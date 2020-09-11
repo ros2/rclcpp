@@ -35,13 +35,29 @@ public:
     rclcpp::shutdown();
   }
 
-protected:
-  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
+  ::testing::AssertionResult test_type_support_init_fini(const rosidl_service_type_support_t * ts)
   {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
+    rcl_service_t service_handle = rcl_get_zero_initialized_service();
+    rcl_service_options_t service_options = rcl_service_get_default_options();
+    rcl_ret_t ret = rcl_service_init(
+      &service_handle,
+      node->get_node_base_interface()->get_rcl_node_handle(),
+      ts, "base_node_service", &service_options);
+    if (ret != RCL_RET_OK) {
+      return ::testing::AssertionFailure() << "Failed ts init";
+    }
+    EXPECT_EQ(
+      RCL_RET_OK, rcl_service_fini(
+        &service_handle,
+	node->get_node_base_interface()->get_rcl_node_handle()));
+    if (ret != RCL_RET_OK) {
+      return ::testing::AssertionFailure() << "Failed ts fini";
+    }
+    return ::testing::AssertionSuccess();
   }
 
-  rclcpp::Node::SharedPtr node;
+protected:
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 };
 
 const rcl_publisher_options_t PublisherOptions()
@@ -112,7 +128,6 @@ public:
    Test that the publisher is created properly for different msg typesupport
  */
 TEST_F(TestTypeSupport, basic_getters) {
-  initialize();
   {
     auto publisher = TestTSParameterEvent(node.get());
     std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
@@ -135,68 +150,52 @@ TEST_F(TestTypeSupport, basic_getters) {
   }
 }
 
-void test_type_support_init_fini(const rosidl_service_type_support_t * ts)
-{
-  auto node_handle_int = rclcpp::Node::make_shared("base_node");
-  rcl_service_t service_handle = rcl_get_zero_initialized_service();
-  rcl_service_options_t service_options = rcl_service_get_default_options();
-  rcl_ret_t ret = rcl_service_init(
-    &service_handle,
-    node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-    ts, "base_node_service", &service_options);
-  if (ret != RCL_RET_OK) {
-    FAIL();
-    return;
-  }
-  EXPECT_EQ(
-    RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+/* Testing type support getters */
+TEST_F(TestTypeSupport, test_service_ts_get_params_srv) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_get_parameters_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
-/* Testing type support getters */
-TEST_F(TestTypeSupport, test_service_getters) {
-  initialize();
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_get_parameters_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_get_parameters_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_get_parameter_types_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_set_parameters_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_list_parameters_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_describe_parameters_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
-  {
-    const rosidl_service_type_support_t * ts =
-      rclcpp::type_support::get_set_parameters_atomically_srv_type_support();
-    EXPECT_NE(nullptr, ts);
-    test_type_support_init_fini(ts);
-  }
+TEST_F(TestTypeSupport, test_service_ts_get_params_srv_type) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_get_parameters_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
+}
+
+TEST_F(TestTypeSupport, test_service_ts_get_parameters_types_srv) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_get_parameter_types_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
+}
+
+TEST_F(TestTypeSupport, test_service_ts_set_params_srv) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_set_parameters_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
+}
+
+TEST_F(TestTypeSupport, test_service_ts_list_params_srv) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_list_parameters_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
+}
+
+TEST_F(TestTypeSupport, test_service_ts_describe_params_srv) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_describe_parameters_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
+}
+
+TEST_F(TestTypeSupport, test_service_ts_set_params_atomically_srv) {
+  const rosidl_service_type_support_t * ts =
+    rclcpp::type_support::get_set_parameters_atomically_srv_type_support();
+  EXPECT_NE(nullptr, ts);
+  EXPECT_TRUE(test_type_support_init_fini(ts));
 }
