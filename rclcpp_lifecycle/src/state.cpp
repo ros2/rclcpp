@@ -83,13 +83,7 @@ State::State(const State & rhs)
 
 State::~State()
 {
-  try {
-    reset();
-  } catch (...) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp_lifecycle"),
-      "Resetting rclcpp_lifecycle::State threw during destruction, leaking memory");
-  }
+  reset();
 }
 
 State &
@@ -150,7 +144,7 @@ State::label() const
 }
 
 void
-State::reset()
+State::reset() noexcept
 {
   if (!owns_rcl_state_handle_) {
     state_handle_ = nullptr;
@@ -164,7 +158,9 @@ State::reset()
   allocator_.deallocate(state_handle_, allocator_.state);
   state_handle_ = nullptr;
   if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp_lifecycle"),
+      "rcl_lifecycle_transition_fini did not complete successfully, leaking memory");
   }
 }
 
