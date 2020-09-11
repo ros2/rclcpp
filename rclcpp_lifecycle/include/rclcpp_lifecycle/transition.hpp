@@ -119,7 +119,7 @@ public:
 protected:
   RCLCPP_LIFECYCLE_PUBLIC
   void
-  reset();
+  reset() noexcept;
 
   rcutils_allocator_t allocator_;
 
