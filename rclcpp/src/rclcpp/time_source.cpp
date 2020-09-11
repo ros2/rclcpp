@@ -237,7 +237,7 @@ void TimeSource::create_clock_sub()
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
     node_topics_,
     "/clock",
-    rclcpp::QoS(QoSInitialization::from_rmw(rmw_qos_profile_default)),
+    rclcpp::QoS(KeepLast(1)).reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT),
     std::bind(&TimeSource::clock_cb, this, std::placeholders::_1)
   );
 }
