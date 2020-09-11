@@ -1,0 +1,139 @@
+// Copyright 2017 Open Source Robotics Foundation, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <gtest/gtest.h>
+
+#include <string>
+#include <memory>
+#include <vector>
+
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/type_support_decl.hpp"
+#include "test_msgs/msg/empty.hpp"
+
+class TestPublisher : public ::testing::Test
+{
+public:
+  static void SetUpTestCase()
+  {
+    if (!rclcpp::ok()) {
+      rclcpp::init(0, nullptr);
+    }
+  }
+
+protected:
+  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
+  {
+    node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
+  }
+
+  void TearDown()
+  {
+    node.reset();
+  }
+
+  rclcpp::Node::SharedPtr node;
+};
+
+const rcl_publisher_options_t PublisherOptions()
+{
+  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
+         to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+}
+
+// Auxiliary classes used to test rosidl_message_type_support_t getters
+// defined in type_support.hpp
+const rosidl_message_type_support_t *ts_parameter_event =
+  rclcpp::type_support::get_parameter_event_msg_type_support();
+
+class TestTSParameterEvent : public rclcpp::PublisherBase
+{
+public:
+  explicit TestTSParameterEvent(rclcpp::Node * node)
+  : rclcpp::PublisherBase(
+      node->get_node_base_interface().get(),
+      "topicTSParameterEvent",
+      *ts_parameter_event,
+      PublisherOptions()) {}
+};
+
+const rosidl_message_type_support_t *ts_set_parameter_result =
+  rclcpp::type_support::get_set_parameters_result_msg_type_support();
+
+class TestTSSetParameterResult : public rclcpp::PublisherBase
+{
+public:
+  explicit TestTSSetParameterResult(rclcpp::Node * node)
+  : rclcpp::PublisherBase(
+      node->get_node_base_interface().get(),
+      "topicTSSetParameterResult",
+      *ts_set_parameter_result,
+      PublisherOptions()) {}
+};
+
+const rosidl_message_type_support_t *ts_parameter_descriptor =
+  rclcpp::type_support::get_parameter_descriptor_msg_type_support();
+
+class TestTSParameterDescriptor : public rclcpp::PublisherBase
+{
+public:
+  explicit TestTSParameterDescriptor(rclcpp::Node * node)
+  : rclcpp::PublisherBase(
+      node->get_node_base_interface().get(),
+      "topicTSParameterDescriptor",
+      *ts_parameter_descriptor,
+      PublisherOptions()) {}
+};
+
+const rosidl_message_type_support_t *ts_list_parameter_result =
+  rclcpp::type_support::get_list_parameters_result_msg_type_support();
+
+class TestTSListParametersResult : public rclcpp::PublisherBase
+{
+public:
+  explicit TestTSListParametersResult(rclcpp::Node * node)
+  : rclcpp::PublisherBase(
+      node->get_node_base_interface().get(),
+      "topicTSListParametersResult",
+      *ts_list_parameter_result,
+      PublisherOptions()) {}
+};
+
+/*
+   Test that the publisher is created properly for different msg typesupport
+ */
+TEST_F(TestPublisher, basic_getters) {
+  initialize();
+  {
+    auto publisher = TestTSParameterEvent(node.get());
+    std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
+    EXPECT_NE(nullptr, publisher_handle);
+  }
+  {
+    auto publisher = TestTSSetParameterResult(node.get());
+    std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
+    EXPECT_NE(nullptr, publisher_handle);
+  }
+  {
+    auto publisher = TestTSParameterDescriptor(node.get());
+    std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
+    EXPECT_NE(nullptr, publisher_handle);
+  }
+  {
+    auto publisher = TestTSListParametersResult(node.get());
+    std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
+    EXPECT_NE(nullptr, publisher_handle);
+  }
+}
