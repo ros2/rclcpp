@@ -141,5 +141,9 @@ TEST_F(TestService, basic_public_getters) {
     // Use get_service_handle specific to const service
     std::shared_ptr<const rcl_service_t> const_service_handle = base.get_service_handle();
     EXPECT_NE(nullptr, const_service_handle);
+
+    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
+      &service_handle,
+      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
   }
 }
