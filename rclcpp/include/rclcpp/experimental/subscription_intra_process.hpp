@@ -102,6 +102,12 @@ public:
 #endif
   }
 
+  ~SubscriptionIntraProcess()
+  {
+    rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
+    (void)ret;
+  }
+
   bool
   is_ready(rcl_wait_set_t * wait_set)
   {
