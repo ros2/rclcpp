@@ -498,7 +498,8 @@ ament_add_gtest(
   TIMEOUT 180)
 if(TARGET test_executors)
   ament_target_dependencies(test_executors
-    "rcl")
+    "rcl"
+    "test_msgs")
   target_link_libraries(test_executors ${PROJECT_NAME})
 endif()
 
