@@ -48,6 +48,8 @@ StaticSingleThreadedExecutor::spin()
     entities_collector_->refresh_wait_set();
     execute_ready_executables();
   }
+
+  entities_collector_->fini();
 }
 
 void
