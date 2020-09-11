@@ -15,6 +15,7 @@
 #ifndef RCLCPP_ACTION__CLIENT_HPP_
 #define RCLCPP_ACTION__CLIENT_HPP_
 
+#include <rclcpp/exceptions.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_logging_interface.hpp>
@@ -37,6 +38,7 @@
 #include <utility>
 
 #include "rclcpp_action/client_goal_handle.hpp"
+#include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
@@ -261,8 +263,7 @@ public:
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
   using WrappedResult = typename GoalHandle::WrappedResult;
-  using GoalResponseCallback =
-    std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
+  using GoalResponseCallback = std::function<void (typename GoalHandle::SharedPtr)>;
   using FeedbackCallback = typename GoalHandle::FeedbackCallback;
   using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
@@ -284,12 +285,9 @@ public:
 
     /// Function called when the goal is accepted or rejected.
     /**
-     * Takes a single argument that is a future to a goal handle shared pointer.
+     * Takes a single argument that is a goal handle shared pointer.
      * If the goal is accepted, then the pointer points to a valid goal handle.
      * If the goal is rejected, then pointer has the value `nullptr`.
-     * If an error occurs while waiting for the goal response an exception will be thrown
-     * when calling `future::get()`.
-     * Possible exceptions include `rclcpp::RCLError` and `rclcpp::RCLBadAlloc`.
      */
     GoalResponseCallback goal_response_callback;
 
@@ -360,7 +358,7 @@ public:
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
           if (options.goal_response_callback) {
-            options.goal_response_callback(future);
+            options.goal_response_callback(nullptr);
           }
           return;
         }
@@ -376,16 +374,11 @@ public:
         }
         promise->set_value(goal_handle);
         if (options.goal_response_callback) {
-          options.goal_response_callback(future);
+          options.goal_response_callback(goal_handle);
         }
 
         if (options.result_callback) {
-          try {
-            this->make_result_aware(goal_handle);
-          } catch (...) {
-            promise->set_exception(std::current_exception());
-            return;
-          }
+          this->make_result_aware(goal_handle);
         }
       });
 
@@ -632,22 +625,28 @@ private:
     using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
     goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
-    this->send_result_request(
-      std::static_pointer_cast<void>(goal_result_request),
-      [goal_handle, this](std::shared_ptr<void> response) mutable
-      {
-        // Wrap the response in a struct with the fields a user cares about
-        WrappedResult wrapped_result;
-        using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
-        auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
-        wrapped_result.result = std::make_shared<typename ActionT::Result>();
-        *wrapped_result.result = result_response->result;
-        wrapped_result.goal_id = goal_handle->get_goal_id();
-        wrapped_result.code = static_cast<ResultCode>(result_response->status);
-        goal_handle->set_result(wrapped_result);
-        std::lock_guard<std::mutex> lock(goal_handles_mutex_);
-        goal_handles_.erase(goal_handle->get_goal_id());
-      });
+    try {
+      this->send_result_request(
+        std::static_pointer_cast<void>(goal_result_request),
+        [goal_handle, this](std::shared_ptr<void> response) mutable
+        {
+          // Wrap the response in a struct with the fields a user cares about
+          WrappedResult wrapped_result;
+          using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
+          auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
+          wrapped_result.result = std::make_shared<typename ActionT::Result>();
+          *wrapped_result.result = result_response->result;
+          wrapped_result.goal_id = goal_handle->get_goal_id();
+          wrapped_result.code = static_cast<ResultCode>(result_response->status);
+          goal_handle->set_result(wrapped_result);
+          std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+          goal_handles_.erase(goal_handle->get_goal_id());
+        });
+    } catch (rclcpp::exceptions::RCLError &) {
+      goal_handle->invalidate();
+      std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+      goal_handles_.erase(goal_handle->get_goal_id());
+    }
   }
 
   /// \internal
