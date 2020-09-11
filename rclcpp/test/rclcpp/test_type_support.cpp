@@ -138,7 +138,8 @@ TEST_F(TestTypeSupport, basic_getters) {
   }
 }
 
-void test_type_support_init_fini(const rosidl_service_type_support_t * ts) {
+void test_type_support_init_fini(const rosidl_service_type_support_t * ts)
+{
   auto node_handle_int = rclcpp::Node::make_shared("base_node");
   rcl_service_t service_handle = rcl_get_zero_initialized_service();
   rcl_service_options_t service_options = rcl_service_get_default_options();
