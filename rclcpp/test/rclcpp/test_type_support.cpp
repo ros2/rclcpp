@@ -160,36 +160,43 @@ TEST_F(TestTypeSupport, test_service_getters) {
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_get_parameters_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_get_parameters_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_get_parameter_types_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_set_parameters_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_list_parameters_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_describe_parameters_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
   {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_set_parameters_atomically_srv_type_support();
+    EXPECT_NE(nullptr, ts);
     test_type_support_init_fini(ts);
   }
 }
