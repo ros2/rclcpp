@@ -57,13 +57,6 @@ ClientGoalHandle<ActionT>::get_goal_stamp() const
 
 template<typename ActionT>
 std::shared_future<typename ClientGoalHandle<ActionT>::WrappedResult>
-ClientGoalHandle<ActionT>::async_result()
-{
-  return this->async_get_result();
-}
-
-template<typename ActionT>
-std::shared_future<typename ClientGoalHandle<ActionT>::WrappedResult>
 ClientGoalHandle<ActionT>::async_get_result()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
