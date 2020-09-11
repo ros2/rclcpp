@@ -1031,25 +1031,13 @@ TEST_F(TestValidServer, is_ready_rcl_error) {
   EXPECT_THROW(action_server_->is_ready(&wait_set), rclcpp::exceptions::RCLError);
 }
 
-enum class RequestType {GOAL, CANCEL};
-
 class TestBasicServer : public TestServer
 {
-protected:
-  void SetupActionServerAndSpin(
-    RequestType request_type,
-    std::chrono::milliseconds timeout = std::chrono::milliseconds(1000))
+public:
+  void SetUp()
   {
-    using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
-    if (nullptr != node_) {
-      node_.reset();
-    }
     node_ = std::make_shared<rclcpp::Node>("goal_request", "/rclcpp_action/goal_request");
     uuid_ = {{1, 2, 3, 4, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}};
-    std::shared_ptr<GoalHandle> goal_handle = nullptr;
-    if (nullptr != action_server_) {
-      action_server_.reset();
-    }
     action_server_ = rclcpp_action::create_server<Fibonacci>(
       node_, "fibonacci",
       [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
@@ -1058,144 +1046,163 @@ protected:
       [](std::shared_ptr<GoalHandle>) {
         return rclcpp_action::CancelResponse::REJECT;
       },
-      [&goal_handle](std::shared_ptr<GoalHandle> handle) {
-        goal_handle = handle;
+      [this](std::shared_ptr<GoalHandle> handle) {
+        goal_handle_ = handle;
       });
-    switch (request_type) {
-      case RequestType::GOAL:
-        {
-          send_goal_request(node_, uuid_, timeout);
-          goal_handle->execute();
-          auto result = std::make_shared<Fibonacci::Result>();
-          result->sequence = {5, 8, 13, 21};
-          goal_handle->succeed(result);
-          break;
-        }
-      case RequestType::CANCEL:
-        {
-          send_cancel_request(node_, uuid_, timeout);
-          break;
-        }
-        // No default, let compiler flag missing case
-    }
   }
+
+  virtual void SendClientRequest(
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1)) = 0;
+
+protected:
   GoalUUID uuid_;
   std::shared_ptr<rclcpp::Node> node_;
   std::shared_ptr<rclcpp_action::Server<Fibonacci>> action_server_;
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+  std::shared_ptr<GoalHandle> goal_handle_;
 };
 
-TEST_F(TestBasicServer, execute_goal_request_received_rcl_errors) {
+class TestGoalRequestServer : public TestBasicServer
+{
+public:
+  void SendClientRequest(
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1)) override
   {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ERROR);
-
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), rclcpp::exceptions::RCLError);
+    send_goal_request(node_, uuid_, timeout);
+    goal_handle_->execute();
+    auto result = std::make_shared<Fibonacci::Result>();
+    result->sequence = {5, 8, 13, 21};
+    goal_handle_->succeed(result);
   }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_send_goal_response, RCL_RET_ERROR);
+};
 
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), rclcpp::exceptions::RCLError);
+class TestCancelRequestServer : public TestBasicServer
+{
+public:
+  void SendClientRequest(
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1)) override
+  {
+    send_cancel_request(node_, uuid_, timeout);
   }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_accept_new_goal, nullptr);
+};
 
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), std::runtime_error);
-  }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_update_goal_state, RCL_RET_ERROR);
+TEST_F(TestGoalRequestServer, execute_goal_request_received_take_goal_request_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ERROR);
 
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), rclcpp::exceptions::RCLError);
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+TEST_F(TestGoalRequestServer, execute_goal_request_received_send_goal_response_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_send_goal_response, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+TEST_F(TestGoalRequestServer, execute_goal_request_received_accept_new_goal_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_accept_new_goal, nullptr);
+
+  EXPECT_THROW(SendClientRequest(), std::runtime_error);
+}
+TEST_F(TestGoalRequestServer, execute_goal_request_received_update_goal_state_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_update_goal_state, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestGoalRequestServer, publish_status_server_get_goal_handles_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_server_get_goal_handles, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestGoalRequestServer, publish_status_get_goal_status_array_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_get_goal_status_array, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestGoalRequestServer, publish_status_publish_status_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_publish_status, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), std::runtime_error);
+}
+
+TEST_F(TestGoalRequestServer, publish_result_send_result_response_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_send_result_response, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestGoalRequestServer, execute_goal_request_received_take_failed)
+{
+  auto mock = mocking_utils::inject_on_return(
+    "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
+  try {
+    SendClientRequest(std::chrono::milliseconds(100));
+    ADD_FAILURE() << "SetupActionServerAndSpin did not throw, but was expected to";
+  } catch (const std::runtime_error & e) {
+    EXPECT_STREQ("send goal future timed out", e.what());
+  } catch (...) {
+    ADD_FAILURE() << "SetupActionServerAndSpin threw, but not the expected std::runtime_error";
   }
 }
 
-TEST_F(TestBasicServer, publish_status_rcl_errors) {
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_server_get_goal_handles, RCL_RET_ERROR);
+TEST_F(TestCancelRequestServer, execute_cancel_request_received_take_cancel_request_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_take_cancel_request, RCL_RET_ERROR);
 
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), rclcpp::exceptions::RCLError);
-  }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_get_goal_status_array, RCL_RET_ERROR);
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
 
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), rclcpp::exceptions::RCLError);
-  }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_publish_status, RCL_RET_ERROR);
+TEST_F(TestGoalRequestServer, publish_status_rcl_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_process_cancel_request, RCL_RET_ERROR);
 
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), std::runtime_error);
+  EXPECT_THROW(SendClientRequest(), rclcpp::exceptions::RCLError);
+}
+TEST_F(TestGoalRequestServer, publish_status_send_cancel_response_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_send_cancel_response, RCL_RET_ERROR);
+
+  EXPECT_THROW(SendClientRequest(), std::runtime_error);
+}
+
+TEST_F(TestCancelRequestServer, execute_cancel_request_received_take_failed)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_take_cancel_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
+  try {
+    SendClientRequest(std::chrono::milliseconds(100));
+    ADD_FAILURE() << "SetupActionServerAndSpin did not throw, but it was expected to";
+  } catch (const std::runtime_error & e) {
+    EXPECT_STREQ("cancel request future timed out", e.what());
+  } catch (...) {
+    ADD_FAILURE() << "SetupActionServerAndSpin threw, but not the expected std::runtime_error";
   }
 }
 
-TEST_F(TestBasicServer, publish_result_rcl_errors) {
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_send_result_response, RCL_RET_ERROR);
-
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::GOAL), rclcpp::exceptions::RCLError);
-  }
-}
-
-TEST_F(TestBasicServer, execute_goal_request_received_take_failed) {
-  {
-    auto mock = mocking_utils::inject_on_return(
-      "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
-    try {
-      SetupActionServerAndSpin(RequestType::GOAL, std::chrono::milliseconds(100));
-      ADD_FAILURE() << "SetupActionServerAndSpin did not throw, but was expected to";
-    } catch (const std::runtime_error & e) {
-      EXPECT_STREQ("send goal future timed out", e.what());
-    } catch (...) {
-      ADD_FAILURE() << "SetupActionServerAndSpin threw, but not the expected std::runtime_error";
-    }
-  }
-}
-
-TEST_F(TestBasicServer, execute_cancel_request_received_rcl_errors) {
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_take_cancel_request, RCL_RET_ERROR);
-
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::CANCEL), rclcpp::exceptions::RCLError);
-  }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_process_cancel_request, RCL_RET_ERROR);
-
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::CANCEL), rclcpp::exceptions::RCLError);
-  }
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_send_cancel_response, RCL_RET_ERROR);
-
-    EXPECT_THROW(SetupActionServerAndSpin(RequestType::CANCEL), std::runtime_error);
-  }
-}
-
-TEST_F(TestBasicServer, execute_cancel_request_received_take_failed) {
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_take_cancel_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
-    try {
-      SetupActionServerAndSpin(RequestType::CANCEL, std::chrono::milliseconds(100));
-      ADD_FAILURE() << "SetupActionServerAndSpin did not throw, but it was expected to";
-    } catch (const std::runtime_error & e) {
-      EXPECT_STREQ("cancel request future timed out", e.what());
-    } catch (...) {
-      ADD_FAILURE() << "SetupActionServerAndSpin threw, but not the expected std::runtime_error";
-    }
-  }
-}
-
-TEST_F(TestBasicServer, get_result_rcl_errors)
+TEST_F(TestGoalRequestServer, get_result_rcl_errors)
 {
   auto take_result_request_error = [this]() {
-      this->SetupActionServerAndSpin(RequestType::GOAL);
+      this->SendClientRequest();
       // Send result request
       auto result_client = node_->create_client<Fibonacci::Impl::GetResultService>(
         "fibonacci/_action/get_result");
@@ -1210,9 +1217,12 @@ TEST_F(TestBasicServer, get_result_rcl_errors)
     };
 
   EXPECT_THROW(take_result_request_error(), rclcpp::exceptions::RCLError);
+}
 
+TEST_F(TestGoalRequestServer, send_result_rcl_errors)
+{
   auto send_result_error = [this]() {
-      this->SetupActionServerAndSpin(RequestType::GOAL);
+      this->SendClientRequest();
       // Send result request
       auto result_client = node_->create_client<Fibonacci::Impl::GetResultService>(
         "fibonacci/_action/get_result");

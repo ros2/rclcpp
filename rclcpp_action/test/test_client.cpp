@@ -332,7 +332,7 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
 TEST_F(TestClient, construction_and_destruction_rcl_errors)
 {
   {
-    auto mock = mocking_utils::patch_and_return(
+    auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp_action", rcl_action_client_fini, RCL_RET_ERROR);
     // It just logs an error message and continues
     EXPECT_NO_THROW(
@@ -357,12 +357,8 @@ TEST_F(TestClient, construction_and_destruction_rcl_errors)
 TEST_F(TestClient, wait_for_action_server)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
-  auto future = std::async(
-    std::launch::async, [&action_client]() {
-      return action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT);
-    });
   SetUpServer();
-  EXPECT_TRUE(future.get());
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
   TearDownServer();
 
   client_node.reset();  // Drop node before action client
@@ -373,11 +369,7 @@ TEST_F(TestClient, wait_for_action_server_rcl_errors)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   SetUpServer();
-  auto future = std::async(
-    std::launch::async, [&action_client]() {
-      return action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT);
-    });
-  EXPECT_TRUE(future.get());
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
   {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp_action", rcl_action_server_is_available, RCL_RET_NODE_INVALID);
@@ -506,7 +498,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_goal_response_callback_wait
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.goal_response_callback =
     [&goal_response_received]
-      (typename ActionGoalHandle::SharedPtr goal_handle) mutable
+      (typename ActionGoalHandle::SharedPtr goal_handle)
     {
       if (goal_handle) {
         goal_response_received = true;
@@ -554,7 +546,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
   send_goal_ops.feedback_callback =
     [&feedback_count](
     typename ActionGoalHandle::SharedPtr goal_handle,
-    const std::shared_ptr<const ActionFeedback> feedback) mutable
+    const std::shared_ptr<const ActionFeedback> feedback)
     {
       (void)goal_handle;
       (void)feedback;
@@ -587,7 +579,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_result_callback_wait_for_re
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
     [&result_callback_received](
-    const typename ActionGoalHandle::WrappedResult & result) mutable
+    const typename ActionGoalHandle::WrappedResult & result)
     {
       if (
         rclcpp_action::ResultCode::SUCCEEDED == result.code &&
@@ -629,7 +621,7 @@ TEST_F(TestClientAgainstServer, async_get_result_with_callback)
   auto future_result = action_client->async_get_result(
     goal_handle,
     [&result_callback_received](
-      const typename ActionGoalHandle::WrappedResult & result) mutable
+      const typename ActionGoalHandle::WrappedResult & result)
     {
       if (
         rclcpp_action::ResultCode::SUCCEEDED == result.code &&
@@ -680,7 +672,7 @@ TEST_F(TestClientAgainstServer, async_cancel_one_goal_with_callback)
   auto future_cancel = action_client->async_cancel_goal(
     goal_handle,
     [&cancel_response_received, goal_handle](
-      ActionCancelGoalResponse::SharedPtr response) mutable
+      ActionCancelGoalResponse::SharedPtr response)
     {
       if (
         ActionCancelGoalResponse::ERROR_NONE == response->return_code &&
@@ -865,11 +857,10 @@ TEST_F(TestClientAgainstServer, send_rcl_errors)
 
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
-    [](
-    const typename ActionGoalHandle::WrappedResult &) mutable {};
+    [](const typename ActionGoalHandle::WrappedResult &) {};
   send_goal_ops.feedback_callback =
     [](typename ActionGoalHandle::SharedPtr,
-      const std::shared_ptr<const ActionFeedback>) mutable {};
+      const std::shared_ptr<const ActionFeedback>) {};
 
   {
     ActionGoal goal;
@@ -909,11 +900,10 @@ TEST_F(TestClientAgainstServer, execute_rcl_errors)
 
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
-    [](
-    const typename ActionGoalHandle::WrappedResult &) mutable {};
+    [](const typename ActionGoalHandle::WrappedResult &) {};
   send_goal_ops.feedback_callback =
     [](typename ActionGoalHandle::SharedPtr,
-      const std::shared_ptr<const ActionFeedback>) mutable {};
+      const std::shared_ptr<const ActionFeedback>) {};
 
   {
     ActionGoal goal;
@@ -949,11 +939,9 @@ TEST_F(TestClientAgainstServer, execute_rcl_errors)
     auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
     dual_spin_until_future_complete(future_goal_handle);
     auto goal_handle = future_goal_handle.get();
+    auto future_result = action_client->async_get_result(goal_handle);
     EXPECT_THROW(
-    {
-      auto future_result = action_client->async_get_result(goal_handle);
-      dual_spin_until_future_complete(future_result);
-    },
+      dual_spin_until_future_complete(future_result),
       rclcpp::exceptions::RCLError);
   }
   {
