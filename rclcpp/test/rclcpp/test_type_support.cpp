@@ -55,7 +55,7 @@ const rcl_publisher_options_t PublisherOptions()
 
 // Auxiliary classes used to test rosidl_message_type_support_t getters
 // defined in type_support.hpp
-const rosidl_message_type_support_t *ts_parameter_event =
+const rosidl_message_type_support_t * ts_parameter_event =
   rclcpp::type_support::get_parameter_event_msg_type_support();
 
 class TestTSParameterEvent : public rclcpp::PublisherBase
@@ -69,7 +69,7 @@ public:
       PublisherOptions()) {}
 };
 
-const rosidl_message_type_support_t *ts_set_parameter_result =
+const rosidl_message_type_support_t * ts_set_parameter_result =
   rclcpp::type_support::get_set_parameters_result_msg_type_support();
 
 class TestTSSetParameterResult : public rclcpp::PublisherBase
@@ -83,7 +83,7 @@ public:
       PublisherOptions()) {}
 };
 
-const rosidl_message_type_support_t *ts_parameter_descriptor =
+const rosidl_message_type_support_t * ts_parameter_descriptor =
   rclcpp::type_support::get_parameter_descriptor_msg_type_support();
 
 class TestTSParameterDescriptor : public rclcpp::PublisherBase
@@ -97,7 +97,7 @@ public:
       PublisherOptions()) {}
 };
 
-const rosidl_message_type_support_t *ts_list_parameter_result =
+const rosidl_message_type_support_t * ts_list_parameter_result =
   rclcpp::type_support::get_list_parameters_result_msg_type_support();
 
 class TestTSListParametersResult : public rclcpp::PublisherBase
@@ -138,7 +138,7 @@ TEST_F(TestTypeSupport, basic_getters) {
   }
 }
 
-void test_type_support_init_fini(const rosidl_service_type_support_t * ts){
+void test_type_support_init_fini(const rosidl_service_type_support_t * ts) {
   auto node_handle_int = rclcpp::Node::make_shared("base_node");
   rcl_service_t service_handle = rcl_get_zero_initialized_service();
   rcl_service_options_t service_options = rcl_service_get_default_options();
@@ -150,9 +150,10 @@ void test_type_support_init_fini(const rosidl_service_type_support_t * ts){
     FAIL();
     return;
   }
-  EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-    &service_handle,
-    node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+  EXPECT_EQ(
+    RCL_RET_OK, rcl_service_fini(
+      &service_handle,
+      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
 }
 
 /* Testing type support getters */
