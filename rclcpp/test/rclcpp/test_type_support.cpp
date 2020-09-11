@@ -138,115 +138,59 @@ TEST_F(TestTypeSupport, basic_getters) {
   }
 }
 
+void test_type_support_init_fini(const rosidl_service_type_support_t * ts){
+  auto node_handle_int = rclcpp::Node::make_shared("base_node");
+  rcl_service_t service_handle = rcl_get_zero_initialized_service();
+  rcl_service_options_t service_options = rcl_service_get_default_options();
+  rcl_ret_t ret = rcl_service_init(
+    &service_handle,
+    node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
+    ts, "base_node_service", &service_options);
+  if (ret != RCL_RET_OK) {
+    FAIL();
+    return;
+  }
+  EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
+    &service_handle,
+    node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+}
+
 /* Testing type support getters */
 TEST_F(TestTypeSupport, test_service_getters) {
   initialize();
   {
-    auto node_handle_int = rclcpp::Node::make_shared("base_node");
-    rcl_service_t service_handle = rcl_get_zero_initialized_service();
-    rcl_service_options_t service_options = rcl_service_get_default_options();
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_get_parameters_srv_type_support();
-    rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
-    if (ret != RCL_RET_OK) {
-      FAIL();
-      return;
-    }
-    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+    test_type_support_init_fini(ts);
   }
   {
-    auto node_handle_int = rclcpp::Node::make_shared("base_node");
-    rcl_service_t service_handle = rcl_get_zero_initialized_service();
-    rcl_service_options_t service_options = rcl_service_get_default_options();
+    const rosidl_service_type_support_t * ts =
+      rclcpp::type_support::get_get_parameters_srv_type_support();
+    test_type_support_init_fini(ts);
+  }
+  {
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_get_parameter_types_srv_type_support();
-    rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
-    if (ret != RCL_RET_OK) {
-      FAIL();
-      return;
-    }
-    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+    test_type_support_init_fini(ts);
   }
   {
-    auto node_handle_int = rclcpp::Node::make_shared("base_node");
-    rcl_service_t service_handle = rcl_get_zero_initialized_service();
-    rcl_service_options_t service_options = rcl_service_get_default_options();
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_set_parameters_srv_type_support();
-    rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
-    if (ret != RCL_RET_OK) {
-      FAIL();
-      return;
-    }
-    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+    test_type_support_init_fini(ts);
   }
   {
-    auto node_handle_int = rclcpp::Node::make_shared("base_node");
-    rcl_service_t service_handle = rcl_get_zero_initialized_service();
-    rcl_service_options_t service_options = rcl_service_get_default_options();
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_list_parameters_srv_type_support();
-    rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
-    if (ret != RCL_RET_OK) {
-      FAIL();
-      return;
-    }
-    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+    test_type_support_init_fini(ts);
   }
   {
-    auto node_handle_int = rclcpp::Node::make_shared("base_node");
-    rcl_service_t service_handle = rcl_get_zero_initialized_service();
-    rcl_service_options_t service_options = rcl_service_get_default_options();
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_describe_parameters_srv_type_support();
-    rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
-    if (ret != RCL_RET_OK) {
-      FAIL();
-      return;
-    }
-    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+    test_type_support_init_fini(ts);
   }
   {
-    auto node_handle_int = rclcpp::Node::make_shared("base_node");
-    rcl_service_t service_handle = rcl_get_zero_initialized_service();
-    rcl_service_options_t service_options = rcl_service_get_default_options();
     const rosidl_service_type_support_t * ts =
       rclcpp::type_support::get_set_parameters_atomically_srv_type_support();
-    rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
-    if (ret != RCL_RET_OK) {
-      FAIL();
-      return;
-    }
-    EXPECT_EQ(RCL_RET_OK, rcl_service_fini(
-      &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+    test_type_support_init_fini(ts);
   }
 }
