@@ -21,6 +21,7 @@
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcl/node.h"
+#include "rcutils/logging.h"
 
 /**
  * \def RCLCPP_LOGGING_ENABLED
@@ -76,6 +77,18 @@ get_node_logger(const rcl_node_t * node);
 
 class Logger
 {
+public:
+  /// An enum for the type of logger level.
+  enum class Level
+  {
+    Unset = RCUTILS_LOG_SEVERITY_UNSET,  ///< The unset log level
+    Debug = RCUTILS_LOG_SEVERITY_DEBUG,  ///< The debug log level
+    Info = RCUTILS_LOG_SEVERITY_INFO,    ///< The info log level
+    Warn = RCUTILS_LOG_SEVERITY_WARN,    ///< The warn log level
+    Error = RCUTILS_LOG_SEVERITY_ERROR,  ///< The error log level
+    Fatal = RCUTILS_LOG_SEVERITY_FATAL,  ///< The fatal log level
+  };
+
 private:
   friend Logger rclcpp::get_logger(const std::string & name);
   friend ::rclcpp::node_interfaces::NodeLogging;
@@ -138,6 +151,16 @@ public:
     }
     return Logger(*name_ + "." + suffix);
   }
+
+  /// Set level for current logger.
+  /**
+   * \param[in] level the logger's level
+   * \throws rclcpp::exceptions::RCLInvalidArgument if level is invalid.
+   * \throws rclcpp::exceptions::RCLError if other error happens.
+   */
+  RCLCPP_PUBLIC
+  void
+  set_level(Level level);
 };
 
 }  // namespace rclcpp
