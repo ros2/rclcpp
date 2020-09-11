@@ -30,15 +30,15 @@ public:
     }
   }
 
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
 protected:
   void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
     node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
-  }
-
-  void TearDown()
-  {
-    node.reset();
   }
 
   rclcpp::Node::SharedPtr node;
