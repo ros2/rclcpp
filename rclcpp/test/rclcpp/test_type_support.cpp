@@ -14,11 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
-#include <vector>
 
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "test_msgs/msg/empty.hpp"
