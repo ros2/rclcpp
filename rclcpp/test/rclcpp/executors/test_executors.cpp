@@ -33,7 +33,7 @@
 #include "rclcpp/duration.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "std_msgs/msg/empty.hpp"
+#include "test_msgs/msg/empty.hpp"
 
 using namespace std::chrono_literals;
 
@@ -61,10 +61,10 @@ public:
     callback_count = 0;
 
     const std::string topic_name = std::string("topic_") + test_name.str();
-    publisher = node->create_publisher<std_msgs::msg::Empty>(topic_name, rclcpp::QoS(10));
-    auto callback = [this](std_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
+    publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, rclcpp::QoS(10));
+    auto callback = [this](test_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
     subscription =
-      node->create_subscription<std_msgs::msg::Empty>(
+      node->create_subscription<test_msgs::msg::Empty>(
       topic_name, rclcpp::QoS(10), std::move(callback));
   }
 
@@ -76,8 +76,8 @@ public:
   }
 
   rclcpp::Node::SharedPtr node;
-  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr publisher;
-  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr subscription;
+  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
   int callback_count;
 };
 
@@ -323,7 +323,7 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
     !spin_exited &&
     (std::chrono::steady_clock::now() - start < 1s))
   {
-    this->publisher->publish(std_msgs::msg::Empty());
+    this->publisher->publish(test_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
   }
 
