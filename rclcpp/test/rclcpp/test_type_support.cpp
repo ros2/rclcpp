@@ -43,13 +43,13 @@ public:
     rcl_ret_t ret = rcl_service_init(
       &service_handle, node_handle, ts, "base_node_service", &service_options);
     if (ret != RCL_RET_OK) {
-      return ::testing::AssertionFailure()
-	<< "Failed rcl_service_init with error string: " << rcl_get_error_string().str;
+      return ::testing::AssertionFailure() <<
+        "Failed rcl_service_init with error string: " << rcl_get_error_string().str;
     }
     ret = rcl_service_fini(&service_handle, node_handle);
     if (ret != RCL_RET_OK) {
-      return ::testing::AssertionFailure()
-	<< "Failed rcl_service_fini with error string: " << rcl_get_error_string().str;
+      return ::testing::AssertionFailure() <<
+        "Failed rcl_service_fini with error string: " << rcl_get_error_string().str;
     }
     return ::testing::AssertionSuccess();
   }
