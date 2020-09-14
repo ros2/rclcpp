@@ -44,14 +44,16 @@ public:
       node->get_node_base_interface()->get_rcl_node_handle(),
       ts, "base_node_service", &service_options);
     if (ret != RCL_RET_OK) {
-      return ::testing::AssertionFailure() << "Failed ts init";
+      return ::testing::AssertionFailure()
+	<< "Failed rcl_service_init with error string: " << rcl_get_error_string().str;
     }
     EXPECT_EQ(
       RCL_RET_OK, rcl_service_fini(
         &service_handle,
 	node->get_node_base_interface()->get_rcl_node_handle()));
     if (ret != RCL_RET_OK) {
-      return ::testing::AssertionFailure() << "Failed ts fini";
+      return ::testing::AssertionFailure()
+	<< "Failed rcl_service_fini with error string: " << rcl_get_error_string().str;
     }
     return ::testing::AssertionSuccess();
   }
