@@ -104,8 +104,12 @@ public:
 
   ~SubscriptionIntraProcess()
   {
-    rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
-    (void)ret;
+    if (rcl_guard_condition_fini(&gc_) != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Failed to destory guard condition: %s",
+        rcutils_get_error_string().str);
+    }
   }
 
   bool
