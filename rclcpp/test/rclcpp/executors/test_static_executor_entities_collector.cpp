@@ -190,6 +190,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_basic_node) {
 
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
@@ -224,6 +225,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
+  entities_collector_->fini();
 }
 
 class TestWaitable : public rclcpp::Waitable
@@ -303,6 +305,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   EXPECT_EQ(0u, entities_collector_->get_number_of_clients());
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_callback_group) {
