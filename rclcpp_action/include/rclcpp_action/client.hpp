@@ -643,9 +643,8 @@ private:
           goal_handles_.erase(goal_handle->get_goal_id());
         });
     } catch (rclcpp::exceptions::RCLError &) {
+      // This will cause an exception when the user tries to access the result
       goal_handle->invalidate();
-      std::lock_guard<std::mutex> lock(goal_handles_mutex_);
-      goal_handles_.erase(goal_handle->get_goal_id());
     }
   }
 
