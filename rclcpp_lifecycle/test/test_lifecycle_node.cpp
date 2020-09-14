@@ -565,11 +565,11 @@ TEST_F(TestDefaultStateMachine, test_graph_topics) {
     topic_names_and_types["/testnode/transition_event"][0].c_str(),
     "lifecycle_msgs/msg/TransitionEvent");
 
-  EXPECT_LE(1u, test_node->count_publishers("/testnode/transition_event"));
+  EXPECT_EQ(1u, test_node->count_publishers("/testnode/transition_event"));
   EXPECT_EQ(0u, test_node->count_subscribers("/testnode/transition_event"));
 
   auto publishers_info = test_node->get_publishers_info_by_topic("/testnode/transition_event");
-  EXPECT_LE(1u, publishers_info.size());
+  EXPECT_EQ(1u, publishers_info.size());
   auto subscriptions_info =
     test_node->get_subscriptions_info_by_topic("/testnode/transition_event");
   EXPECT_EQ(0u, subscriptions_info.size());
