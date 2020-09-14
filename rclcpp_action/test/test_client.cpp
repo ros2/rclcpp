@@ -876,9 +876,8 @@ TEST_F(TestClientAgainstServer, send_rcl_errors)
       "lib:rclcpp_action", rcl_action_send_result_request, RCL_RET_ERROR);
     auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
     dual_spin_until_future_complete(future_goal_handle);
-    EXPECT_THROW(
-      future_goal_handle.get(),
-      rclcpp::exceptions::RCLError);
+    auto goal_handle = future_goal_handle.get();
+    EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_UNKNOWN, goal_handle->get_status());
   }
   {
     ActionGoal goal;
