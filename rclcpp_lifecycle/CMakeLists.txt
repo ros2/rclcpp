@@ -56,6 +56,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_lifecycle_node
       "rcl_lifecycle"
       "rclcpp"
+      "rcutils"
     )
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME} mimick)
   endif()
@@ -73,6 +74,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_lifecycle_service_client
       "rcl_lifecycle"
       "rclcpp"
+      "rcutils"
     )
     target_link_libraries(test_lifecycle_service_client ${PROJECT_NAME} mimick)
   endif()
