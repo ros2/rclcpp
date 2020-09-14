@@ -77,6 +77,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   if(TARGET test_client)
     ament_target_dependencies(test_client
+      "rcutils"
       "test_msgs"
     )
     target_link_libraries(test_client
@@ -88,6 +89,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_server test/test_server.cpp)
   if(TARGET test_server)
     ament_target_dependencies(test_server
+      "rcutils"
       "test_msgs"
     )
     target_link_libraries(test_server
@@ -99,6 +101,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_server_goal_handle test/test_server_goal_handle.cpp)
   if(TARGET test_server_goal_handle)
     ament_target_dependencies(test_server_goal_handle
+      "rcutils"
       "test_msgs"
     )
     target_link_libraries(test_server_goal_handle
