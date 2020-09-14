@@ -154,48 +154,48 @@ TEST_F(TestTypeSupport, basic_getters) {
 TEST_F(TestTypeSupport, test_service_ts_get_params_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_get_parameters_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
 TEST_F(TestTypeSupport, test_service_ts_get_params_srv_type) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_get_parameters_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
 TEST_F(TestTypeSupport, test_service_ts_get_parameters_types_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_get_parameter_types_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
 TEST_F(TestTypeSupport, test_service_ts_set_params_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_set_parameters_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
 TEST_F(TestTypeSupport, test_service_ts_list_params_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_list_parameters_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
 TEST_F(TestTypeSupport, test_service_ts_describe_params_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_describe_parameters_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
 TEST_F(TestTypeSupport, test_service_ts_set_params_atomically_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_set_parameters_atomically_srv_type_support();
-  EXPECT_NE(nullptr, ts);
+  ASSERT_NE(nullptr, ts);
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
