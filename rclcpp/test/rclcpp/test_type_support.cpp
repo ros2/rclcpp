@@ -39,18 +39,14 @@ public:
   {
     rcl_service_t service_handle = rcl_get_zero_initialized_service();
     rcl_service_options_t service_options = rcl_service_get_default_options();
+    auto node_handle = node->get_node_base_interface()->get_rcl_node_handle();
     rcl_ret_t ret = rcl_service_init(
-      &service_handle,
-      node->get_node_base_interface()->get_rcl_node_handle(),
-      ts, "base_node_service", &service_options);
+      &service_handle, node_handle, ts, "base_node_service", &service_options);
     if (ret != RCL_RET_OK) {
       return ::testing::AssertionFailure()
 	<< "Failed rcl_service_init with error string: " << rcl_get_error_string().str;
     }
-    EXPECT_EQ(
-      RCL_RET_OK, rcl_service_fini(
-        &service_handle,
-	node->get_node_base_interface()->get_rcl_node_handle()));
+    ret = rcl_service_fini(&service_handle, node_handle);
     if (ret != RCL_RET_OK) {
       return ::testing::AssertionFailure()
 	<< "Failed rcl_service_fini with error string: " << rcl_get_error_string().str;
