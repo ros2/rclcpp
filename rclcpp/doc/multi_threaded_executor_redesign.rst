@@ -35,20 +35,22 @@ Broadly speaking, two approaches were discussed:
      * needs to be documented well so every class that executes :code:`AnyExecutable` objects is thread-safe and doesn't hide a race condition
 
 
-2. **Take the data**: When an executable is ready, take it and store it so that it can be executed when execute is called:
+2. **Take the data**: This approach takes the data when collecting the ready entities, and that process is done in a mutually exclusive fashion. Thus, this approach may avoid spurious wake ups.
 
     .. code-block:: c++
 
+        // called first
         void take_data(std::shared_ptr<void> & data) {
           data = buffer->consume_data();
         }
 
+        // called second
         void execute(std::shared_ptr<void> & data) {
           run_any_callback(data_);
         }
 
    :Advantages:
-     * no spurious wake ups
+     * fixes spurious wake ups for events where :code:`take_data` has a meaning (i.e., not timers)
    :Disadvantages:
      * more complex
      * extends the interface in a way that doesn't generalize well for all other types of executable objects (i.e., timers)
