@@ -56,9 +56,26 @@ Broadly speaking, two approaches were discussed:
      * extends the interface in a way that doesn't generalize well for all other types of executable objects (i.e., timers)
      * type erasure of data
 
+.. note::
+
+   To avoid erasing the type of the data, :code:`take_data` could be replaced with a :code:`get_handle` method that would return a lambda function.
+
+   .. code-block:: c++
+
+      // called first
+      std::function<void()> get_handle() {
+        return [data=buffer->consume_data()]() {
+          run_any_callback(data);
+        };
+      }
+
+      // called second
+      void execute(std::function<void()> handle) {
+        handle();
+      }
+
 Ideas
 -----------------------
 
 * Add a preparation method to get the event after :code:`take_data`
-* Take a lambda that can be executed later
 * Store conditions in the waitset (like DDS)
