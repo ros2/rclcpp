@@ -357,6 +357,8 @@ TEST_F(TestClient, construction_and_destruction_rcl_errors)
 TEST_F(TestClient, wait_for_action_server)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  EXPECT_FALSE(action_client->wait_for_action_server(0ms));
+  EXPECT_FALSE(action_client->wait_for_action_server(10ms));
   SetUpServer();
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
   TearDownServer();
