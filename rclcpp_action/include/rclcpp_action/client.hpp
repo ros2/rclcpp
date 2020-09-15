@@ -407,7 +407,7 @@ public:
   /// Asynchronously get the result for an active goal.
   /**
    * \throws exceptions::UnknownGoalHandleError If the goal unknown or already reached a terminal
-   *   state.
+   *   state, or if there was an error requesting the result.
    * \param[in] goal_handle The goal handle for which to get the result.
    * \param[in] result_callback Optional callback that is called when the result is received.
    * \return A future that is set to the goal result when the goal is finished.
@@ -420,6 +420,11 @@ public:
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
+    }
+    if (goal_handle->is_invalidated()) {
+      // This case can happen if there was a failure to send the result request
+      // during the goal response callback
+      throw goal_handle->invalidate_exception_;
     }
     if (result_callback) {
       // This will override any previously registered callback
@@ -511,7 +516,7 @@ public:
     while (it != goal_handles_.end()) {
       typename GoalHandle::SharedPtr goal_handle = it->second.lock();
       if (goal_handle) {
-        goal_handle->invalidate();
+        goal_handle->invalidate(exceptions::UnawareGoalHandleError());
       }
       it = goal_handles_.erase(it);
     }
@@ -642,9 +647,9 @@ private:
           std::lock_guard<std::mutex> lock(goal_handles_mutex_);
           goal_handles_.erase(goal_handle->get_goal_id());
         });
-    } catch (rclcpp::exceptions::RCLError &) {
+    } catch (rclcpp::exceptions::RCLError & ex) {
       // This will cause an exception when the user tries to access the result
-      goal_handle->invalidate();
+      goal_handle->invalidate(exceptions::UnawareGoalHandleError(ex.message));
     }
   }
 

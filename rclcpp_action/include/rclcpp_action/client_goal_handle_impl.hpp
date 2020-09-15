@@ -138,11 +138,20 @@ ClientGoalHandle<ActionT>::set_result_awareness(bool awareness)
 
 template<typename ActionT>
 void
-ClientGoalHandle<ActionT>::invalidate()
+ClientGoalHandle<ActionT>::invalidate(const exceptions::UnawareGoalHandleError & ex)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
+  is_result_aware_ = false;
+  invalidate_exception_ = std::make_exception_ptr(ex);
   status_ = GoalStatus::STATUS_UNKNOWN;
-  result_promise_.set_exception(std::make_exception_ptr(exceptions::UnawareGoalHandleError()));
+  result_promise_.set_exception(invalidate_exception_);
+}
+
+template<typename ActionT>
+bool
+ClientGoalHandle<ActionT>::is_invalidated() const
+{
+  return invalidate_exception_ != nullptr;
 }
 
 template<typename ActionT>
