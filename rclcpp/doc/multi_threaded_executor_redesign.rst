@@ -2,7 +2,7 @@
 :code:`MultiThreadedExecutor` Redesign
 ======================================
 
-:code:`MultiThreadedExecutor` may attempt to execute one executable object multiple times. 
+:code:`MultiThreadedExecutor` may attempt to execute one executable object multiple times.
 This occurs because an executable object can be identified as ready in multiple threads before it has been executed, and each of these threads will then try to execute it.
 To fix this, a general solution should do the following:
 
@@ -14,7 +14,7 @@ Summary of discussion so far
 
 Broadly speaking, two approaches were discussed:
 
-1. **Handle no data in the executor**: If more than one thread is trying to execute the same object and that object is consumed after it is executed once, check for the executable before trying to execute it:
+1. **Handle no data in the executor**: If more than one thread is trying to execute the same entity and that entity is consumed after it is executed once, check for the executable before trying to execute it:
 
     .. code-block:: c++
 
@@ -27,10 +27,10 @@ Broadly speaking, two approaches were discussed:
           }
         }
 
-   :Advantages: 
+   :Advantages:
      * simplicity
      * extends interface in a way that generalizes well for all other types of executable objects (i.e., timers)
-   :Disadvantages: 
+   :Disadvantages:
      * spurious wake up calls
      * needs to be documented well so every class that executes :code:`AnyExecutable` objects is thread-safe and doesn't hide a race condition
 
