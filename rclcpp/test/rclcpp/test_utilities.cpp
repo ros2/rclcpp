@@ -78,3 +78,18 @@ TEST(TestUtilities, multi_init) {
   EXPECT_FALSE(rclcpp::ok(context1));
   EXPECT_FALSE(rclcpp::ok(context2));
 }
+
+TEST(TestUtilities, test_context_basic_access) {
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
+  EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  EXPECT_EQ(std::string{""}, context1->shutdown_reason());
+}
+
+TEST(TestUtilities, test_context_basic_access_const_methods) {
+  auto context1 = std::make_shared<const rclcpp::contexts::DefaultContext>();
+
+  EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
+  EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  // EXPECT_EQ(std::string{""}, context1->shutdown_reason()); not available for const
+}
