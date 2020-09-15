@@ -77,5 +77,26 @@ Broadly speaking, two approaches were discussed:
 Ideas
 -----------------------
 
-* Add a preparation method to get the event after :code:`take_data`
+* Add a preparation method to get the event after :code:`take_data`:
+
+  .. code-block:: c++
+
+     std::shared_ptr<void> & data_;
+
+     // called first
+     void take_data() {
+       data_ = buffer->consume_data();
+     }
+
+     // called second
+     std::shared_ptr<void> get_prepared() {
+       return data_;
+     }
+
+     // called third, with the data returned in the previous step
+     void execute(std::shared_ptr<void> & data) {
+       run_any_callback(data);
+     }
+
+
 * Store conditions in the waitset (like DDS)
