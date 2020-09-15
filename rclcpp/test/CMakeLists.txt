@@ -400,6 +400,16 @@ if(TARGET test_subscription_traits)
   )
   target_link_libraries(test_subscription_traits ${PROJECT_NAME})
 endif()
+ament_add_gtest(test_type_support rclcpp/test_type_support.cpp)
+if(TARGET test_type_support)
+  ament_target_dependencies(test_type_support
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  target_link_libraries(test_type_support ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_find_weak_nodes rclcpp/test_find_weak_nodes.cpp)
 if(TARGET test_find_weak_nodes)
   ament_target_dependencies(test_find_weak_nodes
