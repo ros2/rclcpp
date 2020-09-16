@@ -141,6 +141,10 @@ void
 ClientGoalHandle<ActionT>::invalidate(const exceptions::UnawareGoalHandleError & ex)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
+  // Guard against multiple calls
+  if (is_invalidated()) {
+    return;
+  }
   is_result_aware_ = false;
   invalidate_exception_ = std::make_exception_ptr(ex);
   status_ = GoalStatus::STATUS_UNKNOWN;
