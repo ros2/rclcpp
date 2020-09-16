@@ -15,11 +15,14 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "test_msgs/msg/basic_types.hpp"
+
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 class TestWaitSet : public ::testing::Test
 {
@@ -261,4 +264,40 @@ TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
       wait_set2.add_waitable(qos_event, pub);
     }, std::runtime_error);
   }
+}
+
+/*
+ * Get wait_set from result.
+ */
+TEST_F(TestWaitSet, get_result_from_wait_result) {
+  rclcpp::WaitSet wait_set;
+  auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
+  wait_set.add_guard_condition(guard_condition);
+  guard_condition->trigger();
+
+  rclcpp::WaitResult<rclcpp::WaitSet> result = wait_set.wait();
+  ASSERT_EQ(rclcpp::WaitResultKind::Ready, result.kind());
+  EXPECT_EQ(&wait_set, &result.get_wait_set());
+
+  const rclcpp::WaitResult<rclcpp::WaitSet> const_result(std::move(result));
+  ASSERT_EQ(rclcpp::WaitResultKind::Ready, const_result.kind());
+  EXPECT_EQ(&wait_set, &const_result.get_wait_set());
+}
+
+TEST_F(TestWaitSet, get_result_from_wait_result_not_ready_error) {
+  rclcpp::WaitSet wait_set;
+  auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
+  wait_set.add_guard_condition(guard_condition);
+
+  rclcpp::WaitResult<rclcpp::WaitSet> result = wait_set.wait(std::chrono::milliseconds(10));
+  ASSERT_EQ(rclcpp::WaitResultKind::Timeout, result.kind());
+  RCLCPP_EXPECT_THROW_EQ(
+    result.get_wait_set(),
+    std::runtime_error("cannot access wait set when the result was not ready"));
+
+  const rclcpp::WaitResult<rclcpp::WaitSet> const_result(std::move(result));
+  ASSERT_EQ(rclcpp::WaitResultKind::Timeout, const_result.kind());
+  RCLCPP_EXPECT_THROW_EQ(
+    const_result.get_wait_set(),
+    std::runtime_error("cannot access wait set when the result was not ready"));
 }
