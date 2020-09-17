@@ -82,40 +82,42 @@ TEST_F(TestStaticStorage, iterables_construct_destruct) {
 }
 
 TEST_F(TestStaticStorage, fixed_storage_needs_pruning) {
+  // std::shared_ptr<StaticWaitSet>::reset() is not required for these exceptions, it just
+  // disables the unused return value warning.
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<1, 0, 0, 0, 0, 0>;
     RCLCPP_EXPECT_THROW_EQ(
-      std::make_shared<StaticWaitSet>(),
+      std::make_shared<StaticWaitSet>().reset(),
       std::runtime_error("unexpected condition, fixed storage policy needs pruning"));
   }
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<0, 1, 0, 0, 0, 0>;
     RCLCPP_EXPECT_THROW_EQ(
-      std::make_shared<StaticWaitSet>(),
+      std::make_shared<StaticWaitSet>().reset(),
       std::runtime_error("unexpected condition, fixed storage policy needs pruning"));
   }
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<0, 0, 1, 0, 0, 0>;
     RCLCPP_EXPECT_THROW_EQ(
-      std::make_shared<StaticWaitSet>(),
+      std::make_shared<StaticWaitSet>().reset(),
       std::runtime_error("unexpected condition, fixed storage policy needs pruning"));
   }
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<0, 0, 0, 1, 0, 0>;
     RCLCPP_EXPECT_THROW_EQ(
-      std::make_shared<StaticWaitSet>(),
+      std::make_shared<StaticWaitSet>().reset(),
       std::runtime_error("unexpected condition, fixed storage policy needs pruning"));
   }
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<0, 0, 0, 0, 1, 0>;
     RCLCPP_EXPECT_THROW_EQ(
-      std::make_shared<StaticWaitSet>(),
+      std::make_shared<StaticWaitSet>().reset(),
       std::runtime_error("unexpected condition, fixed storage policy needs pruning"));
   }
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<0, 0, 0, 0, 0, 1>;
     RCLCPP_EXPECT_THROW_EQ(
-      std::make_shared<StaticWaitSet>(),
+      std::make_shared<StaticWaitSet>().reset(),
       std::runtime_error("unexpected condition, fixed storage policy needs pruning"));
   }
 }

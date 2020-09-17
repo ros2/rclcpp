@@ -123,7 +123,6 @@ TEST_F(TestStoragePolicyCommon, rcl_wait_set_add_guard_condition_error) {
 
 TEST_F(TestStoragePolicyCommon, rcl_wait_set_add_timer_error) {
   rclcpp::WaitSet wait_set;
-  // This is long, so it can stick around and be removed
   auto timer = node->create_wall_timer(std::chrono::seconds(100), []() {});
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_wait_set_add_timer, RCL_RET_ERROR);

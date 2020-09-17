@@ -152,6 +152,10 @@ TEST_F(TestDynamicStorage, add_remove_dynamically) {
 
   auto waitable = std::make_shared<TestWaitable>();
   wait_set.add_waitable(waitable);
+  RCLCPP_EXPECT_THROW_EQ(
+    wait_set.add_waitable(waitable),
+    std::runtime_error("waitable already in use by another wait set"));
+
   wait_set.remove_waitable(waitable);
   wait_set.prune_deleted_entities();
   EXPECT_EQ(rclcpp::WaitResultKind::Empty, wait_set.wait().kind());
