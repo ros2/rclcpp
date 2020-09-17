@@ -233,9 +233,9 @@ public:
         }
         if (mask.include_intra_process_waitable) {
           auto local_waitable = inner_subscription->get_intra_process_waitable();
-          inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
           if (nullptr != local_waitable) {
-            // This is the case when intra process is disabled for the subscription.
+            // This is the case when intra process is enabled for the subscription.
+            inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
             this->storage_remove_waitable(std::move(local_waitable));
           }
         }
