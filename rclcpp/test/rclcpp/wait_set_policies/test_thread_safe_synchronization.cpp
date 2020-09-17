@@ -160,7 +160,7 @@ TEST_F(TestThreadSafeStorage, add_remove_dynamically) {
     std::runtime_error("waitable already in use by another wait set"));
   wait_set.remove_waitable(waitable);
   wait_set.prune_deleted_entities();
-  
+
   // Expected behavior of thread-safe is to timeout here
   EXPECT_EQ(rclcpp::WaitResultKind::Timeout, wait_set.wait(std::chrono::milliseconds(10)).kind());
 }

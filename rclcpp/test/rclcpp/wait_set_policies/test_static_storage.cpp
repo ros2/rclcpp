@@ -18,6 +18,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/wait_set.hpp"
+#include "rclcpp/wait_set_policies/static_storage.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
@@ -126,7 +127,8 @@ TEST_F(TestStaticStorage, wait_subscription) {
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
     "topic", 10, [](test_msgs::msg::Empty::SharedPtr) {});
-  rclcpp::StaticWaitSet<1, 0, 0, 0, 0, 0> wait_set({{{subscription}}});
+  rclcpp::SubscriptionWaitSetMask mask{true, true, true};
+  rclcpp::StaticWaitSet<1, 0, 0, 0, 0, 0> wait_set({{{subscription, mask}}});
 
   {
     auto wait_result = wait_set.wait(std::chrono::milliseconds(10));
