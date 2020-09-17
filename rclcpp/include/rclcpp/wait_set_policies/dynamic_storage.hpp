@@ -382,11 +382,13 @@ public:
         return weak_ptr.expired();
       };
     // remove guard conditions which have been deleted
-    guard_conditions_.erase(std::remove_if(guard_conditions_.begin(), guard_conditions_.end(), p));
-    timers_.erase(std::remove_if(timers_.begin(), timers_.end(), p));
-    clients_.erase(std::remove_if(clients_.begin(), clients_.end(), p));
-    services_.erase(std::remove_if(services_.begin(), services_.end(), p));
-    waitables_.erase(std::remove_if(waitables_.begin(), waitables_.end(), p));
+    guard_conditions_.erase(
+      std::remove_if(guard_conditions_.begin(), guard_conditions_.end(), p),
+      guard_conditions_.end());
+    timers_.erase(std::remove_if(timers_.begin(), timers_.end(), p), timers_.end());
+    clients_.erase(std::remove_if(clients_.begin(), clients_.end(), p), clients_.end());
+    services_.erase(std::remove_if(services_.begin(), services_.end(), p), services_.end());
+    waitables_.erase(std::remove_if(waitables_.begin(), waitables_.end(), p), waitables_.end());
   }
 
   void
