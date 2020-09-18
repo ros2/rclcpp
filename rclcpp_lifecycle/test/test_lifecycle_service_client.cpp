@@ -36,6 +36,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
+#include "./mocking_utils/patch.hpp"
+
 using namespace std::chrono_literals;
 
 constexpr char const * lifecycle_node_name = "lc_talker";
@@ -392,4 +394,57 @@ TEST_F(TestLifecycleServiceClient, wait_for_graph_change)
   EXPECT_THROW(
     node_graph->wait_for_graph_change(event, std::chrono::milliseconds(0)),
     rclcpp::exceptions::EventNotRegisteredError);
+}
+
+class TestLifecycleServiceClientRCLErrors : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestLifecycleServiceClientRCLErrors, call_services_rcl_errors) {
+  auto lifecycle_node = std::make_shared<EmptyLifecycleNode>();
+  auto lifecycle_client = std::make_shared<LifecycleServiceClient>("client_with_errors");
+
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp_lifecycle", rcl_lifecycle_state_machine_is_initialized, RCL_RET_ERROR);
+
+  // on_change_state
+  lifecycle_client->change_state(
+    lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  rclcpp::spin_some(lifecycle_client);
+  EXPECT_THROW(
+    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+
+  // on_get_state
+  lifecycle_client->get_state();
+  rclcpp::spin_some(lifecycle_client);
+  EXPECT_THROW(
+    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+
+  // on_get_avilable_states
+  lifecycle_client->get_available_states();
+  rclcpp::spin_some(lifecycle_client);
+  EXPECT_THROW(
+    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+
+  // on_get_available_transitions
+  lifecycle_client->get_available_transitions();
+  rclcpp::spin_some(lifecycle_client);
+  EXPECT_THROW(
+    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+
+  // on_get_transition_graph
+  lifecycle_client->get_transition_graph();
+  rclcpp::spin_some(lifecycle_client);
+  EXPECT_THROW(
+    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
 }
