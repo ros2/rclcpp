@@ -17,6 +17,9 @@
 #include <string>
 #include <memory>
 
+#include "rcl/init.h"
+#include "rcl/logging.h"
+
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
@@ -153,4 +156,57 @@ TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
   EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
 
   rclcpp::shutdown(context1);
+}
+
+
+TEST(TestUtilities, test_context_init_shutdown_fails) {
+  auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
+
+  {
+    auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_init, RCL_RET_ERROR);
+    EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_logging_configure_with_output_handler, RCL_RET_ERROR);
+    EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    context->init(0, nullptr);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+    // This will log a message, no throw expected
+    EXPECT_NO_THROW(context->shutdown(""));
+  }
+
+  {
+    context->init(0, nullptr);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_shutdown, RCL_RET_ERROR);
+    EXPECT_THROW(context->shutdown(""), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    context->init(0, nullptr);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_logging_fini, RCL_RET_ERROR);
+    // This will log a message, no throw expected
+    EXPECT_NO_THROW(context->shutdown(""));
+  }
+
+  {
+    auto context_to_destroy = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+    // This will log a message, no throw expected
+    EXPECT_NO_THROW(
+    {
+      // context_to_destroy.~rclcpp::Context();
+    });
+  }
 }
