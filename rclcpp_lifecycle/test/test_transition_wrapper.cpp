@@ -18,7 +18,11 @@
 #include <utility>
 #include <vector>
 
+#include "rcutils/testing/fault_injection.h"
+
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+
+#include "./mocking_utils/patch.hpp"
 
 class TestTransitionWrapper : public ::testing::Test
 {
@@ -31,8 +35,11 @@ protected:
 class TransitionDerived : public rclcpp_lifecycle::Transition
 {
 public:
+  TransitionDerived(const uint8_t id, const std::string & label)
+  : Transition(id, label) {}
+
   TransitionDerived(
-    uint8_t id, const std::string & label,
+    const uint8_t id, const std::string & label,
     rclcpp_lifecycle::State && start, rclcpp_lifecycle::State && goal)
   : Transition(id, label, std::move(start), std::move(goal)) {}
   void expose_reset()
@@ -125,4 +132,80 @@ TEST_F(TestTransitionWrapper, exceptions) {
   EXPECT_THROW(a->goal_state(), std::runtime_error);
   EXPECT_THROW(a->id(), std::runtime_error);
   EXPECT_THROW(a->label(), std::runtime_error);
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_lifecycle", rcl_lifecycle_transition_init, RCL_RET_ERROR);
+
+    EXPECT_THROW(
+      std::make_shared<TransitionDerived>(1, "one").reset(),
+      std::runtime_error);
+
+    rclcpp_lifecycle::State state1(1, "start_state");
+    rclcpp_lifecycle::State state2(2, "goal_state");
+    EXPECT_THROW(
+      std::make_shared<TransitionDerived>(
+        2, "two", std::move(start_state), std::move(goal_state)).reset(),
+      std::runtime_error);
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_lifecycle", rcl_lifecycle_transition_fini, RCL_RET_ERROR);
+    auto transition1 = std::make_shared<TransitionDerived>(1, "one");
+    EXPECT_NO_THROW(transition1->expose_reset());
+
+    rclcpp_lifecycle::State state1(1, "start_state");
+    rclcpp_lifecycle::State state2(2, "goal_state");
+    auto transition2 =
+      std::make_shared<TransitionDerived>(2, "two", std::move(start_state), std::move(goal_state));
+    EXPECT_NO_THROW(transition2->expose_reset());
+  }
+
+  RCUTILS_FAULT_INJECTION_TEST(
+  {
+    std::shared_ptr<TransitionDerived> transition = nullptr;
+    try {
+      transition = std::make_shared<TransitionDerived>(1, "one");
+    } catch (...) {
+    }
+    if (nullptr != transition) {
+      EXPECT_NO_THROW(transition->expose_reset());
+    }
+  });
+
+  RCUTILS_FAULT_INJECTION_TEST(
+  {
+    std::shared_ptr<TransitionDerived> transition = nullptr;
+    try {
+      {
+        // These will fail due to failed allocations
+        rclcpp_lifecycle::State state1(1, "start_state");
+        rclcpp_lifecycle::State state2(2, "goal_state");
+
+        // Failed allocations and failed rcl init functions
+        transition = std::make_shared<TransitionDerived>(
+          2, "two", std::move(state1), std::move(state2));
+      }
+    } catch (...) {
+    }
+
+    if (nullptr != transition) {
+      EXPECT_NO_THROW(transition->expose_reset());
+    }
+  });
+
+  RCUTILS_FAULT_INJECTION_TEST(
+  {
+    try {
+      // These will fail due to failed allocations
+      rclcpp_lifecycle::State state1(1, "start_state");
+      rclcpp_lifecycle::State state2(2, "goal_state");
+
+      // Failed allocations and failed rcl init functions
+      auto a = std::make_shared<TransitionDerived>(2, "two", std::move(state1), std::move(state2));
+      auto b = std::make_shared<TransitionDerived>(3, "three");
+      *b = *a;
+    } catch (...) {
+    }
+  });
 }
