@@ -435,9 +435,8 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_goal_response_callback_wait
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.goal_response_callback =
     [&goal_response_received]
-      (std::shared_future<typename ActionGoalHandle::SharedPtr> future) mutable
+      (typename ActionGoalHandle::SharedPtr goal_handle) mutable
     {
-      auto goal_handle = future.get();
       if (goal_handle) {
         goal_response_received = true;
       }

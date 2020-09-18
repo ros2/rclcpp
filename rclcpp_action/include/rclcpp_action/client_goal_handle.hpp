@@ -26,6 +26,7 @@
 #include <memory>
 #include <mutex>
 
+#include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
@@ -145,9 +146,14 @@ private:
   set_result(const WrappedResult & wrapped_result);
 
   void
-  invalidate();
+  invalidate(const exceptions::UnawareGoalHandleError & ex);
+
+  bool
+  is_invalidated() const;
 
   GoalInfo info_;
+
+  std::exception_ptr invalidate_exception_{nullptr};
 
   bool is_result_aware_{false};
   std::promise<WrappedResult> result_promise_;
