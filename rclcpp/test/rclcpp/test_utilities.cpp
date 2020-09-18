@@ -93,3 +93,22 @@ TEST(TestUtilities, test_context_basic_access_const_methods) {
   EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
   // EXPECT_EQ(std::string{""}, context1->shutdown_reason()); not available for const
 }
+
+TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  context1->init(0, nullptr);
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+
+  rcl_ret_t ret = rcl_wait_set_init(
+    &wait_set, 0, 2, 0, 0, 0, 0, context1->get_rcl_context().get(),
+    rcl_get_default_allocator());
+  ASSERT_EQ(RCL_RET_OK, ret);
+
+  // Expected usage
+  rcl_guard_condition_t * interrupt_guard_condition =
+    context1->get_interrupt_guard_condition(&wait_set);
+  EXPECT_NE(nullptr, interrupt_guard_condition);
+  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
+
+  rclcpp::shutdown(context1);
+}
