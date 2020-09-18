@@ -138,13 +138,14 @@ TEST_F(TestTransitionWrapper, exceptions) {
       "lib:rclcpp_lifecycle", rcl_lifecycle_transition_init, RCL_RET_ERROR);
 
     EXPECT_THROW(
-      std::make_shared<TransitionDerived>(1, "one"),
+      std::make_shared<TransitionDerived>(1, "one").reset(),
       std::runtime_error);
 
     rclcpp_lifecycle::State state1(1, "start_state");
     rclcpp_lifecycle::State state2(2, "goal_state");
     EXPECT_THROW(
-      std::make_shared<TransitionDerived>(2, "two", std::move(start_state), std::move(goal_state)),
+      std::make_shared<TransitionDerived>(
+        2, "two", std::move(start_state), std::move(goal_state)).reset(),
       std::runtime_error);
   }
   {
