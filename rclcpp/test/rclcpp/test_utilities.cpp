@@ -21,6 +21,8 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
+#include "../mocking_utils/patch.hpp"
+
 TEST(TestUtilities, remove_ros_arguments) {
   const char * const argv[] = {
     "process_name",
@@ -94,6 +96,11 @@ TEST(TestUtilities, test_context_basic_access_const_methods) {
   // EXPECT_EQ(std::string{""}, context1->shutdown_reason()); not available for const
 }
 
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, !=)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, >)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, <)
+
 TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
   auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
   context1->init(0, nullptr);
@@ -107,6 +114,41 @@ TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
   // Expected usage
   rcl_guard_condition_t * interrupt_guard_condition =
     context1->get_interrupt_guard_condition(&wait_set);
+  EXPECT_NE(nullptr, interrupt_guard_condition);
+  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
+    EXPECT_THROW(
+      {interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);},
+      rclcpp::exceptions::RCLError);
+  }
+
+  {
+    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      {context1->release_interrupt_guard_condition(&wait_set);},
+      rclcpp::exceptions::RCLError);
+  }
+
+  {
+    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
+    EXPECT_NO_THROW({context1->release_interrupt_guard_condition(&wait_set, std::nothrow);});
+  }
+
+  {
+    EXPECT_THROW(
+      context1->release_interrupt_guard_condition(nullptr),
+      std::runtime_error);
+  }
+
+  // Test it works after restore mocks
+  interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
   EXPECT_NE(nullptr, interrupt_guard_condition);
   EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
 
