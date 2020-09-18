@@ -82,9 +82,12 @@ TEST_F(TestStaticStorage, iterables_construct_destruct) {
   EXPECT_TRUE(rcl_wait_set_is_valid(&wait_set.get_rcl_wait_set()));
 }
 
+// Because these StaticWaitSet's have templated sizes larger than the input arguments passed
+// to the constructor, their shared-pointer contents will be default constructed to null. This
+// test just checks the appropriate exception is thrown.
+// std::shared_ptr<StaticWaitSet>::reset() is not required for these exceptions, it just
+// disables the unused return value warning of std::make_shared
 TEST_F(TestStaticStorage, fixed_storage_needs_pruning) {
-  // std::shared_ptr<StaticWaitSet>::reset() is not required for these exceptions, it just
-  // disables the unused return value warning.
   {
     using StaticWaitSet = rclcpp::StaticWaitSet<1, 0, 0, 0, 0, 0>;
     RCLCPP_EXPECT_THROW_EQ(
