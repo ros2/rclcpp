@@ -278,7 +278,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   size_t
-  count_graph_users() = 0;
+  count_graph_users() const = 0;
 
   /// Return the topic endpoint information about publishers on a given topic.
   /**
