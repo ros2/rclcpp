@@ -3,6 +3,16 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+5.0.0 (2020-09-18)
+------------------
+* Increase test coverage of rclcpp_lifecycle to 96% (`#1298 <https://github.com/ros2/rclcpp/issues/1298>`_)
+* Log error instead of throwing exception in Transition and State reset(), mark no except (`#1297 <https://github.com/ros2/rclcpp/issues/1297>`_)
+* Remove unused private function (rclcpp::Node and rclcpp_lifecycle::Node) (`#1294 <https://github.com/ros2/rclcpp/issues/1294>`_)
+* Remove rmw-dependent unit-test checks (`#1293 <https://github.com/ros2/rclcpp/issues/1293>`_)
+* Added missing tests for rclcpp lifecycle (`#1240 <https://github.com/ros2/rclcpp/issues/1240>`_)
+* Warn about unused result of add_on_set_parameters_callback (`#1238 <https://github.com/ros2/rclcpp/issues/1238>`_)
+* Contributors: Alejandro Hernández Cordero, Jacob Perron, Stephen Brawner
+
 4.0.0 (2020-07-09)
 ------------------
 * Remove deprecated set_on_parameters_set_callback function (`#1199 <https://github.com/ros2/rclcpp/issues/1199>`_)

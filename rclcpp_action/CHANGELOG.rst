@@ -3,6 +3,13 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+5.0.0 (2020-09-18)
+------------------
+* Pass goal handle to goal response callback instead of a future (`#1311 <https://github.com/ros2/rclcpp/issues/1311>`_)
+* Remove deprecated client goal handle method for getting result (`#1309 <https://github.com/ros2/rclcpp/issues/1309>`_)
+* Increase test timeout necessary for Connext (`#1256 <https://github.com/ros2/rclcpp/issues/1256>`_)
+* Contributors: Dirk Thomas, Jacob Perron
+
 4.0.0 (2020-07-09)
 ------------------
 * Bump to QD to level 3 and fixed links (`#1158 <https://github.com/ros2/rclcpp/issues/1158>`_)
