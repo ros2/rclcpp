@@ -20,10 +20,10 @@
 #include "rcl/init.h"
 #include "rcl/logging.h"
 
-#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 #include "../mocking_utils/patch.hpp"
 
