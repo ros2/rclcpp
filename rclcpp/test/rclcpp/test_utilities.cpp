@@ -160,9 +160,8 @@ TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
 
 
 TEST(TestUtilities, test_context_init_shutdown_fails) {
-  auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
-
   {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
     auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_init, RCL_RET_ERROR);
@@ -177,6 +176,7 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
   }
 
   {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
     context->init(0, nullptr);
     auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
@@ -185,6 +185,7 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
   }
 
   {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
     context->init(0, nullptr);
     auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp", rcl_shutdown, RCL_RET_ERROR);
@@ -192,6 +193,7 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
   }
 
   {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
     context->init(0, nullptr);
     auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp", rcl_logging_fini, RCL_RET_ERROR);
