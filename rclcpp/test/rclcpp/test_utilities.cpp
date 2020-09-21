@@ -204,9 +204,6 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
     auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     // This will log a message, no throw expected
-    EXPECT_NO_THROW(
-    {
-      // context_to_destroy.~rclcpp::Context();
-    });
+    EXPECT_NO_THROW({context_to_destroy.reset();});
   }
 }
