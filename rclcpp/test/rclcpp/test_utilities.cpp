@@ -20,6 +20,7 @@
 #include "rcl/init.h"
 #include "rcl/logging.h"
 
+#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
@@ -107,8 +108,9 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, <)
 TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
   auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
   context1->init(0, nullptr);
-  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  RCLCPP_SCOPE_EXIT(rclcpp::shutdown(context1););
 
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret = rcl_wait_set_init(
     &wait_set, 0, 2, 0, 0, 0, 0, context1->get_rcl_context().get(),
     rcl_get_default_allocator());
@@ -154,8 +156,6 @@ TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
   interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
   EXPECT_NE(nullptr, interrupt_guard_condition);
   EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
-
-  rclcpp::shutdown(context1);
 }
 
 
