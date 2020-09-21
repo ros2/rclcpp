@@ -101,7 +101,6 @@ protected:
 
 TEST_F(TestNodeTopics, add_publisher)
 {
-
   auto publisher = std::make_shared<TestPublisher>(node.get());
   auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   EXPECT_NO_THROW(node_topics->add_publisher(publisher, callback_group));

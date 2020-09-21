@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "rcl/graph.h"
@@ -34,9 +35,9 @@
 namespace
 {
 
-const std::string node_name = "node";
-const std::string node_namespace = "ns";
-const std::string absolute_namespace = "/" + node_namespace;
+constexpr char node_name[] = "node";
+constexpr char node_namespace[] = "ns";
+constexpr char absolute_namespace[] = "/ns";
 
 }  // namespace
 
@@ -313,10 +314,10 @@ TEST_F(TestNodeGraph, get_info_by_topic)
 
   auto publisher_endpoint_info = publishers[0];
   const auto const_publisher_endpoint_info = publisher_endpoint_info;
-  EXPECT_EQ(node_name, publisher_endpoint_info.node_name());
-  EXPECT_EQ(node_name, const_publisher_endpoint_info.node_name());
-  EXPECT_EQ(absolute_namespace, publisher_endpoint_info.node_namespace().c_str());
-  EXPECT_EQ(absolute_namespace, const_publisher_endpoint_info.node_namespace().c_str());
+  EXPECT_STREQ(node_name, publisher_endpoint_info.node_name().c_str());
+  EXPECT_STREQ(node_name, const_publisher_endpoint_info.node_name().c_str());
+  EXPECT_STREQ(absolute_namespace, publisher_endpoint_info.node_namespace().c_str());
+  EXPECT_STREQ(absolute_namespace, const_publisher_endpoint_info.node_namespace().c_str());
   EXPECT_STREQ("test_msgs/msg/Empty", publisher_endpoint_info.topic_type().c_str());
   EXPECT_STREQ("test_msgs/msg/Empty", const_publisher_endpoint_info.topic_type().c_str());
   EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_endpoint_info.endpoint_type());
@@ -395,7 +396,7 @@ TEST_F(TestNodeGraph, get_info_by_topic_rcl_remap_topic_name_nullptr)
   ASSERT_NE(nullptr, some_string);
   auto mock =
     mocking_utils::patch(
-    "lib:rclcpp", rcl_remap_topic_name, [some_string](
+    "lib:rclcpp", rcl_remap_topic_name, [&some_string](
       const rcl_arguments_t *, const rcl_arguments_t *, const char *, const char *, const char *,
       rcl_allocator_t, char ** output_name)
     {

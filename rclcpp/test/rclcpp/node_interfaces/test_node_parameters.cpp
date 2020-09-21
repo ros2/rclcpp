@@ -57,7 +57,6 @@ public:
 protected:
   std::shared_ptr<rclcpp::Node> node;
   rclcpp::node_interfaces::NodeParameters * node_parameters;
-
 };
 
 TEST_F(TestNodeParameters, construct_destruct_rcl_errors) {

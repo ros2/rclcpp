@@ -82,6 +82,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_error) {
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_ERROR);
 
+  // This function is called only if rcl_node_init fails, so both mocked functions are required
   // This just logs an error, so behavior shouldn't change
   auto mock_guard_condition_fini = mocking_utils::inject_on_return(
     "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
@@ -95,6 +96,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_rcl_invalid_node_name) {
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_NODE_INVALID_NAME);
 
+  // `rmw_validate_node_name` is only called if `rcl_node_init` returns INVALID_NAME
   auto mock_validate_node_name = mocking_utils::patch_and_return(
     "lib:rclcpp", rmw_validate_node_name, RMW_RET_ERROR);
 
@@ -107,6 +109,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_rcl_invalid_node_name_inva
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_NODE_INVALID_NAME);
 
+  // `rmw_validate_node_name` is only called if `rcl_node_init` returns INVALID_NAME
   auto mock_validate_node_name = mocking_utils::patch_and_return(
     "lib:rclcpp", rmw_validate_node_name, RMW_RET_INVALID_ARGUMENT);
 
@@ -119,6 +122,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_rcl_invalid_node_name_vali
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_NODE_INVALID_NAME);
 
+  // `rmw_validate_node_name` is only called if `rcl_node_init` returns INVALID_NAME
   auto mock = mocking_utils::patch(
     "lib:rclcpp", rmw_validate_node_name, [](const char *, int * validation_result, size_t *)
     {
@@ -135,6 +139,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_rcl_invalid_namespace) {
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_NODE_INVALID_NAMESPACE);
 
+  // `rmw_validate_namespace` is only called if `rcl_node_init` returns INVALID_NAMESPACE
   auto mock_validate_namespace = mocking_utils::patch_and_return(
     "lib:rclcpp", rmw_validate_namespace, RMW_RET_ERROR);
 
@@ -147,6 +152,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_rcl_invalid_namespace_rmw_
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_NODE_INVALID_NAMESPACE);
 
+  // `rmw_validate_namespace` is only called if `rcl_node_init` returns INVALID_NAMESPACE
   auto mock_validate_namespace = mocking_utils::patch_and_return(
     "lib:rclcpp", rmw_validate_namespace, RMW_RET_INVALID_ARGUMENT);
 
@@ -159,6 +165,7 @@ TEST_F(TestNodeBase, construct_destruct_rcl_node_init_rcl_invalid_namespace_vali
   auto mock_node_init = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_node_init, RCL_RET_NODE_INVALID_NAMESPACE);
 
+  // `rmw_validate_namespace` is only called if `rcl_node_init` returns INVALID_NAMESPACE
   auto mock = mocking_utils::patch(
     "lib:rclcpp", rmw_validate_namespace, [](const char *, int * validation_result, size_t *)
     {

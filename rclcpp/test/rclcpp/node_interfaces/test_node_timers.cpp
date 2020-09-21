@@ -49,7 +49,6 @@ public:
     node_timers =
       dynamic_cast<rclcpp::node_interfaces::NodeTimers *>(node->get_node_timers_interface().get());
     ASSERT_NE(nullptr, node_timers);
-
   }
 
   void TearDown()
