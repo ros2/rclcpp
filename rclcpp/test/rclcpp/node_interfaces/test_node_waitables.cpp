@@ -22,6 +22,9 @@
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "../../mocking_utils/patch.hpp"
+#include "../../utils/rclcpp_gtest_macros.hpp"
+
 class TestWaitable : public rclcpp::Waitable
 {
 public:
@@ -36,23 +39,26 @@ public:
   void SetUp()
   {
     rclcpp::init(0, nullptr);
+    node = std::make_shared<rclcpp::Node>("node", "ns");
+
+    node_waitables =
+      dynamic_cast<rclcpp::node_interfaces::NodeWaitables *>(
+      node->get_node_waitables_interface().get());
+    ASSERT_NE(nullptr, node_waitables);
   }
 
   void TearDown()
   {
     rclcpp::shutdown();
   }
+
+protected:
+  std::shared_ptr<rclcpp::Node> node;
+  rclcpp::node_interfaces::NodeWaitables * node_waitables;
 };
 
 TEST_F(TestNodeWaitables, add_remove_waitable)
 {
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
-
-  auto * node_waitables =
-    dynamic_cast<rclcpp::node_interfaces::NodeWaitables *>(
-    node->get_node_waitables_interface().get());
-  ASSERT_NE(nullptr, node_waitables);
-
   std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns");
 
   auto callback_group1 = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -60,9 +66,25 @@ TEST_F(TestNodeWaitables, add_remove_waitable)
   auto waitable = std::make_shared<TestWaitable>();
   EXPECT_NO_THROW(
     node_waitables->add_waitable(waitable, callback_group1));
-  EXPECT_THROW(
+  RCLCPP_EXPECT_THROW_EQ(
     node_waitables->add_waitable(waitable, callback_group2),
-    std::runtime_error);
+    std::runtime_error("Cannot create waitable, group not in node."));
   EXPECT_NO_THROW(node_waitables->remove_waitable(waitable, callback_group1));
   EXPECT_NO_THROW(node_waitables->remove_waitable(waitable, callback_group2));
+
+  auto waitable2 = std::make_shared<TestWaitable>();
+  EXPECT_NO_THROW(node_waitables->add_waitable(waitable2, nullptr));
+  EXPECT_NO_THROW(node_waitables->remove_waitable(waitable2, nullptr));
+}
+
+TEST_F(TestNodeWaitables, add_waitable_rcl_trigger_guard_condition_error)
+{
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  auto waitable = std::make_shared<TestWaitable>();
+
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_waitables->add_waitable(waitable, callback_group),
+    std::runtime_error("Failed to notify wait set on waitable creation: error not set"));
 }
