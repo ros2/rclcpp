@@ -645,6 +645,11 @@ if(TARGET test_executor)
   target_link_libraries(test_executor ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_graph_listener rclcpp/test_graph_listener.cpp)
+if(TARGET test_graph_listener)
+  target_link_libraries(test_graph_listener ${PROJECT_NAME})
+endif()
+
 # Install test resources
 install(
   DIRECTORY resources
