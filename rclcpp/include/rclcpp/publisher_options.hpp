@@ -80,10 +80,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result = rcl_publisher_get_default_options();
-    using AllocatorTraits = std::allocator_traits<Allocator>;
-    using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-    auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
-    result.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc);
+    result.allocator = rclcpp::allocator::get_rcl_allocator(*this->get_allocator());
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_publisher_options.require_unique_network_flow_endpoints =
       this->require_unique_network_flow_endpoints;
