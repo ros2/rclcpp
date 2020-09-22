@@ -21,6 +21,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "rcl/allocator.h"
+
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/detail/rmw_implementation_specific_subscription_payload.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
@@ -103,7 +105,8 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   explicit SubscriptionOptionsWithAllocator(
     const SubscriptionOptionsBase & subscription_options_base)
   : SubscriptionOptionsBase(subscription_options_base)
-  {}
+  {
+  }
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
   /**
@@ -115,7 +118,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result = rcl_subscription_get_default_options();
-    result.allocator = this->get_rcl_allocator();
+    result.allocator = rcl_get_default_allocator();
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
     result.rmw_subscription_options.require_unique_network_flow_endpoints =
@@ -167,7 +170,7 @@ private:
       plain_allocator_storage_ =
         std::make_shared<PlainAllocator>(*this->get_allocator());
     }
-    return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
+    return rcl_get_default_allocator();
   }
 
   // This is a temporal workaround, to make sure that get_allocator()

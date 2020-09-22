@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "rcl/allocator.h"
 #include "rcl/publisher.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
@@ -77,7 +78,8 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   /// Constructor using base class as input.
   explicit PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)
   : PublisherOptionsBase(publisher_options_base)
-  {}
+  {
+  }
 
   /// Convert this class, and a rclcpp::QoS, into an rcl_publisher_options_t.
   template<typename MessageT>
@@ -85,7 +87,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result = rcl_publisher_get_default_options();
-    result.allocator = this->get_rcl_allocator();
+    result.allocator = rcl_get_default_allocator();
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_publisher_options.require_unique_network_flow_endpoints =
       this->require_unique_network_flow_endpoints;
@@ -97,7 +99,6 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
 
     return result;
   }
-
 
   /// Get the allocator, creating one if needed.
   std::shared_ptr<Allocator>
@@ -123,7 +124,7 @@ private:
       plain_allocator_storage_ =
         std::make_shared<PlainAllocator>(*this->get_allocator());
     }
-    return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
+    return rcl_get_default_allocator();
   }
 
   // This is a temporal workaround, to make sure that get_allocator()
