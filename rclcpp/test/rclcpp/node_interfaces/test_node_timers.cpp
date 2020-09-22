@@ -22,6 +22,9 @@
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "../../mocking_utils/patch.hpp"
+#include "../../utils/rclcpp_gtest_macros.hpp"
+
 class TestTimer : public rclcpp::TimerBase
 {
 public:
@@ -39,23 +42,27 @@ public:
   void SetUp()
   {
     rclcpp::init(0, nullptr);
+    node = std::make_shared<rclcpp::Node>("node", "ns");
+
+    // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
+    // the proper type is being tested and covered.
+    node_timers =
+      dynamic_cast<rclcpp::node_interfaces::NodeTimers *>(node->get_node_timers_interface().get());
+    ASSERT_NE(nullptr, node_timers);
   }
 
   void TearDown()
   {
     rclcpp::shutdown();
   }
+
+protected:
+  std::shared_ptr<rclcpp::Node> node;
+  rclcpp::node_interfaces::NodeTimers * node_timers;
 };
 
 TEST_F(TestNodeTimers, add_timer)
 {
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
-
-  // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
-  // the proper type is being tested and covered.
-  auto node_timers =
-    dynamic_cast<rclcpp::node_interfaces::NodeTimers *>(node->get_node_timers_interface().get());
-  ASSERT_NE(nullptr, node_timers);
   auto timer = std::make_shared<TestTimer>(node.get());
   auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   EXPECT_NO_THROW(node_timers->add_timer(timer, callback_group));
@@ -65,7 +72,19 @@ TEST_F(TestNodeTimers, add_timer)
 
   auto callback_group_in_different_node =
     different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  EXPECT_THROW(
+  RCLCPP_EXPECT_THROW_EQ(
     node_timers->add_timer(timer, callback_group_in_different_node),
-    std::runtime_error);
+    std::runtime_error("Cannot create timer, group not in node."));
+}
+
+TEST_F(TestNodeTimers, add_timer_rcl_trigger_guard_condition_error)
+{
+  auto timer = std::make_shared<TestTimer>(node.get());
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_timers->add_timer(timer, callback_group),
+    std::runtime_error("Failed to notify wait set on timer creation: error not set"));
 }

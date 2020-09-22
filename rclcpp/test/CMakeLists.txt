@@ -173,7 +173,7 @@ endif()
 ament_add_gtest(test_node_interfaces__node_base
   rclcpp/node_interfaces/test_node_base.cpp)
 if(TARGET test_node_interfaces__node_base)
-  target_link_libraries(test_node_interfaces__node_base ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_base ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_clock
   rclcpp/node_interfaces/test_node_clock.cpp)
@@ -186,22 +186,22 @@ if(TARGET test_node_interfaces__node_graph)
   ament_target_dependencies(
     test_node_interfaces__node_graph
     "test_msgs")
-  target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_parameters
   rclcpp/node_interfaces/test_node_parameters.cpp)
 if(TARGET test_node_interfaces__node_parameters)
-  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_services
   rclcpp/node_interfaces/test_node_services.cpp)
 if(TARGET test_node_interfaces__node_services)
-  target_link_libraries(test_node_interfaces__node_services ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_services ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_timers
   rclcpp/node_interfaces/test_node_timers.cpp)
 if(TARGET test_node_interfaces__node_timers)
-  target_link_libraries(test_node_interfaces__node_timers ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_timers ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_topics
   rclcpp/node_interfaces/test_node_topics.cpp)
@@ -209,12 +209,12 @@ if(TARGET test_node_interfaces__node_topics)
   ament_target_dependencies(
     test_node_interfaces__node_topics
     "test_msgs")
-  target_link_libraries(test_node_interfaces__node_topics ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_topics ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_waitables
   rclcpp/node_interfaces/test_node_waitables.cpp)
 if(TARGET test_node_interfaces__node_waitables)
-  target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME})
+  target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME} mimick)
 endif()
 
 # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
