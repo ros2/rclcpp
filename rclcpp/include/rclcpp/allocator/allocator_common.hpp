@@ -39,42 +39,40 @@ void * retyped_allocate(size_t size, void * untyped_allocator)
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
 
-template<typename T, typename Alloc>
+template<typename Alloc>
 void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
   if (!typed_allocator) {
     throw std::runtime_error("Received incorrect allocator type");
   }
-  auto typed_ptr = static_cast<T *>(untyped_pointer);
+  auto typed_ptr = static_cast<typename Alloc::value_type *>(untyped_pointer);
   std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);
 }
 
-template<typename T, typename Alloc>
+template<typename Alloc>
 void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
   if (!typed_allocator) {
     throw std::runtime_error("Received incorrect allocator type");
   }
-  auto typed_ptr = static_cast<T *>(untyped_pointer);
+  auto typed_ptr = static_cast<typename Alloc::value_type *>(untyped_pointer);
   std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
 
+}  // namespace allocator
 
 // Convert a std::allocator_traits-formatted Allocator into an rcl allocator
-template<
-  typename T,
-  typename Alloc,
-  typename std::enable_if<!std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
+template<typename Alloc>
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
 #ifndef _WIN32
-  rcl_allocator.allocate = &retyped_allocate<Alloc>;
-  rcl_allocator.deallocate = &retyped_deallocate<T, Alloc>;
-  rcl_allocator.reallocate = &retyped_reallocate<T, Alloc>;
+  rcl_allocator.allocate = &allocator::retyped_allocate<Alloc>;
+  rcl_allocator.deallocate = &allocator::retyped_deallocate<Alloc>;
+  rcl_allocator.reallocate = &allocator::retyped_reallocate<Alloc>;
   rcl_allocator.state = &allocator;
 #else
   (void)allocator;  // Remove warning
@@ -82,18 +80,13 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   return rcl_allocator;
 }
 
-// TODO(jacquelinekay) Workaround for an incomplete implementation of std::allocator<void>
-template<
-  typename T,
-  typename Alloc,
-  typename std::enable_if<std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
-rcl_allocator_t get_rcl_allocator(Alloc & allocator)
+template <typename T>
+rcl_allocator_t get_rcl_allocator(std::allocator<T>& allocator)
 {
-  (void)allocator;
+  (void)allocator;  // Remove warning
   return rcl_get_default_allocator();
 }
 
-}  // namespace allocator
 }  // namespace rclcpp
 
 #endif  // RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_

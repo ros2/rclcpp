@@ -61,7 +61,7 @@ public:
     message_allocator_ = std::make_shared<MessageAlloc>();
     serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>();
     buffer_allocator_ = std::make_shared<BufferAlloc>();
-    rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
+    rcutils_allocator_ = get_rcl_allocator(*buffer_allocator_.get());
   }
 
   explicit MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
@@ -69,7 +69,7 @@ public:
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
     serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>(*allocator.get());
     buffer_allocator_ = std::make_shared<BufferAlloc>(*allocator.get());
-    rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
+    rcutils_allocator_ = get_rcl_allocator(*buffer_allocator_.get());
   }
 
   virtual ~MessageMemoryStrategy() = default;

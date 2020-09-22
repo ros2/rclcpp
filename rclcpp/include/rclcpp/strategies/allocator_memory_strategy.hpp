@@ -437,7 +437,7 @@ public:
 
   rcl_allocator_t get_allocator() override
   {
-    return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
+    return get_rcl_allocator(*allocator_.get());
   }
 
   size_t number_of_ready_subscriptions() const override
