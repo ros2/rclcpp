@@ -480,7 +480,7 @@ ament_add_gtest(test_utilities rclcpp/test_utilities.cpp
 if(TARGET test_utilities)
   ament_target_dependencies(test_utilities
     "rcl")
-  target_link_libraries(test_utilities ${PROJECT_NAME})
+  target_link_libraries(test_utilities ${PROJECT_NAME} mimick)
 endif()
 
 ament_add_gtest(test_init rclcpp/test_init.cpp
