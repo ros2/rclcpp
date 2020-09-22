@@ -299,12 +299,13 @@ endif()
 ament_add_gtest(test_publisher rclcpp/test_publisher.cpp)
 if(TARGET test_publisher)
   ament_target_dependencies(test_publisher
+    "rcl"
     "rmw"
     "rosidl_runtime_cpp"
     "rosidl_typesupport_cpp"
     "test_msgs"
   )
-  target_link_libraries(test_publisher ${PROJECT_NAME})
+  target_link_libraries(test_publisher ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_publisher_subscription_count_api rclcpp/test_publisher_subscription_count_api.cpp)
 if(TARGET test_publisher_subscription_count_api)
@@ -386,7 +387,7 @@ if(TARGET test_subscription)
     "rosidl_typesupport_cpp"
     "test_msgs"
   )
-  target_link_libraries(test_subscription ${PROJECT_NAME})
+  target_link_libraries(test_subscription ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_subscription_publisher_count_api rclcpp/test_subscription_publisher_count_api.cpp)
 if(TARGET test_subscription_publisher_count_api)

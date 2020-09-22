@@ -18,8 +18,13 @@
 #include <memory>
 #include <vector>
 
+#include "rcl/publisher.h"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include "../mocking_utils/patch.hpp"
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
 
@@ -257,5 +262,180 @@ TEST_F(TestPublisher, basic_getters) {
 
     // Test == operator of publisher with rmw_gid_t
     EXPECT_EQ(publisher, publisher_rmw_gid);
+  }
+}
+
+TEST_F(TestPublisher, rcl_publisher_init_error) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_publisher_init, RCL_RET_ERROR);
+  // Failure in rcl_publisher_fini should just log error
+  EXPECT_THROW(
+    node->create_publisher<test_msgs::msg::Empty>("topic", 10).reset(),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestPublisher, rcl_publisher_get_rmw_handle_error) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_publisher_get_rmw_handle, nullptr);
+  RCLCPP_EXPECT_THROW_EQ(
+    node->create_publisher<test_msgs::msg::Empty>("topic", 10),
+    std::runtime_error("failed to get rmw handle: error not set"));
+}
+
+TEST_F(TestPublisher, rcl_publisher_get_gid_for_publisher_error) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_get_gid_for_publisher, RMW_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node->create_publisher<test_msgs::msg::Empty>("topic", 10),
+    std::runtime_error("failed to get publisher gid: error not set"));
+}
+
+TEST_F(TestPublisher, rcl_publisher_fini_error) {
+  initialize();
+  auto mock = mocking_utils::inject_on_return("lib:rclcpp", rcl_publisher_fini, RCL_RET_ERROR);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  ASSERT_EQ(1, publisher.use_count());
+  EXPECT_NO_THROW(publisher.reset());
+}
+
+TEST_F(TestPublisher, rcl_publisher_get_options_error) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_publisher_get_options, nullptr);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  RCLCPP_EXPECT_THROW_EQ(
+    publisher->get_queue_size(),
+    std::runtime_error("failed to get publisher options: error not set"));
+}
+
+TEST_F(TestPublisher, rcl_publisher_get_subscription_count_publisher_invalid) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_publisher_get_subscription_count, RCL_RET_PUBLISHER_INVALID);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  EXPECT_THROW(
+    publisher->get_subscription_count(),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestPublisher, rcl_publisher_get_actual_qos_error) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_publisher_get_actual_qos, nullptr);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  RCLCPP_EXPECT_THROW_EQ(
+    publisher->get_actual_qos(),
+    std::runtime_error("failed to get qos settings: error not set"));
+}
+
+TEST_F(TestPublisher, publishers_equal_rmw_compare_gids_error) {
+  initialize();
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_compare_gids_equal, RMW_RET_ERROR);
+  const auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  const rmw_gid_t * gid = nullptr;
+  auto throwing_fn = [publisher, gid]()
+    {
+      // The == operator is expected to throw here, but this lambda avoids unused result warning
+      return (*publisher.get() == gid) ? true : false;
+    };
+
+  RCLCPP_EXPECT_THROW_EQ(
+    throwing_fn(),
+    std::runtime_error("failed to compare gids: error not set"));
+}
+
+TEST_F(TestPublisher, intra_process_publish_failures) {
+  initialize();
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10, options);
+
+  auto msg_unique = std::make_unique<test_msgs::msg::Empty>();
+  EXPECT_NO_THROW(publisher->publish(std::move(msg_unique)));
+
+  rclcpp::SerializedMessage serialized_msg;
+  RCLCPP_EXPECT_THROW_EQ(
+    publisher->publish(serialized_msg),
+    std::runtime_error("storing serialized messages in intra process is not supported yet"));
+
+  std::allocator<void> allocator;
+  {
+    rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
+    RCLCPP_EXPECT_THROW_EQ(
+      publisher->publish(std::move(loaned_msg)),
+      std::runtime_error("storing loaned messages in intra process is not supported yet"));
+  }
+
+  {
+    rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
+    loaned_msg.release();
+    RCLCPP_EXPECT_THROW_EQ(
+      publisher->publish(std::move(loaned_msg)),
+      std::runtime_error("loaned message is not valid"));
+  }
+}
+
+TEST_F(TestPublisher, inter_process_publish_failures) {
+  initialize();
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10, options);
+
+  auto msg_unique = std::make_unique<test_msgs::msg::Empty>();
+  EXPECT_NO_THROW(publisher->publish(std::move(msg_unique)));
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_publish, RCL_RET_PUBLISHER_INVALID);
+    test_msgs::msg::Empty msg;
+    EXPECT_THROW(publisher->publish(msg), rclcpp::exceptions::RCLError);
+  }
+
+  rclcpp::SerializedMessage serialized_msg;
+  EXPECT_NO_THROW(publisher->publish(serialized_msg));
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publish_serialized_message, RCL_RET_ERROR);
+    EXPECT_THROW(publisher->publish(serialized_msg), rclcpp::exceptions::RCLError);
+  }
+
+  std::allocator<void> allocator;
+  rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
+  EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
+}
+
+template<typename MessageT, typename AllocatorT = std::allocator<void>>
+class TestPublisherProtectedMethods : public rclcpp::Publisher<MessageT, AllocatorT>
+{
+public:
+  using rclcpp::Publisher<MessageT, AllocatorT>::Publisher;
+
+  void publish_loaned_message(MessageT * msg)
+  {
+    this->do_loaned_message_publish(msg);
+  }
+};
+
+TEST_F(TestPublisher, do_loaned_message_publish_error) {
+  initialize();
+  using PublisherT = TestPublisherProtectedMethods<test_msgs::msg::Empty, std::allocator<void>>;
+  auto publisher =
+    node->create_publisher<test_msgs::msg::Empty, std::allocator<void>, PublisherT>("topic", 10);
+
+  auto msg = std::make_shared<test_msgs::msg::Empty>();
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publish_loaned_message, RCL_RET_PUBLISHER_INVALID);
+    EXPECT_THROW(publisher->publish_loaned_message(msg.get()), rclcpp::exceptions::RCLError);
+  }
+}
+
+TEST_F(TestPublisher, run_event_handlers) {
+  initialize();
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  for (const auto & handler : publisher->get_event_handlers()) {
+    EXPECT_NO_THROW(handler->execute());
   }
 }
