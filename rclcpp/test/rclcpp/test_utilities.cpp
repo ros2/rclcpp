@@ -17,9 +17,15 @@
 #include <string>
 #include <memory>
 
+#include "rcl/init.h"
+#include "rcl/logging.h"
+
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/scope_exit.hpp"
+
+#include "../mocking_utils/patch.hpp"
 
 TEST(TestUtilities, remove_ros_arguments) {
   const char * const argv[] = {
@@ -77,4 +83,129 @@ TEST(TestUtilities, multi_init) {
 
   EXPECT_FALSE(rclcpp::ok(context1));
   EXPECT_FALSE(rclcpp::ok(context2));
+}
+
+TEST(TestUtilities, test_context_basic_access) {
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
+  EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  EXPECT_EQ(std::string{""}, context1->shutdown_reason());
+}
+
+TEST(TestUtilities, test_context_basic_access_const_methods) {
+  auto context1 = std::make_shared<const rclcpp::contexts::DefaultContext>();
+
+  EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
+  EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  // EXPECT_EQ(std::string{""}, context1->shutdown_reason()); not available for const
+}
+
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, !=)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, >)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, <)
+
+TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  context1->init(0, nullptr);
+  RCLCPP_SCOPE_EXIT(rclcpp::shutdown(context1););
+
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  rcl_ret_t ret = rcl_wait_set_init(
+    &wait_set, 0, 2, 0, 0, 0, 0, context1->get_rcl_context().get(),
+    rcl_get_default_allocator());
+  ASSERT_EQ(RCL_RET_OK, ret);
+
+  // Expected usage
+  rcl_guard_condition_t * interrupt_guard_condition =
+    context1->get_interrupt_guard_condition(&wait_set);
+  EXPECT_NE(nullptr, interrupt_guard_condition);
+  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
+    EXPECT_THROW(
+      {interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);},
+      rclcpp::exceptions::RCLError);
+  }
+
+  {
+    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      {context1->release_interrupt_guard_condition(&wait_set);},
+      rclcpp::exceptions::RCLError);
+  }
+
+  {
+    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
+    EXPECT_NO_THROW({context1->release_interrupt_guard_condition(&wait_set, std::nothrow);});
+  }
+
+  {
+    EXPECT_THROW(
+      context1->release_interrupt_guard_condition(nullptr),
+      std::runtime_error);
+  }
+
+  // Test it works after restore mocks
+  interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
+  EXPECT_NE(nullptr, interrupt_guard_condition);
+  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
+}
+
+
+TEST(TestUtilities, test_context_init_shutdown_fails) {
+  {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_init, RCL_RET_ERROR);
+    EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_logging_configure_with_output_handler, RCL_RET_ERROR);
+    EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
+    context->init(0, nullptr);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+    // This will log a message, no throw expected
+    EXPECT_NO_THROW(context->shutdown(""));
+  }
+
+  {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
+    context->init(0, nullptr);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_shutdown, RCL_RET_ERROR);
+    EXPECT_THROW(context->shutdown(""), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
+    context->init(0, nullptr);
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_logging_fini, RCL_RET_ERROR);
+    // This will log a message, no throw expected
+    EXPECT_NO_THROW(context->shutdown(""));
+  }
+
+  {
+    auto context_to_destroy = std::make_shared<rclcpp::contexts::DefaultContext>();
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+    // This will log a message, no throw expected
+    EXPECT_NO_THROW({context_to_destroy.reset();});
+  }
 }
