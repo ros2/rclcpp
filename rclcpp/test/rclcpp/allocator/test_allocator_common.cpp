@@ -51,7 +51,8 @@ TEST(TestAllocatorCommon, get_rcl_allocator) {
   EXPECT_NE(nullptr, rcl_allocator.allocate);
   EXPECT_NE(nullptr, rcl_allocator.deallocate);
   EXPECT_NE(nullptr, rcl_allocator.reallocate);
-  EXPECT_NE(nullptr, rcl_allocator.state);
+  EXPECT_NE(nullptr, rcl_allocator.zero_allocate);
+  // Not testing state as that may or may not be null depending on platform
 }
 
 TEST(TestAllocatorCommon, get_void_rcl_allocator) {
@@ -61,5 +62,6 @@ TEST(TestAllocatorCommon, get_void_rcl_allocator) {
   EXPECT_NE(nullptr, rcl_allocator.allocate);
   EXPECT_NE(nullptr, rcl_allocator.deallocate);
   EXPECT_NE(nullptr, rcl_allocator.reallocate);
-  EXPECT_EQ(nullptr, rcl_allocator.state);
+  EXPECT_NE(nullptr, rcl_allocator.zero_allocate);
+  // Not testing state as that may or may not be null depending on platform
 }
