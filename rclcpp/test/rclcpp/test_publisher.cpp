@@ -16,6 +16,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "rcl/publisher.h"
@@ -268,7 +269,6 @@ TEST_F(TestPublisher, basic_getters) {
 TEST_F(TestPublisher, rcl_publisher_init_error) {
   initialize();
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_publisher_init, RCL_RET_ERROR);
-  // Failure in rcl_publisher_fini should just log error
   EXPECT_THROW(
     node->create_publisher<test_msgs::msg::Empty>("topic", 10).reset(),
     rclcpp::exceptions::RCLError);
@@ -296,6 +296,7 @@ TEST_F(TestPublisher, rcl_publisher_fini_error) {
   auto mock = mocking_utils::inject_on_return("lib:rclcpp", rcl_publisher_fini, RCL_RET_ERROR);
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
   ASSERT_EQ(1, publisher.use_count());
+  // Failure in rcl_publisher_fini should just log error
   EXPECT_NO_THROW(publisher.reset());
 }
 
@@ -396,6 +397,8 @@ TEST_F(TestPublisher, inter_process_publish_failures) {
   EXPECT_NO_THROW(publisher->publish(serialized_msg));
 
   {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publish_serialized_message` is entirely
+    // defined in a header
     auto mock = mocking_utils::patch_and_return(
       "self", rcl_publish_serialized_message, RCL_RET_ERROR);
     EXPECT_THROW(publisher->publish(serialized_msg), rclcpp::exceptions::RCLError);
@@ -426,6 +429,8 @@ TEST_F(TestPublisher, do_loaned_message_publish_error) {
 
   auto msg = std::make_shared<test_msgs::msg::Empty>();
   {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publish_loaned_message` is entirely
+    // defined in a header
     auto mock = mocking_utils::patch_and_return(
       "self", rcl_publish_loaned_message, RCL_RET_PUBLISHER_INVALID);
     EXPECT_THROW(publisher->publish_loaned_message(msg.get()), rclcpp::exceptions::RCLError);
