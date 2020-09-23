@@ -67,7 +67,7 @@ TEST_F(TestLoanedMessage, release) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
-  MessageT * msg = nullptr;
+  std::unique_ptr<MessageT, std::function<void(MessageT *)>> msg;
   {
     auto loaned_msg = pub->borrow_loaned_message();
     ASSERT_TRUE(loaned_msg.is_valid());
@@ -79,10 +79,8 @@ TEST_F(TestLoanedMessage, release) {
     // of the data after a call to release.
   }
 
-  ASSERT_EQ(42.0f, msg->float64_value);
+  ASSERT_EQ(42.0f, msg.get()->float64_value);
 
-  msg->~MessageT();
-  pub->get_allocator()->deallocate(msg, 1);
   SUCCEED();
 }
 
