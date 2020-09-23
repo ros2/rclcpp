@@ -19,6 +19,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
+
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 class TestParameterClient : public ::testing::Test
@@ -158,4 +160,25 @@ TEST_F(TestParameterClient, sync_parameter_event_subscription) {
       callback);
     (void)event_sub;
   }
+}
+
+/*
+   Coverage for simple get_parameter methods
+ */
+TEST_F(TestParameterClient, sync_parameter_get_parameter) {
+  rclcpp::SyncParametersClient client(node);
+  EXPECT_EQ(10, client.get_parameter("not_a_parameter", 10));
+
+  RCLCPP_EXPECT_THROW_EQ(
+    client.get_parameter<int>("not_a_parameter"),
+    std::runtime_error("Parameter 'not_a_parameter' is not set"));
+}
+
+/*
+   Coverage for async waiting/is_ready
+ */
+TEST_F(TestParameterClient, sync_parameter_is_ready) {
+  rclcpp::SyncParametersClient client(node);
+  EXPECT_TRUE(client.wait_for_service());
+  EXPECT_TRUE(client.service_is_ready());
 }
