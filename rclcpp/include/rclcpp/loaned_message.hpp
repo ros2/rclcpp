@@ -179,6 +179,20 @@ public:
     return *message_;
   }
 
+  /// Release ownership of the ROS message instance.
+  /**
+   * A call to `release()` will unmanage the memory for the ROS message.
+   * That means that the destructor of this class will not free the memory on scope exit.
+   *
+   * \return Raw pointer to the message instance.
+   */
+  MessageT * release()
+  {
+    auto msg = message_;
+    message_ = nullptr;
+    return msg;
+  }
+
 protected:
   const rclcpp::PublisherBase & pub_;
 
