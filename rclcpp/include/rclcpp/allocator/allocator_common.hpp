@@ -80,8 +80,8 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   return rcl_allocator;
 }
 
-template <typename T>
-rcl_allocator_t get_rcl_allocator(std::allocator<T>& allocator)
+template<typename T>
+rcl_allocator_t get_rcl_allocator(std::allocator<T> & allocator)
 {
   (void)allocator;  // Remove warning
   return rcl_get_default_allocator();
