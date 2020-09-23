@@ -54,6 +54,7 @@ protected:
         this->executor->cancel();
       }
     );
+    EXPECT_TRUE(timer->is_steady());
 
     executor->add_node(test_node);
     // don't start spinning, let the test dictate when
@@ -190,4 +191,21 @@ TEST_F(TestTimer, test_bad_arguments) {
   EXPECT_THROW(
     rclcpp::GenericTimer<void (*)()>(unitialized_clock, 1us, []() {}, context),
     rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestTimer, callback_with_timer) {
+  rclcpp::TimerBase * timer_ptr = nullptr;
+  timer = test_node->create_wall_timer(
+    std::chrono::milliseconds(1),
+    [&timer_ptr](rclcpp::TimerBase & timer) {
+      timer_ptr = &timer;
+    });
+  auto start = std::chrono::steady_clock::now();
+  while (nullptr == timer_ptr &&
+    (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
+  {
+    executor->spin_some();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  EXPECT_EQ(timer.get(), timer_ptr);
 }

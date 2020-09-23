@@ -29,6 +29,7 @@ TEST(TestRate, rate_basics) {
 
   auto start = std::chrono::system_clock::now();
   rclcpp::Rate r(period);
+  EXPECT_EQ(period, r.period());
   ASSERT_FALSE(r.is_steady());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
@@ -68,6 +69,7 @@ TEST(TestRate, wall_rate_basics) {
 
   auto start = std::chrono::steady_clock::now();
   rclcpp::WallRate r(period);
+  EXPECT_EQ(period, r.period());
   ASSERT_TRUE(r.is_steady());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::steady_clock::now();
@@ -97,4 +99,24 @@ TEST(TestRate, wall_rate_basics) {
   auto five = std::chrono::steady_clock::now();
   delta = five - four;
   EXPECT_GT(epsilon, delta);
+}
+
+TEST(TestRade, from_double) {
+  {
+    rclcpp::WallRate rate(1.0);
+    EXPECT_EQ(std::chrono::seconds(1), rate.period());
+  }
+  {
+    rclcpp::WallRate rate(2.0);
+    EXPECT_EQ(std::chrono::milliseconds(500), rate.period());
+  }
+  {
+    rclcpp::WallRate rate(0.5);
+    EXPECT_EQ(std::chrono::seconds(2), rate.period());
+  }
+  {
+    rclcpp::WallRate rate(4.0);
+    EXPECT_EQ(std::chrono::milliseconds(250), rate.period());
+  }
+
 }

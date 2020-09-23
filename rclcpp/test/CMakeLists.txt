@@ -17,6 +17,25 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   SKIP_INSTALL
 )
 
+ament_add_gtest(
+  test_allocator_common
+  rclcpp/allocator/test_allocator_common.cpp)
+if(TARGET test_allocator_common)
+  target_link_libraries(test_allocator_common ${PROJECT_NAME})
+endif()
+ament_add_gtest(
+  test_allocator_deleter
+  rclcpp/allocator/test_allocator_deleter.cpp)
+if(TARGET test_allocator_deleter)
+  target_link_libraries(test_allocator_deleter ${PROJECT_NAME})
+endif()
+ament_add_gtest(
+  test_exceptions
+  rclcpp/exceptions/test_exceptions.cpp)
+if(TARGET test_exceptions)
+  target_link_libraries(test_exceptions ${PROJECT_NAME} mimick)
+endif()
+
 # Increasing timeout because connext can take a long time to destroy nodes
 # TODO(brawner) remove when destroying Node for Connext is resolved. See:
 # https://github.com/ros2/rclcpp/issues/1250
@@ -108,6 +127,12 @@ if(TARGET test_function_traits)
     "rosidl_runtime_cpp"
     "rosidl_typesupport_cpp"
   )
+endif()
+ament_add_gtest(
+  test_future_return_code
+  rclcpp/test_future_return_code.cpp)
+if(TARGET test_future_return_code)
+  target_link_libraries(test_future_return_code ${PROJECT_NAME})
 endif()
 ament_add_gmock(test_intra_process_manager rclcpp/test_intra_process_manager.cpp)
 if(TARGET test_intra_process_manager)
