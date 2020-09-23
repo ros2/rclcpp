@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -31,6 +32,12 @@ protected:
     rclcpp::init(0, nullptr);
   }
 };
+
+TEST_F(TestParameter, construct_destruct) {
+  EXPECT_NO_THROW(std::make_shared<rclcpp::Parameter>().reset());
+  EXPECT_NO_THROW(std::make_shared<rclcpp::Parameter>("some_parameter").reset());
+  EXPECT_NO_THROW(std::make_shared<rclcpp::Parameter>("some_parameter", 10).reset());
+}
 
 TEST_F(TestParameter, not_set_variant) {
   // Direct instantiation
@@ -56,6 +63,10 @@ TEST_F(TestParameter, not_set_variant) {
   EXPECT_EQ(
     rclcpp::ParameterType::PARAMETER_NOT_SET,
     rclcpp::Parameter::from_parameter_msg(not_set_param).get_type());
+
+  EXPECT_THROW(
+    not_set_variant.get_value<int>(),
+    rclcpp::exceptions::InvalidParameterTypeException);
 }
 
 TEST_F(TestParameter, bool_variant) {
