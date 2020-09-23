@@ -204,8 +204,7 @@ TEST_F(TestTimer, callback_with_timer) {
   while (nullptr == timer_ptr &&
     (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
   {
-    executor->spin_some();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    executor->spin_once(std::chrono::milliseconds(10));
   }
   EXPECT_EQ(timer.get(), timer_ptr);
 }

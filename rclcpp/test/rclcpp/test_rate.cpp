@@ -101,7 +101,7 @@ TEST(TestRate, wall_rate_basics) {
   EXPECT_GT(epsilon, delta);
 }
 
-TEST(TestRade, from_double) {
+TEST(TestRate, from_double) {
   {
     rclcpp::WallRate rate(1.0);
     EXPECT_EQ(std::chrono::seconds(1), rate.period());
@@ -118,5 +118,4 @@ TEST(TestRade, from_double) {
     rclcpp::WallRate rate(4.0);
     EXPECT_EQ(std::chrono::milliseconds(250), rate.period());
   }
-
 }

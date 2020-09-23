@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "rclcpp/allocator/allocator_deleter.hpp"
 
 #include "../../utils/rclcpp_gtest_macros.hpp"
@@ -36,6 +38,7 @@ TEST(TestAllocatorDeleter, construct_destruct) {
 TEST(TestAllocatorDeleter, delete) {
   std::allocator<int> allocator;
   int * some_mem = allocator.allocate(1u);
+  ASSERT_NE(nullptr, some_mem);
 
   rclcpp::allocator::AllocatorDeleter<std::allocator<int>> deleter(&allocator);
   EXPECT_NO_THROW(deleter(some_mem));

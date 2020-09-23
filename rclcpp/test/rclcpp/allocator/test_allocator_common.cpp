@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "rclcpp/allocator/allocator_common.hpp"
 
 TEST(TestAllocatorCommon, retyped_allocate) {
@@ -21,7 +23,7 @@ TEST(TestAllocatorCommon, retyped_allocate) {
   void * untyped_allocator = &allocator;
   void * allocated_mem =
     rclcpp::allocator::retyped_allocate<std::allocator<char>>(1u, untyped_allocator);
-  EXPECT_NE(nullptr, allocated_mem);
+  ASSERT_NE(nullptr, allocated_mem);
 
   auto code = [&untyped_allocator, allocated_mem]() {
       rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
@@ -34,7 +36,7 @@ TEST(TestAllocatorCommon, retyped_allocate) {
   void * reallocated_mem =
     rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
     allocated_mem, 2u, untyped_allocator);
-  EXPECT_NE(nullptr, reallocated_mem);
+  ASSERT_NE(nullptr, reallocated_mem);
 
   auto code2 = [&untyped_allocator, reallocated_mem]() {
       rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(

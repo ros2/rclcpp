@@ -20,15 +20,15 @@
 
 TEST(TestFutureReturnCode, to_string) {
   EXPECT_EQ(
-    std::string("Unknown enum value (-1)"), rclcpp::to_string(rclcpp::FutureReturnCode(-1)));
+    "Unknown enum value (-1)", rclcpp::to_string(rclcpp::FutureReturnCode(-1)));
   EXPECT_EQ(
-    std::string("SUCCESS (0)"), rclcpp::to_string(rclcpp::FutureReturnCode::SUCCESS));
+    "SUCCESS (0)", rclcpp::to_string(rclcpp::FutureReturnCode::SUCCESS));
   EXPECT_EQ(
-    std::string("INTERRUPTED (1)"), rclcpp::to_string(rclcpp::FutureReturnCode::INTERRUPTED));
+    "INTERRUPTED (1)", rclcpp::to_string(rclcpp::FutureReturnCode::INTERRUPTED));
   EXPECT_EQ(
-    std::string("TIMEOUT (2)"), rclcpp::to_string(rclcpp::FutureReturnCode::TIMEOUT));
+    "TIMEOUT (2)", rclcpp::to_string(rclcpp::FutureReturnCode::TIMEOUT));
   EXPECT_EQ(
-    std::string("Unknown enum value (3)"), rclcpp::to_string(rclcpp::FutureReturnCode(3)));
+    "Unknown enum value (3)", rclcpp::to_string(rclcpp::FutureReturnCode(3)));
   EXPECT_EQ(
-    std::string("Unknown enum value (100)"), rclcpp::to_string(rclcpp::FutureReturnCode(100)));
+    "Unknown enum value (100)", rclcpp::to_string(rclcpp::FutureReturnCode(100)));
 }
