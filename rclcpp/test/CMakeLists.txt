@@ -647,7 +647,7 @@ endif()
 
 ament_add_gtest(test_graph_listener rclcpp/test_graph_listener.cpp)
 if(TARGET test_graph_listener)
-  target_link_libraries(test_graph_listener ${PROJECT_NAME})
+  target_link_libraries(test_graph_listener ${PROJECT_NAME} mimick)
 endif()
 
 # Install test resources
