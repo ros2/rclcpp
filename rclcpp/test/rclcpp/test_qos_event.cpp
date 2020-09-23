@@ -211,11 +211,11 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 
   if (!is_fastrtps) {
     EXPECT_EQ(
-      "New subscription discovered on this topic, requesting incompatible QoS. "
+      "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
       "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
       pub_log_msg);
     EXPECT_EQ(
-      "New publisher discovered on this topic, offering incompatible QoS. "
+      "New publisher discovered on topic '/ns/test_topic', offering incompatible QoS. "
       "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
       sub_log_msg);
   }
