@@ -198,3 +198,12 @@ TEST(TestNodeOptions, copy) {
       rcl_arguments_get_count_unparsed(&rcl_options->arguments));
   }
 }
+
+TEST(TestNodeOptions, append_parameter_override) {
+  std::vector<std::string> expected_args{"--unknown-flag", "arg"};
+  auto options = rclcpp::NodeOptions().arguments(expected_args).use_global_arguments(false);
+  rclcpp::Parameter parameter("some_parameter", 10);
+  options.append_parameter_override("some_parameter", 10);
+  EXPECT_EQ(1u, options.parameter_overrides().size());
+  EXPECT_EQ(std::string("some_parameter"), options.parameter_overrides()[0].get_name());
+}
