@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/graph_listener.hpp"
+#include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -38,6 +40,12 @@ public:
     rclcpp::init(0, nullptr);
     node_ = std::make_shared<rclcpp::Node>(node_name, node_namespace);
 
+    // This dynamic cast is not necessary for the unittests, but instead is used to ensure
+    // the proper type is being tested and covered.
+    node_graph_ =
+      dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node_->get_node_graph_interface().get());
+    ASSERT_NE(nullptr, node_graph_);
+
     using rclcpp::contexts::get_global_default_context;
     graph_listener_ =
       std::make_shared<rclcpp::graph_listener::GraphListener>(get_global_default_context());
@@ -50,10 +58,13 @@ public:
 
 protected:
   std::shared_ptr<rclcpp::Node> node() {return node_;}
+  const rclcpp::node_interfaces::NodeGraph * node_graph_const() const {return node_graph_;}
+  rclcpp::node_interfaces::NodeGraph * node_graph() {return node_graph_;}
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener() {return graph_listener_;}
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
+  rclcpp::node_interfaces::NodeGraph * node_graph_;
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
 };
 
@@ -75,38 +86,169 @@ TEST_F(TestGraphListener, error_construct_graph_listener) {
     "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
 
   using rclcpp::contexts::get_global_default_context;
-  RCLCPP_EXPECT_THROW_EQ({
-  auto graph_listener_error =
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    auto graph_listener_error =
     std::make_shared<rclcpp::graph_listener::GraphListener>(get_global_default_context());
-    }, std::runtime_error("failed to create interrupt guard condition: error not set"));
+  }, std::runtime_error("failed to create interrupt guard condition: error not set"));
 }
+
+// Required for mocking_utils below
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, ==)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
 
 /* Errors that occur when initializing the graph_listener */
 TEST_F(TestGraphListener, error_start_graph_listener) {
   {
-    // Invalid incomplete type mock, skip
-    /*
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_wait_set_init, RCL_RET_ERROR);
-    RCLCPP_EXPECT_THROW_EQ({
+    RCLCPP_EXPECT_THROW_EQ(
+    {
       graph_listener()->start_if_not_started();
     }, std::runtime_error("failed to initialize wait set: error not set"));
-    */
   }
   {
     auto context_to_destroy = std::make_shared<rclcpp::contexts::DefaultContext>();
     context_to_destroy->init(0, nullptr);
     auto graph_listener_error =
       std::make_shared<rclcpp::graph_listener::GraphListener>(context_to_destroy);
+    // rclcpp::shutdown(context_to_destroy); Using this causes test to fail
     context_to_destroy.reset();
-    RCLCPP_EXPECT_THROW_EQ({
+    RCLCPP_EXPECT_THROW_EQ(
+    {
       graph_listener_error->start_if_not_started();
     }, std::runtime_error("parent context was destroyed"));
   }
   {
     EXPECT_NO_THROW(graph_listener()->shutdown());
-    RCLCPP_EXPECT_THROW_EQ({
+    RCLCPP_EXPECT_THROW_EQ(
+    {
       graph_listener()->start_if_not_started();
-      }, std::runtime_error(shutdown_error_str));
+    }, std::runtime_error(shutdown_error_str));
+  }
+}
+
+class TestGraphListenerProtectedMethods : public rclcpp::graph_listener::GraphListener
+{
+public:
+  explicit TestGraphListenerProtectedMethods(std::shared_ptr<rclcpp::Context> parent_context)
+  : rclcpp::graph_listener::GraphListener{parent_context}
+  {}
+
+  void run_protected()
+  {
+    this->run();
+  }
+};
+
+// Tricky: patch on return the start method, to prepare the
+// loop thread to be run, but leave early with the failure thrown
+// Then, run the loop method to test it
+#define MOCK_WAIT_SET_INIT_ON_THREAD() \
+  do { \
+    auto mock_wait_set_init = mocking_utils::inject_on_return( \
+      "lib:rclcpp", rcl_wait_set_init, RCL_RET_ERROR); \
+    RCLCPP_EXPECT_THROW_EQ( \
+    { \
+      graph_listener_mocked->start_if_not_started(); \
+    }, std::runtime_error("failed to initialize wait set: error not set")); \
+  } while (0)
+
+/* Errors running graph protected methods */
+TEST_F(TestGraphListener, error_run_graph_listener) {
+  {
+    auto context_to_destroy = std::make_shared<rclcpp::contexts::DefaultContext>();
+    context_to_destroy->init(0, nullptr);
+    auto graph_listener_error =
+      std::make_shared<TestGraphListenerProtectedMethods>(context_to_destroy);
+    context_to_destroy.reset();
+    EXPECT_NO_THROW(
+    {
+      graph_listener_error->run_protected();
+    });
+  }
+  {
+    auto global_context = rclcpp::contexts::get_global_default_context();
+    auto graph_listener_mocked =
+      std::make_shared<TestGraphListenerProtectedMethods>(global_context);
+    MOCK_WAIT_SET_INIT_ON_THREAD();
+    auto mock_wait_set_clear = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+    {
+      graph_listener_mocked->run_protected();
+    }, std::runtime_error("failed to clear wait set: error not set"));
+  }
+  {
+    auto global_context = rclcpp::contexts::get_global_default_context();
+    auto graph_listener_mocked =
+      std::make_shared<TestGraphListenerProtectedMethods>(global_context);
+    MOCK_WAIT_SET_INIT_ON_THREAD();
+    auto mock_wait_set_clear = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_wait_set_add_guard_condition, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+    {
+      graph_listener_mocked->run_protected();
+    }, std::runtime_error("failed to add interrupt guard condition to wait set: error not set"));
+  }
+  {
+    auto global_context = rclcpp::contexts::get_global_default_context();
+    auto graph_listener_mocked =
+      std::make_shared<TestGraphListenerProtectedMethods>(global_context);
+    MOCK_WAIT_SET_INIT_ON_THREAD();
+    auto mock = mocking_utils::patch(
+      "lib:rclcpp", rcl_wait_set_add_guard_condition, [](auto, ...) {
+        static int counter = 1;
+        if (counter == 1) {
+          counter++;
+          return RCL_RET_OK;
+        } else {
+          return RCL_RET_ERROR;
+        }
+      });
+    RCLCPP_EXPECT_THROW_EQ(
+    {
+      graph_listener_mocked->run_protected();
+    }, std::runtime_error("failed to add shutdown guard condition to wait set: error not set"));
+  }
+  {
+    auto global_context = rclcpp::contexts::get_global_default_context();
+    auto graph_listener_mocked =
+      std::make_shared<TestGraphListenerProtectedMethods>(global_context);
+    MOCK_WAIT_SET_INIT_ON_THREAD();
+    auto mock_wait_set_clear = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_wait, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+    {
+      graph_listener_mocked->run_protected();
+    }, std::runtime_error("failed to wait on wait set: error not set"));
+  }
+  {
+    auto global_context = rclcpp::contexts::get_global_default_context();
+    auto graph_listener_mocked =
+      std::make_shared<TestGraphListenerProtectedMethods>(global_context);
+    MOCK_WAIT_SET_INIT_ON_THREAD();
+    auto mock_wait_set_clear = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_wait, RCL_RET_TIMEOUT);
+    RCLCPP_EXPECT_THROW_EQ(
+    {
+      graph_listener_mocked->run_protected();
+    }, std::runtime_error("rcl_wait unexpectedly timed out"));
+  }
+  {
+    auto global_context = rclcpp::contexts::get_global_default_context();
+    auto graph_listener_mocked =
+      std::make_shared<TestGraphListenerProtectedMethods>(global_context);
+    MOCK_WAIT_SET_INIT_ON_THREAD();
+    EXPECT_NO_THROW(graph_listener_mocked->add_node(node_graph()));
+    EXPECT_NE(nullptr, node()->get_node_graph_interface()->get_graph_event());
+    auto mock_wait_set_clear = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_node_get_graph_guard_condition, nullptr);
+    RCLCPP_EXPECT_THROW_EQ(
+    {
+      graph_listener_mocked->run_protected();
+    }, std::runtime_error("failed to get graph guard condition: error not set"));
   }
 }
