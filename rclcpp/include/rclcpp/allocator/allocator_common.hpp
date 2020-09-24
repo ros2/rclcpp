@@ -64,7 +64,9 @@ void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_al
 
 }  // namespace allocator
 
-// Convert a std::allocator_traits-formatted Allocator into an rcl allocator
+// Deprecated: Generic converter from C++ allocator into RCL allocator.
+// This allocator overallocates memory by 100x and invokes UB on free,
+// see #1254.
 template<typename Alloc>
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
@@ -80,6 +82,9 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   return rcl_allocator;
 }
 
+// Builds the RCL default allocator for the C++ standard allocator.
+// This assumes that the user intent behind both allocators is the
+// same: Using system malloc for allocation.
 template<typename T>
 rcl_allocator_t get_rcl_allocator(std::allocator<T> & allocator)
 {
