@@ -297,6 +297,12 @@ TEST_F(TestMemoryStrategy, get_node_by_group) {
 
     callback_group =
       node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
+    // Nothing in the weak_groups_to_nodes, so find fails.
+    EXPECT_EQ(
+      nullptr,
+      memory_strategy()->get_node_by_group(callback_group, weak_groups_to_nodes));
+
     weak_groups_to_nodes.insert(
       std::pair<rclcpp::CallbackGroup::WeakPtr,
       rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
@@ -306,6 +312,7 @@ TEST_F(TestMemoryStrategy, get_node_by_group) {
       node_handle,
       memory_strategy()->get_node_by_group(callback_group, weak_groups_to_nodes));
   }  // Node goes out of scope
+  // Callback group still exists, so lookup returns nullptr because node is destroyed.
   EXPECT_EQ(
     nullptr,
     memory_strategy()->get_node_by_group(callback_group, weak_groups_to_nodes));
