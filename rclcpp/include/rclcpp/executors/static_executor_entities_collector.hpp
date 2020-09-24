@@ -290,7 +290,7 @@ public:
   bool
   has_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const;
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
 
 private:
   /// Add all callback groups that can be automatically added by any executor
@@ -305,7 +305,7 @@ private:
 
   RCLCPP_PUBLIC
   void
-  fill_executable_list_from_map(WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
+  fill_executable_list_from_map(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
