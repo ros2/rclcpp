@@ -29,14 +29,14 @@ using rclcpp::executors::StaticExecutorEntitiesCollector;
 StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 {
   // Disassociate all callback groups and thus nodes.
-  for (auto & pair : weak_groups_associated_with_executor_to_nodes_) {
+  for (const auto & pair : weak_groups_associated_with_executor_to_nodes_) {
     auto group = pair.first.lock();
     if (group) {
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
     }
   }
-  for (auto & pair : weak_groups_to_nodes_associated_with_executor_) {
+  for (const auto & pair : weak_groups_to_nodes_associated_with_executor_) {
     auto group = pair.first.lock();
     if (group) {
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
@@ -44,7 +44,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
     }
   }
   // Disassociate all nodes
-  for (auto & weak_node : weak_nodes_) {
+  for (const auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
       std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
@@ -100,7 +100,7 @@ StaticExecutorEntitiesCollector::fill_memory_strategy()
   // Clean up any invalid nodes, if they were detected
   if (has_invalid_weak_groups_or_nodes) {
     std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-    for (auto & pair : weak_groups_to_nodes_associated_with_executor_) {
+    for (const auto & pair : weak_groups_to_nodes_associated_with_executor_) {
       auto & weak_group_ptr = pair.first;
       auto & weak_node_ptr = pair.second;
       if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
@@ -118,9 +118,9 @@ StaticExecutorEntitiesCollector::fill_memory_strategy()
   // Clean up any invalid nodes, if they were detected
   if (has_invalid_weak_groups_or_nodes) {
     std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-    for (auto & pair : weak_groups_associated_with_executor_to_nodes_) {
+    for (const auto & pair : weak_groups_associated_with_executor_to_nodes_) {
       auto & weak_group_ptr = pair.first;
-      auto & weak_node_ptr = pair.second;
+      const auto & weak_node_ptr = pair.second;
       if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
         invalid_group_ptrs.push_back(weak_group_ptr);
       }
@@ -148,7 +148,7 @@ StaticExecutorEntitiesCollector::fill_executable_list()
 }
 void
 StaticExecutorEntitiesCollector::fill_executable_list_from_map(
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes)
+  const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
@@ -270,7 +270,7 @@ StaticExecutorEntitiesCollector::add_node(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
-  for (auto & weak_group : node_ptr->get_callback_groups()) {
+  for (const auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
       group_ptr->automatically_add_to_executor_with_node())
@@ -430,7 +430,7 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
 bool
 StaticExecutorEntitiesCollector::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const
+  const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const
 {
   return std::find_if(
     weak_groups_to_nodes.begin(),
@@ -444,7 +444,7 @@ StaticExecutorEntitiesCollector::has_node(
 void
 StaticExecutorEntitiesCollector::add_callback_groups_from_nodes_associated_to_executor()
 {
-  for (auto & weak_node : weak_nodes_) {
+  for (const auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
       auto group_ptrs = node->get_callback_groups();
@@ -470,10 +470,10 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 StaticExecutorEntitiesCollector::get_all_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
-  for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+  for (const auto & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
     groups.push_back(group_node_ptr.first);
   }
-  for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
+  for (const auto & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
     groups.push_back(group_node_ptr.first);
   }
   return groups;
@@ -483,7 +483,7 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 StaticExecutorEntitiesCollector::get_manually_added_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
-  for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+  for (const auto & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
     groups.push_back(group_node_ptr.first);
   }
   return groups;
@@ -493,7 +493,7 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 StaticExecutorEntitiesCollector::get_automatically_added_callback_groups_from_nodes()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
-  for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
+  for (const auto & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
     groups.push_back(group_node_ptr.first);
   }
   return groups;
