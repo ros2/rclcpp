@@ -102,6 +102,16 @@ public:
 #endif
   }
 
+  ~SubscriptionIntraProcess()
+  {
+    if (rcl_guard_condition_fini(&gc_) != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Failed to destroy guard condition: %s",
+        rcutils_get_error_string().str);
+    }
+  }
+
   bool
   is_ready(rcl_wait_set_t * wait_set)
   {
