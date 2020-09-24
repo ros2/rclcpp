@@ -133,7 +133,7 @@ public:
     if (message_ == nullptr) {
       return;
     }
-    DestroyMessage(pub_, message_, message_allocator_);
+    destroy_message(pub_, message_, message_allocator_);
     message_ = nullptr;
   }
 
@@ -178,7 +178,7 @@ public:
     return std::unique_ptr<MessageT, std::function<void(MessageT *)>>(
       msg,
       [pub = pub_, allocator = message_allocator_](MessageT * msg_ptr) {
-        LoanedMessage::DestroyMessage(pub, msg_ptr, allocator);
+        LoanedMessage::destroy_message(pub, msg_ptr, allocator);
       });
   }
 
@@ -193,8 +193,9 @@ protected:
   LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
 
 private:
-  static void DestroyMessage(
-    const rclcpp::PublisherBase & pub, MessageT * msg_ptr,
+  static void destroy_message(
+    const rclcpp::PublisherBase & pub,
+    MessageT * msg_ptr,
     std::allocator<MessageT> allocator)
   {
     auto error_logger = rclcpp::get_logger("LoanedMessage");

@@ -79,7 +79,7 @@ TEST_F(TestLoanedMessage, release) {
     // of the data after a call to release.
   }
 
-  ASSERT_EQ(42.0f, msg.get()->float64_value);
+  ASSERT_EQ(42.0f, msg->float64_value);
 
   SUCCEED();
 }
