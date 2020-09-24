@@ -28,7 +28,7 @@ using rclcpp::executors::StaticExecutorEntitiesCollector;
 
 StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 {
-  // Disassocate all callback groups and thus nodes.
+  // Disassociate all callback groups and thus nodes.
   for (auto & pair : weak_groups_associated_with_executor_to_nodes_) {
     auto group = pair.first.lock();
     if (group) {
@@ -218,7 +218,7 @@ StaticExecutorEntitiesCollector::prepare_wait_set()
 void
 StaticExecutorEntitiesCollector::refresh_wait_set(std::chrono::nanoseconds timeout)
 {
-  // clear wait set (memeset to '0' all wait_set_ entities
+  // clear wait set (memset to '0' all wait_set_ entities
   // but keeps the wait_set_ number of entities)
   if (rcl_wait_set_clear(p_wait_set_) != RCL_RET_OK) {
     throw std::runtime_error("Couldn't clear wait set");

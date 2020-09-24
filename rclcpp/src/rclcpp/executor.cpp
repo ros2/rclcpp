@@ -85,7 +85,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
 
 Executor::~Executor()
 {
-  // Disassocate all callback groups.
+  // Disassociate all callback groups.
   for (auto & pair : weak_groups_to_nodes_) {
     auto group = pair.first.lock();
     if (group) {
@@ -93,7 +93,7 @@ Executor::~Executor()
       has_executor.store(false);
     }
   }
-  // Disassocate all nodes.
+  // Disassociate all nodes.
   std::for_each(
     weak_nodes_.begin(), weak_nodes_.end(), []
       (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
