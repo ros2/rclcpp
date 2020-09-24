@@ -167,6 +167,8 @@ public:
   /**
    * A call to `release()` will unmanage the memory for the ROS message.
    * That means that the destructor of this class will not free the memory on scope exit.
+   * The memory is freed when the unique pointer goes out instead, and the unique pointer
+   * will keep the publisher alive until it is destroyed.
    *
    * \return std::unique_ptr to the message instance.
    */
