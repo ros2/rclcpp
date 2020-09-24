@@ -101,9 +101,8 @@ TEST_F(TestGraphListener, error_start_graph_listener) {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_wait_set_init, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener()->start_if_not_started();
-    }, std::runtime_error("failed to initialize wait set: error not set"));
+      graph_listener()->start_if_not_started(),
+      std::runtime_error("failed to initialize wait set: error not set"));
   }
   {
     auto context_to_destroy = std::make_shared<rclcpp::contexts::DefaultContext>();
@@ -113,16 +112,14 @@ TEST_F(TestGraphListener, error_start_graph_listener) {
     // rclcpp::shutdown(context_to_destroy); Using this causes test to fail
     context_to_destroy.reset();
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_error->start_if_not_started();
-    }, std::runtime_error("parent context was destroyed"));
+      graph_listener_error->start_if_not_started(),
+      std::runtime_error("parent context was destroyed"));
   }
   {
     EXPECT_NO_THROW(graph_listener()->shutdown());
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener()->start_if_not_started();
-    }, std::runtime_error(shutdown_error_str));
+      graph_listener()->start_if_not_started(),
+      std::runtime_error(shutdown_error_str));
   }
 }
 
@@ -147,9 +144,8 @@ public:
     auto mock_wait_set_init = mocking_utils::inject_on_return( \
       "lib:rclcpp", rcl_wait_set_init, RCL_RET_ERROR); \
     RCLCPP_EXPECT_THROW_EQ( \
-    { \
-      graph_listener_mocked->start_if_not_started(); \
-    }, std::runtime_error("failed to initialize wait set: error not set")); \
+      graph_listener_mocked->start_if_not_started(), \
+      std::runtime_error("failed to initialize wait set: error not set")); \
   } while (0)
 
 /* Errors running graph protected methods */
@@ -160,10 +156,7 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     auto graph_listener_error =
       std::make_shared<TestGraphListenerProtectedMethods>(context_to_destroy);
     context_to_destroy.reset();
-    EXPECT_NO_THROW(
-    {
-      graph_listener_error->run_protected();
-    });
+    EXPECT_NO_THROW(graph_listener_error->run_protected());
   }
   {
     auto global_context = rclcpp::contexts::get_global_default_context();
@@ -173,9 +166,8 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     auto mock_wait_set_clear = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_mocked->run_protected();
-    }, std::runtime_error("failed to clear wait set: error not set"));
+      graph_listener_mocked->run_protected(),
+      std::runtime_error("failed to clear wait set: error not set"));
   }
   {
     auto global_context = rclcpp::contexts::get_global_default_context();
@@ -185,9 +177,8 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     auto mock_wait_set_clear = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_wait_set_add_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_mocked->run_protected();
-    }, std::runtime_error("failed to add interrupt guard condition to wait set: error not set"));
+      graph_listener_mocked->run_protected(),
+      std::runtime_error("failed to add interrupt guard condition to wait set: error not set"));
   }
   {
     auto global_context = rclcpp::contexts::get_global_default_context();
@@ -205,9 +196,8 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
         }
       });
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_mocked->run_protected();
-    }, std::runtime_error("failed to add shutdown guard condition to wait set: error not set"));
+      graph_listener_mocked->run_protected(),
+      std::runtime_error("failed to add shutdown guard condition to wait set: error not set"));
   }
   {
     auto global_context = rclcpp::contexts::get_global_default_context();
@@ -217,9 +207,8 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     auto mock_wait_set_clear = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_wait, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_mocked->run_protected();
-    }, std::runtime_error("failed to wait on wait set: error not set"));
+      graph_listener_mocked->run_protected(),
+      std::runtime_error("failed to wait on wait set: error not set"));
   }
   {
     auto global_context = rclcpp::contexts::get_global_default_context();
@@ -229,9 +218,8 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     auto mock_wait_set_clear = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_wait, RCL_RET_TIMEOUT);
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_mocked->run_protected();
-    }, std::runtime_error("rcl_wait unexpectedly timed out"));
+      graph_listener_mocked->run_protected(),
+      std::runtime_error("rcl_wait unexpectedly timed out"));
   }
   {
     auto global_context = rclcpp::contexts::get_global_default_context();
@@ -243,9 +231,8 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     auto mock_wait_set_clear = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_node_get_graph_guard_condition, nullptr);
     RCLCPP_EXPECT_THROW_EQ(
-    {
-      graph_listener_mocked->run_protected();
-    }, std::runtime_error("failed to get graph guard condition: error not set"));
+      graph_listener_mocked->run_protected(),
+      std::runtime_error("failed to get graph guard condition: error not set"));
   }
 }
 
@@ -266,40 +253,34 @@ TEST_F(TestGraphListener, test_errors_graph_listener_add_remove_node) {
   EXPECT_FALSE(graph_listener()->has_node(nullptr));
 
   RCLCPP_EXPECT_THROW_EQ(
-  {
-    graph_listener()->add_node(nullptr);
-  }, std::invalid_argument("node is nullptr"));
+    graph_listener()->add_node(nullptr),
+    std::invalid_argument("node is nullptr"));
 
   RCLCPP_EXPECT_THROW_EQ(
-  {
-    graph_listener()->remove_node(nullptr);
-  }, std::invalid_argument("node is nullptr"));
+    graph_listener()->remove_node(nullptr),
+    std::invalid_argument("node is nullptr"));
 
   // Already added
   graph_listener()->add_node(node_graph());
   EXPECT_TRUE(graph_listener()->has_node(node_graph()));
   RCLCPP_EXPECT_THROW_EQ(
-  {
-    graph_listener()->add_node(node_graph());
-  }, std::runtime_error("node already added"));
+    graph_listener()->add_node(node_graph()),
+    std::runtime_error("node already added"));
 
   // Remove node not found
   graph_listener()->remove_node(node_graph());
   EXPECT_FALSE(graph_listener()->has_node(node_graph()));
   RCLCPP_EXPECT_THROW_EQ(
-  {
-    graph_listener()->remove_node(node_graph());
-  }, std::runtime_error("node not found"));
+    graph_listener()->remove_node(node_graph()),
+    std::runtime_error("node not found"));
 
   // Add and remove after shutdown
   EXPECT_NO_THROW(graph_listener()->shutdown());
   RCLCPP_EXPECT_THROW_EQ(
-  {
-    graph_listener()->add_node(node_graph());
-  }, std::runtime_error(shutdown_error_str));
+    graph_listener()->add_node(node_graph()),
+    std::runtime_error(shutdown_error_str));
   // Remove works the same
   RCLCPP_EXPECT_THROW_EQ(
-  {
-    graph_listener()->remove_node(node_graph());
-  }, std::runtime_error("node not found"));
+    graph_listener()->remove_node(node_graph()),
+    std::runtime_error("node not found"));
 }
