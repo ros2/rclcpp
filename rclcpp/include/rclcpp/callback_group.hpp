@@ -71,7 +71,7 @@ public:
    *   - will not be run at the same time as other callbacks in their group
    *   - but must run at the same time as callbacks in other groups
    *
-   * Additiionally, callback groups have a property which determines whether or
+   * Additionally, callback groups have a property which determines whether or
    * not they are added to an executor with their associated node automatically.
    * When creating a callback group the automatically_add_to_executor_with_node
    * argument determines this behavior, and if true it will cause the newly
