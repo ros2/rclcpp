@@ -82,7 +82,6 @@ TEST_F(TestGraphListener, error_construct_graph_listener) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
 
-  using rclcpp::contexts::get_global_default_context;
   RCLCPP_EXPECT_THROW_EQ(
   {
     auto graph_listener_error =
