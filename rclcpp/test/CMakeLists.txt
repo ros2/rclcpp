@@ -559,7 +559,7 @@ if(TARGET test_static_executor_entities_collector)
   ament_target_dependencies(test_static_executor_entities_collector
     "rcl"
     "test_msgs")
-  target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME})
+  target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick)
 endif()
 
 ament_add_gtest(test_guard_condition rclcpp/test_guard_condition.cpp
