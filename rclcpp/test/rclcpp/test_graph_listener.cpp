@@ -252,3 +252,58 @@ TEST_F(TestGraphListener, error_run_graph_listener) {
     }, std::runtime_error("failed to get graph guard condition: error not set"));
   }
 }
+
+/* Add/Remove node usage */
+TEST_F(TestGraphListener, test_graph_listener_add_remove_node) {
+  EXPECT_FALSE(graph_listener()->has_node(node_graph()));
+
+  graph_listener()->add_node(node_graph());
+  EXPECT_TRUE(graph_listener()->has_node(node_graph()));
+
+  graph_listener()->remove_node(node_graph());
+  EXPECT_FALSE(graph_listener()->has_node(node_graph()));
+}
+
+/* Add/Remove node error usage */
+TEST_F(TestGraphListener, test_errors_graph_listener_add_remove_node) {
+  // nullptrs tests
+  EXPECT_FALSE(graph_listener()->has_node(nullptr));
+
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    graph_listener()->add_node(nullptr);
+  }, std::invalid_argument("node is nullptr"));
+
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    graph_listener()->remove_node(nullptr);
+  }, std::invalid_argument("node is nullptr"));
+
+  // Already added
+  graph_listener()->add_node(node_graph());
+  EXPECT_TRUE(graph_listener()->has_node(node_graph()));
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    graph_listener()->add_node(node_graph());
+  }, std::runtime_error("node already added"));
+
+  // Remove node not found
+  graph_listener()->remove_node(node_graph());
+  EXPECT_FALSE(graph_listener()->has_node(node_graph()));
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    graph_listener()->remove_node(node_graph());
+  }, std::runtime_error("node not found"));
+
+  // Add and remove after shutdown
+  EXPECT_NO_THROW(graph_listener()->shutdown());
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    graph_listener()->add_node(node_graph());
+  }, std::runtime_error(shutdown_error_str));
+  // Remove works the same
+  RCLCPP_EXPECT_THROW_EQ(
+  {
+    graph_listener()->remove_node(node_graph());
+  }, std::runtime_error("node not found"));
+}
