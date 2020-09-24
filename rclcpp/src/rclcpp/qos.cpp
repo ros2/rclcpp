@@ -251,6 +251,10 @@ ParameterEventsQoS::ParameterEventsQoS(const QoSInitialization & qos_initializat
 : QoS(qos_initialization, rmw_qos_profile_parameter_events)
 {}
 
+RosoutQoS::RosoutQoS(const QoSInitialization & rosout_initialization)
+: QoS(rosout_initialization, rcl_qos_profile_rosout_default)
+{}
+
 SystemDefaultsQoS::SystemDefaultsQoS(const QoSInitialization & qos_initialization)
 : QoS(qos_initialization, rmw_qos_profile_system_default)
 {}

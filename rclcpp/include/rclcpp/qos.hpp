@@ -19,6 +19,7 @@
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcl/logging_rosout.h"
 #include "rmw/incompatible_qos_events_statuses.h"
 #include "rmw/qos_profiles.h"
 #include "rmw/types.h"
@@ -246,6 +247,28 @@ public:
   ParameterEventsQoS(
     const QoSInitialization & qos_initialization = (
       QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
+  ));
+};
+
+/**
+ * Rosout QoS class
+ *    - History: Keep last,
+ *    - Depth: 1000,
+ *    - Reliability: Reliable,
+ *    - Durability: TRANSIENT_LOCAL,
+ *    - Deadline: Default,
+ *    - Lifespan: {10, 0},
+ *    - Liveliness: System default,
+ *    - Liveliness lease duration: default,
+ *    - Avoid ros namespace conventions: false
+ */
+class RCLCPP_PUBLIC RosoutQoS : public QoS
+{
+public:
+  explicit
+  RosoutQoS(
+    const QoSInitialization & rosout_qos_initialization = (
+      QoSInitialization::from_rmw(rcl_qos_profile_rosout_default)
   ));
 };
 
