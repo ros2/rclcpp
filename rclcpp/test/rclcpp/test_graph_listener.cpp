@@ -40,10 +40,8 @@ public:
     rclcpp::init(0, nullptr);
     node_ = std::make_shared<rclcpp::Node>(node_name, node_namespace);
 
-    // This dynamic cast is not necessary for the unittests, but instead is used to ensure
-    // the proper type is being tested and covered.
-    node_graph_ =
-      dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node_->get_node_graph_interface().get());
+    node_graph_ = std::make_shared<rclcpp::node_interfaces::NodeGraph>(
+      node_->get_node_base_interface().get());
     ASSERT_NE(nullptr, node_graph_);
 
     using rclcpp::contexts::get_global_default_context;
@@ -58,13 +56,12 @@ public:
 
 protected:
   std::shared_ptr<rclcpp::Node> node() {return node_;}
-  const rclcpp::node_interfaces::NodeGraph * node_graph_const() const {return node_graph_;}
-  rclcpp::node_interfaces::NodeGraph * node_graph() {return node_graph_;}
+  rclcpp::node_interfaces::NodeGraph * node_graph() {return node_graph_.get();}
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener() {return graph_listener_;}
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
-  rclcpp::node_interfaces::NodeGraph * node_graph_;
+  std::shared_ptr<rclcpp::node_interfaces::NodeGraph> node_graph_;
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
 };
 
