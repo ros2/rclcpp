@@ -109,7 +109,6 @@ TEST_F(TestGraphListener, error_start_graph_listener) {
     context_to_destroy->init(0, nullptr);
     auto graph_listener_error =
       std::make_shared<rclcpp::graph_listener::GraphListener>(context_to_destroy);
-    // rclcpp::shutdown(context_to_destroy); Using this causes test to fail
     context_to_destroy.reset();
     RCLCPP_EXPECT_THROW_EQ(
       graph_listener_error->start_if_not_started(),
