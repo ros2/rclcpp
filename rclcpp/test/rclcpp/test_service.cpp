@@ -16,9 +16,12 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include "../mocking_utils/patch.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "test_msgs/srv/empty.hpp"
@@ -30,6 +33,11 @@ protected:
   static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
   }
 
   void SetUp()
@@ -50,6 +58,12 @@ class TestServiceSub : public ::testing::Test
 protected:
   static void SetUpTestCase()
   {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
   }
 
   void SetUp()
@@ -77,6 +91,9 @@ TEST_F(TestService, construction_and_destruction) {
     };
   {
     auto service = node->create_service<ListParameters>("service", callback);
+    EXPECT_NE(nullptr, service->get_service_handle());
+    const rclcpp::ServiceBase * const_service_base = service.get();
+    EXPECT_NE(nullptr, const_service_base->get_service_handle());
   }
 
   {
@@ -105,6 +122,25 @@ TEST_F(TestServiceSub, construction_and_destruction) {
     {
       auto service = node->create_service<ListParameters>("invalid_service?", callback);
     }, rclcpp::exceptions::InvalidServiceNameError);
+  }
+}
+
+TEST_F(TestService, construction_and_destruction_rcl_errors) {
+  auto callback =
+    [](const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
+
+  {
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_service_init, RCL_RET_ERROR);
+    // reset() isn't necessary for this exception, it just avoids unused return value warning
+    EXPECT_THROW(
+      node->create_service<test_msgs::srv::Empty>("service", callback).reset(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    // reset() is required for this one
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_service_fini, RCL_RET_ERROR);
+    EXPECT_NO_THROW(node->create_service<test_msgs::srv::Empty>("service", callback).reset());
   }
 }
 
@@ -146,5 +182,56 @@ TEST_F(TestService, basic_public_getters) {
       RCL_RET_OK, rcl_service_fini(
         &service_handle,
         node_handle_int->get_node_base_interface()->get_rcl_node_handle()));
+  }
+}
+
+TEST_F(TestService, take_request) {
+  auto callback =
+    [](const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto server = node->create_service<test_msgs::srv::Empty>("service", callback);
+  {
+    auto request_id = server->create_request_header();
+    test_msgs::srv::Empty::Request request;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_take_request, RCL_RET_OK);
+    EXPECT_TRUE(server->take_request(request, *request_id.get()));
+  }
+  {
+    auto request_id = server->create_request_header();
+    test_msgs::srv::Empty::Request request;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_take_request, RCL_RET_SERVICE_TAKE_FAILED);
+    EXPECT_FALSE(server->take_request(request, *request_id.get()));
+  }
+  {
+    auto request_id = server->create_request_header();
+    test_msgs::srv::Empty::Request request;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_take_request, RCL_RET_ERROR);
+    EXPECT_THROW(server->take_request(request, *request_id.get()), rclcpp::exceptions::RCLError);
+  }
+}
+
+TEST_F(TestService, send_response) {
+  auto callback =
+    [](const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto server = node->create_service<test_msgs::srv::Empty>("service", callback);
+
+  {
+    auto request_id = server->create_request_header();
+    test_msgs::srv::Empty::Response response;
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_send_response, RCL_RET_OK);
+    EXPECT_NO_THROW(server->send_response(*request_id.get(), response));
+  }
+
+  {
+    auto request_id = server->create_request_header();
+    test_msgs::srv::Empty::Response response;
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_send_response, RCL_RET_ERROR);
+    EXPECT_THROW(
+      server->send_response(*request_id.get(), response),
+      rclcpp::exceptions::RCLError);
   }
 }
