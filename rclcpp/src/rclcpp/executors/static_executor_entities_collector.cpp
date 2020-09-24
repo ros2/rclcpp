@@ -297,6 +297,8 @@ StaticExecutorEntitiesCollector::add_callback_group(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Callback group has already been added to an executor.");
   }
+  bool is_new_node = !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
+    !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
   auto insert_info = weak_groups_to_nodes.insert(
     std::make_pair(weak_group_ptr, node_ptr));
@@ -304,8 +306,6 @@ StaticExecutorEntitiesCollector::add_callback_group(
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
   }
-  bool is_new_node = !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
-    !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
   if (is_new_node) {
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
     weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
