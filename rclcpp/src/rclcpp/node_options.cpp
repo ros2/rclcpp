@@ -255,6 +255,19 @@ NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publishe
   return *this;
 }
 
+bool
+NodeOptions::start_parameter_event_subscriber() const
+{
+  return this->start_parameter_event_subscriber_;
+}
+
+NodeOptions &
+NodeOptions::start_parameter_event_subscriber(bool start_parameter_event_subscriber)
+{
+  this->start_parameter_event_subscriber_ = start_parameter_event_subscriber;
+  return *this;
+}
+
 const rclcpp::QoS &
 NodeOptions::parameter_event_qos() const
 {

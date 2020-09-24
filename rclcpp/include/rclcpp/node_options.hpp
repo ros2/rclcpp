@@ -46,6 +46,7 @@ public:
    *   - enable_topic_statistics = false
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
+   *   - start_parameter_event_subscriber = true
    *   - parameter_event_qos = rclcpp::ParameterEventQoS
    *     - with history setting and depth from rmw_qos_profile_parameter_events
    *   - parameter_event_publisher_options = rclcpp::PublisherOptionsBase
@@ -243,6 +244,19 @@ public:
   NodeOptions &
   start_parameter_event_publisher(bool start_parameter_event_publisher);
 
+  /// Return the start_parameter_event_subscriber flag.
+  RCLCPP_PUBLIC
+  bool
+  start_parameter_event_subscriber() const;
+
+  /// Set the start_parameter_event_subscriber flag, return this for parameter idiom.
+  /**
+   * If true, a subscriber to parameter events is created
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  start_parameter_event_subscriber(bool start_parameter_event_subscriber);
+
   /// Return a reference to the parameter_event_qos QoS.
   RCLCPP_PUBLIC
   const rclcpp::QoS &
@@ -366,6 +380,8 @@ private:
   bool start_parameter_services_ {true};
 
   bool start_parameter_event_publisher_ {true};
+
+  bool start_parameter_event_subscriber_ {true};
 
   rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)

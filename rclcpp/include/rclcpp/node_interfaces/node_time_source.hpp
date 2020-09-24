@@ -46,7 +46,8 @@ public:
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
+    bool start_parameter_event_subscriber
   );
 
   RCLCPP_PUBLIC
