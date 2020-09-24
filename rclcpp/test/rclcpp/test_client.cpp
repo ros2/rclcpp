@@ -208,8 +208,11 @@ protected:
 
     auto request = std::make_shared<test_msgs::srv::Empty::Request>();
     bool received_response = false;
-    auto callback = [&received_response](SharedFuture future_response) {
-        ASSERT_NE(nullptr, future_response.get());
+    ::testing::AssertionResult request_result = ::testing::AssertionSuccess();
+    auto callback = [&received_response, &request_result](SharedFuture future_response) {
+        if (nullptr == future_response.get()) {
+          request_result = ::testing::AssertionFailure() << "Future response was null";
+        }
         received_response = true;
       };
 
@@ -225,7 +228,8 @@ protected:
     if (!received_response) {
       return ::testing::AssertionFailure() << "Waiting for response timed out";
     }
-    return ::testing::AssertionSuccess();
+
+    return request_result;
   }
 
   std::shared_ptr<rclcpp::Node> node;
@@ -302,6 +306,13 @@ TEST_F(TestClientWithServer, take_response) {
   test_msgs::srv::Empty::Response response;
   EXPECT_FALSE(client->take_response(response, *request_header.get()));
 
+  {
+    // Checking rcl_take_response in rclcpp::ClientBase::take_type_erased_response
+    auto client = node->create_client<test_msgs::srv::Empty>(service_name);
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_take_response, RCL_RET_OK);
+    EXPECT_TRUE(client->take_response(response, *request_header.get()));
+  }
   {
     // Checking rcl_take_response in rclcpp::ClientBase::take_type_erased_response
     auto client = node->create_client<test_msgs::srv::Empty>(service_name);
