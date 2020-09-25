@@ -203,7 +203,7 @@ TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_set_add_guard_condi
     std::runtime_error("failed to add shutdown guard condition to wait set: error not set"));
 }
 
-TEST_F(TestGraphListener, error_run_graph_listener_mock_wait) {
+TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_error) {
   auto global_context = rclcpp::contexts::get_global_default_context();
   auto graph_listener_mocked =
     std::make_shared<TestGraphListenerProtectedMethods>(global_context);
@@ -215,7 +215,7 @@ TEST_F(TestGraphListener, error_run_graph_listener_mock_wait) {
     std::runtime_error("failed to wait on wait set: error not set"));
 }
 
-TEST_F(TestGraphListener, error_run_graph_listener_mock_wait) {
+TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_timeout) {
   auto global_context = rclcpp::contexts::get_global_default_context();
   auto graph_listener_mocked =
     std::make_shared<TestGraphListenerProtectedMethods>(global_context);
