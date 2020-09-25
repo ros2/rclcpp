@@ -289,3 +289,30 @@ TEST_F(TestGraphListener, test_errors_graph_listener_add_remove_node) {
     graph_listener()->remove_node(node_graph()),
     std::runtime_error("node not found"));
 }
+
+/* Shutdown errors */
+TEST_F(TestGraphListener, test_graph_listener_shutdown_wait_fini_error_nothrow) {
+  graph_listener()->start_if_not_started();
+  auto mock_wait_set_fini = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_wait_set_fini, RCL_RET_ERROR);
+  // Exception is logged when using nothrow_t
+  EXPECT_NO_THROW(graph_listener()->shutdown(std::nothrow_t()));
+}
+
+TEST_F(TestGraphListener, test_graph_listener_shutdown_wait_fini_error_throw) {
+  graph_listener()->start_if_not_started();
+  auto mock_wait_set_fini = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_wait_set_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    graph_listener()->shutdown(),
+    std::runtime_error("failed to finalize wait set: error not set"));
+}
+
+TEST_F(TestGraphListener, test_graph_listener_shutdown_guard_fini_error_throw) {
+  graph_listener()->start_if_not_started();
+  auto mock_wait_set_fini = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    graph_listener()->shutdown(),
+    std::runtime_error("failed to finalize interrupt guard condition: error not set"));
+}
