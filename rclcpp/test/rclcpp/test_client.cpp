@@ -246,7 +246,7 @@ TEST_F(TestClientWithServer, async_send_request_callback_with_request) {
     rclcpp::Client<test_msgs::srv::Empty>::SharedFutureWithRequest;
 
   auto client = node->create_client<test_msgs::srv::Empty>(service_name);
-  EXPECT_TRUE(client->wait_for_service());
+  ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(1)));
 
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
   bool received_response = false;
@@ -299,30 +299,28 @@ TEST_F(TestClientWithServer, async_send_request_rcl_service_server_is_available_
 
 TEST_F(TestClientWithServer, take_response) {
   auto client = node->create_client<test_msgs::srv::Empty>(service_name);
+  ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(1)));
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
-
-  client->async_send_request(request);
   auto request_header = client->create_request_header();
   test_msgs::srv::Empty::Response response;
+
+  client->async_send_request(request);
   EXPECT_FALSE(client->take_response(response, *request_header.get()));
 
   {
     // Checking rcl_take_response in rclcpp::ClientBase::take_type_erased_response
-    auto client = node->create_client<test_msgs::srv::Empty>(service_name);
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_take_response, RCL_RET_OK);
     EXPECT_TRUE(client->take_response(response, *request_header.get()));
   }
   {
     // Checking rcl_take_response in rclcpp::ClientBase::take_type_erased_response
-    auto client = node->create_client<test_msgs::srv::Empty>(service_name);
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_take_response, RCL_RET_CLIENT_TAKE_FAILED);
     EXPECT_FALSE(client->take_response(response, *request_header.get()));
   }
   {
     // Checking rcl_take_response in rclcpp::ClientBase::take_type_erased_response
-    auto client = node->create_client<test_msgs::srv::Empty>(service_name);
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_take_response, RCL_RET_ERROR);
     EXPECT_THROW(
