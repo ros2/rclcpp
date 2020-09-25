@@ -79,7 +79,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
         "failed to destroy guard condition: %s", rcl_get_error_string().str);
       rcl_reset_error();
     }
-    throw std::runtime_error("Failed to create wait set in Executor constructor");
+    throw_from_rcl_error(ret, "Failed to create wait set in Executor constructor");
   }
 }
 
@@ -219,8 +219,9 @@ Executor::add_callback_group_to_map(
     weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
     if (notify) {
       // Interrupt waiting to handle new node
-      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-        throw std::runtime_error(rcl_get_error_string().str);
+      rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
+      if (ret != RCL_RET_OK) {
+        throw_from_rcl_error(ret, "Failed to trigger guard condition on callback group add");
       }
     }
     // Add the node's notify condition to the guard condition handles
@@ -293,8 +294,9 @@ Executor::remove_callback_group_from_map(
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
     weak_nodes_to_guard_conditions_.erase(node_weak_ptr);
     if (notify) {
-      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-        throw std::runtime_error(rcl_get_error_string().str);
+      rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
+      if (ret != RCL_RET_OK) {
+        throw_from_rcl_error(ret, "Failed to trigger guard condition on callback group remove");
       }
     }
     std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
@@ -470,8 +472,9 @@ void
 Executor::cancel()
 {
   spinning.store(false);
-  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(rcl_get_error_string().str);
+  rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
+  if (ret != RCL_RET_OK) {
+    throw_from_rcl_error(ret, "Failed to trigger guard condition in cancel");
   }
 }
 
@@ -509,8 +512,9 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   any_exec.callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(rcl_get_error_string().str);
+  rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
+  if (ret != RCL_RET_OK) {
+    throw_from_rcl_error(ret, "Failed to trigger guard condition from execute_any_executable");
   }
 }
 
@@ -696,19 +700,19 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     }
 
     // clear wait set
-    if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {
-      throw std::runtime_error("Couldn't clear wait set");
+    rcl_ret_t ret = rcl_wait_set_clear(&wait_set_);
+    if (ret != RCL_RET_OK) {
+      throw_from_rcl_error(ret, "Couldn't clear wait set");
     }
 
     // The size of waitables are accounted for in size of the other entities
-    rcl_ret_t ret = rcl_wait_set_resize(
+    ret = rcl_wait_set_resize(
       &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
       memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
       memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services(),
       memory_strategy_->number_of_ready_events());
     if (RCL_RET_OK != ret) {
-      throw std::runtime_error(
-              std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
+      throw_from_rcl_error(ret, "Couldn't resize the wait set");
     }
 
     if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {
