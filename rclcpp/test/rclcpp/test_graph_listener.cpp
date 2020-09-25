@@ -40,8 +40,7 @@ public:
     rclcpp::init(0, nullptr);
     node_ = std::make_shared<rclcpp::Node>(node_name, node_namespace);
 
-    node_graph_ = std::make_shared<rclcpp::node_interfaces::NodeGraph>(
-      node_->get_node_base_interface().get());
+    node_graph_ = node_->get_node_graph_interface();
     ASSERT_NE(nullptr, node_graph_);
 
     graph_listener_ =
@@ -56,12 +55,12 @@ public:
 
 protected:
   std::shared_ptr<rclcpp::Node> node() {return node_;}
-  rclcpp::node_interfaces::NodeGraph * node_graph() {return node_graph_.get();}
+  rclcpp::node_interfaces::NodeGraphInterface * node_graph() {return node_graph_.get();}
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener() {return graph_listener_;}
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
-  std::shared_ptr<rclcpp::node_interfaces::NodeGraph> node_graph_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
 };
 
