@@ -67,7 +67,8 @@ private:
 
 /* Run base class init/shutdown */
 TEST_F(TestGraphListener, construction_and_destruction) {
-  void();
+  EXPECT_FALSE(graph_listener()->has_node(node_graph()));
+  EXPECT_FALSE(graph_listener()->is_shutdown());
 }
 
 // Required for mocking_utils below
