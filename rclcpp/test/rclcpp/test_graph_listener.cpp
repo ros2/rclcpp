@@ -86,6 +86,7 @@ TEST_F(TestGraphListener, error_construct_graph_listener) {
   {
     auto graph_listener_error =
     std::make_shared<rclcpp::graph_listener::GraphListener>(get_global_default_context());
+    graph_listener_error.reset();
   }, std::runtime_error("failed to create interrupt guard condition: error not set"));
 }
 
