@@ -26,7 +26,14 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
+
+#include "rmw/validate_namespace.h"
+
 #include "test_msgs/msg/basic_types.hpp"
+#include "test_msgs/msg/empty.hpp"
+#include "test_msgs/srv/empty.hpp"
+
+#include "../mocking_utils/patch.hpp"
 
 class TestNode : public ::testing::Test
 {
@@ -50,7 +57,19 @@ protected:
 TEST_F(TestNode, construction_and_destruction) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-    (void)node;
+    EXPECT_NE(nullptr, node->get_node_base_interface());
+    EXPECT_NE(nullptr, node->get_node_clock_interface());
+    EXPECT_NE(nullptr, node->get_node_graph_interface());
+    EXPECT_NE(nullptr, node->get_node_logging_interface());
+    EXPECT_NE(nullptr, node->get_node_time_source_interface());
+    EXPECT_NE(nullptr, node->get_node_timers_interface());
+    EXPECT_NE(nullptr, node->get_node_topics_interface());
+    EXPECT_NE(nullptr, node->get_node_services_interface());
+    EXPECT_NE(nullptr, node->get_node_parameters_interface());
+    EXPECT_NE(nullptr, node->get_node_waitables_interface());
+    EXPECT_NE(nullptr, node->get_node_options().get_rcl_node_options());
+    EXPECT_NE(nullptr, node->get_graph_event());
+    EXPECT_NE(nullptr, node->get_clock());
   }
 
   {
@@ -279,8 +298,11 @@ TEST_F(TestNode, get_logger) {
 TEST_F(TestNode, get_clock) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto ros_clock = node->get_clock();
-  EXPECT_TRUE(ros_clock != nullptr);
+  EXPECT_NE(nullptr, ros_clock);
   EXPECT_EQ(ros_clock->get_clock_type(), RCL_ROS_TIME);
+
+  const rclcpp::Node & const_node = *node.get();
+  EXPECT_NE(nullptr, const_node.get_clock());
 }
 
 TEST_F(TestNode, now) {
@@ -793,6 +815,19 @@ TEST_F(TestNode, has_parameter) {
     EXPECT_TRUE(node->has_parameter(name));
     node->undeclare_parameter(name);
     EXPECT_FALSE(node->has_parameter(name));
+  }
+}
+
+TEST_F(TestNode, list_parameters) {
+  auto node = std::make_shared<rclcpp::Node>("test_list_parameter_node"_unq);
+  {
+    // normal use
+    auto name = "parameter"_unq;
+    const size_t before_size = node->list_parameters({}, 1u).names.size();
+    node->declare_parameter(name);
+    EXPECT_EQ(1u + before_size, node->list_parameters({}, 1u).names.size());
+    node->undeclare_parameter(name);
+    EXPECT_EQ(before_size, node->list_parameters({}, 1u).names.size());
   }
 }
 
@@ -2454,4 +2489,90 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   {
     subscription_list = node->get_subscriptions_info_by_topic("13");
   }, rclcpp::exceptions::InvalidTopicNameError);
+}
+
+TEST_F(TestNode, callback_groups) {
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  size_t num_callback_groups_in_basic_node = node->get_callback_groups().size();
+
+  auto group1 = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_EQ(1u + num_callback_groups_in_basic_node, node->get_callback_groups().size());
+
+  auto group2 = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  EXPECT_EQ(2u + num_callback_groups_in_basic_node, node->get_callback_groups().size());
+}
+
+// This is tested more thoroughly in node_interfaces/test_node_graph
+TEST_F(TestNode, get_entity_names) {
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  const auto node_names = node->get_node_names();
+  EXPECT_NE(
+    node_names.end(),
+    std::find(node_names.begin(), node_names.end(), node->get_fully_qualified_name()));
+
+  const auto topic_names_and_types = node->get_topic_names_and_types();
+  EXPECT_EQ(topic_names_and_types.end(), topic_names_and_types.find("topic"));
+
+  EXPECT_EQ(0u, node->count_publishers("topic"));
+  EXPECT_EQ(0u, node->count_subscribers("topic"));
+
+  const auto service_names_and_types = node->get_service_names_and_types();
+  EXPECT_EQ(service_names_and_types.end(), service_names_and_types.find("service"));
+
+  const auto service_names_and_types_by_node =
+    node->get_service_names_and_types_by_node("node", "/ns");
+  EXPECT_EQ(
+    service_names_and_types_by_node.end(),
+    service_names_and_types_by_node.find("service"));
+}
+
+TEST_F(TestNode, wait_for_graph_event) {
+  // Even though this node is only used in the std::thread below, it's here to ensure there is no
+  // race condition in its destruction and modification of the node_graph
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+
+  constexpr std::chrono::seconds timeout(10);
+  auto thread_start = std::chrono::steady_clock::now();
+  auto thread_completion = thread_start;
+
+  // This runs until the graph is updated
+  std::thread graph_event_wait_thread([&thread_completion, node, timeout]() {
+      auto event = node->get_graph_event();
+      EXPECT_NO_THROW(node->wait_for_graph_change(event, timeout));
+      thread_completion = std::chrono::steady_clock::now();
+    });
+
+  // Start creating nodes until event triggers in graph_event_wait_thread or until 100 nodes have
+  // been created
+  std::vector<std::shared_ptr<rclcpp::Node>> nodes;
+  while (thread_completion == thread_start && nodes.size() < 100) {
+    nodes.emplace_back(std::make_shared<rclcpp::Node>("node"_unq, "ns"));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  graph_event_wait_thread.join();
+  // Nodes will probably only be of size 1
+  EXPECT_LT(0u, nodes.size());
+  EXPECT_GT(100u, nodes.size());
+  EXPECT_NE(thread_start, thread_completion);
+  EXPECT_GT(timeout, thread_completion - thread_start);
+}
+
+TEST_F(TestNode, create_sub_node_rmw_validate_namespace_error) {
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rmw_validate_namespace, RMW_RET_INVALID_ARGUMENT);
+
+    // reset() is not necessary for this exception, but it handles unused return value warning
+    EXPECT_THROW(
+      node->create_sub_node("ns").reset(),
+      rclcpp::exceptions::RCLInvalidArgument);
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rmw_validate_namespace, RMW_RET_ERROR);
+    EXPECT_THROW(
+      node->create_sub_node("ns").reset(),
+      rclcpp::exceptions::RCLError);
+  }
 }
