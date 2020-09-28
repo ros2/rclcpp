@@ -22,15 +22,8 @@ int main(int argc, char * argv[])
 {
   /// Component container with a multi-threaded executor.
   rclcpp::init(argc, argv);
-
-  rclcpp::NodeOptions options;
-  options.start_parameter_services(false);
-  options.start_parameter_event_publisher(false);
-
   auto exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-  auto node = std::make_shared<rclcpp_components::ComponentManager>(
-    exec, "ComponentManager",
-    options);
+  auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
   exec->add_node(node);
   exec->spin();
 }
