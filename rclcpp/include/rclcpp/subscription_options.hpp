@@ -103,7 +103,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
     auto message_alloc = std::make_shared<MessageAllocatorT>(*allocator.get());
     // TODO(stevewolter): This is likely to invoke undefined behavior - message_alloc
-    // goes out of scope at the end of this function, but the allocator doesn't.
+    // goes out of scope at the end of this function, but the allocator doesn't. See #1339.
     result.allocator = get_rcl_allocator(*message_alloc);
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
