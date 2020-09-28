@@ -106,16 +106,6 @@ TEST_F(TestGraphListener, error_start_graph_listener) {
       std::runtime_error("failed to initialize wait set: error not set"));
   }
   {
-    auto context_to_destroy = std::make_shared<rclcpp::contexts::DefaultContext>();
-    context_to_destroy->init(0, nullptr);
-    auto graph_listener_error =
-      std::make_shared<rclcpp::graph_listener::GraphListener>(context_to_destroy);
-    context_to_destroy.reset();
-    RCLCPP_EXPECT_THROW_EQ(
-      graph_listener_error->start_if_not_started(),
-      std::runtime_error("parent context was destroyed"));
-  }
-  {
     EXPECT_NO_THROW(graph_listener()->shutdown());
     RCLCPP_EXPECT_THROW_EQ(
       graph_listener()->start_if_not_started(),
