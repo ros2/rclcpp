@@ -216,20 +216,6 @@ TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_timeout) {
     std::runtime_error("rcl_wait unexpectedly timed out"));
 }
 
-TEST_F(TestGraphListener, error_run_graph_listener_mock_get_graph_cond) {
-  auto global_context = rclcpp::contexts::get_global_default_context();
-  auto graph_listener_test =
-    std::make_shared<TestGraphListenerProtectedMethods>(global_context);
-  graph_listener_test->mock_start_thread();
-  EXPECT_NO_THROW(graph_listener_test->add_node(node_graph()));
-  EXPECT_NE(nullptr, node()->get_node_graph_interface()->get_graph_event());
-  auto mock_wait_set_clear = mocking_utils::patch_and_return(
-    "lib:rclcpp", rcl_node_get_graph_guard_condition, nullptr);
-  RCLCPP_EXPECT_THROW_EQ(
-    graph_listener_test->run_protected(),
-    std::runtime_error("failed to get graph guard condition: error not set"));
-}
-
 /* Add/Remove node usage */
 TEST_F(TestGraphListener, test_graph_listener_add_remove_node) {
   EXPECT_FALSE(graph_listener()->has_node(node_graph()));
