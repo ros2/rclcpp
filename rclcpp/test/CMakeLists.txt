@@ -79,8 +79,9 @@ if(TARGET test_client)
     "rmw"
     "rosidl_runtime_cpp"
     "rosidl_typesupport_cpp"
+    "test_msgs"
   )
-  target_link_libraries(test_client ${PROJECT_NAME})
+  target_link_libraries(test_client ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_create_timer rclcpp/test_create_timer.cpp)
 if(TARGET test_create_timer)
