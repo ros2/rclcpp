@@ -68,6 +68,10 @@ public:
     rcl_guard_condition_t * executor_guard_condition);
 
   RCLCPP_PUBLIC
+  bool
+  is_init() {return initialized;}
+
+  RCLCPP_PUBLIC
   void
   execute() override;
 
@@ -329,6 +333,9 @@ private:
 
   /// Executable list: timers, subscribers, clients, services and waitables
   rclcpp::experimental::ExecutableList exec_list_;
+
+  /// Bool to check if the entities collector has been initialized
+  bool initialized = false;
 };
 
 }  // namespace executors

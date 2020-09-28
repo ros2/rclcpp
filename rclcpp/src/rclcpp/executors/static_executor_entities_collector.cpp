@@ -76,8 +76,12 @@ StaticExecutorEntitiesCollector::init(
 
   // Add executor's guard condition
   memory_strategy_->add_guard_condition(executor_guard_condition);
+
   // Get memory strategy and executable list. Prepare wait_set_
   execute();
+
+  // The entities collector is now initialized
+  initialized = true;
 }
 
 void

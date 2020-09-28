@@ -51,6 +51,34 @@ StaticSingleThreadedExecutor::spin()
 }
 
 void
+StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
+{
+  // Make sure the entities collector has been initialized
+  if (!entities_collector_->is_init()) {
+    throw std::runtime_error("spin_some() called without initializing the entities collector");
+  }
+
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+
+  if (rclcpp::ok(context_) && spinning.load()) {
+    // Refresh wait set, wait for work and execute ready executables
+    entities_collector_->refresh_wait_set(max_duration);
+    execute_ready_executables();
+  }
+}
+
+void
+StaticSingleThreadedExecutor::init_entities_collector()
+{
+  // Set memory_strategy_ and exec_list_ based on weak_nodes_
+  // Prepare wait_set_ based on memory_strategy_
+  entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+}
+
+void
 StaticSingleThreadedExecutor::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
