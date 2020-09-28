@@ -401,7 +401,7 @@ if(TARGET test_service)
     "rosidl_typesupport_cpp"
     "test_msgs"
   )
-  target_link_libraries(test_service ${PROJECT_NAME})
+  target_link_libraries(test_service ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_subscription rclcpp/test_subscription.cpp)
 if(TARGET test_subscription)
