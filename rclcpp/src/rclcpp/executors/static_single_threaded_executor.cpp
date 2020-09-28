@@ -14,6 +14,7 @@
 
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
 
+#include <chrono>
 #include <memory>
 #include <vector>
 
@@ -48,6 +49,84 @@ StaticSingleThreadedExecutor::spin()
     // Refresh wait set and wait for work
     entities_collector_->refresh_wait_set();
     execute_ready_executables();
+  }
+}
+
+void
+StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
+{
+  // In this context a 0 input max_duration means no duration limit
+  if (std::chrono::nanoseconds(0) == max_duration) {
+    max_duration = std::chrono::nanoseconds::max();
+  }
+
+  return this->spin_some_impl(max_duration, false);
+}
+
+void
+StaticSingleThreadedExecutor::spin_all(std::chrono::nanoseconds max_duration)
+{
+  if (max_duration <= std::chrono::nanoseconds(0)) {
+    throw std::invalid_argument("max_duration must be positive");
+  }
+  return this->spin_some_impl(max_duration, true);
+}
+
+void
+StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
+{
+  // Make sure the entities collector has been initialized
+  if (!entities_collector_->is_init()) {
+    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+  }
+
+  auto start = std::chrono::steady_clock::now();
+  auto max_duration_not_elapsed = [max_duration, start]() {
+      if (std::chrono::nanoseconds(0) == max_duration) {
+        // told to spin forever if need be
+        return true;
+      } else if (std::chrono::steady_clock::now() - start < max_duration) {
+        // told to spin only for some maximum amount of time
+        return true;
+      }
+      // spun too long
+      return false;
+    };
+
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
+    // Get executables that are ready now
+    entities_collector_->refresh_wait_set(std::chrono::milliseconds::zero());
+    // Execute ready executables
+    bool work_available = execute_ready_executables();
+    if (!work_available || !exhaustive) {
+      break;
+    }
+  }
+}
+
+void
+StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
+{
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+
+  // Make sure the entities collector has been initialized
+  if (!entities_collector_->is_init()) {
+    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+  }
+
+  if (rclcpp::ok(context_) && spinning.load()) {
+    // Wait until we have a ready entity or timeout expired
+    entities_collector_->refresh_wait_set(timeout);
+    // Execute ready executables
+    execute_ready_executables(true);
   }
 }
 
@@ -138,14 +217,20 @@ StaticSingleThreadedExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr
   this->remove_node(node_ptr->get_node_base_interface(), notify);
 }
 
-void
-StaticSingleThreadedExecutor::execute_ready_executables()
+bool
+StaticSingleThreadedExecutor::execute_ready_executables(bool spin_once)
 {
+  bool any_ready_executable = false;
+
   // Execute all the ready subscriptions
   for (size_t i = 0; i < wait_set_.size_of_subscriptions; ++i) {
     if (i < entities_collector_->get_number_of_subscriptions()) {
       if (wait_set_.subscriptions[i]) {
         execute_subscription(entities_collector_->get_subscription(i));
+        if (spin_once) {
+          return true;
+        }
+        any_ready_executable = true;
       }
     }
   }
@@ -154,6 +239,10 @@ StaticSingleThreadedExecutor::execute_ready_executables()
     if (i < entities_collector_->get_number_of_timers()) {
       if (wait_set_.timers[i] && entities_collector_->get_timer(i)->is_ready()) {
         execute_timer(entities_collector_->get_timer(i));
+        if (spin_once) {
+          return true;
+        }
+        any_ready_executable = true;
       }
     }
   }
@@ -162,6 +251,10 @@ StaticSingleThreadedExecutor::execute_ready_executables()
     if (i < entities_collector_->get_number_of_services()) {
       if (wait_set_.services[i]) {
         execute_service(entities_collector_->get_service(i));
+        if (spin_once) {
+          return true;
+        }
+        any_ready_executable = true;
       }
     }
   }
@@ -170,6 +263,10 @@ StaticSingleThreadedExecutor::execute_ready_executables()
     if (i < entities_collector_->get_number_of_clients()) {
       if (wait_set_.clients[i]) {
         execute_client(entities_collector_->get_client(i));
+        if (spin_once) {
+          return true;
+        }
+        any_ready_executable = true;
       }
     }
   }
@@ -179,6 +276,11 @@ StaticSingleThreadedExecutor::execute_ready_executables()
     if (waitable->is_ready(&wait_set_)) {
       auto data = waitable->take_data();
       waitable->execute(data);
+      if (spin_once) {
+        return true;
+      }
+      any_ready_executable = true;
     }
   }
+  return any_ready_executable;
 }

@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 
+#include <chrono>
 #include <cassert>
 #include <cstdlib>
 #include <memory>
@@ -77,6 +78,42 @@ public:
   RCLCPP_PUBLIC
   void
   spin() override;
+
+  /// Static executor implementation of spin some
+  /**
+   * This non-blocking function will execute entities that
+   * were ready when this API was called, until timeout or no
+   * more work available. Entities that got ready while
+   * executing work, won't be taken into account here.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_some();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
+   */
+  RCLCPP_PUBLIC
+  void
+  spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0)) override;
+
+  /// Static executor implementation of spin all
+  /**
+   * This non-blocking function will execute entities until
+   * timeout or no more work available. If new entities get ready
+   * while executing work available, they will be executed
+   * as long as the timeout hasn't expired.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_all();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
+   */
+  RCLCPP_PUBLIC
+  void
+  spin_all(std::chrono::nanoseconds max_duration) override;
 
   /// Add a callback group to an executor.
   /**
@@ -224,27 +261,6 @@ public:
   /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
   RCLCPP_PUBLIC
   void
-  spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0)) override
-  {
-    (void)max_duration;
-    throw rclcpp::exceptions::UnimplementedError(
-            "spin_some is not implemented for StaticSingleThreadedExecutor, use spin or "
-            "spin_until_future_complete");
-  }
-
-  /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
-  RCLCPP_PUBLIC
-  void
-  spin_all(std::chrono::nanoseconds) override
-  {
-    throw rclcpp::exceptions::UnimplementedError(
-            "spin_all is not implemented for StaticSingleThreadedExecutor, use spin or "
-            "spin_until_future_complete");
-  }
-
-  /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
-  RCLCPP_PUBLIC
-  void
   spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1)) override
   {
     (void)timeout;
@@ -254,14 +270,22 @@ public:
   }
 
 protected:
-  /// Check which executables in ExecutableList struct are ready from wait_set and execute them.
   /**
-   * \param[in] exec_list Structure that can hold subscriptionbases, timerbases, etc
-   * \param[in] timeout Optional timeout parameter.
+   * @brief Executes ready executables from wait set.
+   * @param spin_once if true executes only the first ready executable.
+   * @return true if any executable was ready.
    */
   RCLCPP_PUBLIC
+  bool
+  execute_ready_executables(bool spin_once = false);
+
+  RCLCPP_PUBLIC
   void
-  execute_ready_executables();
+  spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
+
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout) override;
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)

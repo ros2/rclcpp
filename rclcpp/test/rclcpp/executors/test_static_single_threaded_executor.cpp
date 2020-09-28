@@ -45,16 +45,6 @@ public:
   }
 };
 
-TEST_F(TestStaticSingleThreadedExecutor, check_unimplemented) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  executor.add_node(node);
-
-  EXPECT_THROW(executor.spin_some(), rclcpp::exceptions::UnimplementedError);
-  EXPECT_THROW(executor.spin_all(0ns), rclcpp::exceptions::UnimplementedError);
-  EXPECT_THROW(executor.spin_once(0ns), rclcpp::exceptions::UnimplementedError);
-}
-
 TEST_F(TestStaticSingleThreadedExecutor, add_callback_group_trigger_guard_failed) {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");

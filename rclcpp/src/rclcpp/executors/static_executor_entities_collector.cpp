@@ -76,9 +76,13 @@ StaticExecutorEntitiesCollector::init(
 
   // Add executor's guard condition
   memory_strategy_->add_guard_condition(executor_guard_condition);
+
   // Get memory strategy and executable list. Prepare wait_set_
   std::shared_ptr<void> shared_ptr;
   execute(shared_ptr);
+
+  // The entities collector is now initialized
+  initialized_ = true;
 }
 
 void
