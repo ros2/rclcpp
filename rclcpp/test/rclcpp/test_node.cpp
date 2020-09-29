@@ -2538,8 +2538,8 @@ TEST_F(TestNode, wait_for_graph_event) {
       thread_completion = std::chrono::steady_clock::now();
     });
 
-  // Start creating nodes until event triggers in graph_event_wait_thread or until 100 nodes have
-  // been created
+  // Start creating nodes until at least one event triggers in graph_event_wait_thread or until 100
+  // nodes have been created (at which point this is a failure)
   std::vector<std::shared_ptr<rclcpp::Node>> nodes;
   while (thread_completion == thread_start && nodes.size() < 100) {
     nodes.emplace_back(std::make_shared<rclcpp::Node>("node"_unq, "ns"));
