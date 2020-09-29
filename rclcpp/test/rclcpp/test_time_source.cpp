@@ -211,6 +211,7 @@ TEST_F(TestTimeSource, ROS_time_valid_attach_detach) {
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   ts.detachClock(ros_clock);
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
 
 TEST_F(TestTimeSource, ROS_time_valid_wall_time) {
