@@ -188,7 +188,7 @@ if(TARGET test_node)
     "rosidl_typesupport_cpp"
     "test_msgs"
   )
-  target_link_libraries(test_node ${PROJECT_NAME})
+  target_link_libraries(test_node ${PROJECT_NAME} mimick)
 endif()
 
 ament_add_gtest(test_node_interfaces__get_node_interfaces
