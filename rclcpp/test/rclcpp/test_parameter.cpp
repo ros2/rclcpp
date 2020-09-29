@@ -44,6 +44,9 @@ TEST_F(TestParameter, not_set_variant) {
   rclcpp::Parameter not_set_variant;
   EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, not_set_variant.get_type());
   EXPECT_EQ("not set", not_set_variant.get_type_name());
+  std::stringstream ss;
+  ss << not_set_variant;
+  EXPECT_EQ("{\"name\": \"\", \"type\": \"not set\", \"value\": \"not set\"}", ss.str());
 
   EXPECT_THROW(not_set_variant.as_bool(), rclcpp::ParameterTypeException);
   EXPECT_THROW(not_set_variant.as_int(), rclcpp::ParameterTypeException);
@@ -67,6 +70,13 @@ TEST_F(TestParameter, not_set_variant) {
   EXPECT_THROW(
     not_set_variant.get_value<int>(),
     rclcpp::exceptions::InvalidParameterTypeException);
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(not_set_variant, not_set_variant);
+  rclcpp::Parameter not_set_variant2;
+  EXPECT_EQ(not_set_variant, not_set_variant2);
+  rclcpp::Parameter bool_variant("bool_param", true);
+  EXPECT_NE(not_set_variant, bool_variant);
 }
 
 TEST_F(TestParameter, bool_variant) {
@@ -92,6 +102,10 @@ TEST_F(TestParameter, bool_variant) {
   EXPECT_THROW(bool_variant_true.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("true", bool_variant_true.value_to_string());
+  std::stringstream ss;
+  ss << bool_variant_true;
+  EXPECT_EQ("{\"name\": \"bool_param\", \"type\": \"bool\", \"value\": \"true\"}", ss.str());
+
 
   rclcpp::Parameter bool_variant_false("bool_param", false);
   EXPECT_FALSE(bool_variant_false.get_value<rclcpp::ParameterType::PARAMETER_BOOL>());
@@ -125,6 +139,11 @@ TEST_F(TestParameter, bool_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
     bool_variant_false.get_value_message().type);
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(bool_variant_true, bool_variant_true);
+  EXPECT_NE(bool_variant_false, bool_variant_true);
+  EXPECT_EQ(bool_variant_true, from_msg_true);
 }
 
 TEST_F(TestParameter, integer_variant) {
@@ -154,6 +173,9 @@ TEST_F(TestParameter, integer_variant) {
   EXPECT_THROW(integer_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("42", integer_variant.value_to_string());
+  std::stringstream ss;
+  ss << integer_variant;
+  EXPECT_EQ("{\"name\": \"integer_param\", \"type\": \"integer\", \"value\": \"42\"}", ss.str());
 
   rcl_interfaces::msg::Parameter integer_param = integer_variant.to_parameter_msg();
   EXPECT_EQ("integer_param", integer_param.name);
@@ -173,6 +195,11 @@ TEST_F(TestParameter, integer_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(integer_variant, integer_variant);
+  EXPECT_NE(integer_variant, rclcpp::Parameter("integer_param", 41));
+  EXPECT_EQ(integer_variant, from_msg);
 }
 
 TEST_F(TestParameter, long_integer_variant) {
@@ -202,6 +229,12 @@ TEST_F(TestParameter, long_integer_variant) {
   EXPECT_THROW(long_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("9223372036854775807", long_variant.value_to_string());
+  std::stringstream ss;
+  ss << long_variant;
+  EXPECT_EQ(
+    "{\"name\": \"long_integer_param\", \"type\": \"integer\", \"value\": "
+    "\"9223372036854775807\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter integer_param = long_variant.to_parameter_msg();
   EXPECT_EQ("long_integer_param", integer_param.name);
@@ -221,6 +254,12 @@ TEST_F(TestParameter, long_integer_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     from_msg.get_value_message().type);
+
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(long_variant, long_variant);
+  EXPECT_NE(long_variant, rclcpp::Parameter("long_integer_param", 41));
+  EXPECT_EQ(long_variant, from_msg);
 }
 
 TEST_F(TestParameter, float_variant) {
@@ -250,6 +289,10 @@ TEST_F(TestParameter, float_variant) {
   EXPECT_THROW(float_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("42.000000", float_variant.value_to_string());
+  std::stringstream ss;
+  ss << float_variant;
+  EXPECT_EQ(
+    "{\"name\": \"float_param\", \"type\": \"double\", \"value\": \"42.000000\"}", ss.str());
 
   rcl_interfaces::msg::Parameter float_param = float_variant.to_parameter_msg();
   EXPECT_EQ("float_param", float_param.name);
@@ -269,6 +312,11 @@ TEST_F(TestParameter, float_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(float_variant, float_variant);
+  EXPECT_NE(float_variant, rclcpp::Parameter("float_param", 41.0));
+  EXPECT_EQ(float_variant, from_msg);
 }
 
 TEST_F(TestParameter, double_variant) {
@@ -298,6 +346,10 @@ TEST_F(TestParameter, double_variant) {
   EXPECT_THROW(double_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("-42.100000", double_variant.value_to_string());
+  std::stringstream ss;
+  ss << double_variant;
+  EXPECT_EQ(
+    "{\"name\": \"double_param\", \"type\": \"double\", \"value\": \"-42.100000\"}", ss.str());
 
   rcl_interfaces::msg::Parameter double_param = double_variant.to_parameter_msg();
   EXPECT_EQ("double_param", double_param.name);
@@ -317,6 +369,11 @@ TEST_F(TestParameter, double_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(double_variant, double_variant);
+  EXPECT_NE(double_variant, rclcpp::Parameter("double_param", -41.2));
+  EXPECT_EQ(double_variant, from_msg);
 }
 
 TEST_F(TestParameter, string_variant) {
@@ -346,6 +403,9 @@ TEST_F(TestParameter, string_variant) {
   EXPECT_THROW(string_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ(TEST_VALUE, string_variant.value_to_string());
+  std::stringstream ss;
+  ss << string_variant;
+  EXPECT_EQ("{\"name\": \"string_param\", \"type\": \"string\", \"value\": \"ROS2\"}", ss.str());
 
   rcl_interfaces::msg::Parameter string_param = string_variant.to_parameter_msg();
   EXPECT_EQ("string_param", string_param.name);
@@ -363,6 +423,11 @@ TEST_F(TestParameter, string_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  EXPECT_EQ(string_variant, string_variant);
+  EXPECT_NE(string_variant, rclcpp::Parameter("string_param", "ROS1"));
+  EXPECT_EQ(string_variant, from_msg);
 }
 
 TEST_F(TestParameter, byte_array_variant) {
@@ -392,6 +457,12 @@ TEST_F(TestParameter, byte_array_variant) {
   EXPECT_THROW(byte_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("[0x52, 0x4f, 0x53, 0x32]", byte_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << byte_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"byte_array_param\", \"type\": \"byte_array\", \"value\": "
+    "\"[0x52, 0x4f, 0x53, 0x32]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter byte_array_param = byte_array_variant.to_parameter_msg();
   EXPECT_EQ("byte_array_param", byte_array_param.name);
@@ -411,6 +482,12 @@ TEST_F(TestParameter, byte_array_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  const std::vector<uint8_t> TEST_VALUE2 {0x1, 0x2, 0x3, 0x4};
+  EXPECT_EQ(byte_array_variant, byte_array_variant);
+  EXPECT_NE(byte_array_variant, rclcpp::Parameter("byte_array_param", TEST_VALUE2));
+  EXPECT_EQ(byte_array_variant, from_msg);
 }
 
 TEST_F(TestParameter, bool_array_variant) {
@@ -440,6 +517,12 @@ TEST_F(TestParameter, bool_array_variant) {
   EXPECT_THROW(bool_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("[false, true, true, false, false, true]", bool_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << bool_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"bool_array_param\", \"type\": \"bool_array\", \"value\": "
+    "\"[false, true, true, false, false, true]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter bool_array_param = bool_array_variant.to_parameter_msg();
   EXPECT_EQ("bool_array_param", bool_array_param.name);
@@ -459,6 +542,12 @@ TEST_F(TestParameter, bool_array_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  const std::vector<bool> TEST_VALUE2 {true, true, true};
+  EXPECT_EQ(bool_array_variant, bool_array_variant);
+  EXPECT_NE(bool_array_variant, rclcpp::Parameter("bool_array_param", TEST_VALUE2));
+  EXPECT_EQ(bool_array_variant, from_msg);
 }
 
 TEST_F(TestParameter, integer_array_variant) {
@@ -506,6 +595,12 @@ TEST_F(TestParameter, integer_array_variant) {
   EXPECT_EQ(
     "[42, -99, 2147483647, -2147483648, 0]",
     integer_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << integer_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"integer_array_param\", \"type\": \"integer_array\", \"value\": "
+    "\"[42, -99, 2147483647, -2147483648, 0]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter integer_array_param = integer_array_variant.to_parameter_msg();
   EXPECT_EQ("integer_array_param", integer_array_param.name);
@@ -538,6 +633,12 @@ TEST_F(TestParameter, integer_array_variant) {
   EXPECT_EQ(
     from_msg.get_value_message().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+
+  // Check == and != operators work as expected
+  const std::vector<int> TEST_VALUE2{1, 2, 3, 4, 5};
+  EXPECT_EQ(integer_array_variant, integer_array_variant);
+  EXPECT_NE(integer_array_variant, rclcpp::Parameter("integer_array_param", TEST_VALUE2));
+  EXPECT_EQ(integer_array_variant, from_msg);
 }
 
 TEST_F(TestParameter, long_integer_array_variant) {
@@ -571,6 +672,12 @@ TEST_F(TestParameter, long_integer_array_variant) {
   EXPECT_EQ(
     "[42, -99, 9223372036854775807, -9223372036854775808, 0]",
     long_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << long_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"long_integer_array_param\", \"type\": \"integer_array\", \"value\": "
+    "\"[42, -99, 9223372036854775807, -9223372036854775808, 0]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter integer_array_param = long_array_variant.to_parameter_msg();
   EXPECT_EQ("long_integer_array_param", integer_array_param.name);
@@ -592,6 +699,12 @@ TEST_F(TestParameter, long_integer_array_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  const std::vector<int64_t> TEST_VALUE2{1, 2, 3, 4, 5};
+  EXPECT_EQ(long_array_variant, long_array_variant);
+  EXPECT_NE(long_array_variant, rclcpp::Parameter("long_integer_array_param", TEST_VALUE2));
+  EXPECT_EQ(long_array_variant, from_msg);
 }
 
 TEST_F(TestParameter, float_array_variant) {
@@ -639,6 +752,12 @@ TEST_F(TestParameter, float_array_variant) {
   EXPECT_EQ(
     "[42.1, -99.1, 3.40282e+38, -3.40282e+38, 0.1]",
     float_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << float_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"float_array_param\", \"type\": \"double_array\", \"value\": "
+    "\"[42.1, -99.1, 3.40282e+38, -3.40282e+38, 0.1]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter float_array_param = float_array_variant.to_parameter_msg();
   EXPECT_EQ("float_array_param", float_array_param.name);
@@ -671,6 +790,12 @@ TEST_F(TestParameter, float_array_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  const std::vector<float> TEST_VALUE2{1.0, 2.0, 3.0, 4.0};
+  EXPECT_EQ(float_array_variant, float_array_variant);
+  EXPECT_NE(float_array_variant, rclcpp::Parameter("float_array_param", TEST_VALUE2));
+  EXPECT_EQ(float_array_variant, from_msg);
 }
 
 TEST_F(TestParameter, double_array_variant) {
@@ -704,6 +829,12 @@ TEST_F(TestParameter, double_array_variant) {
   EXPECT_EQ(
     "[42.1, -99.1, 1.79769e+308, -1.79769e+308, 0.1]",
     double_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << double_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"double_array_param\", \"type\": \"double_array\", \"value\": "
+    "\"[42.1, -99.1, 1.79769e+308, -1.79769e+308, 0.1]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter double_array_param = double_array_variant.to_parameter_msg();
   EXPECT_EQ("double_array_param", double_array_param.name);
@@ -725,6 +856,12 @@ TEST_F(TestParameter, double_array_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  const std::vector<double> TEST_VALUE2{1.0, 2.0, 3.0, 4.0};
+  EXPECT_EQ(double_array_variant, double_array_variant);
+  EXPECT_NE(double_array_variant, rclcpp::Parameter("double_array_param", TEST_VALUE2));
+  EXPECT_EQ(double_array_variant, from_msg);
 }
 
 TEST_F(TestParameter, string_array_variant) {
@@ -756,6 +893,11 @@ TEST_F(TestParameter, string_array_variant) {
   EXPECT_THROW(string_array_variant.as_double_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("[R, O, S2]", string_array_variant.value_to_string());
+  std::stringstream ss;
+  ss << string_array_variant;
+  EXPECT_EQ(
+    "{\"name\": \"string_array_param\", \"type\": \"string_array\", \"value\": \"[R, O, S2]\"}",
+    ss.str());
 
   rcl_interfaces::msg::Parameter string_array_param = string_array_variant.to_parameter_msg();
   EXPECT_EQ("string_array_param", string_array_param.name);
@@ -777,4 +919,31 @@ TEST_F(TestParameter, string_array_variant) {
   EXPECT_EQ(
     rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
     from_msg.get_value_message().type);
+
+  // Check == and != operators work as expected
+  const std::vector<std::string> TEST_VALUE2{"R", "O", "S1"};
+  EXPECT_EQ(string_array_variant, string_array_variant);
+  EXPECT_NE(string_array_variant, rclcpp::Parameter("string_array_param", TEST_VALUE2));
+  EXPECT_EQ(string_array_variant, from_msg);
+}
+
+TEST_F(TestParameter, parameter_vector_stringification) {
+  const std::vector<rclcpp::Parameter> parameters = {
+    rclcpp::Parameter(),
+    rclcpp::Parameter("bool_param", true),
+    rclcpp::Parameter("integer_param", 42),
+    rclcpp::Parameter("double_param", 3.14159),
+    rclcpp::Parameter("string_param", "I'm a string"),
+  };
+
+  std::stringstream ss;
+  ss << parameters;
+  EXPECT_EQ(
+    "{"
+    "\"\": {\"type\": \"not set\", \"value\": \"not set\"}, "
+    "\"bool_param\": {\"type\": \"bool\", \"value\": \"true\"}, "
+    "\"integer_param\": {\"type\": \"integer\", \"value\": \"42\"}, "
+    "\"double_param\": {\"type\": \"double\", \"value\": \"3.141590\"}, "
+    "\"string_param\": {\"type\": \"string\", \"value\": \"I'm a string\"}}",
+    ss.str());
 }
