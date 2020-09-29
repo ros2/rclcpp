@@ -278,7 +278,7 @@ Time::operator-=(const rclcpp::Duration & rhs)
 Time
 Time::max()
 {
-  return Time(std::numeric_limits<int64_t>::max());
+  return Time(std::numeric_limits<int32_t>::max(), 999999999);
 }
 
 

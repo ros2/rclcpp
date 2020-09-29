@@ -357,7 +357,7 @@ TEST_F(TestTime, seconds) {
 
 TEST_F(TestTime, test_max) {
   rclcpp::Time time_max = rclcpp::Time::max();
-  rclcpp::Time max_time(std::numeric_limits<int64_t>::max());
+  rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999);
   EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
   EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
 }
