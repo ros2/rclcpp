@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -299,10 +300,10 @@ TEST(TestNodeOptions, set_get_allocator) {
   EXPECT_NE(nullptr, options.allocator().zero_allocate);
 
   rcl_allocator_t fake_allocator;
-  fake_allocator.allocate = [](size_t, void *) {return (void *)nullptr;};
+  fake_allocator.allocate = [](size_t, void *) -> void * {return nullptr;};
   fake_allocator.deallocate = [](void *, void *) {};
-  fake_allocator.reallocate = [](void *, size_t, void *) {return (void *)nullptr;};
-  fake_allocator.zero_allocate = [](size_t, size_t, void *) {return (void *)nullptr;};
+  fake_allocator.reallocate = [](void *, size_t, void *) -> void * {return nullptr;};
+  fake_allocator.zero_allocate = [](size_t, size_t, void *) -> void * {return nullptr;};
   fake_allocator.state = rcl_get_default_allocator().state;
 
   options.allocator(fake_allocator);
