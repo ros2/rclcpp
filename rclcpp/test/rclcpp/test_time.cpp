@@ -356,8 +356,8 @@ TEST_F(TestTime, seconds) {
 }
 
 TEST_F(TestTime, test_max) {
-  rclcpp::Time time_max = rclcpp::Time::max();
-  rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999);
+  const rclcpp::Time time_max = rclcpp::Time::max();
+  const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999);
   EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
   EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
 }
@@ -369,7 +369,7 @@ TEST_F(TestTime, test_constructor_from_rcl_time_point) {
   test_time_point.nanoseconds = test_nano_seconds;
   test_time_point.clock_type = test_clock_type;
 
-  rclcpp::Time time_max = rclcpp::Time(test_time_point);
+  const rclcpp::Time time_max = rclcpp::Time(test_time_point);
 
   EXPECT_EQ(test_nano_seconds, time_max.nanoseconds());
   EXPECT_EQ(test_nano_seconds, test_time_point.nanoseconds);
@@ -379,7 +379,7 @@ TEST_F(TestTime, test_constructor_from_rcl_time_point) {
 
 TEST_F(TestTime, test_assignment_operator_from_builtin_msg_time) {
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
-  builtin_interfaces::msg::Time ros_now = ros_clock.now();
+  const builtin_interfaces::msg::Time ros_now = ros_clock.now();
   EXPECT_NE(0, ros_now.sec);
   EXPECT_NE(0u, ros_now.nanosec);
 
@@ -394,11 +394,11 @@ TEST_F(TestTime, test_assignment_operator_from_builtin_msg_time) {
 }
 
 TEST_F(TestTime, test_sum_operator) {
-  rclcpp::Duration one(1);
-  rclcpp::Time test_time(0u);
+  const rclcpp::Duration one(1);
+  const rclcpp::Time test_time(0u);
   EXPECT_EQ(0u, test_time.nanoseconds());
 
-  rclcpp::Time new_time = one + test_time;
+  const rclcpp::Time new_time = one + test_time;
   EXPECT_EQ(1, new_time.nanoseconds());
 }
 
