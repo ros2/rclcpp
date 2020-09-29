@@ -14,8 +14,9 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "rcl/init.h"
 #include "rcl/logging.h"
@@ -26,6 +27,7 @@
 #include "rclcpp/scope_exit.hpp"
 
 #include "../mocking_utils/patch.hpp"
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 TEST(TestUtilities, remove_ros_arguments) {
   const char * const argv[] = {
@@ -97,7 +99,6 @@ TEST(TestUtilities, test_context_basic_access_const_methods) {
 
   EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
   EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
-  // EXPECT_EQ(std::string{""}, context1->shutdown_reason()); not available for const
 }
 
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
@@ -208,4 +209,89 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
     // This will log a message, no throw expected
     EXPECT_NO_THROW({context_to_destroy.reset();});
   }
+}
+
+TEST(TestUtilities, signal_handlers_installed) {
+  EXPECT_FALSE(rclcpp::signal_handlers_installed());
+}
+
+// Required for mocking_utils below
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, ==)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
+
+TEST(TestUtilities, remove_ros_arguments_rcl_parse_arguments_failed) {
+  const char * const argv[] = {
+    "process_name",
+    "-d", "--ros-args",
+    "-r", "__ns:=/foo/bar",
+    "-r", "__ns:=/fiz/buz",
+    "--", "--foo=bar", "--baz"
+  };
+  int argc = sizeof(argv) / sizeof(const char *);
+
+  auto mock = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_parse_arguments, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::remove_ros_arguments(argc, argv),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), "failed to parse arguments"));
+}
+
+TEST(TestUtilities, remove_ros_arguments_rcl_remove_ros_arguments_failed) {
+  const char * const argv[] = {
+    "process_name",
+    "-d", "--ros-args",
+    "-r", "__ns:=/foo/bar",
+    "-r", "__ns:=/fiz/buz",
+    "--", "--foo=bar", "--baz"
+  };
+  int argc = sizeof(argv) / sizeof(const char *);
+
+  auto mock = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_remove_ros_arguments, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::remove_ros_arguments(argc, argv),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), ""));
+}
+
+TEST(TestUtilities, remove_ros_arguments_rcl_remove_ros_arguments_failed_and_fini) {
+  const char * const argv[] = {
+    "process_name",
+    "-d", "--ros-args",
+    "-r", "__ns:=/foo/bar",
+    "-r", "__ns:=/fiz/buz",
+    "--", "--foo=bar", "--baz"
+  };
+  int argc = sizeof(argv) / sizeof(const char *);
+
+  auto mock = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_remove_ros_arguments, RCL_RET_ERROR);
+  auto mock2 = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_arguments_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::remove_ros_arguments(argc, argv),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(),
+      ", failed also to cleanup parsed arguments, leaking memory: "));
+}
+
+TEST(TestUtilities, remove_ros_arguments_rcl_arguments_fini_failed) {
+  const char * const argv[] = {
+    "process_name",
+    "-d", "--ros-args",
+    "-r", "__ns:=/foo/bar",
+    "-r", "__ns:=/fiz/buz",
+    "--", "--foo=bar", "--baz"
+  };
+  int argc = sizeof(argv) / sizeof(const char *);
+
+  auto mock = mocking_utils::inject_on_return(
+    "lib:rclcpp", rcl_arguments_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::remove_ros_arguments(argc, argv),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), "failed to cleanup parsed arguments, leaking memory"));
 }
