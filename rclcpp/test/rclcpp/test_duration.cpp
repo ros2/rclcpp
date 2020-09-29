@@ -237,3 +237,16 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(chrono_duration.count(), -ONE_AND_HALF_SEC_IN_NS);
   }
 }
+
+TEST_F(TestDuration, test_some_constructors) {
+  builtin_interfaces::msg::Duration duration_msg;
+  duration_msg.sec = 1;
+  duration_msg.nanosec = 1000;
+  rclcpp::Duration duration_from_msg(duration_msg);
+  EXPECT_EQ(RCL_S_TO_NS(1) + 1000, duration_from_msg.nanoseconds());
+
+  rcl_duration_t duration_struct;
+  duration_struct.nanoseconds = 4000;
+  rclcpp::Duration duration_from_struct(duration_struct);
+  EXPECT_EQ(4000, duration_from_struct.nanoseconds());
+}
