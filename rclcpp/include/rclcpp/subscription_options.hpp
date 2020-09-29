@@ -78,15 +78,17 @@ struct SubscriptionOptionsBase
 template<typename Allocator>
 struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 {
-  /// Optional custom allocator.
-  std::shared_ptr<Allocator> allocator = nullptr;
-
-  SubscriptionOptionsWithAllocator<Allocator>() {}
+  SubscriptionOptionsWithAllocator<Allocator>()
+  : allocator_(new Allocator()),
+    message_allocator_(*allocator_)
+  {}
 
   /// Constructor using base class as input.
   explicit SubscriptionOptionsWithAllocator(
     const SubscriptionOptionsBase & subscription_options_base)
-  : SubscriptionOptionsBase(subscription_options_base)
+  : SubscriptionOptionsBase(subscription_options_base),
+    allocator_(new Allocator()),
+    message_allocator_(*allocator_)
   {}
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
@@ -99,12 +101,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result = rcl_subscription_get_default_options();
-    using AllocatorTraits = std::allocator_traits<Allocator>;
-    using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-    auto message_alloc = std::make_shared<MessageAllocatorT>(*allocator.get());
-    // TODO(stevewolter): This is likely to invoke undefined behavior - message_alloc
-    // goes out of scope at the end of this function, but the allocator doesn't. See #1339.
-    result.allocator = get_rcl_allocator(*message_alloc);
+    result.allocator = get_rcl_allocator(message_allocator_);
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
 
@@ -116,15 +113,19 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     return result;
   }
 
-  /// Get the allocator, creating one if needed.
+  /// Get the allocator
   std::shared_ptr<Allocator>
   get_allocator() const
   {
-    if (!this->allocator) {
-      return std::make_shared<Allocator>();
-    }
-    return this->allocator;
+    return allocator_
   }
+
+ private:
+  using AllocatorTraits = std::allocator_traits<Allocator>;
+  using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
+
+  std::shared_ptr<Allocator> allocator_;
+  MessageAllocatorT message_allocator_;
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
