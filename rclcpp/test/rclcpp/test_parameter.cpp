@@ -71,6 +71,7 @@ TEST_F(TestParameter, not_set_variant) {
     not_set_variant.get_value<int>(),
     rclcpp::exceptions::InvalidParameterTypeException);
 
+  // Check == and != operators work as expected
   EXPECT_EQ(not_set_variant, not_set_variant);
   rclcpp::Parameter not_set_variant2;
   EXPECT_EQ(not_set_variant, not_set_variant2);
@@ -139,6 +140,7 @@ TEST_F(TestParameter, bool_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
     bool_variant_false.get_value_message().type);
 
+  // Check == and != operators work as expected
   EXPECT_EQ(bool_variant_true, bool_variant_true);
   EXPECT_NE(bool_variant_false, bool_variant_true);
   EXPECT_EQ(bool_variant_true, from_msg_true);
@@ -194,6 +196,7 @@ TEST_F(TestParameter, integer_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   EXPECT_EQ(integer_variant, integer_variant);
   EXPECT_NE(integer_variant, rclcpp::Parameter("integer_param", 41));
   EXPECT_EQ(integer_variant, from_msg);
@@ -252,6 +255,8 @@ TEST_F(TestParameter, long_integer_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     from_msg.get_value_message().type);
 
+
+  // Check == and != operators work as expected
   EXPECT_EQ(long_variant, long_variant);
   EXPECT_NE(long_variant, rclcpp::Parameter("long_integer_param", 41));
   EXPECT_EQ(long_variant, from_msg);
@@ -308,6 +313,7 @@ TEST_F(TestParameter, float_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   EXPECT_EQ(float_variant, float_variant);
   EXPECT_NE(float_variant, rclcpp::Parameter("float_param", 41.0));
   EXPECT_EQ(float_variant, from_msg);
@@ -364,6 +370,7 @@ TEST_F(TestParameter, double_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   EXPECT_EQ(double_variant, double_variant);
   EXPECT_NE(double_variant, rclcpp::Parameter("double_param", -41.2));
   EXPECT_EQ(double_variant, from_msg);
@@ -417,6 +424,7 @@ TEST_F(TestParameter, string_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   EXPECT_EQ(string_variant, string_variant);
   EXPECT_NE(string_variant, rclcpp::Parameter("string_param", "ROS1"));
   EXPECT_EQ(string_variant, from_msg);
@@ -475,6 +483,7 @@ TEST_F(TestParameter, byte_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   const std::vector<uint8_t> TEST_VALUE2 {0x1, 0x2, 0x3, 0x4};
   EXPECT_EQ(byte_array_variant, byte_array_variant);
   EXPECT_NE(byte_array_variant, rclcpp::Parameter("byte_array_param", TEST_VALUE2));
@@ -534,6 +543,7 @@ TEST_F(TestParameter, bool_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   const std::vector<bool> TEST_VALUE2 {true, true, true};
   EXPECT_EQ(bool_array_variant, bool_array_variant);
   EXPECT_NE(bool_array_variant, rclcpp::Parameter("bool_array_param", TEST_VALUE2));
@@ -624,6 +634,7 @@ TEST_F(TestParameter, integer_array_variant) {
     from_msg.get_value_message().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
 
+  // Check == and != operators work as expected
   const std::vector<int> TEST_VALUE2{1, 2, 3, 4, 5};
   EXPECT_EQ(integer_array_variant, integer_array_variant);
   EXPECT_NE(integer_array_variant, rclcpp::Parameter("integer_array_param", TEST_VALUE2));
@@ -689,6 +700,7 @@ TEST_F(TestParameter, long_integer_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   const std::vector<int64_t> TEST_VALUE2{1, 2, 3, 4, 5};
   EXPECT_EQ(long_array_variant, long_array_variant);
   EXPECT_NE(long_array_variant, rclcpp::Parameter("long_integer_array_param", TEST_VALUE2));
@@ -779,6 +791,7 @@ TEST_F(TestParameter, float_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   const std::vector<float> TEST_VALUE2{1.0, 2.0, 3.0, 4.0};
   EXPECT_EQ(float_array_variant, float_array_variant);
   EXPECT_NE(float_array_variant, rclcpp::Parameter("float_array_param", TEST_VALUE2));
@@ -844,6 +857,7 @@ TEST_F(TestParameter, double_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   const std::vector<double> TEST_VALUE2{1.0, 2.0, 3.0, 4.0};
   EXPECT_EQ(double_array_variant, double_array_variant);
   EXPECT_NE(double_array_variant, rclcpp::Parameter("double_array_param", TEST_VALUE2));
@@ -906,6 +920,7 @@ TEST_F(TestParameter, string_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
     from_msg.get_value_message().type);
 
+  // Check == and != operators work as expected
   const std::vector<std::string> TEST_VALUE2{"R", "O", "S1"};
   EXPECT_EQ(string_array_variant, string_array_variant);
   EXPECT_NE(string_array_variant, rclcpp::Parameter("string_array_param", TEST_VALUE2));
