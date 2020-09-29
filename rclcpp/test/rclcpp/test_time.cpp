@@ -378,7 +378,6 @@ TEST_F(TestTime, test_constructor_from_rcl_time_point) {
 }
 
 TEST_F(TestTime, test_assignment_operator_from_builtin_msg_time) {
-  // using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   builtin_interfaces::msg::Time ros_now = ros_clock.now();
   EXPECT_NE(0, ros_now.sec);
