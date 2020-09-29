@@ -48,12 +48,14 @@ TEST(TestUtilities, remove_ros_arguments) {
 }
 
 TEST(TestUtilities, init_with_args) {
+  EXPECT_FALSE(rclcpp::signal_handlers_installed());
   const char * const argv[] = {"process_name"};
   int argc = sizeof(argv) / sizeof(const char *);
   auto other_args = rclcpp::init_and_remove_ros_arguments(argc, argv);
 
   ASSERT_EQ(1u, other_args.size());
   ASSERT_EQ(std::string{"process_name"}, other_args[0]);
+  EXPECT_TRUE(rclcpp::signal_handlers_installed());
 
   EXPECT_TRUE(rclcpp::ok());
   rclcpp::shutdown();
@@ -159,7 +161,6 @@ TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
   EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
 }
 
-
 TEST(TestUtilities, test_context_init_shutdown_fails) {
   {
     auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
@@ -209,10 +210,6 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
     // This will log a message, no throw expected
     EXPECT_NO_THROW({context_to_destroy.reset();});
   }
-}
-
-TEST(TestUtilities, signal_handlers_installed) {
-  EXPECT_FALSE(rclcpp::signal_handlers_installed());
 }
 
 // Required for mocking_utils below
