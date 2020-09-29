@@ -218,6 +218,22 @@ TEST(TestExpandTopicOrServiceName, rcl_expand_topic_name_fail_other) {
     rclcpp::exceptions::RCLError(RCL_RET_ERROR, rcl_get_error_state(), "error not set"));
 }
 
+TEST(TestExpandTopicOrServiceName, rcl_expand_topic_name_fail_invalid_node_name) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_NODE_INVALID_NAME);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("invalid rcl node name but valid rmw node name"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcl_expand_topic_name_fail_invalid_node_namespace) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_NODE_INVALID_NAMESPACE);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("invalid rcl namespace but valid rmw namespace"));
+}
+
 TEST(TestExpandTopicOrServiceName, rmw_validate_full_topic_name_fail_other) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rmw_validate_full_topic_name, RMW_RET_ERROR);
