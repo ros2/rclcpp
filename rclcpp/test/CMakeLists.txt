@@ -117,7 +117,7 @@ if(TARGET test_expand_topic_or_service_name)
     "rosidl_runtime_cpp"
     "rosidl_typesupport_cpp"
   )
-  target_link_libraries(test_expand_topic_or_service_name ${PROJECT_NAME})
+  target_link_libraries(test_expand_topic_or_service_name ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_function_traits rclcpp/test_function_traits.cpp)
 if(TARGET test_function_traits)
