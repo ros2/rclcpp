@@ -14,8 +14,19 @@
 
 #include <gtest/gtest.h>
 
+#include <stdexcept>
+
+#include "rcl/expand_topic_name.h"
+#include "rcl/validate_topic_name.h"
+#include "rmw/validate_full_topic_name.h"
+#include "rmw/validate_namespace.h"
+#include "rmw/validate_node_name.h"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+
+#include "../mocking_utils/patch.hpp"
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 /*
    Testing expand_topic_or_service_name.
@@ -77,4 +88,141 @@ TEST(TestExpandTopicOrServiceName, exceptions) {
       expand_topic_or_service_name("chatter/{ns}/invalid", "node", "/ns", true);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
+}
+
+// Required for mocking_utils below
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, ==)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
+
+TEST(TestExpandTopicOrServiceName, rcutils_string_map_init_fail_bad_alloc) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcutils_string_map_init, RCUTILS_RET_BAD_ALLOC);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::bad_alloc());
+}
+
+TEST(TestExpandTopicOrServiceName, rcutils_string_map_init_fail_other) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcutils_string_map_init, RCUTILS_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("error not set"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcl_get_default_topic_name_substitution_fail) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_default_topic_name_substitutions, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("error not set"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcl_get_default_topic_name_substitution_and_map_fini_fail) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_default_topic_name_substitutions, RCL_RET_ERROR);
+  auto mock2 = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcutils_string_map_fini, RCUTILS_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("error not set"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcutils_string_map_fini_fail_bad_alloc) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcutils_string_map_fini, RCUTILS_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("error not set"));
+}
+
+TEST(TestExpandTopicOrServiceName, rmw_valid_full_topic_name_fail_invalid_argument) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_validate_full_topic_name, RMW_RET_INVALID_ARGUMENT);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLInvalidArgument(
+      RCL_RET_INVALID_ARGUMENT, rcl_get_error_state(), "failed to validate full topic name"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcl_expand_topic_name_fail) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_TOPIC_NAME_INVALID);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    std::runtime_error("topic name unexpectedly valid"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcl_validate_topic_name_fail) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_TOPIC_NAME_INVALID);
+  auto mock2 = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_validate_topic_name, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), "failed to validate full topic name"));
+}
+
+TEST(TestExpandTopicOrServiceName, rmw_validate_node_name_fail_invalid_argument) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_NODE_INVALID_NAME);
+  auto mock2 = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_validate_node_name, RMW_RET_INVALID_ARGUMENT);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLInvalidArgument(
+      RCL_RET_INVALID_ARGUMENT, rcl_get_error_state(), "failed to validate node name"));
+}
+
+TEST(TestExpandTopicOrServiceName, rmw_validate_node_name_fail_other) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_NODE_INVALID_NAME);
+  auto mock2 = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_validate_node_name, RMW_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), "failed to validate node name"));
+}
+
+TEST(TestExpandTopicOrServiceName, rmw_validate_namespace_fail_invalid_argument) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_NODE_INVALID_NAMESPACE);
+  auto mock2 = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_validate_namespace, RMW_RET_INVALID_ARGUMENT);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLInvalidArgument(
+      RCL_RET_INVALID_ARGUMENT, rcl_get_error_state(), "failed to validate namespace"));
+}
+
+TEST(TestExpandTopicOrServiceName, rmw_validate_namespace_fail_other) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_NODE_INVALID_NAMESPACE);
+  auto mock2 = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_validate_namespace, RMW_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), "failed to validate namespace"));
+}
+
+TEST(TestExpandTopicOrServiceName, rcl_expand_topic_name_fail_other) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_expand_topic_name, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLError(RCL_RET_ERROR, rcl_get_error_state(), "error not set"));
+}
+
+TEST(TestExpandTopicOrServiceName, rmw_validate_full_topic_name_fail_other) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rmw_validate_full_topic_name, RMW_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::expand_topic_or_service_name("chatter", "node", "/ns"),
+    rclcpp::exceptions::RCLError(
+      RCL_RET_ERROR, rcl_get_error_state(), "failed to validate full topic name"));
 }
