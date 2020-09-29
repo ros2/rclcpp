@@ -60,7 +60,6 @@ NodeParameters::NodeParameters(
   // TODO(wjwwood): expose this allocator through the Parameter interface.
   rclcpp::PublisherOptionsWithAllocator<AllocatorT> publisher_options(
     parameter_event_publisher_options);
-  publisher_options.allocator = std::make_shared<AllocatorT>();
 
   if (start_parameter_services) {
     parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);

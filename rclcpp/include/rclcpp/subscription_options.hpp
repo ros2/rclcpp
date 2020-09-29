@@ -78,17 +78,15 @@ struct SubscriptionOptionsBase
 template<typename Allocator>
 struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 {
-  SubscriptionOptionsWithAllocator<Allocator>()
-  : allocator_(new Allocator()),
-    message_allocator_(*allocator_)
-  {}
+  /// Optional custom allocator.
+  std::shared_ptr<Allocator> allocator = nullptr;
+
+  SubscriptionOptionsWithAllocator<Allocator>() {}
 
   /// Constructor using base class as input.
   explicit SubscriptionOptionsWithAllocator(
     const SubscriptionOptionsBase & subscription_options_base)
-  : SubscriptionOptionsBase(subscription_options_base),
-    allocator_(new Allocator()),
-    message_allocator_(*allocator_)
+  : SubscriptionOptionsBase(subscription_options_base)
   {}
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
@@ -101,7 +99,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result = rcl_subscription_get_default_options();
-    result.allocator = get_rcl_allocator(message_allocator_);
+    result.allocator = get_rcl_allocator(*this->get_allocator());
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
 
@@ -113,19 +111,15 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     return result;
   }
 
-  /// Get the allocator
+  /// Get the allocator, creating one if needed.
   std::shared_ptr<Allocator>
   get_allocator() const
   {
-    return allocator_
+    if (!this->allocator) {
+      return std::make_shared<Allocator>();
+    }
+    return this->allocator;
   }
-
- private:
-  using AllocatorTraits = std::allocator_traits<Allocator>;
-  using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-
-  std::shared_ptr<Allocator> allocator_;
-  MessageAllocatorT message_allocator_;
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;

@@ -56,16 +56,14 @@ struct PublisherOptionsBase
 template<typename Allocator>
 struct PublisherOptionsWithAllocator : public PublisherOptionsBase
 {
-  PublisherOptionsWithAllocator<Allocator>()
-  : allocator_(new Allocator()),
-    message_allocator_(*allocator_)
-  {}
+  /// Optional custom allocator.
+  std::shared_ptr<Allocator> allocator = nullptr;
+
+  PublisherOptionsWithAllocator<Allocator>() {}
 
   /// Constructor using base class as input.
   explicit PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)
-  : PublisherOptionsBase(publisher_options_base),
-    allocator_(new Allocator()),
-    message_allocator_(*allocator_)
+  : PublisherOptionsBase(publisher_options_base)
   {}
 
   /// Convert this class, and a rclcpp::QoS, into an rcl_publisher_options_t.
@@ -74,7 +72,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result = rcl_publisher_get_default_options();
-    result.allocator = get_rcl_allocator(message_allocator_);
+    result.allocator = get_rcl_allocator(*this->get_allocator());
     result.qos = qos.get_rmw_qos_profile();
 
     // Apply payload to rcl_publisher_options if necessary.
@@ -86,19 +84,20 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   }
 
 
-  /// Get the allocator
+  /// Get the allocator, creating one if needed.
   std::shared_ptr<Allocator>
   get_allocator() const
   {
-    return allocator_;
+    if (!this->allocator) {
+      // TODO(wjwwood): I would like to use the commented line instead, but
+      //   cppcheck 1.89 fails with:
+      //     Syntax Error: AST broken, binary operator '>' doesn't have two operands.
+      // return std::make_shared<Allocator>();
+      std::shared_ptr<Allocator> tmp(new Allocator());
+      return tmp;
+    }
+    return this->allocator;
   }
-
- private:
-  using AllocatorTraits = std::allocator_traits<Allocator>;
-  using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-
-  std::shared_ptr<Allocator> allocator_;
-  MessageAllocatorT message_allocator_;
 };
 
 using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;

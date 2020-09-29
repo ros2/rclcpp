@@ -29,64 +29,16 @@ namespace allocator
 template<typename T, typename Alloc>
 using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
 
-template<typename Alloc>
-void * retyped_allocate(size_t size, void * untyped_allocator)
-{
-  auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
-  if (!typed_allocator) {
-    throw std::runtime_error("Received incorrect allocator type");
-  }
-  return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
-}
-
-template<typename Alloc>
-void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
-{
-  auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
-  if (!typed_allocator) {
-    throw std::runtime_error("Received incorrect allocator type");
-  }
-  auto typed_ptr = static_cast<typename Alloc::value_type *>(untyped_pointer);
-  std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);
-}
-
-template<typename Alloc>
-void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_allocator)
-{
-  auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
-  if (!typed_allocator) {
-    throw std::runtime_error("Received incorrect allocator type");
-  }
-  auto typed_ptr = static_cast<typename Alloc::value_type *>(untyped_pointer);
-  std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);
-  return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
-}
-
 }  // namespace allocator
-
-// Deprecated: Generic converter from C++ allocator into RCL allocator.
-// This allocator overallocates memory by 100x and invokes UB on free,
-// see #1254.
-template<typename Alloc>
-rcl_allocator_t get_rcl_allocator(Alloc & allocator)
-{
-  rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
-#ifndef _WIN32
-  rcl_allocator.allocate = &allocator::retyped_allocate<Alloc>;
-  rcl_allocator.deallocate = &allocator::retyped_deallocate<Alloc>;
-  rcl_allocator.reallocate = &allocator::retyped_reallocate<Alloc>;
-  rcl_allocator.state = &allocator;
-#else
-  (void)allocator;  // Remove warning
-#endif
-  return rcl_allocator;
-}
 
 // Builds the RCL default allocator for the C++ standard allocator.
 // This assumes that the user intent behind both allocators is the
 // same: Using system malloc for allocation.
+//
+// If you're using a custom allocator in ROS, you'll need to provide
+// your own overload for this function.
 template<typename T>
-rcl_allocator_t get_rcl_allocator(std::allocator<T> & allocator)
+rcl_allocator_t get_rcl_allocator(std::allocator<T> allocator)
 {
   (void)allocator;  // Remove warning
   return rcl_get_default_allocator();

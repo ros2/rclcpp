@@ -18,33 +18,6 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 
-TEST(TestAllocatorCommon, retyped_allocate) {
-  std::allocator<int> allocator;
-  void * untyped_allocator = &allocator;
-  void * allocated_mem =
-    rclcpp::allocator::retyped_allocate<std::allocator<char>>(1u, untyped_allocator);
-  ASSERT_NE(nullptr, allocated_mem);
-
-  auto code = [&untyped_allocator, allocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<std::allocator<int>>(
-        allocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code());
-
-  allocated_mem = allocator.allocate(1);
-  ASSERT_NE(nullptr, allocated_mem);
-  void * reallocated_mem =
-    rclcpp::allocator::retyped_reallocate<std::allocator<int>>(
-    allocated_mem, 2u, untyped_allocator);
-  ASSERT_NE(nullptr, reallocated_mem);
-
-  auto code2 = [&untyped_allocator, reallocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<std::allocator<int>>(
-        reallocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code2());
-}
-
 TEST(TestAllocatorCommon, get_rcl_allocator) {
   std::allocator<int> allocator;
   auto rcl_allocator = rclcpp::get_rcl_allocator(allocator);
