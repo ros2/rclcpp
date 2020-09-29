@@ -807,28 +807,24 @@ TEST_F(TestNode, undeclare_parameter) {
 
 TEST_F(TestNode, has_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_has_parameter_node"_unq);
-  {
-    // normal use
-    auto name = "parameter"_unq;
-    EXPECT_FALSE(node->has_parameter(name));
-    node->declare_parameter(name);
-    EXPECT_TRUE(node->has_parameter(name));
-    node->undeclare_parameter(name);
-    EXPECT_FALSE(node->has_parameter(name));
-  }
+  // normal use
+  auto name = "parameter"_unq;
+  EXPECT_FALSE(node->has_parameter(name));
+  node->declare_parameter(name);
+  EXPECT_TRUE(node->has_parameter(name));
+  node->undeclare_parameter(name);
+  EXPECT_FALSE(node->has_parameter(name));
 }
 
 TEST_F(TestNode, list_parameters) {
   auto node = std::make_shared<rclcpp::Node>("test_list_parameter_node"_unq);
-  {
-    // normal use
-    auto name = "parameter"_unq;
-    const size_t before_size = node->list_parameters({}, 1u).names.size();
-    node->declare_parameter(name);
-    EXPECT_EQ(1u + before_size, node->list_parameters({}, 1u).names.size());
-    node->undeclare_parameter(name);
-    EXPECT_EQ(before_size, node->list_parameters({}, 1u).names.size());
-  }
+  // normal use
+  auto name = "parameter"_unq;
+  const size_t before_size = node->list_parameters({}, 1u).names.size();
+  node->declare_parameter(name);
+  EXPECT_EQ(1u + before_size, node->list_parameters({}, 1u).names.size());
+  node->undeclare_parameter(name);
+  EXPECT_EQ(before_size, node->list_parameters({}, 1u).names.size());
 }
 
 TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
