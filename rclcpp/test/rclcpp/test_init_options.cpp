@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,8 @@
 
 #include "rclcpp/init_options.hpp"
 
+#include "../mocking_utils/patch.hpp"
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 TEST(TestInitOptions, test_construction) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -74,4 +77,64 @@ TEST(TestInitOptions, test_domain_id) {
   EXPECT_EQ((size_t)42, options.get_domain_id());
   options.use_default_domain_id();
   EXPECT_EQ(domain_id, options.get_domain_id());
+}
+
+// Required for mocking_utils below
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, ==)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
+MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
+
+TEST(TestInitOptions, constructor_rcl_init_options_init_failed) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_init_options_init, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::InitOptions(),
+    std::runtime_error("failed to initialize rcl init options: error not set"));
+}
+
+TEST(TestInitOptions, constructor_rcl_init_options_copy_failed) {
+  rcl_init_options_t rcl_opts;
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_init_options_copy, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    new rclcpp::InitOptions(rcl_opts),
+    std::runtime_error("failed to copy rcl init options: error not set"));
+}
+
+TEST(TestInitOptions, copy_constructor_rcl_init_options_copy_failed) {
+  rclcpp::InitOptions options;
+  rclcpp::InitOptions options2;
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_init_options_copy, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    options2.operator=(options),
+    std::runtime_error("failed to copy rcl init options: error not set"));
+}
+
+TEST(TestInitOptions, use_default_domain_id_rcl_get_default_domain_id_failed) {
+  rclcpp::InitOptions options;
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_default_domain_id, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    options.use_default_domain_id(),
+    std::runtime_error("failed to get default domain id: error not set"));
+}
+
+TEST(TestInitOptions, set_domain_id_rcl_init_options_set_domain_id_failed) {
+  rclcpp::InitOptions options;
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_init_options_set_domain_id, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    options.set_domain_id(0),
+    std::runtime_error("failed to set domain id to rcl init options: error not set"));
+}
+
+TEST(TestInitOptions, get_domain_id_rcl_init_options_get_domain_id_failed) {
+  rclcpp::InitOptions options;
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_init_options_get_domain_id, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    options.get_domain_id(),
+    std::runtime_error("failed to get domain id from rcl init options: error not set"));
 }
