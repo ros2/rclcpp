@@ -526,3 +526,72 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
 
   spinner.join();
 }
+
+// Check spin_node_until_future_complete with node base pointer
+TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodeBasePtr) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
+
+  auto shared_future = future.share();
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, this->node->get_node_base_interface(), shared_future, 1s);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
+// Check spin_node_until_future_complete with node pointer
+TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodePtr) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
+
+  auto shared_future = future.share();
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, this->node, shared_future, 1s);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
+// Check spin_until_future_complete with node base pointer (instantiates its own executor)
+TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
+  rclcpp::init(0, nullptr);
+
+  {
+    auto node = std::make_shared<rclcpp::Node>("node");
+
+    std::promise<bool> promise;
+    std::future<bool> future = promise.get_future();
+    promise.set_value(true);
+
+    auto shared_future = future.share();
+    auto ret = rclcpp::spin_until_future_complete(
+      node->get_node_base_interface(), shared_future, 1s);
+    EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+  }
+
+  rclcpp::shutdown();
+}
+
+// Check spin_until_future_complete with node pointer (instantiates its own executor)
+TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr) {
+  rclcpp::init(0, nullptr);
+
+  {
+    auto node = std::make_shared<rclcpp::Node>("node");
+
+    std::promise<bool> promise;
+    std::future<bool> future = promise.get_future();
+    promise.set_value(true);
+
+    auto shared_future = future.share();
+    auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
+    EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+  }
+
+  rclcpp::shutdown();
+}
