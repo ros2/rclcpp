@@ -258,6 +258,6 @@ TEST_F(TestDuration, test_some_exceptions) {
     test_duration = rclcpp::Duration(INT64_MAX) - rclcpp::Duration(-1),
     std::overflow_error("duration subtraction leads to int64_t overflow"));
   RCLCPP_EXPECT_THROW_EQ(
-    test_duration = test_duration * (1.0 / 0.0),
+    test_duration = test_duration * (std::numeric_limits<double>::infinity()),
     std::runtime_error("abnormal scale in rclcpp::Duration"));
 }
