@@ -25,6 +25,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/duration.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 using namespace std::chrono_literals;
 
@@ -249,4 +250,14 @@ TEST_F(TestDuration, test_some_constructors) {
   duration_struct.nanoseconds = 4000;
   rclcpp::Duration duration_from_struct(duration_struct);
   EXPECT_EQ(4000, duration_from_struct.nanoseconds());
+}
+
+TEST_F(TestDuration, test_some_exceptions) {
+  rclcpp::Duration test_duration(0u);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_duration = rclcpp::Duration(INT64_MAX) - rclcpp::Duration(-1),
+    std::overflow_error("duration subtraction leads to int64_t overflow"));
+  RCLCPP_EXPECT_THROW_EQ(
+    test_duration = test_duration * (1.0 / 0.0),
+    std::runtime_error("abnormal scale in rclcpp::Duration"));
 }
