@@ -99,5 +99,5 @@ TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
     rclcpp::detail::resolve_enable_topic_statistics(
       subscription_options,
       *(node->get_node_base_interface())),
-      std::runtime_error("Unrecognized EnableTopicStatistics value"));
+    std::runtime_error("Unrecognized EnableTopicStatistics value"));
 }
