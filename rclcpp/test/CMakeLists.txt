@@ -361,6 +361,7 @@ if(TARGET test_qos_event)
   )
   target_link_libraries(test_qos_event
     ${PROJECT_NAME}
+    mimick
   )
 endif()
 ament_add_gtest(test_rate rclcpp/test_rate.cpp)

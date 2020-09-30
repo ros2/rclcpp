@@ -25,6 +25,8 @@
 #include "rmw/rmw.h"
 #include "test_msgs/msg/empty.hpp"
 
+#include "../mocking_utils/patch.hpp"
+
 class TestQosEvent : public ::testing::Test
 {
 protected:
@@ -207,9 +209,14 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   rclcpp::executors::SingleThreadedExecutor ex;
   ex.add_node(node->get_node_base_interface());
 
-  ex.spin_until_future_complete(log_msgs_future, std::chrono::seconds(10));
+  // This future won't complete on fastrtps, so just timeout immediately
+  const auto timeout = (is_fastrtps) ? std::chrono::milliseconds(5) : std::chrono::seconds(10);
+  ex.spin_until_future_complete(log_msgs_future, timeout);
 
-  if (!is_fastrtps) {
+  if (is_fastrtps) {
+    EXPECT_EQ("", pub_log_msg);
+    EXPECT_EQ("", sub_log_msg);
+  } else {
     EXPECT_EQ(
       "New subscription discovered on this topic, requesting incompatible QoS. "
       "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
@@ -221,4 +228,98 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   }
 
   rcutils_logging_set_output_handler(original_output_handler);
+}
+
+TEST_F(TestQosEvent, construct_destruct_rcl_error) {
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+  auto rcl_handle = publisher->get_publisher_handle();
+  ASSERT_NE(nullptr, rcl_handle);
+
+  // This callback requires some type of parameter, but it could be anything
+  auto callback = [](int) {};
+  const rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
+
+  {
+    // Logs error and returns
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_publisher_event_init, RCL_RET_ERROR);
+
+    auto throwing_statement = [callback, rcl_handle, event_type]() {
+        // reset() is not needed for the exception, but it handles unused return value warning
+        std::make_shared<
+          rclcpp::QOSEventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
+          callback, rcl_publisher_event_init, rcl_handle, event_type).reset();
+      };
+    // This is done through a lambda because the compiler is having trouble parsing the templated
+    // function inside a macro.
+    EXPECT_THROW(throwing_statement(), rclcpp::exceptions::RCLError);
+  }
+
+  {
+    // Logs error and returns
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_event_fini, RCL_RET_ERROR);
+
+    auto throwing_statement = [callback, rcl_handle, event_type]() {
+        // reset() is needed for this exception
+        std::make_shared<
+          rclcpp::QOSEventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
+          callback, rcl_publisher_event_init, rcl_handle, event_type).reset();
+      };
+
+    // This is done through a lambda because the compiler is having trouble parsing the templated
+    // function inside a macro.
+    EXPECT_NO_THROW(throwing_statement());
+  }
+}
+
+TEST_F(TestQosEvent, execute) {
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+  auto rcl_handle = publisher->get_publisher_handle();
+
+  bool handler_callback_executed = false;
+  // This callback requires some type of parameter, but it could be anything
+  auto callback = [&handler_callback_executed](int) {handler_callback_executed = true;};
+  rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
+
+  rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)> handler(
+    callback, rcl_publisher_event_init, rcl_handle, event_type);
+
+  EXPECT_NO_THROW(handler.execute());
+  EXPECT_TRUE(handler_callback_executed);
+
+  {
+    handler_callback_executed = false;
+    // Logs error and returns early
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_take_event, RCL_RET_ERROR);
+    EXPECT_NO_THROW(handler.execute());
+    EXPECT_FALSE(handler_callback_executed);
+  }
+}
+
+TEST_F(TestQosEvent, add_to_wait_set) {
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+  auto rcl_handle = publisher->get_publisher_handle();
+
+  // This callback requires some type of parameter, but it could be anything
+  auto callback = [](int) {};
+
+  rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
+  rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)> handler(
+    callback, rcl_publisher_event_init, rcl_handle, event_type);
+
+  EXPECT_EQ(1u, handler.get_number_of_ready_events());
+
+  {
+    rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_add_event, RCL_RET_OK);
+    EXPECT_TRUE(handler.add_to_wait_set(&wait_set));
+  }
+
+  {
+    rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_wait_set_add_event, RCL_RET_ERROR);
+    EXPECT_THROW(handler.add_to_wait_set(&wait_set), rclcpp::exceptions::RCLError);
+  }
 }

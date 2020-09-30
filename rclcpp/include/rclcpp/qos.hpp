@@ -26,6 +26,7 @@
 namespace rclcpp
 {
 
+RCLCPP_PUBLIC
 std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind);
 
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
