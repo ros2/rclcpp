@@ -199,13 +199,17 @@ Context::init(
     throw rclcpp::ContextAlreadyInitialized();
   }
   this->clean_up();
-  rcl_context_.reset(new rcl_context_t, __delete_context);
-  *rcl_context_.get() = rcl_get_zero_initialized_context();
-  rcl_ret_t ret = rcl_init(argc, argv, init_options.get_rcl_init_options(), rcl_context_.get());
+  rcl_context_t * context = new rcl_context_t;
+  if (!context) {
+    throw std::runtime_error("failed to allocate memory for rcl context");
+  }
+  *context = rcl_get_zero_initialized_context();
+  rcl_ret_t ret = rcl_init(argc, argv, init_options.get_rcl_init_options(), context);
   if (RCL_RET_OK != ret) {
-    rcl_context_.reset();
+    delete context;
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
+  rcl_context_.reset(context, __delete_context);
 
   if (init_options.auto_initialize_logging()) {
     logging_mutex_ = get_global_logging_mutex();
