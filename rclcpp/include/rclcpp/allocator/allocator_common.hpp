@@ -31,12 +31,14 @@ using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_trait
 
 }  // namespace allocator
 
-// Builds the RCL default allocator for the C++ standard allocator.
-// This assumes that the user intent behind both allocators is the
-// same: Using system malloc for allocation.
-//
-// If you're using a custom allocator in ROS, you'll need to provide
-// your own overload for this function.
+/// Return the equivalent rcl_allocator_t for the C++ standard allocator.
+/**
+ * This assumes that the user intent behind both allocators is the
+ * same: Using system malloc for allocation.
+ *
+ * If you're using a custom allocator in ROS, you'll need to provide
+ * your own overload for this function.
+ */
 template<typename T>
 rcl_allocator_t get_rcl_allocator(std::allocator<T> allocator)
 {
