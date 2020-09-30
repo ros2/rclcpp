@@ -213,7 +213,10 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   const auto timeout = (is_fastrtps) ? std::chrono::milliseconds(5) : std::chrono::seconds(10);
   ex.spin_until_future_complete(log_msgs_future, timeout);
 
-  if (!is_fastrtps) {
+  if (is_fastrtps) {
+    EXPECT_EQ("", pub_log_msg);
+    EXPECT_EQ("", sub_log_msg);
+  } else {
     EXPECT_EQ(
       "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
       "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
