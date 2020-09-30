@@ -25,6 +25,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/duration.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 using namespace std::chrono_literals;
 
@@ -236,4 +237,27 @@ TEST_F(TestDuration, conversions) {
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), -ONE_AND_HALF_SEC_IN_NS);
   }
+}
+
+TEST_F(TestDuration, test_some_constructors) {
+  builtin_interfaces::msg::Duration duration_msg;
+  duration_msg.sec = 1;
+  duration_msg.nanosec = 1000;
+  rclcpp::Duration duration_from_msg(duration_msg);
+  EXPECT_EQ(RCL_S_TO_NS(1) + 1000, duration_from_msg.nanoseconds());
+
+  rcl_duration_t duration_struct;
+  duration_struct.nanoseconds = 4000;
+  rclcpp::Duration duration_from_struct(duration_struct);
+  EXPECT_EQ(4000, duration_from_struct.nanoseconds());
+}
+
+TEST_F(TestDuration, test_some_exceptions) {
+  rclcpp::Duration test_duration(0u);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_duration = rclcpp::Duration(INT64_MAX) - rclcpp::Duration(-1),
+    std::overflow_error("duration subtraction leads to int64_t overflow"));
+  RCLCPP_EXPECT_THROW_EQ(
+    test_duration = test_duration * (std::numeric_limits<double>::infinity()),
+    std::runtime_error("abnormal scale in rclcpp::Duration"));
 }
