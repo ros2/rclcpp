@@ -266,6 +266,19 @@ TEST_F(TestPublisher, basic_getters) {
   }
 }
 
+TEST_F(TestPublisher, serialized_message_publish) {
+  initialize();
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  // This is the default, but it's also important for this test to succeed.
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10, options);
+
+  rclcpp::SerializedMessage serialized_msg;
+  EXPECT_NO_THROW(publisher->publish(serialized_msg));
+
+  EXPECT_NO_THROW(publisher->publish(serialized_msg.get_rcl_serialized_message()));
+}
+
 TEST_F(TestPublisher, rcl_publisher_init_error) {
   initialize();
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_publisher_init, RCL_RET_ERROR);
@@ -424,6 +437,11 @@ public:
   {
     this->do_loaned_message_publish(msg);
   }
+
+  void call_default_incompatible_qos_callback(rclcpp::QOSOfferedIncompatibleQoSInfo & event) const
+  {
+    this->default_incompatible_qos_callback(event);
+  }
 };
 
 TEST_F(TestPublisher, do_loaned_message_publish_error) {
@@ -440,6 +458,17 @@ TEST_F(TestPublisher, do_loaned_message_publish_error) {
       "self", rcl_publish_loaned_message, RCL_RET_PUBLISHER_INVALID);
     EXPECT_THROW(publisher->publish_loaned_message(msg.get()), rclcpp::exceptions::RCLError);
   }
+}
+
+TEST_F(TestPublisher, default_incompatible_qos_callback) {
+  initialize();
+  using PublisherT = TestPublisherProtectedMethods<test_msgs::msg::Empty, std::allocator<void>>;
+  auto publisher =
+    node->create_publisher<test_msgs::msg::Empty, std::allocator<void>, PublisherT>("topic", 10);
+  rclcpp::QOSOfferedIncompatibleQoSInfo event;
+  event.last_policy_kind = RMW_QOS_POLICY_INVALID;
+  // This message just logs an error message
+  EXPECT_NO_THROW(publisher->call_default_incompatible_qos_callback(event));
 }
 
 TEST_F(TestPublisher, run_event_handlers) {
