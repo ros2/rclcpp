@@ -207,4 +207,24 @@ TEST_F(TestTimer, callback_with_timer) {
     executor->spin_once(std::chrono::milliseconds(10));
   }
   EXPECT_EQ(timer.get(), timer_ptr);
+  EXPECT_LE(std::chrono::nanoseconds(0).count(), timer_ptr->time_until_trigger().count());
+  EXPECT_FALSE(timer_ptr->is_ready());
+}
+
+TEST_F(TestTimer, callback_with_period_zero) {
+  rclcpp::TimerBase * timer_ptr = nullptr;
+  timer = test_node->create_wall_timer(
+    std::chrono::milliseconds(0),
+    [&timer_ptr](rclcpp::TimerBase & timer) {
+      timer_ptr = &timer;
+    });
+  auto start = std::chrono::steady_clock::now();
+  while (nullptr == timer_ptr &&
+    (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
+  {
+    executor->spin_once(std::chrono::milliseconds(10));
+  }
+  ASSERT_EQ(timer.get(), timer_ptr);
+  EXPECT_GE(std::chrono::nanoseconds(0).count(), timer_ptr->time_until_trigger().count());
+  EXPECT_TRUE(timer_ptr->is_ready());
 }
