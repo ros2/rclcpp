@@ -484,7 +484,7 @@ ament_add_gtest(test_timer rclcpp/test_timer.cpp
 if(TARGET test_timer)
   ament_target_dependencies(test_timer
     "rcl")
-  target_link_libraries(test_timer ${PROJECT_NAME})
+  target_link_libraries(test_timer ${PROJECT_NAME} mimick)
 endif()
 
 ament_add_gtest(test_time_source rclcpp/test_time_source.cpp
