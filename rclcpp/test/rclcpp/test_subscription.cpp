@@ -461,6 +461,33 @@ TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {
   }
 }
 
+/*
+   Testing subscription with invalid use_intra_process_comm
+ */
+TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws_intraprocess) {
+  // Adds more coverage
+  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = static_cast<rclcpp::IntraProcessSetting>(5);
+
+  initialize();
+  rclcpp::QoS qos = GetParam().qos;
+  using test_msgs::msg::Empty;
+  {
+    auto callback = std::bind(
+      &TestSubscriptionInvalidIntraprocessQos::OnMessage,
+      this,
+      std::placeholders::_1);
+
+    ASSERT_THROW(
+      {auto subscription = node->create_subscription<Empty>(
+          "topic",
+          qos,
+          callback,
+          options);},
+      std::runtime_error);
+  }
+}
+
 static std::vector<TestParameters> invalid_qos_profiles()
 {
   std::vector<TestParameters> parameters;
