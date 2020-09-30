@@ -25,6 +25,8 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
+
 namespace
 {
 
@@ -351,4 +353,94 @@ TEST_F(TestTime, seconds) {
   EXPECT_DOUBLE_EQ(0.0, rclcpp::Time(0, 0).seconds());
   EXPECT_DOUBLE_EQ(4.5, rclcpp::Time(4, 500000000).seconds());
   EXPECT_DOUBLE_EQ(2.5, rclcpp::Time(0, 2500000000).seconds());
+}
+
+TEST_F(TestTime, test_max) {
+  const rclcpp::Time time_max = rclcpp::Time::max();
+  const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999);
+  EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
+  EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
+}
+
+TEST_F(TestTime, test_constructor_from_rcl_time_point) {
+  const rcl_time_point_value_t test_nano_seconds = 555;
+  const rcl_clock_type_t test_clock_type = RCL_ROS_TIME;
+  rcl_time_point_t test_time_point;
+  test_time_point.nanoseconds = test_nano_seconds;
+  test_time_point.clock_type = test_clock_type;
+
+  const rclcpp::Time time_max = rclcpp::Time(test_time_point);
+
+  EXPECT_EQ(test_nano_seconds, time_max.nanoseconds());
+  EXPECT_EQ(test_nano_seconds, test_time_point.nanoseconds);
+  EXPECT_EQ(test_clock_type, time_max.get_clock_type());
+  EXPECT_EQ(test_clock_type, test_time_point.clock_type);
+}
+
+TEST_F(TestTime, test_assignment_operator_from_builtin_msg_time) {
+  rclcpp::Clock ros_clock(RCL_ROS_TIME);
+  const builtin_interfaces::msg::Time ros_now = ros_clock.now();
+  EXPECT_NE(0, ros_now.sec);
+  EXPECT_NE(0u, ros_now.nanosec);
+
+  rclcpp::Time test_time(0u, RCL_CLOCK_UNINITIALIZED);
+  EXPECT_EQ(0u, test_time.nanoseconds());
+  EXPECT_EQ(RCL_CLOCK_UNINITIALIZED, test_time.get_clock_type());
+
+  test_time = ros_now;
+  EXPECT_NE(0, test_time.nanoseconds());
+  // The clock type is hardcoded internally
+  EXPECT_EQ(RCL_ROS_TIME, test_time.get_clock_type());
+}
+
+TEST_F(TestTime, test_sum_operator) {
+  const rclcpp::Duration one(1);
+  const rclcpp::Time test_time(0u);
+  EXPECT_EQ(0u, test_time.nanoseconds());
+
+  const rclcpp::Time new_time = one + test_time;
+  EXPECT_EQ(1, new_time.nanoseconds());
+}
+
+TEST_F(TestTime, test_overflow_underflow_throws) {
+  rclcpp::Time test_time(0u);
+
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time = rclcpp::Time(INT64_MAX) + rclcpp::Duration(1),
+    std::overflow_error("addition leads to int64_t overflow"));
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time = rclcpp::Time(INT64_MIN) + rclcpp::Duration(-1),
+    std::underflow_error("addition leads to int64_t underflow"));
+
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time = rclcpp::Time(INT64_MAX) - rclcpp::Duration(-1),
+    std::overflow_error("time subtraction leads to int64_t overflow"));
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time = rclcpp::Time(INT64_MIN) - rclcpp::Duration(1),
+    std::underflow_error("time subtraction leads to int64_t underflow"));
+
+  test_time = rclcpp::Time(INT64_MAX);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time += rclcpp::Duration(1),
+    std::overflow_error("addition leads to int64_t overflow"));
+  test_time = rclcpp::Time(INT64_MIN);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time += rclcpp::Duration(-1),
+    std::underflow_error("addition leads to int64_t underflow"));
+
+  test_time = rclcpp::Time(INT64_MAX);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time -= rclcpp::Duration(-1),
+    std::overflow_error("time subtraction leads to int64_t overflow"));
+  test_time = rclcpp::Time(INT64_MIN);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time -= rclcpp::Duration(1),
+    std::underflow_error("time subtraction leads to int64_t underflow"));
+
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time = rclcpp::Duration(INT64_MAX) + rclcpp::Time(1),
+    std::overflow_error("addition leads to int64_t overflow"));
+  RCLCPP_EXPECT_THROW_EQ(
+    test_time = rclcpp::Duration(INT64_MIN) + rclcpp::Time(-1),
+    std::underflow_error("addition leads to int64_t underflow"));
 }
