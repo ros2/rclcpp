@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -51,6 +51,8 @@ protected:
 TEST_F(TestParameterService, get_parameters) {
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
   EXPECT_EQ(42, client->get_parameter("parameter1", 0));
+
+  EXPECT_EQ(-42, client->get_parameter("undeclared_parameter", -42));
 }
 
 TEST_F(TestParameterService, get_parameter_types) {
@@ -88,7 +90,7 @@ TEST_F(TestParameterService, set_parameters_atomically) {
   EXPECT_EQ(0, client->get_parameter("parameter1", 100));
 }
 
-TEST_F(TestParameterService, list_parametercs) {
+TEST_F(TestParameterService, list_parameters) {
   const size_t number_parameters_in_basic_node = client->list_parameters({}, 1).names.size();
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
 
@@ -106,7 +108,8 @@ TEST_F(TestParameterService, describe_parameters) {
   using ServiceT = rcl_interfaces::srv::DescribeParameters;
   auto client =
     node->create_client<ServiceT>(describe_parameters_service_name);
-  client->wait_for_service();
+
+  ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(1)));
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
 
   {
