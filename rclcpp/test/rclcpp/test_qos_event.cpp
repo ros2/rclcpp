@@ -233,21 +233,21 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 TEST_F(TestQosEvent, construct_destruct_rcl_error) {
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto rcl_handle = publisher->get_publisher_handle();
+  ASSERT_NE(nullptr, rcl_handle);
 
-  bool handler_callback_executed = false;
   // This callback requires some type of parameter, but it could be anything
-  auto callback = [&handler_callback_executed](int) {handler_callback_executed = true;};
-  rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
+  auto callback = [](int) {};
+  const rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
 
   {
     // Logs error and returns
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_publisher_event_init, RCL_RET_ERROR);
 
-    auto throwing_statement = [&callback, &rcl_handle, &event_type]() {
+    auto throwing_statement = [callback, rcl_handle, event_type]() {
         // reset() is not needed for the exception, but it handles unused return value warning
         std::make_shared<
-          rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)>>(
+          rclcpp::QOSEventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
           callback, rcl_publisher_event_init, rcl_handle, event_type).reset();
       };
     // This is done through a lambda because the compiler is having trouble parsing the templated
@@ -260,10 +260,10 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
     auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp", rcl_event_fini, RCL_RET_ERROR);
 
-    auto throwing_statement = [&callback, &rcl_handle, &event_type]() {
+    auto throwing_statement = [callback, rcl_handle, event_type]() {
         // reset() is needed for this exception
         std::make_shared<
-          rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)>>(
+          rclcpp::QOSEventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
           callback, rcl_publisher_event_init, rcl_handle, event_type).reset();
       };
 
