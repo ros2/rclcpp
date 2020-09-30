@@ -23,6 +23,8 @@
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/subscription_options.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
+
 using namespace std::chrono_literals;
 
 namespace
@@ -85,4 +87,17 @@ TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
     rclcpp::detail::resolve_enable_topic_statistics(
       subscription_options,
       *(node->get_node_base_interface())));
+
+  subscription_options.topic_stats_options.state = rclcpp::TopicStatisticsState::Disable;
+  EXPECT_FALSE(
+    rclcpp::detail::resolve_enable_topic_statistics(
+      subscription_options,
+      *(node->get_node_base_interface())));
+
+  subscription_options.topic_stats_options.state = static_cast<rclcpp::TopicStatisticsState>(5);
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::detail::resolve_enable_topic_statistics(
+      subscription_options,
+      *(node->get_node_base_interface())),
+    std::runtime_error("Unrecognized EnableTopicStatistics value"));
 }
