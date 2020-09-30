@@ -291,6 +291,13 @@ if(TARGET test_parameter_client)
   )
   target_link_libraries(test_parameter_client ${PROJECT_NAME})
 endif()
+ament_add_gtest(test_parameter_service rclcpp/test_parameter_service.cpp)
+if(TARGET test_parameter_service)
+  ament_target_dependencies(test_parameter_service
+    "rcl_interfaces"
+  )
+  target_link_libraries(test_parameter_service ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_parameter_events_filter rclcpp/test_parameter_events_filter.cpp)
 if(TARGET test_parameter_events_filter)
   ament_target_dependencies(test_parameter_events_filter
