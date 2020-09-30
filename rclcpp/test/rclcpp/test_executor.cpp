@@ -321,3 +321,37 @@ TEST_F(TestExecutor, get_group_by_timer_with_deleted_group) {
 
   ASSERT_EQ(nullptr, dummy.local_get_group_by_timer(timer).get());
 }
+
+TEST_F(TestExecutor, spin_node_once_base_interface) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool spin_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+      spin_called = true;
+    });
+
+  // Wait for the wall timer to have expired.
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  EXPECT_FALSE(spin_called);
+  dummy.spin_node_once(node->get_node_base_interface());
+  EXPECT_TRUE(spin_called);
+}
+
+TEST_F(TestExecutor, spin_node_once_node) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool spin_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+      spin_called = true;
+    });
+
+  // Wait for the wall timer to have expired.
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  EXPECT_FALSE(spin_called);
+  dummy.spin_node_once(node);
+  EXPECT_TRUE(spin_called);
+}
