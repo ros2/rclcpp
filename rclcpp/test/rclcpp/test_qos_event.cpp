@@ -257,7 +257,7 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 
   {
     // Logs error and returns
-    auto mock = mocking_utils::patch_and_return(
+    auto mock = mocking_utils::inject_on_return(
       "lib:rclcpp", rcl_event_fini, RCL_RET_ERROR);
 
     auto throwing_statement = [&callback, &rcl_handle, &event_type]() {
