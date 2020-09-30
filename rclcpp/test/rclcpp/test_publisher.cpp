@@ -375,6 +375,11 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
       publisher->publish(std::move(loaned_msg)),
       std::runtime_error("loaned message is not valid"));
   }
+  RCLCPP_EXPECT_THROW_EQ(
+    node->create_publisher<test_msgs::msg::Empty>(
+      "topic", rclcpp::QoS(0), options),
+    std::invalid_argument(
+      "intraprocess communication is not allowed with a zero qos history depth value"));
 }
 
 TEST_F(TestPublisher, inter_process_publish_failures) {
