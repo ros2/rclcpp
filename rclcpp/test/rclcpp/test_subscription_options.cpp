@@ -85,4 +85,16 @@ TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
     rclcpp::detail::resolve_enable_topic_statistics(
       subscription_options,
       *(node->get_node_base_interface())));
+
+  subscription_options.topic_stats_options.state = rclcpp::TopicStatisticsState::Disable;
+  EXPECT_FALSE(
+    rclcpp::detail::resolve_enable_topic_statistics(
+      subscription_options,
+      *(node->get_node_base_interface())));
+
+  subscription_options.topic_stats_options.state = static_cast<rclcpp::TopicStatisticsState>(5);
+  EXPECT_THROW(
+    rclcpp::detail::resolve_enable_topic_statistics(
+      subscription_options,
+      *(node->get_node_base_interface())), std::runtime_error);
 }
