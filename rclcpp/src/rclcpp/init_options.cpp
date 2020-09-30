@@ -26,7 +26,7 @@ InitOptions::InitOptions(rcl_allocator_t allocator)
   *init_options_ = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(init_options_.get(), allocator);
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialized rcl init options");
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl init options");
   }
 }
 
