@@ -218,6 +218,7 @@ private:
 /**
  * \throws std::overflow_error if addition leads to overflow
  */
+RCLCPP_PUBLIC
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 
