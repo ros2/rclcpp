@@ -247,6 +247,7 @@ TEST_F(TestSubscription, various_creation_signatures) {
   }
   {
     rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+    options.allocator = std::make_shared<std::allocator<void>>();
     EXPECT_NE(nullptr, options.get_allocator());
     auto sub = rclcpp::create_subscription<Empty>(
       node, "topic", 42, cb, options);
