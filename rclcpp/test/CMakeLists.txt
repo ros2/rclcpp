@@ -171,7 +171,7 @@ ament_add_gtest(test_loaned_message rclcpp/test_loaned_message.cpp)
 ament_target_dependencies(test_loaned_message
   "test_msgs"
 )
-target_link_libraries(test_loaned_message ${PROJECT_NAME})
+target_link_libraries(test_loaned_message ${PROJECT_NAME} mimick)
 
 ament_add_gtest(test_memory_strategy rclcpp/test_memory_strategy.cpp)
 ament_target_dependencies(test_memory_strategy
