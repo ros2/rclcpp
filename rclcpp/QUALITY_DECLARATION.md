@@ -123,6 +123,8 @@ Changes are required to make a best effort to keep or increase coverage before b
 
 Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rclcpp_rclcpp_src_rclcpp/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
+`rclcpp` has a line coverage `>= 95%`, which is calculated over all directories within `rclcpp` with the exception of the `experimental` directory.
+
 ### Performance [4.iv]
 
 It is not yet defined if this package requires performance testing and how addresses this topic.
