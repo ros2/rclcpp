@@ -567,7 +567,7 @@ endif()
 ament_add_gtest(test_guard_condition rclcpp/test_guard_condition.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_guard_condition)
-  target_link_libraries(test_guard_condition ${PROJECT_NAME})
+  target_link_libraries(test_guard_condition ${PROJECT_NAME} mimick)
 endif()
 
 ament_add_gtest(test_wait_set rclcpp/test_wait_set.cpp
