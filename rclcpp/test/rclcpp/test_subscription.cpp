@@ -506,7 +506,7 @@ static std::vector<TestParameters> invalid_qos_profiles()
   return parameters;
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
   ::testing::ValuesIn(invalid_qos_profiles()),
   ::testing::PrintToStringParamName());
