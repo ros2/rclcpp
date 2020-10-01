@@ -271,61 +271,57 @@ TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
  * Testing adding each entity and waiting, and removing each entity and waiting
  */
 TEST_F(TestWaitSet, add_remove_wait) {
-  {
-    rclcpp::WaitSet wait_set;
-    auto node = std::make_shared<rclcpp::Node>("add_remove_wait");
+  rclcpp::WaitSet wait_set;
+  auto node = std::make_shared<rclcpp::Node>("add_remove_wait");
 
-    auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
-    guard_condition->trigger();
+  auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
+  guard_condition->trigger();
 
-    // For coverage reasons, this subscription should have event handlers
-    rclcpp::SubscriptionOptions subscription_options;
-    subscription_options.event_callbacks.deadline_callback = [](auto) {};
-    subscription_options.event_callbacks.liveliness_callback = [](auto) {};
-    auto do_nothing = [](const std::shared_ptr<test_msgs::msg::BasicTypes>) {};
-    auto sub =
-      node->create_subscription<test_msgs::msg::BasicTypes>(
-      "~/test", 1, do_nothing, subscription_options);
+  // For coverage reasons, this subscription should have event handlers
+  rclcpp::SubscriptionOptions subscription_options;
+  subscription_options.event_callbacks.deadline_callback = [](auto) {};
+  subscription_options.event_callbacks.liveliness_callback = [](auto) {};
+  auto do_nothing = [](const std::shared_ptr<test_msgs::msg::BasicTypes>) {};
+  auto sub =
+    node->create_subscription<test_msgs::msg::BasicTypes>(
+    "~/test", 1, do_nothing, subscription_options);
 
-    auto timer = node->create_wall_timer(std::chrono::milliseconds(1), []() {});
+  auto timer = node->create_wall_timer(std::chrono::milliseconds(1), []() {});
 
-    auto client = node->create_client<rcl_interfaces::srv::ListParameters>("~/test");
+  auto client = node->create_client<rcl_interfaces::srv::ListParameters>("~/test");
 
-    auto srv_do_nothing = [](
-      const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request>,
-      std::shared_ptr<rcl_interfaces::srv::ListParameters::Response>) {};
-    auto service =
-      node->create_service<rcl_interfaces::srv::ListParameters>("~/test", srv_do_nothing);
+  auto srv_do_nothing = [](
+    const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request>,
+    std::shared_ptr<rcl_interfaces::srv::ListParameters::Response>) {};
+  auto service =
+    node->create_service<rcl_interfaces::srv::ListParameters>("~/test", srv_do_nothing);
 
-    rclcpp::PublisherOptions publisher_options;
-    publisher_options.event_callbacks.deadline_callback =
-      [](rclcpp::QOSDeadlineOfferedInfo &) {};
-    auto pub = node->create_publisher<test_msgs::msg::BasicTypes>(
-      "~/test", 1, publisher_options);
-    auto qos_event = pub->get_event_handlers()[0];
+  rclcpp::PublisherOptions publisher_options;
+  publisher_options.event_callbacks.deadline_callback =
+    [](rclcpp::QOSDeadlineOfferedInfo &) {};
+  auto pub = node->create_publisher<test_msgs::msg::BasicTypes>(
+    "~/test", 1, publisher_options);
+  auto qos_event = pub->get_event_handlers()[0];
 
-    // Subscription mask is required here for coverage.
-    wait_set.add_subscription(sub, {true, true, true});
-    wait_set.add_guard_condition(guard_condition);
-    wait_set.add_timer(timer);
-    wait_set.add_client(client);
-    wait_set.add_service(service);
-    wait_set.add_waitable(qos_event, pub);
+  // Subscription mask is required here for coverage.
+  wait_set.add_subscription(sub, {true, true, true});
+  wait_set.add_guard_condition(guard_condition);
+  wait_set.add_timer(timer);
+  wait_set.add_client(client);
+  wait_set.add_service(service);
+  wait_set.add_waitable(qos_event, pub);
 
-    // At least timer or guard_condition should trigger
-    EXPECT_EQ(
-      rclcpp::WaitResultKind::Ready, wait_set.wait(std::chrono::seconds(1)).kind());
+  // At least timer or guard_condition should trigger
+  EXPECT_EQ(rclcpp::WaitResultKind::Ready, wait_set.wait(std::chrono::seconds(1)).kind());
 
-    wait_set.remove_subscription(sub, {true, true, true});
-    wait_set.remove_guard_condition(guard_condition);
-    wait_set.remove_timer(timer);
-    wait_set.remove_client(client);
-    wait_set.remove_service(service);
-    wait_set.remove_waitable(qos_event);
+  wait_set.remove_subscription(sub, {true, true, true});
+  wait_set.remove_guard_condition(guard_condition);
+  wait_set.remove_timer(timer);
+  wait_set.remove_client(client);
+  wait_set.remove_service(service);
+  wait_set.remove_waitable(qos_event);
 
-    EXPECT_EQ(
-      rclcpp::WaitResultKind::Empty, wait_set.wait(std::chrono::seconds(1)).kind());
-  }
+  EXPECT_EQ(rclcpp::WaitResultKind::Empty, wait_set.wait(std::chrono::seconds(1)).kind());
 }
 
 /*
