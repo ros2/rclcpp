@@ -20,6 +20,8 @@
 
 #include "test_msgs/msg/basic_types.hpp"
 
+#include "../mocking_utils/patch.hpp"
+
 using MessageT = test_msgs::msg::BasicTypes;
 using LoanedMessageT = rclcpp::LoanedMessage<MessageT>;
 
@@ -80,4 +82,52 @@ TEST_F(TestLoanedMessage, release) {
   ASSERT_EQ(42.0f, msg->float64_value);
 
   SUCCEED();
+}
+
+TEST_F(TestLoanedMessage, construct_with_loaned_message_publisher) {
+  auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
+  auto publisher = node->create_publisher<MessageT>("topic", 10);
+  std::allocator<MessageT> allocator;
+
+  auto mock_can_loan = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_publisher_can_loan_messages, true);
+
+  {
+    auto mock_borrow_loaned = mocking_utils::patch_and_return(
+      "self", rcl_borrow_loaned_message, RCL_RET_ERROR);
+
+    EXPECT_THROW(
+      std::make_shared<LoanedMessageT>(*publisher.get(), allocator).reset(),
+      rclcpp::exceptions::RCLError);
+  }
+
+  MessageT message;
+  auto borrow_loaned_message_callback =
+    [&message](
+    const rcl_publisher_t *, const rosidl_message_type_support_t *, void ** ros_message) {
+      *ros_message = &message;
+      return RCL_RET_OK;
+    };
+  auto mock_borrow_loaned = mocking_utils::patch(
+    "self", rcl_borrow_loaned_message, borrow_loaned_message_callback);
+
+  {
+    auto mock_return_loaned = mocking_utils::patch_and_return(
+      "self", rcl_return_loaned_message_from_publisher, RCL_RET_OK);
+
+    auto loaned_message = std::make_shared<LoanedMessageT>(*publisher.get(), allocator);
+    EXPECT_TRUE(loaned_message->is_valid());
+    EXPECT_NO_THROW(loaned_message.reset());
+  }
+
+  {
+    auto loaned_message = std::make_shared<LoanedMessageT>(*publisher.get(), allocator);
+    EXPECT_TRUE(loaned_message->is_valid());
+
+    auto mock_return_loaned = mocking_utils::patch_and_return(
+      "self", rcl_return_loaned_message_from_publisher, RCL_RET_ERROR);
+
+    // No exception, it just logs an error
+    EXPECT_NO_THROW(loaned_message.reset());
+  }
 }
