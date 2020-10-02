@@ -41,7 +41,6 @@ EventsExecutor::spin()
 
   // Init entities collector
   entities_collector_->init_events_executor(
-    &interrupt_guard_condition_,
     this,
     &EventsExecutor::push_event,
     &exec_list_mutex_);

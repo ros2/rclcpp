@@ -70,6 +70,13 @@ public:
   rmw_qos_profile_t
   get_actual_qos() const;
 
+  RCLCPP_PUBLIC
+  void
+  set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback,
+    void * waitable_handle) const override;
+
 protected:
   std::recursive_mutex reentrant_mutex_;
   rcl_guard_condition_t gc_;

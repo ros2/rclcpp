@@ -77,7 +77,6 @@ public:
   RCLCPP_PUBLIC
   void
   init_events_executor(
-    rcl_guard_condition_t * executor_guard_condition,
     void * executor_context,
     Event_callback executor_callback,
     std::mutex * exec_list_mutex);
@@ -102,6 +101,13 @@ public:
   RCLCPP_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  void
+  set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback,
+    void * waitable_handle) const override;
 
   RCLCPP_PUBLIC
   size_t

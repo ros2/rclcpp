@@ -36,3 +36,20 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 {
   return qos_profile_;
 }
+
+void
+SubscriptionIntraProcessBase::set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback,
+    void * waitable_handle) const
+{
+  rcl_ret_t ret = rcl_set_guard_condition_callback(
+      executor_context,
+      executor_callback,
+      waitable_handle,
+      &gc_);
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+  }
+}

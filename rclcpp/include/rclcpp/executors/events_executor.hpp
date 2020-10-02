@@ -143,6 +143,7 @@ private:
 
   // Timers heap members
   // TODO: Finish this to not hardcode that magic number
+  // Also the timers heap vector could be part of the executable list
   TimersHeap<30> timers;
   std::mutex m_;
 };

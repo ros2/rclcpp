@@ -57,3 +57,14 @@ Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
 }
+
+void
+Waitable::set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback,
+    void * waitable_handle) const
+{
+  (void)executor_context;
+  (void)executor_callback;
+  (void)waitable_handle;
+}

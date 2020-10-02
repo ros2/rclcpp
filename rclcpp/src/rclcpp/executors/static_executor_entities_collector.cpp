@@ -60,7 +60,6 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 
 void
 StaticExecutorEntitiesCollector::init_events_executor(
-  rcl_guard_condition_t * executor_guard_condition,
   void * executor_context,
   Event_callback executor_callback,
   std::mutex * exec_list_mutex)
@@ -68,19 +67,11 @@ StaticExecutorEntitiesCollector::init_events_executor(
   // Empty initialize executable list
   exec_list_ = rclcpp::experimental::ExecutableList();
 
-  // Add executor's guard condition
-  // memory_strategy_->add_guard_condition(executor_guard_condition);
-
   // Set context (associated executor)
   executor_context_ = executor_context;
 
   // Set executor callback to push events into the event queue
   executor_callback_ = executor_callback;
-
-  // Init event handle : The handler is the waitabe pointer (this)
-  // So if any guard condition attached to this waitable is triggered,
-  // we execute the waitable
-  // event_handle_ = {executor_context_, static_cast<void *>(this), executor_callback_};
 
   // Init executable list mutex
   exec_list_mutex_ = exec_list_mutex;
@@ -253,9 +244,35 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::Waitable::SharedPtr & waitable) {
         if (waitable) {
           exec_list_.add_waitable(waitable);
+
+          waitable->set_guard_condition_callback(
+              executor_context_,
+              executor_callback_,
+              waitable.get());
         }
         return false;
       });
+  }
+}
+
+void
+StaticExecutorEntitiesCollector::set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback,
+    void * waitable_handle) const
+{
+  // Set waitable guard conditions' callback (one for each registered node)
+  for (const auto & pair : weak_nodes_to_guard_conditions_) {
+    auto & gc = pair.second;
+    rcl_ret_t ret = rcl_set_guard_condition_callback(
+                      executor_context,
+                      executor_callback,
+                      waitable_handle,
+                      gc);
+
+    if (ret != RCL_RET_OK) {
+      throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+    }
   }
 }
 
