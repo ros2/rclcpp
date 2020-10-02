@@ -59,6 +59,37 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 }
 
 void
+StaticExecutorEntitiesCollector::init_events_executor(
+  rcl_guard_condition_t * executor_guard_condition,
+  void * executor_context,
+  Event_callback executor_callback,
+  std::mutex * exec_list_mutex)
+{
+  // Empty initialize executable list
+  exec_list_ = rclcpp::experimental::ExecutableList();
+
+  // Add executor's guard condition
+  // memory_strategy_->add_guard_condition(executor_guard_condition);
+
+  // Set context (associated executor)
+  executor_context_ = executor_context;
+
+  // Set executor callback to push events into the event queue
+  executor_callback_ = executor_callback;
+
+  // Init event handle : The handler is the waitabe pointer (this)
+  // So if any guard condition attached to this waitable is triggered,
+  // we execute the waitable
+  // event_handle_ = {executor_context_, static_cast<void *>(this), executor_callback_};
+
+  // Init executable list mutex
+  exec_list_mutex_ = exec_list_mutex;
+
+  // Fill executable list
+  fill_executable_list();
+}
+
+void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
@@ -139,6 +170,10 @@ StaticExecutorEntitiesCollector::fill_memory_strategy()
 void
 StaticExecutorEntitiesCollector::fill_executable_list()
 {
+  // Mutex to avoid clearing the executable list if we are
+  // in the middle of events processing in the events queue
+  std::unique_lock<std::mutex> lk(*exec_list_mutex_);
+
   exec_list_.clear();
   add_callback_groups_from_nodes_associated_to_executor();
   fill_executable_list_from_map(weak_groups_associated_with_executor_to_nodes_);
@@ -167,6 +202,16 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
         if (subscription) {
           exec_list_.add_subscription(subscription);
+
+          rcl_ret_t ret = rcl_set_subscription_callback(
+              executor_context_,
+              executor_callback_,
+              subscription.get(),
+              subscription->get_subscription_handle().get());
+
+          if (RCL_RET_OK != ret) {
+            throw std::runtime_error(std::string("Couldn't set subscription callback"));
+          }
         }
         return false;
       });
@@ -174,6 +219,16 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::ServiceBase::SharedPtr & service) {
         if (service) {
           exec_list_.add_service(service);
+
+          rcl_ret_t ret = rcl_set_service_callback(
+              executor_context_,
+              executor_callback_,
+              service.get(),
+              service->get_service_handle().get());
+
+          if (RCL_RET_OK != ret) {
+            throw std::runtime_error(std::string("Couldn't set service callback"));
+          }
         }
         return false;
       });
@@ -181,6 +236,16 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::ClientBase::SharedPtr & client) {
         if (client) {
           exec_list_.add_client(client);
+
+          rcl_ret_t ret = rcl_set_client_callback(
+              executor_context_,
+              executor_callback_,
+              client.get(),
+              client->get_client_handle().get());
+
+          if (RCL_RET_OK != ret) {
+            throw std::runtime_error(std::string("Couldn't set client callback"));
+          }
         }
         return false;
       });
@@ -497,4 +562,28 @@ StaticExecutorEntitiesCollector::get_automatically_added_callback_groups_from_no
     groups.push_back(group_node_ptr.first);
   }
   return groups;
+}
+
+rclcpp::SubscriptionBase::SharedPtr
+StaticExecutorEntitiesCollector::get_subscription_by_handle(void * handle)
+{
+  return exec_list_.get_subscription(handle);
+}
+
+rclcpp::ServiceBase::SharedPtr
+StaticExecutorEntitiesCollector::get_service_by_handle(void * handle)
+{
+  return exec_list_.get_service(handle);
+}
+
+rclcpp::ClientBase::SharedPtr
+StaticExecutorEntitiesCollector::get_client_by_handle(void * handle)
+{
+  return exec_list_.get_client(handle);
+}
+
+rclcpp::Waitable::SharedPtr
+StaticExecutorEntitiesCollector::get_waitable_by_handle(void * handle)
+{
+  return exec_list_.get_waitable(handle);
 }

@@ -82,3 +82,51 @@ ExecutableList::add_waitable(rclcpp::Waitable::SharedPtr waitable)
   this->waitable.push_back(std::move(waitable));
   this->number_of_waitables++;
 }
+
+rclcpp::SubscriptionBase::SharedPtr
+ExecutableList::get_subscription(void * subscription_handler)
+{
+  for(const auto& sub : subscription) {
+    if (sub.get() == subscription_handler) {
+      return sub;
+    }
+  }
+  throw std::runtime_error("Couldn't get subscription!");
+  return nullptr;
+}
+
+rclcpp::ServiceBase::SharedPtr
+ExecutableList::get_service(void * service_handler)
+{
+  for(const auto& srv : service) {
+    if (srv.get() == service_handler) {
+      return srv;
+    }
+  }
+  throw std::runtime_error("Couldn't get service!");
+  return nullptr;
+}
+
+rclcpp::ClientBase::SharedPtr
+ExecutableList::get_client(void * client_handler)
+{
+  for(const auto& cli : client) {
+    if (cli.get() == client_handler) {
+      return cli;
+    }
+  }
+  throw std::runtime_error("Couldn't get client!");
+  return nullptr;
+}
+
+rclcpp::Waitable::SharedPtr
+ExecutableList::get_waitable(void * waitable_handle)
+{
+  for(const auto& w : waitable) {
+    if (w.get() == waitable_handle) {
+      return w;
+    }
+  }
+  throw std::runtime_error("Couldn't get waitable!");
+  return nullptr;
+}

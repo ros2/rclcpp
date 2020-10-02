@@ -64,6 +64,22 @@ public:
   void
   add_waitable(rclcpp::Waitable::SharedPtr waitable);
 
+  RCLCPP_PUBLIC
+  rclcpp::SubscriptionBase::SharedPtr
+  get_subscription(void * subscription_handle);
+
+  RCLCPP_PUBLIC
+  rclcpp::ServiceBase::SharedPtr
+  get_service(void * service_handle);
+
+  RCLCPP_PUBLIC
+  rclcpp::ClientBase::SharedPtr
+  get_client(void * client_handle);
+
+  RCLCPP_PUBLIC
+  rclcpp::Waitable::SharedPtr
+  get_waitable(void * waitable_handle);
+
   // Vector containing the SubscriptionBase of all the subscriptions added to the executor.
   std::vector<rclcpp::SubscriptionBase::SharedPtr> subscription;
   // Contains the count of added subscriptions

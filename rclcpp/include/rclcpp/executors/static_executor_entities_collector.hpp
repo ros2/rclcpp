@@ -67,6 +67,21 @@ public:
     rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
     rcl_guard_condition_t * executor_guard_condition);
 
+  /// Initialize StaticExecutorEntitiesCollector for EventsExecutor
+  /**
+   * \param executor_guard_condition executor's guard condition
+   * \param executor_context executor's pointer
+   * \param executor_callback executor's callback to place event in queue
+   * \param exec_list_mutex mutex to protect executable list
+   */
+  RCLCPP_PUBLIC
+  void
+  init_events_executor(
+    rcl_guard_condition_t * executor_guard_condition,
+    void * executor_context,
+    Event_callback executor_callback,
+    std::mutex * exec_list_mutex);
+
   RCLCPP_PUBLIC
   void
   execute() override;
@@ -266,6 +281,42 @@ public:
   rclcpp::Waitable::SharedPtr
   get_waitable(size_t i) {return exec_list_.waitable[i];}
 
+  /** Return a Subscription Sharedptr by handle
+   * \param[in] handle The handle of the Subscription
+   * \return a Subscription shared pointer
+   * \throws ????  if the Subscription is not found.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::SubscriptionBase::SharedPtr
+  get_subscription_by_handle(void * handle);
+
+  /** Return a Service Sharedptr by handle
+   * \param[in] handle The handle of the Service
+   * \return a Service shared pointer
+   * \throws ????  if the Service is not found.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ServiceBase::SharedPtr
+  get_service_by_handle(void * handle);
+
+  /** Return a Client Sharedptr by handle
+   * \param[in] handle The handle of the Client
+   * \return a Client shared pointer
+   * \throws ????  if the Client is not found.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ClientBase::SharedPtr
+  get_client_by_handle(void * handle);
+
+  /** Return a Waitable Sharedptr by handle
+   * \param[in] handle The handle of the Waitable
+   * \return a Waitable shared pointer
+   * \throws ????  if the Waitable is not found.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::Waitable::SharedPtr
+  get_waitable_by_handle(void * handle);
+
 private:
   /// Function to reallocate space for entities in the wait set.
   /**
@@ -324,6 +375,15 @@ private:
 
   /// Executable list: timers, subscribers, clients, services and waitables
   rclcpp::experimental::ExecutableList exec_list_;
+
+  /// Context (associated executor)
+  void * executor_context_ = nullptr;
+
+  /// Event callback: push new events to queue
+  Event_callback executor_callback_;
+
+  /// Mutex to protect the executable list
+  std::mutex * exec_list_mutex_;
 };
 
 }  // namespace executors
