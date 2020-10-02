@@ -121,6 +121,10 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
+  RCLCPP_PUBLIC
+  void
+  set_callback(const void * executor_context, Event_callback executor_callback) const;
+
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 

@@ -120,9 +120,11 @@ private:
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
   static void
-  push_event(void * executor_ptr, EventQ event)
+  push_event(const void * executor_ptr, EventQ event)
   {
-    auto this_executor = static_cast<executors::EventsExecutor*>(executor_ptr);
+    // Cast executor_ptr to this
+    auto this_executor = const_cast<executors::EventsExecutor *>(
+      static_cast<executors::EventsExecutor const *>(executor_ptr));
 
     {
       std::unique_lock<std::mutex> lock(this_executor->event_queue_mutex_);

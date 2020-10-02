@@ -84,3 +84,19 @@ ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
 }
+
+void
+ServiceBase::set_callback(
+    const void * executor_context,
+    Event_callback executor_callback) const
+{
+  rcl_ret_t ret = rcl_service_set_callback(
+      executor_context,
+      executor_callback,
+      this,
+      service_handle_.get());
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error(std::string("Couldn't set service callback"));
+  }
+}

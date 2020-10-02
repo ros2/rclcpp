@@ -84,7 +84,7 @@ ExecutableList::add_waitable(rclcpp::Waitable::SharedPtr waitable)
 }
 
 rclcpp::SubscriptionBase::SharedPtr
-ExecutableList::get_subscription(void * subscription_handler)
+ExecutableList::get_subscription(const void * subscription_handler)
 {
   for(const auto& sub : subscription) {
     if (sub.get() == subscription_handler) {
@@ -96,7 +96,7 @@ ExecutableList::get_subscription(void * subscription_handler)
 }
 
 rclcpp::ServiceBase::SharedPtr
-ExecutableList::get_service(void * service_handler)
+ExecutableList::get_service(const void * service_handler)
 {
   for(const auto& srv : service) {
     if (srv.get() == service_handler) {
@@ -108,7 +108,7 @@ ExecutableList::get_service(void * service_handler)
 }
 
 rclcpp::ClientBase::SharedPtr
-ExecutableList::get_client(void * client_handler)
+ExecutableList::get_client(const void * client_handler)
 {
   for(const auto& cli : client) {
     if (cli.get() == client_handler) {
@@ -120,7 +120,7 @@ ExecutableList::get_client(void * client_handler)
 }
 
 rclcpp::Waitable::SharedPtr
-ExecutableList::get_waitable(void * waitable_handle)
+ExecutableList::get_waitable(const void * waitable_handle)
 {
   for(const auto& w : waitable) {
     if (w.get() == waitable_handle) {

@@ -74,8 +74,7 @@ public:
   void
   set_guard_condition_callback(
     void * executor_context,
-    Event_callback executor_callback,
-    void * waitable_handle) const override;
+    Event_callback executor_callback) const override;
 
 protected:
   std::recursive_mutex reentrant_mutex_;

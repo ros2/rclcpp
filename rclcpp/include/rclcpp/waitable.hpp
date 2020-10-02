@@ -170,8 +170,7 @@ public:
   void
   set_guard_condition_callback(
     void * executor_context,
-    Event_callback executor_callback,
-    void * waitable_handle) const;
+    Event_callback executor_callback) const;
 
 private:
   std::atomic<bool> in_use_by_wait_set_{false};

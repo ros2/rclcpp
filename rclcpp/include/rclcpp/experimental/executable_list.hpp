@@ -66,19 +66,19 @@ public:
 
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
-  get_subscription(void * subscription_handle);
+  get_subscription(const void * subscription_handle);
 
   RCLCPP_PUBLIC
   rclcpp::ServiceBase::SharedPtr
-  get_service(void * service_handle);
+  get_service(const void * service_handle);
 
   RCLCPP_PUBLIC
   rclcpp::ClientBase::SharedPtr
-  get_client(void * client_handle);
+  get_client(const void * client_handle);
 
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
-  get_waitable(void * waitable_handle);
+  get_waitable(const void * waitable_handle);
 
   // Vector containing the SubscriptionBase of all the subscriptions added to the executor.
   std::vector<rclcpp::SubscriptionBase::SharedPtr> subscription;

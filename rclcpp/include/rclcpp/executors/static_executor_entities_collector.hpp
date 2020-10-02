@@ -106,8 +106,7 @@ public:
   void
   set_guard_condition_callback(
     void * executor_context,
-    Event_callback executor_callback,
-    void * waitable_handle) const override;
+    Event_callback executor_callback) const override;
 
   RCLCPP_PUBLIC
   size_t
@@ -294,7 +293,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(void * handle);
+  get_subscription_by_handle(const void * handle);
 
   /** Return a Service Sharedptr by handle
    * \param[in] handle The handle of the Service
@@ -303,7 +302,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::ServiceBase::SharedPtr
-  get_service_by_handle(void * handle);
+  get_service_by_handle(const void * handle);
 
   /** Return a Client Sharedptr by handle
    * \param[in] handle The handle of the Client
@@ -312,7 +311,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::ClientBase::SharedPtr
-  get_client_by_handle(void * handle);
+  get_client_by_handle(const void * handle);
 
   /** Return a Waitable Sharedptr by handle
    * \param[in] handle The handle of the Waitable
@@ -321,7 +320,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
-  get_waitable_by_handle(void * handle);
+  get_waitable_by_handle(const void * handle);
 
 private:
   /// Function to reallocate space for entities in the wait set.

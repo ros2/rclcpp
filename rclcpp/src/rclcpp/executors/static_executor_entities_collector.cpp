@@ -193,16 +193,7 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
         if (subscription) {
           exec_list_.add_subscription(subscription);
-
-          rcl_ret_t ret = rcl_set_subscription_callback(
-              executor_context_,
-              executor_callback_,
-              subscription.get(),
-              subscription->get_subscription_handle().get());
-
-          if (RCL_RET_OK != ret) {
-            throw std::runtime_error(std::string("Couldn't set subscription callback"));
-          }
+          subscription->set_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -210,16 +201,7 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::ServiceBase::SharedPtr & service) {
         if (service) {
           exec_list_.add_service(service);
-
-          rcl_ret_t ret = rcl_set_service_callback(
-              executor_context_,
-              executor_callback_,
-              service.get(),
-              service->get_service_handle().get());
-
-          if (RCL_RET_OK != ret) {
-            throw std::runtime_error(std::string("Couldn't set service callback"));
-          }
+          service->set_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -227,16 +209,7 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::ClientBase::SharedPtr & client) {
         if (client) {
           exec_list_.add_client(client);
-
-          rcl_ret_t ret = rcl_set_client_callback(
-              executor_context_,
-              executor_callback_,
-              client.get(),
-              client->get_client_handle().get());
-
-          if (RCL_RET_OK != ret) {
-            throw std::runtime_error(std::string("Couldn't set client callback"));
-          }
+          client->set_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -244,11 +217,7 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::Waitable::SharedPtr & waitable) {
         if (waitable) {
           exec_list_.add_waitable(waitable);
-
-          waitable->set_guard_condition_callback(
-              executor_context_,
-              executor_callback_,
-              waitable.get());
+          waitable->set_guard_condition_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -258,16 +227,15 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
 void
 StaticExecutorEntitiesCollector::set_guard_condition_callback(
     void * executor_context,
-    Event_callback executor_callback,
-    void * waitable_handle) const
+    Event_callback executor_callback) const
 {
   // Set waitable guard conditions' callback (one for each registered node)
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & gc = pair.second;
-    rcl_ret_t ret = rcl_set_guard_condition_callback(
+    rcl_ret_t ret = rcl_guard_condition_set_callback(
                       executor_context,
                       executor_callback,
-                      waitable_handle,
+                      this,
                       gc);
 
     if (ret != RCL_RET_OK) {
@@ -582,25 +550,25 @@ StaticExecutorEntitiesCollector::get_automatically_added_callback_groups_from_no
 }
 
 rclcpp::SubscriptionBase::SharedPtr
-StaticExecutorEntitiesCollector::get_subscription_by_handle(void * handle)
+StaticExecutorEntitiesCollector::get_subscription_by_handle(const void * handle)
 {
   return exec_list_.get_subscription(handle);
 }
 
 rclcpp::ServiceBase::SharedPtr
-StaticExecutorEntitiesCollector::get_service_by_handle(void * handle)
+StaticExecutorEntitiesCollector::get_service_by_handle(const void * handle)
 {
   return exec_list_.get_service(handle);
 }
 
 rclcpp::ClientBase::SharedPtr
-StaticExecutorEntitiesCollector::get_client_by_handle(void * handle)
+StaticExecutorEntitiesCollector::get_client_by_handle(const void * handle)
 {
   return exec_list_.get_client(handle);
 }
 
 rclcpp::Waitable::SharedPtr
-StaticExecutorEntitiesCollector::get_waitable_by_handle(void * handle)
+StaticExecutorEntitiesCollector::get_waitable_by_handle(const void * handle)
 {
   return exec_list_.get_waitable(handle);
 }

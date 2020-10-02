@@ -288,3 +288,19 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   }
   throw std::runtime_error("given pointer_to_subscription_part does not match any part");
 }
+
+void
+SubscriptionBase::set_callback(
+    const void * executor_context,
+    Event_callback executor_callback) const
+{
+  rcl_ret_t ret = rcl_subscription_set_callback(
+      executor_context,
+      executor_callback,
+      this,
+      subscription_handle_.get());
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error(std::string("Couldn't set subscription callback"));
+  }
+}
