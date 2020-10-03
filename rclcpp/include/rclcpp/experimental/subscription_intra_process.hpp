@@ -28,6 +28,8 @@
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 #include "tracetools/tracetools.h"
@@ -72,6 +74,12 @@ public:
       throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
     }
 
+    if (!allocator) {
+      message_allocator_ = std::make_shared<MessageAlloc>();
+    } else {
+      message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    }
+
     // Create the intra-process buffer.
     buffer_ = rclcpp::experimental::create_intra_process_buffer<MessageT, Alloc, Deleter>(
       buffer_type,
@@ -113,6 +121,12 @@ public:
   }
 
   bool
+  is_serialized() const
+  {
+    return serialization_traits::is_serialized_message_class<MessageT>::value;
+  }
+
+  bool
   is_ready(rcl_wait_set_t * wait_set)
   {
     (void)wait_set;
@@ -125,10 +139,9 @@ public:
   }
 
   void
-  provide_intra_process_message(ConstMessageSharedPtr message)
+  provide_intra_process_message(std::shared_ptr<const void> message)
   {
-    buffer_->add_shared(std::move(message));
-    trigger_guard_condition();
+    provide_intra_process_message_impl(std::static_pointer_cast<const MessageT>(message));
   }
 
   void
@@ -144,12 +157,37 @@ public:
     return buffer_->use_take_shared_method();
   }
 
+  std::shared_ptr<void>
+  create_shared_message(const void * message_to_copy)
+  {
+    if (nullptr != message_to_copy) {
+      return std::allocate_shared<MessageT, MessageAlloc>(
+        *message_allocator_,
+        *reinterpret_cast<const MessageT *>(message_to_copy));
+    }
+
+    return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_);
+  }
+
+  std::unique_ptr<SerializationBase>
+  get_serialization()
+  {
+    return std::make_unique<Serialization<MessageT>>();
+  }
+
 private:
   void
   trigger_guard_condition()
   {
     rcl_ret_t ret = rcl_trigger_guard_condition(&gc_);
     (void)ret;
+  }
+
+  void
+  provide_intra_process_message_impl(ConstMessageSharedPtr message)
+  {
+    buffer_->add_shared(std::move(message));
+    trigger_guard_condition();
   }
 
   template<typename T>
@@ -178,6 +216,7 @@ private:
 
   AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
   BufferUniquePtr buffer_;
+  std::shared_ptr<MessageAlloc> message_allocator_;
 };
 
 }  // namespace experimental
