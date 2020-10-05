@@ -37,10 +37,10 @@ public:
   /// Time constructor
   /**
    * \param nanoseconds since time epoch
-   * \param clock clock type
+   * \param clock_type clock type
    */
   RCLCPP_PUBLIC
-  explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
+  explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time(const Time & rhs);
@@ -48,13 +48,13 @@ public:
   /// Time constructor
   /**
    * \param time_msg builtin_interfaces time message to copy
-   * \param ros_time clock type
+   * \param clock_type clock type
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
   Time(
     const builtin_interfaces::msg::Time & time_msg,
-    rcl_clock_type_t ros_time = RCL_ROS_TIME);
+    rcl_clock_type_t clock_type = RCL_ROS_TIME);
 
   /// Time constructor
   /**
@@ -73,6 +73,12 @@ public:
   Time &
   operator=(const Time & rhs);
 
+  /**
+   * Assign Time from a builtin_interfaces::msg::Time instance.
+   * The clock_type will be reset to RCL_ROS_TIME.
+   * Equivalent to *this = Time(time_msg, RCL_ROS_TIME).
+   * \throws std::runtime_error if seconds are negative
+   */
   RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
