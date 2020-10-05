@@ -20,7 +20,6 @@
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
 #include "rclcpp/executors/timers_heap.hpp"
-#include "rclcpp/experimental/executable_list.hpp"
 #include "rclcpp/node.hpp"
 
 #include "rcutils/event_types.h"
@@ -155,7 +154,6 @@ private:
 
   // Timers heap members
   // TODO: Finish this to not hardcode that magic number
-  // Also the timers heap vector could be part of the executable list
   TimersHeap<30> timers;
 };
 

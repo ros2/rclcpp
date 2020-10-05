@@ -14,13 +14,7 @@
 
 #include "rclcpp/executors/events_executor.hpp"
 
-#include <memory>
-#include <iomanip>
-
-#include "rclcpp/scope_exit.hpp"
-
 using rclcpp::executors::EventsExecutor;
-using rclcpp::experimental::ExecutableList;
 
 EventsExecutor::EventsExecutor(
   const rclcpp::ExecutorOptions & options)
@@ -39,11 +33,11 @@ EventsExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
-  auto push_timer = [this](const rclcpp::TimerBase::SharedPtr & t) {
+  auto push_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
     timers.add_timer(t);
   };
 
-  auto clear_timers = [this]() {
+  auto clear_timers_function = [this]() {
     timers.clear();
   };
 
@@ -51,8 +45,8 @@ EventsExecutor::spin()
   entities_collector_->set_callbacks(
     this,
     &EventsExecutor::push_event,
-    push_timer,
-    clear_timers);
+    push_timer_function,
+    clear_timers_function);
 
   std::thread t_exec_timers(&EventsExecutor::execute_timers, this);
   pthread_setname_np(t_exec_timers.native_handle(), "Timers");

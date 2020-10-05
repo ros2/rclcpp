@@ -16,7 +16,6 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
 #include <list>
-#include <map>
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/waitable.hpp"
@@ -26,15 +25,13 @@ namespace rclcpp
 namespace executors
 {
 
-class EventsExecutorEntitiesCollector final
-  : public rclcpp::Waitable,
-  public std::enable_shared_from_this<EventsExecutorEntitiesCollector>
+class EventsExecutorEntitiesCollector final : public rclcpp::Waitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
 
-  using PushTimer = std::function<void (const rclcpp::TimerBase::SharedPtr & timer)>;
-  using ClearTimers = std::function<void (void)>;
+  using PushTimerFn = std::function<void (const rclcpp::TimerBase::SharedPtr & timer)>;
+  using ClearTimersFn = std::function<void (void)>;
 
   // Constructor
   RCLCPP_PUBLIC
@@ -49,8 +46,8 @@ public:
   set_callbacks(
     void * executor_context,
     Event_callback executor_callback,
-    PushTimer push_timer,
-    ClearTimers clear_timers);
+    PushTimerFn push_timer,
+    ClearTimersFn clear_timers);
 
   RCLCPP_PUBLIC
   void
@@ -88,17 +85,18 @@ private:
   void
   set_entities_callbacks();
 
-  /// List of weak nodes registered in the static executor
+  /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
   /// Context (associated executor)
   void * executor_context_ = nullptr;
 
-  /// Event callback: push new events to queue
+  /// Events callback
   Event_callback executor_callback_ = nullptr;
 
-  PushTimer push_timer_ = nullptr;
-  ClearTimers clear_timers_ = nullptr;
+  /// Function pointers to push and clear timers from the timers heap
+  PushTimerFn push_timer_ = nullptr;
+  ClearTimersFn clear_timers_ = nullptr;
 };
 
 }  // namespace executors

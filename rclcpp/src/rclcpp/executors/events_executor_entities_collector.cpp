@@ -34,8 +34,8 @@ void
 EventsExecutorEntitiesCollector::set_callbacks(
   void * executor_context,
   Event_callback executor_callback,
-  PushTimer push_timer,
-  ClearTimers clear_timers)
+  PushTimerFn push_timer,
+  ClearTimersFn clear_timers)
 {
   executor_context_ = executor_context;
   executor_callback_ = executor_callback;
