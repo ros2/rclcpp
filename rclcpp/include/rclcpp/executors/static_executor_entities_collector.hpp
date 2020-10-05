@@ -69,10 +69,6 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_callback(void * executor_context, Event_callback executor_callback);
-
-  RCLCPP_PUBLIC
-  void
   execute() override;
 
   /// Function to add_handles_to_wait_set and wait for work and
@@ -91,13 +87,6 @@ public:
   RCLCPP_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  void
-  add_node_gc(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    void * executor_context,
-    Event_callback executor_callback) const;
 
   RCLCPP_PUBLIC
   size_t
@@ -335,12 +324,6 @@ private:
 
   /// Executable list: timers, subscribers, clients, services and waitables
   rclcpp::experimental::ExecutableList exec_list_;
-
-  /// Context (associated executor)
-  void * executor_context_ = nullptr;
-
-  /// Event callback: push new events to queue
-  Event_callback executor_callback_ = nullptr;
 };
 
 }  // namespace executors

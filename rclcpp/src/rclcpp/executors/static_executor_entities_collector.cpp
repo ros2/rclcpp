@@ -59,22 +59,6 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 }
 
 void
-StaticExecutorEntitiesCollector::set_callback(
-  void * executor_context,
-  Event_callback executor_callback)
-{
-  // Empty initialize executable list
-  // Why do I need it for the new EventsExecutor approach?
-  exec_list_ = rclcpp::experimental::ExecutableList();
-
-  // Set context (associated executor)
-  executor_context_ = executor_context;
-
-  // Set executor callback to push events into the event queue
-  executor_callback_ = executor_callback;
-}
-
-void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
@@ -96,26 +80,15 @@ StaticExecutorEntitiesCollector::init(
   execute();
 }
 
-// The purpose of "execute" is handling the situation of a new entity added to
-// a node, while the executor is already spinning.
-// With the new approach, "execute" should only take care of setting that
-// entitiy's callback.
-// If a entity is removed from a node, should we unset its callback?
-// Maybe worth it create a new EventsExecutorEntitiesCollector??
-// because now we'd be doing unnecessary thinks like:
-// fill_memory_strategy, prepare_wait_set,fill_executable_list
-// Now we only use fill_executable_list because it can set the callbacks
-// to entities, but it's setting the ones already set so we shoud do it
-// more efficently
 void
 StaticExecutorEntitiesCollector::execute()
 {
   // Fill memory strategy with entities coming from weak_nodes_
-  //fill_memory_strategy();
+  fill_memory_strategy();
   // Fill exec_list_ with entities coming from weak_nodes_ (same as memory strategy)
   fill_executable_list();
   // Resize the wait_set_ based on memory_strategy handles (rcl_wait_set_resize)
-  //prepare_wait_set();
+  prepare_wait_set();
 }
 
 void
@@ -194,7 +167,6 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
         if (subscription) {
           exec_list_.add_subscription(subscription);
-          subscription->set_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -202,7 +174,6 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::ServiceBase::SharedPtr & service) {
         if (service) {
           exec_list_.add_service(service);
-          service->set_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -210,7 +181,6 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::ClientBase::SharedPtr & client) {
         if (client) {
           exec_list_.add_client(client);
-          client->set_callback(executor_context_, executor_callback_);
         }
         return false;
       });
@@ -218,29 +188,9 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
       [this](const rclcpp::Waitable::SharedPtr & waitable) {
         if (waitable) {
           exec_list_.add_waitable(waitable);
-          waitable->set_guard_condition_callback(executor_context_, executor_callback_);
         }
         return false;
       });
-  }
-}
-
-
-// Do also remove_node_gc
-void
-StaticExecutorEntitiesCollector::add_node_gc(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    void * executor_context,
-    Event_callback executor_callback) const
-{
-  rcl_ret_t ret = rcl_guard_condition_set_callback(
-                    executor_context,
-                    executor_callback,
-                    this,
-                    node_ptr->get_notify_guard_condition());
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
   }
 }
 
