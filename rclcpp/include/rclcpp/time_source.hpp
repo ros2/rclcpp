@@ -48,7 +48,7 @@ public:
   /// Empty constructor
   /**
    * An Empty TimeSource class
-   * 
+   *
    * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
