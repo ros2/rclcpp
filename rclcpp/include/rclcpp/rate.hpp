@@ -112,8 +112,9 @@ private:
   std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
 };
 
-using Rate = GenericRate<std::chrono::system_clock>;
-using WallRate = GenericRate<std::chrono::steady_clock>;
+using WallRate = GenericRate<std::chrono::system_clock>;
+using SteadyRate = GenericRate<std::chrono::steady_clock>;
+using Rate = WallRate;
 
 }  // namespace rclcpp
 
