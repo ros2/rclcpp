@@ -164,6 +164,26 @@ RCLCPP_PUBLIC
 bool operator!=(const QoS & left, const QoS & right);
 
 /**
+ * Clock QoS class
+ *    - History: Keep last,
+ *    - Depth: 1,
+ *    - Reliability: Best effort,
+ *    - Durability: Volatile,
+ *    - Deadline: Default,
+ *    - Lifespan: Default,
+ *    - Liveliness: System default,
+ *    - Liveliness lease duration: default,
+ *    - avoid ros namespace conventions: false
+ */
+class RCLCPP_PUBLIC ClockQoS : public QoS
+{
+public:
+  explicit
+  ClockQoS(
+    const QoSInitialization & qos_initialization = KeepLast(1));
+};
+
+/**
  * Sensor Data QoS class
  *    - History: Keep last,
  *    - Depth: 5,

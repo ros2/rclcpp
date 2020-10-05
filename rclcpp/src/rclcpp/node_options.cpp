@@ -77,6 +77,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->enable_topic_statistics_ = other.enable_topic_statistics_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->start_parameter_event_publisher_ = other.start_parameter_event_publisher_;
+    this->clock_qos_ = other.clock_qos_;
     this->parameter_event_qos_ = other.parameter_event_qos_;
     this->rosout_qos_ = other.rosout_qos_;
     this->parameter_event_publisher_options_ = other.parameter_event_publisher_options_;
@@ -255,6 +256,19 @@ NodeOptions &
 NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publisher)
 {
   this->start_parameter_event_publisher_ = start_parameter_event_publisher;
+  return *this;
+}
+
+const rclcpp::QoS &
+NodeOptions::clock_qos() const
+{
+  return this->clock_qos_;
+}
+
+NodeOptions &
+NodeOptions::clock_qos(const rclcpp::QoS & clock_qos)
+{
+  this->clock_qos_ = clock_qos;
   return *this;
 }
 

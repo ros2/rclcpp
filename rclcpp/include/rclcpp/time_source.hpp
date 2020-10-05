@@ -40,16 +40,19 @@ public:
    * The node will be attached to the time source.
    *
    * \param node std::shared pointer to a initialized node
+   * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
-  explicit TimeSource(rclcpp::Node::SharedPtr node);
+  explicit TimeSource(rclcpp::Node::SharedPtr node, const rclcpp::QoS & qos = rclcpp::ClockQoS());
 
   /// Empty constructor
   /**
    * An Empty TimeSource class
+   * 
+   * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
-  TimeSource();
+  explicit TimeSource(const rclcpp::QoS & qos = rclcpp::ClockQoS());
 
   /// Attack node to the time source.
   /**
@@ -114,11 +117,14 @@ private:
   // Store (and update on node attach) logger for logging.
   Logger logger_;
 
+  // QoS of the clock subscription.
+  rclcpp::QoS qos_;
+
   // The subscription for the clock callback
   using MessageT = rosgraph_msgs::msg::Clock;
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
-  std::shared_ptr<SubscriptionT> clock_subscription_;
+  std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
 
   // The clock callback itself
@@ -155,7 +161,7 @@ private:
 
   // Local storage of validity of ROS time
   // This is needed when new clocks are added.
-  bool ros_time_active_;
+  bool ros_time_active_{false};
   // Last set message to be passed to newly registered clocks
   rosgraph_msgs::msg::Clock::SharedPtr last_msg_set_;
 
@@ -164,7 +170,7 @@ private:
   // A vector to store references to associated clocks.
   std::vector<rclcpp::Clock::SharedPtr> associated_clocks_;
   // A handler for the use_sim_time parameter callback.
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler_ = nullptr;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler_{nullptr};
 };
 
 }  // namespace rclcpp
