@@ -79,6 +79,11 @@ public:
     }
   }
 
+  inline void clear()
+  {
+    // Todo: Implement clear all timers.
+  }
+
 private:
   struct TimerInternal
   {

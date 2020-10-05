@@ -37,10 +37,22 @@ EventsExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
+
+  auto push_timer = [this](const rclcpp::TimerBase::SharedPtr & t) {
+    timers.add_timer(t);
+  };
+
+  auto clear_timers = [this]() {
+    timers.clear();
+  };
 
   // Init entities collector
-  entities_collector_->set_callback(this, &EventsExecutor::push_event);
+  entities_collector_->set_callbacks(
+    this,
+    &EventsExecutor::push_event,
+    push_timer,
+    clear_timers);
 
   std::thread t_exec_timers(&EventsExecutor::execute_timers, this);
   pthread_setname_np(t_exec_timers.native_handle(), "Timers");
@@ -72,9 +84,9 @@ EventsExecutor::add_node(
     group->find_timer_ptrs_if(
       [this](const rclcpp::TimerBase::SharedPtr & timer) {
         if (timer) {
-        timers.add_timer(timer);
-      }
-      return false;
+          timers.add_timer(timer);
+        }
+        return false;
     });
     // Set the callbacks to all the entities
     group->find_subscription_ptrs_if(

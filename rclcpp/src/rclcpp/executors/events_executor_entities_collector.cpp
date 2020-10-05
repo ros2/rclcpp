@@ -31,11 +31,16 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 }
 
 void
-EventsExecutorEntitiesCollector::set_callback(
-  void * executor_context, Event_callback executor_callback)
+EventsExecutorEntitiesCollector::set_callbacks(
+  void * executor_context,
+  Event_callback executor_callback,
+  PushTimer push_timer,
+  ClearTimers clear_timers)
 {
   executor_context_ = executor_context;
   executor_callback_ = executor_callback;
+  push_timer_ = push_timer;
+  clear_timers_ = clear_timers;
 }
 
 // The purpose of "execute" is handling the situation of a new entity added to
@@ -46,7 +51,7 @@ EventsExecutorEntitiesCollector::set_callback(
 void
 EventsExecutorEntitiesCollector::execute()
 {
-  // Fill exec_list_ with entities coming from weak_nodes_ (same as memory strategy)
+  clear_timers_();
   set_entities_callbacks();
 }
 
@@ -64,11 +69,10 @@ EventsExecutorEntitiesCollector::set_entities_callbacks()
       if (!group || !group->can_be_taken_from().load()) {
         continue;
       }
-
       group->find_timer_ptrs_if(
         [this](const rclcpp::TimerBase::SharedPtr & timer) {
           if (timer) {
-            // Add timer!!
+            push_timer_(timer);
           }
           return false;
         });

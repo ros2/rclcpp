@@ -33,6 +33,9 @@ class EventsExecutorEntitiesCollector final
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
 
+  using PushTimer = std::function<void (const rclcpp::TimerBase::SharedPtr & timer)>;
+  using ClearTimers = std::function<void (void)>;
+
   // Constructor
   RCLCPP_PUBLIC
   EventsExecutorEntitiesCollector() = default;
@@ -43,7 +46,11 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_callback(void * executor_context, Event_callback executor_callback);
+  set_callbacks(
+    void * executor_context,
+    Event_callback executor_callback,
+    PushTimer push_timer,
+    ClearTimers clear_timers);
 
   RCLCPP_PUBLIC
   void
@@ -89,6 +96,9 @@ private:
 
   /// Event callback: push new events to queue
   Event_callback executor_callback_ = nullptr;
+
+  PushTimer push_timer_ = nullptr;
+  ClearTimers clear_timers_ = nullptr;
 };
 
 }  // namespace executors
