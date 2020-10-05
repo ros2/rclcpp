@@ -48,11 +48,63 @@ EventsExecutorEntitiesCollector::set_callbacks(
 // With the new approach, "execute" should only take care of setting that
 // entitiy's callback.
 // If a entity is removed from a node, we should unset its callback
+// Todo: We're still not ready for this.
 void
 EventsExecutorEntitiesCollector::execute()
 {
+  // std::cout << "EventsExecutorEntitiesCollector::execute()" << std::endl;
   // clear_timers_();
   // set_entities_callbacks();
+}
+
+void
+EventsExecutorEntitiesCollector::add_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    void * executor_context,
+    Event_callback executor_callback)
+{
+  // If the node already has an executor
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+
+  if (has_executor.exchange(true)) {
+    throw std::runtime_error("Node has already been added to an executor.");
+  }
+
+  weak_nodes_.push_back(node_ptr);
+
+  // Set node's guard condition callback, so if a new entitiy is added while
+  // spinning we can set its callback.
+  rcl_ret_t ret = rcl_guard_condition_set_callback(
+                    executor_context,
+                    executor_callback,
+                    this,
+                    node_ptr->get_notify_guard_condition());
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+  }
+}
+
+// Here we should unset the node's guard condition callback.
+bool
+EventsExecutorEntitiesCollector::remove_node(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
+{
+  auto node_it = weak_nodes_.begin();
+
+  while (node_it != weak_nodes_.end()) {
+    bool matched = (node_it->lock() == node_ptr);
+    if (matched) {
+      // Find and remove node and unset its guard condition callback (TODO)
+      // rcl_ret_t ret = rcl_guard_condition_unset_callback(
+      //                   node_ptr->get_notify_guard_condition());
+      weak_nodes_.erase(node_it);
+      return true;
+    } else {
+      ++node_it;
+    }
+  }
+  return false;
 }
 
 void
@@ -106,54 +158,4 @@ EventsExecutorEntitiesCollector::set_entities_callbacks()
         });
     }
   }
-}
-
-void
-EventsExecutorEntitiesCollector::add_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    void * executor_context,
-    Event_callback executor_callback)
-{
-  // If the node already has an executor
-  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-
-  if (has_executor.exchange(true)) {
-    throw std::runtime_error("Node has already been added to an executor.");
-  }
-
-  weak_nodes_.push_back(node_ptr);
-
-  // Set node's guard condition callback, so if a new entitiy is added while
-  // spinning we can set its callback.
-  rcl_ret_t ret = rcl_guard_condition_set_callback(
-                    executor_context,
-                    executor_callback,
-                    this,
-                    node_ptr->get_notify_guard_condition());
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
-  }
-}
-
-// Here we should unset the node's guard condition callback.
-bool
-EventsExecutorEntitiesCollector::remove_node(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
-{
-  auto node_it = weak_nodes_.begin();
-
-  while (node_it != weak_nodes_.end()) {
-    bool matched = (node_it->lock() == node_ptr);
-    if (matched) {
-      // Find and remove node and unset its guard condition callback (TODO)
-      // rcl_ret_t ret = rcl_guard_condition_unset_callback(
-      //                   node_ptr->get_notify_guard_condition());
-      weak_nodes_.erase(node_it);
-      return true;
-    } else {
-      ++node_it;
-    }
-  }
-  return false;
 }
