@@ -18,7 +18,7 @@
 #include <queue>
 
 #include "rclcpp/executor.hpp"
-#include "rclcpp/executors/static_executor_entities_collector.hpp"
+#include "rclcpp/executors/events_executor_entities_collector.hpp"
 #include "rclcpp/executors/timers_heap.hpp"
 #include "rclcpp/experimental/executable_list.hpp"
 #include "rclcpp/node.hpp"
@@ -126,7 +126,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
-  StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
+  EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,

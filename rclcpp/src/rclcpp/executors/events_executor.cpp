@@ -26,7 +26,7 @@ EventsExecutor::EventsExecutor(
   const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
-  entities_collector_ = std::make_shared<StaticExecutorEntitiesCollector>();
+  entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>();
 }
 
 EventsExecutor::~EventsExecutor() {}
@@ -58,11 +58,10 @@ EventsExecutor::add_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   (void) notify;
-  // entities_collector_->add_node(node_ptr);
 
   std::unique_lock<std::mutex> lock(event_queue_mutex_);
 
-  entities_collector_->add_node_gc(node_ptr, this, &EventsExecutor::push_event);
+  entities_collector_->add_node(node_ptr, this, &EventsExecutor::push_event);
 
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group = weak_group.lock();
