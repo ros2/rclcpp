@@ -285,42 +285,6 @@ public:
   rclcpp::Waitable::SharedPtr
   get_waitable(size_t i) {return exec_list_.waitable[i];}
 
-  /** Return a Subscription Sharedptr by handle
-   * \param[in] handle The handle of the Subscription
-   * \return a Subscription shared pointer
-   * \throws ????  if the Subscription is not found.
-   */
-  RCLCPP_PUBLIC
-  rclcpp::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(const void * handle);
-
-  /** Return a Service Sharedptr by handle
-   * \param[in] handle The handle of the Service
-   * \return a Service shared pointer
-   * \throws ????  if the Service is not found.
-   */
-  RCLCPP_PUBLIC
-  rclcpp::ServiceBase::SharedPtr
-  get_service_by_handle(const void * handle);
-
-  /** Return a Client Sharedptr by handle
-   * \param[in] handle The handle of the Client
-   * \return a Client shared pointer
-   * \throws ????  if the Client is not found.
-   */
-  RCLCPP_PUBLIC
-  rclcpp::ClientBase::SharedPtr
-  get_client_by_handle(const void * handle);
-
-  /** Return a Waitable Sharedptr by handle
-   * \param[in] handle The handle of the Waitable
-   * \return a Waitable shared pointer
-   * \throws ????  if the Waitable is not found.
-   */
-  RCLCPP_PUBLIC
-  rclcpp::Waitable::SharedPtr
-  get_waitable_by_handle(const void * handle);
-
 private:
   /// Function to reallocate space for entities in the wait set.
   /**

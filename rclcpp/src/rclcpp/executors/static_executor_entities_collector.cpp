@@ -556,27 +556,3 @@ StaticExecutorEntitiesCollector::get_automatically_added_callback_groups_from_no
   }
   return groups;
 }
-
-rclcpp::SubscriptionBase::SharedPtr
-StaticExecutorEntitiesCollector::get_subscription_by_handle(const void * handle)
-{
-  return exec_list_.get_subscription(handle);
-}
-
-rclcpp::ServiceBase::SharedPtr
-StaticExecutorEntitiesCollector::get_service_by_handle(const void * handle)
-{
-  return exec_list_.get_service(handle);
-}
-
-rclcpp::ClientBase::SharedPtr
-StaticExecutorEntitiesCollector::get_client_by_handle(const void * handle)
-{
-  return exec_list_.get_client(handle);
-}
-
-rclcpp::Waitable::SharedPtr
-StaticExecutorEntitiesCollector::get_waitable_by_handle(const void * handle)
-{
-  return exec_list_.get_waitable(handle);
-}
