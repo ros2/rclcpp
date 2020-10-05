@@ -100,6 +100,18 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
+  RCLCPP_PUBLIC
+  void
+  execute_subscription(rclcpp::SubscriptionBase* subscription);
+
+  RCLCPP_PUBLIC
+  void
+  execute_service(rclcpp::ServiceBase* service);
+
+  RCLCPP_PUBLIC
+  void
+  execute_client(rclcpp::ClientBase* client);
+
 protected:
   /// Execute timers when ready
   RCLCPP_PUBLIC
@@ -122,10 +134,11 @@ private:
   static void
   push_event(const void * executor_ptr, EventQ event)
   {
-    // Cast executor_ptr to this
-    auto this_executor = const_cast<executors::EventsExecutor *>(
-      static_cast<executors::EventsExecutor const *>(executor_ptr));
+    // Cast executor_ptr to this (need to remove constness)
+    auto this_executor = const_cast<executors::EventsExecutor*>(
+                  static_cast<const executors::EventsExecutor*>(executor_ptr));
 
+    // Event queue mutex scope
     {
       std::unique_lock<std::mutex> lock(this_executor->event_queue_mutex_);
 

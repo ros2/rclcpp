@@ -160,28 +160,134 @@ EventsExecutor::execute_events()
     {
     case SUBSCRIPTION_EVENT:
       {
-        execute_subscription(std::move(entities_collector_->get_subscription_by_handle(event.entity)));
+        //execute_subscription(std::move(entities_collector_->get_subscription_by_handle(event.entity)));
+        auto subscription = const_cast<rclcpp::SubscriptionBase *>(
+                     static_cast<const rclcpp::SubscriptionBase*>(event.entity));
+        execute_subscription(subscription);
         break;
       }
 
     case SERVICE_EVENT:
       {
-        execute_service(std::move(entities_collector_->get_service_by_handle(event.entity)));
+        //execute_service(std::move(entities_collector_->get_service_by_handle(event.entity)));
+        auto service = const_cast<rclcpp::ServiceBase*>(
+                static_cast<const rclcpp::ServiceBase*>(event.entity));
+        execute_service(service);
         break;
       }
 
     case CLIENT_EVENT:
       {
-        execute_client(std::move(entities_collector_->get_client_by_handle(event.entity)));
+        //execute_client(std::move(entities_collector_->get_client_by_handle(event.entity)));
+        auto client = const_cast<rclcpp::ClientBase*>(
+               static_cast<const rclcpp::ClientBase*>(event.entity));
+        execute_client(client);
         break;
       }
 
      case GUARD_CONDITION_EVENT:
       {
-        entities_collector_->get_waitable_by_handle(event.entity)->execute();
+        //entities_collector_->get_waitable_by_handle(event.entity)->execute();
+        auto waitable = const_cast<rclcpp::Waitable*>(
+                 static_cast<const rclcpp::Waitable*>(event.entity));
+        waitable->execute();
         break;
       }
 
     }
   } while (!local_event_queue.empty());
+}
+
+
+// Raw pointer versions of Executor::execute_<ENTITY>
+void
+EventsExecutor::execute_subscription(rclcpp::SubscriptionBase* subscription)
+{
+  rclcpp::MessageInfo message_info;
+  message_info.get_rmw_message_info().from_intra_process = false;
+
+  if (subscription->is_serialized()) {
+    // This is the case where a copy of the serialized message is taken from
+    // the middleware via inter-process communication.
+    std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
+    take_and_do_error_handling(
+      "taking a serialized message from topic",
+      subscription->get_topic_name(),
+      [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
+      [&]()
+      {
+        auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
+        subscription->handle_message(void_serialized_msg, message_info);
+      });
+    subscription->return_serialized_message(serialized_msg);
+  } else if (subscription->can_loan_messages()) {
+    // This is the case where a loaned message is taken from the middleware via
+    // inter-process communication, given to the user for their callback,
+    // and then returned.
+    void * loaned_msg = nullptr;
+    // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
+    //   is extened to support subscriptions as well.
+    take_and_do_error_handling(
+      "taking a loaned message from topic",
+      subscription->get_topic_name(),
+      [&]()
+      {
+        rcl_ret_t ret = rcl_take_loaned_message(
+          subscription->get_subscription_handle().get(),
+          &loaned_msg,
+          &message_info.get_rmw_message_info(),
+          nullptr);
+        if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+          return false;
+        } else if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
+        return true;
+      },
+      [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
+    rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
+      subscription->get_subscription_handle().get(),
+      loaned_msg);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "rcl_return_loaned_message_from_subscription() failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string().str);
+    }
+    loaned_msg = nullptr;
+  } else {
+    // This case is taking a copy of the message data from the middleware via
+    // inter-process communication.
+    std::shared_ptr<void> message = subscription->create_message();
+    take_and_do_error_handling(
+      "taking a message from topic",
+      subscription->get_topic_name(),
+      [&]() {return subscription->take_type_erased(message.get(), message_info);},
+      [&]() {subscription->handle_message(message, message_info);});
+    subscription->return_message(message);
+  }
+}
+
+void
+EventsExecutor::execute_service(rclcpp::ServiceBase* service)
+{
+  auto request_header = service->create_request_header();
+  std::shared_ptr<void> request = service->create_request();
+  take_and_do_error_handling(
+    "taking a service server request from service",
+    service->get_service_name(),
+    [&]() {return service->take_type_erased_request(request.get(), *request_header);},
+    [&]() {service->handle_request(request_header, request);});
+}
+
+void
+EventsExecutor::execute_client(rclcpp::ClientBase* client)
+{
+  auto request_header = client->create_request_header();
+  std::shared_ptr<void> response = client->create_response();
+  take_and_do_error_handling(
+    "taking a service client response from service",
+    client->get_service_name(),
+    [&]() {return client->take_type_erased_response(response.get(), *request_header);},
+    [&]() {client->handle_response(request_header, response);});
 }

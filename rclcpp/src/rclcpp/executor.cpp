@@ -518,9 +518,8 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 }
 
-static
 void
-take_and_do_error_handling(
+Executor::take_and_do_error_handling(
   const char * action_description,
   const char * topic_or_service_name,
   std::function<bool()> take_action,
