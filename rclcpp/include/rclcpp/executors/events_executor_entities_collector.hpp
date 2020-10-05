@@ -15,28 +15,16 @@
 #ifndef RCLCPP__EXECUTORS__EVENTS_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
-#include <chrono>
 #include <list>
 #include <map>
-#include <memory>
-#include <vector>
 
-#include "rcl/guard_condition.h"
-#include "rcl/wait.h"
-
-#include "rclcpp/experimental/executable_list.hpp"
-#include "rclcpp/macros.hpp"
-#include "rclcpp/memory_strategy.hpp"
-#include "rclcpp/visibility_control.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
 namespace executors
 {
-typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
 class EventsExecutorEntitiesCollector final
   : public rclcpp::Waitable,

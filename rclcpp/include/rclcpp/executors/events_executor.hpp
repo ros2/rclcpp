@@ -153,14 +153,10 @@ private:
   std::mutex event_queue_mutex_;
   std::condition_variable event_queue_cv;
 
-  // Executable list mutex
-  std::mutex exec_list_mutex_;
-
   // Timers heap members
   // TODO: Finish this to not hardcode that magic number
   // Also the timers heap vector could be part of the executable list
   TimersHeap<30> timers;
-  std::mutex m_;
 };
 
 }  // namespace executors

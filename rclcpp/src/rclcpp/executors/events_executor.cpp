@@ -132,7 +132,7 @@ EventsExecutor::remove_node(
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
 
-  // Remove the timers from the timers heap here and unset entities callback
+  // Todo: Remove the timers from the timers heap here and unset entities callback
 }
 
 void
@@ -169,10 +169,6 @@ EventsExecutor::execute_events()
     // We got an event! Swap queues and execute events
     swap(local_event_queue, event_queue);
   }
-
-  // Mutex to protect the executable list from being
-  // cleared while we still have events to process
-  std::unique_lock<std::mutex> lock(exec_list_mutex_);
 
   // Execute events
   do {

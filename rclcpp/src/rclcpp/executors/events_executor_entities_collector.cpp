@@ -12,17 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/executors/events_executor_entities_collector.hpp"
-
-#include <algorithm>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/events_executor.hpp"
+#include "rclcpp/executors/events_executor_entities_collector.hpp"
 
 using rclcpp::executors::EventsExecutorEntitiesCollector;
 
