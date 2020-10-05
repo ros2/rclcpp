@@ -67,18 +67,9 @@ public:
     rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
     rcl_guard_condition_t * executor_guard_condition);
 
-  /// Initialize StaticExecutorEntitiesCollector for EventsExecutor
-  /**
-   * \param executor_guard_condition executor's guard condition
-   * \param executor_context executor's pointer
-   * \param executor_callback executor's callback to place event in queue
-   * \param exec_list_mutex mutex to protect executable list
-   */
   RCLCPP_PUBLIC
   void
-  init_events_executor(
-    void * executor_context,
-    Event_callback executor_callback);
+  set_callback(void * executor_context, Event_callback executor_callback);
 
   RCLCPP_PUBLIC
   void

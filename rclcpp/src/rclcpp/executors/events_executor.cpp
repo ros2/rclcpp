@@ -40,7 +40,7 @@ EventsExecutor::spin()
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
 
   // Init entities collector
-  entities_collector_->init_events_executor(this, &EventsExecutor::push_event);
+  entities_collector_->set_callback(this, &EventsExecutor::push_event);
 
   std::thread t_exec_timers(&EventsExecutor::execute_timers, this);
   pthread_setname_np(t_exec_timers.native_handle(), "Timers");
@@ -58,7 +58,9 @@ EventsExecutor::add_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   (void) notify;
-  bool is_new_node = entities_collector_->add_node(node_ptr);
+  // entities_collector_->add_node(node_ptr);
+
+  std::unique_lock<std::mutex> lock(event_queue_mutex_);
 
   entities_collector_->add_node_gc(node_ptr, this, &EventsExecutor::push_event);
 
@@ -105,11 +107,6 @@ EventsExecutor::add_node(
         return false;
       });
   }
-
-  // We should add the node's guard condition to the entities collector waitable,
-  // so if a new entitity is added to the node while spinning, its guard condition is triggered
-  // so the entitites collector (waitable) gets an event on the queue, which should
-  // set that new entity' callback
 }
 
 void
@@ -188,7 +185,6 @@ EventsExecutor::execute_events()
     {
     case SUBSCRIPTION_EVENT:
       {
-        //execute_subscription(std::move(entities_collector_->get_subscription_by_handle(event.entity)));
         auto subscription = const_cast<rclcpp::SubscriptionBase *>(
                      static_cast<const rclcpp::SubscriptionBase*>(event.entity));
         execute_subscription(subscription);
@@ -197,7 +193,6 @@ EventsExecutor::execute_events()
 
     case SERVICE_EVENT:
       {
-        //execute_service(std::move(entities_collector_->get_service_by_handle(event.entity)));
         auto service = const_cast<rclcpp::ServiceBase*>(
                 static_cast<const rclcpp::ServiceBase*>(event.entity));
         execute_service(service);
@@ -206,7 +201,6 @@ EventsExecutor::execute_events()
 
     case CLIENT_EVENT:
       {
-        //execute_client(std::move(entities_collector_->get_client_by_handle(event.entity)));
         auto client = const_cast<rclcpp::ClientBase*>(
                static_cast<const rclcpp::ClientBase*>(event.entity));
         execute_client(client);
@@ -215,7 +209,6 @@ EventsExecutor::execute_events()
 
      case GUARD_CONDITION_EVENT:
       {
-        //entities_collector_->get_waitable_by_handle(event.entity)->execute();
         auto waitable = const_cast<rclcpp::Waitable*>(
                  static_cast<const rclcpp::Waitable*>(event.entity));
         waitable->execute();

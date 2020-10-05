@@ -59,7 +59,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 }
 
 void
-StaticExecutorEntitiesCollector::init_events_executor(
+StaticExecutorEntitiesCollector::set_callback(
   void * executor_context,
   Event_callback executor_callback)
 {
@@ -111,11 +111,11 @@ void
 StaticExecutorEntitiesCollector::execute()
 {
   // Fill memory strategy with entities coming from weak_nodes_
-  fill_memory_strategy();
+  //fill_memory_strategy();
   // Fill exec_list_ with entities coming from weak_nodes_ (same as memory strategy)
   fill_executable_list();
   // Resize the wait_set_ based on memory_strategy handles (rcl_wait_set_resize)
-  prepare_wait_set();
+  //prepare_wait_set();
 }
 
 void
