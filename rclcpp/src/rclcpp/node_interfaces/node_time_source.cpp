@@ -35,7 +35,7 @@ NodeTimeSource::NodeTimeSource(
   node_logging_(node_logging),
   node_clock_(node_clock),
   node_parameters_(node_parameters),
-  time_source_(qos),
+  time_source_(qos)
 {
   time_source_.attachNode(
     node_base_,

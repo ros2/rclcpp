@@ -48,7 +48,7 @@ public:
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
-    const rclcpp::QoS & qos,
+    const rclcpp::QoS & qos
   );
 
   RCLCPP_PUBLIC
