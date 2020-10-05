@@ -247,7 +247,7 @@ Transition::goal_state() const
 }
 
 void
-Transition::reset() noexcept
+Transition::reset()
 {
   // can't free anything which is not owned
   if (!owns_rcl_transition_handle_) {
