@@ -65,16 +65,20 @@ NodeOptions &
 NodeOptions::operator=(const NodeOptions & other)
 {
   if (this != &other) {
+    this->node_options_.reset();
     this->context_ = other.context_;
     this->arguments_ = other.arguments_;
     this->parameter_overrides_ = other.parameter_overrides_;
     this->use_global_arguments_ = other.use_global_arguments_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->start_parameter_services_ = other.start_parameter_services_;
-    this->allocator_ = other.allocator_;
+    this->start_parameter_event_publisher_ = other.start_parameter_event_publisher_;
+    this->parameter_event_qos_ = other.parameter_event_qos_;
+    this->parameter_event_publisher_options_ = other.parameter_event_publisher_options_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
     this->automatically_declare_parameters_from_overrides_ =
       other.automatically_declare_parameters_from_overrides_;
+    this->allocator_ = other.allocator_;
   }
   return *this;
 }
