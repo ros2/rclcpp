@@ -61,10 +61,10 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 void
 StaticExecutorEntitiesCollector::init_events_executor(
   void * executor_context,
-  Event_callback executor_callback,
-  std::mutex * exec_list_mutex)
+  Event_callback executor_callback)
 {
   // Empty initialize executable list
+  // Why do I need it for the new EventsExecutor approach?
   exec_list_ = rclcpp::experimental::ExecutableList();
 
   // Set context (associated executor)
@@ -73,11 +73,12 @@ StaticExecutorEntitiesCollector::init_events_executor(
   // Set executor callback to push events into the event queue
   executor_callback_ = executor_callback;
 
-  // Init executable list mutex
-  exec_list_mutex_ = exec_list_mutex;
+  // Now that we have all nodes registered we can set the nodes
+  // guard condition callback
+  set_guard_condition_callback(executor_context_, executor_callback_);
 
-  // Fill executable list
-  fill_executable_list();
+  // If we are already spinning this won't be called, but we have to set
+  // add the new node's guard condition callback
 }
 
 void
@@ -102,6 +103,17 @@ StaticExecutorEntitiesCollector::init(
   execute();
 }
 
+// The purpose of "execute" is handling the situation of a new entity added to
+// a node, while the executor is already spinning.
+// With the new approach, "execute" should only take care of setting that
+// entitiy's callback.
+// If a entity is removed from a node, should we unset its callback?
+// Maybe worth it create a new EventsExecutorEntitiesCollector??
+// because now we'd be doing unnecessary thinks like:
+// fill_memory_strategy, prepare_wait_set,fill_executable_list
+// Now we only use fill_executable_list because it can set the callbacks
+// to entities, but it's setting the ones already set so we shoud do it
+// more efficently
 void
 StaticExecutorEntitiesCollector::execute()
 {
@@ -161,10 +173,6 @@ StaticExecutorEntitiesCollector::fill_memory_strategy()
 void
 StaticExecutorEntitiesCollector::fill_executable_list()
 {
-  // Mutex to avoid clearing the executable list if we are
-  // in the middle of events processing in the events queue
-  std::unique_lock<std::mutex> lk(*exec_list_mutex_);
-
   exec_list_.clear();
   add_callback_groups_from_nodes_associated_to_executor();
   fill_executable_list_from_map(weak_groups_associated_with_executor_to_nodes_);

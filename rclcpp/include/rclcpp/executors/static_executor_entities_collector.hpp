@@ -78,8 +78,7 @@ public:
   void
   init_events_executor(
     void * executor_context,
-    Event_callback executor_callback,
-    std::mutex * exec_list_mutex);
+    Event_callback executor_callback);
 
   RCLCPP_PUBLIC
   void
@@ -385,10 +384,7 @@ private:
   void * executor_context_ = nullptr;
 
   /// Event callback: push new events to queue
-  Event_callback executor_callback_;
-
-  /// Mutex to protect the executable list
-  std::mutex * exec_list_mutex_;
+  Event_callback executor_callback_ = nullptr;
 };
 
 }  // namespace executors
