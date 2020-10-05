@@ -103,9 +103,10 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_guard_condition_callback(
+  add_node_gc(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     void * executor_context,
-    Event_callback executor_callback) const override;
+    Event_callback executor_callback) const;
 
   RCLCPP_PUBLIC
   size_t

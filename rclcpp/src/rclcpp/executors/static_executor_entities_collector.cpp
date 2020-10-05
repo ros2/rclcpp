@@ -72,13 +72,6 @@ StaticExecutorEntitiesCollector::init_events_executor(
 
   // Set executor callback to push events into the event queue
   executor_callback_ = executor_callback;
-
-  // Now that we have all nodes registered we can set the nodes
-  // guard condition callback
-  set_guard_condition_callback(executor_context_, executor_callback_);
-
-  // If we are already spinning this won't be called, but we have to set
-  // add the new node's guard condition callback
 }
 
 void
@@ -232,23 +225,22 @@ StaticExecutorEntitiesCollector::fill_executable_list_from_map(
   }
 }
 
+
+// Do also remove_node_gc
 void
-StaticExecutorEntitiesCollector::set_guard_condition_callback(
+StaticExecutorEntitiesCollector::add_node_gc(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     void * executor_context,
     Event_callback executor_callback) const
 {
-  // Set waitable guard conditions' callback (one for each registered node)
-  for (const auto & pair : weak_nodes_to_guard_conditions_) {
-    auto & gc = pair.second;
-    rcl_ret_t ret = rcl_guard_condition_set_callback(
-                      executor_context,
-                      executor_callback,
-                      this,
-                      gc);
+  rcl_ret_t ret = rcl_guard_condition_set_callback(
+                    executor_context,
+                    executor_callback,
+                    this,
+                    node_ptr->get_notify_guard_condition());
 
-    if (ret != RCL_RET_OK) {
-      throw std::runtime_error(std::string("Couldn't set guard condition callback"));
-    }
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
   }
 }
 
