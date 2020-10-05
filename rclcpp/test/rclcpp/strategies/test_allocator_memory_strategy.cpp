@@ -83,6 +83,7 @@ public:
 
   void TearDown() override
   {
+    allocator_memory_strategy_.reset();
     rclcpp::shutdown();
   }
 
