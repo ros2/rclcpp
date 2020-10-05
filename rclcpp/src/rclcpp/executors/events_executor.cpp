@@ -71,8 +71,6 @@ EventsExecutor::add_node(
 {
   (void) notify;
 
-  std::unique_lock<std::mutex> lock(event_queue_mutex_);
-
   entities_collector_->add_node(node_ptr, this, &EventsExecutor::push_event);
 
   for (auto & weak_group : node_ptr->get_callback_groups()) {
