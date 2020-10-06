@@ -235,6 +235,12 @@ bool operator!=(const QoS & left, const QoS & right)
   return !(left == right);
 }
 
+ClockQoS::ClockQoS(const QoSInitialization & qos_initialization)
+// Using `rmw_qos_profile_sensor_data` intentionally.
+// It's best effort and `qos_initialization` is overriding the depth to 1.
+: QoS(qos_initialization, rmw_qos_profile_sensor_data)
+{}
+
 SensorDataQoS::SensorDataQoS(const QoSInitialization & qos_initialization)
 : QoS(qos_initialization, rmw_qos_profile_sensor_data)
 {}
