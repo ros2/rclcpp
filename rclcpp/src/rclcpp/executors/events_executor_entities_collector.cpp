@@ -34,15 +34,18 @@ void
 EventsExecutorEntitiesCollector::set_callbacks(
   void * executor_context,
   Event_callback executor_callback,
-  PushTimerFn push_timer,
-  ClearTimersFn clear_timers)
+  TimerFn push_timer,
+  TimerFn clear_timer,
+  ClearTimersFn clear_all_timers)
 {
-  // These callbacks are used whenever a new entity is added/removed
-  // to/from a new node
+  // These callbacks are used when:
+  // 1. A new entity is added/removed to/from a new node
+  // 2. A node is removed from the executor
   executor_context_ = executor_context;
   executor_callback_ = executor_callback;
   push_timer_ = push_timer;
-  clear_timers_ = clear_timers;
+  clear_timer_ = clear_timer;
+  clear_all_timers_ = clear_all_timers;
 }
 
 // The purpose of "execute" is handling the situation of a new entity added to
@@ -54,7 +57,7 @@ EventsExecutorEntitiesCollector::set_callbacks(
 void
 EventsExecutorEntitiesCollector::execute()
 {
-  // clear_timers_();
+  // clear_all_timers_();
   // set_entities_callbacks();
 }
 
@@ -87,8 +90,8 @@ EventsExecutorEntitiesCollector::add_node(
   }
 }
 
-// Here we should unset the node's guard condition callback.
-bool
+// Here we unset the node entities callback.
+void
 EventsExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
@@ -97,16 +100,65 @@ EventsExecutorEntitiesCollector::remove_node(
   while (node_it != weak_nodes_.end()) {
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
-      // Find and remove node and unset its guard condition callback (TODO)
-      // rcl_ret_t ret = rcl_guard_condition_unset_callback(
-      //                   node_ptr->get_notify_guard_condition());
+      // Node found: unset its entities callbacks
+      rcl_ret_t ret = rcl_guard_condition_set_callback(
+                        nullptr, nullptr, nullptr,
+                        node_ptr->get_notify_guard_condition(),
+                        false);
+
+      if (ret != RCL_RET_OK) {
+        throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+      }
+
+      // Unset entities callbacks
+      for (auto & weak_group : node_ptr->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group || !group->can_be_taken_from().load()) {
+          continue;
+        }
+        group->find_timer_ptrs_if(
+          [this](const rclcpp::TimerBase::SharedPtr & timer) {
+            if (timer) {
+              clear_timer_(timer);
+            }
+            return false;
+          });
+        group->find_subscription_ptrs_if(
+          [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
+            if (subscription) {
+              subscription->set_callback(nullptr, nullptr);
+            }
+            return false;
+          });
+        group->find_service_ptrs_if(
+          [this](const rclcpp::ServiceBase::SharedPtr & service) {
+            if (service) {
+              service->set_callback(nullptr, nullptr);
+            }
+            return false;
+          });
+        group->find_client_ptrs_if(
+          [this](const rclcpp::ClientBase::SharedPtr & client) {
+            if (client) {
+              client->set_callback(nullptr, nullptr);
+            }
+            return false;
+          });
+        group->find_waitable_ptrs_if(
+          [this](const rclcpp::Waitable::SharedPtr & waitable) {
+            if (waitable) {
+              waitable->set_guard_condition_callback(nullptr, nullptr);
+            }
+            return false;
+          });
+      }
+
       weak_nodes_.erase(node_it);
-      return true;
+      return;
     } else {
       ++node_it;
     }
   }
-  return false;
 }
 
 void

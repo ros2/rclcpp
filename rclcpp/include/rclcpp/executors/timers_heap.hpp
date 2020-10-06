@@ -79,9 +79,15 @@ public:
     }
   }
 
-  inline void clear()
+  inline void clear_all()
   {
     // Todo: Implement clear all timers.
+  }
+
+  inline void remove_timer(rclcpp::TimerBase::SharedPtr timer)
+  {
+    // Todo: Implement
+    (void)timer;
   }
 
 private:

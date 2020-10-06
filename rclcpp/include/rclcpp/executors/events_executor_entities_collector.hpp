@@ -30,7 +30,7 @@ class EventsExecutorEntitiesCollector final : public rclcpp::Waitable
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
 
-  using PushTimerFn = std::function<void (const rclcpp::TimerBase::SharedPtr & timer)>;
+  using TimerFn = std::function<void (const rclcpp::TimerBase::SharedPtr & timer)>;
   using ClearTimersFn = std::function<void (void)>;
 
   // Constructor
@@ -46,8 +46,9 @@ public:
   set_callbacks(
     void * executor_context,
     Event_callback executor_callback,
-    PushTimerFn push_timer,
-    ClearTimersFn clear_timers);
+    TimerFn push_timer,
+    TimerFn clear_timer,
+    ClearTimersFn clear_all_timers);
 
   RCLCPP_PUBLIC
   void
@@ -61,7 +62,7 @@ public:
     Event_callback executor_callback);
 
   RCLCPP_PUBLIC
-  bool
+  void
   remove_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
@@ -95,8 +96,9 @@ private:
   Event_callback executor_callback_ = nullptr;
 
   /// Function pointers to push and clear timers from the timers heap
-  PushTimerFn push_timer_ = nullptr;
-  ClearTimersFn clear_timers_ = nullptr;
+  TimerFn push_timer_ = nullptr;
+  TimerFn clear_timer_ = nullptr;
+  ClearTimersFn clear_all_timers_ = nullptr;
 };
 
 }  // namespace executors

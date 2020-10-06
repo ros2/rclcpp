@@ -74,8 +74,12 @@ EventsExecutor::provide_callbacks()
     timers.add_timer(t);
   };
 
-  auto clear_timers_function = [this]() {
-    timers.clear();
+  auto clear_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
+    timers.remove_timer(t);
+  };
+
+  auto clear_all_timers_function = [this]() {
+    timers.clear_all();
   };
 
   // Set entities collector callbacks
@@ -83,7 +87,8 @@ EventsExecutor::provide_callbacks()
     this,
     &EventsExecutor::push_event,
     push_timer_function,
-    clear_timers_function);
+    clear_timer_function,
+    clear_all_timers_function);
 }
 
 void
@@ -149,21 +154,11 @@ void
 EventsExecutor::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
-  bool node_removed = entities_collector_->remove_node(node_ptr);
-
-  if (notify) {
-    // If the node was matched and removed, interrupt waiting
-    if (node_removed) {
-      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-        throw std::runtime_error(rcl_get_error_string().str);
-      }
-    }
-  }
+  (void)notify;
+  entities_collector_->remove_node(node_ptr);
 
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
-
-  // Todo: Remove the timers from the timers heap here and unset entities callback
 }
 
 void
