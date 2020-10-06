@@ -25,7 +25,11 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
+  # About -Wno-sign-conversion: With Clang, -Wconversion implies -Wsign-conversion. There are a number of
+  # implicit sign conversions in rclcpp and gtest.cc, see https://ci.ros2.org/job/ci_osx/9265/.
+  # Hence disabling -Wsign-conversion for now until all those have eventually been fixed.
+  # (from https://github.com/ros2/rclcpp/pull/1188#issuecomment-650229140)
+  add_compile_options(-Wall -Wextra -Wconversion -Wno-sign-conversion -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
 endif()
 
 set(${PROJECT_NAME}_SRCS

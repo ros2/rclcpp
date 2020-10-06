@@ -47,17 +47,14 @@ Duration::Duration(std::chrono::nanoseconds nanoseconds)
   rcl_duration_.nanoseconds = nanoseconds.count();
 }
 
-Duration::Duration(const Duration & rhs)
-{
-  rcl_duration_.nanoseconds = rhs.rcl_duration_.nanoseconds;
-}
+Duration::Duration(const Duration & rhs) = default;
 
 Duration::Duration(
   const builtin_interfaces::msg::Duration & duration_msg)
 {
   rcl_duration_.nanoseconds =
-    static_cast<rcl_duration_value_t>(RCL_S_TO_NS(duration_msg.sec));
-  rcl_duration_.nanoseconds += duration_msg.nanosec;
+    RCL_S_TO_NS(static_cast<rcl_duration_value_t>(duration_msg.sec));
+  rcl_duration_.nanoseconds += static_cast<rcl_duration_value_t>(duration_msg.nanosec);
 }
 
 Duration::Duration(const rcl_duration_t & duration)
@@ -69,24 +66,25 @@ Duration::Duration(const rcl_duration_t & duration)
 Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
-  msg_duration.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_duration_.nanoseconds));
-  msg_duration.nanosec =
-    static_cast<std::uint32_t>(rcl_duration_.nanoseconds % (1000 * 1000 * 1000));
+  constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
+  const auto result = std::div(rcl_duration_.nanoseconds, kDivisor);
+  if (result.rem >= 0) {
+    msg_duration.sec = static_cast<std::int32_t>(result.quot);
+    msg_duration.nanosec = static_cast<std::uint32_t>(result.rem);
+  } else {
+    msg_duration.sec = static_cast<std::int32_t>(result.quot - 1);
+    msg_duration.nanosec = static_cast<std::uint32_t>(kDivisor + result.rem);
+  }
   return msg_duration;
 }
 
 Duration &
-Duration::operator=(const Duration & rhs)
-{
-  rcl_duration_.nanoseconds = rhs.rcl_duration_.nanoseconds;
-  return *this;
-}
+Duration::operator=(const Duration & rhs) = default;
 
 Duration &
 Duration::operator=(const builtin_interfaces::msg::Duration & duration_msg)
 {
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(duration_msg.sec));
-  rcl_duration_.nanoseconds += duration_msg.nanosec;
+  *this = Duration(duration_msg);
   return *this;
 }
 
@@ -236,6 +234,10 @@ Duration::seconds() const
 rmw_time_t
 Duration::to_rmw_time() const
 {
+  if (rcl_duration_.nanoseconds < 0) {
+    throw std::runtime_error("rmw_time_t cannot be negative");
+  }
+
   // reuse conversion logic from msg creation
   builtin_interfaces::msg::Duration msg = *this;
   rmw_time_t result;
