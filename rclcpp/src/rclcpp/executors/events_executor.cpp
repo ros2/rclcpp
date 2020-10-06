@@ -33,6 +33,43 @@ EventsExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
+  // Provide callbacks to entities collector
+  provide_callbacks();
+
+  std::thread t_spin_timers(&EventsExecutor::spin_timers, this, false);
+  pthread_setname_np(t_spin_timers.native_handle(), "Timers");
+
+  while (rclcpp::ok(context_) && spinning.load())
+  {
+    execute_events();
+  }
+
+  t_spin_timers.join();
+}
+
+// Before calling spin_some
+void
+EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
+{
+  (void)max_duration;
+
+  // Check, are we already spinning?
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
+
+  std::thread t_spin_timers(&EventsExecutor::spin_timers, this, true);
+
+  // Execute events and leave
+  execute_events();
+
+  t_spin_timers.join();
+}
+
+void
+EventsExecutor::provide_callbacks()
+{
   auto push_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
     timers.add_timer(t);
   };
@@ -41,22 +78,12 @@ EventsExecutor::spin()
     timers.clear();
   };
 
-  // Init entities collector
+  // Set entities collector callbacks
   entities_collector_->set_callbacks(
     this,
     &EventsExecutor::push_event,
     push_timer_function,
     clear_timers_function);
-
-  std::thread t_exec_timers(&EventsExecutor::execute_timers, this);
-  pthread_setname_np(t_exec_timers.native_handle(), "Timers");
-
-  while(spinning.load())
-  {
-    execute_events();
-  }
-
-  t_exec_timers.join();
 }
 
 void
@@ -146,12 +173,15 @@ EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-EventsExecutor::execute_timers()
+EventsExecutor::spin_timers(bool spin_once)
 {
-  while (rclcpp::ok(this->context_) && spinning.load())
+  while (rclcpp::ok(context_) && spinning.load())
   {
     std::this_thread::sleep_for(timers.get_head_timeout());
     timers.execute_ready_timers();
+    if (spin_once) {
+      break;
+    }
   }
 }
 

@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_HPP_
 
 #include <queue>
+#include <chrono>
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
@@ -62,6 +63,17 @@ public:
   RCLCPP_PUBLIC
   void
   spin() override;
+
+  /// Events executor implementation of spin some
+  /**
+   * executor.provide_callbacks();
+   * while(condition) {
+   *   executor.spin_some();
+   * }
+   */
+  RCLCPP_PUBLIC
+  void
+  spin_some(std::chrono::nanoseconds max_duration) override;
 
   /// Add a node to the executor.
   /**
@@ -111,11 +123,15 @@ public:
   void
   execute_client(rclcpp::ClientBase* client);
 
+  RCLCPP_PUBLIC
+  void
+  provide_callbacks();
+
 protected:
   /// Execute timers when ready
   RCLCPP_PUBLIC
   void
-  execute_timers();
+  spin_timers(bool spin_once);
 
   /// Execute events in the queue until is empty
   RCLCPP_PUBLIC

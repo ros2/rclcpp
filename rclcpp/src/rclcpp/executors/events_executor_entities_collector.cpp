@@ -37,6 +37,8 @@ EventsExecutorEntitiesCollector::set_callbacks(
   PushTimerFn push_timer,
   ClearTimersFn clear_timers)
 {
+  // These callbacks are used whenever a new entity is added/removed
+  // to/from a new node
   executor_context_ = executor_context;
   executor_callback_ = executor_callback;
   push_timer_ = push_timer;
@@ -52,7 +54,6 @@ EventsExecutorEntitiesCollector::set_callbacks(
 void
 EventsExecutorEntitiesCollector::execute()
 {
-  // std::cout << "EventsExecutorEntitiesCollector::execute()" << std::endl;
   // clear_timers_();
   // set_entities_callbacks();
 }
