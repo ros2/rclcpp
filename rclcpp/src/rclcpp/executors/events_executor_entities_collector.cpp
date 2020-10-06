@@ -78,7 +78,8 @@ EventsExecutorEntitiesCollector::add_node(
                     executor_context,
                     executor_callback,
                     this,
-                    node_ptr->get_notify_guard_condition());
+                    node_ptr->get_notify_guard_condition(),
+                    false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
     throw std::runtime_error(std::string("Couldn't set guard condition callback"));

@@ -46,7 +46,8 @@ SubscriptionIntraProcessBase::set_guard_condition_callback(
       executor_context,
       executor_callback,
       this,
-      &gc_);
+      &gc_,
+      true /*Use previous events*/);
 
   if (RCL_RET_OK != ret) {
     throw std::runtime_error(std::string("Couldn't set guard condition callback"));
