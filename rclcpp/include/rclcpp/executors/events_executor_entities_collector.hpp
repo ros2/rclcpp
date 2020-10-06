@@ -57,9 +57,7 @@ public:
   RCLCPP_PUBLIC
   void
   add_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    void * executor_context,
-    Event_callback executor_callback);
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
   RCLCPP_PUBLIC
   void

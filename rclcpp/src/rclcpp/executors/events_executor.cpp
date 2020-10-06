@@ -97,8 +97,23 @@ EventsExecutor::add_node(
 {
   (void) notify;
 
-  entities_collector_->add_node(node_ptr, this, &EventsExecutor::push_event);
+  // Add node to entities collector
+  entities_collector_->add_node(node_ptr);
 
+  // Set node's guard condition callback, so if a new entitiy is added while
+  // spinning we can set its callback.
+  rcl_ret_t ret = rcl_guard_condition_set_callback(
+                    this,
+                    &EventsExecutor::push_event,
+                    entities_collector_.get(),
+                    node_ptr->get_notify_guard_condition(),
+                    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+  }
+
+  // Get nodes entities, and assign their callbaks
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group = weak_group.lock();
     if (!group || !group->can_be_taken_from().load()) {
@@ -211,7 +226,7 @@ EventsExecutor::execute_events()
       {
         auto subscription = const_cast<rclcpp::SubscriptionBase *>(
                      static_cast<const rclcpp::SubscriptionBase*>(event.entity));
-        //execute_subscription(subscription);
+        execute_subscription(subscription);
         break;
       }
 
@@ -219,7 +234,7 @@ EventsExecutor::execute_events()
       {
         auto service = const_cast<rclcpp::ServiceBase*>(
                 static_cast<const rclcpp::ServiceBase*>(event.entity));
-        //execute_service(service);
+        execute_service(service);
         break;
       }
 
@@ -227,7 +242,7 @@ EventsExecutor::execute_events()
       {
         auto client = const_cast<rclcpp::ClientBase*>(
                static_cast<const rclcpp::ClientBase*>(event.entity));
-        //execute_client(client);
+        execute_client(client);
         break;
       }
 
