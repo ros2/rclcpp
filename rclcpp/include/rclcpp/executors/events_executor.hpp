@@ -113,18 +113,6 @@ public:
 
   RCLCPP_PUBLIC
   void
-  execute_subscription(rclcpp::SubscriptionBase* subscription);
-
-  RCLCPP_PUBLIC
-  void
-  execute_service(rclcpp::ServiceBase* service);
-
-  RCLCPP_PUBLIC
-  void
-  execute_client(rclcpp::ClientBase* client);
-
-  RCLCPP_PUBLIC
-  void
   provide_callbacks();
 
 protected:

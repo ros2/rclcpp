@@ -422,14 +422,6 @@ protected:
 
   RCLCPP_PUBLIC
   static void
-  take_and_do_error_handling(
-    const char * action_description,
-    const char * topic_or_service_name,
-    std::function<bool()> take_action,
-    std::function<void()> handle_action);
-
-  RCLCPP_PUBLIC
-  static void
   execute_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription);
 
@@ -444,6 +436,18 @@ protected:
   RCLCPP_PUBLIC
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
+
+  RCLCPP_PUBLIC
+  static void
+  execute_subscription(rclcpp::SubscriptionBase* subscription);
+
+  RCLCPP_PUBLIC
+  static void
+  execute_service(rclcpp::ServiceBase* service);
+
+  RCLCPP_PUBLIC
+  static void
+  execute_client(rclcpp::ClientBase* client);
 
   /**
    * \throws std::runtime_error if the wait set can be cleared
