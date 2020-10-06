@@ -4,8 +4,11 @@
   <name>rclcpp_action</name>
   <version>5.0.0</version>
   <description>Adds action APIs for C++.</description>
-  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
+  <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
+  <maintainer email="mabel@openrobotics.org">Mabel Zhang</maintainer>
+  <maintainer email="william@osrfoundation.org">William Woodall</maintainer>
   <license>Apache License 2.0</license>
+  <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 

@@ -4,8 +4,11 @@
   <name>rclcpp_lifecycle</name>
   <version>5.0.0</version>
   <description>Package containing a prototype for lifecycle implementation</description>
-  <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>
+  <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
+  <maintainer email="mabel@openrobotics.org">Mabel Zhang</maintainer>
+  <maintainer email="william@osrfoundation.org">William Woodall</maintainer>
   <license>Apache License 2.0</license>
+  <author email="karsten@osrfoundation.org">Karsten Knese</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
