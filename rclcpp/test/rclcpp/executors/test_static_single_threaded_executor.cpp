@@ -44,6 +44,5 @@ TEST_F(TestStaticSingleThreadedExecutor, check_unimplemented) {
   executor.add_node(node);
 
   EXPECT_THROW(executor.spin_some(), rclcpp::exceptions::UnimplementedError);
-  EXPECT_THROW(executor.spin_all(0ns), rclcpp::exceptions::UnimplementedError);
   EXPECT_THROW(executor.spin_once(0ns), rclcpp::exceptions::UnimplementedError);
 }
