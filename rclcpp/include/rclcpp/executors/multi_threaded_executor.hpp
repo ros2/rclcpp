@@ -22,6 +22,8 @@
 #include <thread>
 #include <unordered_map>
 
+#include <pthread.h>
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -87,6 +89,9 @@ private:
   std::chrono::nanoseconds next_exec_timeout_;
 
   std::set<TimerBase::SharedPtr> scheduled_timers_;
+
+  struct sched_param sch_org, sch_mod;
+  int policy;
 };
 
 }  // namespace executors

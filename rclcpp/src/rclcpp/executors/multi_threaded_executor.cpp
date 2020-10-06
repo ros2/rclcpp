@@ -37,6 +37,9 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
   }
+
+  pthread_getschedparam(pthread_self(), &policy, &sch_org);
+  sch_mod.sched_priority = 1; // set lowest priority in SCHED_RR
 }
 
 MultiThreadedExecutor::~MultiThreadedExecutor() {}
@@ -94,6 +97,7 @@ MultiThreadedExecutor::run(size_t)
           continue;
         }
         scheduled_timers_.insert(any_exec.timer);
+        pthread_setschedparam(pthread_self(), SCHED_RR, &sch_mod);
       }
     }
     if (yield_before_execute_) {
@@ -103,11 +107,14 @@ MultiThreadedExecutor::run(size_t)
     execute_any_executable(any_exec);
 
     if (any_exec.timer) {
-      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      auto it = scheduled_timers_.find(any_exec.timer);
-      if (it != scheduled_timers_.end()) {
-        scheduled_timers_.erase(it);
+      {
+        std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+        auto it = scheduled_timers_.find(any_exec.timer);
+        if (it != scheduled_timers_.end()) {
+          scheduled_timers_.erase(it);
+        }
       }
+      pthread_setschedparam(pthread_self(), policy, &sch_org);
     }
     // Clear the callback_group to prevent the AnyExecutable destructor from
     // resetting the callback group `can_be_taken_from`
