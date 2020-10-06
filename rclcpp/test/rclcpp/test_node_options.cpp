@@ -105,6 +105,38 @@ TEST(TestNodeOptions, bad_ros_args) {
     rclcpp::exceptions::UnknownROSArgsError);
 }
 
+TEST(TestNodeOptions, use_global_arguments) {
+  {
+    auto options = rclcpp::NodeOptions();
+    EXPECT_TRUE(options.use_global_arguments());
+    EXPECT_TRUE(options.get_rcl_node_options()->use_global_arguments);
+  }
+
+  {
+    auto options = rclcpp::NodeOptions().use_global_arguments(false);
+    EXPECT_FALSE(options.use_global_arguments());
+    EXPECT_FALSE(options.get_rcl_node_options()->use_global_arguments);
+  }
+
+  {
+    auto options = rclcpp::NodeOptions().use_global_arguments(true);
+    EXPECT_TRUE(options.use_global_arguments());
+    EXPECT_TRUE(options.get_rcl_node_options()->use_global_arguments);
+  }
+
+  {
+    auto options = rclcpp::NodeOptions();
+    EXPECT_TRUE(options.use_global_arguments());
+    EXPECT_TRUE(options.get_rcl_node_options()->use_global_arguments);
+    options.use_global_arguments(false);
+    EXPECT_FALSE(options.use_global_arguments());
+    EXPECT_FALSE(options.get_rcl_node_options()->use_global_arguments);
+    options.use_global_arguments(true);
+    EXPECT_TRUE(options.use_global_arguments());
+    EXPECT_TRUE(options.get_rcl_node_options()->use_global_arguments);
+  }
+}
+
 TEST(TestNodeOptions, enable_rosout) {
   {
     auto options = rclcpp::NodeOptions();

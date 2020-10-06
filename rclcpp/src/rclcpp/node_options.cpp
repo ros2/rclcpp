@@ -176,7 +176,7 @@ NodeOptions::parameter_overrides(const std::vector<rclcpp::Parameter> & paramete
 bool
 NodeOptions::use_global_arguments() const
 {
-  return this->node_options_->use_global_arguments;
+  return this->use_global_arguments_;
 }
 
 NodeOptions &
