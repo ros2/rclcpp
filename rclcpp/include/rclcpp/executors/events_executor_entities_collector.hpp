@@ -43,7 +43,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_callbacks(
+  init(
     void * executor_context,
     Event_callback executor_callback,
     TimerFn push_timer,

@@ -111,10 +111,6 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
-  RCLCPP_PUBLIC
-  void
-  provide_callbacks();
-
 protected:
   /// Execute timers when ready
   RCLCPP_PUBLIC

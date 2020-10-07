@@ -31,7 +31,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 }
 
 void
-EventsExecutorEntitiesCollector::set_callbacks(
+EventsExecutorEntitiesCollector::init(
   void * executor_context,
   Event_callback executor_callback,
   TimerFn push_timer,

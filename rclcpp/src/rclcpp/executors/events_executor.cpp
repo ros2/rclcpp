@@ -21,6 +21,27 @@ EventsExecutor::EventsExecutor(
 : rclcpp::Executor(options)
 {
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>();
+
+   auto push_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
+    timers.add_timer(t);
+  };
+
+  auto clear_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
+    timers.remove_timer(t);
+  };
+
+  auto clear_all_timers_function = [this]() {
+    timers.clear_all();
+  };
+
+  // Set entities collector callbacks
+  entities_collector_->init(
+    this,
+    &EventsExecutor::push_event,
+    push_timer_function,
+    clear_timer_function,
+    clear_all_timers_function);
+
 }
 
 EventsExecutor::~EventsExecutor() {}
@@ -32,9 +53,6 @@ EventsExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
-
-  // Provide callbacks to entities collector
-  provide_callbacks();
 
   std::thread t_spin_timers(&EventsExecutor::spin_timers, this, false);
   pthread_setname_np(t_spin_timers.native_handle(), "Timers");
@@ -65,30 +83,6 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   execute_events();
 
   t_spin_timers.join();
-}
-
-void
-EventsExecutor::provide_callbacks()
-{
-  auto push_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
-    timers.add_timer(t);
-  };
-
-  auto clear_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
-    timers.remove_timer(t);
-  };
-
-  auto clear_all_timers_function = [this]() {
-    timers.clear_all();
-  };
-
-  // Set entities collector callbacks
-  entities_collector_->set_callbacks(
-    this,
-    &EventsExecutor::push_event,
-    push_timer_function,
-    clear_timer_function,
-    clear_all_timers_function);
 }
 
 void
