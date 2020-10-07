@@ -22,6 +22,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/executors/static_single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/utilities.hpp"
@@ -215,6 +216,12 @@ Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
 void
 Executor::spin_some(std::chrono::nanoseconds max_duration)
 {
+  if (nullptr != dynamic_cast<executors::StaticSingleThreadedExecutor *>(this)) {
+    throw rclcpp::exceptions::UnimplementedError(
+            "spin_some is not implemented for StaticSingleThreadedExecutor, use spin or "
+            "spin_until_future_complete");
+  }
+
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
       if (std::chrono::nanoseconds(0) == max_duration) {
@@ -256,6 +263,11 @@ Executor::spin_once_impl(std::chrono::nanoseconds timeout)
 void
 Executor::spin_once(std::chrono::nanoseconds timeout)
 {
+  if (nullptr != dynamic_cast<executors::StaticSingleThreadedExecutor *>(this)) {
+    throw rclcpp::exceptions::UnimplementedError(
+            "spin_once is not implemented for StaticSingleThreadedExecutor, use spin or "
+            "spin_until_future_complete");
+  }
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
