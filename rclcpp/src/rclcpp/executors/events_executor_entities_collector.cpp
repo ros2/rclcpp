@@ -57,8 +57,8 @@ EventsExecutorEntitiesCollector::init(
 void
 EventsExecutorEntitiesCollector::execute()
 {
-  // clear_all_timers_();
-  // set_entities_callbacks();
+  clear_all_timers_();
+  set_entities_callbacks();
 }
 
 void

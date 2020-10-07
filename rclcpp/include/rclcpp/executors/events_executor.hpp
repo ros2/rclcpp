@@ -154,7 +154,7 @@ private:
 
   // Timers heap members
   // TODO: Finish this to not hardcode that magic number
-  TimersHeap<30> timers;
+  TimersHeap timers;
 };
 
 }  // namespace executors
