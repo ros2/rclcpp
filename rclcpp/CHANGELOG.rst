@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2020-10-07)
+------------------
+* Fix implementation of NodeOptions::use_global_arguments() (`#1176 <https://github.com/ros2/rclcpp/issues/1176>`_) (`#1372 <https://github.com/ros2/rclcpp/issues/1372>`_)
+* Fix conversion of negative durations to messages (`#1188 <https://github.com/ros2/rclcpp/issues/1188>`_) (`#1371 <https://github.com/ros2/rclcpp/issues/1371>`_)
+* Call vector.erase with end iterator overload (`#1314 <https://github.com/ros2/rclcpp/issues/1314>`_) (`#1380 <https://github.com/ros2/rclcpp/issues/1380>`_)
+* Check waitable for nullptr during constructor (`#1315 <https://github.com/ros2/rclcpp/issues/1315>`_) (`#1379 <https://github.com/ros2/rclcpp/issues/1379>`_)
+* Fix pub/sub count API tests. (`#1203 <https://github.com/ros2/rclcpp/issues/1203>`_) (`#1319 <https://github.com/ros2/rclcpp/issues/1319>`_)
+* Reorganize test directory and split CMakeLists.txt (`#1173 <https://github.com/ros2/rclcpp/issues/1173>`_) (`#1262 <https://github.com/ros2/rclcpp/issues/1262>`_)
+* Add operator!= for duration (`#1236 <https://github.com/ros2/rclcpp/issues/1236>`_) (`#1278 <https://github.com/ros2/rclcpp/issues/1278>`_)
+* Contributors: Ivan Santiago Paunovic, Jacob Perron, Jannik Abbenseth, Johannes Meyer, Michel Hidalgo, Stephen Brawner
+
 2.1.0 (2020-08-03)
 ------------------
 * Warn about unused result of add_on_set_parameters_callback (`#1238 <https://github.com/ros2/rclcpp/issues/1238>`_) (`#1244 <https://github.com/ros2/rclcpp/issues/1244>`_)

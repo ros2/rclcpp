@@ -3,6 +3,12 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.2.0 (2020-10-07)
+------------------
+* Log error instead of throwing exception in Transition and State reset() mark no except (`#1297 <https://github.com/ros2/rclcpp/issues/1297>`_) (`#1378 <https://github.com/ros2/rclcpp/issues/1378>`_)
+* Remove rmw-dependent unit-test checks (`#1293 <https://github.com/ros2/rclcpp/issues/1293>`_) (`#1377 <https://github.com/ros2/rclcpp/issues/1377>`_)
+* Contributors: Stephen Brawner
+
 2.1.0 (2020-08-03)
 ------------------
 * Warn about unused result of add_on_set_parameters_callback (`#1238 <https://github.com/ros2/rclcpp/issues/1238>`_) (`#1244 <https://github.com/ros2/rclcpp/issues/1244>`_)

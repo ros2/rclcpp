@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2020-10-07)
+------------------
+* Include original exception in ComponentManagerException (`#1157 <https://github.com/ros2/rclcpp/issues/1157>`_) (`#1223 <https://github.com/ros2/rclcpp/issues/1223>`_)
+* Contributors: Dereck Wonnacott
+
 2.1.0 (2020-08-03)
 ------------------
 
