@@ -6,9 +6,9 @@
   <description>The ROS client library in C++.</description>
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
   <maintainer email="mabel@openrobotics.org">Mabel Zhang</maintainer>
-  <maintainer email="william@osrfoundation.org">William Woodall</maintainer>
+  <maintainer email="william@openrobotics.org">William Woodall</maintainer>
   <license>Apache License 2.0</license>
-  <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
+  <author email="dthomas@openrobotics.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 

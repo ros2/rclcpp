@@ -6,7 +6,7 @@
   <description>Package containing tools for dynamically loadable components</description>
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
   <maintainer email="mabel@openrobotics.org">Mabel Zhang</maintainer>
-  <maintainer email="william@osrfoundation.org">William Woodall</maintainer>
+  <maintainer email="william@openrobotics.org">William Woodall</maintainer>
   <license>Apache License 2.0</license>
   <author email="michael@openrobotics.org">Michael Carroll</author>
 
