@@ -40,7 +40,7 @@ public:
   {
     auto min_timeout = std::chrono::nanoseconds::max();
 
-    auto head = peek();
+    auto head = timers_queue.front();
 
     if (head != nullptr) {
       min_timeout = head->time_until_trigger();
@@ -51,17 +51,15 @@ public:
 
   /**
    * @brief Executes all the ready timers in the queue
-   * These timers are refreshed and added back to the queue
    */
   inline void execute_ready_timers()
   {
-    auto head = peek();
-
-    while (head != nullptr && head->is_ready()) {
-      head->execute_callback();
-      head = peek();
+    for (const auto &timer : timers_queue) {
+      if (!timer->is_ready()) {
+        break;
+      }
+      timer->execute_callback();
     }
-
     reorder_queue();
   }
 
@@ -95,14 +93,6 @@ private:
   inline void reorder_queue()
   {
     std::sort(timers_queue.begin(), timers_queue.end(), timer_less_than_comparison());
-  }
-
-  inline rclcpp::TimerBase::SharedPtr peek()
-  {
-    if (timers_queue.empty()) {
-      return nullptr;
-    }
-    return timers_queue.front();
   }
 
   // Ordered queue of timers
