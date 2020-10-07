@@ -11,13 +11,13 @@ namespace rclcpp
 namespace executors
 {
 
-struct TimersHeap
+struct TimersQueue
 {
 public:
   /**
    * @brief Construct a new Timers Heap object
    */
-  TimersHeap() = default;
+  TimersQueue() = default;
 
   /**
    * @brief Adds a new TimerBase to the queue

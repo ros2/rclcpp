@@ -20,7 +20,7 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
-#include "rclcpp/executors/timers_heap.hpp"
+#include "rclcpp/executors/timers_queue.hpp"
 #include "rclcpp/node.hpp"
 
 #include "rcutils/event_types.h"
@@ -154,7 +154,7 @@ private:
 
   // Timers heap members
   // TODO: Finish this to not hardcode that magic number
-  TimersHeap timers;
+  TimersQueue timers;
 };
 
 }  // namespace executors
