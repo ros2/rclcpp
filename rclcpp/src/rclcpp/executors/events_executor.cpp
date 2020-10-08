@@ -22,25 +22,19 @@ EventsExecutor::EventsExecutor(
 {
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>();
 
-   auto push_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
-    timers.add_timer(t);
-  };
-
-  auto clear_timer_function = [this](const rclcpp::TimerBase::SharedPtr & t) {
-    timers.remove_timer(t);
-  };
-
-  auto clear_all_timers_function = [this]() {
-    timers.clear_all();
-  };
-
   // Set entities collector callbacks
   entities_collector_->init(
     this,
     &EventsExecutor::push_event,
-    push_timer_function,
-    clear_timer_function,
-    clear_all_timers_function);
+    [this](const rclcpp::TimerBase::SharedPtr & t) {
+      timers.add_timer(t);
+    },
+    [this](const rclcpp::TimerBase::SharedPtr & t) {
+      timers.remove_timer(t);
+    },
+    [this]() {
+      timers.clear_all();
+    });
 
 }
 
