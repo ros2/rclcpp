@@ -48,6 +48,7 @@ EventsExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
+  // Start timers thread
   std::thread t_spin_timers(&EventsExecutor::spin_timers, this, false);
   pthread_setname_np(t_spin_timers.native_handle(), "Timers");
 
@@ -71,6 +72,7 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
+  // Start timers thread
   std::thread t_spin_timers(&EventsExecutor::spin_timers, this, true);
 
   // Execute events and leave
@@ -242,6 +244,7 @@ EventsExecutor::execute_events()
         break;
       }
 
+     default: break;
     }
   } while (!local_event_queue.empty());
 }
