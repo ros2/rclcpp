@@ -94,19 +94,6 @@ EventsExecutor::add_node(
   // Add node to entities collector
   entities_collector_->add_node(node_ptr);
 
-  // Set node's guard condition callback, so if a new entitiy is added while
-  // spinning we can set its callback.
-  rcl_ret_t ret = rcl_guard_condition_set_callback(
-                    this,
-                    &EventsExecutor::push_event,
-                    entities_collector_.get(),
-                    node_ptr->get_notify_guard_condition(),
-                    false /* Discard previous events */);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
-  }
-
   // Get nodes entities, and assign their callbaks
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group = weak_group.lock();
@@ -150,6 +137,19 @@ EventsExecutor::add_node(
         }
         return false;
       });
+  }
+
+  // Set node's guard condition callback, so if new entities are added while
+  // spinning we can set their callback.
+  rcl_ret_t ret = rcl_guard_condition_set_callback(
+                    this,
+                    &EventsExecutor::push_event,
+                    entities_collector_.get(),
+                    node_ptr->get_notify_guard_condition(),
+                    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
   }
 }
 

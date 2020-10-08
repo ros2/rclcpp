@@ -53,7 +53,6 @@ EventsExecutorEntitiesCollector::init(
 // With the new approach, "execute" should only take care of setting that
 // entitiy's callback.
 // If a entity is removed from a node, we should unset its callback
-// Todo: We're still not ready for this.
 void
 EventsExecutorEntitiesCollector::execute()
 {

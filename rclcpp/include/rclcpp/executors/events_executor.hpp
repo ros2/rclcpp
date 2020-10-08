@@ -152,8 +152,7 @@ private:
   std::mutex event_queue_mutex_;
   std::condition_variable event_queue_cv;
 
-  // Timers heap members
-  // TODO: Finish this to not hardcode that magic number
+  // Timers queue manager
   TimersQueue timers;
 };
 
