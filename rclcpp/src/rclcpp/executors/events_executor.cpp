@@ -180,11 +180,11 @@ EventsExecutor::spin_timers(bool spin_once)
 {
   while (rclcpp::ok(context_) && spinning.load())
   {
-    std::this_thread::sleep_for(timers.get_head_timeout());
     timers.execute_ready_timers();
     if (spin_once) {
       break;
     }
+    std::this_thread::sleep_for(timers.get_head_timeout());
   }
 }
 
