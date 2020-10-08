@@ -42,6 +42,20 @@ RCLCPP_PUBLIC
 std::string
 to_string(const FutureReturnCode & future_return_code);
 
+namespace executor
+{
+
+using FutureReturnCode [[deprecated("use rclcpp::FutureReturnCode instead")]] = FutureReturnCode;
+
+[[deprecated("use rclcpp::to_string(const rclcpp::FutureReturnCode &) instead")]]
+inline
+std::string
+to_string(const rclcpp::FutureReturnCode & future_return_code)
+{
+  return rclcpp::to_string(future_return_code);
+}
+
+}  // namespace executor
 }  // namespace rclcpp
 
 #endif  // RCLCPP__FUTURE_RETURN_CODE_HPP_
