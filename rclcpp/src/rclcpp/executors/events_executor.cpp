@@ -76,7 +76,10 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   std::thread t_spin_timers(&EventsExecutor::spin_timers, this, true);
 
   // Execute events and leave
-  execute_events();
+  if (rclcpp::ok(context_) && spinning.load())
+  {
+    execute_events();
+  }
 
   t_spin_timers.join();
 }
