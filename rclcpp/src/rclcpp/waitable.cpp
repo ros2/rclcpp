@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
+
 #include "rclcpp/waitable.hpp"
 
 using rclcpp::Waitable;
@@ -65,4 +67,6 @@ Waitable::set_guard_condition_callback(
 {
   (void)executor_context;
   (void)executor_callback;
+
+  throw std::runtime_error("Custom waitables should override set_guard_condition_callback() to use events executor");
 }

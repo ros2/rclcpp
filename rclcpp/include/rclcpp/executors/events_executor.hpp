@@ -15,15 +15,16 @@
 #ifndef RCLCPP__EXECUTORS__EVENTS_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_HPP_
 
-#include <queue>
 #include <chrono>
+#include <memory>
+#include <queue>
+
+#include "rcutils/event_types.h"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
-#include "rclcpp/executors/timers_heap.hpp"
+#include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node.hpp"
-
-#include "rcutils/event_types.h"
 
 namespace rclcpp
 {
@@ -46,6 +47,9 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutor)
 
   /// Default constructor. See the default constructor for Executor.
+  /**
+   * \param[in] options Options used to configure the executor.
+   */
   RCLCPP_PUBLIC
   explicit EventsExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
@@ -74,6 +78,10 @@ public:
   RCLCPP_PUBLIC
   void
   spin_some(std::chrono::nanoseconds max_duration) override;
+
+  RCLCPP_PUBLIC
+  void
+  spin_all(std::chrono::nanoseconds max_duration) override;
 
   /// Add a node to the executor.
   /**
@@ -112,20 +120,29 @@ public:
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
 protected:
-  /// Execute timers when ready
+  /// Waits for events and then executes them
   RCLCPP_PUBLIC
   void
-  spin_timers(bool spin_once);
+  handle_events();
 
-  /// Execute events in the queue until is empty
   RCLCPP_PUBLIC
   void
-  execute_events();
+  spin_once_impl(std::chrono::nanoseconds timeout) override;
 
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
   EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
+
+  /// Extract and execute events from the queue until it is empty
+  RCLCPP_PUBLIC
+  void
+  consume_all_events(std::queue<EventQ> &queue);
+
+  // Execute a single event
+  RCLCPP_PUBLIC
+  void
+  execute_event(const EventQ &event);
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
@@ -141,19 +158,19 @@ private:
     {
       std::unique_lock<std::mutex> lock(this_executor->event_queue_mutex_);
 
-      this_executor->event_queue.push(event);
+      this_executor->event_queue_.push(event);
     }
     // Notify that the event queue has some events in it.
-    this_executor->event_queue_cv.notify_one();
+    this_executor->event_queue_cv_.notify_one();
   }
 
   // Event queue members
-  std::queue<EventQ> event_queue;
+  std::queue<EventQ> event_queue_;
   std::mutex event_queue_mutex_;
-  std::condition_variable event_queue_cv;
+  std::condition_variable event_queue_cv_;
 
   // Timers heap manager
-  TimersHeap timers;
+  std::shared_ptr<TimersManager> timers_manager_;
 };
 
 }  // namespace executors

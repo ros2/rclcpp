@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <queue>
+#include <utility>
+
 #include "rclcpp/executors/events_executor.hpp"
+
+using namespace std::chrono_literals;
 
 using rclcpp::executors::EventsExecutor;
 
@@ -20,6 +26,7 @@ EventsExecutor::EventsExecutor(
   const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
+  timers_manager_ = std::make_shared<TimersManager>(context_);
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>();
 
   // Set entities collector callbacks
@@ -27,22 +34,36 @@ EventsExecutor::EventsExecutor(
     this,
     &EventsExecutor::push_event,
     [this](const rclcpp::TimerBase::SharedPtr & t) {
-      timers.add_timer(t);
+      timers_manager_->add_timer(t);
     },
     [this](const rclcpp::TimerBase::SharedPtr & t) {
-      timers.remove_timer(t);
+      timers_manager_->remove_timer(t);
     },
     [this]() {
-      timers.clear_all();
+      timers_manager_->clear_all();
     });
 
-  // Set interrupt guard condition callback
-  rcl_ret_t ret = rcl_guard_condition_set_callback(
-                    this,
-                    &EventsExecutor::push_event,
-                    entities_collector_.get(),
-                    &interrupt_guard_condition_,
-                    false /* Discard previous events */);
+  rcl_ret_t ret;
+
+  // Set the global ctrl-c guard condition callback
+  ret = rcl_guard_condition_set_callback(
+    this,
+    &EventsExecutor::push_event,
+    entities_collector_.get(),
+    options.context->get_interrupt_guard_condition(&wait_set_),
+    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set ctrl-c guard condition callback");
+  }
+
+  // Set the executor interrupt guard condition callback
+  ret = rcl_guard_condition_set_callback(
+    this,
+    &EventsExecutor::push_event,
+    entities_collector_.get(),
+    &interrupt_guard_condition_,
+    false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
     throw std::runtime_error("Couldn't set interrupt guard condition callback");
@@ -59,40 +80,153 @@ EventsExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
-  // Start timers thread
-  std::thread t_spin_timers(&EventsExecutor::spin_timers, this, false);
-  pthread_setname_np(t_spin_timers.native_handle(), "Timers");
+  // When condition variable is notified, check this predicate to proceed
+  auto predicate = [this]() { return !event_queue_.empty(); };
 
-  while (rclcpp::ok(context_) && spinning.load())
-  {
-    execute_events();
+  // Local event queue
+  std::queue<EventQ> local_event_queue;
+
+  timers_manager_->start();
+
+  while (rclcpp::ok(context_) && spinning.load()) {
+    // Scope block for the mutex
+    {
+      std::unique_lock<std::mutex> lock(event_queue_mutex_);
+      // We wait here until something has been pushed to the event queue
+      event_queue_cv_.wait(lock, predicate);
+
+      // We got an event! Swap queues and execute events
+      std::swap(local_event_queue, event_queue_);
+    }
+
+    this->consume_all_events(local_event_queue);
   }
 
-  t_spin_timers.join();
+  timers_manager_->stop();
 }
 
-// Before calling spin_some
 void
 EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
 {
-  (void)max_duration;
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
+  
+  // This function will wait until the first of the following events occur:
+  // - The input max_duration is elapsed
+  // - A timer triggers
+  // - An executor event is received and processed
 
-  // Check, are we already spinning?
+  // Select the smallest between input max_duration and timer timeout
+  auto next_timer_timeout = timers_manager_->get_head_timeout();
+  if (next_timer_timeout < max_duration) {
+    max_duration = next_timer_timeout;
+  }
+
+  std::queue<EventQ> local_event_queue;
+
+  {
+    // Wait until timeout or event
+    std::unique_lock<std::mutex> lock(event_queue_mutex_);
+    event_queue_cv_.wait_for(lock, max_duration);
+    std::swap(local_event_queue, event_queue_);
+  }
+
+  timers_manager_->execute_ready_timers();
+  this->consume_all_events(local_event_queue);
+}
+
+void
+EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
+{
+  if (max_duration <= 0ns) {
+    throw std::invalid_argument("max_duration must be positive");
+  }
+
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
-  // Start timers thread
-  std::thread t_spin_timers(&EventsExecutor::spin_timers, this, true);
+  std::queue<EventQ> local_event_queue;
 
-  // Execute events and leave
-  if (rclcpp::ok(context_) && spinning.load())
-  {
-    execute_events();
+  auto start = std::chrono::steady_clock::now();
+  auto max_duration_not_elapsed = [max_duration, start]() {
+      auto elapsed_time = std::chrono::steady_clock::now() - start;
+      return elapsed_time < max_duration;
+    };
+
+  // Wait once
+  // Select the smallest between input timeout and timer timeout
+  auto next_timer_timeout = timers_manager_->get_head_timeout();
+  if (next_timer_timeout < max_duration) {
+    max_duration = next_timer_timeout;
   }
 
-  t_spin_timers.join();
+  {
+    // Wait until timeout or event
+    std::unique_lock<std::mutex> lock(event_queue_mutex_);
+    event_queue_cv_.wait_for(lock, max_duration);
+  }
+
+  // Keep executing until work available or timeout expired
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
+    {
+      std::unique_lock<std::mutex> lock(event_queue_mutex_);
+      std::swap(local_event_queue, event_queue_);
+    }
+
+    bool ready_timer = timers_manager_->get_head_timeout() < 0ns;
+    bool has_events = !local_event_queue.empty();
+    if (!ready_timer && !has_events) {
+      // Exit as there is no more work to do
+      break;
+    }
+
+    // Execute all ready work
+    timers_manager_->execute_ready_timers();
+    this->consume_all_events(local_event_queue);
+  }
+}
+
+void
+EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
+{
+  // In this context a negative input timeout means no timeout
+  if (timeout < 0ns) {
+    timeout = timers_manager_->MAX_TIME;
+  }
+
+  // Select the smallest between input timeout and timer timeout
+  auto next_timer_timeout = timers_manager_->get_head_timeout();
+  if (next_timer_timeout < timeout) {
+    timeout = next_timer_timeout;
+  }
+
+  EventQ event;
+  bool has_event = false;
+
+  {
+    // Wait until timeout or event arrives
+    std::unique_lock<std::mutex> lock(event_queue_mutex_);
+    event_queue_cv_.wait_for(lock, timeout);
+
+    // Grab first event from queue if it exists
+    has_event = !event_queue_.empty();
+    if (has_event) {
+      event = event_queue_.front();
+      event_queue_.pop();
+    }
+  }
+
+  // If we wake up from the wait with an event, it means that it
+  // arrived before any of the timers expired.
+  if (has_event) {
+    this->execute_event(event);
+  } else {
+    timers_manager_->execute_head_timer();
+  }
 }
 
 void
@@ -110,11 +244,11 @@ EventsExecutor::add_node(
     if (!group || !group->can_be_taken_from().load()) {
       continue;
     }
-    // Add timers to timers heap
+    // Add timers to timers to timer manager
     group->find_timer_ptrs_if(
       [this](const rclcpp::TimerBase::SharedPtr & timer) {
         if (timer) {
-          timers.add_timer(timer);
+          timers_manager_->add_timer(timer);
         }
         return false;
     });
@@ -187,23 +321,10 @@ EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-EventsExecutor::spin_timers(bool spin_once)
-{
-  while (rclcpp::ok(context_) && spinning.load())
-  {
-    timers.execute_ready_timers();
-    if (spin_once) {
-      break;
-    }
-    std::this_thread::sleep_for(timers.get_head_timeout());
-  }
-}
-
-void
-EventsExecutor::execute_events()
+EventsExecutor::handle_events()
 {
   // When condition variable is notified, check this predicate to proceed
-  auto predicate = [this]() { return !event_queue.empty(); };
+  auto predicate = [this]() { return !event_queue_.empty(); };
 
   // Local event queue
   std::queue<EventQ> local_event_queue;
@@ -212,53 +333,64 @@ EventsExecutor::execute_events()
   {
     std::unique_lock<std::mutex> lock(event_queue_mutex_);
     // We wait here until something has been pushed to the event queue
-    event_queue_cv.wait(lock, predicate);
+    event_queue_cv_.wait(lock, predicate);
 
     // We got an event! Swap queues and execute events
-    swap(local_event_queue, event_queue);
+    std::swap(local_event_queue, event_queue_);
   }
 
-  // Execute events
-  do {
-    EventQ event = local_event_queue.front();
+  this->consume_all_events(local_event_queue);
+}
 
-    local_event_queue.pop();
+void
+EventsExecutor::consume_all_events(std::queue<EventQ> &event_queue)
+{
+  while (!event_queue.empty()) {
+    EventQ event = event_queue.front();
+    event_queue.pop();
 
-    switch(event.type)
+    this->execute_event(event);
+  }
+}
+
+void
+EventsExecutor::execute_event(const EventQ &event)
+{
+  switch(event.type) {
+  case SUBSCRIPTION_EVENT:
     {
-    case SUBSCRIPTION_EVENT:
-      {
-        auto subscription = const_cast<rclcpp::SubscriptionBase *>(
-                     static_cast<const rclcpp::SubscriptionBase*>(event.entity));
-        execute_subscription(subscription);
-        break;
-      }
-
-    case SERVICE_EVENT:
-      {
-        auto service = const_cast<rclcpp::ServiceBase*>(
-                static_cast<const rclcpp::ServiceBase*>(event.entity));
-        execute_service(service);
-        break;
-      }
-
-    case CLIENT_EVENT:
-      {
-        auto client = const_cast<rclcpp::ClientBase*>(
-               static_cast<const rclcpp::ClientBase*>(event.entity));
-        execute_client(client);
-        break;
-      }
-
-     case GUARD_CONDITION_EVENT:
-      {
-        auto waitable = const_cast<rclcpp::Waitable*>(
-                 static_cast<const rclcpp::Waitable*>(event.entity));
-        waitable->execute();
-        break;
-      }
-
-     default: break;
+      auto subscription = const_cast<rclcpp::SubscriptionBase *>(
+                    static_cast<const rclcpp::SubscriptionBase*>(event.entity));
+      execute_subscription(subscription);
+      break;
     }
-  } while (!local_event_queue.empty());
+
+  case SERVICE_EVENT:
+    {
+      auto service = const_cast<rclcpp::ServiceBase*>(
+              static_cast<const rclcpp::ServiceBase*>(event.entity));
+      execute_service(service);
+      break;
+    }
+
+  case CLIENT_EVENT:
+    {
+      auto client = const_cast<rclcpp::ClientBase*>(
+              static_cast<const rclcpp::ClientBase*>(event.entity));
+      execute_client(client);
+      break;
+    }
+
+  case GUARD_CONDITION_EVENT:
+    {
+      auto waitable = const_cast<rclcpp::Waitable*>(
+                static_cast<const rclcpp::Waitable*>(event.entity));
+      waitable->execute();
+      break;
+    }
+
+  default:
+    throw std::runtime_error("EventsExecutor received unrecognized event");
+    break;
+  }
 }

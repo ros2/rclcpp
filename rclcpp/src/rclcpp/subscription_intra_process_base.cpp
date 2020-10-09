@@ -39,15 +39,15 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 
 void
 SubscriptionIntraProcessBase::set_guard_condition_callback(
-    void * executor_context,
-    Event_callback executor_callback) const
+  void * executor_context,
+  Event_callback executor_callback) const
 {
   rcl_ret_t ret = rcl_guard_condition_set_callback(
-      executor_context,
-      executor_callback,
-      this,
-      &gc_,
-      true /*Use previous events*/);
+    executor_context,
+    executor_callback,
+    this,
+    &gc_,
+    true /*Use previous events*/);
 
   if (RCL_RET_OK != ret) {
     throw std::runtime_error(std::string("Couldn't set guard condition callback"));

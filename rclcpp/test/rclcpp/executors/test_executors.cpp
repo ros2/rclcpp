@@ -90,7 +90,8 @@ using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
+  rclcpp::executors::StaticSingleThreadedExecutor,
+  rclcpp::executors::EventsExecutor>;
 
 class ExecutorTypeNames
 {
@@ -111,6 +112,10 @@ public:
       return "StaticSingleThreadedExecutor";
     }
 
+    if (std::is_same<T, rclcpp::executors::EventsExecutor>()) {
+      return "EventsExecutor";
+    }
+
     return "";
   }
 };
@@ -123,8 +128,8 @@ TYPED_TEST_CASE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 // https://github.com/ros2/rclcpp/issues/1219
 using StandardExecutors =
   ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor>;
+  rclcpp::executors::EventsExecutor,
+  rclcpp::executors::SingleThreadedExecutor>;
 TYPED_TEST_CASE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
@@ -143,6 +148,7 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
 // Make sure that the executor can automatically remove expired nodes correctly
 // Currently fails for StaticSingleThreadedExecutor so it is being skipped, see:
 // https://github.com/ros2/rclcpp/issues/1231
+// This test is also flaky for the MultiThreadedExecutor
 TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
@@ -414,10 +420,12 @@ public:
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, &gc_, NULL);
-    if (RCL_RET_OK != ret) {
-      return false;
-    }
-    ret = rcl_trigger_guard_condition(&gc_);
+    return RCL_RET_OK == ret;
+  }
+
+  bool trigger()
+  {
+    rcl_ret_t ret = rcl_trigger_guard_condition(&gc_);
     return RCL_RET_OK == ret;
   }
 
@@ -432,7 +440,7 @@ public:
   execute() override
   {
     count_++;
-    std::this_thread::sleep_for(1ms);
+    std::this_thread::sleep_for(3ms);
   }
 
   size_t
@@ -442,6 +450,23 @@ public:
   get_count()
   {
     return count_;
+  }
+
+  void
+  set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback) const override
+  {
+    rcl_ret_t ret = rcl_guard_condition_set_callback(
+      executor_context,
+      executor_callback,
+      this,
+      &gc_,
+      true /*Use previous events*/);
+
+    if (RCL_RET_OK != ret) {
+      throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+    }
   }
 
 private:
@@ -473,6 +498,7 @@ TYPED_TEST(TestExecutorsStable, spinAll) {
     !spin_exited &&
     (std::chrono::steady_clock::now() - start < 1s))
   {
+    my_waitable->trigger();
     this->publisher->publish(test_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
   }
@@ -506,14 +532,20 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
       spin_exited = true;
     });
 
+  // Give some time for executor to start spinning
+  // otherwise when it will start looking for work to do it will already find
+  // more than 1 notification
+  std::this_thread::sleep_for(10ms);
+
   // Do some work until sufficient calls to the waitable occur, but keep going until either
   // count becomes too large, spin exits, or the 1 second timeout completes.
   auto start = std::chrono::steady_clock::now();
   while (
-    my_waitable->get_count() <= 1 &&
+    my_waitable->get_count() <= 10 &&
     !spin_exited &&
     (std::chrono::steady_clock::now() - start < 1s))
   {
+    my_waitable->trigger();
     this->publisher->publish(test_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
   }
