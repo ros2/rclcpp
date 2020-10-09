@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
 #include <string>
 
 #include "rclcpp/future_return_code.hpp"
@@ -31,4 +32,11 @@ TEST(TestFutureReturnCode, to_string) {
     "Unknown enum value (3)", rclcpp::to_string(rclcpp::FutureReturnCode(3)));
   EXPECT_EQ(
     "Unknown enum value (100)", rclcpp::to_string(rclcpp::FutureReturnCode(100)));
+}
+
+TEST(FutureReturnCode, ostream) {
+  std::ostringstream ostream;
+
+  ostream << rclcpp::FutureReturnCode::SUCCESS;
+  ASSERT_EQ("SUCCESS (0)", ostream.str());
 }
