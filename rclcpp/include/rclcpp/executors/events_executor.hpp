@@ -20,7 +20,7 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
-#include "rclcpp/executors/timers_queue.hpp"
+#include "rclcpp/executors/timers_heap.hpp"
 #include "rclcpp/node.hpp"
 
 #include "rcutils/event_types.h"
@@ -152,8 +152,8 @@ private:
   std::mutex event_queue_mutex_;
   std::condition_variable event_queue_cv;
 
-  // Timers queue manager
-  TimersQueue timers;
+  // Timers heap manager
+  TimersHeap timers;
 };
 
 }  // namespace executors
