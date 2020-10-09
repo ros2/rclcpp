@@ -36,6 +36,17 @@ EventsExecutor::EventsExecutor(
       timers.clear_all();
     });
 
+  // Set interrupt guard condition callback
+  rcl_ret_t ret = rcl_guard_condition_set_callback(
+                    this,
+                    &EventsExecutor::push_event,
+                    entities_collector_.get(),
+                    &interrupt_guard_condition_,
+                    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set interrupt guard condition callback");
+  }
 }
 
 EventsExecutor::~EventsExecutor() {}
@@ -148,7 +159,7 @@ EventsExecutor::add_node(
                     false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+    throw std::runtime_error("Couldn't set node guard condition callback");
   }
 }
 
