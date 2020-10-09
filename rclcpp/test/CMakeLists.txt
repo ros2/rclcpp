@@ -622,6 +622,14 @@ if(TARGET test_rclcpp_gtest_macros)
   target_link_libraries(test_rclcpp_gtest_macros ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_executor rclcpp/test_executor.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_executor)
+  ament_target_dependencies(test_executor "rcl")
+  target_link_libraries(test_executor ${PROJECT_NAME} mimick)
+endif()
+
 # Install test resources
 install(
   DIRECTORY resources
