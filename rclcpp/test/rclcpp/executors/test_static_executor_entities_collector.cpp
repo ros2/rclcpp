@@ -369,6 +369,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_clear_
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize_error) {
@@ -399,6 +400,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_not_initialized) {
@@ -436,6 +438,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_rcl_wait_failed) {
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait_set_failed) {
@@ -487,6 +490,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
 
   entities_collector_->remove_node(node->get_node_base_interface());
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
@@ -515,6 +519,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) {
@@ -547,6 +552,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) 
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, remove_callback_group_after_node) {
@@ -619,4 +625,5 @@ TEST_F(
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  entities_collector_->fini();
 }
