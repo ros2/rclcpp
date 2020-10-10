@@ -414,7 +414,7 @@ public:
   {
     rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+      fprintf(stderr, "failed to call rcl_guard_condition_fini\n");
     }
   }
 
