@@ -120,11 +120,6 @@ public:
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
 protected:
-  /// Waits for events and then executes them
-  RCLCPP_PUBLIC
-  void
-  handle_events();
-
   RCLCPP_PUBLIC
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
