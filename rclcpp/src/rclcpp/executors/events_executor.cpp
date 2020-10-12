@@ -84,7 +84,7 @@ EventsExecutor::spin()
   auto predicate = [this]() { return !event_queue_.empty(); };
 
   // Local event queue
-  std::queue<EventQ> local_event_queue;
+  std::queue<ExecutorEvent> local_event_queue;
 
   timers_manager_->start();
 
@@ -124,7 +124,7 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
     max_duration = next_timer_timeout;
   }
 
-  std::queue<EventQ> local_event_queue;
+  std::queue<ExecutorEvent> local_event_queue;
 
   {
     // Wait until timeout or event
@@ -149,7 +149,7 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
-  std::queue<EventQ> local_event_queue;
+  std::queue<ExecutorEvent> local_event_queue;
 
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
@@ -204,7 +204,7 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
     timeout = next_timer_timeout;
   }
 
-  EventQ event;
+  ExecutorEvent event;
   bool has_event = false;
 
   {
@@ -327,7 +327,7 @@ EventsExecutor::handle_events()
   auto predicate = [this]() { return !event_queue_.empty(); };
 
   // Local event queue
-  std::queue<EventQ> local_event_queue;
+  std::queue<ExecutorEvent> local_event_queue;
 
   // Scope block for the mutex
   {
@@ -343,10 +343,10 @@ EventsExecutor::handle_events()
 }
 
 void
-EventsExecutor::consume_all_events(std::queue<EventQ> &event_queue)
+EventsExecutor::consume_all_events(std::queue<ExecutorEvent> &event_queue)
 {
   while (!event_queue.empty()) {
-    EventQ event = event_queue.front();
+    ExecutorEvent event = event_queue.front();
     event_queue.pop();
 
     this->execute_event(event);
@@ -354,7 +354,7 @@ EventsExecutor::consume_all_events(std::queue<EventQ> &event_queue)
 }
 
 void
-EventsExecutor::execute_event(const EventQ &event)
+EventsExecutor::execute_event(const ExecutorEvent &event)
 {
   switch(event.type) {
   case SUBSCRIPTION_EVENT:
