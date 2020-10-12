@@ -81,7 +81,7 @@ EventsExecutor::spin()
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
   // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() { return !event_queue_.empty(); };
+  auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
   // Local event queue
   std::queue<EventQ> local_event_queue;
@@ -119,7 +119,7 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   // - An executor event is received and processed
 
   // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() { return !event_queue_.empty(); };
+  auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
   std::queue<EventQ> local_event_queue;
 
@@ -153,7 +153,7 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
   // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() { return !event_queue_.empty(); };
+  auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
   std::queue<EventQ> local_event_queue;
 
@@ -211,7 +211,7 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
   }
 
   // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() { return !event_queue_.empty(); };
+  auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
   EventQ event;
   bool has_event = false;
