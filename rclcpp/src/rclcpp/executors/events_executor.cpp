@@ -277,7 +277,7 @@ EventsExecutor::add_node(
     group->find_waitable_ptrs_if(
       [this](const rclcpp::Waitable::SharedPtr & waitable) {
         if (waitable) {
-          waitable->set_guard_condition_callback(this, &EventsExecutor::push_event);
+          waitable->set_callback(this, &EventsExecutor::push_event);
         }
         return false;
       });

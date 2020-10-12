@@ -38,7 +38,7 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 }
 
 void
-SubscriptionIntraProcessBase::set_guard_condition_callback(
+SubscriptionIntraProcessBase::set_callback(
   void * executor_context,
   Event_callback executor_callback) const
 {

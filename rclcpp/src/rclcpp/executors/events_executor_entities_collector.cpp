@@ -131,7 +131,7 @@ EventsExecutorEntitiesCollector::remove_node(
         group->find_waitable_ptrs_if(
           [this](const rclcpp::Waitable::SharedPtr & waitable) {
             if (waitable) {
-              waitable->set_guard_condition_callback(nullptr, nullptr);
+              waitable->set_callback(nullptr, nullptr);
             }
             return false;
           });
@@ -190,7 +190,7 @@ EventsExecutorEntitiesCollector::set_entities_callbacks()
       group->find_waitable_ptrs_if(
         [this](const rclcpp::Waitable::SharedPtr & waitable) {
           if (waitable) {
-            waitable->set_guard_condition_callback(executor_context_, executor_callback_);
+            waitable->set_callback(executor_context_, executor_callback_);
           }
           return false;
         });
