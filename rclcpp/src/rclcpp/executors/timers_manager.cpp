@@ -164,7 +164,7 @@ void TimersManager::remove_timer(rclcpp::TimerBase::SharedPtr timer)
 void TimersManager::rebuild_heap()
 {
   heap_.clear();
-  for (auto& t : timers_storage_) {
+  for (auto & t : timers_storage_) {
     this->add_timer_to_heap(&t);
   }
 }

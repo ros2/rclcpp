@@ -132,12 +132,12 @@ private:
   /// Extract and execute events from the queue until it is empty
   RCLCPP_PUBLIC
   void
-  consume_all_events(std::queue<ExecutorEvent> &queue);
+  consume_all_events(std::queue<ExecutorEvent> & queue);
 
   // Execute a single event
   RCLCPP_PUBLIC
   void
-  execute_event(const ExecutorEvent &event);
+  execute_event(const ExecutorEvent & event);
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
@@ -146,8 +146,8 @@ private:
   push_event(const void * executor_ptr, ExecutorEvent event)
   {
     // Cast executor_ptr to this (need to remove constness)
-    auto this_executor = const_cast<executors::EventsExecutor*>(
-                  static_cast<const executors::EventsExecutor*>(executor_ptr));
+    auto this_executor = const_cast<executors::EventsExecutor *>(
+      static_cast<const executors::EventsExecutor *>(executor_ptr));
 
     // Event queue mutex scope
     {

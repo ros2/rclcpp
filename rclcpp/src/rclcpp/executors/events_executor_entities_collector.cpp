@@ -62,7 +62,7 @@ EventsExecutorEntitiesCollector::execute()
 
 void
 EventsExecutorEntitiesCollector::add_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   // If the node already has an executor
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
@@ -86,9 +86,9 @@ EventsExecutorEntitiesCollector::remove_node(
     if (matched) {
       // Node found: unset its entities callbacks
       rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-                        nullptr, nullptr, nullptr,
-                        node_ptr->get_notify_guard_condition(),
-                        false);
+        nullptr, nullptr, nullptr,
+        node_ptr->get_notify_guard_condition(),
+        false);
 
       if (ret != RCL_RET_OK) {
         throw std::runtime_error(std::string("Couldn't set guard condition callback"));

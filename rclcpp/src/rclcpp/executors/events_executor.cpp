@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <queue>
+#include <string>
 #include <utility>
 
 #include "rclcpp/executors/events_executor.hpp"
@@ -112,7 +113,7 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
-  
+
   // This function will wait until the first of the following events occur:
   // - The input max_duration is elapsed
   // - A timer triggers
@@ -260,7 +261,7 @@ EventsExecutor::add_node(
           timers_manager_->add_timer(timer);
         }
         return false;
-    });
+      });
     // Set the callbacks to all the entities
     group->find_subscription_ptrs_if(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
@@ -295,11 +296,11 @@ EventsExecutor::add_node(
   // Set node's guard condition callback, so if new entities are added while
   // spinning we can set their callback.
   rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-                    this,
-                    &EventsExecutor::push_event,
-                    entities_collector_.get(),
-                    node_ptr->get_notify_guard_condition(),
-                    false /* Discard previous events */);
+    this,
+    &EventsExecutor::push_event,
+    entities_collector_.get(),
+    node_ptr->get_notify_guard_condition(),
+    false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
     throw std::runtime_error("Couldn't set node guard condition callback");
@@ -330,7 +331,7 @@ EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-EventsExecutor::consume_all_events(std::queue<ExecutorEvent> &event_queue)
+EventsExecutor::consume_all_events(std::queue<ExecutorEvent> & event_queue)
 {
   while (!event_queue.empty()) {
     ExecutorEvent event = event_queue.front();
@@ -341,43 +342,43 @@ EventsExecutor::consume_all_events(std::queue<ExecutorEvent> &event_queue)
 }
 
 void
-EventsExecutor::execute_event(const ExecutorEvent &event)
+EventsExecutor::execute_event(const ExecutorEvent & event)
 {
-  switch(event.type) {
-  case SUBSCRIPTION_EVENT:
-    {
-      auto subscription = const_cast<rclcpp::SubscriptionBase *>(
-                    static_cast<const rclcpp::SubscriptionBase*>(event.entity));
-      execute_subscription(subscription);
-      break;
-    }
+  switch (event.type) {
+    case SUBSCRIPTION_EVENT:
+      {
+        auto subscription = const_cast<rclcpp::SubscriptionBase *>(
+          static_cast<const rclcpp::SubscriptionBase *>(event.entity));
+        execute_subscription(subscription);
+        break;
+      }
 
-  case SERVICE_EVENT:
-    {
-      auto service = const_cast<rclcpp::ServiceBase*>(
-              static_cast<const rclcpp::ServiceBase*>(event.entity));
-      execute_service(service);
-      break;
-    }
+    case SERVICE_EVENT:
+      {
+        auto service = const_cast<rclcpp::ServiceBase *>(
+          static_cast<const rclcpp::ServiceBase *>(event.entity));
+        execute_service(service);
+        break;
+      }
 
-  case CLIENT_EVENT:
-    {
-      auto client = const_cast<rclcpp::ClientBase*>(
-              static_cast<const rclcpp::ClientBase*>(event.entity));
-      execute_client(client);
-      break;
-    }
+    case CLIENT_EVENT:
+      {
+        auto client = const_cast<rclcpp::ClientBase *>(
+          static_cast<const rclcpp::ClientBase *>(event.entity));
+        execute_client(client);
+        break;
+      }
 
-  case WAITABLE_EVENT:
-    {
-      auto waitable = const_cast<rclcpp::Waitable*>(
-                static_cast<const rclcpp::Waitable*>(event.entity));
-      waitable->execute();
-      break;
-    }
+    case WAITABLE_EVENT:
+      {
+        auto waitable = const_cast<rclcpp::Waitable *>(
+          static_cast<const rclcpp::Waitable *>(event.entity));
+        waitable->execute();
+        break;
+      }
 
-  default:
-    throw std::runtime_error("EventsExecutor received unrecognized event");
-    break;
+    default:
+      throw std::runtime_error("EventsExecutor received unrecognized event");
+      break;
   }
 }
