@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
+
 #include "rclcpp/waitable.hpp"
 
 using rclcpp::Waitable;
@@ -56,4 +58,15 @@ bool
 Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void
+Waitable::set_guard_condition_callback(
+    void * executor_context,
+    Event_callback executor_callback) const
+{
+  (void)executor_context;
+  (void)executor_callback;
+
+  throw std::runtime_error("Custom waitables should override set_guard_condition_callback() to use events executor");
 }
