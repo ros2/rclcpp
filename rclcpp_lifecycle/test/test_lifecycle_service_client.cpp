@@ -52,6 +52,10 @@ constexpr char const * node_get_transition_graph_topic =
   "/lc_talker/get_transition_graph";
 const lifecycle_msgs::msg::State unknown_state = lifecycle_msgs::msg::State();
 
+// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
+// that this test can complete fully, or adjust the timeout as necessary.
+// See https://github.com/ros2/rmw_connext/issues/325 for resolution
+
 class EmptyLifecycleNode : public rclcpp_lifecycle::LifecycleNode
 {
 public:

@@ -86,7 +86,7 @@ if(BUILD_TESTING)
     )
   endif()
 
-  ament_add_gtest(test_server test/test_server.cpp)
+  ament_add_gtest(test_server test/test_server.cpp TIMEOUT 180)
   if(TARGET test_server)
     ament_target_dependencies(test_server
       "rcutils"
