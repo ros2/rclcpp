@@ -33,7 +33,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 void
 EventsExecutorEntitiesCollector::init(
   void * executor_context,
-  Event_callback executor_callback,
+  ExecutorEventCallback executor_callback,
   TimerFn push_timer,
   TimerFn clear_timer,
   ClearTimersFn clear_all_timers)
@@ -85,7 +85,7 @@ EventsExecutorEntitiesCollector::remove_node(
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
       // Node found: unset its entities callbacks
-      rcl_ret_t ret = rcl_guard_condition_set_callback(
+      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
                         nullptr, nullptr, nullptr,
                         node_ptr->get_notify_guard_condition(),
                         false);
@@ -110,28 +110,28 @@ EventsExecutorEntitiesCollector::remove_node(
         group->find_subscription_ptrs_if(
           [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
             if (subscription) {
-              subscription->set_callback(nullptr, nullptr);
+              subscription->set_events_executor_callback(nullptr, nullptr);
             }
             return false;
           });
         group->find_service_ptrs_if(
           [this](const rclcpp::ServiceBase::SharedPtr & service) {
             if (service) {
-              service->set_callback(nullptr, nullptr);
+              service->set_events_executor_callback(nullptr, nullptr);
             }
             return false;
           });
         group->find_client_ptrs_if(
           [this](const rclcpp::ClientBase::SharedPtr & client) {
             if (client) {
-              client->set_callback(nullptr, nullptr);
+              client->set_events_executor_callback(nullptr, nullptr);
             }
             return false;
           });
         group->find_waitable_ptrs_if(
           [this](const rclcpp::Waitable::SharedPtr & waitable) {
             if (waitable) {
-              waitable->set_guard_condition_callback(nullptr, nullptr);
+              waitable->set_events_executor_callback(nullptr, nullptr);
             }
             return false;
           });
@@ -169,28 +169,28 @@ EventsExecutorEntitiesCollector::set_entities_callbacks()
       group->find_subscription_ptrs_if(
         [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
           if (subscription) {
-            subscription->set_callback(executor_context_, executor_callback_);
+            subscription->set_events_executor_callback(executor_context_, executor_callback_);
           }
           return false;
         });
       group->find_service_ptrs_if(
         [this](const rclcpp::ServiceBase::SharedPtr & service) {
           if (service) {
-            service->set_callback(executor_context_, executor_callback_);
+            service->set_events_executor_callback(executor_context_, executor_callback_);
           }
           return false;
         });
       group->find_client_ptrs_if(
         [this](const rclcpp::ClientBase::SharedPtr & client) {
           if (client) {
-            client->set_callback(executor_context_, executor_callback_);
+            client->set_events_executor_callback(executor_context_, executor_callback_);
           }
           return false;
         });
       group->find_waitable_ptrs_if(
         [this](const rclcpp::Waitable::SharedPtr & waitable) {
           if (waitable) {
-            waitable->set_guard_condition_callback(executor_context_, executor_callback_);
+            waitable->set_events_executor_callback(executor_context_, executor_callback_);
           }
           return false;
         });
