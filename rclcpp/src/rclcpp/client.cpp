@@ -201,14 +201,14 @@ ClientBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 
 void
 ClientBase::set_events_executor_callback(
-    const void * executor_context,
-    ExecutorEventCallback executor_callback) const
+  const void * executor_context,
+  ExecutorEventCallback executor_callback) const
 {
   rcl_ret_t ret = rcl_client_set_events_executor_callback(
-      executor_context,
-      executor_callback,
-      this,
-      client_handle_.get());
+    executor_context,
+    executor_callback,
+    this,
+    client_handle_.get());
 
   if (RCL_RET_OK != ret) {
     throw std::runtime_error(std::string("Couldn't set client callback"));

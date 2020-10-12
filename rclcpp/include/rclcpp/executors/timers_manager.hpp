@@ -98,7 +98,7 @@ public:
 
   /**
    * @brief Executes one ready timer if available
-   * 
+   *
    * @return true if there was a timer ready
    */
   bool execute_head_timer();
@@ -106,7 +106,7 @@ public:
   /**
    * @brief Get the amount of time before the next timer expires.
    *
-   * @return std::chrono::nanoseconds to wait, 
+   * @return std::chrono::nanoseconds to wait,
    * the returned value could be negative if the timer is already expired
    * or MAX_TIME if the heap is empty.
    */
@@ -131,7 +131,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
 
-  using TimerPtr = rclcpp::TimerBase::SharedPtr*;
+  using TimerPtr = rclcpp::TimerBase::SharedPtr *;
 
   /**
    * @brief Implements a loop that keeps executing ready timers.
@@ -143,7 +143,7 @@ private:
    * @brief Get the amount of time before the next timer expires.
    * This function is not thread safe, acquire a mutex before calling it.
    *
-   * @return std::chrono::nanoseconds to wait, 
+   * @return std::chrono::nanoseconds to wait,
    * the returned value could be negative if the timer is already expired
    * or MAX_TIME if the heap is empty.
    */
@@ -194,10 +194,13 @@ private:
   {
     size_t i = heap_.size();  // Position where we are going to add timer
     heap_.push_back(x);
-    while (i && ((*x)->time_until_trigger() < (*heap_[(i-1)/2])->time_until_trigger())) {
-      heap_[i] = heap_[(i-1)/2];
-      heap_[(i-1)/2] = x;
-      i = (i-1)/2;
+
+    size_t parent = (i - 1) / 2;
+    while (i > 0 && ((*x)->time_until_trigger() < (*heap_[parent])->time_until_trigger())) {
+      heap_[i] = heap_[parent];
+      heap_[parent] = x;
+      i = parent;
+      parent = (i - 1) / 2;
     }
   }
 
@@ -225,12 +228,12 @@ private:
       }
       heap_[i] = heap_[left_child];
       i = left_child;
-      left_child = 2*i + 1;
+      left_child = 2 * i + 1;
     }
 
     // Swim down
     while (i > start) {
-      size_t parent = (i - 1)/2;
+      size_t parent = (i - 1) / 2;
       if ((*updated_timer)->time_until_trigger() < (*heap_[parent])->time_until_trigger()) {
         heap_[i] = heap_[parent];
         i = parent;

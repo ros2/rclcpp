@@ -439,15 +439,15 @@ protected:
 
   RCLCPP_PUBLIC
   static void
-  execute_subscription(rclcpp::SubscriptionBase* subscription);
+  execute_subscription(rclcpp::SubscriptionBase * subscription);
 
   RCLCPP_PUBLIC
   static void
-  execute_service(rclcpp::ServiceBase* service);
+  execute_service(rclcpp::ServiceBase * service);
 
   RCLCPP_PUBLIC
   static void
-  execute_client(rclcpp::ClientBase* client);
+  execute_client(rclcpp::ClientBase * client);
 
   /**
    * \throws std::runtime_error if the wait set can be cleared
