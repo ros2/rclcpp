@@ -61,12 +61,12 @@ Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 }
 
 void
-Waitable::set_guard_condition_callback(
+Waitable::set_events_executor_callback(
     void * executor_context,
-    Event_callback executor_callback) const
+    ExecutorEventCallback executor_callback) const
 {
   (void)executor_context;
   (void)executor_callback;
 
-  throw std::runtime_error("Custom waitables should override set_guard_condition_callback() to use events executor");
+  throw std::runtime_error("Custom waitables should override set_events_executor_callback() to use events executor");
 }

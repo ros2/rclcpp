@@ -19,7 +19,7 @@
 #include <memory>
 #include <queue>
 
-#include "rcutils/event_types.h"
+#include "rcutils/executor_event_types.h"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
@@ -120,11 +120,6 @@ public:
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
 protected:
-  /// Waits for events and then executes them
-  RCLCPP_PUBLIC
-  void
-  handle_events();
-
   RCLCPP_PUBLIC
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
@@ -137,18 +132,18 @@ private:
   /// Extract and execute events from the queue until it is empty
   RCLCPP_PUBLIC
   void
-  consume_all_events(std::queue<EventQ> &queue);
+  consume_all_events(std::queue<ExecutorEvent> &queue);
 
   // Execute a single event
   RCLCPP_PUBLIC
   void
-  execute_event(const EventQ &event);
+  execute_event(const ExecutorEvent &event);
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
   static void
-  push_event(const void * executor_ptr, EventQ event)
+  push_event(const void * executor_ptr, ExecutorEvent event)
   {
     // Cast executor_ptr to this (need to remove constness)
     auto this_executor = const_cast<executors::EventsExecutor*>(
@@ -165,7 +160,7 @@ private:
   }
 
   // Event queue members
-  std::queue<EventQ> event_queue_;
+  std::queue<ExecutorEvent> event_queue_;
   std::mutex event_queue_mutex_;
   std::condition_variable event_queue_cv_;
 

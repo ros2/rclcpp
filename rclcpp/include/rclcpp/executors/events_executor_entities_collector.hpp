@@ -45,7 +45,7 @@ public:
   void
   init(
     void * executor_context,
-    Event_callback executor_callback,
+    ExecutorEventCallback executor_callback,
     TimerFn push_timer,
     TimerFn clear_timer,
     ClearTimersFn clear_all_timers);
@@ -91,7 +91,7 @@ private:
   void * executor_context_ = nullptr;
 
   /// Events callback
-  Event_callback executor_callback_ = nullptr;
+  ExecutorEventCallback executor_callback_ = nullptr;
 
   /// Function pointers to push and clear timers from the timers heap
   TimerFn push_timer_ = nullptr;

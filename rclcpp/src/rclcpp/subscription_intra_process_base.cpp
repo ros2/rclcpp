@@ -38,11 +38,11 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 }
 
 void
-SubscriptionIntraProcessBase::set_guard_condition_callback(
+SubscriptionIntraProcessBase::set_events_executor_callback(
   void * executor_context,
-  Event_callback executor_callback) const
+  ExecutorEventCallback executor_callback) const
 {
-  rcl_ret_t ret = rcl_guard_condition_set_callback(
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
     executor_context,
     executor_callback,
     this,
