@@ -61,6 +61,7 @@ void TimersManager::start()
     throw std::runtime_error("TimersManager::start() can't start timers thread as already running");
   }
 
+  running_ = true;
   timers_thread_ = std::thread(&TimersManager::run_timers, this);
   pthread_setname_np(timers_thread_.native_handle(), "TimersManager");
 }
@@ -104,6 +105,7 @@ void TimersManager::execute_ready_timers_unsafe()
   while ((*head)->is_ready() && timer_was_ready_at_tp(start, head)) {
     (*head)->execute_callback();
     this->restore_heap_root();
+    head = heap_.front();
     //verify();
   }
 }
@@ -128,7 +130,6 @@ bool TimersManager::execute_head_timer()
 
 void TimersManager::run_timers()
 {
-  running_ = true;
   while (rclcpp::ok(context_) && running_) {
     std::unique_lock<std::mutex> lock(timers_mutex_);
     auto time_to_sleep = this->get_head_timeout_unsafe();

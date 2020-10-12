@@ -540,7 +540,7 @@ ament_add_gtest(
   test_executors
   rclcpp/executors/test_executors.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
-  TIMEOUT 20)
+  TIMEOUT 180)
 if(TARGET test_executors)
   ament_target_dependencies(test_executors
     "rcl"
@@ -571,6 +571,14 @@ if(TARGET test_static_executor_entities_collector)
     "rcl"
     "test_msgs")
   target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_timers_manager rclcpp/executors/test_timers_manager.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_timers_manager)
+  ament_target_dependencies(test_timers_manager
+    "rcl")
+  target_link_libraries(test_timers_manager ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_guard_condition rclcpp/test_guard_condition.cpp
