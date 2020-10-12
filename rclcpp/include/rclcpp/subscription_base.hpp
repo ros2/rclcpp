@@ -265,7 +265,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_callback(const void * executor_context, Event_callback executor_callback) const;
+  set_events_executor_callback(const void * executor_context, Event_callback executor_callback) const;
 
 protected:
   template<typename EventCallbackT>

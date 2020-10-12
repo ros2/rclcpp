@@ -72,7 +72,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_callback(
+  set_events_executor_callback(
     void * executor_context,
     Event_callback executor_callback) const override;
 

@@ -46,7 +46,7 @@ EventsExecutor::EventsExecutor(
   rcl_ret_t ret;
 
   // Set the global ctrl-c guard condition callback
-  ret = rcl_guard_condition_set_callback(
+  ret = rcl_guard_condition_set_events_executor_callback(
     this,
     &EventsExecutor::push_event,
     entities_collector_.get(),
@@ -58,7 +58,7 @@ EventsExecutor::EventsExecutor(
   }
 
   // Set the executor interrupt guard condition callback
-  ret = rcl_guard_condition_set_callback(
+  ret = rcl_guard_condition_set_events_executor_callback(
     this,
     &EventsExecutor::push_event,
     entities_collector_.get(),
@@ -256,28 +256,28 @@ EventsExecutor::add_node(
     group->find_subscription_ptrs_if(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
         if (subscription) {
-          subscription->set_callback(this, &EventsExecutor::push_event);
+          subscription->set_events_executor_callback(this, &EventsExecutor::push_event);
         }
         return false;
       });
     group->find_service_ptrs_if(
       [this](const rclcpp::ServiceBase::SharedPtr & service) {
         if (service) {
-          service->set_callback(this, &EventsExecutor::push_event);
+          service->set_events_executor_callback(this, &EventsExecutor::push_event);
         }
         return false;
       });
     group->find_client_ptrs_if(
       [this](const rclcpp::ClientBase::SharedPtr & client) {
         if (client) {
-          client->set_callback(this, &EventsExecutor::push_event);
+          client->set_events_executor_callback(this, &EventsExecutor::push_event);
         }
         return false;
       });
     group->find_waitable_ptrs_if(
       [this](const rclcpp::Waitable::SharedPtr & waitable) {
         if (waitable) {
-          waitable->set_callback(this, &EventsExecutor::push_event);
+          waitable->set_events_executor_callback(this, &EventsExecutor::push_event);
         }
         return false;
       });
@@ -285,7 +285,7 @@ EventsExecutor::add_node(
 
   // Set node's guard condition callback, so if new entities are added while
   // spinning we can set their callback.
-  rcl_ret_t ret = rcl_guard_condition_set_callback(
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
                     this,
                     &EventsExecutor::push_event,
                     entities_collector_.get(),
