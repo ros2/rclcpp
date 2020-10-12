@@ -170,7 +170,7 @@ public:
   void
   set_events_executor_callback(
     void * executor_context,
-    Event_callback executor_callback) const;
+    ExecutorEventCallback executor_callback) const;
 
 private:
   std::atomic<bool> in_use_by_wait_set_{false};

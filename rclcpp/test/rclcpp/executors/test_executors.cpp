@@ -455,7 +455,7 @@ public:
   void
   set_callback(
     void * executor_context,
-    Event_callback executor_callback) const override
+    ExecutorEventCallback executor_callback) const override
   {
     rcl_ret_t ret = rcl_guard_condition_set_callback(
       executor_context,

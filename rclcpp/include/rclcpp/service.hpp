@@ -123,7 +123,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_events_executor_callback(const void * executor_context, Event_callback executor_callback) const;
+  set_events_executor_callback(const void * executor_context, ExecutorEventCallback executor_callback) const;
 
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)

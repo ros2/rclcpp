@@ -381,7 +381,7 @@ EventsExecutor::execute_event(const ExecutorEvent &event)
       break;
     }
 
-  case GUARD_CONDITION_EVENT:
+  case WAITABLE_EVENT:
     {
       auto waitable = const_cast<rclcpp::Waitable*>(
                 static_cast<const rclcpp::Waitable*>(event.entity));

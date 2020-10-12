@@ -33,7 +33,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 void
 EventsExecutorEntitiesCollector::init(
   void * executor_context,
-  Event_callback executor_callback,
+  ExecutorEventCallback executor_callback,
   TimerFn push_timer,
   TimerFn clear_timer,
   ClearTimersFn clear_all_timers)

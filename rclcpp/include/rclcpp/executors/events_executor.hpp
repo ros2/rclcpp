@@ -19,7 +19,7 @@
 #include <memory>
 #include <queue>
 
-#include "rcutils/event_types.h"
+#include "rcutils/executor_event_types.h"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
