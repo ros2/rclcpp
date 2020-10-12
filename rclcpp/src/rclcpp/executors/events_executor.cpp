@@ -321,28 +321,6 @@ EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-EventsExecutor::handle_events()
-{
-  // When condition variable is notified, check this predicate to proceed
-  auto predicate = [this]() { return !event_queue_.empty(); };
-
-  // Local event queue
-  std::queue<ExecutorEvent> local_event_queue;
-
-  // Scope block for the mutex
-  {
-    std::unique_lock<std::mutex> lock(event_queue_mutex_);
-    // We wait here until something has been pushed to the event queue
-    event_queue_cv_.wait(lock, predicate);
-
-    // We got an event! Swap queues and execute events
-    std::swap(local_event_queue, event_queue_);
-  }
-
-  this->consume_all_events(local_event_queue);
-}
-
-void
 EventsExecutor::consume_all_events(std::queue<ExecutorEvent> &event_queue)
 {
   while (!event_queue.empty()) {
