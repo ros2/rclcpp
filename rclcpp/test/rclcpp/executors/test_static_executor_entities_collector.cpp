@@ -368,7 +368,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_clear_
   }
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
 
@@ -399,7 +398,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize
   }
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
 
@@ -437,7 +435,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_rcl_wait_failed) {
   }
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
 
@@ -489,7 +486,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
   }
 
   entities_collector_->remove_node(node->get_node_base_interface());
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
 
@@ -518,7 +514,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
   rcl_reset_error();
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
 
@@ -551,7 +546,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) 
   ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
 
@@ -624,6 +618,5 @@ TEST_F(
   entities_collector_->execute();
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
   entities_collector_->fini();
 }
