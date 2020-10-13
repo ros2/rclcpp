@@ -119,6 +119,15 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
+  /// Cancel any running spin* function, causing it to return.
+  /**
+   * This function can be called asynchonously from any thread.
+   * \throws std::runtime_error if there is an issue triggering the guard condition
+   */
+  RCLCPP_PUBLIC
+  void
+  cancel() override;
+
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
