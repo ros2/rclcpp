@@ -17,6 +17,14 @@
 
 using rclcpp::executors::EventsExecutorEntitiesCollector;
 
+EventsExecutorEntitiesCollector::EventsExecutorEntitiesCollector(
+  EventsExecutor * executor_context,
+  TimersManager::SharedPtr timers_manager)
+{
+  associated_executor_ = executor_context;
+  timers_manager_ = timers_manager;
+}
+
 EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 {
   // Disassociate all nodes
@@ -31,33 +39,20 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 }
 
 void
-EventsExecutorEntitiesCollector::init(
-  void * executor_context,
-  ExecutorEventCallback executor_callback,
-  TimerFn push_timer,
-  TimerFn clear_timer,
-  ClearTimersFn clear_all_timers)
-{
-  // These callbacks are used when:
-  // 1. A new entity is added/removed to/from a new node
-  // 2. A node is removed from the executor
-  executor_context_ = executor_context;
-  executor_callback_ = executor_callback;
-  push_timer_ = push_timer;
-  clear_timer_ = clear_timer;
-  clear_all_timers_ = clear_all_timers;
-}
-
-// The purpose of "execute" is handling the situation of a new entity added to
-// a node, while the executor is already spinning.
-// With the new approach, "execute" should only take care of setting that
-// entitiy's callback.
-// If a entity is removed from a node, we should unset its callback
-void
 EventsExecutorEntitiesCollector::execute()
 {
-  clear_all_timers_();
-  set_entities_callbacks();
+  // This function is called when the associated executor is notified that something changed.
+  // We do not know if an entity has been added or remode so we have to rebuild everything.
+
+  timers_manager_->clear_all();
+
+  for (auto & weak_node : weak_nodes_) {
+    auto node = weak_node.lock();
+    if (!node) {
+      continue;
+    }
+    set_entities_callbacks(node);
+  }
 }
 
 void
@@ -72,15 +67,30 @@ EventsExecutorEntitiesCollector::add_node(
   }
 
   weak_nodes_.push_back(node_ptr);
+
+  set_entities_callbacks(node_ptr);
+
+  // Set node's guard condition callback, so if new entities are added while
+  // spinning we can set their callback.
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    associated_executor_,
+    &EventsExecutor::push_event,
+    this,
+    node_ptr->get_notify_guard_condition(),
+    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set node guard condition callback");
+  }
 }
 
-// Here we unset the node entities callback.
 void
 EventsExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   auto node_it = weak_nodes_.begin();
 
+  // Here we unset the node entities callback.
   while (node_it != weak_nodes_.end()) {
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
@@ -103,7 +113,7 @@ EventsExecutorEntitiesCollector::remove_node(
         group->find_timer_ptrs_if(
           [this](const rclcpp::TimerBase::SharedPtr & timer) {
             if (timer) {
-              clear_timer_(timer);
+              timers_manager_->remove_timer(timer);
             }
             return false;
           });
@@ -146,54 +156,49 @@ EventsExecutorEntitiesCollector::remove_node(
 }
 
 void
-EventsExecutorEntitiesCollector::set_entities_callbacks()
+EventsExecutorEntitiesCollector::set_entities_callbacks(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
 {
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
+  // Check in all the callback groups
+  for (auto & weak_group : node->get_callback_groups()) {
+    auto group = weak_group.lock();
+    if (!group || !group->can_be_taken_from().load()) {
       continue;
     }
-    // Check in all the callback groups
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
-      if (!group || !group->can_be_taken_from().load()) {
-        continue;
-      }
-      group->find_timer_ptrs_if(
-        [this](const rclcpp::TimerBase::SharedPtr & timer) {
-          if (timer) {
-            push_timer_(timer);
-          }
-          return false;
-        });
-      group->find_subscription_ptrs_if(
-        [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-          if (subscription) {
-            subscription->set_events_executor_callback(executor_context_, executor_callback_);
-          }
-          return false;
-        });
-      group->find_service_ptrs_if(
-        [this](const rclcpp::ServiceBase::SharedPtr & service) {
-          if (service) {
-            service->set_events_executor_callback(executor_context_, executor_callback_);
-          }
-          return false;
-        });
-      group->find_client_ptrs_if(
-        [this](const rclcpp::ClientBase::SharedPtr & client) {
-          if (client) {
-            client->set_events_executor_callback(executor_context_, executor_callback_);
-          }
-          return false;
-        });
-      group->find_waitable_ptrs_if(
-        [this](const rclcpp::Waitable::SharedPtr & waitable) {
-          if (waitable) {
-            waitable->set_events_executor_callback(executor_context_, executor_callback_);
-          }
-          return false;
-        });
-    }
+    group->find_timer_ptrs_if(
+      [this](const rclcpp::TimerBase::SharedPtr & timer) {
+        if (timer) {
+          timers_manager_->add_timer(timer);
+        }
+        return false;
+      });
+    group->find_subscription_ptrs_if(
+      [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
+        if (subscription) {
+          subscription->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+        }
+        return false;
+      });
+    group->find_service_ptrs_if(
+      [this](const rclcpp::ServiceBase::SharedPtr & service) {
+        if (service) {
+          service->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+        }
+        return false;
+      });
+    group->find_client_ptrs_if(
+      [this](const rclcpp::ClientBase::SharedPtr & client) {
+        if (client) {
+          client->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+        }
+        return false;
+      });
+    group->find_waitable_ptrs_if(
+      [this](const rclcpp::Waitable::SharedPtr & waitable) {
+        if (waitable) {
+          waitable->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+        }
+        return false;
+      });
   }
 }

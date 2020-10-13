@@ -28,21 +28,7 @@ EventsExecutor::EventsExecutor(
 : rclcpp::Executor(options)
 {
   timers_manager_ = std::make_shared<TimersManager>(context_);
-  entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>();
-
-  // Set entities collector callbacks
-  entities_collector_->init(
-    this,
-    &EventsExecutor::push_event,
-    [this](const rclcpp::TimerBase::SharedPtr & t) {
-      timers_manager_->add_timer(t);
-    },
-    [this](const rclcpp::TimerBase::SharedPtr & t) {
-      timers_manager_->remove_timer(t);
-    },
-    [this]() {
-      timers_manager_->clear_all();
-    });
+  entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this, timers_manager_);
 
   rcl_ret_t ret;
 
@@ -247,64 +233,6 @@ EventsExecutor::add_node(
 
   // Add node to entities collector
   entities_collector_->add_node(node_ptr);
-
-  // Get nodes entities, and assign their callbaks
-  for (auto & weak_group : node_ptr->get_callback_groups()) {
-    auto group = weak_group.lock();
-    if (!group || !group->can_be_taken_from().load()) {
-      continue;
-    }
-    // Add timers to timers to timer manager
-    group->find_timer_ptrs_if(
-      [this](const rclcpp::TimerBase::SharedPtr & timer) {
-        if (timer) {
-          timers_manager_->add_timer(timer);
-        }
-        return false;
-      });
-    // Set the callbacks to all the entities
-    group->find_subscription_ptrs_if(
-      [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-        if (subscription) {
-          subscription->set_events_executor_callback(this, &EventsExecutor::push_event);
-        }
-        return false;
-      });
-    group->find_service_ptrs_if(
-      [this](const rclcpp::ServiceBase::SharedPtr & service) {
-        if (service) {
-          service->set_events_executor_callback(this, &EventsExecutor::push_event);
-        }
-        return false;
-      });
-    group->find_client_ptrs_if(
-      [this](const rclcpp::ClientBase::SharedPtr & client) {
-        if (client) {
-          client->set_events_executor_callback(this, &EventsExecutor::push_event);
-        }
-        return false;
-      });
-    group->find_waitable_ptrs_if(
-      [this](const rclcpp::Waitable::SharedPtr & waitable) {
-        if (waitable) {
-          waitable->set_events_executor_callback(this, &EventsExecutor::push_event);
-        }
-        return false;
-      });
-  }
-
-  // Set node's guard condition callback, so if new entities are added while
-  // spinning we can set their callback.
-  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-    this,
-    &EventsExecutor::push_event,
-    entities_collector_.get(),
-    node_ptr->get_notify_guard_condition(),
-    false /* Discard previous events */);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set node guard condition callback");
-  }
 }
 
 void
