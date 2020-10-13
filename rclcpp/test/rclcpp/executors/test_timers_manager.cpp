@@ -166,21 +166,15 @@ TEST_F(TestTimersManager, timers_order) {
   EXPECT_EQ(0u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
-  std::this_thread::sleep_for(1ms);
+  std::this_thread::sleep_for(2ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(2u, t1_runs);
-  EXPECT_EQ(0u, t2_runs);
-  EXPECT_EQ(0u, t3_runs);
-
-  std::this_thread::sleep_for(1ms);
-  timers_manager->execute_ready_timers();
-  EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(1u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
   std::this_thread::sleep_for(5ms);
   timers_manager->execute_ready_timers();
-  EXPECT_EQ(4u, t1_runs);
+  EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(2u, t2_runs);
   EXPECT_EQ(1u, t3_runs);
 }
