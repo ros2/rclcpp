@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 
+#include "rclcpp/exceptions/exceptions.hpp"
 #include "rclcpp/executors/events_executor.hpp"
 
 using namespace std::chrono_literals;
@@ -256,6 +257,20 @@ void
 EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
+}
+
+void
+EventsExecutor::cancel()
+{
+  spinning.store(false);
+  rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to trigger guard condition in cancel");
+  }
+
+  // This makes sure that the timers manager is stopped when we return from this function
+  // otherwise applications may call rclcpp::shutdown() while that thread is still running.
+  timers_manager_->stop();
 }
 
 void

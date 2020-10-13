@@ -385,7 +385,7 @@ public:
    * \throws std::runtime_error if there is an issue triggering the guard condition
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   cancel();
 
   /// Support dynamic switching of the memory strategy.
