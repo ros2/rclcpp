@@ -525,6 +525,8 @@ protected:
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
 
+  std::shared_ptr<rcl_guard_condition_t> shutdown_guard_condition_;
+
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 

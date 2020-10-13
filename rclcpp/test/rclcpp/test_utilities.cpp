@@ -131,59 +131,6 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, !=)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, >)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, <)
 
-TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
-  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
-  context1->init(0, nullptr);
-  RCLCPP_SCOPE_EXIT(rclcpp::shutdown(context1););
-
-  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  rcl_ret_t ret = rcl_wait_set_init(
-    &wait_set, 0, 2, 0, 0, 0, 0, context1->get_rcl_context().get(),
-    rcl_get_default_allocator());
-  ASSERT_EQ(RCL_RET_OK, ret);
-
-  // Expected usage
-  rcl_guard_condition_t * interrupt_guard_condition =
-    context1->get_interrupt_guard_condition(&wait_set);
-  EXPECT_NE(nullptr, interrupt_guard_condition);
-  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
-
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
-    EXPECT_THROW(
-      {interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);},
-      rclcpp::exceptions::RCLError);
-  }
-
-  {
-    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
-    auto mock = mocking_utils::inject_on_return(
-      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
-    EXPECT_THROW(
-      {context1->release_interrupt_guard_condition(&wait_set);},
-      rclcpp::exceptions::RCLError);
-  }
-
-  {
-    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
-    auto mock = mocking_utils::inject_on_return(
-      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
-    EXPECT_NO_THROW({context1->release_interrupt_guard_condition(&wait_set, std::nothrow);});
-  }
-
-  {
-    EXPECT_THROW(
-      context1->release_interrupt_guard_condition(nullptr),
-      std::runtime_error);
-  }
-
-  // Test it works after restore mocks
-  interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
-  EXPECT_NE(nullptr, interrupt_guard_condition);
-  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
-}
-
 TEST(TestUtilities, test_context_init_shutdown_fails) {
   {
     auto context = std::make_shared<rclcpp::contexts::DefaultContext>();

@@ -33,6 +33,52 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 namespace rclcpp
 {
+namespace {
+
+std::shared_ptr<rcl_guard_condition_t>
+CreateShutdownGuardCondition(rclcpp::Context * context)
+{
+  auto custom_deleter = [](rcl_guard_condition_t * guard_condition) {
+      rcl_ret_t ret = rcl_guard_condition_fini(guard_condition);
+      if (RCL_RET_OK != ret) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"),
+          "Failed to finalize shutdown_guard_condition, leaking memory!");
+      }
+    };
+
+  auto shutdown_guard_condition =
+    std::shared_ptr<rcl_guard_condition_t>(new rcl_guard_condition_t, custom_deleter);
+  *shutdown_guard_condition = rcl_get_zero_initialized_guard_condition();
+
+  rcl_ret_t ret = rcl_guard_condition_init(
+    shutdown_guard_condition.get(),
+    context->get_rcl_context().get(),
+    rcl_guard_condition_get_default_options());
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "failed to create shutdown guard condition");
+  }
+
+  context->on_shutdown(
+    [weak_shutdown_guard_condition =
+    std::weak_ptr<rcl_guard_condition_t>(shutdown_guard_condition)]()
+    {
+      auto shared_guard_condition = weak_shutdown_guard_condition.lock();
+      if (nullptr != shared_guard_condition) {
+        rcl_ret_t status = rcl_trigger_guard_condition(shared_guard_condition.get());
+        if (status != RCL_RET_OK) {
+          RCUTILS_LOG_ERROR_NAMED(
+            "rclcpp",
+            "failed to trigger guard condition in Context shutdown callback(): %s",
+            rcl_get_error_string().str);
+        }
+      }
+    });
+  return shutdown_guard_condition;
+}
+
+}  // namespace
+
 namespace graph_listener
 {
 
@@ -54,7 +100,8 @@ GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
 
-  shutdown_guard_condition_ = parent_context->get_interrupt_guard_condition(&wait_set_);
+  // Register a shutdown hook for the graph_listener with parent_context
+  shutdown_guard_condition_ = CreateShutdownGuardCondition(parent_context.get());
 }
 
 GraphListener::~GraphListener()
@@ -179,7 +226,7 @@ GraphListener::run_loop()
     // Put the shutdown guard condition in the wait set.
     size_t shutdown_guard_condition_index = 0u;
     ret = rcl_wait_set_add_guard_condition(
-      &wait_set_, shutdown_guard_condition_, &shutdown_guard_condition_index);
+      &wait_set_, shutdown_guard_condition_.get(), &shutdown_guard_condition_index);
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to add shutdown guard condition to wait set");
     }
@@ -213,7 +260,8 @@ GraphListener::run_loop()
 
     // Check to see if the shutdown guard condition has been triggered.
     bool shutdown_guard_condition_triggered =
-      (shutdown_guard_condition_ == wait_set_.guard_conditions[shutdown_guard_condition_index]);
+      (shutdown_guard_condition_.get() ==
+      wait_set_.guard_conditions[shutdown_guard_condition_index]);
     // Notify nodes who's guard conditions are set (triggered).
     for (size_t i = 0u; i < node_graph_interfaces_size; ++i) {
       const auto node_ptr = node_graph_interfaces_[i];
@@ -365,7 +413,7 @@ GraphListener::cleanup_wait_set()
 }
 
 void
-GraphListener::__shutdown(bool should_throw)
+GraphListener::__shutdown()
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
   if (!is_shutdown_.exchange(true)) {
@@ -377,28 +425,6 @@ GraphListener::__shutdown(bool should_throw)
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
     }
-    if (shutdown_guard_condition_) {
-      auto parent_context_ptr = parent_context_.lock();
-      if (parent_context_ptr) {
-        if (should_throw) {
-          parent_context_ptr->release_interrupt_guard_condition(&wait_set_);
-        } else {
-          parent_context_ptr->release_interrupt_guard_condition(&wait_set_, std::nothrow);
-        }
-      } else {
-        ret = rcl_guard_condition_fini(shutdown_guard_condition_);
-        if (RCL_RET_OK != ret) {
-          if (should_throw) {
-            throw_from_rcl_error(ret, "failed to finalize shutdown guard condition");
-          } else {
-            RCLCPP_ERROR(
-              rclcpp::get_logger("rclcpp"),
-              "failed to finalize shutdown guard condition");
-          }
-        }
-      }
-      shutdown_guard_condition_ = nullptr;
-    }
     if (is_started_) {
       cleanup_wait_set();
     }
@@ -408,14 +434,14 @@ GraphListener::__shutdown(bool should_throw)
 void
 GraphListener::shutdown()
 {
-  this->__shutdown(true);
+  this->__shutdown();
 }
 
 void
 GraphListener::shutdown(const std::nothrow_t &) noexcept
 {
   try {
-    this->__shutdown(false);
+    this->__shutdown();
   } catch (const std::exception & exc) {
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
