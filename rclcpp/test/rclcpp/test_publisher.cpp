@@ -278,6 +278,9 @@ TEST_F(TestPublisher, serialized_message_publish) {
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10, options);
 
   rclcpp::SerializedMessage serialized_msg;
+  // Mock successful rcl publish because the serialized_msg above is poorly formed
+  auto mock = mocking_utils::patch_and_return(
+    "self", rcl_publish_serialized_message, RCL_RET_OK);
   EXPECT_NO_THROW(publisher->publish(serialized_msg));
 
   EXPECT_NO_THROW(publisher->publish(serialized_msg.get_rcl_serialized_message()));
@@ -415,14 +418,22 @@ TEST_F(TestPublisher, inter_process_publish_failures) {
     EXPECT_THROW(publisher->publish(msg), rclcpp::exceptions::RCLError);
   }
 
-  rclcpp::SerializedMessage serialized_msg;
-  EXPECT_NO_THROW(publisher->publish(serialized_msg));
+  {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publish_serialized_message` is entirely
+    // defined in a header. Also, this one requires mocking because the serialized_msg is poorly
+    // formed and this just tests rclcpp functionality.
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publish_serialized_message, RCL_RET_OK);
+    rclcpp::SerializedMessage serialized_msg;
+    EXPECT_NO_THROW(publisher->publish(serialized_msg));
+  }
 
   {
     // Using 'self' instead of 'lib:rclcpp' because `rcl_publish_serialized_message` is entirely
     // defined in a header
     auto mock = mocking_utils::patch_and_return(
       "self", rcl_publish_serialized_message, RCL_RET_ERROR);
+    rclcpp::SerializedMessage serialized_msg;
     EXPECT_THROW(publisher->publish(serialized_msg), rclcpp::exceptions::RCLError);
   }
 

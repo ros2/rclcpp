@@ -216,7 +216,8 @@ if(TARGET test_node_interfaces__node_clock)
   target_link_libraries(test_node_interfaces__node_clock ${PROJECT_NAME})
 endif()
 ament_add_gtest(test_node_interfaces__node_graph
-  rclcpp/node_interfaces/test_node_graph.cpp)
+  rclcpp/node_interfaces/test_node_graph.cpp
+  TIMEOUT 120)
 if(TARGET test_node_interfaces__node_graph)
   ament_target_dependencies(
     test_node_interfaces__node_graph

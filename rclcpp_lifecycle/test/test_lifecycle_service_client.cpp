@@ -376,6 +376,14 @@ TEST_F(TestLifecycleServiceClient, get_service_names_and_types_by_node)
     std::runtime_error);
   auto service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
   auto service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+  auto start = std::chrono::steady_clock::now();
+  while (0 == service_names_and_types1.size() ||
+    service_names_and_types1.size() != service_names_and_types2.size() ||
+    (std::chrono::steady_clock::now() - start) < std::chrono::seconds(1))
+  {
+    service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
+    service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+  }
   EXPECT_EQ(service_names_and_types1.size(), service_names_and_types2.size());
 }
 
