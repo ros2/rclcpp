@@ -371,17 +371,6 @@ GraphListener::__shutdown(bool should_throw)
         } else {
           parent_context_ptr->release_interrupt_guard_condition(&wait_set_, std::nothrow);
         }
-      } else {
-        ret = rcl_guard_condition_fini(shutdown_guard_condition_);
-        if (RCL_RET_OK != ret) {
-          if (should_throw) {
-            throw_from_rcl_error(ret, "failed to finalize shutdown guard condition");
-          } else {
-            RCLCPP_ERROR(
-              rclcpp::get_logger("rclcpp"),
-              "failed to finalize shutdown guard condition");
-          }
-        }
       }
       shutdown_guard_condition_ = nullptr;
     }
