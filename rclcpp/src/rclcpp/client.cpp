@@ -211,6 +211,6 @@ ClientBase::set_events_executor_callback(
     client_handle_.get());
 
   if (RCL_RET_OK != ret) {
-    throw std::runtime_error(std::string("Couldn't set client callback"));
+    throw std::runtime_error("Couldn't set the EventsExecutor's callback to client");
   }
 }
