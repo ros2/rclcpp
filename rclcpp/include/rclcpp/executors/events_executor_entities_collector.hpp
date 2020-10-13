@@ -17,6 +17,7 @@
 
 #include <list>
 
+#include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/waitable.hpp"
 
@@ -25,31 +26,41 @@ namespace rclcpp
 namespace executors
 {
 
+// forward declaration of EventsExecutor to avoid circular dependency
+class EventsExecutor;
+
+/**
+ * @brief This class provides a waitable object that is used for managing the
+ * entities (i.e. nodes and their subscriptions, timers, services, etc)
+ * added to an EventsExecutor.
+ * The add/remove node APIs are used when a node is added/removed from
+ * the associated EventsExecutor and result in setting/unsetting the
+ * events callbacks and adding timers to the timers manager.
+ *
+ * Being this class derived from Waitable, it can be used to wake up an
+ * executor thread while it's spinning.
+ * When this occurs, the execute API takes care of handling changes
+ * in the entities currently used by the executor.
+ */
 class EventsExecutorEntitiesCollector final : public rclcpp::Waitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
 
-  using TimerFn = std::function<void (const rclcpp::TimerBase::SharedPtr & timer)>;
-  using ClearTimersFn = std::function<void (void)>;
-
   // Constructor
   RCLCPP_PUBLIC
-  EventsExecutorEntitiesCollector() = default;
+  EventsExecutorEntitiesCollector(
+    EventsExecutor * executor_context,
+    std::shared_ptr<TimersManager> timers_manager);
 
   // Destructor
   RCLCPP_PUBLIC
   ~EventsExecutorEntitiesCollector();
 
-  RCLCPP_PUBLIC
-  void
-  init(
-    void * executor_context,
-    ExecutorEventCallback executor_callback,
-    TimerFn push_timer,
-    TimerFn clear_timer,
-    ClearTimersFn clear_all_timers);
-
+  // The purpose of "execute" is handling the situation of a new entity added to
+  // a node, while the executor is already spinning.
+  // This consists in setting that entitiy's callback.
+  // If a entity is removed from a node, we should unset its callback
   RCLCPP_PUBLIC
   void
   execute() override;
@@ -64,6 +75,7 @@ public:
   remove_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
+  // Stub API: not used by EventsExecutor
   RCLCPP_PUBLIC
   bool
   is_ready(rcl_wait_set_t * wait_set) override
@@ -72,6 +84,7 @@ public:
     return false;
   }
 
+  // Stub API: not used by EventsExecutor
   RCLCPP_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override
@@ -82,21 +95,16 @@ public:
 
 private:
   void
-  set_entities_callbacks();
+  set_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
-  /// Context (associated executor)
-  void * executor_context_ = nullptr;
+  /// Executor using this entities collector object
+  EventsExecutor * associated_executor_ = nullptr;
 
-  /// Events callback
-  ExecutorEventCallback executor_callback_ = nullptr;
-
-  /// Function pointers to push and clear timers from the timers heap
-  TimerFn push_timer_ = nullptr;
-  TimerFn clear_timer_ = nullptr;
-  ClearTimersFn clear_all_timers_ = nullptr;
+  // Instance of the timers manager used by the associated executor
+  TimersManager::SharedPtr timers_manager_;
 };
 
 }  // namespace executors

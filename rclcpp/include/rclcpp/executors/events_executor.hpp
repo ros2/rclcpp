@@ -119,26 +119,6 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
-protected:
-  RCLCPP_PUBLIC
-  void
-  spin_once_impl(std::chrono::nanoseconds timeout) override;
-
-private:
-  RCLCPP_DISABLE_COPY(EventsExecutor)
-
-  EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
-
-  /// Extract and execute events from the queue until it is empty
-  RCLCPP_PUBLIC
-  void
-  consume_all_events(std::queue<ExecutorEvent> & queue);
-
-  // Execute a single event
-  RCLCPP_PUBLIC
-  void
-  execute_event(const ExecutorEvent & event);
-
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
@@ -158,6 +138,26 @@ private:
     // Notify that the event queue has some events in it.
     this_executor->event_queue_cv_.notify_one();
   }
+
+protected:
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout) override;
+
+private:
+  RCLCPP_DISABLE_COPY(EventsExecutor)
+
+  EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
+
+  /// Extract and execute events from the queue until it is empty
+  RCLCPP_PUBLIC
+  void
+  consume_all_events(std::queue<ExecutorEvent> & queue);
+
+  // Execute a single event
+  RCLCPP_PUBLIC
+  void
+  execute_event(const ExecutorEvent & event);
 
   // Event queue members
   std::queue<ExecutorEvent> event_queue_;
