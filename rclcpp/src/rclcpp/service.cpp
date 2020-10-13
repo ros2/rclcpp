@@ -97,6 +97,6 @@ ServiceBase::set_events_executor_callback(
     service_handle_.get());
 
   if (RCL_RET_OK != ret) {
-    throw std::runtime_error(std::string("Couldn't set service callback"));
+    throw std::runtime_error("Couldn't set the EventsExecutor's callback to service");
   }
 }

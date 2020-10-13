@@ -148,6 +148,25 @@ public:
     event_callback_(callback_info);
   }
 
+  /// Set EventsExecutor's callback
+  RCLCPP_PUBLIC
+  void
+  set_events_executor_callback(
+    void * executor_context,
+    ExecutorEventCallback executor_callback) const override
+  {
+    rcl_ret_t ret = rcl_event_set_events_executor_callback(
+      executor_context,
+      executor_callback,
+      this,
+      &event_handle_,
+      false /* Discard previous events */);
+
+    if (RCL_RET_OK != ret) {
+      throw std::runtime_error("Couldn't set EventsExecutor's callback to event");
+    }
+  }
+
 private:
   using EventCallbackInfoT = typename std::remove_reference<typename
       rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
