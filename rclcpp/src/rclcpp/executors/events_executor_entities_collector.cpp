@@ -72,12 +72,16 @@ EventsExecutorEntitiesCollector::add_node(
 
   // Set node's guard condition callback, so if new entities are added while
   // spinning we can set their callback.
-  rcl_guard_condition_set_events_executor_callback(
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
     associated_executor_,
     &EventsExecutor::push_event,
     this,
     node_ptr->get_notify_guard_condition(),
     false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set node guard condition callback");
+  }
 }
 
 void
@@ -91,10 +95,14 @@ EventsExecutorEntitiesCollector::remove_node(
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
       // Node found: unset its entities callbacks
-      rcl_guard_condition_set_events_executor_callback(
+      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
         nullptr, nullptr, nullptr,
         node_ptr->get_notify_guard_condition(),
         false);
+
+      if (ret != RCL_RET_OK) {
+        throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+      }
 
       // Unset entities callbacks
       for (auto & weak_group : node_ptr->get_callback_groups()) {
