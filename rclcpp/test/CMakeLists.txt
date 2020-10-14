@@ -207,7 +207,8 @@ if(TARGET test_node_interfaces__node_clock)
   target_link_libraries(test_node_interfaces__node_clock ${PROJECT_NAME})
 endif()
 ament_add_gtest(test_node_interfaces__node_graph
-  rclcpp/node_interfaces/test_node_graph.cpp)
+  rclcpp/node_interfaces/test_node_graph.cpp
+  TIMEOUT 120)
 if(TARGET test_node_interfaces__node_graph)
   ament_target_dependencies(
     test_node_interfaces__node_graph
@@ -322,7 +323,7 @@ ament_add_gtest(test_parameter_map rclcpp/test_parameter_map.cpp)
 if(TARGET test_parameter_map)
   target_link_libraries(test_parameter_map ${PROJECT_NAME})
 endif()
-ament_add_gtest(test_publisher rclcpp/test_publisher.cpp)
+ament_add_gtest(test_publisher rclcpp/test_publisher.cpp TIMEOUT 120)
 if(TARGET test_publisher)
   ament_target_dependencies(test_publisher
     "rcl"
@@ -405,7 +406,8 @@ if(TARGET test_service)
   )
   target_link_libraries(test_service ${PROJECT_NAME} mimick)
 endif()
-ament_add_gtest(test_subscription rclcpp/test_subscription.cpp)
+# Creating and destroying nodes is slow with Connext, so this needs larger timeout.
+ament_add_gtest(test_subscription rclcpp/test_subscription.cpp TIMEOUT 120)
 if(TARGET test_subscription)
   ament_target_dependencies(test_subscription
     "rcl_interfaces"
@@ -556,7 +558,7 @@ if(TARGET test_multi_threaded_executor)
 endif()
 
 ament_add_gtest(test_static_executor_entities_collector rclcpp/executors/test_static_executor_entities_collector.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
 if(TARGET test_static_executor_entities_collector)
   ament_target_dependencies(test_static_executor_entities_collector
     "rcl"
@@ -632,7 +634,7 @@ endif()
 
 ament_add_gtest(test_executor rclcpp/test_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
-)
+  TIMEOUT 120)
 if(TARGET test_executor)
   ament_target_dependencies(test_executor "rcl")
   target_link_libraries(test_executor ${PROJECT_NAME} mimick)
