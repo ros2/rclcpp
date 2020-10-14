@@ -244,7 +244,7 @@ private:
   // Flag used as predicate by timers_cv
   bool timers_updated_ {false};
   // Indicates whether the timers thread is currently running or requested to stop
-  std::atomic<bool> running_ {false};
+  bool running_ {false};
   // Context of the parent executor
   std::shared_ptr<rclcpp::Context> context_;
   // Container to keep ownership of the timers

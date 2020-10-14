@@ -62,12 +62,13 @@ void TimersManager::add_timer(rclcpp::TimerBase::SharedPtr timer)
 
 void TimersManager::start()
 {
+  std::unique_lock<std::mutex> timers_lock(timers_mutex_);
+
   // Make sure that the thread is not already running
   if (running_) {
     throw std::runtime_error("TimersManager::start() can't start timers thread as already running");
   }
 
-  std::unique_lock<std::mutex> timers_lock(timers_mutex_);
   running_ = true;
   timers_thread_ = std::thread(&TimersManager::run_timers, this);
   pthread_setname_np(timers_thread_.native_handle(), "TimersManager");
@@ -75,15 +76,15 @@ void TimersManager::start()
 
 void TimersManager::stop()
 {
-  // Nothing to do if the timers thread is not running
-  // or if another thred already signaled to stop.
-  if (!running_) {
-    return;
-  }
-
-  running_ = false;
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
+    // Nothing to do if the timers thread is not running
+    // or if another thred already signaled to stop.
+    if (!running_) {
+      return;
+    }
+
+    running_ = false;
     timers_updated_ = true;
   }
   timers_cv_.notify_one();
@@ -96,37 +97,39 @@ void TimersManager::stop()
 
 std::chrono::nanoseconds TimersManager::get_head_timeout()
 {
+  std::unique_lock<std::mutex> lock(timers_mutex_);
+  
   // Do not allow to interfere with the thread running
   if (running_) {
     throw std::runtime_error(
             "TimersManager::get_head_timeout() can't be used while timers thread is running");
   }
 
-  std::unique_lock<std::mutex> lock(timers_mutex_);
   return this->get_head_timeout_unsafe();
 }
 
 void TimersManager::execute_ready_timers()
 {
+  std::unique_lock<std::mutex> lock(timers_mutex_);
+
   // Do not allow to interfere with the thread running
   if (running_) {
     throw std::runtime_error(
             "TimersManager::execute_ready_timers() can't be used while timers thread is running");
   }
 
-  std::unique_lock<std::mutex> lock(timers_mutex_);
   this->execute_ready_timers_unsafe();
 }
 
 bool TimersManager::execute_head_timer()
 {
+  std::unique_lock<std::mutex> lock(timers_mutex_);
+
   // Do not allow to interfere with the thread running
   if (running_) {
     throw std::runtime_error(
             "TimersManager::execute_head_timer() can't be used while timers thread is running");
   }
-
-  std::unique_lock<std::mutex> lock(timers_mutex_);
 
   // Nothing to do if we don't have any timer
   if (heap_.empty()) {
@@ -170,9 +173,14 @@ void TimersManager::execute_ready_timers_unsafe()
 
 void TimersManager::run_timers()
 {
-  while (rclcpp::ok(context_) && running_) {
+  while (rclcpp::ok(context_)) {
     // Lock mutex
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
+
+    if (!running_) {
+      break;
+    }
+
     // Get timeout before next timer expires
     auto time_to_sleep = this->get_head_timeout_unsafe();
     // Wait until timeout or notification that timers have been updated
@@ -185,6 +193,7 @@ void TimersManager::run_timers()
 
   // Make sure the running flag is set to false when we exit from this function
   // to allow restarting the timers thread.
+  std::unique_lock<std::mutex> timers_lock(timers_mutex_);
   running_ = false;
 }
 
