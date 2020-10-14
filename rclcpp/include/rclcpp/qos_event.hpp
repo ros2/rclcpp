@@ -22,6 +22,7 @@
 #include "rmw/incompatible_qos_events_statuses.h"
 
 #include "rcutils/logging_macros.h"
+#include "rcutils/executor_event_types.h"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
@@ -155,16 +156,12 @@ public:
     void * executor_context,
     ExecutorEventCallback executor_callback) const override
   {
-    rcl_ret_t ret = rcl_event_set_events_executor_callback(
+    rcl_event_set_events_executor_callback(
       executor_context,
       executor_callback,
       this,
       &event_handle_,
       false /* Discard previous events */);
-
-    if (RCL_RET_OK != ret) {
-      throw std::runtime_error("Couldn't set EventsExecutor's callback to event");
-    }
   }
 
 private:

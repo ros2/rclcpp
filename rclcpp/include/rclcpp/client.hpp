@@ -38,6 +38,7 @@
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcutils/logging_macros.h"
+#include "rcutils/executor_event_types.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
