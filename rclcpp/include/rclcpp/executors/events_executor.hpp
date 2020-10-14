@@ -173,7 +173,7 @@ private:
   std::mutex event_queue_mutex_;
   std::condition_variable event_queue_cv_;
 
-  // Timers heap manager
+  // Timers manager
   std::shared_ptr<TimersManager> timers_manager_;
 };
 

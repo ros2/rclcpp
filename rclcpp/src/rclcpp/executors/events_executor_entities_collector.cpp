@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "rclcpp/executors/events_executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
 
@@ -110,7 +112,7 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
     if (!group || !group->can_be_taken_from().load()) {
       continue;
     }
-    
+
     // Timers are handled by the timers manager
     group->find_timer_ptrs_if(
       [this](const rclcpp::TimerBase::SharedPtr & timer) {
@@ -119,45 +121,53 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
         }
         return false;
       });
-    
+
     // Set callbacks for all other entity types
     group->find_subscription_ptrs_if(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
         if (subscription) {
-          subscription->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+          subscription->set_events_executor_callback(
+            associated_executor_,
+            &EventsExecutor::push_event);
         }
         return false;
       });
     group->find_service_ptrs_if(
       [this](const rclcpp::ServiceBase::SharedPtr & service) {
         if (service) {
-          service->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+          service->set_events_executor_callback(
+            associated_executor_,
+            &EventsExecutor::push_event);
         }
         return false;
       });
     group->find_client_ptrs_if(
       [this](const rclcpp::ClientBase::SharedPtr & client) {
         if (client) {
-          client->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+          client->set_events_executor_callback(
+            associated_executor_,
+            &EventsExecutor::push_event);
         }
         return false;
       });
     group->find_waitable_ptrs_if(
       [this](const rclcpp::Waitable::SharedPtr & waitable) {
         if (waitable) {
-          waitable->set_events_executor_callback(associated_executor_, &EventsExecutor::push_event);
+          waitable->set_events_executor_callback(
+            associated_executor_,
+            &EventsExecutor::push_event);
         }
         return false;
       });
   }
 
   // Set an event callback for the node's notify guard condition, so if new entities are added
-  // or remove to this node we will receive an event.
+  // or removed to this node we will receive an event.
   rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
     associated_executor_,
     &EventsExecutor::push_event,
     this,
-    node_ptr->get_notify_guard_condition(),
+    node->get_notify_guard_condition(),
     false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {

@@ -69,5 +69,5 @@ Waitable::set_events_executor_callback(
   (void)executor_callback;
 
   throw std::runtime_error(
-        "Custom waitables should override set_events_executor_callback() to use events executor");
+          "Custom waitables should override set_events_executor_callback() to use events executor");
 }

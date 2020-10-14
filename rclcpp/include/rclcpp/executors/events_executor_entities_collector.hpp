@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
 #include <list>
+#include <memory>
 
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -90,7 +91,7 @@ public:
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     (void)wait_set;
-    return true;
+    return false;
   }
 
 private:
