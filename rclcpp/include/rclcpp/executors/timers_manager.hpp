@@ -15,14 +15,12 @@
 #ifndef RCLCPP__EXECUTORS__TIMERS_MANAGER_HPP_
 #define RCLCPP__EXECUTORS__TIMERS_MANAGER_HPP_
 
-#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <list>
 #include <memory>
 #include <mutex>
-#include <stdexcept>
 #include <thread>
 #include <vector>
 
@@ -152,7 +150,6 @@ private:
     if (heap_.empty()) {
       return MAX_TIME;
     }
-
     return (*heap_[0])->time_until_trigger();
   }
 
@@ -166,25 +163,18 @@ private:
   /**
    * @brief Helper function that checks whether a timer was already ready
    * at a specific timepoint
-   * @param tp the timepoint to check for
    * @param timer a pointer to the timer to check for
+   * @param tp the timepoint to check for
    * @return true if timer was ready at tp
    */
   bool timer_was_ready_at_tp(
-    std::chrono::time_point<std::chrono::steady_clock> tp,
-    TimerPtr timer)
+    TimerPtr timer,
+    std::chrono::time_point<std::chrono::steady_clock> tp)
   {
     // A ready timer will return a negative duration when calling time_until_trigger
     auto time_ready = std::chrono::steady_clock::now() + (*timer)->time_until_trigger();
     return time_ready < tp;
   }
-
-  /**
-   * @brief Rebuilds the heap queue from the timers storage
-   * This function is meant to be called whenever something changes in the timers storage.
-   * This function is not thread safe, you need to acquire a mutex before calling it.
-   */
-  void rebuild_heap();
 
   /**
    * @brief Add a new timer to the heap and sort it.
@@ -245,29 +235,16 @@ private:
     heap_[i] = updated_timer;
   }
 
-  // Helper function to check the correctness of the heap.
-  void verify()
-  {
-    for (size_t i = 0; i < heap_.size()/2; ++i) {
-      size_t left = 2*i + 1;
-      if (left < heap_.size()) {
-        assert(((*heap_[left])->time_until_trigger().count() >= (*heap_[i])->time_until_trigger().count()));
-      }
-      size_t right = left + 1;
-      if (right < heap_.size()) {
-        assert(((*heap_[right])->time_until_trigger().count() >= (*heap_[i])->time_until_trigger().count()));
-      }
-    }
-  }
-
-  // Thread used to run the timers monitoring and execution
+  // Thread used to run the timers monitoring and execution task
   std::thread timers_thread_;
   // Protects access to timers
   std::mutex timers_mutex_;
   // Notifies the timers thread whenever timers are added/removed
   std::condition_variable timers_cv_;
+  // Flag used as predicate by timers_cv
+  bool timers_updated_ {false};
   // Indicates whether the timers thread is currently running or requested to stop
-  std::atomic<bool> running_ {false};
+  bool running_ {false};
   // Context of the parent executor
   std::shared_ptr<rclcpp::Context> context_;
   // Container to keep ownership of the timers

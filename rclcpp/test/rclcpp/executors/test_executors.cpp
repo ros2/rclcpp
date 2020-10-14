@@ -589,6 +589,57 @@ TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodePtr) {
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 }
 
+TYPED_TEST(TestExecutorsStable, testSpinSomeWhileSpinning) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::thread spinner([&]() {executor.spin();});
+
+  // Wait to make sure thread started
+  do {
+    std::this_thread::sleep_for(5ms);
+  } while (!spinner.joinable());
+
+  EXPECT_THROW(executor.spin_some(1s), std::runtime_error);
+
+  executor.cancel();
+  spinner.join();
+}
+
+TYPED_TEST(TestExecutorsStable, testSpinAllWhileSpinning) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::thread spinner([&]() {executor.spin();});
+
+  // Wait to make sure thread started
+  do {
+    std::this_thread::sleep_for(5ms);
+  } while (!spinner.joinable());
+
+  EXPECT_THROW(executor.spin_all(1s), std::runtime_error);
+
+  executor.cancel();
+  spinner.join();
+}
+
+TYPED_TEST(TestExecutorsStable, testSpinOnceWhileSpinning) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::thread spinner([&]() {executor.spin();});
+
+  // Wait to make sure thread started
+  do {
+    std::this_thread::sleep_for(5ms);
+  } while (!spinner.joinable());
+
+  EXPECT_THROW(executor.spin_once(), std::runtime_error);
+
+  executor.cancel();
+  spinner.join();
+}
+
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)
 TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
   rclcpp::init(0, nullptr);

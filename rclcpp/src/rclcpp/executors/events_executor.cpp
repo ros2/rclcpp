@@ -318,9 +318,5 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
         waitable->execute();
         break;
       }
-
-    default:
-      throw std::runtime_error("EventsExecutor received unrecognized event");
-      break;
   }
 }

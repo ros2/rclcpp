@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
@@ -24,7 +25,7 @@ using namespace std::chrono_literals;
 
 using rclcpp::executors::TimersManager;
 
-using CallbackT = std::function<void()>;
+using CallbackT = std::function<void ()>;
 using TimerT = rclcpp::WallTimer<CallbackT>;
 
 class TestTimersManager : public ::testing::Test
@@ -41,8 +42,8 @@ public:
   }
 };
 
-TEST_F(TestTimersManager, empty_manager) {
-
+TEST_F(TestTimersManager, empty_manager)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
@@ -54,12 +55,21 @@ TEST_F(TestTimersManager, empty_manager) {
   EXPECT_NO_THROW(timers_manager->stop());
 }
 
-TEST_F(TestTimersManager, add_run_remove_timer) {
+TEST_F(TestTimersManager, max_time)
+{
+  // Timers manager max time should be a very big duration that does not cause overflow
 
+  EXPECT_LT(std::chrono::hours(50).count(), TimersManager::MAX_TIME.count());
+  auto tp = std::chrono::steady_clock::now() + TimersManager::MAX_TIME;
+  EXPECT_TRUE(std::chrono::steady_clock::now() < tp);
+}
+
+TEST_F(TestTimersManager, add_run_remove_timer)
+{
   size_t t_runs = 0;
   auto t = TimerT::make_shared(
     1ms,
-    [&t_runs](){
+    [&t_runs]() {
       t_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -89,7 +99,8 @@ TEST_F(TestTimersManager, add_run_remove_timer) {
   EXPECT_FALSE(t_tmp != nullptr);
 }
 
-TEST_F(TestTimersManager, clear_all) {
+TEST_F(TestTimersManager, clear_all)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
@@ -110,8 +121,8 @@ TEST_F(TestTimersManager, clear_all) {
   EXPECT_FALSE(t2_weak.lock() != nullptr);
 }
 
-TEST_F(TestTimersManager, remove_not_existing_timer) {
-
+TEST_F(TestTimersManager, remove_not_existing_timer)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
@@ -126,15 +137,73 @@ TEST_F(TestTimersManager, remove_not_existing_timer) {
   EXPECT_NO_THROW(timers_manager->remove_timer(t));
 }
 
-TEST_F(TestTimersManager, timers_order) {
+TEST_F(TestTimersManager, timers_thread_exclusive_usage)
+{
+  auto timers_manager = std::make_shared<TimersManager>(
+    rclcpp::contexts::get_global_default_context());
 
+  timers_manager->start();
+
+  EXPECT_THROW(timers_manager->get_head_timeout(), std::exception);
+  EXPECT_THROW(timers_manager->execute_ready_timers(), std::exception);
+  EXPECT_THROW(timers_manager->execute_head_timer(), std::exception);
+
+  timers_manager->stop();
+
+  EXPECT_NO_THROW(timers_manager->get_head_timeout());
+  EXPECT_NO_THROW(timers_manager->execute_ready_timers());
+  EXPECT_NO_THROW(timers_manager->execute_head_timer());
+}
+
+TEST_F(TestTimersManager, add_timer_twice)
+{
+  auto timers_manager = std::make_shared<TimersManager>(
+    rclcpp::contexts::get_global_default_context());
+
+  auto t = TimerT::make_shared(1ms, CallbackT(), rclcpp::contexts::get_global_default_context());
+
+  timers_manager->add_timer(t);
+  EXPECT_NO_THROW(timers_manager->add_timer(t));
+}
+
+TEST_F(TestTimersManager, add_nullptr)
+{
+  auto timers_manager = std::make_shared<TimersManager>(
+    rclcpp::contexts::get_global_default_context());
+
+  EXPECT_THROW(timers_manager->add_timer(nullptr), std::exception);
+}
+
+TEST_F(TestTimersManager, head_not_ready)
+{
+  auto timers_manager = std::make_shared<TimersManager>(
+    rclcpp::contexts::get_global_default_context());
+
+  size_t t_runs = 0;
+  auto t = TimerT::make_shared(
+    10s,
+    [&t_runs]() {
+      t_runs++;
+    },
+    rclcpp::contexts::get_global_default_context());
+
+  timers_manager->add_timer(t);
+
+  // Timer will take 10s to get ready, so nothing to execute here
+  bool ret = timers_manager->execute_head_timer();
+  EXPECT_FALSE(ret);
+  EXPECT_EQ(0u, t_runs);
+}
+
+TEST_F(TestTimersManager, timers_order)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
   size_t t1_runs = 0;
   auto t1 = TimerT::make_shared(
     1ms,
-    [&t1_runs](){
+    [&t1_runs]() {
       t1_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -142,15 +211,15 @@ TEST_F(TestTimersManager, timers_order) {
   size_t t2_runs = 0;
   auto t2 = TimerT::make_shared(
     3ms,
-    [&t2_runs](){
+    [&t2_runs]() {
       t2_runs++;
     },
     rclcpp::contexts::get_global_default_context());
 
   size_t t3_runs = 0;
   auto t3 = TimerT::make_shared(
-    5ms,
-    [&t3_runs](){
+    10ms,
+    [&t3_runs]() {
       t3_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -166,25 +235,33 @@ TEST_F(TestTimersManager, timers_order) {
   EXPECT_EQ(0u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
-  std::this_thread::sleep_for(2ms);
+  std::this_thread::sleep_for(3ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(2u, t1_runs);
   EXPECT_EQ(1u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(10ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(2u, t2_runs);
   EXPECT_EQ(1u, t3_runs);
+
+  timers_manager->remove_timer(t1);
+
+  std::this_thread::sleep_for(3ms);
+  timers_manager->execute_ready_timers();
+  EXPECT_EQ(3u, t1_runs);
+  EXPECT_EQ(3u, t2_runs);
+  EXPECT_EQ(1u, t3_runs);
 }
 
-TEST_F(TestTimersManager, start_stop_timers_thread) {
-
+TEST_F(TestTimersManager, start_stop_timers_thread)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
-  auto t = TimerT::make_shared(1ms, [](){}, rclcpp::contexts::get_global_default_context());
+  auto t = TimerT::make_shared(1ms, []() {}, rclcpp::contexts::get_global_default_context());
   timers_manager->add_timer(t);
 
   // Calling start multiple times will throw an error
@@ -196,15 +273,15 @@ TEST_F(TestTimersManager, start_stop_timers_thread) {
   EXPECT_NO_THROW(timers_manager->stop());
 }
 
-TEST_F(TestTimersManager, timers_thread) {
-
+TEST_F(TestTimersManager, timers_thread)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
   size_t t1_runs = 0;
   auto t1 = TimerT::make_shared(
     1ms,
-    [&t1_runs](){
+    [&t1_runs]() {
       t1_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -212,7 +289,7 @@ TEST_F(TestTimersManager, timers_thread) {
   size_t t2_runs = 0;
   auto t2 = TimerT::make_shared(
     1ms,
-    [&t2_runs](){
+    [&t2_runs]() {
       t2_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -231,12 +308,12 @@ TEST_F(TestTimersManager, timers_thread) {
   EXPECT_EQ(t1_runs, t2_runs);
 }
 
-TEST_F(TestTimersManager, destructor) {
-
+TEST_F(TestTimersManager, destructor)
+{
   size_t t_runs = 0;
   auto t = TimerT::make_shared(
     1ms,
-    [&t_runs](){
+    [&t_runs]() {
       t_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -263,15 +340,15 @@ TEST_F(TestTimersManager, destructor) {
   EXPECT_FALSE(t_weak.lock() != nullptr);
 }
 
-TEST_F(TestTimersManager, add_remove_while_thread_running) {
-
+TEST_F(TestTimersManager, add_remove_while_thread_running)
+{
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
   size_t t1_runs = 0;
   auto t1 = TimerT::make_shared(
     1ms,
-    [&t1_runs](){
+    [&t1_runs]() {
       t1_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -279,7 +356,7 @@ TEST_F(TestTimersManager, add_remove_while_thread_running) {
   size_t t2_runs = 0;
   auto t2 = TimerT::make_shared(
     1ms,
-    [&t2_runs](){
+    [&t2_runs]() {
       t2_runs++;
     },
     rclcpp::contexts::get_global_default_context());
@@ -306,8 +383,8 @@ TEST_F(TestTimersManager, add_remove_while_thread_running) {
   EXPECT_LT(1u, t2_runs);
 }
 
-TEST_F(TestTimersManager, infinite_loop) {
-
+TEST_F(TestTimersManager, infinite_loop)
+{
   // This test makes sure that even if timers have a period shorter than the duration
   // of their callback the functions never block indefinitely.
 
@@ -317,7 +394,7 @@ TEST_F(TestTimersManager, infinite_loop) {
   size_t t1_runs = 0;
   auto t1 = TimerT::make_shared(
     1ms,
-    [&t1_runs](){
+    [&t1_runs]() {
       t1_runs++;
       std::this_thread::sleep_for(5ms);
     },
@@ -326,7 +403,7 @@ TEST_F(TestTimersManager, infinite_loop) {
   size_t t2_runs = 0;
   auto t2 = TimerT::make_shared(
     1ms,
-    [&t2_runs](){
+    [&t2_runs]() {
       t2_runs++;
       std::this_thread::sleep_for(5ms);
     },
