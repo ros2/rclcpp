@@ -151,14 +151,18 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
       });
   }
 
-  // Set an event callback for the node's guard condition, so if new entities are added
+  // Set an event callback for the node's notify guard condition, so if new entities are added
   // or remove to this node we will receive an event.
-  rcl_guard_condition_set_events_executor_callback(
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
     associated_executor_,
     &EventsExecutor::push_event,
     this,
-    node->get_notify_guard_condition(),
+    node_ptr->get_notify_guard_condition(),
     false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set node guard condition callback");
+  }
 }
 
 void
@@ -213,10 +217,14 @@ EventsExecutorEntitiesCollector::unset_entities_callbacks(
       });
   }
 
-  // Unset the event callback for the node's guard condition, to stop receiving events
+  // Unset the event callback for the node's notify guard condition, to stop receiving events
   // if entities are added or removed to this node.
-  rcl_guard_condition_set_events_executor_callback(
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
     nullptr, nullptr, nullptr,
     node->get_notify_guard_condition(),
     false);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set node guard condition callback");
+  }
 }

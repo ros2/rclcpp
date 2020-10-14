@@ -31,21 +31,31 @@ EventsExecutor::EventsExecutor(
   timers_manager_ = std::make_shared<TimersManager>(context_);
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this, timers_manager_);
 
+  rcl_ret_t ret;
+
   // Set the global ctrl-c guard condition callback
-  rcl_guard_condition_set_events_executor_callback(
+  ret = rcl_guard_condition_set_events_executor_callback(
     this,
     &EventsExecutor::push_event,
     entities_collector_.get(),
     options.context->get_interrupt_guard_condition(&wait_set_),
     false /* Discard previous events */);
 
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set ctrl-c guard condition callback");
+  }
+
   // Set the executor interrupt guard condition callback
-  rcl_guard_condition_set_events_executor_callback(
+  ret = rcl_guard_condition_set_events_executor_callback(
     this,
     &EventsExecutor::push_event,
     entities_collector_.get(),
     &interrupt_guard_condition_,
     false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set interrupt guard condition callback");
+  }
 }
 
 EventsExecutor::~EventsExecutor() {}
