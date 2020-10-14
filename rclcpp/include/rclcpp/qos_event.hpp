@@ -21,8 +21,8 @@
 #include "rcl/error_handling.h"
 #include "rmw/incompatible_qos_events_statuses.h"
 
-#include "rcutils/logging_macros.h"
 #include "rcutils/executor_event_types.h"
+#include "rcutils/logging_macros.h"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
