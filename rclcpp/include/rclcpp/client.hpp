@@ -37,8 +37,8 @@
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rcutils/logging_macros.h"
 #include "rcutils/executor_event_types.h"
+#include "rcutils/logging_macros.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
