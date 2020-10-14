@@ -457,12 +457,16 @@ public:
     void * executor_context,
     ExecutorEventCallback executor_callback) const override
   {
-    rcl_guard_condition_set_events_executor_callback(
+    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
       executor_context,
       executor_callback,
       this,
       &gc_,
       true /*Use previous events*/);
+
+    if (RCL_RET_OK != ret) {
+      throw std::runtime_error(std::string("Couldn't set guard condition callback"));
+    }
   }
 
 private:
