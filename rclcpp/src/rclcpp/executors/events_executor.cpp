@@ -237,10 +237,9 @@ EventsExecutor::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   (void)notify;
-  entities_collector_->remove_node(node_ptr);
 
-  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-  has_executor.store(false);
+  // Remove node from entities collector
+  entities_collector_->remove_node(node_ptr);
 }
 
 void

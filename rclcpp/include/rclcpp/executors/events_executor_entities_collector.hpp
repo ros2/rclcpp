@@ -97,6 +97,9 @@ private:
   void
   set_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
+  void
+  unset_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
+
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
