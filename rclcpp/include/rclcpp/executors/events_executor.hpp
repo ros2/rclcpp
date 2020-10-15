@@ -168,11 +168,12 @@ private:
   void
   execute_event(const ExecutorEvent & event);
 
-  // Event queue members
+  // Event queue
   std::queue<ExecutorEvent> event_queue_;
+  // Mutex to protect insertion and extraction of events in the queue
   std::mutex event_queue_mutex_;
+  // Variable used to notify when an event is added to the queue
   std::condition_variable event_queue_cv_;
-
   // Timers manager
   std::shared_ptr<TimersManager> timers_manager_;
 };

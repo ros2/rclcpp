@@ -101,6 +101,11 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
+  // In this context a 0 input max_duration means no duration limit
+  if (std::chrono::nanoseconds(0) == max_duration) {
+    max_duration = timers_manager_->MAX_TIME;
+  }
+
   // This function will wait until the first of the following events occur:
   // - The input max_duration is elapsed
   // - A timer triggers
@@ -230,6 +235,7 @@ void
 EventsExecutor::add_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
+  // This field is unused because we don't have to wake up the executor when a node is added.
   (void) notify;
 
   // Add node to entities collector
@@ -246,6 +252,7 @@ void
 EventsExecutor::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
+  // This field is unused because we don't have to wake up the executor when a node is removed.
   (void)notify;
 
   // Remove node from entities collector
