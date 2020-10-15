@@ -86,8 +86,7 @@ struct SubscriptionQosParametersTraits
  */
 template<typename EntityQosParametersTraits>
 inline
-void
-declare_qos_parameters(
+void declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
   const std::string & topic_name,
@@ -133,8 +132,7 @@ apply_qos_override(
 
 template<typename EntityQosParametersTraits>
 inline
-void
-declare_qos_parameters(
+void declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
   const std::string & topic_name,

@@ -46,7 +46,8 @@ namespace detail
 // See comment in `get_subscription_actual_qos`.
 //
 // List of places in rclcpp passing directly a topic interface:
-//  creation of "/clock" topic in time source (can be solved with an overload accepting a parameters interface).
+//  creation of "/clock" topic in time source
+//  (can be fixed by adding an overload accepting a parameters interface).
 template<typename NodeT>
 std::enable_if_t<rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
 get_subscription_actual_qos(

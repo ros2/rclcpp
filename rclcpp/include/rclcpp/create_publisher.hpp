@@ -46,7 +46,7 @@ namespace detail
 //
 // TODO(ivanpauno): Write overload in which you can pass
 // a topic interface and a parameter interface directly.
-// TODO2(ivanpauno): If we want the qos of `/parameters_event` topic to be reconfigurable,
+// TODO(ivanpauno): If we want the qos of `/parameters_event` topic to be reconfigurable,
 // we need to figure out something.
 template<typename NodeT>
 std::enable_if_t<rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
