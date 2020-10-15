@@ -170,6 +170,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_basic_node) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
   EXPECT_EQ(
     expected_number_of_entities->subscriptions,
     entities_collector_->get_number_of_subscriptions());
@@ -190,7 +191,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_basic_node) {
 
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
@@ -218,6 +218,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 
   // Expect weak_node pointers to be cleaned up and used
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
   EXPECT_EQ(0u, entities_collector_->get_number_of_subscriptions());
   EXPECT_EQ(0u, entities_collector_->get_number_of_timers());
   EXPECT_EQ(0u, entities_collector_->get_number_of_services());
@@ -225,7 +226,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
-  entities_collector_->fini();
 }
 
 class TestWaitable : public rclcpp::Waitable
@@ -280,6 +280,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   EXPECT_EQ(
     1u + expected_number_of_entities->subscriptions,
@@ -305,7 +306,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   EXPECT_EQ(0u, entities_collector_->get_number_of_clients());
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_callback_group) {
@@ -359,6 +359,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_clear_
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
@@ -368,7 +369,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_clear_
   }
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize_error) {
@@ -389,6 +389,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_resize, RCL_RET_ERROR);
@@ -398,7 +399,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize
   }
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_not_initialized) {
@@ -426,6 +426,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_rcl_wait_failed) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait, RCL_RET_ERROR);
@@ -435,7 +436,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_rcl_wait_failed) {
   }
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait_set_failed) {
@@ -475,6 +475,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return(
@@ -486,7 +487,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
   }
 
   entities_collector_->remove_node(node->get_node_base_interface());
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
@@ -507,6 +507,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   RCLCPP_EXPECT_THROW_EQ(
     entities_collector_->add_to_wait_set(nullptr),
@@ -514,7 +515,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
   rcl_reset_error();
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) {
@@ -543,10 +543,10 @@ TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) 
   cb_group.reset();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
   ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->fini();
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, remove_callback_group_after_node) {
@@ -613,10 +613,10 @@ TEST_F(
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   cb_group->get_associated_with_executor_atomic().exchange(false);
   entities_collector_->execute();
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-  entities_collector_->fini();
 }

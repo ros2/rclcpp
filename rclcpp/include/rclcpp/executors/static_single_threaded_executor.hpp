@@ -193,8 +193,8 @@ public:
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
     entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+    RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
-    rclcpp::FutureReturnCode ret = rclcpp::FutureReturnCode::INTERRUPTED;
     while (rclcpp::ok(this->context_)) {
       // Do one set of work.
       entities_collector_->refresh_wait_set(timeout_left);
@@ -202,8 +202,7 @@ public:
       // Check if the future is set, return SUCCESS if it is.
       status = future.wait_for(std::chrono::seconds(0));
       if (status == std::future_status::ready) {
-        ret = rclcpp::FutureReturnCode::SUCCESS;
-        break;
+        return rclcpp::FutureReturnCode::SUCCESS;
       }
       // If the original timeout is < 0, then this is blocking, never TIMEOUT.
       if (timeout_ns < std::chrono::nanoseconds::zero()) {
@@ -212,17 +211,14 @@ public:
       // Otherwise check if we still have time to wait, return TIMEOUT if not.
       auto now = std::chrono::steady_clock::now();
       if (now >= end_time) {
-        ret = rclcpp::FutureReturnCode::TIMEOUT;
-        break;
+        return rclcpp::FutureReturnCode::TIMEOUT;
       }
       // Subtract the elapsed time from the original timeout.
       timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
     }
 
-    entities_collector_->fini();
-
     // The future did not complete before ok() returned false, return INTERRUPTED.
-    return ret;
+    return rclcpp::FutureReturnCode::INTERRUPTED;
   }
 
   /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
