@@ -103,11 +103,9 @@ private:
 
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
-
   /// Executor using this entities collector object
   EventsExecutor * associated_executor_ = nullptr;
-
-  // Instance of the timers manager used by the associated executor
+  /// Instance of the timers manager used by the associated executor
   TimersManager::SharedPtr timers_manager_;
 };
 
