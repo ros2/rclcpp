@@ -41,7 +41,8 @@ namespace detail
 // In that case, passing qos overridding options doesn't make sense.
 //
 // List of places in rclcpp passing directly a topic interface:
-//  creating of "/parameters_event" topic in node parameters interface (this one is tricky).
+//  creation of "/parameters_event" topic in node parameters interface (this one is tricky).
+//  creation of "topic statistics" in create_subscription
 //
 // TODO(ivanpauno): Write overload in which you can pass
 // a topic interface and a parameter interface directly.
@@ -49,7 +50,7 @@ namespace detail
 // we need to figure out something.
 template<typename NodeT>
 std::enable_if_t<rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
-get_actual_qos(
+get_publisher_actual_qos(
   const rclcpp::QosOverridingOptions & options, NodeT & node,
   std::string topic_name, rclcpp::QoS actual_qos)
 {
@@ -69,7 +70,7 @@ get_actual_qos(
 
 template<typename NodeT>
 std::enable_if_t<!rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
-get_actual_qos(
+get_publisher_actual_qos(
   const rclcpp::QosOverridingOptions & options, NodeT, std::string, rclcpp::QoS actual_qos)
 {
   if (options.policy_kinds.size()) {
@@ -106,7 +107,7 @@ create_publisher(
   auto node_topics = get_node_topics_interface(node);
 
   using rclcpp::node_interfaces::get_node_parameters_interface;
-  rclcpp::QoS actual_qos = detail::get_actual_qos(
+  rclcpp::QoS actual_qos = detail::get_publisher_actual_qos(
     options.qos_overriding_options, node, topic_name, qos);
 
   // Create the publisher.
