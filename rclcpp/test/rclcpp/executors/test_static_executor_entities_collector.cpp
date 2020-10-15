@@ -159,6 +159,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_basic_node) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
   EXPECT_EQ(
     expected_number_of_entities->subscriptions,
     entities_collector_->get_number_of_subscriptions());
@@ -206,6 +207,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 
   // Expect weak_node pointers to be cleaned up and used
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
   EXPECT_EQ(0u, entities_collector_->get_number_of_subscriptions());
   EXPECT_EQ(0u, entities_collector_->get_number_of_timers());
   EXPECT_EQ(0u, entities_collector_->get_number_of_services());
@@ -267,6 +269,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   EXPECT_EQ(
     1u + expected_number_of_entities->subscriptions,

@@ -62,6 +62,11 @@ public:
     rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
     rcl_guard_condition_t * executor_guard_condition);
 
+  /// Finalize StaticExecutorEntitiesCollector to clear resources
+  RCLCPP_PUBLIC
+  void
+  fini();
+
   RCLCPP_PUBLIC
   void
   execute() override;

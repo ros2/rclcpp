@@ -63,6 +63,13 @@ StaticExecutorEntitiesCollector::init(
 }
 
 void
+StaticExecutorEntitiesCollector::fini()
+{
+  memory_strategy_->clear_handles();
+  exec_list_.clear();
+}
+
+void
 StaticExecutorEntitiesCollector::execute()
 {
   // Fill memory strategy with entities coming from weak_nodes_
