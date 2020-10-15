@@ -35,8 +35,9 @@ namespace detail
 {
 
 /// \internal Trait used to specialize `declare_qos_parameters()` for publishers.
-struct PublisherQosParametersTraits {
-  static constexpr const char * entity_type() { return "publisher"; }
+struct PublisherQosParametersTraits
+{
+  static constexpr const char * entity_type() {return "publisher";}
   static constexpr auto allowed_policies()
   {
     return std::array<::rclcpp::QosPolicyKind, 9> {
@@ -54,8 +55,9 @@ struct PublisherQosParametersTraits {
 };
 
 /// \internal Trait used to specialize `declare_qos_parameters()` for subscriptions.
-struct SubscriptionQosParametersTraits {
-  static constexpr const char * entity_type() { return "subscription"; }
+struct SubscriptionQosParametersTraits
+{
+  static constexpr const char * entity_type() {return "subscription";}
   static constexpr auto allowed_policies()
   {
     return std::array<::rclcpp::QosPolicyKind, 8> {
@@ -78,7 +80,7 @@ struct SubscriptionQosParametersTraits {
  * \param options User provided options that indicate if qos parameter overrides should be
  *  declared or not, which policy can have overrides, and optionally a callback to validate the profile.
  * \param parameters_interface Parameters will be declared through this interface.
- * \param default_id TODO change this to topic name.
+ * \param topic_name Name of the topic of the entity.
  * \param qos User provided qos. It will be used as a default for the parameters declared,
  *  and then overriden with the final parameter overrides.
  */
@@ -88,7 +90,7 @@ void
 declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & default_id,
+  const std::string & topic_name,
   ::rclcpp::QoS & qos,
   EntityQosParametersTraits);
 
@@ -98,11 +100,11 @@ void
 declare_publisher_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & default_id,
+  const std::string & topic_name,
   ::rclcpp::QoS & qos)
 {
   declare_qos_parameters(
-    options, parameters_interface, default_id, qos, PublisherQosParametersTraits{});
+    options, parameters_interface, topic_name, qos, PublisherQosParametersTraits{});
 }
 
 /// \internal Same as `declare_qos_parameters()` for a `Subscription`.
@@ -111,11 +113,11 @@ void
 declare_subscription_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & default_id,
+  const std::string & topic_name,
   ::rclcpp::QoS & qos)
 {
   declare_qos_parameters(
-    options, parameters_interface, default_id, qos, SubscriptionQosParametersTraits{});
+    options, parameters_interface, topic_name, qos, SubscriptionQosParametersTraits{});
 }
 
 /// \internal Returns the given `policy` of the profile `qos` converted to a parameter value.
@@ -135,21 +137,37 @@ void
 declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & default_id,
+  const std::string & topic_name,
   ::rclcpp::QoS & qos,
   EntityQosParametersTraits)
 {
-  const auto & id = options.id.empty() ? default_id : options.id;
+  std::string param_prefix;
+  {
+    std::ostringstream oss{"qos_overrides.", std::ios::ate};
+    oss << topic_name << "." << EntityQosParametersTraits::entity_type();
+    if (!options.id.empty()) {
+      oss << "_" << options.id;
+    }
+    oss << ".";
+    param_prefix = oss.str();
+  }
+  std::string param_description_suffix;
+  {
+    std::ostringstream oss{"} for ", std::ios::ate};
+    oss << EntityQosParametersTraits::entity_type() << " {" << topic_name << "}";
+    if (!options.id.empty()) {
+      oss << " with id {" << options.id << "}";
+    }
+    param_description_suffix = oss.str();
+  }
   for (auto policy : EntityQosParametersTraits::allowed_policies()) {
     if (
-      std::count(options.qos_policy_kinds.begin(), options.qos_policy_kinds.end(), policy))
+      std::count(options.policy_kinds.begin(), options.policy_kinds.end(), policy))
     {
-      std::ostringstream param_name{"qos_profiles.", std::ios::ate};
-      param_name <<
-        EntityQosParametersTraits::entity_type() << "." << id << "." <<
-        qos_policy_kind_to_cstr(policy);
+      std::ostringstream param_name{param_prefix, std::ios::ate};
+      param_name << qos_policy_kind_to_cstr(policy);
       std::ostringstream param_desciption{"qos policy {", std::ios::ate};
-      param_desciption << qos_policy_kind_to_cstr(policy) << "} for {" << id << "}";
+      param_desciption << qos_policy_kind_to_cstr(policy) << param_description_suffix;
       rcl_interfaces::msg::ParameterDescriptor descriptor{};
       descriptor.description = param_desciption.str();
       descriptor.read_only = true;

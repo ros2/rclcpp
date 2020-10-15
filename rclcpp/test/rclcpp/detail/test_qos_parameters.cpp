@@ -28,7 +28,7 @@ TEST(TestQosParameters, test_overriding_options) {
     EXPECT_EQ(options.id, "");
     EXPECT_EQ(options.validation_callback, nullptr);
     EXPECT_THAT(
-      options.qos_policy_kinds, testing::ElementsAre(
+      options.policy_kinds, testing::ElementsAre(
         rclcpp::QosPolicyKind::History,
         rclcpp::QosPolicyKind::HistoryDepth,
         rclcpp::QosPolicyKind::Reliability));
@@ -41,7 +41,7 @@ TEST(TestQosParameters, declare) {
     "my_node", "/ns", rclcpp::NodeOptions().parameter_overrides(
   {
     rclcpp::Parameter(
-      "qos_profiles.publisher./my/fully/qualified/topic_name.reliability", "best_effort"),
+      "qos_overrides./my/fully/qualified/topic_name.publisher.reliability", "best_effort"),
   }));
 
   rclcpp::QoS qos{rclcpp::KeepLast(10)};
@@ -53,15 +53,15 @@ TEST(TestQosParameters, declare) {
 
   EXPECT_EQ(
     node->get_parameter(
-      "qos_profiles.publisher./my/fully/qualified/topic_name.history").get_value<std::string>(),
+      "qos_overrides./my/fully/qualified/topic_name.publisher.history").get_value<std::string>(),
     "keep_last");
   EXPECT_EQ(
     node->get_parameter(
-      "qos_profiles.publisher./my/fully/qualified/topic_name.history_depth").get_value<int64_t>(),
+      "qos_overrides./my/fully/qualified/topic_name.publisher.history_depth").get_value<int64_t>(),
     10);
   EXPECT_EQ(
     node->get_parameter(
-      "qos_profiles.publisher./my/fully/qualified/topic_name.reliability"
+      "qos_overrides./my/fully/qualified/topic_name.publisher.reliability"
     ).get_value<std::string>(),
     "best_effort");
   EXPECT_EQ(RMW_QOS_POLICY_HISTORY_KEEP_LAST, qos.get_rmw_qos_profile().history);
@@ -71,7 +71,7 @@ TEST(TestQosParameters, declare) {
   std::map<std::string, rclcpp::Parameter> qos_params;
   EXPECT_TRUE(
     node->get_node_parameters_interface()->get_parameters_by_prefix(
-      "qos_profiles.publisher./my/fully/qualified/topic_name", qos_params));
+      "qos_overrides./my/fully/qualified/topic_name.publisher", qos_params));
   EXPECT_EQ(3u, qos_params.size());
 
   rclcpp::shutdown();

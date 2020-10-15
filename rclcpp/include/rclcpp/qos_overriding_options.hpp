@@ -64,7 +64,7 @@ struct QosOverridingOptions
   /// Id of the entity requesting to create parameters.
   std::string id;
   /// Policy kinds that are allowed to be reconfigured.
-  std::vector<QosPolicyKind> qos_policy_kinds;
+  std::vector<QosPolicyKind> policy_kinds;
   /// Validation callback that will be called to verify the profile.
   QosCallback validation_callback;
 

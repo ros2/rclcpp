@@ -17,17 +17,69 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
+#include "rclcpp/node_interfaces/get_node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/publisher_factory.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/qos_overriding_options.hpp"
+#include "rclcpp/detail/qos_parameters.hpp"
+
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
 {
+
+namespace detail
+{
+// This is needed because it's currently possible to call `create_publisher()`
+// only with a node topics interface.
+// In that case, passing qos overridding options doesn't make sense.
+//
+// List of places in rclcpp passing directly a topic interface:
+//  creating of "/parameters_event" topic in node parameters interface (this one is tricky).
+//
+// TODO(ivanpauno): Write overload in which you can pass
+// a topic interface and a parameter interface directly.
+// TODO2(ivanpauno): If we want the qos of `/parameters_event` topic to be reconfigurable,
+// we need to figure out something.
+template<typename NodeT>
+std::enable_if_t<rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
+get_actual_qos(
+  const rclcpp::QosOverridingOptions & options, NodeT & node,
+  std::string topic_name, rclcpp::QoS actual_qos)
+{
+  using rclcpp::node_interfaces::get_node_parameters_interface;
+  if (options.policy_kinds.size()) {
+    // TODO(ivanpauno)
+    // Get expanded and remapped topic name before creating the node.
+    // Need to refactor things in `rcl`.
+    detail::declare_publisher_qos_parameters(
+      options,
+      *get_node_parameters_interface(node),
+      topic_name,  // this should be the expanded and remapped topic name
+      actual_qos);
+  }
+  return actual_qos;
+}
+
+template<typename NodeT>
+std::enable_if_t<!rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
+get_actual_qos(
+  const rclcpp::QosOverridingOptions & options, NodeT, std::string, rclcpp::QoS actual_qos)
+{
+  if (options.policy_kinds.size()) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "qos override options ignored because no parameter interface was provided");
+  }
+  return actual_qos;
+}
+}  // namespace detail
 
 /// Create and return a publisher of the given MessageT type.
 /**
@@ -53,11 +105,15 @@ create_publisher(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(node);
 
+  using rclcpp::node_interfaces::get_node_parameters_interface;
+  rclcpp::QoS actual_qos = detail::get_actual_qos(
+    options.qos_overriding_options, node, topic_name, qos);
+
   // Create the publisher.
   auto pub = node_topics->create_publisher(
     topic_name,
     rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(options),
-    qos
+    actual_qos
   );
 
   // Add the publisher to the node topics interface.
