@@ -61,7 +61,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
-  rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
   rcl_guard_condition_t * executor_guard_condition)
 {
   // Empty initialize executable list
@@ -78,6 +78,13 @@ StaticExecutorEntitiesCollector::init(
   memory_strategy_->add_guard_condition(executor_guard_condition);
   // Get memory strategy and executable list. Prepare wait_set_
   execute();
+}
+
+void
+StaticExecutorEntitiesCollector::fini()
+{
+  memory_strategy_->clear_handles();
+  exec_list_.clear();
 }
 
 void

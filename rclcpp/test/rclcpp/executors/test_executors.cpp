@@ -410,6 +410,14 @@ public:
     }
   }
 
+  ~TestWaitable()
+  {
+    rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
+    if (RCL_RET_OK != ret) {
+      fprintf(stderr, "failed to call rcl_guard_condition_fini\n");
+    }
+  }
+
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
