@@ -369,6 +369,12 @@ if(TARGET test_qos_event)
     mimick
   )
 endif()
+ament_add_gmock(test_qos_parameters detail/test_qos_parameters.cpp)
+if(TARGET test_qos_parameters)
+  target_link_libraries(test_qos_parameters
+    ${PROJECT_NAME}
+  )
+endif()
 ament_add_gtest(test_rate test_rate.cpp)
 if(TARGET test_rate)
   ament_target_dependencies(test_rate
