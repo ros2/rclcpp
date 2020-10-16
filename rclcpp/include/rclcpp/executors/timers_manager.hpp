@@ -250,7 +250,7 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> tp)
   {
     // A ready timer will return a negative duration when calling time_until_trigger
-    auto time_ready = std::chrono::steady_clock::now() + (timer)->time_until_trigger();
+    auto time_ready = std::chrono::steady_clock::now() + timer->time_until_trigger();
     return time_ready < tp;
   }
 

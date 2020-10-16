@@ -423,13 +423,9 @@ TEST_F(TestTimersManager, infinite_loop)
   EXPECT_TRUE(ret);
   EXPECT_EQ(3u, t1_runs + t2_runs);
 
-  std::cout<<"START THREAD-------------------|||||||||||||||||||||||||||"<<std::endl;
-
   // Start a timers thread
   timers_manager->start();
   std::this_thread::sleep_for(10ms);
-  std::cout<<"STOP THREAD-------------------|||||||||||||||||||||||||||"<<std::endl;
-
   timers_manager->stop();
 
   EXPECT_LT(3u, t1_runs + t2_runs);
