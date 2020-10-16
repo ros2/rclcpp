@@ -160,9 +160,6 @@ public:
 
 private:
   void
-  unset_node_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
-
-  void
   set_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
 
   void

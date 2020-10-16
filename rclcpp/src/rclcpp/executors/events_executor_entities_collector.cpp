@@ -352,33 +352,6 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
 }
 
 void
-EventsExecutorEntitiesCollector::unset_node_entities_callbacks(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
-{
-  // Unset event callbacks for all entities in this node
-  // by searching them in all callback groups
-  for (auto & weak_group : node->get_callback_groups()) {
-    auto group = weak_group.lock();
-    if (!group || !group->can_be_taken_from().load()) {
-      continue;
-    }
-
-    unset_callback_group_entities_callbacks(group);
-  }
-
-  // Unset the event callback for the node's notify guard condition, to stop receiving events
-  // if entities are added or removed to this node.
-  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-    nullptr, nullptr, nullptr,
-    node->get_notify_guard_condition(),
-    false);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set node guard condition callback");
-  }
-}
-
-void
 EventsExecutorEntitiesCollector::remove_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr)
 {
@@ -463,8 +436,12 @@ EventsExecutorEntitiesCollector::remove_node(
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
 
-  // Unset the node entities callbacks
-  unset_node_entities_callbacks(node_ptr);
+  // Unset the event callback for the node's notify guard condition, to stop receiving events
+  // if entities are added or removed to this node.
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    nullptr, nullptr, nullptr,
+    node->get_notify_guard_condition(),
+    false);
 }
 
 // Returns true if the map has the node_ptr
