@@ -115,11 +115,10 @@ EventsExecutorEntitiesCollector::add_callback_group(
   // Add callback group to weak_groups_to_node
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
 
-  auto insert_info = weak_groups_to_nodes.insert(std::make_pair(weak_group_ptr, node_ptr));
-  //auto insert_info = weak_groups_to_nodes.emplace_back(weak_group_ptr, node_ptr);
+  auto emplace_info = weak_groups_to_nodes.emplace(weak_group_ptr, node_ptr);
 
   // Throw error if the group was already registered in the executor
-  bool was_inserted = insert_info.second;
+  bool was_inserted = emplace_info.second;
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
   }
