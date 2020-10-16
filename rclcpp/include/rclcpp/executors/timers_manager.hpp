@@ -125,7 +125,7 @@ public:
    * @brief Remove a single timer stored in the object, passed as a raw ptr.
    * @param timer the timer to remove.
    */
-  void remove_timer_raw(rclcpp::TimerBase* timer);
+  void remove_timer_raw(rclcpp::TimerBase * timer);
 
   // This is what the TimersManager uses to denote a duration forever.
   // We don't use std::chrono::nanoseconds::max because it will overflow.
@@ -179,12 +179,12 @@ private:
       std::make_heap(timers_.begin(), timers_.end(), timer_greater);
     }
 
-    TimerPtr& front()
+    TimerPtr & front()
     {
       return timers_.front();
     }
 
-    const TimerPtr& front() const
+    const TimerPtr & front() const
     {
       return timers_.front();
     }
@@ -199,7 +199,6 @@ private:
       timers_.clear();
     }
 
-  private:
     static bool timer_greater(TimerPtr a, TimerPtr b)
     {
       return a->time_until_trigger() > b->time_until_trigger();
@@ -263,7 +262,7 @@ private:
   // Flag used as predicate by timers_cv
   bool timers_updated_ {false};
   // Indicates whether the timers thread is currently running or requested to stop
-  bool running_ {false};
+  std::atomic<bool> running_ {false};
   // Context of the parent executor
   std::shared_ptr<rclcpp::Context> context_;
   // MinHeap of timers

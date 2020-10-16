@@ -164,7 +164,6 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
 
   // Keep executing until work available or timeout expired
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     std::unique_lock<std::mutex> execution_lock(execution_mutex_);
     std::swap(local_event_queue_, event_queue_);

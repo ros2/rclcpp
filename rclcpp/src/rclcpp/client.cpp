@@ -204,11 +204,11 @@ ClientBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 
 void
 ClientBase::set_events_executor_callback(
-  const void * executor_context,
+  const rclcpp::executors::EventsExecutor * executor,
   ExecutorEventCallback executor_callback) const
 {
   rcl_ret_t ret = rcl_client_set_events_executor_callback(
-    executor_context,
+    executor,
     executor_callback,
     this,
     client_handle_.get());
@@ -218,7 +218,9 @@ ClientBase::set_events_executor_callback(
   }
 }
 
-void ClientBase::set_on_destruction_callback(std::function<void (ClientBase*)> on_destruction_callback)
+void
+ClientBase::set_on_destruction_callback(
+  std::function<void(ClientBase *)> on_destruction_callback)
 {
   on_destruction_callback_ = on_destruction_callback;
 }

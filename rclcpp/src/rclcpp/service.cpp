@@ -91,11 +91,11 @@ ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 
 void
 ServiceBase::set_events_executor_callback(
-  const void * executor_context,
+  const rclcpp::executors::EventsExecutor * executor,
   ExecutorEventCallback executor_callback) const
 {
   rcl_ret_t ret = rcl_service_set_events_executor_callback(
-    executor_context,
+    executor,
     executor_callback,
     this,
     service_handle_.get());
@@ -105,7 +105,9 @@ ServiceBase::set_events_executor_callback(
   }
 }
 
-void ServiceBase::set_on_destruction_callback(std::function<void (ServiceBase*)> on_destruction_callback)
+void
+ServiceBase::set_on_destruction_callback(
+  std::function<void(ServiceBase *)> on_destruction_callback)
 {
   on_destruction_callback_ = on_destruction_callback;
 }

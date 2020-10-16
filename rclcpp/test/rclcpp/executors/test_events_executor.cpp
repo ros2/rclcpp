@@ -179,6 +179,24 @@ TEST_F(TestEventsExecutor, spin_some_max_duration)
   }
 }
 
+TEST_F(TestEventsExecutor, spin_some_zero_duration)
+{
+  auto node = std::make_shared<rclcpp::Node>("node");
+
+  size_t t_runs = 0;
+  auto t = node->create_wall_timer(
+    20ms,
+    [&]() {
+      t_runs++;
+    });
+
+  EventsExecutor executor;
+  executor.add_node(node);
+  executor.spin_some(0ms);
+
+  EXPECT_EQ(1u, t_runs);
+}
+
 TEST_F(TestEventsExecutor, spin_all_max_duration)
 {
   {
@@ -226,6 +244,41 @@ TEST_F(TestEventsExecutor, spin_all_max_duration)
   EXPECT_THROW(executor.spin_all(-5ms), std::invalid_argument);
 }
 
+TEST_F(TestEventsExecutor, cancel_while_timers_running)
+{
+  auto node = std::make_shared<rclcpp::Node>("node");
+
+  size_t t1_runs = 0;
+  auto t1 = node->create_wall_timer(
+    1ms,
+    [&]() {
+      t1_runs++;
+      std::this_thread::sleep_for(25ms);
+    });
+
+  size_t t2_runs = 0;
+  auto t2 = node->create_wall_timer(
+    1ms,
+    [&]() {
+      t2_runs++;
+      std::this_thread::sleep_for(25ms);
+    });
+
+  EventsExecutor executor;
+  executor.add_node(node);
+
+  std::thread spinner([&executor, this]() {executor.spin();});
+
+  std::this_thread::sleep_for(10ms);
+  // Call cancel while t1 callback is still being executed
+  executor.cancel();
+  spinner.join();
+
+  // Depending on the latency on the system, t2 may start to execute before cancel is signaled
+  EXPECT_GE(1u, t1_runs);
+  EXPECT_GE(1u, t2_runs);
+}
+
 TEST_F(TestEventsExecutor, cancel_while_timers_waiting)
 {
   auto node = std::make_shared<rclcpp::Node>("node");
@@ -257,7 +310,7 @@ TEST_F(TestEventsExecutor, destroy_entities)
   auto node_pub = std::make_shared<rclcpp::Node>("node_pub");
   auto publisher = node_pub->create_publisher<test_msgs::msg::Empty>("topic", rclcpp::QoS(10));
   auto timer = node_pub->create_wall_timer(
-    2ms, [&]() { publisher->publish(std::make_unique<test_msgs::msg::Empty>()); });
+    2ms, [&]() {publisher->publish(std::make_unique<test_msgs::msg::Empty>());});
   EventsExecutor executor_pub;
   executor_pub.add_node(node_pub);
   std::thread spinner([&executor_pub, this]() {executor_pub.spin();});

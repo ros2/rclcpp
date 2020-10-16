@@ -149,9 +149,9 @@ public:
     this_executor->event_queue_cv_.notify_one();
   }
 
-  template <typename T>
+  template<typename T>
   void
-  remove_entity(T* entity)
+  remove_entity(T * entity)
   {
     // We need to unset the callbacks to make sure that after removing events from the
     // queues, this entity will not push anymore before being completely destroyed.
@@ -160,15 +160,21 @@ public:
     // Remove events associated with this entity from the event queue
     {
       std::unique_lock<std::mutex> lock(push_mutex_);
-      event_queue_.erase(std::remove_if(event_queue_.begin(), event_queue_.end(),
-        [&entity](ExecutorEvent event) { return event.entity == entity; }), event_queue_.end());
+      event_queue_.erase(
+        std::remove_if(
+          event_queue_.begin(), event_queue_.end(),
+          [&entity](ExecutorEvent event) {return event.entity == entity;}), event_queue_.end());
     }
 
     // Remove events associated with this entity from the local event queue
     {
       std::unique_lock<std::mutex> lock(execution_mutex_);
-      local_event_queue_.erase(std::remove_if(local_event_queue_.begin(), local_event_queue_.end(),
-        [&entity](ExecutorEvent event) { return event.entity == entity; }), local_event_queue_.end());
+      local_event_queue_.erase(
+        std::remove_if(
+          local_event_queue_.begin(), local_event_queue_.end(),
+          [&entity](ExecutorEvent event) {
+            return event.entity == entity;
+          }), local_event_queue_.end());
     }
   }
 

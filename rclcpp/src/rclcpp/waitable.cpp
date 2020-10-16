@@ -69,10 +69,10 @@ Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 
 void
 Waitable::set_events_executor_callback(
-  void * executor_context,
+  const rclcpp::executors::EventsExecutor * executor,
   ExecutorEventCallback executor_callback) const
 {
-  (void)executor_context;
+  (void)executor;
   (void)executor_callback;
 
   throw std::runtime_error(
@@ -80,7 +80,8 @@ Waitable::set_events_executor_callback(
 }
 
 void
-Waitable::set_on_destruction_callback(std::function<void (Waitable*)> on_destruction_callback)
+Waitable::set_on_destruction_callback(
+  std::function<void(Waitable *)> on_destruction_callback)
 {
   on_destruction_callback_ = on_destruction_callback;
 }
