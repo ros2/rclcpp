@@ -26,6 +26,9 @@ namespace rclcpp
 {
 namespace executors
 {
+typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
 // forward declaration of EventsExecutor to avoid circular dependency
 class EventsExecutor;
@@ -94,12 +97,110 @@ public:
     return false;
   }
 
+  /// Add a callback group to the entities collector
+  /**
+   * \see rclcpp::Executor::add_callback_group
+   */
+  RCLCPP_PUBLIC
+  void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+
+  /// Add a callback group to the entities collector
+  /**
+   * \see rclcpp::Executor::add_callback_group
+   * \return boolean whether the node from the callback group is new
+   */
+  RCLCPP_PUBLIC
+  void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
+
+  /// Remove a callback group from the entities collector
+  /**
+   * \see rclcpp::Executor::remove_callback_group
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr);
+
+  /// Remove a callback group from the entities collector
+  /**
+   * \see rclcpp::Executor::remove_callback_group_from_map
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_callback_group_from_map(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_all_callback_groups();
+
+  /// Get manually added callback groups that belong to the entities collector
+  /**
+   * \see rclcpp::Executor::get_manually_added_callback_groups()
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_manually_added_callback_groups();
+
+  /// Get autmatically added callback groups that belong to the entities collector
+  /**
+   * \see rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_automatically_added_callback_groups_from_nodes();
+
 private:
   void
-  set_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
+  set_node_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
   void
-  unset_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
+  unset_node_entities_callbacks(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
+
+  void
+  set_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
+
+  void
+  unset_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
+
+  /// Return true if the node belongs to the collector
+  /**
+   * \param[in] group_ptr a node base interface shared pointer
+   * \return boolean whether a node belongs the collector
+   */
+  bool
+  has_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
+
+  /// Add all callback groups that can be automatically added by any executor
+  /// and is not already associated with an executor from nodes
+  /// that are associated with executor
+  /**
+   * \see rclcpp::Executor::add_callback_groups_from_nodes_associated_to_executor()
+   */
+  void
+  add_callback_groups_from_nodes_associated_to_executor();
+
+  void
+  set_entities_event_callbacks_from_map(
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
+
+  /// Memory strategy: an interface for handling user-defined memory allocation strategies.
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
+
+  // maps callback groups to nodes.
+  WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
+  // maps callback groups to nodes.
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
 
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
