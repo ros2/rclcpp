@@ -35,6 +35,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     if (group) {
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
+      unset_callback_group_entities_callbacks(group);
     }
   }
   for (const auto & pair : weak_groups_to_nodes_associated_with_executor_) {
@@ -42,6 +43,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     if (group) {
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
+      unset_callback_group_entities_callbacks(group);
     }
   }
   // Disassociate all nodes
