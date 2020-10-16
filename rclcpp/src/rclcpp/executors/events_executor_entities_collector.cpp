@@ -129,6 +129,24 @@ EventsExecutorEntitiesCollector::add_callback_group(
     throw std::runtime_error("Callback group has already been added to an executor.");
   }
 
+  bool is_new_node = !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
+    !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
+
+  if (is_new_node) {
+    // Set an event callback for the node's notify guard condition, so if new entities are added
+    // or removed to this node we will receive an event.
+    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+      associated_executor_,
+      &EventsExecutor::push_event,
+      this,
+      node_ptr->get_notify_guard_condition(),
+      false /* Discard previous events */);
+
+    if (ret != RCL_RET_OK) {
+      throw std::runtime_error("Couldn't set node guard condition callback");
+    }
+  }
+
   // Add callback group to weak_groups_to_node
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
 
@@ -142,19 +160,6 @@ EventsExecutorEntitiesCollector::add_callback_group(
 
   // For all entities in the callback group, set their event callback
   set_callback_group_entities_callbacks(group_ptr);
-
-  // Set an event callback for the node's notify guard condition, so if new entities are added
-  // or removed to this node we will receive an event.
-  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-    associated_executor_,
-    &EventsExecutor::push_event,
-    this,
-    node_ptr->get_notify_guard_condition(),
-    false /* Discard previous events */);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set node guard condition callback");
-  }
 }
 
 void
