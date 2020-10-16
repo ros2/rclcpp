@@ -137,9 +137,14 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
+  RCLCPP_PUBLIC
+  void
+  set_on_destruction_callback(std::function<void (TimerBase*)> on_destruction_callback);
+
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
+  std::function<void (TimerBase*)> on_destruction_callback_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
 };

@@ -15,10 +15,10 @@
 #ifndef RCLCPP__EXECUTORS__TIMERS_MANAGER_HPP_
 #define RCLCPP__EXECUTORS__TIMERS_MANAGER_HPP_
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
-#include <list>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -113,13 +113,19 @@ public:
   /**
    * @brief Remove all the timers stored in the object.
    */
-  void clear_all();
+  void clear();
 
   /**
-   * @brief Remove a single timer stored in the object.
+   * @brief Remove a single timer stored in the object, passed as a shared_ptr.
    * @param timer the timer to remove.
    */
   void remove_timer(rclcpp::TimerBase::SharedPtr timer);
+
+  /**
+   * @brief Remove a single timer stored in the object, passed as a raw ptr.
+   * @param timer the timer to remove.
+   */
+  void remove_timer_raw(rclcpp::TimerBase* timer);
 
   // This is what the TimersManager uses to denote a duration forever.
   // We don't use std::chrono::nanoseconds::max because it will overflow.
@@ -129,7 +135,79 @@ public:
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
 
-  using TimerPtr = rclcpp::TimerBase::SharedPtr *;
+  using TimerPtr = rclcpp::TimerBase *;
+
+  /**
+   * @brief This struct provides convenient access to a MinHeap of timers.
+   * The root of the heap is the timer that expires first.
+   * This struct is not thread safe and requires external mutexes to protect its usage.
+   */
+  struct TimersHeap
+  {
+    void add_timer(TimerPtr timer)
+    {
+      // Nothing to do if the timer is already stored here
+      auto it = std::find(timers_.begin(), timers_.end(), timer);
+      if (it != timers_.end()) {
+        return;
+      }
+      timers_.push_back(timer);
+      std::make_heap(timers_.begin(), timers_.end(), timer_greater);
+    }
+
+    /**
+    * @brief Restore a valid heap after the root value is replaced.
+    */
+    void heapify_root()
+    {
+      // Push the modified element (i.e. the current root) at the bottom of the heap
+      timers_.push_back(timers_[0]);
+      // Exchange first and last elements and reheapify
+      std::pop_heap(timers_.begin(), timers_.end(), timer_greater);
+      // Remove last element
+      timers_.pop_back();
+    }
+
+    void remove_timer(TimerPtr timer)
+    {
+      // Nothing to do if the timer is not stored here
+      auto it = std::find(timers_.begin(), timers_.end(), timer);
+      if (it == timers_.end()) {
+        return;
+      }
+      timers_.erase(it);
+      std::make_heap(timers_.begin(), timers_.end(), timer_greater);
+    }
+
+    TimerPtr& front()
+    {
+      return timers_.front();
+    }
+
+    const TimerPtr& front() const
+    {
+      return timers_.front();
+    }
+
+    bool empty()
+    {
+      return timers_.empty();
+    }
+
+    void clear()
+    {
+      timers_.clear();
+    }
+
+  private:
+    static bool timer_greater(TimerPtr a, TimerPtr b)
+    {
+      return a->time_until_trigger() > b->time_until_trigger();
+    }
+
+    // Vector of pointers to timers used to implement the priority queue
+    std::vector<TimerPtr> timers_;
+  };
 
   /**
    * @brief Implements a loop that keeps executing ready timers.
@@ -150,7 +228,7 @@ private:
     if (heap_.empty()) {
       return MAX_TIME;
     }
-    return (*heap_[0])->time_until_trigger();
+    return (heap_.front())->time_until_trigger();
   }
 
   /**
@@ -172,67 +250,8 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> tp)
   {
     // A ready timer will return a negative duration when calling time_until_trigger
-    auto time_ready = std::chrono::steady_clock::now() + (*timer)->time_until_trigger();
+    auto time_ready = std::chrono::steady_clock::now() + timer->time_until_trigger();
     return time_ready < tp;
-  }
-
-  /**
-   * @brief Add a new timer to the heap and sort it.
-   * @param x pointer to a timer owned by this object.
-   */
-  void add_timer_to_heap(TimerPtr x)
-  {
-    size_t i = heap_.size();  // Position where we are going to add timer
-    heap_.push_back(x);
-
-    size_t parent = (i - 1) / 2;
-    while (i > 0 && ((*x)->time_until_trigger() < (*heap_[parent])->time_until_trigger())) {
-      heap_[i] = heap_[parent];
-      heap_[parent] = x;
-      i = parent;
-      parent = (i - 1) / 2;
-    }
-  }
-
-  /**
-   * @brief Restore a valid heap after the root value is replaced.
-   * This function assumes that the value is increased, because if it was decreased
-   * then there is nothing to do.
-   */
-  void restore_heap_root()
-  {
-    constexpr size_t start = 0;
-    TimerPtr updated_timer = heap_[0];
-
-    // Initialize to root and first left child
-    size_t i = 0;
-    size_t left_child = 1;
-
-    // Swim up
-    while (left_child < heap_.size()) {
-      size_t right_child = left_child + 1;
-      if (right_child < heap_.size() &&
-        (*heap_[left_child])->time_until_trigger() >= (*heap_[right_child])->time_until_trigger())
-      {
-        left_child = right_child;
-      }
-      heap_[i] = heap_[left_child];
-      i = left_child;
-      left_child = 2 * i + 1;
-    }
-
-    // Swim down
-    while (i > start) {
-      size_t parent = (i - 1) / 2;
-      if ((*updated_timer)->time_until_trigger() < (*heap_[parent])->time_until_trigger()) {
-        heap_[i] = heap_[parent];
-        i = parent;
-        continue;
-      }
-      break;
-    }
-
-    heap_[i] = updated_timer;
   }
 
   // Thread used to run the timers monitoring and execution task
@@ -247,10 +266,8 @@ private:
   bool running_ {false};
   // Context of the parent executor
   std::shared_ptr<rclcpp::Context> context_;
-  // Container to keep ownership of the timers
-  std::list<rclcpp::TimerBase::SharedPtr> timers_storage_;
-  // Vector of pointers to stored timers used to implement the priority queue
-  std::vector<TimerPtr> heap_;
+  // MinHeap of timers
+  TimersHeap heap_;
 };
 
 }  // namespace executors
