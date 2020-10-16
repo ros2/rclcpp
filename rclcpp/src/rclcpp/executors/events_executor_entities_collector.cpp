@@ -52,6 +52,12 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     if (node) {
       std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
       has_executor.store(false);
+
+      // Unset node's guard condition event callback
+      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+        nullptr, nullptr, nullptr,
+        node->get_notify_guard_condition(),
+        false);
     }
   }
 
@@ -83,11 +89,17 @@ EventsExecutorEntitiesCollector::add_node(
     }
   }
 
+  // Set an event callback for the node's notify guard condition, so if new entities are added
+  // or removed to this node we will receive an event.
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    associated_executor_,
+    &EventsExecutor::push_event,
+    this,
+    node_ptr->get_notify_guard_condition(),
+    false /* Discard previous events */);
+
   // Add node to weak_nodes_
   weak_nodes_.push_back(node_ptr);
-
-  // Set node's entities callbacks
-  set_node_entities_callbacks(node_ptr);
 }
 
 
@@ -210,14 +222,6 @@ EventsExecutorEntitiesCollector::set_node_entities_callbacks(
     set_callback_group_entities_callbacks(group);
   }
 
-  // Set an event callback for the node's notify guard condition, so if new entities are added
-  // or removed to this node we will receive an event.
-  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-    associated_executor_,
-    &EventsExecutor::push_event,
-    this,
-    node->get_notify_guard_condition(),
-    false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
     throw std::runtime_error("Couldn't set node guard condition callback");
@@ -400,12 +404,12 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
     }
     // Remove group from map
     weak_groups_to_nodes.erase(iter);
+
+    // For all the entities in the group, unset their callbacks
+    unset_callback_group_entities_callbacks(group_ptr);
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
   }
-
-  // For all the entities in the group, unset their callbacks
-  unset_callback_group_entities_callbacks(group_ptr);
 }
 
 void
