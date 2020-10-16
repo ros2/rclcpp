@@ -79,10 +79,18 @@ SubscriptionBase::SubscriptionBase(
 
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription");
   }
+
+  std::cout<<"Construction subscription "<< this<<std::endl;
 }
 
 SubscriptionBase::~SubscriptionBase()
 {
+  std::cout<<"subscription destruction "<< this<<std::endl;
+  if (on_destruction_callback_) {
+    std::cout<<"SUB calling destruction callback"<<std::endl;
+    on_destruction_callback_(this);
+  }
+
   if (!use_intra_process_) {
     return;
   }
@@ -303,4 +311,10 @@ SubscriptionBase::set_events_executor_callback(
   if (RCL_RET_OK != ret) {
     throw std::runtime_error("Couldn't set the EventsExecutor's callback to subscription");
   }
+}
+
+void
+SubscriptionBase::set_on_destruction_callback(std::function<void (SubscriptionBase*)> on_destruction_callback)
+{
+  on_destruction_callback_ = on_destruction_callback;
 }

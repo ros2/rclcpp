@@ -78,7 +78,7 @@ TEST_F(TestTimersManager, add_run_remove_timer)
   // Add the timer to the timers manager
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
-  timers_manager->add_timer(std::move(t));
+  timers_manager->add_timer(t);
 
   // Sleep for more 3 times the timer period
   std::this_thread::sleep_for(3ms);
@@ -87,16 +87,12 @@ TEST_F(TestTimersManager, add_run_remove_timer)
   timers_manager->execute_ready_timers();
   EXPECT_EQ(1u, t_runs);
 
-  // The timer is still valid after execution
-  auto t_tmp = t_weak.lock();
-  EXPECT_TRUE(t_tmp != nullptr);
-
   // Remove the timer from the manager
-  timers_manager->remove_timer(std::move(t_tmp));
+  timers_manager->remove_timer(t);
 
+  t.reset();
   // The timer is now not valid anymore
-  t_tmp = t_weak.lock();
-  EXPECT_FALSE(t_tmp != nullptr);
+  EXPECT_FALSE(t_weak.lock() != nullptr);
 }
 
 TEST_F(TestTimersManager, clear_all)
@@ -109,13 +105,16 @@ TEST_F(TestTimersManager, clear_all)
   auto t2 = TimerT::make_shared(1ms, CallbackT(), rclcpp::contexts::get_global_default_context());
   std::weak_ptr<TimerT> t2_weak = t2;
 
-  timers_manager->add_timer(std::move(t1));
-  timers_manager->add_timer(std::move(t2));
+  timers_manager->add_timer(t1);
+  timers_manager->add_timer(t2);
 
   EXPECT_TRUE(t1_weak.lock() != nullptr);
   EXPECT_TRUE(t2_weak.lock() != nullptr);
 
   timers_manager->clear_all();
+
+  t1.reset();
+  t2.reset();
 
   EXPECT_FALSE(t1_weak.lock() != nullptr);
   EXPECT_FALSE(t2_weak.lock() != nullptr);
@@ -325,7 +324,7 @@ TEST_F(TestTimersManager, destructor)
     auto timers_manager = std::make_shared<TimersManager>(
       rclcpp::contexts::get_global_default_context());
 
-    timers_manager->add_timer(std::move(t));
+    timers_manager->add_timer(t);
 
     timers_manager->start();
     std::this_thread::sleep_for(3ms);
@@ -337,6 +336,7 @@ TEST_F(TestTimersManager, destructor)
   size_t runs = t_runs;
   std::this_thread::sleep_for(3ms);
   EXPECT_EQ(runs, t_runs);
+  t.reset();
   EXPECT_FALSE(t_weak.lock() != nullptr);
 }
 

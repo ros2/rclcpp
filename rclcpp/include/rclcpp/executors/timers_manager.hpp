@@ -121,6 +121,8 @@ public:
    */
   void remove_timer(rclcpp::TimerBase::SharedPtr timer);
 
+  void remove_timer_raw(rclcpp::TimerBase* timer);
+
   // This is what the TimersManager uses to denote a duration forever.
   // We don't use std::chrono::nanoseconds::max because it will overflow.
   // See https://en.cppreference.com/w/cpp/thread/condition_variable/wait_for
@@ -129,7 +131,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
 
-  using TimerPtr = rclcpp::TimerBase::SharedPtr *;
+  using TimerPtr = rclcpp::TimerBase *;
 
   /**
    * @brief Implements a loop that keeps executing ready timers.
@@ -150,7 +152,7 @@ private:
     if (heap_.empty()) {
       return MAX_TIME;
     }
-    return (*heap_[0])->time_until_trigger();
+    return (heap_[0])->time_until_trigger();
   }
 
   /**
@@ -172,7 +174,7 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> tp)
   {
     // A ready timer will return a negative duration when calling time_until_trigger
-    auto time_ready = std::chrono::steady_clock::now() + (*timer)->time_until_trigger();
+    auto time_ready = std::chrono::steady_clock::now() + (timer)->time_until_trigger();
     return time_ready < tp;
   }
 
@@ -186,7 +188,7 @@ private:
     heap_.push_back(x);
 
     size_t parent = (i - 1) / 2;
-    while (i > 0 && ((*x)->time_until_trigger() < (*heap_[parent])->time_until_trigger())) {
+    while (i > 0 && ((x)->time_until_trigger() < (heap_[parent])->time_until_trigger())) {
       heap_[i] = heap_[parent];
       heap_[parent] = x;
       i = parent;
@@ -212,7 +214,7 @@ private:
     while (left_child < heap_.size()) {
       size_t right_child = left_child + 1;
       if (right_child < heap_.size() &&
-        (*heap_[left_child])->time_until_trigger() >= (*heap_[right_child])->time_until_trigger())
+        (heap_[left_child])->time_until_trigger() >= (heap_[right_child])->time_until_trigger())
       {
         left_child = right_child;
       }
@@ -224,7 +226,7 @@ private:
     // Swim down
     while (i > start) {
       size_t parent = (i - 1) / 2;
-      if ((*updated_timer)->time_until_trigger() < (*heap_[parent])->time_until_trigger()) {
+      if ((updated_timer)->time_until_trigger() < (heap_[parent])->time_until_trigger()) {
         heap_[i] = heap_[parent];
         i = parent;
         continue;
@@ -248,7 +250,7 @@ private:
   // Context of the parent executor
   std::shared_ptr<rclcpp::Context> context_;
   // Container to keep ownership of the timers
-  std::list<rclcpp::TimerBase::SharedPtr> timers_storage_;
+  std::list<rclcpp::TimerBase::WeakPtr> timers_storage_;
   // Vector of pointers to stored timers used to implement the priority queue
   std::vector<TimerPtr> heap_;
 };

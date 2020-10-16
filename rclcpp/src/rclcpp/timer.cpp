@@ -71,7 +71,11 @@ TimerBase::TimerBase(
 }
 
 TimerBase::~TimerBase()
-{}
+{
+  if (on_destruction_callback_) {
+    on_destruction_callback_(this);
+  }
+}
 
 void
 TimerBase::cancel()
@@ -135,4 +139,9 @@ bool
 TimerBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void TimerBase::set_on_destruction_callback(std::function<void (TimerBase*)> on_destruction_callback)
+{
+  on_destruction_callback_ = on_destruction_callback;
 }

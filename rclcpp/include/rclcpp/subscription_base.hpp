@@ -16,6 +16,7 @@
 #define RCLCPP__SUBSCRIPTION_BASE_HPP_
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -269,6 +270,10 @@ public:
     const void * executor_context,
     ExecutorEventCallback executor_callback) const;
 
+  RCLCPP_PUBLIC
+  void
+  set_on_destruction_callback(std::function<void (SubscriptionBase*)> on_destruction_callback);
+
 protected:
   template<typename EventCallbackT>
   void
@@ -311,10 +316,12 @@ private:
   rosidl_message_type_support_t type_support_;
   bool is_serialized_;
 
+  std::function<void (SubscriptionBase*)> on_destruction_callback_;
+
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
   std::unordered_map<rclcpp::QOSEventHandlerBase *,
-    std::atomic<bool>> qos_events_in_use_by_wait_set_;
+  std::atomic<bool>> qos_events_in_use_by_wait_set_;
 };
 
 }  // namespace rclcpp

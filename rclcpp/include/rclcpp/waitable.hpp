@@ -16,6 +16,7 @@
 #define RCLCPP__WAITABLE_HPP_
 
 #include <atomic>
+#include <functional>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -31,7 +32,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Waitable)
 
   RCLCPP_PUBLIC
-  virtual ~Waitable() = default;
+  virtual ~Waitable();
 
   /// Get the number of ready subscriptions
   /**
@@ -172,7 +173,12 @@ public:
     void * executor_context,
     ExecutorEventCallback executor_callback) const;
 
+  RCLCPP_PUBLIC
+  void
+  set_on_destruction_callback(std::function<void (Waitable*)> on_destruction_callback);
+
 private:
+  std::function<void (Waitable*)> on_destruction_callback_;
   std::atomic<bool> in_use_by_wait_set_{false};
 };  // class Waitable
 
