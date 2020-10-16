@@ -321,7 +321,7 @@ private:
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
   std::unordered_map<rclcpp::QOSEventHandlerBase *,
-  std::atomic<bool>> qos_events_in_use_by_wait_set_;
+    std::atomic<bool>> qos_events_in_use_by_wait_set_;
 };
 
 }  // namespace rclcpp
