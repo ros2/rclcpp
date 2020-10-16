@@ -58,6 +58,9 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
         nullptr, nullptr, nullptr,
         node->get_notify_guard_condition(),
         false);
+
+      // Cant' throw exeptions in destructors
+      (void)ret;
     }
   }
 
@@ -98,6 +101,9 @@ EventsExecutorEntitiesCollector::add_node(
     node_ptr->get_notify_guard_condition(),
     false /* Discard previous events */);
 
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set node guard condition callback");
+  }
   // Add node to weak_nodes_
   weak_nodes_.push_back(node_ptr);
 }
@@ -204,27 +210,6 @@ EventsExecutorEntitiesCollector::set_entities_event_callbacks_from_map(
       continue;
     }
     set_callback_group_entities_callbacks(group);
-  }
-}
-
-void
-EventsExecutorEntitiesCollector::set_node_entities_callbacks(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
-{
-  // Set event callbacks for all entities in this node
-  // by searching them in all callback groups
-  for (auto & weak_group : node->get_callback_groups()) {
-    auto group = weak_group.lock();
-    if (!group || !group->can_be_taken_from().load()) {
-      continue;
-    }
-
-    set_callback_group_entities_callbacks(group);
-  }
-
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set node guard condition callback");
   }
 }
 
@@ -440,8 +425,12 @@ EventsExecutorEntitiesCollector::remove_node(
   // if entities are added or removed to this node.
   rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
     nullptr, nullptr, nullptr,
-    node->get_notify_guard_condition(),
+    node_ptr->get_notify_guard_condition(),
     false);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set node guard condition callback");
+  }
 }
 
 // Returns true if the map has the node_ptr
