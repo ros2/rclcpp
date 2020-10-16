@@ -52,7 +52,6 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     if (node) {
       std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
       has_executor.store(false);
-      this->unset_node_entities_callbacks(node);
     }
   }
 
