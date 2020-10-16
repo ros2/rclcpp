@@ -29,18 +29,13 @@ EventsExecutorEntitiesCollector::EventsExecutorEntitiesCollector(
 
 EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 {
-  std::cout<<"entities collector destructor"<<std::endl;
-
   // Disassociate all nodes
   for (const auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
-      std::cout<<"handling with node in entities collector destructor"<<std::endl;
       std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
       has_executor.store(false);
       this->unset_entities_callbacks(node);
-    } else {
-      std::cout<<"skipping node in entities collector destructor"<<std::endl;
     }
   }
 
@@ -135,7 +130,6 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
           subscription->set_events_executor_callback(
             associated_executor_,
             &EventsExecutor::push_event);
-          std::cout<<"Setting destruction callback on "<< subscription.get()<< " with count "<< subscription.use_count()<<std::endl;
           subscription->set_on_destruction_callback(std::bind(&EventsExecutor::remove_entity<rclcpp::SubscriptionBase>, associated_executor_, std::placeholders::_1));
         }
         return false;
@@ -213,7 +207,6 @@ EventsExecutorEntitiesCollector::unset_entities_callbacks(
       [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
         if (subscription) {
           subscription->set_events_executor_callback(nullptr, nullptr);
-          std::cout<<"Removing destruction callback on "<< subscription.get()<<std::endl;
           subscription->set_on_destruction_callback(nullptr);
         }
         return false;

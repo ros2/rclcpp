@@ -79,15 +79,11 @@ SubscriptionBase::SubscriptionBase(
 
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription");
   }
-
-  std::cout<<"Construction subscription "<< this<<std::endl;
 }
 
 SubscriptionBase::~SubscriptionBase()
 {
-  std::cout<<"subscription destruction "<< this<<std::endl;
   if (on_destruction_callback_) {
-    std::cout<<"SUB calling destruction callback"<<std::endl;
     on_destruction_callback_(this);
   }
 
