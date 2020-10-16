@@ -78,10 +78,10 @@ EventsExecutor::spin()
     // We wait here until something has been pushed to the event queue
     event_queue_cv_.wait(push_lock, has_event_predicate);
     std::unique_lock<std::mutex> execution_lock(execution_mutex_);
-    // We got an event! Swap queues and execute events while we hold both mutexes
+    // We got an event! Swap queues while we hold both mutexes
     std::swap(local_event_queue_, event_queue_);
     // After swapping the queues, we don't need the push lock anymore
-    push_lock.~unique_lock<std::mutex>();
+    push_lock.unlock();
     // Consume events while under the execution lock only
     this->consume_all_events(local_event_queue_);
   }
@@ -121,9 +121,9 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   event_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
   std::unique_lock<std::mutex> execution_lock(execution_mutex_);
   std::swap(local_event_queue_, event_queue_);
-  push_lock.~unique_lock<std::mutex>();
+  push_lock.unlock();
   this->consume_all_events(local_event_queue_);
-  execution_lock.~unique_lock<std::mutex>();
+  execution_lock.unlock();
 
   timers_manager_->execute_ready_timers();
 }
@@ -168,7 +168,7 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     std::unique_lock<std::mutex> execution_lock(execution_mutex_);
     std::swap(local_event_queue_, event_queue_);
-    push_lock.~unique_lock<std::mutex>();
+    push_lock.unlock();
 
     bool ready_timer = timers_manager_->get_head_timeout() < 0ns;
     bool has_events = !local_event_queue_.empty();
@@ -179,7 +179,7 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
     // Execute all ready work
 
     this->consume_all_events(local_event_queue_);
-    execution_lock.~unique_lock<std::mutex>();
+    execution_lock.unlock();
 
     timers_manager_->execute_ready_timers();
   }

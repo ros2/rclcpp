@@ -49,7 +49,7 @@ EventsExecutorEntitiesCollector::execute()
   // This function is called when the associated executor is notified that something changed.
   // We do not know if an entity has been added or remode so we have to rebuild everything.
 
-  timers_manager_->clear_all();
+  timers_manager_->clear();
 
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
@@ -118,7 +118,8 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
       [this](const rclcpp::TimerBase::SharedPtr & timer) {
         if (timer) {
           timers_manager_->add_timer(timer);
-          timer->set_on_destruction_callback(std::bind(&TimersManager::remove_timer_raw, timers_manager_, std::placeholders::_1));
+          timer->set_on_destruction_callback(
+            std::bind(&TimersManager::remove_timer_raw, timers_manager_, std::placeholders::_1));
         }
         return false;
       });
@@ -130,7 +131,11 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
           subscription->set_events_executor_callback(
             associated_executor_,
             &EventsExecutor::push_event);
-          subscription->set_on_destruction_callback(std::bind(&EventsExecutor::remove_entity<rclcpp::SubscriptionBase>, associated_executor_, std::placeholders::_1));
+          subscription->set_on_destruction_callback(
+            std::bind(
+              &EventsExecutor::remove_entity<rclcpp::SubscriptionBase>,
+              associated_executor_,
+              std::placeholders::_1));
         }
         return false;
       });
@@ -140,7 +145,11 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
           service->set_events_executor_callback(
             associated_executor_,
             &EventsExecutor::push_event);
-          service->set_on_destruction_callback(std::bind(&EventsExecutor::remove_entity<rclcpp::ServiceBase>, associated_executor_, std::placeholders::_1));
+          service->set_on_destruction_callback(
+            std::bind(
+              &EventsExecutor::remove_entity<rclcpp::ServiceBase>,
+              associated_executor_,
+              std::placeholders::_1));
         }
         return false;
       });
@@ -150,7 +159,11 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
           client->set_events_executor_callback(
             associated_executor_,
             &EventsExecutor::push_event);
-          client->set_on_destruction_callback(std::bind(&EventsExecutor::remove_entity<rclcpp::ClientBase>, associated_executor_, std::placeholders::_1));
+          client->set_on_destruction_callback(
+            std::bind(
+              &EventsExecutor::remove_entity<rclcpp::ClientBase>,
+              associated_executor_,
+              std::placeholders::_1));
         }
         return false;
       });
@@ -160,7 +173,11 @@ EventsExecutorEntitiesCollector::set_entities_callbacks(
           waitable->set_events_executor_callback(
             associated_executor_,
             &EventsExecutor::push_event);
-          waitable->set_on_destruction_callback(std::bind(&EventsExecutor::remove_entity<rclcpp::Waitable>, associated_executor_, std::placeholders::_1));
+          waitable->set_on_destruction_callback(
+            std::bind(
+              &EventsExecutor::remove_entity<rclcpp::Waitable>,
+              associated_executor_,
+              std::placeholders::_1));
         }
         return false;
       });

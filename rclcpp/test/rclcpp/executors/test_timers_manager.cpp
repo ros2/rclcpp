@@ -50,7 +50,7 @@ TEST_F(TestTimersManager, empty_manager)
   EXPECT_EQ(TimersManager::MAX_TIME, timers_manager->get_head_timeout());
   EXPECT_FALSE(timers_manager->execute_head_timer());
   EXPECT_NO_THROW(timers_manager->execute_ready_timers());
-  EXPECT_NO_THROW(timers_manager->clear_all());
+  EXPECT_NO_THROW(timers_manager->clear());
   EXPECT_NO_THROW(timers_manager->start());
   EXPECT_NO_THROW(timers_manager->stop());
 }
@@ -95,7 +95,7 @@ TEST_F(TestTimersManager, add_run_remove_timer)
   EXPECT_FALSE(t_weak.lock() != nullptr);
 }
 
-TEST_F(TestTimersManager, clear_all)
+TEST_F(TestTimersManager, clear)
 {
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
@@ -111,7 +111,7 @@ TEST_F(TestTimersManager, clear_all)
   EXPECT_TRUE(t1_weak.lock() != nullptr);
   EXPECT_TRUE(t2_weak.lock() != nullptr);
 
-  timers_manager->clear_all();
+  timers_manager->clear();
 
   t1.reset();
   t2.reset();
@@ -423,9 +423,13 @@ TEST_F(TestTimersManager, infinite_loop)
   EXPECT_TRUE(ret);
   EXPECT_EQ(3u, t1_runs + t2_runs);
 
+  std::cout<<"START THREAD-------------------|||||||||||||||||||||||||||"<<std::endl;
+
   // Start a timers thread
   timers_manager->start();
   std::this_thread::sleep_for(10ms);
+  std::cout<<"STOP THREAD-------------------|||||||||||||||||||||||||||"<<std::endl;
+
   timers_manager->stop();
 
   EXPECT_LT(3u, t1_runs + t2_runs);
