@@ -97,6 +97,7 @@ public:
   bool is_goal_response_ready{false};
   bool is_cancel_response_ready{false};
   bool is_result_response_ready{false};
+  std::mutex is_anything_ready_mutex;
 
   rclcpp::Context::SharedPtr context_;
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
@@ -260,6 +261,7 @@ ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ClientBase::is_ready(rcl_wait_set_t * wait_set)
 {
+  std::lock_guard<std::mutex> guard(pimpl_->is_anything_ready_mutex);
   rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
     wait_set, pimpl_->client_handle.get(),
     &pimpl_->is_feedback_ready,
@@ -383,11 +385,13 @@ ClientBase::generate_goal_id()
 void
 ClientBase::execute()
 {
+  std::unique_lock<std::mutex> ready_lock(pimpl_->is_anything_ready_mutex);
   if (pimpl_->is_feedback_ready) {
     std::shared_ptr<void> feedback_message = this->create_feedback_message();
     rcl_ret_t ret = rcl_action_take_feedback(
       pimpl_->client_handle.get(), feedback_message.get());
     pimpl_->is_feedback_ready = false;
+    ready_lock.unlock();
     if (RCL_RET_OK == ret) {
       this->handle_feedback_message(feedback_message);
     } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
@@ -398,6 +402,7 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_status(
       pimpl_->client_handle.get(), status_message.get());
     pimpl_->is_status_ready = false;
+    ready_lock.unlock();
     if (RCL_RET_OK == ret) {
       this->handle_status_message(status_message);
     } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
@@ -409,6 +414,7 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_goal_response(
       pimpl_->client_handle.get(), &response_header, goal_response.get());
     pimpl_->is_goal_response_ready = false;
+    ready_lock.unlock();
     if (RCL_RET_OK == ret) {
       this->handle_goal_response(response_header, goal_response);
     } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
@@ -420,6 +426,7 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_result_response(
       pimpl_->client_handle.get(), &response_header, result_response.get());
     pimpl_->is_result_response_ready = false;
+    ready_lock.unlock();
     if (RCL_RET_OK == ret) {
       this->handle_result_response(response_header, result_response);
     } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
@@ -431,13 +438,17 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_cancel_response(
       pimpl_->client_handle.get(), &response_header, cancel_response.get());
     pimpl_->is_cancel_response_ready = false;
+    ready_lock.unlock();
     if (RCL_RET_OK == ret) {
       this->handle_cancel_response(response_header, cancel_response);
     } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "error taking cancel response");
     }
   } else {
-    throw std::runtime_error("Executing action client but nothing is ready");
+    ready_lock.unlock();
+    // Ignore this case, the MultiThreadedExecutor might have scheduled this waitable
+    // for execution more than once.
+    RCLCPP_DEBUG(pimpl_->logger, "Executing action client but nothing is ready");
   }
 }
 
