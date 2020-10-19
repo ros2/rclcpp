@@ -63,12 +63,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     auto node = pair.first.lock();
     if (node) {
       auto node_gc = pair.second;
-      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-        nullptr, nullptr, nullptr,
-        node_gc,
-        false);
-
-      (void)ret;  // Can't throw on destructors
+      unset_guard_condition_callback(node_gc);
     }
   }
 
@@ -131,16 +126,7 @@ EventsExecutorEntitiesCollector::add_callback_group(
   if (is_new_node) {
     // Set an event callback for the node's notify guard condition, so if new entities are added
     // or removed to this node we will receive an event.
-    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-      associated_executor_,
-      &EventsExecutor::push_event,
-      this,
-      node_ptr->get_notify_guard_condition(),
-      false /* Discard previous events */);
-
-    if (ret != RCL_RET_OK) {
-      throw std::runtime_error("Couldn't set node guard condition callback");
-    }
+    set_guard_condition_callback(node_ptr->get_notify_guard_condition());
 
     // Store node's notify guard condition
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
@@ -381,14 +367,7 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
       // Node doesn't have more callback groups associated to the executor.
       // Unset the event callback for the node's notify guard condition, to stop
       // receiving events if entities are added or removed to this node.
-      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-        nullptr, nullptr, nullptr,
-        node_ptr->get_notify_guard_condition(),
-        false);
-
-      if (ret != RCL_RET_OK) {
-        throw std::runtime_error("Couldn't set node guard condition callback");
-      }
+      unset_guard_condition_callback(node_ptr->get_notify_guard_condition());
 
       // Remove guard condition from list
       rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr(node_ptr);
@@ -497,4 +476,36 @@ EventsExecutorEntitiesCollector::get_automatically_added_callback_groups_from_no
     groups.push_back(group_node_ptr.first);
   }
   return groups;
+}
+
+void
+EventsExecutorEntitiesCollector::set_guard_condition_callback(
+  const rcl_guard_condition_t * guard_condition)
+{
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    associated_executor_,
+    &EventsExecutor::push_event,
+    this,
+    guard_condition,
+    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set guard condition event callback");
+  }
+}
+
+void
+EventsExecutorEntitiesCollector::unset_guard_condition_callback(
+  const rcl_guard_condition_t * guard_condition)
+{
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    nullptr,
+    nullptr,
+    nullptr,
+    guard_condition,
+    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't unset guard condition event callback");
+  }
 }

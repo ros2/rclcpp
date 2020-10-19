@@ -149,6 +149,12 @@ private:
   void
   unset_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
 
+  void
+  set_guard_condition_callback(const rcl_guard_condition_t * guard_condition);
+
+  void
+  unset_guard_condition_callback(const rcl_guard_condition_t * guard_condition);
+
   /// Return true if the node belongs to the collector
   /**
    * \param[in] group_ptr a node base interface shared pointer
