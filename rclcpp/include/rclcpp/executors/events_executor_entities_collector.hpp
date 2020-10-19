@@ -193,8 +193,12 @@ private:
   // maps callback groups to nodes.
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
 
-  /// List of nodes notify guard conditions
-  std::list<rcl_guard_condition_t *> nodes_notify_guard_conditions_;
+  typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+      const rcl_guard_condition_t *,
+      std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
+    WeakNodesToGuardConditionsMap;
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
   /// Executor using this entities collector object

@@ -57,19 +57,23 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
   }
 
   // Unset nodes notify guard condition executor callback
-  for (const auto & node_gc : nodes_notify_guard_conditions_) {
-    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-      nullptr, nullptr, nullptr,
-      node_gc,
-      false);
+  for (const auto & pair : weak_nodes_to_guard_conditions_) {
+    auto node = pair.first.lock();
+    if (node) {
+      auto node_gc = pair.second;
+      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+        nullptr, nullptr, nullptr,
+        node_gc,
+        false);
 
-    (void)ret; // Can't throw on destructors
+      (void)ret; // Can't throw on destructors
+    }
   }
 
   // Clear all lists
   weak_groups_associated_with_executor_to_nodes_.clear();
   weak_groups_to_nodes_associated_with_executor_.clear();
-  nodes_notify_guard_conditions_.clear();
+  weak_nodes_to_guard_conditions_.clear();
   weak_nodes_.clear();
 }
 
@@ -138,7 +142,8 @@ EventsExecutorEntitiesCollector::add_callback_group(
     }
 
     // Store node's notify guard condition
-    nodes_notify_guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
   }
 
   // Add callback group to weak_groups_to_node
@@ -385,13 +390,8 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
       }
 
       // Remove guard condition from list
-      auto gc_it = nodes_notify_guard_conditions_.begin();
-      while (gc_it != nodes_notify_guard_conditions_.end()) {
-        if (*gc_it == node_ptr->get_notify_guard_condition()) {
-          nodes_notify_guard_conditions_.erase(gc_it);
-          break;
-        }
-      }
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr(node_ptr);
+      weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
     }
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
