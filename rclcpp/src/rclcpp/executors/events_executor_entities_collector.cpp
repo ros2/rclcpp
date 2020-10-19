@@ -47,7 +47,7 @@ void
 EventsExecutorEntitiesCollector::execute()
 {
   // This function is called when the associated executor is notified that something changed.
-  // We do not know if an entity has been added or remode so we have to rebuild everything.
+  // We do not know if an entity has been added or removed so we have to rebuild everything.
 
   timers_manager_->clear();
 
