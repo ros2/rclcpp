@@ -325,3 +325,43 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       }
   }
 }
+
+void
+EventsExecutor::add_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  bool notify)
+{
+  // This field is unused because we don't have to wake up
+  // the executor when a callback group is added.
+  (void)notify;
+  entities_collector_->add_callback_group(group_ptr, node_ptr);
+}
+
+void
+EventsExecutor::remove_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr, bool notify)
+{
+  // This field is unused because we don't have to wake up
+  // the executor when a callback group is removed.
+  (void)notify;
+   entities_collector_->remove_callback_group(group_ptr);
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+EventsExecutor::get_all_callback_groups()
+{
+  return entities_collector_->get_all_callback_groups();
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+EventsExecutor::get_manually_added_callback_groups()
+{
+  return entities_collector_->get_manually_added_callback_groups();
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+EventsExecutor::get_automatically_added_callback_groups_from_nodes()
+{
+  return entities_collector_->get_automatically_added_callback_groups_from_nodes();
+}

@@ -183,6 +183,42 @@ public:
     }
   }
 
+  void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify) override;
+
+  /// Remove callback group from the executor
+  /**
+   * \sa rclcpp::Executor::remove_callback_group
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    bool notify) override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_all_callback_groups() override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * \sa rclcpp::Executor::get_manually_added_callback_groups()
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_manually_added_callback_groups() override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * \sa rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_automatically_added_callback_groups_from_nodes() override;
+
 protected:
   RCLCPP_PUBLIC
   void
