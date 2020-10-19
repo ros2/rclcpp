@@ -36,6 +36,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
       unset_callback_group_entities_callbacks(group);
+      remove_callback_group_from_map(group, weak_groups_associated_with_executor_to_nodes_);
     }
   }
   for (const auto & pair : weak_groups_to_nodes_associated_with_executor_) {
@@ -44,6 +45,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
       unset_callback_group_entities_callbacks(group);
+      remove_callback_group_from_map(group, weak_groups_to_nodes_associated_with_executor_);
     }
   }
   // Disassociate all nodes
@@ -52,15 +54,6 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     if (node) {
       std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
       has_executor.store(false);
-
-      // Unset node's guard condition event callback
-      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-        nullptr, nullptr, nullptr,
-        node->get_notify_guard_condition(),
-        false);
-
-      // Cant' throw exeptions in destructors
-      (void)ret;
     }
   }
 
