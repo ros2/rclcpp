@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "rclcpp/executors/events_executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
@@ -66,7 +68,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
         node_gc,
         false);
 
-      (void)ret; // Can't throw on destructors
+      (void)ret;  // Can't throw on destructors
     }
   }
 
@@ -89,8 +91,7 @@ EventsExecutorEntitiesCollector::add_node(
   }
 
   // Get node callback groups, add them to weak_groups_to_nodes_associated_with_executor_
-  for (const auto & weak_group : node_ptr->get_callback_groups())
-  {
+  for (const auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
       group_ptr->automatically_add_to_executor_with_node())
@@ -359,7 +360,7 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
 
   // Look for the group to remove in the map
   auto iter = weak_groups_to_nodes.find(weak_group_ptr);
-  if (iter != weak_groups_to_nodes.end()){
+  if (iter != weak_groups_to_nodes.end()) {
     // Group found, get its associated node.
     node_ptr = iter->second.lock();
     if (node_ptr == nullptr) {
@@ -376,7 +377,7 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
       !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
       !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
 
-    if(!node_has_associated_callback_groups) {
+    if (!node_has_associated_callback_groups) {
       // Node doesn't have more callback groups associated to the executor.
       // Unset the event callback for the node's notify guard condition, to stop
       // receiving events if entities are added or removed to this node.

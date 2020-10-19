@@ -18,13 +18,6 @@
 
 using rclcpp::Waitable;
 
-Waitable::~Waitable()
-{
-  if (on_destruction_callback_) {
-    on_destruction_callback_(this);
-  }
-}
-
 size_t
 Waitable::get_number_of_ready_subscriptions()
 {

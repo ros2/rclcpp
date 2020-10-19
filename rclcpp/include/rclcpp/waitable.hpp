@@ -37,7 +37,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Waitable)
 
   RCLCPP_PUBLIC
-  virtual ~Waitable();
+  virtual ~Waitable() = default;
 
   /// Get the number of ready subscriptions
   /**
@@ -182,8 +182,10 @@ public:
   void
   set_on_destruction_callback(std::function<void(Waitable *)> on_destruction_callback);
 
-private:
+protected:
   std::function<void(Waitable *)> on_destruction_callback_;
+
+private:
   std::atomic<bool> in_use_by_wait_set_{false};
 };  // class Waitable
 
