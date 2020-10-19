@@ -16,11 +16,13 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
 #include <list>
+#include <map>
 #include <memory>
+#include <vector>
 
+#include "rclcpp/executors/event_waitable.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -46,7 +48,7 @@ class EventsExecutor;
  * When this occurs, the execute API takes care of handling changes
  * in the entities currently used by the executor.
  */
-class EventsExecutorEntitiesCollector final : public rclcpp::Waitable
+class EventsExecutorEntitiesCollector final : public EventWaitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
@@ -78,24 +80,6 @@ public:
   void
   remove_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
-
-  // Stub API: not used by EventsExecutor
-  RCLCPP_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override
-  {
-    (void)wait_set;
-    return false;
-  }
-
-  // Stub API: not used by EventsExecutor
-  RCLCPP_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override
-  {
-    (void)wait_set;
-    return false;
-  }
 
   /// Add a callback group to the entities collector
   /**
@@ -164,6 +148,12 @@ private:
 
   void
   unset_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
+
+  void
+  set_guard_condition_callback(const rcl_guard_condition_t * guard_condition);
+
+  void
+  unset_guard_condition_callback(const rcl_guard_condition_t * guard_condition);
 
   /// Return true if the node belongs to the collector
   /**

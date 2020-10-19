@@ -16,6 +16,7 @@
 #include <queue>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/exceptions/exceptions.hpp"
 #include "rclcpp/executors/events_executor.hpp"
@@ -31,34 +32,21 @@ EventsExecutor::EventsExecutor(
   timers_manager_ = std::make_shared<TimersManager>(context_);
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this, timers_manager_);
 
-  rcl_ret_t ret;
+  // This API uses the wait_set only as a token to identify different executors.
+  auto context_interrupt_gc = options.context->get_interrupt_guard_condition(&wait_set_);
 
-  // Set the global ctrl-c guard condition callback
-  ret = rcl_guard_condition_set_events_executor_callback(
-    this,
-    &EventsExecutor::push_event,
-    entities_collector_.get(),
-    options.context->get_interrupt_guard_condition(&wait_set_),
-    false /* Discard previous events */);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set ctrl-c guard condition callback");
-  }
-
-  // Set the executor interrupt guard condition callback
-  ret = rcl_guard_condition_set_events_executor_callback(
-    this,
-    &EventsExecutor::push_event,
-    entities_collector_.get(),
-    &interrupt_guard_condition_,
-    false /* Discard previous events */);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set interrupt guard condition callback");
-  }
+  // Setup the executor notifier to wake up the executor when some guard conditions are tiggered.
+  // The added guard conditions are guaranteed to not go out of scope before the executor itself.
+  executor_notifier_ = std::make_shared<EventsExecutorNotifyWaitable>();
+  executor_notifier_->add_guard_condition(context_interrupt_gc);
+  executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
+  executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
+  executor_notifier_->set_on_destruction_callback(
+    std::bind(
+      &EventsExecutor::remove_entity<rclcpp::Waitable>,
+      this,
+      std::placeholders::_1));
 }
-
-EventsExecutor::~EventsExecutor() {}
 
 void
 EventsExecutor::spin()
@@ -345,7 +333,7 @@ EventsExecutor::remove_callback_group(
   // This field is unused because we don't have to wake up
   // the executor when a callback group is removed.
   (void)notify;
-   entities_collector_->remove_callback_group(group_ptr);
+  entities_collector_->remove_callback_group(group_ptr);
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>

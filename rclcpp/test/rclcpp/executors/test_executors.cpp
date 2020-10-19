@@ -416,6 +416,13 @@ public:
     }
   }
 
+  ~TestWaitable()
+  {
+    if (on_destruction_callback_) {
+      on_destruction_callback_(this);
+    }
+  }
+
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {

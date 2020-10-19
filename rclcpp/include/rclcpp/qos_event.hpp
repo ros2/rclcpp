@@ -105,6 +105,13 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set) override;
 
+  /// Set EventsExecutor's callback
+  RCLCPP_PUBLIC
+  void
+  set_events_executor_callback(
+    const rclcpp::executors::EventsExecutor * executor,
+    ExecutorEventCallback executor_callback) const override;
+
 protected:
   rcl_event_t event_handle_;
   size_t wait_set_event_index_;
@@ -151,25 +158,6 @@ public:
     }
 
     event_callback_(callback_info);
-  }
-
-  /// Set EventsExecutor's callback
-  RCLCPP_PUBLIC
-  void
-  set_events_executor_callback(
-    const rclcpp::executors::EventsExecutor * executor,
-    ExecutorEventCallback executor_callback) const override
-  {
-    rcl_ret_t ret = rcl_event_set_events_executor_callback(
-      executor,
-      executor_callback,
-      this,
-      &event_handle_,
-      false /* Discard previous events */);
-
-    if (RCL_RET_OK != ret) {
-      throw std::runtime_error("Couldn't set EventsExecutor's callback to event");
-    }
   }
 
 private:

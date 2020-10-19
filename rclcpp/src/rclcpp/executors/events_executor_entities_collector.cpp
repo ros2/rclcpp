@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "rclcpp/executors/events_executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
@@ -61,12 +63,7 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     auto node = pair.first.lock();
     if (node) {
       auto node_gc = pair.second;
-      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-        nullptr, nullptr, nullptr,
-        node_gc,
-        false);
-
-      (void)ret; // Can't throw on destructors
+      unset_guard_condition_callback(node_gc);
     }
   }
 
@@ -89,8 +86,7 @@ EventsExecutorEntitiesCollector::add_node(
   }
 
   // Get node callback groups, add them to weak_groups_to_nodes_associated_with_executor_
-  for (const auto & weak_group : node_ptr->get_callback_groups())
-  {
+  for (const auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
       group_ptr->automatically_add_to_executor_with_node())
@@ -130,16 +126,7 @@ EventsExecutorEntitiesCollector::add_callback_group(
   if (is_new_node) {
     // Set an event callback for the node's notify guard condition, so if new entities are added
     // or removed to this node we will receive an event.
-    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-      associated_executor_,
-      &EventsExecutor::push_event,
-      this,
-      node_ptr->get_notify_guard_condition(),
-      false /* Discard previous events */);
-
-    if (ret != RCL_RET_OK) {
-      throw std::runtime_error("Couldn't set node guard condition callback");
-    }
+    set_guard_condition_callback(node_ptr->get_notify_guard_condition());
 
     // Store node's notify guard condition
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
@@ -359,7 +346,7 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
 
   // Look for the group to remove in the map
   auto iter = weak_groups_to_nodes.find(weak_group_ptr);
-  if (iter != weak_groups_to_nodes.end()){
+  if (iter != weak_groups_to_nodes.end()) {
     // Group found, get its associated node.
     node_ptr = iter->second.lock();
     if (node_ptr == nullptr) {
@@ -376,18 +363,11 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
       !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
       !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
 
-    if(!node_has_associated_callback_groups) {
+    if (!node_has_associated_callback_groups) {
       // Node doesn't have more callback groups associated to the executor.
       // Unset the event callback for the node's notify guard condition, to stop
       // receiving events if entities are added or removed to this node.
-      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-        nullptr, nullptr, nullptr,
-        node_ptr->get_notify_guard_condition(),
-        false);
-
-      if (ret != RCL_RET_OK) {
-        throw std::runtime_error("Couldn't set node guard condition callback");
-      }
+      unset_guard_condition_callback(node_ptr->get_notify_guard_condition());
 
       // Remove guard condition from list
       rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr(node_ptr);
@@ -496,4 +476,36 @@ EventsExecutorEntitiesCollector::get_automatically_added_callback_groups_from_no
     groups.push_back(group_node_ptr.first);
   }
   return groups;
+}
+
+void
+EventsExecutorEntitiesCollector::set_guard_condition_callback(
+  const rcl_guard_condition_t * guard_condition)
+{
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    associated_executor_,
+    &EventsExecutor::push_event,
+    this,
+    guard_condition,
+    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't set guard condition event callback");
+  }
+}
+
+void
+EventsExecutorEntitiesCollector::unset_guard_condition_callback(
+  const rcl_guard_condition_t * guard_condition)
+{
+  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    nullptr,
+    nullptr,
+    nullptr,
+    guard_condition,
+    false /* Discard previous events */);
+
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't unset guard condition event callback");
+  }
 }
