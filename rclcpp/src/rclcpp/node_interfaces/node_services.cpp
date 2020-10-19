@@ -78,3 +78,9 @@ NodeServices::add_client(
     }
   }
 }
+
+std::string
+NodeServices::resolve_service_name(const std::string & name, bool only_expand) const
+{
+  return node_base_->resolve_topic_or_service_name(name, true, only_expand);
+}

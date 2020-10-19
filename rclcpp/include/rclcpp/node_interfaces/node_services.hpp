@@ -15,6 +15,8 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_SERVICES_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_SERVICES_HPP_
 
+#include <string>
+
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
 #include "rclcpp/macros.hpp"
@@ -52,6 +54,10 @@ public:
   add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::CallbackGroup::SharedPtr group) override;
+
+  RCLCPP_PUBLIC
+  std::string
+  resolve_service_name(const std::string & name, bool only_expand = false) const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeServices)
