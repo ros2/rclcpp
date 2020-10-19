@@ -36,7 +36,6 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
       unset_callback_group_entities_callbacks(group);
-      remove_callback_group_from_map(group, weak_groups_associated_with_executor_to_nodes_);
     }
   }
   for (const auto & pair : weak_groups_to_nodes_associated_with_executor_) {
@@ -45,9 +44,9 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
       unset_callback_group_entities_callbacks(group);
-      remove_callback_group_from_map(group, weak_groups_to_nodes_associated_with_executor_);
     }
   }
+
   // Disassociate all nodes
   for (const auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
@@ -57,9 +56,20 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     }
   }
 
+  // Unset nodes notify guard condition executor callback
+  for (const auto & node_gc : nodes_notify_guard_conditions_) {
+    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+      nullptr, nullptr, nullptr,
+      node_gc,
+      false);
+
+    (void)ret; // Can't throw on destructors
+  }
+
   // Clear all lists
   weak_groups_associated_with_executor_to_nodes_.clear();
   weak_groups_to_nodes_associated_with_executor_.clear();
+  nodes_notify_guard_conditions_.clear();
   weak_nodes_.clear();
 }
 
@@ -126,6 +136,9 @@ EventsExecutorEntitiesCollector::add_callback_group(
     if (ret != RCL_RET_OK) {
       throw std::runtime_error("Couldn't set node guard condition callback");
     }
+
+    // Store node's notify guard condition
+    nodes_notify_guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
   }
 
   // Add callback group to weak_groups_to_node
@@ -369,6 +382,15 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
 
       if (ret != RCL_RET_OK) {
         throw std::runtime_error("Couldn't set node guard condition callback");
+      }
+
+      // Remove guard condition from list
+      auto gc_it = nodes_notify_guard_conditions_.begin();
+      while (gc_it != nodes_notify_guard_conditions_.end()) {
+        if (*gc_it == node_ptr->get_notify_guard_condition()) {
+          nodes_notify_guard_conditions_.erase(gc_it);
+          break;
+        }
       }
     }
   } else {
