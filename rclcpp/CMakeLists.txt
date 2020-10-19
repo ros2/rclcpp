@@ -222,6 +222,13 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
+  # For benchmark tests. Currently these libraries can't be found if these calls
+  # are located in the CMakeLists.txt in test/rclcpp/benchmark, which implies
+  # some sort of scope issue
+  find_package(benchmark REQUIRED)
+  find_package(osrf_testing_tools_cpp REQUIRED)
+  find_package(performance_test_fixture REQUIRED)
+
   add_subdirectory(test)
 endif()
 
