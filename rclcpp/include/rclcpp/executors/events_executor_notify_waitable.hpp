@@ -25,6 +25,10 @@ namespace rclcpp
 namespace executors
 {
 
+/**
+ * @brief This class provides an EventWaitable that allows to
+ * wake up an EventsExecutor when a guard condition is notified.
+ */
 class EventsExecutorNotifyWaitable final : public EventWaitable
 {
 public:
