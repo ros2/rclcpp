@@ -51,6 +51,11 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
+namespace executors
+{
+class EventsExecutor;
+}  // namespace executors
+
 class ClientBase
 {
 public:
@@ -154,12 +159,12 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    const void * executor_context,
+    const rclcpp::executors::EventsExecutor * executor,
     ExecutorEventCallback executor_callback) const;
 
   RCLCPP_PUBLIC
   void
-  set_on_destruction_callback(std::function<void (ClientBase*)> on_destruction_callback);
+  set_on_destruction_callback(std::function<void(ClientBase *)> on_destruction_callback);
 
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
@@ -176,7 +181,7 @@ protected:
   const rcl_node_t *
   get_rcl_node_handle() const;
 
-  std::function<void (ClientBase*)> on_destruction_callback_;
+  std::function<void(ClientBase *)> on_destruction_callback_;
 
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;

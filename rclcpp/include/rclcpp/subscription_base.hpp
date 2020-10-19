@@ -46,6 +46,11 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
+namespace executors
+{
+class EventsExecutor;
+}  // namespace executors
+
 namespace experimental
 {
 /**
@@ -267,12 +272,12 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    const void * executor_context,
+    const rclcpp::executors::EventsExecutor * executor,
     ExecutorEventCallback executor_callback) const;
 
   RCLCPP_PUBLIC
   void
-  set_on_destruction_callback(std::function<void (SubscriptionBase*)> on_destruction_callback);
+  set_on_destruction_callback(std::function<void(SubscriptionBase *)> on_destruction_callback);
 
 protected:
   template<typename EventCallbackT>
@@ -316,7 +321,7 @@ private:
   rosidl_message_type_support_t type_support_;
   bool is_serialized_;
 
-  std::function<void (SubscriptionBase*)> on_destruction_callback_;
+  std::function<void(SubscriptionBase *)> on_destruction_callback_;
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};

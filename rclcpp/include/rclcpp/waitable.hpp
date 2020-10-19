@@ -26,6 +26,11 @@
 namespace rclcpp
 {
 
+namespace executors
+{
+class EventsExecutor;
+}  // namespace executors
+
 class Waitable
 {
 public:
@@ -170,15 +175,15 @@ public:
   virtual
   void
   set_events_executor_callback(
-    void * executor_context,
+    const rclcpp::executors::EventsExecutor * executor,
     ExecutorEventCallback executor_callback) const;
 
   RCLCPP_PUBLIC
   void
-  set_on_destruction_callback(std::function<void (Waitable*)> on_destruction_callback);
+  set_on_destruction_callback(std::function<void(Waitable *)> on_destruction_callback);
 
 private:
-  std::function<void (Waitable*)> on_destruction_callback_;
+  std::function<void(Waitable *)> on_destruction_callback_;
   std::atomic<bool> in_use_by_wait_set_{false};
 };  // class Waitable
 

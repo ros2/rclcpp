@@ -30,6 +30,11 @@
 namespace rclcpp
 {
 
+namespace executors
+{
+class EventsExecutor;
+}  // namespace executors
+
 using QOSDeadlineRequestedInfo = rmw_requested_deadline_missed_status_t;
 using QOSDeadlineOfferedInfo = rmw_offered_deadline_missed_status_t;
 using QOSLivelinessChangedInfo = rmw_liveliness_changed_status_t;
@@ -152,11 +157,11 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    void * executor_context,
+    const rclcpp::executors::EventsExecutor * executor,
     ExecutorEventCallback executor_callback) const override
   {
     rcl_ret_t ret = rcl_event_set_events_executor_callback(
-      executor_context,
+      executor,
       executor_callback,
       this,
       &event_handle_,

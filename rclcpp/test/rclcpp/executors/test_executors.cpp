@@ -454,11 +454,11 @@ public:
 
   void
   set_events_executor_callback(
-    void * executor_context,
+    const rclcpp::executors::EventsExecutor * executor,
     ExecutorEventCallback executor_callback) const override
   {
     rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-      executor_context,
+      executor,
       executor_callback,
       this,
       &gc_,
