@@ -92,18 +92,6 @@ EventsExecutorEntitiesCollector::add_node(
     }
   }
 
-  // Set an event callback for the node's notify guard condition, so if new entities are added
-  // or removed to this node we will receive an event.
-  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-    associated_executor_,
-    &EventsExecutor::push_event,
-    this,
-    node_ptr->get_notify_guard_condition(),
-    false /* Discard previous events */);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set node guard condition callback");
-  }
   // Add node to weak_nodes_
   weak_nodes_.push_back(node_ptr);
 }
@@ -361,6 +349,7 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
   // Look for the group to remove in the map
   auto iter = weak_groups_to_nodes.find(weak_group_ptr);
   if (iter != weak_groups_to_nodes.end()){
+    // Group found, get its associated node.
     node_ptr = iter->second.lock();
     if (node_ptr == nullptr) {
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
@@ -370,6 +359,25 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
 
     // For all the entities in the group, unset their callbacks
     unset_callback_group_entities_callbacks(group_ptr);
+
+    // Check if this node still has other callback groups associated with the executor
+    bool node_has_associated_callback_groups =
+      !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
+      !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
+
+    if(!node_has_associated_callback_groups) {
+      // Node doesn't have more callback groups associated to the executor.
+      // Unset the event callback for the node's notify guard condition, to stop
+      // receiving events if entities are added or removed to this node.
+      rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+        nullptr, nullptr, nullptr,
+        node_ptr->get_notify_guard_condition(),
+        false);
+
+      if (ret != RCL_RET_OK) {
+        throw std::runtime_error("Couldn't set node guard condition callback");
+      }
+    }
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
   }
@@ -425,17 +433,6 @@ EventsExecutorEntitiesCollector::remove_node(
   // Set that the node does not have an executor anymore
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
-
-  // Unset the event callback for the node's notify guard condition, to stop receiving events
-  // if entities are added or removed to this node.
-  rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
-    nullptr, nullptr, nullptr,
-    node_ptr->get_notify_guard_condition(),
-    false);
-
-  if (ret != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't set node guard condition callback");
-  }
 }
 
 // Returns true if the map has the node_ptr
