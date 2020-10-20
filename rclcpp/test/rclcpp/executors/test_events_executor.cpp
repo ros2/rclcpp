@@ -52,17 +52,10 @@ TEST_F(TestEventsExecutor, notify_waitable)
   EXPECT_THROW(notifier->add_to_wait_set(&wait_set), std::runtime_error);
   EXPECT_THROW(notifier->is_ready(&wait_set), std::runtime_error);
 
-  EventsExecutor executor;
-  rcl_guard_condition_t gc = rcl_get_zero_initialized_guard_condition();
-  notifier->add_guard_condition(&gc);
   {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_guard_condition_set_events_executor_callback, RCL_RET_ERROR);
-    EXPECT_THROW(
-      notifier->set_events_executor_callback(
-        &executor,
-        &EventsExecutor::push_event),
-      std::runtime_error);
+    EXPECT_THROW(std::make_shared<EventsExecutor>(), std::runtime_error);
   }
 }
 

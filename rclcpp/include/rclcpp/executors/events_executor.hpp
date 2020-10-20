@@ -123,6 +123,58 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
+  /// Add a callback group to an executor.
+  /**
+   * \sa rclcpp::Executor::add_callback_group
+   */
+  void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify = true) override;
+
+  /// Remove callback group from the executor
+  /**
+   * \sa rclcpp::Executor::remove_callback_group
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    bool notify = true) override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_all_callback_groups() override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * \sa rclcpp::Executor::get_manually_added_callback_groups()
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_manually_added_callback_groups() override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * \sa rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_automatically_added_callback_groups_from_nodes() override;
+
+protected:
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout) override;
+
+private:
+  RCLCPP_DISABLE_COPY(EventsExecutor)
+
+  // Event queue implementation is a deque only to
+  // facilitate the removal of events from expired entities.
+  using EventQueue = std::deque<ExecutorEvent>;
+
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
@@ -176,58 +228,6 @@ public:
           }), local_event_queue_.end());
     }
   }
-
-  /// Add a callback group to an executor.
-  /**
-   * \sa rclcpp::Executor::add_callback_group
-   */
-  void
-  add_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify = true) override;
-
-  /// Remove callback group from the executor
-  /**
-   * \sa rclcpp::Executor::remove_callback_group
-   */
-  RCLCPP_PUBLIC
-  void
-  remove_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    bool notify = true) override;
-
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_all_callback_groups() override;
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \sa rclcpp::Executor::get_manually_added_callback_groups()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_manually_added_callback_groups() override;
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \sa rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_automatically_added_callback_groups_from_nodes() override;
-
-protected:
-  RCLCPP_PUBLIC
-  void
-  spin_once_impl(std::chrono::nanoseconds timeout) override;
-
-private:
-  RCLCPP_DISABLE_COPY(EventsExecutor)
-
-  // Event queue implementation is a deque only to
-  // facilitate the removal of events from expired entities.
-  using EventQueue = std::deque<ExecutorEvent>;
 
   /// Extract and execute events from the queue until it is empty
   RCLCPP_PUBLIC
