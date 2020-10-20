@@ -74,7 +74,7 @@ public:
   void
   set_events_executor_callback(
     const rclcpp::executors::EventsExecutor * executor,
-    ExecutorEventCallback executor_callback) const override;
+    EventsExecutorCallback executor_callback) const override;
 
 protected:
   std::recursive_mutex reentrant_mutex_;

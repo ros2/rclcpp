@@ -176,7 +176,7 @@ public:
   void
   set_events_executor_callback(
     const rclcpp::executors::EventsExecutor * executor,
-    ExecutorEventCallback executor_callback) const;
+    EventsExecutorCallback executor_callback) const;
 
   RCLCPP_PUBLIC
   void
