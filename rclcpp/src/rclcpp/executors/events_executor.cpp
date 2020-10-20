@@ -30,7 +30,7 @@ EventsExecutor::EventsExecutor(
 : rclcpp::Executor(options)
 {
   timers_manager_ = std::make_shared<TimersManager>(context_);
-  entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this, timers_manager_);
+  entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this);
 
   // This API uses the wait_set only as a token to identify different executors.
   auto context_interrupt_gc = options.context->get_interrupt_guard_condition(&wait_set_);
@@ -249,20 +249,6 @@ void
 EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
-}
-
-void
-EventsExecutor::cancel()
-{
-  spinning.store(false);
-  rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to trigger guard condition in cancel");
-  }
-
-  // This makes sure that the timers manager is stopped when we return from this function
-  // otherwise applications may call rclcpp::shutdown() while that thread is still running.
-  timers_manager_->stop();
 }
 
 void

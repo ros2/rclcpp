@@ -26,8 +26,9 @@ namespace executors
  * @brief This class provides a wrapper around the waitable object, that is
  * meant to be used with the EventsExecutor.
  * The waitset related methods are stubbed out as they should not be called.
+ * This class is abstract as the execute method of rclcpp::Waitable is not implemented.
  * Nodes who want to implement a custom EventWaitable, can derive from this class and override
- * the execute function.
+ * the execute method.
  */
 class EventWaitable : public rclcpp::Waitable
 {
@@ -41,12 +42,6 @@ public:
   // Destructor
   RCLCPP_PUBLIC
   virtual ~EventWaitable() = default;
-
-  // Executing an EventWaitable is a no-op.
-  // Derive from this class to implement execute function.
-  RCLCPP_PUBLIC
-  virtual void
-  execute() = 0;
 
   // Stub API: not used by EventsExecutor
   RCLCPP_PUBLIC

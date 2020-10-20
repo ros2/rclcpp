@@ -557,6 +557,15 @@ if(TARGET test_events_executor)
   target_link_libraries(test_events_executor ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_events_executor_entities_collector rclcpp/executors/test_events_executor_entities_collector.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_executor_entities_collector)
+  ament_target_dependencies(test_events_executor_entities_collector
+    "rcl"
+    "test_msgs")
+  target_link_libraries(test_events_executor_entities_collector ${PROJECT_NAME} mimick)
+endif()
+
 ament_add_gtest(test_static_single_threaded_executor rclcpp/executors/test_static_single_threaded_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_static_single_threaded_executor)
