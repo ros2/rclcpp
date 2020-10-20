@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <memory>
-#include <vector>
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -31,15 +30,15 @@ public:
 
   void TearDown(::benchmark::State & state)
   {
-    rclcpp::shutdown();
     performance_test_fixture::PerformanceTest::TearDown(state);
+    rclcpp::shutdown();
   }
 };
 
 BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 {
-  std::vector<std::unique_ptr<rclcpp::Node>> nodes(10000);
   for (auto _ : state) {
+    // Using pointer to separate construction and destruction in timing
     auto node = std::make_unique<rclcpp::Node>("node");
     benchmark::DoNotOptimize(node);
     benchmark::ClobberMemory();
@@ -54,6 +53,7 @@ BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 BENCHMARK_F(NodePerformanceTest, destroy_node)(benchmark::State & state)
 {
   for (auto _ : state) {
+    // Using pointer to separate construction and destruction in timing
     state.PauseTiming();
     auto node = std::make_unique<rclcpp::Node>("node");
     state.ResumeTiming();

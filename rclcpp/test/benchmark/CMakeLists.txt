@@ -5,7 +5,8 @@ get_target_property(
   INTERFACE_INCLUDE_DIRECTORIES)
 
 function(add_rclcpp_benchmark NAME SOURCE)
-  cmake_parse_arguments(RCLCPP_BENCHMARK "" "LIBRARIES" "")
+  set(multiValueArgs LIBRARIES)
+  cmake_parse_arguments(RCLCPP_BENCHMARK "" "${multiValueArgs}" "${ARGN}")
   if(RCLCPP_UNPARSED_ARGUMENTS)
     message(
       FATAL_ERROR
@@ -18,9 +19,9 @@ function(add_rclcpp_benchmark NAME SOURCE)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
 
   set(full_benchmark_name ${NAME}${target_suffix})
-  add_performance_test(${full_benchmark_name} ${SOURCE})
+  add_performance_test(${full_benchmark_name} ${SOURCE} ENV ${rmw_implementation_env_var})
   if(TARGET ${full_benchmark_name})
-    target_link_libraries(${full_benchmark_name} ${PROJECT_NAME} ${LIBRARIES})
+    target_link_libraries(${full_benchmark_name} ${PROJECT_NAME} ${RCLCPP_BENCHMARK_LIBRARIES})
   endif()
 endfunction()
 

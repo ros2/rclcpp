@@ -26,6 +26,7 @@ BENCHMARK_F(PerformanceTest, rclcpp_init)(benchmark::State & state)
     state.PauseTiming();
     rclcpp::shutdown();
     state.ResumeTiming();
+    benchmark::ClobberMemory();
   }
 }
 
@@ -37,5 +38,6 @@ BENCHMARK_F(PerformanceTest, rclcpp_shutdown)(benchmark::State & state)
     state.ResumeTiming();
 
     rclcpp::shutdown();
+    benchmark::ClobberMemory();
   }
 }
