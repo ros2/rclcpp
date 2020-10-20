@@ -45,11 +45,12 @@ TEST(TestQosParameters, declare) {
   }));
 
   rclcpp::QoS qos{rclcpp::KeepLast(10)};
-  rclcpp::detail::declare_publisher_qos_parameters(
+  qos = rclcpp::detail::declare_qos_parameters(
     rclcpp::QosOverridingOptions{true},
-    *node->get_node_parameters_interface(),
+    node,
     "/my/fully/qualified/topic_name",
-    qos);
+    qos,
+    rclcpp::detail::PublisherQosParametersTraits{});
 
   EXPECT_EQ(
     node->get_parameter(

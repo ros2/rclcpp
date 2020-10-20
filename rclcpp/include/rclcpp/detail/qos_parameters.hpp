@@ -24,10 +24,11 @@
 #include <vector>
 
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
-
+#include "rcpputils/pointer_traits.hpp"
 #include "rmw/qos_string_conversions.h"
 
 #include "rclcpp/duration.hpp"
+#include "rclcpp/node_interfaces/get_node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 
@@ -75,52 +76,6 @@ struct SubscriptionQosParametersTraits
   }
 };
 
-/// \internal Declare qos parameters for the given entity.
-/**
- * \tparam EntityQosParametersTraits A class with two static methods: `entity_type()` and
- *  `allowed_policies()`. See `PublisherQosParametersTraits` and `SubscriptionQosParametersTraits`.
- * \param options User provided options that indicate if qos parameter overrides should be
- *  declared or not, which policy can have overrides, and optionally a callback to validate the profile.
- * \param parameters_interface Parameters will be declared through this interface.
- * \param topic_name Name of the topic of the entity.
- * \param qos User provided qos. It will be used as a default for the parameters declared,
- *  and then overriden with the final parameter overrides.
- */
-template<typename EntityQosParametersTraits>
-inline
-void declare_qos_parameters(
-  const ::rclcpp::QosOverridingOptions & options,
-  ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & topic_name,
-  ::rclcpp::QoS & qos,
-  EntityQosParametersTraits);
-
-/// \internal Same as `declare_qos_parameters()` for a `Publisher`.
-inline
-void
-declare_publisher_qos_parameters(
-  const ::rclcpp::QosOverridingOptions & options,
-  ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & topic_name,
-  ::rclcpp::QoS & qos)
-{
-  declare_qos_parameters(
-    options, parameters_interface, topic_name, qos, PublisherQosParametersTraits{});
-}
-
-/// \internal Same as `declare_qos_parameters()` for a `Subscription`.
-inline
-void
-declare_subscription_qos_parameters(
-  const ::rclcpp::QosOverridingOptions & options,
-  ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
-  const std::string & topic_name,
-  ::rclcpp::QoS & qos)
-{
-  declare_qos_parameters(
-    options, parameters_interface, topic_name, qos, SubscriptionQosParametersTraits{});
-}
-
 /// \internal Returns the given `policy` of the profile `qos` converted to a parameter value.
 inline
 ::rclcpp::ParameterValue
@@ -132,15 +87,31 @@ void
 apply_qos_override(
   rclcpp::QosPolicyKind policy, rclcpp::ParameterValue value, rclcpp::QoS & qos);
 
-template<typename EntityQosParametersTraits>
-inline
-void declare_qos_parameters(
+/// \internal Declare qos parameters for the given entity.
+/**
+ * \tparam NodeT Node pointer or reference type.
+ * \tparam EntityQosParametersTraits A class with two static methods: `entity_type()` and
+ *  `allowed_policies()`. See `PublisherQosParametersTraits` and `SubscriptionQosParametersTraits`.
+ * \param options User provided options that indicate if qos parameter overrides should be
+ *  declared or not, which policy can have overrides, and optionally a callback to validate the profile.
+ * \param node Parameters will be declared using this node.
+ * \param topic_name Name of the topic of the entity.
+ * \param default_qos User provided qos. It will be used as a default for the parameters declared.
+ * \return qos profile based on the user provided parameter overrides.
+ */
+template<typename NodeT, typename EntityQosParametersTraits>
+std::enable_if_t<
+  rclcpp::node_interfaces::has_node_parameters_interface<
+    decltype(std::declval<typename rcpputils::remove_pointer<NodeT>::type>())>::value,
+  rclcpp::QoS>
+declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
-  ::rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
+  NodeT & node,
   const std::string & topic_name,
-  ::rclcpp::QoS & qos,
+  const ::rclcpp::QoS & default_qos,
   EntityQosParametersTraits)
 {
+  auto & parameters_interface = *rclcpp::node_interfaces::get_node_parameters_interface(node);
   std::string param_prefix;
   {
     std::ostringstream oss{"qos_overrides.", std::ios::ate};
@@ -160,6 +131,7 @@ void declare_qos_parameters(
     }
     param_description_suffix = oss.str();
   }
+  rclcpp::QoS qos = default_qos;
   for (auto policy : EntityQosParametersTraits::allowed_policies()) {
     if (
       std::count(options.policy_kinds.begin(), options.policy_kinds.end(), policy))
@@ -179,6 +151,27 @@ void declare_qos_parameters(
   if (options.validation_callback && !options.validation_callback(qos)) {
     throw rclcpp::exceptions::InvalidQosOverridesException{"validation callback failed"};
   }
+  return qos;
+}
+
+template<typename NodeT, typename EntityQosParametersTraits>
+std::enable_if_t<
+  !rclcpp::node_interfaces::has_node_parameters_interface<
+    decltype(std::declval<typename rcpputils::remove_pointer<NodeT>::type>())>::value,
+  rclcpp::QoS>
+declare_qos_parameters(
+  const ::rclcpp::QosOverridingOptions & options,
+  NodeT &,
+  const std::string &,
+  const ::rclcpp::QoS & default_qos,
+  EntityQosParametersTraits)
+{
+  if (options.policy_kinds.size()) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "qos override options ignored because no parameter interface was provided");
+  }
+  return default_qos;
 }
 
 /// \internal Helper function to get a rmw qos policy value from a string.

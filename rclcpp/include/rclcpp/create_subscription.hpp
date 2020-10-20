@@ -41,47 +41,6 @@
 namespace rclcpp
 {
 
-namespace detail
-{
-// See comment in `get_subscription_actual_qos`.
-//
-// List of places in rclcpp passing directly a topic interface:
-//  creation of "/clock" topic in time source
-//  (can be fixed by adding an overload accepting a parameters interface).
-template<typename NodeT>
-std::enable_if_t<rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
-get_subscription_actual_qos(
-  const rclcpp::QosOverridingOptions & options, NodeT & node,
-  std::string topic_name, rclcpp::QoS actual_qos)
-{
-  using rclcpp::node_interfaces::get_node_parameters_interface;
-  if (options.policy_kinds.size()) {
-    // TODO(ivanpauno)
-    // Get expanded and remapped topic name before creating the node.
-    // Need to refactor things in `rcl`.
-    detail::declare_subscription_qos_parameters(
-      options,
-      *get_node_parameters_interface(node),
-      topic_name,  // this should be the expanded and remapped topic name
-      actual_qos);
-  }
-  return actual_qos;
-}
-
-template<typename NodeT>
-std::enable_if_t<!rclcpp::node_interfaces::has_node_parameters_interface<NodeT>::value, rclcpp::QoS>
-get_subscription_actual_qos(
-  const rclcpp::QosOverridingOptions & options, NodeT, std::string, rclcpp::QoS actual_qos)
-{
-  if (options.policy_kinds.size()) {
-    RCLCPP_WARN(
-      rclcpp::get_logger("rclcpp"),
-      "qos override options ignored because no parameter interface was provided");
-  }
-  return actual_qos;
-}
-}  // namespace detail
-
 /// Create and return a subscription of the given MessageT type.
 /**
  * The NodeT type only needs to have a method called get_node_topics_interface()
@@ -189,8 +148,9 @@ create_subscription(
     subscription_topic_stats
   );
 
-  rclcpp::QoS actual_qos = detail::get_subscription_actual_qos(
-    options.qos_overriding_options, node, topic_name, qos);
+  rclcpp::QoS actual_qos = rclcpp::detail::declare_qos_parameters(
+    options.qos_overriding_options, node, topic_name,
+    qos, rclcpp::detail::SubscriptionQosParametersTraits{});
 
   auto sub = node_topics->create_subscription(topic_name, factory, actual_qos);
   node_topics->add_subscription(sub, options.callback_group);
