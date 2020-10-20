@@ -56,8 +56,7 @@ public:
   // Constructor
   RCLCPP_PUBLIC
   EventsExecutorEntitiesCollector(
-    EventsExecutor * executor_context,
-    std::shared_ptr<TimersManager> timers_manager);
+    EventsExecutor * executor);
 
   // Destructor
   RCLCPP_PUBLIC

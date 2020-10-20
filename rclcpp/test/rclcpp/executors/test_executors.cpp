@@ -128,8 +128,9 @@ TYPED_TEST_CASE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 // https://github.com/ros2/rclcpp/issues/1219
 using StandardExecutors =
   ::testing::Types<
-  rclcpp::executors::EventsExecutor,
-  rclcpp::executors::SingleThreadedExecutor>;
+  rclcpp::executors::SingleThreadedExecutor,
+  rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::EventsExecutor>;
 TYPED_TEST_CASE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
@@ -148,7 +149,6 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
 // Make sure that the executor can automatically remove expired nodes correctly
 // Currently fails for StaticSingleThreadedExecutor so it is being skipped, see:
 // https://github.com/ros2/rclcpp/issues/1231
-// This test is also flaky for the MultiThreadedExecutor
 TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
@@ -162,7 +162,7 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.
   std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
 
-  std::this_thread::sleep_for(50ms);
+  std::this_thread::sleep_for(200ms);
   executor.cancel();
   spinner.join();
 }

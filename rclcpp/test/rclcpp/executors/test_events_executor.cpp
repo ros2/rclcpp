@@ -22,9 +22,12 @@
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/msg/empty.hpp"
 
+#include "../../mocking_utils/patch.hpp"
+
 using namespace std::chrono_literals;
 
 using rclcpp::executors::EventsExecutor;
+using rclcpp::executors::EventsExecutorNotifyWaitable;
 
 class TestEventsExecutor : public ::testing::Test
 {
@@ -39,6 +42,29 @@ public:
     rclcpp::shutdown();
   }
 };
+
+TEST_F(TestEventsExecutor, notify_waitable)
+{
+  auto notifier = std::make_shared<EventsExecutorNotifyWaitable>();
+
+  // Waitset methods can't be used on EventsWaitable
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  EXPECT_THROW(notifier->add_to_wait_set(&wait_set), std::runtime_error);
+  EXPECT_THROW(notifier->is_ready(&wait_set), std::runtime_error);
+
+  EventsExecutor executor;
+  rcl_guard_condition_t gc = rcl_get_zero_initialized_guard_condition();
+  notifier->add_guard_condition(&gc);
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_guard_condition_set_events_executor_callback, RCL_RET_ERROR);
+    EXPECT_THROW(
+      notifier->set_events_executor_callback(
+        &executor,
+        &EventsExecutor::push_event),
+      std::runtime_error);
+  }
+}
 
 TEST_F(TestEventsExecutor, run_clients_servers)
 {

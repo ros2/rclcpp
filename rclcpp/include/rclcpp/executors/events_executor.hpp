@@ -45,6 +45,8 @@ namespace executors
  */
 class EventsExecutor : public rclcpp::Executor
 {
+  friend class EventsExecutorEntitiesCollector;
+
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutor)
 
@@ -121,15 +123,6 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
-  /// Cancel any running spin* function, causing it to return.
-  /**
-   * This function can be called asynchonously from any thread.
-   * \throws std::runtime_error if there is an issue triggering the guard condition
-   */
-  RCLCPP_PUBLIC
-  void
-  cancel() override;
-
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
@@ -184,11 +177,15 @@ public:
     }
   }
 
+  /// Add a callback group to an executor.
+  /**
+   * \sa rclcpp::Executor::add_callback_group
+   */
   void
   add_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify) override;
+    bool notify = true) override;
 
   /// Remove callback group from the executor
   /**
@@ -198,7 +195,7 @@ public:
   void
   remove_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
-    bool notify) override;
+    bool notify = true) override;
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>

@@ -22,11 +22,14 @@
 using rclcpp::executors::EventsExecutorEntitiesCollector;
 
 EventsExecutorEntitiesCollector::EventsExecutorEntitiesCollector(
-  EventsExecutor * executor_context,
-  TimersManager::SharedPtr timers_manager)
+  EventsExecutor * executor)
 {
-  associated_executor_ = executor_context;
-  timers_manager_ = timers_manager;
+  if (executor == nullptr) {
+    throw std::runtime_error("Received NULL executor in EventsExecutorEntitiesCollector.");
+  }
+
+  associated_executor_ = executor;
+  timers_manager_ = associated_executor_->timers_manager_;
 }
 
 EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
@@ -80,7 +83,6 @@ EventsExecutorEntitiesCollector::add_node(
 {
   // Check if the node already has an executor and if not, set this to true
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
@@ -98,7 +100,6 @@ EventsExecutorEntitiesCollector::add_node(
   // Add node to weak_nodes_
   weak_nodes_.push_back(node_ptr);
 }
-
 
 void
 EventsExecutorEntitiesCollector::add_callback_group(
@@ -346,35 +347,36 @@ EventsExecutorEntitiesCollector::remove_callback_group_from_map(
 
   // Look for the group to remove in the map
   auto iter = weak_groups_to_nodes.find(weak_group_ptr);
-  if (iter != weak_groups_to_nodes.end()) {
-    // Group found, get its associated node.
-    node_ptr = iter->second.lock();
-    if (node_ptr == nullptr) {
-      throw std::runtime_error("Node must not be deleted before its callback group(s).");
-    }
-    // Remove group from map
-    weak_groups_to_nodes.erase(iter);
+  if (iter == weak_groups_to_nodes.end()) {
+    // Group not found.
+    throw std::runtime_error("Callback group needs to be associated with this executor.");
+  }
 
-    // For all the entities in the group, unset their callbacks
-    unset_callback_group_entities_callbacks(group_ptr);
+  // Group found, get its associated node.
+  node_ptr = iter->second.lock();
+  if (node_ptr == nullptr) {
+    throw std::runtime_error("Node must not be deleted before its callback group(s).");
+  }
+  // Remove group from map
+  weak_groups_to_nodes.erase(iter);
 
-    // Check if this node still has other callback groups associated with the executor
-    bool node_has_associated_callback_groups =
-      !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) &&
-      !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
+  // For all the entities in the group, unset their callbacks
+  unset_callback_group_entities_callbacks(group_ptr);
 
-    if (!node_has_associated_callback_groups) {
-      // Node doesn't have more callback groups associated to the executor.
-      // Unset the event callback for the node's notify guard condition, to stop
-      // receiving events if entities are added or removed to this node.
-      unset_guard_condition_callback(node_ptr->get_notify_guard_condition());
+  // Check if this node still has other callback groups associated with the executor
+  bool node_has_associated_callback_groups =
+    has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_) ||
+    has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_);
 
-      // Remove guard condition from list
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr(node_ptr);
-      weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
-    }
-  } else {
-    throw std::runtime_error("Callback group needs to be associated with executor.");
+  if (!node_has_associated_callback_groups) {
+    // Node doesn't have more callback groups associated to the executor.
+    // Unset the event callback for the node's notify guard condition, to stop
+    // receiving events if entities are added or removed to this node.
+    unset_guard_condition_callback(node_ptr->get_notify_guard_condition());
+
+    // Remove guard condition from list
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
   }
 }
 
@@ -383,26 +385,27 @@ EventsExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   if (!node_ptr->get_associated_with_executor_atomic().load()) {
-    throw std::runtime_error("Node needs to be associated with this executor.");
+    throw std::runtime_error("Node needs to be associated with an executor.");
     return;
   }
   // Check if this node is currently stored here
   auto node_it = weak_nodes_.begin();
   while (node_it != weak_nodes_.end()) {
-    if (node_it->lock() == node_ptr) {
+    bool matched = (node_it->lock() == node_ptr);
+    if (matched) {
       weak_nodes_.erase(node_it);
       break;
     }
+    ++node_it;
   }
   if (node_it == weak_nodes_.end()) {
-    // The node is not stored here, so nothing to do
-    throw std::runtime_error("Tried to remove node not stored in executor.");
+    // The node is not stored here
+    throw std::runtime_error("Tried to remove node not stored in this executor.");
     return;
   }
 
   // Find callback groups belonging to the node to remove
   std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
-
   std::for_each(
     weak_groups_to_nodes_associated_with_executor_.begin(),
     weak_groups_to_nodes_associated_with_executor_.end(),
@@ -415,7 +418,6 @@ EventsExecutorEntitiesCollector::remove_node(
         found_group_ptrs.push_back(group_ptr);
       }
     });
-
   // Remove those callback groups
   std::for_each(
     found_group_ptrs.begin(), found_group_ptrs.end(), [this]
