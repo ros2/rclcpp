@@ -75,7 +75,7 @@ QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
 void
 QOSEventHandlerBase::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
-  ExecutorEventCallback executor_callback) const
+  EventsExecutorCallback executor_callback) const
 {
   rcl_ret_t ret = rcl_event_set_events_executor_callback(
     executor,

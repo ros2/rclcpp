@@ -296,7 +296,7 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
 void
 SubscriptionBase::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
-  ExecutorEventCallback executor_callback) const
+  EventsExecutorCallback executor_callback) const
 {
   rcl_ret_t ret = rcl_subscription_set_events_executor_callback(
     executor,

@@ -63,7 +63,7 @@ Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 void
 Waitable::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
-  ExecutorEventCallback executor_callback) const
+  EventsExecutorCallback executor_callback) const
 {
   (void)executor;
   (void)executor_callback;
