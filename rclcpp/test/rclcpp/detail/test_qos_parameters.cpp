@@ -30,7 +30,7 @@ TEST(TestQosParameters, test_overriding_options) {
     EXPECT_THAT(
       options.policy_kinds, testing::ElementsAre(
         rclcpp::QosPolicyKind::History,
-        rclcpp::QosPolicyKind::HistoryDepth,
+        rclcpp::QosPolicyKind::Depth,
         rclcpp::QosPolicyKind::Reliability));
   }
 }
@@ -57,7 +57,7 @@ TEST(TestQosParameters, declare) {
     "keep_last");
   EXPECT_EQ(
     node->get_parameter(
-      "qos_overrides./my/fully/qualified/topic_name.publisher.history_depth").get_value<int64_t>(),
+      "qos_overrides./my/fully/qualified/topic_name.publisher.depth").get_value<int64_t>(),
     10);
   EXPECT_EQ(
     node->get_parameter(

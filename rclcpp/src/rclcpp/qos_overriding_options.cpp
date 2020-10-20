@@ -20,35 +20,20 @@
 #include <string>
 #include <utility>
 
+#include "rmw/qos_policy_kind.h"
+#include "rmw/qos_string_conversions.h"
+
 namespace rclcpp
 {
 
-// TODO(ivanpauno): this should be wrapping an rcl function
 const char *
 qos_policy_kind_to_cstr(const QosPolicyKind & qpk)
 {
-  switch (qpk) {
-    case QosPolicyKind::AvoidRosNamespaceConventions:
-      return "avoid_ros_namespace_conventions";
-    case QosPolicyKind::Deadline:
-      return "deadline";
-    case QosPolicyKind::Durability:
-      return "durability";
-    case QosPolicyKind::History:
-      return "history";
-    case QosPolicyKind::HistoryDepth:
-      return "history_depth";
-    case QosPolicyKind::Lifespan:
-      return "lifespan";
-    case QosPolicyKind::Liveliness:
-      return "liveliness";
-    case QosPolicyKind::LivelinessLeaseDuration:
-      return "liveliness_lease_duration";
-    case QosPolicyKind::Reliability:
-      return "reliability";
-    default:
-      throw std::invalid_argument{"unknown qos policy kind"};
+  const char * ret = rmw_qos_policy_kind_to_str(static_cast<rmw_qos_policy_kind_t>(qpk));
+  if (!ret) {
+    throw std::invalid_argument{"unknown qos policy kind"};
   }
+  return ret;
 }
 
 std::ostream &
@@ -58,7 +43,7 @@ operator<<(std::ostream & oss, const QosPolicyKind & qpk)
 }
 
 #define RCLCPP_QOS_OVERRIDING_OPTIONS_DEFAULT_QOS_POLICIES (std::initializer_list<QosPolicyKind> \
-  {QosPolicyKind::History, QosPolicyKind::HistoryDepth, QosPolicyKind::Reliability})
+  {QosPolicyKind::History, QosPolicyKind::Depth, QosPolicyKind::Reliability})
 
 QosOverridingOptions::QosOverridingOptions(bool declare_default_parameters, std::string id)
 : id{std::move(id)},

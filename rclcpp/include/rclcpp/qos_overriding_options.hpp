@@ -24,20 +24,23 @@
 
 #include "rclcpp/qos.hpp"
 
+#include "rmw/qos_policy_kind.h"
+
 namespace rclcpp
 {
 
 enum class QosPolicyKind
 {
-  AvoidRosNamespaceConventions,
-  Deadline,
-  Durability,
-  History,
-  HistoryDepth,
-  Lifespan,
-  Liveliness,
-  LivelinessLeaseDuration,
-  Reliability,
+  AvoidRosNamespaceConventions = RMW_QOS_POLICY_AVOID_ROS_NAMESPACE_CONVENTIONS,
+  Deadline = RMW_QOS_POLICY_DEADLINE,
+  Depth = RMW_QOS_POLICY_DEPTH,
+  Durability = RMW_QOS_POLICY_DURABILITY,
+  History = RMW_QOS_POLICY_HISTORY,
+  Lifespan = RMW_QOS_POLICY_LIFESPAN,
+  Liveliness = RMW_QOS_POLICY_LIVELINESS,
+  LivelinessLeaseDuration = RMW_QOS_POLICY_LIVELINESS_LEASE_DURATION,
+  Reliability = RMW_QOS_POLICY_RELIABILITY,
+  Invalid = RMW_QOS_POLICY_INVALID,
 };
 
 const char *

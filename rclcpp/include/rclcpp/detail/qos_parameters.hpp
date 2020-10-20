@@ -25,6 +25,8 @@
 
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
+#include "rmw/qos_string_conversions.h"
+
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
@@ -45,7 +47,7 @@ struct PublisherQosParametersTraits
       QosPolicyKind::Deadline,
       QosPolicyKind::Durability,
       QosPolicyKind::History,
-      QosPolicyKind::HistoryDepth,
+      QosPolicyKind::Depth,
       QosPolicyKind::Lifespan,
       QosPolicyKind::Liveliness,
       QosPolicyKind::LivelinessLeaseDuration,
@@ -65,7 +67,7 @@ struct SubscriptionQosParametersTraits
       QosPolicyKind::Deadline,
       QosPolicyKind::Durability,
       QosPolicyKind::History,
-      QosPolicyKind::HistoryDepth,
+      QosPolicyKind::Depth,
       QosPolicyKind::Liveliness,
       QosPolicyKind::LivelinessLeaseDuration,
       QosPolicyKind::Reliability,
@@ -179,30 +181,17 @@ void declare_qos_parameters(
   }
 }
 
-/// \internal Get the `rmw_qos_*_policy_t` value from a given `str`, or raise a runtime_error.
-template<typename RetT>
-RetT
-string_to_policy(const std::string & str);
-
-template<>
-inline
-rmw_qos_durability_policy_t
-string_to_policy(const std::string & str);
-
-template<>
-inline
-rmw_qos_liveliness_policy_t
-string_to_policy(const std::string & str);
-
-template<>
-inline
-rmw_qos_history_policy_t
-string_to_policy(const std::string & str);
-
-template<>
-inline
-rmw_qos_reliability_policy_t
-string_to_policy(const std::string & str);
+/// \internal Helper function to get a rmw qos policy value from a string.
+#define RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING( \
+    kind_lower, kind_upper, parameter_value, rclcpp_qos) \
+  do { \
+    auto policy_string = (parameter_value).get<std::string>(); \
+    auto policy_value = rmw_qos_ ## kind_lower ## _policy_from_str(policy_string.c_str()); \
+    if (RMW_QOS_POLICY_ ## kind_upper ## _UNKNOWN == policy_value) { \
+      throw std::invalid_argument{"unknown qos policy " #kind_lower " value: " + policy_string}; \
+    } \
+    ((rclcpp_qos).kind_lower)(policy_value); \
+  } while (0)
 
 inline
 void
@@ -217,50 +206,34 @@ apply_qos_override(
       qos.deadline(::rclcpp::Duration(value.get<int64_t>()));
       break;
     case QosPolicyKind::Durability:
-      qos.durability(string_to_policy<rmw_qos_durability_policy_t>(value.get<std::string>()));
+      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+        durability, DURABILITY, value, qos);
       break;
     case QosPolicyKind::History:
-      qos.history(string_to_policy<rmw_qos_history_policy_t>(value.get<std::string>()));
+      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+        history, HISTORY, value, qos);
       break;
-    case QosPolicyKind::HistoryDepth:
+    case QosPolicyKind::Depth:
       qos.get_rmw_qos_profile().depth = static_cast<size_t>(value.get<int64_t>());
       break;
     case QosPolicyKind::Lifespan:
       qos.lifespan(::rclcpp::Duration(value.get<int64_t>()));
       break;
     case QosPolicyKind::Liveliness:
-      qos.liveliness(string_to_policy<rmw_qos_liveliness_policy_t>(value.get<std::string>()));
+      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+        liveliness, LIVELINESS, value, qos);
       break;
     case QosPolicyKind::LivelinessLeaseDuration:
       qos.liveliness_lease_duration(::rclcpp::Duration(value.get<int64_t>()));
       break;
     case QosPolicyKind::Reliability:
-      qos.reliability(string_to_policy<rmw_qos_reliability_policy_t>(value.get<std::string>()));
+      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+        reliability, RELIABILITY, value, qos);
       break;
     default:
       throw std::runtime_error{"unknown QosPolicyKind"};
   }
 }
-
-/// Convert the given policy to the corresponding string representation.
-inline
-const char *
-policy_to_cstring(rmw_qos_durability_policy_t durability);
-
-/// Convert the given policy to the corresponding string representation.
-inline
-const char *
-policy_to_cstring(rmw_qos_history_policy_t history);
-
-/// Convert the given policy to the corresponding string representation.
-inline
-const char *
-policy_to_cstring(rmw_qos_liveliness_policy_t liveliness);
-
-/// Convert the given policy to the corresponding string representation.
-inline
-const char *
-policy_to_cstring(rmw_qos_reliability_policy_t reliability);
 
 /// Convert `rmw_time_t` to `int64_t` that can be used as a parameter value.
 inline
@@ -271,6 +244,19 @@ rmw_duration_to_int64_t(rmw_time_t rmw_duration)
     static_cast<int32_t>(rmw_duration.sec),
     static_cast<uint32_t>(rmw_duration.nsec)
   ).nanoseconds();
+}
+
+/// \internal Throw an exception if `policy_value_stringified` is NULL.
+inline
+const char *
+check_if_stringified_policy_is_null(const char * policy_value_stringified, QosPolicyKind kind)
+{
+  if (!policy_value_stringified) {
+    std::ostringstream oss{"unknown ", std::ios::ate};
+    oss << kind << " qos policy value: {" << policy_value_stringified << "}";
+    throw std::invalid_argument{oss.str()};
+  }
+  return policy_value_stringified;
 }
 
 inline
@@ -285,160 +271,30 @@ get_default_qos_param_value(rclcpp::QosPolicyKind qpk, const rclcpp::QoS & qos)
     case QosPolicyKind::Deadline:
       return ParameterValue(rmw_duration_to_int64_t(rmw_qos.deadline));
     case QosPolicyKind::Durability:
-      return ParameterValue(policy_to_cstring(rmw_qos.durability));
+      return ParameterValue(
+        check_if_stringified_policy_is_null(
+          rmw_qos_durability_policy_to_str(rmw_qos.durability), qpk));
     case QosPolicyKind::History:
-      return ParameterValue(policy_to_cstring(rmw_qos.history));
-    case QosPolicyKind::HistoryDepth:
+      return ParameterValue(
+        check_if_stringified_policy_is_null(
+          rmw_qos_history_policy_to_str(rmw_qos.history), qpk));
+    case QosPolicyKind::Depth:
       return ParameterValue(static_cast<int64_t>(rmw_qos.depth));
     case QosPolicyKind::Lifespan:
       return ParameterValue(rmw_duration_to_int64_t(rmw_qos.lifespan));
     case QosPolicyKind::Liveliness:
-      return ParameterValue(policy_to_cstring(rmw_qos.liveliness));
+      return ParameterValue(
+        check_if_stringified_policy_is_null(
+          rmw_qos_liveliness_policy_to_str(rmw_qos.liveliness), qpk));
     case QosPolicyKind::LivelinessLeaseDuration:
       return ParameterValue(rmw_duration_to_int64_t(rmw_qos.liveliness_lease_duration));
     case QosPolicyKind::Reliability:
-      return ParameterValue(policy_to_cstring(rmw_qos.reliability));
+      return ParameterValue(
+        check_if_stringified_policy_is_null(
+          rmw_qos_reliability_policy_to_str(rmw_qos.reliability), qpk));
     default:
       throw std::invalid_argument{"unknown qos policy kind"};
   }
-}
-
-// TODO(ivanpauno): All `policy_to_cstring()` and `string_to_policy()` functions should be
-// a wrapper of a `rcl` implemented function.
-inline
-const char *
-policy_to_cstring(rmw_qos_durability_policy_t durability)
-{
-  switch (durability) {
-    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
-      return "system_default";
-    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      return "transient_local";
-    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      return "volatile";
-    case RMW_QOS_POLICY_DURABILITY_UNKNOWN:  // fallthrough
-    default:
-      throw std::invalid_argument{"unknown durability qos policy value"};
-  }
-}
-
-inline
-const char *
-policy_to_cstring(rmw_qos_history_policy_t history)
-{
-  switch (history) {
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      return "system_default";
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      return "keep_last";
-    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      return "keep_all";
-    case RMW_QOS_POLICY_HISTORY_UNKNOWN:  // fallthrough
-    default:
-      throw std::invalid_argument{"unknown history qos policy value"};
-  }
-}
-
-inline
-const char *
-policy_to_cstring(rmw_qos_liveliness_policy_t liveliness)
-{
-  switch (liveliness) {
-    case RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT:
-      return "system_default";
-    case RMW_QOS_POLICY_LIVELINESS_AUTOMATIC:
-      return "automatic";
-    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
-      return "manual_by_topic";
-    case RMW_QOS_POLICY_LIVELINESS_UNKNOWN:  // fallthrough
-    default:
-      throw std::invalid_argument{"unknown liveliness qos policy value"};
-  }
-}
-
-inline
-const char *
-policy_to_cstring(rmw_qos_reliability_policy_t reliability)
-{
-  switch (reliability) {
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
-      return "system_default";
-    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      return "reliable";
-    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      return "best_effort";
-    case RMW_QOS_POLICY_RELIABILITY_UNKNOWN:  // fallthrough
-    default:
-      throw std::invalid_argument{"unknown reliability qos policy value"};
-  }
-}
-
-template<>
-inline
-rmw_qos_durability_policy_t
-string_to_policy(const std::string & str)
-{
-  if ("system_default" == str) {
-    return RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT;
-  }
-  if ("transient_local" == str) {
-    return RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
-  }
-  if ("volatile" == str) {
-    return RMW_QOS_POLICY_DURABILITY_VOLATILE;
-  }
-  throw std::invalid_argument{"unknown durability qos policy string"};
-}
-
-template<>
-inline
-rmw_qos_history_policy_t
-string_to_policy(const std::string & str)
-{
-  if ("system_default" == str) {
-    return RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT;
-  }
-  if ("keep_last" == str) {
-    return RMW_QOS_POLICY_HISTORY_KEEP_LAST;
-  }
-  if ("keep_all" == str) {
-    return RMW_QOS_POLICY_HISTORY_KEEP_ALL;
-  }
-  throw std::invalid_argument{"unknown history qos policy string"};
-}
-
-template<>
-inline
-rmw_qos_liveliness_policy_t
-string_to_policy(const std::string & str)
-{
-  if ("system_default" == str) {
-    return RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT;
-  }
-  if ("automatic" == str) {
-    return RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
-  }
-  if ("manual_by_topic" == str) {
-    return RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
-  }
-  throw std::invalid_argument{"unknown liveliness qos policy string"};
-}
-
-template<>
-inline
-rmw_qos_reliability_policy_t
-string_to_policy(const std::string & str)
-{
-  if ("system_default" == str) {
-    return RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT;
-  }
-  if ("reliable" == str) {
-    return RMW_QOS_POLICY_RELIABILITY_RELIABLE;
-  }
-  if ("best_effort" == str) {
-    return RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
-  }
-  throw std::invalid_argument{"unknown reliability qos policy string"};
 }
 
 }  // namespace detail
