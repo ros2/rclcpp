@@ -115,9 +115,9 @@ public:
   }
 };
 
-// TYPED_TEST_CASE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
+// TYPED_TEST_SUITE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
 // is updated.
-TYPED_TEST_CASE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
+TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 
 // StaticSingleThreadedExecutor is not included in these tests for now, due to:
 // https://github.com/ros2/rclcpp/issues/1219
@@ -125,7 +125,7 @@ using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor>;
-TYPED_TEST_CASE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
+TYPED_TEST_SUITE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
 TYPED_TEST(TestExecutors, detachOnDestruction) {
