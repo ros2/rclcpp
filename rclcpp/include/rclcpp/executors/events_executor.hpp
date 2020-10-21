@@ -35,7 +35,10 @@ namespace executors
 
 /// Events executor implementation
 /**
- * Add description
+ * This executor is a variation of the standard one that does not uses a waitset.
+ * The executor uses an events queue and a timers manager to execute entities from its
+ * associated nodes and callback groups.
+ * This provides improved performance as it allows to skip all the waitset maintenance operations.
  *
  * To run this executor:
  * rclcpp::executors::EventsExecutor executor;
