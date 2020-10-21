@@ -86,12 +86,12 @@ create_subscription(
 
     // TODO(ivanpauno): This could have topics statistics enabled, but I'm not sure if it makes
     // sense.
-    std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
-      rclcpp::detail::create_publisher<statistics_msgs::msg::MetricsMessage>(
-        node_parameters,
-        node_topics_interface,
-        options.topic_stats_options.publish_topic,
-        qos);
+    std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>>
+    publisher = rclcpp::detail::create_publisher<statistics_msgs::msg::MetricsMessage>(
+      node_parameters,
+      node_topics_interface,
+      options.topic_stats_options.publish_topic,
+      qos);
 
     subscription_topic_stats = std::make_shared<
       rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
@@ -137,7 +137,7 @@ create_subscription(
 
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
 }
-} // namespace detail
+}  // namespace detail
 
 /// Create and return a subscription of the given MessageT type.
 /**
@@ -190,8 +190,8 @@ create_subscription(
 {
   return rclcpp::detail::create_subscription<
     MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT, MessageMemoryStrategyT>(
-      std::forward<NodeT>(node), std::forward<NodeT>(node), topic_name, qos,
-      std::forward<CallbackT>(callback), options, msg_mem_strat);
+    std::forward<NodeT>(node), std::forward<NodeT>(node), topic_name, qos,
+    std::forward<CallbackT>(callback), options, msg_mem_strat);
 }
 
 /// Create and return a subscription of the given MessageT type.
@@ -226,9 +226,9 @@ create_subscription(
 {
   return rclcpp::detail::create_subscription<
     MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT, MessageMemoryStrategyT>(
-      std::forward<rclcpp::node_interfaces::NodeParametersInterface>(node_parameters),
-      std::forward<rclcpp::node_interfaces::NodeTopicsInterface>(node_topics),
-      topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
+    std::forward<rclcpp::node_interfaces::NodeParametersInterface>(node_parameters),
+    std::forward<rclcpp::node_interfaces::NodeTopicsInterface>(node_topics),
+    topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
 }
 
 }  // namespace rclcpp
