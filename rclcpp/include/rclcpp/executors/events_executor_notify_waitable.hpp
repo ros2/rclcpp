@@ -75,7 +75,7 @@ public:
         false);
 
       if (RCL_RET_OK != ret) {
-        throw std::runtime_error("Couldn't set guard condition callback");
+        throw std::runtime_error("Couldn't set guard condition events callback");
       }
     }
   }
