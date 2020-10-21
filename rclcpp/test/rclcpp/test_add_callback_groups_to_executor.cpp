@@ -30,6 +30,10 @@
 #include "rclcpp/executor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
+// that this test can complete fully, or adjust the timeout as necessary.
+// See https://github.com/ros2/rmw_connext/issues/325 for resolution]
+
 using namespace std::chrono_literals;
 
 template<typename T>
@@ -80,7 +84,7 @@ public:
   }
 };
 
-TYPED_TEST_CASE(TestAddCallbackGroupsToExecutor, ExecutorTypes, ExecutorTypeNames);
+TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutor, ExecutorTypes, ExecutorTypeNames);
 
 /*
  * Test adding callback groups.
