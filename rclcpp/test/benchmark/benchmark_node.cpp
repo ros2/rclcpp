@@ -38,12 +38,9 @@ public:
 
 BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 {
-  for (int i = 0; i < 10; ++i)
-  {
-    // Warmup
-    auto node = std::make_unique<rclcpp::Node>("node");
-    node.reset();
-  }
+  // Warmup and prime caches
+  auto outer_node = std::make_unique<rclcpp::Node>("node");
+  outer_node.reset();
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
     auto node = std::make_unique<rclcpp::Node>("node");
@@ -59,12 +56,9 @@ BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 
 BENCHMARK_F(NodePerformanceTest, destroy_node)(benchmark::State & state)
 {
-  for (int i = 0; i < 10; ++i)
-  {
-    // Warmup
-    auto node = std::make_unique<rclcpp::Node>("node");
-    node.reset();
-  }
+  // Warmup and prime caches
+  auto outer_node = std::make_unique<rclcpp::Node>("node");
+  outer_node.reset();
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
     state.PauseTiming();
