@@ -118,6 +118,10 @@ public:
   bool
   get_enable_topic_statistics_default() const override;
 
+  std::string
+  resolve_topic_or_service_name(
+    const std::string & name, bool is_service, bool only_expand = false) const override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 
