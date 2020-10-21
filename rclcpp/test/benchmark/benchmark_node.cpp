@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <string>
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -33,10 +34,24 @@ public:
     performance_test_fixture::PerformanceTest::TearDown(state);
     rclcpp::shutdown();
   }
+
+  bool implementation_is_rmw_connext_cpp() const
+  {
+    return std::string("rmw_connext_cpp") == rmw_get_implementation_identifier();
+  }
 };
 
 BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 {
+  if (implementation_is_rmw_connext_cpp()) {
+    // TODO(brawner) remove these checks and the last benchmark when rmw_connext doesn't hang
+    // during node destruction for 3s.
+    // See https://github.com/ros2/rmw_connext/issues/325 for resolution
+    RCLCPP_INFO(
+      rclcpp::get_logger("rclcpp"), "Skipping create_node benchmark for rmw_connext_cpp");
+    return;
+  }
+
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
     auto node = std::make_unique<rclcpp::Node>("node");
@@ -52,6 +67,11 @@ BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 
 BENCHMARK_F(NodePerformanceTest, destroy_node)(benchmark::State & state)
 {
+  if (implementation_is_rmw_connext_cpp()) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("rclcpp"), "Skipping destroy_node benchmark for rmw_connext_cpp");
+    return;
+  }
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
     state.PauseTiming();
@@ -62,5 +82,19 @@ BENCHMARK_F(NodePerformanceTest, destroy_node)(benchmark::State & state)
     benchmark::ClobberMemory();
 
     node.reset();
+  }
+}
+
+// TODO(brawner) remove this benchmark when rmw_connext doesn't block node destruction for 3s
+// See https://github.com/ros2/rmw_connext/issues/325 for resolution
+BENCHMARK_F(NodePerformanceTest, create_destroy_node)(benchmark::State & state)
+{
+  for (auto _ : state) {
+    // Using pointer to separate construction and destruction in timing
+    auto node = std::make_unique<rclcpp::Node>("node");
+    node.reset();
+
+    benchmark::DoNotOptimize(node);
+    benchmark::ClobberMemory();
   }
 }
