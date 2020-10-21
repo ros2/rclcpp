@@ -5,9 +5,14 @@ get_target_property(
   INTERFACE_INCLUDE_DIRECTORIES)
 
 function(add_rclcpp_benchmark NAME SOURCE)
-  set(multiValueArgs LIBRARIES)
-  cmake_parse_arguments(RCLCPP_BENCHMARK "" "${multiValueArgs}" "${ARGN}")
-  if(RCLCPP_UNPARSED_ARGUMENTS)
+  set(multiValueArgs AMENT_DEPENDS LIBRARIES)
+  cmake_parse_arguments(
+    RCLCPP_BENCHMARK
+    ""
+    ""
+    "${multiValueArgs}"
+    "${ARGN}")
+  if(RCLCPP_BENCHMARK_UNPARSED_ARGUMENTS)
     message(
       FATAL_ERROR
       "Unrecognized arguments for 'add_rclcpp_benchmark'"
@@ -21,6 +26,9 @@ function(add_rclcpp_benchmark NAME SOURCE)
   set(full_benchmark_name ${NAME}${target_suffix})
   add_performance_test(${full_benchmark_name} ${SOURCE} ENV ${rmw_implementation_env_var})
   if(TARGET ${full_benchmark_name})
+    if(RCLCPP_BENCHMARK_AMENT_DEPENDS)
+      ament_target_dependencies(${full_benchmark_name} "${RCLCPP_BENCHMARK_AMENT_DEPENDS}")
+    endif()
     target_link_libraries(${full_benchmark_name} ${PROJECT_NAME} ${RCLCPP_BENCHMARK_LIBRARIES})
   endif()
 endfunction()
