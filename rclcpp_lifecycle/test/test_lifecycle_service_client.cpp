@@ -52,6 +52,10 @@ constexpr char const * node_get_transition_graph_topic =
   "/lc_talker/get_transition_graph";
 const lifecycle_msgs::msg::State unknown_state = lifecycle_msgs::msg::State();
 
+// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
+// that this test can complete fully, or adjust the timeout as necessary.
+// See https://github.com/ros2/rmw_connext/issues/325 for resolution
+
 class EmptyLifecycleNode : public rclcpp_lifecycle::LifecycleNode
 {
 public:
@@ -372,6 +376,14 @@ TEST_F(TestLifecycleServiceClient, get_service_names_and_types_by_node)
     std::runtime_error);
   auto service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
   auto service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+  auto start = std::chrono::steady_clock::now();
+  while (0 == service_names_and_types1.size() ||
+    service_names_and_types1.size() != service_names_and_types2.size() ||
+    (std::chrono::steady_clock::now() - start) < std::chrono::seconds(1))
+  {
+    service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
+    service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+  }
   EXPECT_EQ(service_names_and_types1.size(), service_names_and_types2.size());
 }
 

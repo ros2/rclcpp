@@ -42,6 +42,7 @@ StaticSingleThreadedExecutor::spin()
   // Set memory_strategy_ and exec_list_ based on weak_nodes_
   // Prepare wait_set_ based on memory_strategy_
   entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   while (rclcpp::ok(this->context_) && spinning.load()) {
     // Refresh wait set and wait for work
