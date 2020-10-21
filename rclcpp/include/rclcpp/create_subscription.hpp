@@ -84,12 +84,14 @@ create_subscription(
               " ms");
     }
 
+    // TODO(ivanpauno): This could have topics statistics enabled, but I'm not sure if it makes
+    // sense.
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       rclcpp::detail::create_publisher<statistics_msgs::msg::MetricsMessage>(
         node_parameters,
         node_topics_interface,
         options.topic_stats_options.publish_topic,
-        qos);  // why the topics statistics publisher is using the same QoS as the subscription??
+        qos);
 
     subscription_topic_stats = std::make_shared<
       rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>

@@ -154,6 +154,8 @@ declare_qos_parameters(
   return qos;
 }
 
+// TODO(ivanpauno): This overload cannot declare the QoS parameters, as a node parameters interface
+// was not provided.
 template<typename NodeT, typename EntityQosParametersTraits>
 std::enable_if_t<
   !rclcpp::node_interfaces::has_node_parameters_interface<

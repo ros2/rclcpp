@@ -91,8 +91,8 @@ struct QosOverridingOptions
    * \param policy_kinds list of policy kinds that will be reconfigurable.
    * \param id id of the entity.
    */
-
   QosOverridingOptions(std::initializer_list<QosPolicyKind> policy_kinds, std::string id = {});
+
   /// Construct passing a list of qos policies that and a verification callback.
   /**
    * This constructor is implicit, e.g.:

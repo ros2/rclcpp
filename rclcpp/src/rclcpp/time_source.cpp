@@ -27,6 +27,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter_client.hpp"
 #include "rclcpp/parameter_events_filter.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
@@ -233,11 +234,17 @@ void TimeSource::create_clock_sub()
     return;
   }
 
+  using rclcpp::QosPolicyKind;
+  rclcpp::SubscriptionOptions options;
+  options.qos_overriding_options = QosOverridingOptions{
+    QosPolicyKind::Depth, QosPolicyKind::History, QosPolicyKind::LivelinessLeaseDuration,
+    QosPolicyKind::Reliability};
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
     node_topics_,
     "/clock",
     rclcpp::QoS(KeepLast(1)).best_effort(),
-    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1)
+    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
+    options
   );
 }
 
