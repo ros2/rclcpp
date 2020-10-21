@@ -20,6 +20,12 @@ using performance_test_fixture::PerformanceTest;
 
 BENCHMARK_F(PerformanceTest, rclcpp_init)(benchmark::State & state)
 {
+  for (int i = 0; i < 10; ++i)
+  {
+    // Warmup
+    rclcpp::init(0, nullptr);
+    rclcpp::shutdown();
+  }
   for (auto _ : state) {
     rclcpp::init(0, nullptr);
 
@@ -32,6 +38,13 @@ BENCHMARK_F(PerformanceTest, rclcpp_init)(benchmark::State & state)
 
 BENCHMARK_F(PerformanceTest, rclcpp_shutdown)(benchmark::State & state)
 {
+  for (int i = 0; i < 10; ++i)
+  {
+    // Warmup
+    rclcpp::init(0, nullptr);
+    rclcpp::shutdown();
+  }
+
   for (auto _ : state) {
     state.PauseTiming();
     rclcpp::init(0, nullptr);
