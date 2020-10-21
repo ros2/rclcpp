@@ -54,9 +54,12 @@ create_publisher(
 )
 {
   auto node_topics_interface = rclcpp::node_interfaces::get_node_topics_interface(node_topics);
-  rclcpp::QoS actual_qos = rclcpp::detail::declare_qos_parameters(
-    options.qos_overriding_options, node_parameters, topic_name,
-    qos, rclcpp::detail::PublisherQosParametersTraits{});
+  const rclcpp::QoS & actual_qos = options.qos_overriding_options.policy_kinds.size() ?
+    rclcpp::detail::declare_qos_parameters(
+    options.qos_overriding_options, node_parameters,
+    node_topics_interface->resolve_topic_name(topic_name),
+    qos, rclcpp::detail::PublisherQosParametersTraits{}) :
+    qos;
 
   // Create the publisher.
   auto pub = node_topics_interface->create_publisher(

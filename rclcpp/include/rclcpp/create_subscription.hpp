@@ -128,9 +128,12 @@ create_subscription(
     subscription_topic_stats
   );
 
-  rclcpp::QoS actual_qos = rclcpp::detail::declare_qos_parameters(
-    options.qos_overriding_options, node_parameters, topic_name,
-    qos, rclcpp::detail::SubscriptionQosParametersTraits{});
+  const rclcpp::QoS & actual_qos = options.qos_overriding_options.policy_kinds.size() ?
+    rclcpp::detail::declare_qos_parameters(
+    options.qos_overriding_options, node_parameters,
+    node_topics_interface->resolve_topic_name(topic_name),
+    qos, rclcpp::detail::SubscriptionQosParametersTraits{}) :
+    qos;
 
   auto sub = node_topics_interface->create_subscription(topic_name, factory, actual_qos);
   node_topics_interface->add_subscription(sub, options.callback_group);
