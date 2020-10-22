@@ -54,8 +54,8 @@ template<
   typename NodeTopicsT>
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
-  NodeParametersT && node_parameters,
-  NodeTopicsT && node_topics,
+  NodeParametersT & node_parameters,
+  NodeTopicsT & node_topics,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
@@ -68,7 +68,7 @@ create_subscription(
 )
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
-  auto node_topics_interface = get_node_topics_interface(std::forward<NodeTopicsT>(node_topics));
+  auto node_topics_interface = get_node_topics_interface(node_topics);
 
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
@@ -179,7 +179,7 @@ template<
   typename NodeT>
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
-  NodeT && node,
+  NodeT & node,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
@@ -193,8 +193,7 @@ create_subscription(
 {
   return rclcpp::detail::create_subscription<
     MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT, MessageMemoryStrategyT>(
-    std::forward<NodeT>(node), std::forward<NodeT>(node), topic_name, qos,
-    std::forward<CallbackT>(callback), options, msg_mem_strat);
+    node, node, topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
 }
 
 /// Create and return a subscription of the given MessageT type.
@@ -214,8 +213,8 @@ template<
   >>
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
-  rclcpp::node_interfaces::NodeParametersInterface && node_parameters,
-  rclcpp::node_interfaces::NodeTopicsInterface && node_topics,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
@@ -229,9 +228,8 @@ create_subscription(
 {
   return rclcpp::detail::create_subscription<
     MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT, MessageMemoryStrategyT>(
-    std::forward<rclcpp::node_interfaces::NodeParametersInterface>(node_parameters),
-    std::forward<rclcpp::node_interfaces::NodeTopicsInterface>(node_topics),
-    topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
+    node_parameters, node_topics, topic_name, qos,
+    std::forward<CallbackT>(callback), options, msg_mem_strat);
 }
 
 }  // namespace rclcpp

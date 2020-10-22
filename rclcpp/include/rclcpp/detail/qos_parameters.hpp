@@ -21,6 +21,7 @@
 #include <initializer_list>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -102,7 +103,9 @@ apply_qos_override(
 template<typename NodeT, typename EntityQosParametersTraits>
 std::enable_if_t<
   rclcpp::node_interfaces::has_node_parameters_interface<
-    decltype(std::declval<typename rcpputils::remove_pointer<NodeT>::type>())>::value,
+    decltype(std::declval<typename rcpputils::remove_pointer<NodeT>::type>())>::value ||
+  std::is_same<typename std::decay_t<NodeT>,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr>::value,
   rclcpp::QoS>
 declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
@@ -158,8 +161,10 @@ declare_qos_parameters(
 // was not provided.
 template<typename NodeT, typename EntityQosParametersTraits>
 std::enable_if_t<
-  !rclcpp::node_interfaces::has_node_parameters_interface<
-    decltype(std::declval<typename rcpputils::remove_pointer<NodeT>::type>())>::value,
+  !(rclcpp::node_interfaces::has_node_parameters_interface<
+    decltype(std::declval<typename rcpputils::remove_pointer<NodeT>::type>())>::value ||
+  std::is_same<typename std::decay_t<NodeT>,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr>::value),
   rclcpp::QoS>
 declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,

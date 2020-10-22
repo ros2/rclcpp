@@ -77,3 +77,37 @@ TEST(TestQosParameters, declare) {
 
   rclcpp::shutdown();
 }
+
+TEST(TestQosParameters, qos_parameters_created_by_one_node) {
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>(
+    "my_node", "/ns");
+
+  // Total number of qos parameters created by a node
+  // Up to now, /rosout and /parameter_events
+  // aren't creating qos parameters.
+  std::map<std::string, rclcpp::Parameter> qos_params;
+  EXPECT_FALSE(
+    node->get_node_parameters_interface()->get_parameters_by_prefix(
+      "qos_overrides", qos_params));
+
+  rclcpp::shutdown();
+}
+
+TEST(TestQosParameters, qos_parameters_created_by_one_node_with_use_sim_time) {
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>(
+    "my_node", "/ns", rclcpp::NodeOptions().parameter_overrides(
+  {
+    rclcpp::Parameter("use_sim_time", true)
+  }));
+
+  // Total number of qos parameters for the /clock topic is 4.
+  std::map<std::string, rclcpp::Parameter> qos_params;
+  EXPECT_TRUE(
+    node->get_node_parameters_interface()->get_parameters_by_prefix(
+      "qos_overrides", qos_params));
+  EXPECT_EQ(4u, qos_params.size());
+
+  rclcpp::shutdown();
+}

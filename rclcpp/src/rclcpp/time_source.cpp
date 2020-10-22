@@ -240,6 +240,7 @@ void TimeSource::create_clock_sub()
     QosPolicyKind::Depth, QosPolicyKind::History, QosPolicyKind::LivelinessLeaseDuration,
     QosPolicyKind::Reliability};
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
+    node_parameters_,
     node_topics_,
     "/clock",
     rclcpp::QoS(KeepLast(1)).best_effort(),
