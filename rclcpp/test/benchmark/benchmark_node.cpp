@@ -39,13 +39,13 @@ public:
 BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 {
   // Warmup and prime caches
-  auto outer_node = std::make_unique<rclcpp::Node>("node");
+  auto outer_node = std::make_shared<rclcpp::Node>("node");
   outer_node.reset();
 
   reset_heap_counters();
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
-    auto node = std::make_unique<rclcpp::Node>("node");
+    auto node = std::make_shared<rclcpp::Node>("node");
     benchmark::DoNotOptimize(node);
     benchmark::ClobberMemory();
 
@@ -59,14 +59,14 @@ BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
 BENCHMARK_F(NodePerformanceTest, destroy_node)(benchmark::State & state)
 {
   // Warmup and prime caches
-  auto outer_node = std::make_unique<rclcpp::Node>("node");
+  auto outer_node = std::make_shared<rclcpp::Node>("node");
   outer_node.reset();
 
   reset_heap_counters();
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
     state.PauseTiming();
-    auto node = std::make_unique<rclcpp::Node>("node");
+    auto node = std::make_shared<rclcpp::Node>("node");
     state.ResumeTiming();
 
     benchmark::DoNotOptimize(node);
