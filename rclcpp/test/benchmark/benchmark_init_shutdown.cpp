@@ -23,6 +23,8 @@ BENCHMARK_F(PerformanceTest, rclcpp_init)(benchmark::State & state)
   // Warmup and prime caches
   rclcpp::init(0, nullptr);
   rclcpp::shutdown();
+
+  reset_heap_counters();
   for (auto _ : state) {
     rclcpp::init(0, nullptr);
 
@@ -39,6 +41,7 @@ BENCHMARK_F(PerformanceTest, rclcpp_shutdown)(benchmark::State & state)
   rclcpp::init(0, nullptr);
   rclcpp::shutdown();
 
+  reset_heap_counters();
   for (auto _ : state) {
     state.PauseTiming();
     rclcpp::init(0, nullptr);
