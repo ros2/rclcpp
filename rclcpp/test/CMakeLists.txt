@@ -12,6 +12,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   SKIP_INSTALL
 )
 
+add_subdirectory(benchmark)
 add_subdirectory(rclcpp)
 
 ament_add_gtest(test_rclcpp_gtest_macros utils/test_rclcpp_gtest_macros.cpp)
