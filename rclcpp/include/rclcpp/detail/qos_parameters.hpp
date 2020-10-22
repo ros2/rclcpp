@@ -256,11 +256,11 @@ check_if_stringified_policy_is_null(const char * policy_value_stringified, QosPo
 
 inline
 ::rclcpp::ParameterValue
-get_default_qos_param_value(rclcpp::QosPolicyKind qpk, const rclcpp::QoS & qos)
+get_default_qos_param_value(rclcpp::QosPolicyKind kind, const rclcpp::QoS & qos)
 {
   using ParameterValue = ::rclcpp::ParameterValue;
   const auto & rmw_qos = qos.get_rmw_qos_profile();
-  switch (qpk) {
+  switch (kind) {
     case QosPolicyKind::AvoidRosNamespaceConventions:
       return ParameterValue(rmw_qos.avoid_ros_namespace_conventions);
     case QosPolicyKind::Deadline:
@@ -268,11 +268,11 @@ get_default_qos_param_value(rclcpp::QosPolicyKind qpk, const rclcpp::QoS & qos)
     case QosPolicyKind::Durability:
       return ParameterValue(
         check_if_stringified_policy_is_null(
-          rmw_qos_durability_policy_to_str(rmw_qos.durability), qpk));
+          rmw_qos_durability_policy_to_str(rmw_qos.durability), kind));
     case QosPolicyKind::History:
       return ParameterValue(
         check_if_stringified_policy_is_null(
-          rmw_qos_history_policy_to_str(rmw_qos.history), qpk));
+          rmw_qos_history_policy_to_str(rmw_qos.history), kind));
     case QosPolicyKind::Depth:
       return ParameterValue(static_cast<int64_t>(rmw_qos.depth));
     case QosPolicyKind::Lifespan:
@@ -280,13 +280,13 @@ get_default_qos_param_value(rclcpp::QosPolicyKind qpk, const rclcpp::QoS & qos)
     case QosPolicyKind::Liveliness:
       return ParameterValue(
         check_if_stringified_policy_is_null(
-          rmw_qos_liveliness_policy_to_str(rmw_qos.liveliness), qpk));
+          rmw_qos_liveliness_policy_to_str(rmw_qos.liveliness), kind));
     case QosPolicyKind::LivelinessLeaseDuration:
       return ParameterValue(rmw_duration_to_int64_t(rmw_qos.liveliness_lease_duration));
     case QosPolicyKind::Reliability:
       return ParameterValue(
         check_if_stringified_policy_is_null(
-          rmw_qos_reliability_policy_to_str(rmw_qos.reliability), qpk));
+          rmw_qos_reliability_policy_to_str(rmw_qos.reliability), kind));
     default:
       throw std::invalid_argument{"unknown qos policy kind"};
   }
