@@ -177,7 +177,7 @@ declare_qos_parameters(
 }
 
 /// \internal Helper function to get a rmw qos policy value from a string.
-#define RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING( \
+#define RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING( \
     kind_lower, kind_upper, parameter_value, rclcpp_qos) \
   do { \
     auto policy_string = (parameter_value).get<std::string>(); \
@@ -201,11 +201,11 @@ apply_qos_override(
       qos.deadline(::rclcpp::Duration(value.get<int64_t>()));
       break;
     case QosPolicyKind::Durability:
-      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+      RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
         durability, DURABILITY, value, qos);
       break;
     case QosPolicyKind::History:
-      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+      RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
         history, HISTORY, value, qos);
       break;
     case QosPolicyKind::Depth:
@@ -215,14 +215,14 @@ apply_qos_override(
       qos.lifespan(::rclcpp::Duration(value.get<int64_t>()));
       break;
     case QosPolicyKind::Liveliness:
-      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+      RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
         liveliness, LIVELINESS, value, qos);
       break;
     case QosPolicyKind::LivelinessLeaseDuration:
       qos.liveliness_lease_duration(::rclcpp::Duration(value.get<int64_t>()));
       break;
     case QosPolicyKind::Reliability:
-      RCLCPP_DETAIL_QOS_POLICY_FROM_PARAMETER_STRING(
+      RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
         reliability, RELIABILITY, value, qos);
       break;
     default:
