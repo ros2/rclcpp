@@ -207,7 +207,7 @@ public:
       sub_ids.take_shared_subscriptions.size() <= 1)
     {
       // There is at maximum 1 buffer that does not require ownership.
-      // So we this case is equivalent to all the buffers requiring ownership
+      // So this case is equivalent to all the buffers requiring ownership
 
       // Merge the two vector of ids into a unique one
       std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
