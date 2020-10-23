@@ -31,6 +31,7 @@ public:
   void SetUp(benchmark::State & st)
   {
     rclcpp::init(0, nullptr);
+    callback_count = 0;
     node = std::make_shared<rclcpp::Node>("my_node");
 
     publisher = node->create_publisher<test_msgs::msg::Empty>(
