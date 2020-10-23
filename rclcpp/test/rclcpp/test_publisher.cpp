@@ -151,6 +151,13 @@ TEST_F(TestPublisher, various_creation_signatures) {
       rclcpp::create_publisher<Empty>(node, "topic", 42, rclcpp::PublisherOptions());
     (void)publisher;
   }
+  {
+    auto node_parameters = node->get_node_parameters_interface();
+    auto node_topics = node->get_node_topics_interface();
+    auto publisher = rclcpp::create_publisher<Empty>(
+      node_parameters, node_topics, "topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
 }
 
 /*

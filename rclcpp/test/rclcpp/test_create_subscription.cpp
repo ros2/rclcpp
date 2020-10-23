@@ -50,6 +50,21 @@ TEST_F(TestCreateSubscription, create) {
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
 }
 
+TEST_F(TestCreateSubscription, create_separated_node_topics_and_parameters) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  const rclcpp::QoS qos(10);
+  auto options = rclcpp::SubscriptionOptions();
+  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+
+  auto node_parameters = node->get_node_parameters_interface();
+  auto node_topics = node->get_node_topics_interface();
+  auto subscription = rclcpp::create_subscription<test_msgs::msg::Empty>(
+    node_parameters, node_topics, "topic_name", qos, callback, options);
+
+  ASSERT_NE(nullptr, subscription);
+  EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
+}
+
 TEST_F(TestCreateSubscription, create_with_statistics) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   const rclcpp::QoS qos(10);

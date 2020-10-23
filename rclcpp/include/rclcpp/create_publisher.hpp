@@ -108,7 +108,7 @@ template<
 std::shared_ptr<PublisherT>
 create_publisher(
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
-  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_topics,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
