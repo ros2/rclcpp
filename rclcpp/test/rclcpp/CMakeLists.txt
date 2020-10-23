@@ -4,6 +4,14 @@ find_package(rmw_implementation_cmake REQUIRED)
 
 add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/../resources")
 
+rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
+  ../msg/Header.msg
+  ../msg/MessageWithHeader.msg
+  DEPENDENCIES builtin_interfaces
+  LIBRARY_NAME ${PROJECT_NAME}
+  SKIP_INSTALL
+)
+
 ament_add_gtest(
   test_allocator_common
   allocator/test_allocator_common.cpp)
