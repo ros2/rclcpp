@@ -234,19 +234,11 @@ void TimeSource::create_clock_sub()
     return;
   }
 
-  using rclcpp::QosPolicyKind;
-  rclcpp::SubscriptionOptions options;
-  options.qos_overriding_options = QosOverridingOptions{
-    QosPolicyKind::Depth, QosPolicyKind::History, QosPolicyKind::LivelinessLeaseDuration,
-    QosPolicyKind::Reliability};
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
-    node_parameters_,
     node_topics_,
     "/clock",
     rclcpp::QoS(KeepLast(1)).best_effort(),
-    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
-    options
-  );
+    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1));
 }
 
 void TimeSource::destroy_clock_sub()

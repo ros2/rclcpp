@@ -78,6 +78,49 @@ TEST(TestQosParameters, declare) {
   rclcpp::shutdown();
 }
 
+// TEST(TestQosParameters, declare_with_callback) {
+//   rclcpp::init(0, nullptr);
+//   auto node = std::make_shared<rclcpp::Node>(
+//     "my_node", "/ns", rclcpp::NodeOptions().parameter_overrides(
+//   {
+//     rclcpp::Parameter(
+//       "qos_overrides./my/fully/qualified/topic_name.publisher.reliability", "best_effort"),
+//   }));
+
+//   rclcpp::QoS qos{rclcpp::KeepLast(10)};
+//   qos = rclcpp::detail::declare_qos_parameters(
+//     rclcpp::QosOverridingOptions{[](const )},
+//     node,
+//     "/my/fully/qualified/topic_name",
+//     qos,
+//     rclcpp::detail::PublisherQosParametersTraits{});
+
+//   EXPECT_EQ(
+//     node->get_parameter(
+//       "qos_overrides./my/fully/qualified/topic_name.publisher.history").get_value<std::string>(),
+//     "keep_last");
+//   EXPECT_EQ(
+//     node->get_parameter(
+//       "qos_overrides./my/fully/qualified/topic_name.publisher.depth").get_value<int64_t>(),
+//     10);
+//   EXPECT_EQ(
+//     node->get_parameter(
+//       "qos_overrides./my/fully/qualified/topic_name.publisher.reliability"
+//     ).get_value<std::string>(),
+//     "best_effort");
+//   EXPECT_EQ(RMW_QOS_POLICY_HISTORY_KEEP_LAST, qos.get_rmw_qos_profile().history);
+//   EXPECT_EQ(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT, qos.get_rmw_qos_profile().reliability);
+//   EXPECT_EQ(10u, qos.get_rmw_qos_profile().depth);
+
+//   std::map<std::string, rclcpp::Parameter> qos_params;
+//   EXPECT_TRUE(
+//     node->get_node_parameters_interface()->get_parameters_by_prefix(
+//       "qos_overrides./my/fully/qualified/topic_name.publisher", qos_params));
+//   EXPECT_EQ(3u, qos_params.size());
+
+//   rclcpp::shutdown();
+// }
+
 TEST(TestQosParameters, qos_parameters_created_by_one_node) {
   rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>(
