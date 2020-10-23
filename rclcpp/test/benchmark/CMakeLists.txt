@@ -10,6 +10,12 @@ if(TARGET benchmark_client)
   ament_target_dependencies(benchmark_client test_msgs rcl_interfaces)
 endif()
 
+add_performance_test(benchmark_executor benchmark_executor.cpp)
+if(TARGET benchmark_executor)
+  target_link_libraries(benchmark_executor ${PROJECT_NAME})
+  ament_target_dependencies(benchmark_executor test_msgs)
+endif()
+
 add_performance_test(benchmark_init_shutdown benchmark_init_shutdown.cpp)
 if(TARGET benchmark_init_shutdown)
   target_link_libraries(benchmark_init_shutdown ${PROJECT_NAME})
