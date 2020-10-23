@@ -27,7 +27,6 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter_client.hpp"
 #include "rclcpp/parameter_events_filter.hpp"
-#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
@@ -238,7 +237,8 @@ void TimeSource::create_clock_sub()
     node_topics_,
     "/clock",
     rclcpp::QoS(KeepLast(1)).best_effort(),
-    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1));
+    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1)
+  );
 }
 
 void TimeSource::destroy_clock_sub()
