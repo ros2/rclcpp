@@ -4,14 +4,6 @@ find_package(test_msgs REQUIRED)
 
 include(cmake/rclcpp_add_build_failure_test.cmake)
 
-rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
-  msg/Header.msg
-  msg/MessageWithHeader.msg
-  DEPENDENCIES builtin_interfaces
-  LIBRARY_NAME ${PROJECT_NAME}
-  SKIP_INSTALL
-)
-
 add_subdirectory(benchmark)
 add_subdirectory(rclcpp)
 
