@@ -42,21 +42,8 @@ operator<<(std::ostream & oss, const QosPolicyKind & qpk)
   return oss << qos_policy_kind_to_cstr(qpk);
 }
 
-#define RCLCPP_QOS_OVERRIDING_OPTIONS_DEFAULT_QOS_POLICIES (std::initializer_list<QosPolicyKind> \
-  {QosPolicyKind::History, QosPolicyKind::Depth, QosPolicyKind::Reliability})
-
-QosOverridingOptions::QosOverridingOptions(bool declare_default_parameters, std::string id)
-: id{std::move(id)},
-  policy_kinds{declare_default_parameters ?
-    RCLCPP_QOS_OVERRIDING_OPTIONS_DEFAULT_QOS_POLICIES :
-    std::initializer_list<QosPolicyKind>{}}
-{}
-
-QosOverridingOptions::QosOverridingOptions(
-  std::initializer_list<QosPolicyKind> policy_kinds, std::string id)
-: id{std::move(id)},
-  policy_kinds{policy_kinds}
-{}
+std::initializer_list<QosPolicyKind> QosOverridingOptions::kDefaultPolicies =
+{QosPolicyKind::History, QosPolicyKind::Depth, QosPolicyKind::Reliability};
 
 QosOverridingOptions::QosOverridingOptions(
   std::initializer_list<QosPolicyKind> policy_kinds,
@@ -64,14 +51,6 @@ QosOverridingOptions::QosOverridingOptions(
   std::string id)
 : id{std::move(id)},
   policy_kinds{policy_kinds},
-  validation_callback{std::move(validation_callback)}
-{}
-
-QosOverridingOptions::QosOverridingOptions(
-  QosCallback validation_callback,
-  std::string id)
-: id{std::move(id)},
-  policy_kinds{RCLCPP_QOS_OVERRIDING_OPTIONS_DEFAULT_QOS_POLICIES},
   validation_callback{std::move(validation_callback)}
 {}
 

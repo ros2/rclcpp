@@ -71,27 +71,8 @@ struct QosOverridingOptions
   /// Validation callback that will be called to verify the profile.
   QosCallback validation_callback;
 
-  /// Construct using default overriding options.
-  /**
-   * \param declare_default_parameters if `true`, the default set of qos that can be
-   *   reconfigured will be declared. If `false`, qos aren't reconfigurable.
-   * \param id id of the entity.
-   */
-  explicit QosOverridingOptions(bool declare_default_parameters = false, std::string id = {});
-
-  /// Construct passing a list of qos policies that can be overriden.
-  /**
-   * This constructor is implicit, e.g.:
-   * ```cpp
-   * node->create_publisher(
-   *   "topic_name",
-   *   default_qos_profile,
-   *   {{QosPolicyKind::Reliability}, "my_id"});
-   * ```
-   * \param policy_kinds list of policy kinds that will be reconfigurable.
-   * \param id id of the entity.
-   */
-  QosOverridingOptions(std::initializer_list<QosPolicyKind> policy_kinds, std::string id = {});
+  /// Default constructor, no overrides allowed.
+  QosOverridingOptions() = default;
 
   /// Construct passing a list of qos policies that and a verification callback.
   /**
@@ -113,26 +94,10 @@ struct QosOverridingOptions
    */
   QosOverridingOptions(
     std::initializer_list<QosPolicyKind> policy_kinds,
-    QosCallback validation_callback,
+    QosCallback validation_callback = nullptr,
     std::string id = {});
 
-  /// Construct using default overriding options and passing a validation callback.
-  /**
-   * This constructor is implicit, e.g.:
-   * ```cpp
-   * node->create_publisher(
-   *   "topic_name",
-   *   default_qos_profile,
-   *   {
-   *     [] (auto && qos) {return check_qos_validity(qos)},
-   *     "my_id"
-   *   });
-   * ```
-   * \param validation_callback callbak that will be called to validate the validity of
-   *   the qos profile set by the user.
-   * \param id id of the entity.
-   */
-  QosOverridingOptions(QosCallback validation_callback, std::string id = {});  // NOLINT, implicit
+  static std::initializer_list<QosPolicyKind> kDefaultPolicies;
 };
 
 }  // namespace rclcpp
