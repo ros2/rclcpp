@@ -25,7 +25,8 @@ constexpr char empty_service_name[] = "empty_service";
 class ServicePerformanceTest : public PerformanceTest
 {
 public:
-  ServicePerformanceTest() : callback_count(0) {}
+  ServicePerformanceTest()
+  : callback_count(0) {}
 
   void SetUp(benchmark::State & state)
   {
