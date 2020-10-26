@@ -27,17 +27,17 @@ class ServicePerformanceTest : public PerformanceTest
 public:
   ServicePerformanceTest() : callback_count(0) {}
 
-  void SetUp(::benchmark::State & state)
+  void SetUp(benchmark::State & state)
   {
     rclcpp::init(0, nullptr);
     node = std::make_unique<rclcpp::Node>("node", "ns");
     empty_client = node->create_client<test_msgs::srv::Empty>(empty_service_name);
     callback_count = 0;
-    
+
     performance_test_fixture::PerformanceTest::SetUp(state);
   }
 
-  void TearDown(::benchmark::State & state)
+  void TearDown(benchmark::State & state)
   {
     performance_test_fixture::PerformanceTest::TearDown(state);
 

@@ -27,7 +27,7 @@ class ClientPerformanceTest : public PerformanceTest
 {
 public:
   explicit ClientPerformanceTest(rclcpp::NodeOptions = rclcpp::NodeOptions()) {}
-  void SetUp(::benchmark::State & state)
+  void SetUp(benchmark::State & state)
   {
     rclcpp::init(0, nullptr);
     node = std::make_unique<rclcpp::Node>("node", "ns");
@@ -42,7 +42,7 @@ public:
     performance_test_fixture::PerformanceTest::SetUp(state);
   }
 
-  void TearDown(::benchmark::State & state)
+  void TearDown(benchmark::State & state)
   {
     performance_test_fixture::PerformanceTest::TearDown(state);
     empty_service.reset();
