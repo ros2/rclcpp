@@ -63,6 +63,8 @@ BENCHMARK_F(PerformanceTestExecutor, single_thread_executor)(benchmark::State & 
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);
+  publisher->publish(empty_msgs);
+  executor.spin_some(100ms);
 
   reset_heap_counters();
 
@@ -72,8 +74,6 @@ BENCHMARK_F(PerformanceTestExecutor, single_thread_executor)(benchmark::State & 
     st.ResumeTiming();
 
     executor.spin_some(100ms);
-
-    benchmark::ClobberMemory();
   }
   if (callback_count == 0) {
     st.SkipWithError("No message was received");
@@ -84,6 +84,8 @@ BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor)(benchmark::State & s
 {
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(node);
+  publisher->publish(empty_msgs);
+  executor.spin_some(100ms);
 
   reset_heap_counters();
 
@@ -93,8 +95,6 @@ BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor)(benchmark::State & s
     st.ResumeTiming();
 
     executor.spin_some(100ms);
-
-    benchmark::ClobberMemory();
   }
   if (callback_count == 0) {
     st.SkipWithError("No message was received");
@@ -131,12 +131,18 @@ BENCHMARK_F(PerformanceTestExecutorSimple, static_single_thread_executor)(benchm
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = executor.spin_until_future_complete(shared_future, 100ms);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = executor.spin_until_future_complete(shared_future, 100ms);
+    ret = executor.spin_until_future_complete(shared_future, 100ms);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -152,13 +158,20 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, node, shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -174,13 +187,20 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, node, shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -203,6 +223,7 @@ BENCHMARK_F(
       executor, node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -218,13 +239,20 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, node->get_node_base_interface(), shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node->get_node_base_interface(), shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -240,13 +268,20 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, node->get_node_base_interface(), shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node->get_node_base_interface(), shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -264,13 +299,20 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, node->get_node_base_interface(), shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node->get_node_base_interface(), shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -283,12 +325,18 @@ BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
+    ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
@@ -303,13 +351,20 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
+  auto ret = rclcpp::spin_until_future_complete(
+    node->get_node_base_interface(), shared_future, 1s);
+  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
+    st.SkipWithError(rcutils_get_error_string().str);
+  }
+
   reset_heap_counters();
 
   for (auto _ : st) {
-    auto ret = rclcpp::spin_until_future_complete(
+    ret = rclcpp::spin_until_future_complete(
       node->get_node_base_interface(), shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
+      break;
     }
   }
 }
