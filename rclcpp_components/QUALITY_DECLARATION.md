@@ -92,7 +92,7 @@ There is an automated test which runs a linter that ensures each file has at lea
 
 ### Feature Testing [4.i]
 
-Each feature in `rclcpp_components` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_components/tree/master/test) directory.
+Each feature in `rclcpp_components` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_components/tree/foxy/test) directory.
 New features are required to have tests before being added.
 
 Currently nightly test results can be seen here:
@@ -151,7 +151,7 @@ It also has several test dependencies, which do not affect the resulting quality
 
 The `ament_index_cpp` package provides a C++ API to access the ament resource index.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/master/ament_index_cpp/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/foxy/ament_index_cpp/QUALITY_DECLARATION.md).
 
 #### `class_loader`
 
@@ -163,19 +163,19 @@ It is **Quality Level 3**, see its [Quality Declaration document](https://github
 
 The `composition_interfaces` package contains message and service definitions for managing composable nodes in a container process.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/composition_interfaces/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/foxy/composition_interfaces/QUALITY_DECLARATION.md).
 
 #### `rclcpp`
 
 The `rclcpp` package provides the ROS client library in C++.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/foxy/rclcpp/QUALITY_DECLARATION.md).
 
 #### `rcpputils`
 
 The `rcpputils` package provides an API which contains common utilities and data structures useful when programming in C++.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/foxy/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 

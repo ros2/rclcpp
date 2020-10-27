@@ -92,7 +92,7 @@ There is an automated test which runs a linter that ensures each file has at lea
 
 ### Feature Testing [4.i]
 
-Each feature in `rclcpp_lifecycle` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_lifecycle/tree/master/test) directory.
+Each feature in `rclcpp_lifecycle` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_lifecycle/tree/foxy/test) directory.
 New features are required to have tests before being added.
 
 Currently nightly test results can be seen here:
@@ -151,31 +151,31 @@ It also has several test dependencies, which do not affect the resulting quality
 
 The `lifecycle_msgs` package contains message and service definitions for managing lifecycle nodes.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/foxy/lifecycle_msgs/QUALITY_DECLARATION.md).
 
 #### `rclcpp`
 
 The `rclcpp` package provides the ROS client library in C++.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/foxy/rclcpp/QUALITY_DECLARATION.md).
 
 #### `rcl_lifecycle`
 
 The `rcl_lifecycle` package provides functionality for ROS 2 lifecycle nodes in C.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl_lifecycle/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/foxy/rcl_lifecycle/QUALITY_DECLARATION.md).
 
 #### `rosidl_typesupport_cpp`
 
 The `rosidl_typesupport_cpp` package generates the type support for C++ messages.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rosidl_typesupport/blob/master/rosidl_typesupport_cpp/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rosidl_typesupport/blob/foxy/rosidl_typesupport_cpp/QUALITY_DECLARATION.md).
 
 #### `rmw`
 
 `rmw` is the ROS 2 middleware library.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/foxy/rmw/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 

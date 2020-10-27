@@ -92,7 +92,7 @@ There is an automated test which runs a linter that ensures each file has at lea
 
 ### Feature Testing [4.i]
 
-Each feature in `rclcpp_action` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_action/tree/master/test) directory.
+Each feature in `rclcpp_action` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_action/tree/foxy/test) directory.
 New features are required to have tests before being added.
 
 Currently nightly test results can be seen here:
@@ -151,19 +151,19 @@ It also has several test dependencies, which do not affect the resulting quality
 
 `action_msgs` provides messages and services for ROS 2 actions.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/foxy/action_msgs/QUALITY_DECLARATION.md).
 
 #### `rclcpp`
 
 The `rclcpp` package provides the ROS client library in C++.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/foxy/rclcpp/QUALITY_DECLARATION.md).
 
 #### `rcl_action`
 
 The `rcl_action` package provides C-based ROS action implementation.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl_action/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/foxy/rcl_action/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
