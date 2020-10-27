@@ -44,7 +44,7 @@ public:
   }
 
   // Lock everything except user callbacks
-  std::recursive_mutex reentrant_mutex_;
+  std::recursive_mutex action_server_reentrant_mutex_;
 
   std::shared_ptr<rcl_action_server_t> action_server_;
 
@@ -88,12 +88,13 @@ ServerBase::ServerBase(
       if (nullptr != ptr) {
         rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
         rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
-        (void)ret;
-        RCLCPP_DEBUG(
-          rclcpp::get_logger("rclcpp_action"),
-          "failed to fini rcl_action_server_t in deleter");
+        if (RCL_RET_OK != ret) {
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("rclcpp_action"),
+            "failed to fini rcl_action_server_t in deleter");
+        }
+        delete ptr;
       }
-      delete ptr;
     };
 
   pimpl_->action_server_.reset(new rcl_action_server_t, deleter);
@@ -159,7 +160,7 @@ ServerBase::get_number_of_ready_guard_conditions()
 bool
 ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_wait_set_add_action_server(
     wait_set, pimpl_->action_server_.get(), NULL);
   return RCL_RET_OK == ret;
@@ -168,7 +169,7 @@ ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
     wait_set,
     pimpl_->action_server_.get(),
@@ -210,7 +211,7 @@ ServerBase::execute_goal_request_received()
   rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
   rmw_request_id_t request_header;
 
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
 
   std::shared_ptr<void> message = create_goal_request();
   ret = rcl_action_take_goal_request(
@@ -254,10 +255,11 @@ ServerBase::execute_goal_request_received()
       {
         if (nullptr != ptr) {
           rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
-          (void)fail_ret;
-          RCLCPP_DEBUG(
-            rclcpp::get_logger("rclcpp_action"),
-            "failed to fini rcl_action_goal_handle_t in deleter");
+          if (RCL_RET_OK != fail_ret) {
+            RCLCPP_DEBUG(
+              rclcpp::get_logger("rclcpp_action"),
+              "failed to fini rcl_action_goal_handle_t in deleter");
+          }
           delete ptr;
         }
       };
@@ -297,7 +299,7 @@ ServerBase::execute_cancel_request_received()
   // Initialize cancel request
   auto request = std::make_shared<action_msgs::srv::CancelGoal::Request>();
 
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   ret = rcl_action_take_cancel_request(
     pimpl_->action_server_.get(),
     &request_header,
@@ -383,7 +385,7 @@ ServerBase::execute_result_request_received()
   // Get the result request message
   rmw_request_id_t request_header;
   std::shared_ptr<void> result_request = create_result_request();
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   ret = rcl_action_take_result_request(
     pimpl_->action_server_.get(), &request_header, result_request.get());
 
@@ -439,7 +441,7 @@ ServerBase::execute_check_expired_goals()
 
   // Loop in case more than 1 goal expired
   while (num_expired > 0u) {
-    std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     rcl_ret_t ret;
     ret = rcl_action_expire_goals(pimpl_->action_server_.get(), expired_goals, 1, &num_expired);
     if (RCL_RET_OK != ret) {
@@ -460,6 +462,11 @@ void
 ServerBase::publish_status()
 {
   rcl_ret_t ret;
+
+  // We need to hold the lock across this entire method because
+  // rcl_action_server_get_goal_handles() returns an internal pointer to the
+  // goal data.
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
 
   // Get all goal handles known to C action server
   rcl_action_goal_handle_t ** goal_handles = NULL;
@@ -516,7 +523,7 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
   // Check that the goal exists
   rcl_action_goal_info_t goal_info;
   convert(uuid, &goal_info);
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   bool goal_exists;
   goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
 
@@ -542,7 +549,7 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
 void
 ServerBase::notify_goal_terminal_state()
 {
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_notify_goal_done(pimpl_->action_server_.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -552,7 +559,7 @@ ServerBase::notify_goal_terminal_state()
 void
 ServerBase::publish_feedback(std::shared_ptr<void> feedback_msg)
 {
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_publish_feedback(pimpl_->action_server_.get(), feedback_msg.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
