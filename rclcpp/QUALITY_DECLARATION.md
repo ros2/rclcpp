@@ -94,7 +94,7 @@ There is an automated test which runs a linter that ensures each file has at lea
 
 ### Feature Testing [4.i]
 
-Each feature in `rclcpp` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp/tree/master/test) directory.
+Each feature in `rclcpp` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp/tree/foxy/test) directory.
 New features are required to have tests before being added.
 
 Currently nightly test results can be seen here:
@@ -155,49 +155,49 @@ It also has several test dependencies, which do not affect the resulting quality
 
 The `libstatistics_collector` package provides lightweight aggregation utilities to collect statistics and measure message metrics.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros-tooling/libstatistics_collector/tree/master/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros-tooling/libstatistics_collector/tree/foxy/QUALITY_DECLARATION.md).
 
 #### `rcl`
 
 `rcl` a library to support implementation of language specific ROS 2 Client Libraries.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/foxy/rcl/QUALITY_DECLARATION.md).
 
 #### `rcl_yaml_param_parser`
 
 The `rcl_yaml_param_parser` package provides an API that is used to parse YAML configuration files which may be used to configure ROS and specific nodes.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/tree/master/rcl_yaml_param_parser/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/tree/foxy/rcl_yaml_param_parser/QUALITY_DECLARATION.md).
 
 #### `rcpputils`
 
 The `rcpputils` package provides an API which contains common utilities and data structures useful when programming in C++.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/foxy/QUALITY_DECLARATION.md).
 
 #### `rcutils`
 
 The `rcutils` package provides an API which contains common utilities and data structures useful when programming in C.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/foxy/QUALITY_DECLARATION.md).
 
 #### `rmw`
 
 `rmw` is the ROS 2 middleware library.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/foxy/rmw/QUALITY_DECLARATION.md).
 
 #### `statistics_msgs`
 
 The `statistics_msgs` package contains ROS 2 message definitions for reporting statistics for topics and system resources.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/statistics_msgs/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/foxy/statistics_msgs/QUALITY_DECLARATION.md).
 
 #### `tracetools`
 
 The `tracetools` package provides utilities for instrumenting the code in `rclcpp` so that it may be traced for debugging and performance analysis.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/master/tracetools/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/foxy/tracetools/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
