@@ -7,7 +7,7 @@ find_package(performance_test_fixture REQUIRED)
 add_performance_test(
   benchmark_action_client
   benchmark_action_client.cpp
-  TIMEOUT 60)
+  TIMEOUT 120)
 if(TARGET benchmark_action_client)
   target_link_libraries(benchmark_action_client ${PROJECT_NAME})
   ament_target_dependencies(benchmark_action_client rclcpp test_msgs)
