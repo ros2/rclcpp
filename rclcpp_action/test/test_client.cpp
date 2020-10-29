@@ -132,7 +132,7 @@ protected:
             feedback_message.feedback.sequence.push_back(1);
             feedback_publisher->publish(feedback_message);
             client_executor.spin_once();
-            for (uint32_t i = 1; i < static_cast<uint32_t>(goal_request->goal.order); ++i) {
+            for (int32_t i = 1; i < goal_request->goal.order; ++i) {
               feedback_message.feedback.sequence.push_back(
                 feedback_message.feedback.sequence[i] +
                 feedback_message.feedback.sequence[i - 1]);
