@@ -60,7 +60,26 @@ class QosParameters;
 
 /// Options that are passed in subscription/publisher constructor to specify QoSConfigurability.
 /**
- * TODO: Write nice docs here.
+ * This options struct allows configuring:
+ * - Which policy kinds will have declared parameters.
+ * - An optional callback, that will be called to validate the final qos profile.
+ * - An optional id. In the case that different qos are desired for two publishers/subscriptions in
+ *   the same topic, this id will allow disambiguating them.
+ * 
+ * Example parameter file:
+ * 
+ * ```yaml
+ * my_node_name:
+ *  ros__parameters:
+ *    qos_overrides:
+ *      /my/topic/name:
+ *        publisher:  # publisher without provided id
+ *          reliability: reliable
+ *          depth: 100
+ *        publisher_my_id:  # publisher with `id="my_id"
+ *          reliability: reliable
+ *          depth: 10
+ * ```
  */
 struct QosOverridingOptions
 {
