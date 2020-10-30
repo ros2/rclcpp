@@ -188,7 +188,7 @@ declare_qos_parameters(
     auto policy_string = (parameter_value).get<std::string>(); \
     auto policy_value = rmw_qos_ ## kind_lower ## _policy_from_str(policy_string.c_str()); \
     if (RMW_QOS_POLICY_ ## kind_upper ## _UNKNOWN == policy_value) { \
-      throw std::invalid_argument{"unknown qos policy " #kind_lower " value: " + policy_string}; \
+      throw std::invalid_argument{"unknown QoS policy " #kind_lower " value: " + policy_string}; \
     } \
     ((rclcpp_qos).kind_lower)(policy_value); \
   } while (0)
