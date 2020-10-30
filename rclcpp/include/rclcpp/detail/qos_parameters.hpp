@@ -93,7 +93,7 @@ apply_qos_override(
  * \tparam NodeT Node pointer or reference type.
  * \tparam EntityQosParametersTraits A class with two static methods: `entity_type()` and
  *  `allowed_policies()`. See `PublisherQosParametersTraits` and `SubscriptionQosParametersTraits`.
- * \param options User provided options that indicate if qos parameter overrides should be
+ * \param options User provided options that indicate if QoS parameter overrides should be
  *  declared or not, which policy can have overrides, and optionally a callback to validate the profile.
  * \param node Parameters will be declared using this node.
  * \param topic_name Name of the topic of the entity.
