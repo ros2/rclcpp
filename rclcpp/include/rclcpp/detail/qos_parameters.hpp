@@ -253,7 +253,7 @@ check_if_stringified_policy_is_null(const char * policy_value_stringified, QosPo
 {
   if (!policy_value_stringified) {
     std::ostringstream oss{"unknown ", std::ios::ate};
-    oss << kind << " qos policy value: {" << policy_value_stringified << "}";
+    oss << kind << " QoS policy value: {" << policy_value_stringified << "}";
     throw std::invalid_argument{oss.str()};
   }
   return policy_value_stringified;
