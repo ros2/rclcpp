@@ -293,7 +293,7 @@ get_default_qos_param_value(rclcpp::QosPolicyKind kind, const rclcpp::QoS & qos)
         check_if_stringified_policy_is_null(
           rmw_qos_reliability_policy_to_str(rmw_qos.reliability), kind));
     default:
-      throw std::invalid_argument{"unknown qos policy kind"};
+      throw std::invalid_argument{"unknown QoS policy kind"};
   }
 }
 
