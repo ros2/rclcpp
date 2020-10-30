@@ -143,8 +143,9 @@ TEST_F(TestDuration, from_seconds) {
   EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration::from_seconds(0.0));
   EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration::from_seconds(0));
   EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(1.5));
-  EXPECT_EQ(rclcpp::Duration::from_nanoseconds(
-    -ONE_AND_HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(-1.5));
+  EXPECT_EQ(
+    rclcpp::Duration::from_nanoseconds(-ONE_AND_HALF_SEC_IN_NS),
+    rclcpp::Duration::from_seconds(-1.5));
 }
 
 TEST_F(TestDuration, std_chrono_constructors) {
@@ -257,7 +258,7 @@ TEST_F(TestDuration, test_some_exceptions) {
   rclcpp::Duration test_duration(0ns);
   RCLCPP_EXPECT_THROW_EQ(
     test_duration =
-      rclcpp::Duration::from_nanoseconds(INT64_MAX) - rclcpp::Duration(-1ns),
+    rclcpp::Duration::from_nanoseconds(INT64_MAX) - rclcpp::Duration(-1ns),
     std::overflow_error("duration subtraction leads to int64_t overflow"));
   RCLCPP_EXPECT_THROW_EQ(
     test_duration = test_duration * (std::numeric_limits<double>::infinity()),
