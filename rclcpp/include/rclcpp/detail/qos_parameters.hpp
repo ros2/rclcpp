@@ -88,7 +88,7 @@ void
 apply_qos_override(
   rclcpp::QosPolicyKind policy, rclcpp::ParameterValue value, rclcpp::QoS & qos);
 
-/// \internal Declare qos parameters for the given entity.
+/// \internal Declare QoS parameters for the given entity.
 /**
  * \tparam NodeT Node pointer or reference type.
  * \tparam EntityQosParametersTraits A class with two static methods: `entity_type()` and
