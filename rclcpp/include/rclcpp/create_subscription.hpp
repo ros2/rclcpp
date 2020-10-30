@@ -84,8 +84,6 @@ create_subscription(
               " ms");
     }
 
-    // TODO(ivanpauno): This could have topics statistics enabled, but I'm not sure if it makes
-    // sense.
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>>
     publisher = rclcpp::detail::create_publisher<statistics_msgs::msg::MetricsMessage>(
       node_parameters,
