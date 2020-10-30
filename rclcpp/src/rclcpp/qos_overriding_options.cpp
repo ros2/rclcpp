@@ -31,7 +31,7 @@ qos_policy_kind_to_cstr(const QosPolicyKind & qpk)
 {
   const char * ret = rmw_qos_policy_kind_to_str(static_cast<rmw_qos_policy_kind_t>(qpk));
   if (!ret) {
-    throw std::invalid_argument{"unknown qos policy kind"};
+    throw std::invalid_argument{"unknown QoS policy kind"};
   }
   return ret;
 }
