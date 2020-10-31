@@ -495,7 +495,7 @@ public:
 
   rcl_lifecycle_state_machine_t state_machine_;
   State current_state_;
-  std::map<
+  std::unordered_map<
     std::uint8_t,
     std::function<LifecycleNodeInterface::CallbackReturn(const State &)>> cb_map_;
 
