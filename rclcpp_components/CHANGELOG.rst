@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainers (`#1384 <https://github.com/ros2/rclcpp/issues/1384>`_)
+* ComponentManager: switch off parameter services and event publisher (`#1333 <https://github.com/ros2/rclcpp/issues/1333>`_)
+* Contributors: Ivan Santiago Paunovic, Martijn Buijs
+
 5.0.0 (2020-09-18)
 ------------------
 
