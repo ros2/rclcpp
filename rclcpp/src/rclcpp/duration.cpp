@@ -255,7 +255,7 @@ Duration::from_seconds(double seconds)
 }
 
 Duration
-Duration::from_nanoseconds(rcl_duration_value_t seconds)
+Duration::from_nanoseconds(rcl_duration_value_t nanoseconds)
 {
   Duration ret;
   ret.rcl_duration_.nanoseconds = seconds;
