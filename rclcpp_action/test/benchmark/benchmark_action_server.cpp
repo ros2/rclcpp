@@ -50,7 +50,7 @@ public:
     rclcpp::shutdown();
   }
 
-  auto AsyncSendGoalOfOrder(const size_t order)
+  auto AsyncSendGoalOfOrder(const int order)
   {
     test_msgs::action::Fibonacci::Goal goal;
     goal.order = order;
@@ -243,7 +243,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_set_success)(benchmark::S
       server_goal_handle = goal_handle;
     });
 
-  const auto result = []() {
+  const auto result = [goal_order]() {
       auto result = std::make_shared<Fibonacci::Result>();
       for (int i = 0; i < goal_order; ++i) {
         // Not the fibonacci sequence, but that's not important to this benchmark
@@ -286,7 +286,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_abort)(benchmark::State &
       server_goal_handle = goal_handle;
     });
 
-  const auto result = []() {
+  const auto result = [goal_order]() {
       auto result = std::make_shared<Fibonacci::Result>();
       for (int i = 0; i < goal_order; ++i) {
         // Not the fibonacci sequence, but that's not important to this benchmark
