@@ -61,6 +61,29 @@ TEST(TestUtilities, init_with_args) {
   rclcpp::shutdown();
 }
 
+TEST(TestUtilities, init_with_args_contains_ros) {
+  EXPECT_FALSE(rclcpp::signal_handlers_installed());
+  const char * const argv[] = {
+    "process_name",
+    "-d", "--ros-args",
+    "-r", "__ns:=/foo/bar",
+    "-r", "__ns:=/fiz/buz",
+    "--", "--foo=bar", "--baz"
+  };
+  int argc = sizeof(argv) / sizeof(const char *);
+  auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
+
+  ASSERT_EQ(4u, args.size());
+  ASSERT_EQ(std::string{"process_name"}, args[0]);
+  ASSERT_EQ(std::string{"-d"}, args[1]);
+  ASSERT_EQ(std::string{"--foo=bar"}, args[2]);
+  ASSERT_EQ(std::string{"--baz"}, args[3]);
+  EXPECT_TRUE(rclcpp::signal_handlers_installed());
+
+  EXPECT_TRUE(rclcpp::ok());
+  rclcpp::shutdown();
+}
+
 TEST(TestUtilities, multi_init) {
   auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
   auto context2 = std::make_shared<rclcpp::contexts::DefaultContext>();
