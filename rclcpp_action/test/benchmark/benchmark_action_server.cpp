@@ -243,7 +243,10 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_set_success)(benchmark::S
       server_goal_handle = goal_handle;
     });
 
-  const auto result = [goal_order]() {
+  // MSVC and Clang disagree how goal_order should be captured here. Though this capture is a bit
+  // too wide, they at least could agree it was fine. In my testing MSVC errored if goal_order was
+  // not captured, but clang would warn if it was explicitly captured.
+  const auto result = [&]() {
       auto result = std::make_shared<Fibonacci::Result>();
       for (int i = 0; i < goal_order; ++i) {
         // Not the fibonacci sequence, but that's not important to this benchmark
@@ -286,7 +289,8 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_abort)(benchmark::State &
       server_goal_handle = goal_handle;
     });
 
-  const auto result = [goal_order]() {
+  // Capturing with & because MSVC and Clang disagree about how to capture goal_order
+  const auto result = [&]() {
       auto result = std::make_shared<Fibonacci::Result>();
       for (int i = 0; i < goal_order; ++i) {
         // Not the fibonacci sequence, but that's not important to this benchmark
