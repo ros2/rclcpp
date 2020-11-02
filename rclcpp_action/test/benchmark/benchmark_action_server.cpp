@@ -159,6 +159,9 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_accept_goal)(benchmark::S
 
 BENCHMARK_F(ActionServerPerformanceTest, action_server_cancel_goal)(benchmark::State & state)
 {
+  // The goal handle needs to be assigned to a variable for the lifetime of the goal so that it is
+  // not cleaned up before the cancel request is received and processed.
+  std::shared_ptr<GoalHandle> server_goal_handle = nullptr;
   auto action_server = rclcpp_action::create_server<Fibonacci>(
     node, fibonacci_action_name,
     [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
@@ -167,7 +170,9 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_cancel_goal)(benchmark::S
     [](std::shared_ptr<GoalHandle>) {
       return rclcpp_action::CancelResponse::ACCEPT;
     },
-    [](std::shared_ptr<GoalHandle>) {});
+    [&server_goal_handle](std::shared_ptr<GoalHandle> goal_handle) {
+      server_goal_handle = goal_handle;
+    });
 
   reset_heap_counters();
   for (auto _ : state) {

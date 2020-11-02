@@ -112,6 +112,9 @@ public:
 protected:
   std::shared_ptr<rclcpp::Node> node;
   std::shared_ptr<rclcpp_action::Server<test_msgs::action::Fibonacci>> action_server;
+
+  // Goal handle needs to be kept alive by the server in order for client request specific to the
+  // goal to succeed.
   std::shared_ptr<GoalHandle> current_goal_handle;
 };
 
