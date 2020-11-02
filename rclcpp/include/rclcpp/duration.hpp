@@ -38,10 +38,14 @@ public:
    */
   Duration(int32_t seconds, uint32_t nanoseconds);
 
-  // This constructor matches any numeric value - ints or floats.
+  /// Construct duration from the specified nanoseconds.
+  [[deprecated(
+    "Use Duration::from_nanoseconds instead or std::chrono_literals. For example:"
+    "rclcpp::Duration::from_nanoseconds(int64_variable);"
+    "rclcpp::Duration(0ns);")]]
   explicit Duration(rcl_duration_value_t nanoseconds);
 
-  // This constructor matches std::chrono::nanoseconds.
+  /// Construct duration from the specified std::chrono::nanoseconds.
   explicit Duration(std::chrono::nanoseconds nanoseconds);
 
   // This constructor matches any std::chrono value other than nanoseconds
@@ -129,6 +133,10 @@ public:
   static Duration
   from_seconds(double seconds);
 
+  /// Create a duration object from an integer number representing nanoseconds
+  static Duration
+  from_nanoseconds(rcl_duration_value_t nanoseconds);
+
   /// Convert Duration into a std::chrono::Duration.
   template<class DurationT>
   DurationT
@@ -143,6 +151,8 @@ public:
 
 private:
   rcl_duration_t rcl_duration_;
+
+  Duration() = default;
 };
 
 }  // namespace rclcpp
