@@ -258,7 +258,7 @@ Duration
 Duration::from_nanoseconds(rcl_duration_value_t nanoseconds)
 {
   Duration ret;
-  ret.rcl_duration_.nanoseconds = seconds;
+  ret.rcl_duration_.nanoseconds = nanoseconds;
   return ret;
 }
 
