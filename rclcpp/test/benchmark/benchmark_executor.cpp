@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 
@@ -25,6 +26,8 @@
 using namespace std::chrono_literals;
 using performance_test_fixture::PerformanceTest;
 
+constexpr unsigned int kNumberOfNodes = 10;
+
 class PerformanceTestExecutor : public PerformanceTest
 {
 public:
@@ -32,45 +35,53 @@ public:
   {
     rclcpp::init(0, nullptr);
     callback_count = 0;
-    node = std::make_shared<rclcpp::Node>("my_node");
+    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
+      nodes.push_back(std::make_shared<rclcpp::Node>("my_node_" + std::to_string(i)));
 
-    publisher = node->create_publisher<test_msgs::msg::Empty>(
-      "empty_msgs", rclcpp::QoS(10));
-    auto callback = [this](test_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
-    subscription =
-      node->create_subscription<test_msgs::msg::Empty>(
-      "empty_msgs", rclcpp::QoS(10), std::move(callback));
+      publishers.push_back(
+        nodes[i]->create_publisher<test_msgs::msg::Empty>(
+          "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10)));
 
+      auto callback = [this](test_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
+      subscriptions.push_back(
+        nodes[i]->create_subscription<test_msgs::msg::Empty>(
+          "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10), std::move(callback)));
+    }
     PerformanceTest::SetUp(st);
   }
   void TearDown(benchmark::State & st)
   {
     PerformanceTest::TearDown(st);
-    publisher.reset();
-    subscription.reset();
-    node.reset();
+    subscriptions.clear();
+    publishers.clear();
+    nodes.clear();
     rclcpp::shutdown();
   }
 
   test_msgs::msg::Empty empty_msgs;
-  rclcpp::Node::SharedPtr node;
-  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
-  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
+  std::vector<rclcpp::Node::SharedPtr> nodes;
+  std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
+  std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
   int callback_count;
 };
 
-BENCHMARK_F(PerformanceTestExecutor, single_thread_executor)(benchmark::State & st)
+BENCHMARK_F(PerformanceTestExecutor, single_thread_executor_spin_some)(benchmark::State & st)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
-  publisher->publish(empty_msgs);
-  executor.spin_some(100ms);
+  for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
+    executor.add_node(nodes[i]);
+    publishers[i]->publish(empty_msgs);
+    executor.spin_some(100ms);
+  }
 
+  callback_count = 0;
   reset_heap_counters();
 
   for (auto _ : st) {
     st.PauseTiming();
-    publisher->publish(empty_msgs);
+    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
+      publishers[i]->publish(empty_msgs);
+    }
     st.ResumeTiming();
 
     executor.spin_some(100ms);
@@ -80,18 +91,23 @@ BENCHMARK_F(PerformanceTestExecutor, single_thread_executor)(benchmark::State & 
   }
 }
 
-BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor)(benchmark::State & st)
+BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor_spin_some)(benchmark::State & st)
 {
   rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(node);
-  publisher->publish(empty_msgs);
-  executor.spin_some(100ms);
+  for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
+    executor.add_node(nodes[i]);
+    publishers[i]->publish(empty_msgs);
+    executor.spin_some(100ms);
+  }
 
+  callback_count = 0;
   reset_heap_counters();
 
   for (auto _ : st) {
     st.PauseTiming();
-    publisher->publish(empty_msgs);
+    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
+      publishers[i]->publish(empty_msgs);
+    }
     st.ResumeTiming();
 
     executor.spin_some(100ms);
@@ -121,7 +137,9 @@ public:
   rclcpp::Node::SharedPtr node;
 };
 
-BENCHMARK_F(PerformanceTestExecutorSimple, static_single_thread_executor)(benchmark::State & st)
+BENCHMARK_F(
+  PerformanceTestExecutorSimple,
+  static_single_thread_executor_spin_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   executor.add_node(node);
@@ -228,95 +246,6 @@ BENCHMARK_F(
   }
 }
 
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  single_thread_executor_spin_node_base_interface_until_future_complete)(benchmark::State & st)
-{
-  rclcpp::executors::SingleThreadedExecutor executor;
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
-    executor, node->get_node_base_interface(), shared_future, 1s);
-  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    ret = rclcpp::executors::spin_node_until_future_complete(
-      executor, node->get_node_base_interface(), shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  multi_thread_executor_spin_node_base_interface_until_future_complete)(benchmark::State & st)
-{
-  rclcpp::executors::MultiThreadedExecutor executor;
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
-    executor, node->get_node_base_interface(), shared_future, 1s);
-  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    ret = rclcpp::executors::spin_node_until_future_complete(
-      executor, node->get_node_base_interface(), shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  static_single_thread_executor_spin_node_base_interface_until_future_complete)(
-  benchmark::State &
-  st)
-{
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
-    executor, node->get_node_base_interface(), shared_future, 1s);
-  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    ret = rclcpp::executors::spin_node_until_future_complete(
-      executor, node->get_node_base_interface(), shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-  }
-}
-
 BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark::State & st)
 {
   // test success of an immediately finishing future
@@ -343,35 +272,7 @@ BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
-  node_base_interface_spin_until_future_complete)(benchmark::State & st)
-{
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  auto ret = rclcpp::spin_until_future_complete(
-    node->get_node_base_interface(), shared_future, 1s);
-  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    ret = rclcpp::spin_until_future_complete(
-      node->get_node_base_interface(), shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  static_executor_entities_collector)(benchmark::State & st)
+  static_executor_entities_collector_execute)(benchmark::State & st)
 {
   rclcpp::executors::StaticExecutorEntitiesCollector::SharedPtr entities_collector_ =
     std::make_shared<rclcpp::executors::StaticExecutorEntitiesCollector>();
