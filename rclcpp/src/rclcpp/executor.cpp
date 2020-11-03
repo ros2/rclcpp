@@ -25,6 +25,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/utilities.hpp"
@@ -195,7 +196,7 @@ void
 Executor::add_callback_group_to_map(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
   bool notify)
 {
   // If the callback_group already has an executor
@@ -269,7 +270,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 void
 Executor::remove_callback_group_from_map(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
-  WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
   bool notify)
 {
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr;
@@ -738,7 +739,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 Executor::get_node_by_group(
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
   rclcpp::CallbackGroup::SharedPtr group)
 {
   if (!group) {
@@ -796,7 +797,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 bool
 Executor::get_next_ready_executable_from_map(
   AnyExecutable & any_executable,
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes)
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes)
 {
   bool success = false;
   // Check the timers to see if there are any that are ready
@@ -884,7 +885,7 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
 bool
 Executor::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const
 {
   return std::find_if(
     weak_groups_to_nodes.begin(),
