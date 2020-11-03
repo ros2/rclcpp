@@ -187,7 +187,6 @@ BENCHMARK_F(
   static_single_thread_executor_spin_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
-  executor.add_node(node);
   // test success of an immediately finishing future
   std::promise<bool> promise;
   std::future<bool> future = promise.get_future();
@@ -202,11 +201,20 @@ BENCHMARK_F(
   reset_heap_counters();
 
   for (auto _ : st) {
+    // static_single_thread_executor has a special design. We need to add/remove the node each
+    // time you call spin
+    st.PauseTiming();
+    executor.add_node(node);
+    st.ResumeTiming();
+
     ret = executor.spin_until_future_complete(shared_future, 100ms);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
       break;
     }
+    st.PauseTiming();
+    executor.remove_node(node);
+    st.ResumeTiming();
   }
 }
 
