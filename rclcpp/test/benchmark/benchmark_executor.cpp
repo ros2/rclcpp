@@ -149,7 +149,8 @@ BENCHMARK_F(PerformanceTestExecutorSimple, single_thread_executor_add_node)(benc
   }
 }
 
-BENCHMARK_F(PerformanceTestExecutorSimple, single_thread_executor_remove_node)(benchmark::State & st)
+BENCHMARK_F(
+  PerformanceTestExecutorSimple, single_thread_executor_remove_node)(benchmark::State & st)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   for (auto _ : st) {
