@@ -137,6 +137,51 @@ public:
   rclcpp::Node::SharedPtr node;
 };
 
+
+BENCHMARK_F(PerformanceTestExecutorSimple, single_thread_executor_add_node)(benchmark::State & st)
+{
+  rclcpp::executors::SingleThreadedExecutor executor;
+  for (auto _ : st) {
+    executor.add_node(node);
+    st.PauseTiming();
+    executor.remove_node(node);
+    st.ResumeTiming();
+  }
+}
+
+BENCHMARK_F(PerformanceTestExecutorSimple, single_thread_executor_remove_node)(benchmark::State & st)
+{
+  rclcpp::executors::SingleThreadedExecutor executor;
+  for (auto _ : st) {
+    st.PauseTiming();
+    executor.add_node(node);
+    st.ResumeTiming();
+    executor.remove_node(node);
+  }
+}
+
+BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_add_node)(benchmark::State & st)
+{
+  rclcpp::executors::MultiThreadedExecutor executor;
+  for (auto _ : st) {
+    executor.add_node(node);
+    st.PauseTiming();
+    executor.remove_node(node);
+    st.ResumeTiming();
+  }
+}
+
+BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_remove_node)(benchmark::State & st)
+{
+  rclcpp::executors::MultiThreadedExecutor executor;
+  for (auto _ : st) {
+    st.PauseTiming();
+    executor.add_node(node);
+    st.ResumeTiming();
+    executor.remove_node(node);
+  }
+}
+
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
   static_single_thread_executor_spin_until_future_complete)(benchmark::State & st)
