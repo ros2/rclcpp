@@ -183,7 +183,9 @@ BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_remove_node)(be
   }
 }
 
-BENCHMARK_F(PerformanceTestExecutorSimple, static_single_thread_executor_add_node)(benchmark::State & st)
+BENCHMARK_F(
+  PerformanceTestExecutorSimple,
+  static_single_thread_executor_add_node)(benchmark::State & st)
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   for (auto _ : st) {
@@ -194,7 +196,9 @@ BENCHMARK_F(PerformanceTestExecutorSimple, static_single_thread_executor_add_nod
   }
 }
 
-BENCHMARK_F(PerformanceTestExecutorSimple, static_single_thread_executor_remove_node)(benchmark::State & st)
+BENCHMARK_F(
+  PerformanceTestExecutorSimple,
+  static_single_thread_executor_remove_node)(benchmark::State & st)
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   for (auto _ : st) {
