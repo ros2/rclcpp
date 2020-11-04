@@ -493,6 +493,6 @@ TEST_F(TestPublisher, run_event_handlers) {
   for (const auto & handler : publisher->get_event_handlers()) {
     std::shared_ptr<void> data;
     handler->take_data(data);
-    EXPECT_NO_THROW(handler->execute(data));
+    EXPECT_THROW(handler->execute(data), std::runtime_error);
   }
 }
