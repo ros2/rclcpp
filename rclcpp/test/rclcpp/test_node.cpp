@@ -842,10 +842,21 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name).get_value<int>(), 43);
   }
   {
-    // normal use, change type
+    // normal use, change type not allowed
     auto name = "parameter"_unq;
     EXPECT_FALSE(node->has_parameter(name));
     node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, "not an integer")).successful);
+  }
+  {
+    // normal use, change type
+    auto name = "parameter"_unq;
+    EXPECT_FALSE(node->has_parameter(name));
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.static_typing = false;
+    node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
     EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, "not an integer")).successful);
@@ -864,8 +875,6 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_TRUE(node->has_parameter(name3));
 
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name1, "not an integer")).successful);
-    EXPECT_EQ(node->get_parameter(name1).get_value<std::string>(), std::string("not an integer"));
 
     EXPECT_EQ(node->get_parameter(name2).get_value<bool>(), true);
     EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name2, false)).successful);
@@ -910,9 +919,22 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
   }
   {
-    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will undeclare
+    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will fail
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name)).successful);
+  }
+  {
+    // setting type of rclcpp::PARAMETER_NOT_SET,
+    // when dynamic typing is allowing and already set to another type, will undeclare
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.static_typing = false;
+    node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
@@ -1256,15 +1278,9 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rclcpp::PARAMETER_INTEGER;
-    node->declare_parameter(name, 42, descriptor);
+    node->declare_parameter(name, "asd", descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
-    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
-    EXPECT_EQ(value.get_value<int64_t>(), 42);
-
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, "asd")).successful);
-    EXPECT_TRUE(node->has_parameter(name));
-    value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_STRING);
     EXPECT_EQ(value.get_value<std::string>(), "asd");
   }
@@ -1422,9 +1438,22 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
   }
   {
-    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will undeclare
+    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will fail
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+
+    EXPECT_FALSE(node->set_parameters({rclcpp::Parameter(name)})[0].successful);
+  }
+  {
+    // setting type of rclcpp::PARAMETER_NOT_SET,
+    // when already to another type and dynamic typic allowed, will undeclare
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.static_typing = false;
+    node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
@@ -1596,9 +1625,22 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
   }
   {
-    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will undeclare
+    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will fail
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+
+    EXPECT_FALSE(node->set_parameters_atomically({rclcpp::Parameter(name)}).successful);
+  }
+  {
+    // setting type of rclcpp::PARAMETER_NOT_SET,
+    // when dynamic typing is allowed and already declared to another type, will undeclare
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.static_typing = false;
+    node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
