@@ -253,10 +253,10 @@ __check_parameters(
     std::string name = parameter.get_name();
     auto item = parameter_infos[name];
     const rcl_interfaces::msg::ParameterDescriptor & descriptor = item.descriptor;
-    const rclcpp::ParameterType type = item.value.get_type();
-    const rclcpp::ParameterType old_type = parameter.get_type();
+    const rclcpp::ParameterType old_type = item.value.get_type();
+    const rclcpp::ParameterType type = parameter.get_type();
     result.successful =
-      descriptor.allow_duck_typing || rclcpp::PARAMETER_NOT_SET == old_type || old_type == type;
+      !descriptor.static_typing || rclcpp::PARAMETER_NOT_SET == old_type || old_type == type;
     if (!result.successful) {
       result.reason = format_type_reason(
         name, rclcpp::to_string(old_type), rclcpp::to_string(type));
