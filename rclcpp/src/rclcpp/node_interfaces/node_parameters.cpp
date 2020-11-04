@@ -165,14 +165,13 @@ __are_doubles_equal(double x, double y, double ulp = 100.0)
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
 }
 
-RCLCPP_LOCAL
-inline
-void
-format_reason(std::string & reason, const std::string & name, const char * range_type)
+static
+std::string
+format_range_reason(const std::string & name, const char * range_type)
 {
   std::ostringstream ss;
   ss << "Parameter {" << name << "} doesn't comply with " << range_type << " range.";
-  reason = ss.str();
+  return ss.str();
 }
 
 RCLCPP_LOCAL
@@ -191,7 +190,7 @@ __check_parameter_value_in_range(
     }
     if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
       result.successful = false;
-      format_reason(result.reason, descriptor.name, "integer");
+      result.reason = format_range_reason(descriptor.name, "integer");
       return result;
     }
     if (integer_range.step == 0) {
@@ -201,7 +200,7 @@ __check_parameter_value_in_range(
       return result;
     }
     result.successful = false;
-    format_reason(result.reason, descriptor.name, "integer");
+    result.reason = format_range_reason(descriptor.name, "integer");
     return result;
   }
 
@@ -213,7 +212,7 @@ __check_parameter_value_in_range(
     }
     if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
       result.successful = false;
-      format_reason(result.reason, descriptor.name, "floating point");
+      result.reason = format_range_reason(descriptor.name, "floating point");
       return result;
     }
     if (fp_range.step == 0.0) {
@@ -224,10 +223,21 @@ __check_parameter_value_in_range(
       return result;
     }
     result.successful = false;
-    format_reason(result.reason, descriptor.name, "floating point");
+    result.reason = format_range_reason(descriptor.name, "floating point");
     return result;
   }
   return result;
+}
+
+static
+std::string
+format_type_reason(
+  const std::string & name, const std::string & old_type, const std::string & new_type)
+{
+  std::ostringstream ss;
+  ss << "Parameter {" << name << "} is of type {" << old_type << "}, setting it to {" <<
+    new_type << "} is not allowed.";
+  return ss.str();
 }
 
 // Return true if parameter values comply with the descriptors in parameter_infos.
@@ -240,13 +250,23 @@ __check_parameters(
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   for (const rclcpp::Parameter & parameter : parameters) {
-    const rcl_interfaces::msg::ParameterDescriptor & descriptor =
-      parameter_infos[parameter.get_name()].descriptor;
+    std::string name = parameter.get_name();
+    auto item = parameter_infos[name];
+    const rcl_interfaces::msg::ParameterDescriptor & descriptor = item.descriptor;
+    const rclcpp::ParameterType type = item.value.get_type();
+    const rclcpp::ParameterType old_type = parameter.get_type();
+    result.successful =
+      descriptor.allow_duck_typing || rclcpp::PARAMETER_NOT_SET == old_type || old_type == type;
+    if (!result.successful) {
+      result.reason = format_type_reason(
+        name, rclcpp::to_string(old_type), rclcpp::to_string(type));
+      return result;
+    }
     result = __check_parameter_value_in_range(
       descriptor,
       parameter.get_parameter_value());
     if (!result.successful) {
-      break;
+      return result;
     }
   }
   return result;
