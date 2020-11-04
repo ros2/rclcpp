@@ -296,7 +296,7 @@ TEST_F(TestQosEvent, execute) {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_take_event, RCL_RET_ERROR);
     std::shared_ptr<void> data;
     handler.take_data(data);
-    EXPECT_NO_THROW(handler.execute(data));
+    EXPECT_THROW(handler.execute(data), std::runtime_error);
     EXPECT_FALSE(handler_callback_executed);
   }
 }
