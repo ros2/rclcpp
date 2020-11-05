@@ -220,7 +220,7 @@ apply_qos_override(
       qos.avoid_ros_namespace_conventions(value.get<bool>());
       break;
     case QosPolicyKind::Deadline:
-      qos.deadline(::rclcpp::Duration(value.get<int64_t>()));
+      qos.deadline(::rclcpp::Duration::from_nanoseconds(value.get<int64_t>()));
       break;
     case QosPolicyKind::Durability:
       RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
@@ -234,14 +234,14 @@ apply_qos_override(
       qos.get_rmw_qos_profile().depth = static_cast<size_t>(value.get<int64_t>());
       break;
     case QosPolicyKind::Lifespan:
-      qos.lifespan(::rclcpp::Duration(value.get<int64_t>()));
+      qos.lifespan(::rclcpp::Duration::from_nanoseconds(value.get<int64_t>()));
       break;
     case QosPolicyKind::Liveliness:
       RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
         liveliness, LIVELINESS, value, qos);
       break;
     case QosPolicyKind::LivelinessLeaseDuration:
-      qos.liveliness_lease_duration(::rclcpp::Duration(value.get<int64_t>()));
+      qos.liveliness_lease_duration(::rclcpp::Duration::from_nanoseconds(value.get<int64_t>()));
       break;
     case QosPolicyKind::Reliability:
       RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING(
