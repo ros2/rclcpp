@@ -97,15 +97,6 @@ if(TARGET test_create_subscription)
     "test_msgs"
   )
 endif()
-ament_add_gtest(test_add_callback_groups_to_executor
-  test_add_callback_groups_to_executor.cpp
-  TIMEOUT 120)
-if(TARGET test_add_callback_groups_to_executor)
-  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME})
-  ament_target_dependencies(test_add_callback_groups_to_executor
-    "test_msgs"
-  )
-endif()
 ament_add_gtest(test_expand_topic_or_service_name test_expand_topic_or_service_name.cpp)
 if(TARGET test_expand_topic_or_service_name)
   ament_target_dependencies(test_expand_topic_or_service_name
@@ -631,12 +622,6 @@ ament_add_gtest(test_thread_safe_synchronization wait_set_policies/test_thread_s
 if(TARGET test_thread_safe_synchronization)
   ament_target_dependencies(test_thread_safe_synchronization "rcl" "test_msgs")
   target_link_libraries(test_thread_safe_synchronization ${PROJECT_NAME})
-endif()
-
-ament_add_gtest(test_rosout_qos test_rosout_qos.cpp)
-if(TARGET test_rosout_qos)
-  ament_target_dependencies(test_rosout_qos "rcl")
-  target_link_libraries(test_rosout_qos ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_executor test_executor.cpp
