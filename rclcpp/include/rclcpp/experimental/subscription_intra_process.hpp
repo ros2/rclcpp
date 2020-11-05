@@ -178,6 +178,7 @@ private:
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
   execute_impl(std::shared_ptr<void> & data)
   {
+    (void)data;
     throw std::runtime_error("Subscription intra-process can't handle serialized messages");
   }
 
