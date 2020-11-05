@@ -65,9 +65,9 @@ class QosParameters;
  * - An optional callback, that will be called to validate the final qos profile.
  * - An optional id. In the case that different qos are desired for two publishers/subscriptions in
  *   the same topic, this id will allow disambiguating them.
- * 
+ *
  * Example parameter file:
- * 
+ *
  * ```yaml
  * my_node_name:
  *  ros__parameters:

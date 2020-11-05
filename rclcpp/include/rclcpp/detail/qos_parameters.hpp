@@ -88,6 +88,22 @@ void
 apply_qos_override(
   rclcpp::QosPolicyKind policy, rclcpp::ParameterValue value, rclcpp::QoS & qos);
 
+inline
+rclcpp::ParameterValue
+declare_parameter_or_get(
+  rclcpp::node_interfaces::NodeParametersInterface & parameters_interface,
+  const std::string & param_name,
+  rclcpp::ParameterValue param_value,
+  rcl_interfaces::msg::ParameterDescriptor descriptor)
+{
+  try {
+    return parameters_interface.declare_parameter(
+      param_name, param_value, descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    return parameters_interface.get_parameter(param_name).get_parameter_value();
+  }
+}
+
 /// \internal Declare QoS parameters for the given entity.
 /**
  * \tparam NodeT Node pointer or reference type.
@@ -146,8 +162,9 @@ declare_qos_parameters(
       rcl_interfaces::msg::ParameterDescriptor descriptor{};
       descriptor.description = param_desciption.str();
       descriptor.read_only = true;
-      auto value = parameters_interface.declare_parameter(
-        param_name.str(), get_default_qos_param_value(policy, qos), descriptor);
+      auto value = declare_parameter_or_get(
+        parameters_interface, param_name.str(),
+        get_default_qos_param_value(policy, qos), descriptor);
       ::rclcpp::detail::apply_qos_override(policy, value, qos);
     }
   }
