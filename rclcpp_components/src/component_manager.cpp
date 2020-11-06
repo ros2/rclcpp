@@ -244,7 +244,9 @@ ComponentManager::OnUnloadNode(
     std::stringstream ss;
     ss << "No node found with unique_id: " << request->unique_id;
     response->error_message = ss.str();
-    RCLCPP_WARN(get_logger(), ss.str());
+    const std::string tmp = ss.str();
+    const char * cstr = tmp.c_str();
+    RCLCPP_WARN(get_logger(), cstr);
   } else {
     if (auto exec = executor_.lock()) {
       exec->remove_node(wrapper->second.get_node_base_interface());
