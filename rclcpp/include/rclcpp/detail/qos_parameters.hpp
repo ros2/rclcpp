@@ -168,8 +168,12 @@ declare_qos_parameters(
       ::rclcpp::detail::apply_qos_override(policy, value, qos);
     }
   }
-  if (options.validation_callback && !options.validation_callback(qos)) {
-    throw rclcpp::exceptions::InvalidQosOverridesException{"validation callback failed"};
+  if (options.validation_callback) {
+    auto result = options.validation_callback(qos);
+    if (!result.successful) {
+      throw rclcpp::exceptions::InvalidQosOverridesException{
+              "validation callback failed: " + result.reason};
+    }
   }
   return qos;
 }

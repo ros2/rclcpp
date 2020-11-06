@@ -24,6 +24,7 @@
 
 #include "rclcpp/qos.hpp"
 
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rmw/qos_policy_kind.h"
 
 namespace rclcpp
@@ -49,7 +50,8 @@ qos_policy_kind_to_cstr(const QosPolicyKind & qpk);
 std::ostream &
 operator<<(std::ostream & os, const QosPolicyKind & qpk);
 
-using QosCallback = std::function<bool (const rclcpp::QoS &)>;
+using QosCallbackResult = rcl_interfaces::msg::SetParametersResult;
+using QosCallback = std::function<QosCallbackResult(const rclcpp::QoS &)>;
 
 namespace detail
 {

@@ -92,9 +92,15 @@ TEST(TestQosParameters, declare_with_callback) {
   }));
 
   rclcpp::QoS qos{rclcpp::KeepLast(10)};
+  // *INDENT-OFF*, uncrustify suggestion makes the code unreadable
   EXPECT_THROW(
     rclcpp::detail::declare_qos_parameters(
-      {rclcpp::QosOverridingOptions::kDefaultPolicies, [](const rclcpp::QoS &) {return false;}},
+      {
+        rclcpp::QosOverridingOptions::kDefaultPolicies,
+        [](const rclcpp::QoS &) {
+          return rclcpp::QosCallbackResult{};
+        }
+      },
       node,
       "/my/fully/qualified/topic_name/fails_validation",
       qos,
@@ -102,11 +108,19 @@ TEST(TestQosParameters, declare_with_callback) {
     rclcpp::exceptions::InvalidQosOverridesException);
 
   rclcpp::detail::declare_qos_parameters(
-    {rclcpp::QosOverridingOptions::kDefaultPolicies, [](const rclcpp::QoS &) {return true;}},
+    {
+      rclcpp::QosOverridingOptions::kDefaultPolicies,
+      [](const rclcpp::QoS &) {
+        rclcpp::QosCallbackResult result;
+        result.successful = true;
+        return result;
+      }
+    },
     node,
     "/my/fully/qualified/topic_name",
     qos,
     rclcpp::detail::PublisherQosParametersTraits{});
+  //  *INDENT-ON*
 
   rclcpp::shutdown();
 }
