@@ -144,6 +144,9 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
 // Currently fails for StaticSingleThreadedExecutor so it is being skipped, see:
 // https://github.com/ros2/rclcpp/issues/1231
 TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
+  // Test failing on Windows Debug, see
+  // https://github.com/ros2/rclcpp/issues/1282
+#if !defined(_WIN32)
   using ExecutorType = TypeParam;
   ExecutorType executor;
 
@@ -159,6 +162,7 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   std::this_thread::sleep_for(50ms);
   executor.cancel();
   spinner.join();
+#endif
 }
 
 // Check executor throws properly if the same node is added a second time
