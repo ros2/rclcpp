@@ -177,7 +177,7 @@ public:
   {
     return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node,
-      "parameter_events",
+      "/parameter_events",
       qos,
       std::forward<CallbackT>(callback),
       options);
