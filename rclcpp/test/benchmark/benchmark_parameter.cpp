@@ -1,0 +1,225 @@
+// Copyright 2020 Open Source Robotics Foundation, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "performance_test_fixture/performance_test_fixture.hpp"
+
+#include "rclcpp/rclcpp.hpp"
+
+class ParameterTest : public performance_test_fixture::PerformanceTest
+{
+public:
+  ParameterTest()
+  : node_name("my_node"),
+    param_prefix("my_prefix"),
+    param1_name(param_prefix + ".my_param_1"),
+    param2_name(param_prefix + ".my_param_2"),
+    param3_name(param_prefix + ".my_param_3"),
+    param_value1(true),
+    param_value2(false)
+  {
+  }
+
+  void SetUp(benchmark::State & state)
+  {
+    rclcpp::init(0, nullptr);
+    node = std::make_shared<rclcpp::Node>(node_name);
+
+    node->declare_parameter(param1_name, param_value1);
+    node->declare_parameter(param2_name, param_value2);
+    node->declare_parameter(param3_name);
+    node->undeclare_parameter(param3_name);
+
+    performance_test_fixture::PerformanceTest::SetUp(state);
+  }
+
+  void TearDown(benchmark::State & state)
+  {
+    performance_test_fixture::PerformanceTest::TearDown(state);
+
+    node.reset();
+    rclcpp::shutdown();
+  }
+
+  const std::string node_name;
+  const std::string param_prefix;
+  const std::string param1_name;
+  const std::string param2_name;
+  const std::string param3_name;
+
+  const rclcpp::ParameterValue param_value1;
+  const rclcpp::ParameterValue param_value2;
+
+protected:
+  rclcpp::Node::SharedPtr node;
+};
+
+BENCHMARK_F(ParameterTest, declare_undeclare)(benchmark::State & state)
+{
+  for (auto _ : state) {
+    node->declare_parameter(param3_name);
+    node->undeclare_parameter(param3_name);
+  }
+}
+
+BENCHMARK_F(ParameterTest, has_parameter_hit)(benchmark::State & state)
+{
+  for (auto _ : state) {
+    if (!node->has_parameter(param1_name)) {
+      state.SkipWithError("Parameter was expected");
+      break;
+    }
+  }
+}
+
+BENCHMARK_F(ParameterTest, has_parameter_miss)(benchmark::State & state)
+{
+  for (auto _ : state) {
+    if (node->has_parameter(param3_name)) {
+      state.SkipWithError("Parameter was not expected");
+      break;
+    }
+  }
+}
+
+BENCHMARK_F(ParameterTest, set_parameters)(benchmark::State & state)
+{
+  const std::vector<rclcpp::Parameter> param_values1
+  {
+    rclcpp::Parameter(param1_name, param_value1),
+    rclcpp::Parameter(param2_name, param_value2),
+  };
+  const std::vector<rclcpp::Parameter> param_values2
+  {
+    rclcpp::Parameter(param1_name, param_value2),
+    rclcpp::Parameter(param2_name, param_value1),
+  };
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    node->set_parameters(param_values2);
+    node->set_parameters(param_values1);
+  }
+}
+
+BENCHMARK_F(ParameterTest, set_parameters_atomically)(benchmark::State & state)
+{
+  const std::vector<rclcpp::Parameter> param_values1
+  {
+    rclcpp::Parameter(param1_name, param_value1),
+    rclcpp::Parameter(param2_name, param_value2),
+  };
+  const std::vector<rclcpp::Parameter> param_values2
+  {
+    rclcpp::Parameter(param1_name, param_value2),
+    rclcpp::Parameter(param2_name, param_value1),
+  };
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    node->set_parameters_atomically(param_values2);
+    node->set_parameters_atomically(param_values1);
+  }
+}
+
+BENCHMARK_F(ParameterTest, set_parameters_callback)(benchmark::State & state)
+{
+  const std::vector<rclcpp::Parameter> param_values1
+  {
+    rclcpp::Parameter(param1_name, param_value1),
+    rclcpp::Parameter(param2_name, param_value2),
+  };
+  const std::vector<rclcpp::Parameter> param_values2
+  {
+    rclcpp::Parameter(param1_name, param_value2),
+    rclcpp::Parameter(param2_name, param_value1),
+  };
+
+  rcl_interfaces::msg::SetParametersResult callback_result;
+  bool callback_received = false;
+  callback_result.successful = true;
+  auto callback =
+    [&callback_result, &callback_received](const std::vector<rclcpp::Parameter> &) {
+      callback_received = true;
+      return callback_result;
+    };
+  auto handle = node->add_on_set_parameters_callback(callback);
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    node->set_parameters(param_values2);
+    node->set_parameters(param_values1);
+  }
+
+  if (!callback_received) {
+    state.SkipWithError("Callback is not functioning");
+  }
+
+  node->remove_on_set_parameters_callback(handle.get());
+}
+
+BENCHMARK_F(ParameterTest, get_parameter)(benchmark::State & state)
+{
+  rclcpp::Parameter param1_value;
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    node->get_parameter(param1_name, param1_value);
+  }
+}
+
+BENCHMARK_F(ParameterTest, list_parameters_hit)(benchmark::State & state)
+{
+  rcl_interfaces::msg::ListParametersResult param_list;
+  const std::vector<std::string> prefixes
+  {
+    param_prefix,
+  };
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    param_list = node->list_parameters(prefixes, 10);
+    if (param_list.names.size() != 2) {
+      state.SkipWithError("Expected node names");
+      break;
+    }
+  }
+}
+
+BENCHMARK_F(ParameterTest, list_parameters_miss)(benchmark::State & state)
+{
+  rcl_interfaces::msg::ListParametersResult param_list;
+  const std::vector<std::string> prefixes
+  {
+    "your_param",
+  };
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    param_list = node->list_parameters(prefixes, 10);
+    if (param_list.names.size() != 0) {
+      state.SkipWithError("Expected no node names");
+      break;
+    }
+  }
+}
