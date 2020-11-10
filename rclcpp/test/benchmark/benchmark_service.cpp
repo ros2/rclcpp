@@ -73,9 +73,9 @@ BENCHMARK_F(ServicePerformanceTest, construct_service_no_client)(benchmark::Stat
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 
-    state.PauseTiming();
+    pause_performance_measurements(state);
     service.reset();
-    state.ResumeTiming();
+    resume_performance_measurements(state);
   }
 }
 
@@ -91,9 +91,9 @@ BENCHMARK_F(ServicePerformanceTest, construct_service_empty_srv)(benchmark::Stat
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 
-    state.PauseTiming();
+    pause_performance_measurements(state);
     service.reset();
-    state.ResumeTiming();
+    resume_performance_measurements(state);
   }
 }
 
@@ -105,9 +105,9 @@ BENCHMARK_F(ServicePerformanceTest, destroy_service_empty_srv)(benchmark::State 
 
   reset_heap_counters();
   for (auto _ : state) {
-    state.PauseTiming();
+    pause_performance_measurements(state);
     auto service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
-    state.ResumeTiming();
+    resume_performance_measurements(state);
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 
@@ -123,13 +123,13 @@ BENCHMARK_F(ServicePerformanceTest, async_send_response)(benchmark::State & stat
 
   reset_heap_counters();
   for (auto _ : state) {
-    state.PauseTiming();
+    pause_performance_measurements(state);
     // Clear executor queue
     rclcpp::spin_some(node->get_node_base_interface());
 
     auto request = std::make_shared<test_msgs::srv::Empty::Request>();
     auto future = empty_client->async_send_request(request);
-    state.ResumeTiming();
+    resume_performance_measurements(state);
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 

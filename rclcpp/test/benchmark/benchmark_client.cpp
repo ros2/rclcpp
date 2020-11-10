@@ -66,9 +66,9 @@ BENCHMARK_F(ClientPerformanceTest, construct_client_no_service)(benchmark::State
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
 
-    state.PauseTiming();
+    pause_performance_measurements(state);
     client.reset();
-    state.ResumeTiming();
+    resume_performance_measurements(state);
   }
 }
 
@@ -83,9 +83,9 @@ BENCHMARK_F(ClientPerformanceTest, construct_client_empty_srv)(benchmark::State 
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
 
-    state.PauseTiming();
+    pause_performance_measurements(state);
     client.reset();
-    state.ResumeTiming();
+    resume_performance_measurements(state);
   }
 }
 
@@ -96,9 +96,9 @@ BENCHMARK_F(ClientPerformanceTest, destroy_client_empty_srv)(benchmark::State & 
 
   reset_heap_counters();
   for (auto _ : state) {
-    state.PauseTiming();
+    pause_performance_measurements(state);
     auto client = node->create_client<test_msgs::srv::Empty>(empty_service_name);
-    state.ResumeTiming();
+    resume_performance_measurements(state);
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
 
@@ -109,7 +109,7 @@ BENCHMARK_F(ClientPerformanceTest, destroy_client_empty_srv)(benchmark::State & 
 BENCHMARK_F(ClientPerformanceTest, wait_for_service)(benchmark::State & state) {
   int count = 0;
   for (auto _ : state) {
-    state.PauseTiming();
+    pause_performance_measurements(state);
     const std::string service_name = std::string("service_") + std::to_string(count++);
     // Create client before service so it has to 'discover' the service after construction
     auto client = node->create_client<test_msgs::srv::Empty>(service_name);
@@ -119,7 +119,7 @@ BENCHMARK_F(ClientPerformanceTest, wait_for_service)(benchmark::State & state) {
       test_msgs::srv::Empty::Response::SharedPtr) {};
     auto service =
       node->create_service<test_msgs::srv::Empty>(service_name, callback);
-    state.ResumeTiming();
+    resume_performance_measurements(state);
 
     client->wait_for_service(std::chrono::seconds(1));
     benchmark::ClobberMemory();

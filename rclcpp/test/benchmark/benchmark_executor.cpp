@@ -78,11 +78,11 @@ BENCHMARK_F(PerformanceTestExecutor, single_thread_executor_spin_some)(benchmark
   reset_heap_counters();
 
   for (auto _ : st) {
-    st.PauseTiming();
+    pause_performance_measurements(st);
     for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
       publishers[i]->publish(empty_msgs);
     }
-    st.ResumeTiming();
+    resume_performance_measurements(st);
 
     executor.spin_some(100ms);
   }
@@ -104,11 +104,11 @@ BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor_spin_some)(benchmark:
   reset_heap_counters();
 
   for (auto _ : st) {
-    st.PauseTiming();
+    pause_performance_measurements(st);
     for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
       publishers[i]->publish(empty_msgs);
     }
-    st.ResumeTiming();
+    resume_performance_measurements(st);
 
     executor.spin_some(100ms);
   }
@@ -143,9 +143,9 @@ BENCHMARK_F(PerformanceTestExecutorSimple, single_thread_executor_add_node)(benc
   rclcpp::executors::SingleThreadedExecutor executor;
   for (auto _ : st) {
     executor.add_node(node);
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.remove_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
   }
 }
 
@@ -154,9 +154,9 @@ BENCHMARK_F(
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   for (auto _ : st) {
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.add_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
     executor.remove_node(node);
   }
 }
@@ -166,9 +166,9 @@ BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_add_node)(bench
   rclcpp::executors::MultiThreadedExecutor executor;
   for (auto _ : st) {
     executor.add_node(node);
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.remove_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
   }
 }
 
@@ -176,9 +176,9 @@ BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_remove_node)(be
 {
   rclcpp::executors::MultiThreadedExecutor executor;
   for (auto _ : st) {
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.add_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
     executor.remove_node(node);
   }
 }
@@ -190,9 +190,9 @@ BENCHMARK_F(
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   for (auto _ : st) {
     executor.add_node(node);
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.remove_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
   }
 }
 
@@ -202,9 +202,9 @@ BENCHMARK_F(
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   for (auto _ : st) {
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.add_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
     executor.remove_node(node);
   }
 }
@@ -230,18 +230,18 @@ BENCHMARK_F(
   for (auto _ : st) {
     // static_single_thread_executor has a special design. We need to add/remove the node each
     // time you call spin
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.add_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
 
     ret = executor.spin_until_future_complete(shared_future, 100ms);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
       break;
     }
-    st.PauseTiming();
+    pause_performance_measurements(st);
     executor.remove_node(node);
-    st.ResumeTiming();
+    resume_performance_measurements(st);
   }
 }
 
