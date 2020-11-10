@@ -356,6 +356,15 @@ GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_gr
 }
 
 void
+GraphListener::cleanup_wait_set()
+{
+  rcl_ret_t ret = rcl_wait_set_fini(&wait_set_);
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "failed to finalize wait set");
+  }
+}
+
+void
 GraphListener::__shutdown(bool should_throw)
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
@@ -391,10 +400,7 @@ GraphListener::__shutdown(bool should_throw)
       shutdown_guard_condition_ = nullptr;
     }
     if (is_started_) {
-      ret = rcl_wait_set_fini(&wait_set_);
-      if (RCL_RET_OK != ret) {
-        throw_from_rcl_error(ret, "failed to finalize wait set");
-      }
+      cleanup_wait_set();
     }
   }
 }
