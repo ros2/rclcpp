@@ -160,6 +160,7 @@ protected:
   void
   run_loop();
 
+  RCLCPP_PUBLIC
   void init_wait_set();
 
 private:
