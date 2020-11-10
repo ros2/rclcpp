@@ -132,7 +132,7 @@ public:
     }
   }
 
-  /// Take data so that the callback cannot be called again
+  /// Take data so that the callback cannot be scheduled again
   void
   take_data(std::shared_ptr<void> & data) override
   {
