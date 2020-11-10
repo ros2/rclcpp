@@ -160,6 +160,8 @@ protected:
   void
   run_loop();
 
+  void init_wait_set();
+
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
 
