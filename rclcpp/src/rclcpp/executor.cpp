@@ -345,7 +345,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   }
 
   for (auto it = weak_groups_to_nodes_associated_with_executor_.begin();
-       it != weak_groups_to_nodes_associated_with_executor_.end();)
+    it != weak_groups_to_nodes_associated_with_executor_.end(); )
   {
     auto weak_node_ptr = it->second;
     auto shared_node_ptr = weak_node_ptr.lock();
