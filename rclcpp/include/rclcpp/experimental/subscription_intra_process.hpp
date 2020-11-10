@@ -201,7 +201,7 @@ private:
       ConstMessageSharedPtr shared_msg = shared_ptr->first;
       any_callback_.dispatch_intra_process(shared_msg, msg_info);
     } else {
-      MessageUniquePtr unique_msg = std::move((*shared_ptr).second);
+      MessageUniquePtr unique_msg = std::move(shared_ptr->second);
       any_callback_.dispatch_intra_process(std::move(unique_msg), msg_info);
     }
     shared_ptr.reset();
