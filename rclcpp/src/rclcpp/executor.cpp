@@ -343,27 +343,24 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   if (!found_node) {
     throw std::runtime_error("Node needs to be associated with this executor.");
   }
-  std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
-  std::for_each(
-    weak_groups_to_nodes_associated_with_executor_.begin(),
-    weak_groups_to_nodes_associated_with_executor_.end(),
-    [&found_group_ptrs, node_ptr](std::pair<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-      auto weak_node_ptr = key_value_pair.second;
-      auto shared_node_ptr = weak_node_ptr.lock();
-      auto group_ptr = key_value_pair.first.lock();
-      if (shared_node_ptr == node_ptr) {
-        found_group_ptrs.push_back(group_ptr);
-      }
-    });
-  std::for_each(
-    found_group_ptrs.begin(), found_group_ptrs.end(), [this, notify]
-      (rclcpp::CallbackGroup::SharedPtr group_ptr) {
+
+  for (auto it = weak_groups_to_nodes_associated_with_executor_.begin();
+       it != weak_groups_to_nodes_associated_with_executor_.end();)
+  {
+    auto weak_node_ptr = it->second;
+    auto shared_node_ptr = weak_node_ptr.lock();
+    auto group_ptr = it->first.lock();
+
+    // Increment iterator before removing in case it's invalidated
+    it++;
+    if (shared_node_ptr == node_ptr) {
       remove_callback_group_from_map(
         group_ptr,
         weak_groups_to_nodes_associated_with_executor_,
         notify);
-    });
+    }
+  }
+
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
 }
