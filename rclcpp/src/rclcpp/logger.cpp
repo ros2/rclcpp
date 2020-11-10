@@ -38,8 +38,9 @@ get_node_logger(const rcl_node_t * node)
   const char * logger_name = rcl_node_get_logger_name(node);
   if (nullptr == logger_name) {
     auto logger = rclcpp::get_logger("rclcpp");
-    RCLCPP_ERROR(logger, "failed to get logger name from node at address %p",
-                 static_cast<void*>(const_cast<rcl_node_t*>(node)));
+    RCLCPP_ERROR(
+      logger, "failed to get logger name from node at address %p",
+      static_cast<void *>(const_cast<rcl_node_t *>(node)));
     return logger;
   }
   return rclcpp::get_logger(logger_name);
