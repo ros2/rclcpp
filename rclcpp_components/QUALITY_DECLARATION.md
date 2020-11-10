@@ -2,7 +2,7 @@ This document is a declaration of software quality for the `rclcpp_components` p
 
 # rclcpp_components Quality Declaration
 
-The package `rclcpp_components` claims to be in the **Quality Level 3** category.
+The package `rclcpp_components` claims to be in the **Quality Level 2** category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories) of the ROS2 developer guide.
 
@@ -151,25 +151,25 @@ It also has several test dependencies, which do not affect the resulting quality
 
 The `ament_index_cpp` package provides a C++ API to access the ament resource index.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/master/ament_index_cpp/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/master/ament_index_cpp/QUALITY_DECLARATION.md).
 
 #### `class_loader`
 
 The `class_loader` package provides a ROS-independent package for loading plugins during runtime
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros/class_loader/blob/ros2/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros/class_loader/blob/ros2/QUALITY_DECLARATION.md).
 
 #### `composition_interfaces`
 
 The `composition_interfaces` package contains message and service definitions for managing composable nodes in a container process.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/composition_interfaces/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/composition_interfaces/QUALITY_DECLARATION.md).
 
 #### `rclcpp`
 
 The `rclcpp` package provides the ROS client library in C++.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
 
 #### `rcpputils`
 
