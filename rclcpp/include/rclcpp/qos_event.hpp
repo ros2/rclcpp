@@ -158,7 +158,7 @@ public:
   execute(std::shared_ptr<void> & data) override
   {
     if (!data) {
-      throw std::runtime_error("Data is empty");
+      throw std::runtime_error("'data' is empty");
     }
     auto callback_ptr = std::static_pointer_cast<EventCallbackInfoT>(data);
     event_callback_(*callback_ptr);
