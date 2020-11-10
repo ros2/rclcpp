@@ -198,7 +198,7 @@ private:
       data);
 
     if (any_callback_.use_take_shared_method()) {
-      ConstMessageSharedPtr shared_msg = (*shared_ptr).first;
+      ConstMessageSharedPtr shared_msg = shared_ptr->first;
       any_callback_.dispatch_intra_process(shared_msg, msg_info);
     } else {
       MessageUniquePtr unique_msg = std::move((*shared_ptr).second);
