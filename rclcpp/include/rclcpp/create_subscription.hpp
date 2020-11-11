@@ -117,8 +117,14 @@ create_subscription(
       rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
       >(node_topics->get_node_base_interface()->get_name(), publisher);
 
-    auto sub_call_back = [subscription_topic_stats]() {
-        subscription_topic_stats->publish_message();
+    std::weak_ptr<
+      rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
+    > weak_subscription_topic_stats(subscription_topic_stats);
+    auto sub_call_back = [weak_subscription_topic_stats]() {
+        auto subscription_topic_stats = weak_subscription_topic_stats.lock();
+        if (subscription_topic_stats) {
+          subscription_topic_stats->publish_message();
+        }
       };
 
     auto node_timer_interface = node_topics->get_node_timers_interface();
