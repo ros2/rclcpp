@@ -78,7 +78,6 @@ NodeOptions::operator=(const NodeOptions & other)
     this->start_parameter_services_ = other.start_parameter_services_;
     this->start_parameter_event_publisher_ = other.start_parameter_event_publisher_;
     this->parameter_event_qos_ = other.parameter_event_qos_;
-    this->rosout_qos_ = other.rosout_qos_;
     this->parameter_event_publisher_options_ = other.parameter_event_publisher_options_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
     this->automatically_declare_parameters_from_overrides_ =
