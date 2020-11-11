@@ -62,6 +62,27 @@ GraphListener::~GraphListener()
   this->shutdown(std::nothrow);
 }
 
+void GraphListener::init_wait_set()
+{
+  auto parent_context = parent_context_.lock();
+  if (!parent_context) {
+    throw std::runtime_error("parent context was destroyed");
+  }
+  rcl_ret_t ret = rcl_wait_set_init(
+    &wait_set_,
+    0,  // number_of_subscriptions
+    2,  // number_of_guard_conditions
+    0,  // number_of_timers
+    0,  // number_of_clients
+    0,  // number_of_services
+    0,  // number_of_events
+    parent_context->get_rcl_context().get(),
+    rcl_get_default_allocator());
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "failed to initialize wait set");
+  }
+}
+
 void
 GraphListener::start_if_not_started()
 {
@@ -71,24 +92,8 @@ GraphListener::start_if_not_started()
   }
   if (!is_started_) {
     // Initialize the wait set before starting.
-    auto parent_context = parent_context_.lock();
-    if (!parent_context) {
-      throw std::runtime_error("parent context was destroyed");
-    }
-    rcl_ret_t ret = rcl_wait_set_init(
-      &wait_set_,
-      0,  // number_of_subscriptions
-      2,  // number_of_guard_conditions
-      0,  // number_of_timers
-      0,  // number_of_clients
-      0,  // number_of_services
-      0,  // number_of_events
-      parent_context->get_rcl_context().get(),
-      rcl_get_default_allocator());
-    if (RCL_RET_OK != ret) {
-      throw_from_rcl_error(ret, "failed to initialize wait set");
-    }
-    // Register an on_shutdown hook to shtudown the graph listener.
+    init_wait_set();
+    // Register an on_shutdown hook to shutdown the graph listener.
     // This is important to ensure that the wait set is finalized before
     // destruction of static objects occurs.
     std::weak_ptr<GraphListener> weak_this = shared_from_this();
@@ -351,6 +356,15 @@ GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_gr
 }
 
 void
+GraphListener::cleanup_wait_set()
+{
+  rcl_ret_t ret = rcl_wait_set_fini(&wait_set_);
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "failed to finalize wait set");
+  }
+}
+
+void
 GraphListener::__shutdown(bool should_throw)
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
@@ -386,10 +400,7 @@ GraphListener::__shutdown(bool should_throw)
       shutdown_guard_condition_ = nullptr;
     }
     if (is_started_) {
-      ret = rcl_wait_set_fini(&wait_set_);
-      if (RCL_RET_OK != ret) {
-        throw_from_rcl_error(ret, "failed to finalize wait set");
-      }
+      cleanup_wait_set();
     }
   }
 }

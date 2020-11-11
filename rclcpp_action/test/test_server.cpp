@@ -1156,7 +1156,7 @@ TEST_F(TestGoalRequestServer, publish_status_publish_status_errors)
 
 TEST_F(TestGoalRequestServer, execute_goal_request_received_take_failed)
 {
-  auto mock = mocking_utils::inject_on_return(
+  auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
   try {
     SendClientGoalRequest(std::chrono::milliseconds(100));

@@ -160,6 +160,12 @@ protected:
   void
   run_loop();
 
+  RCLCPP_PUBLIC
+  void init_wait_set();
+
+  RCLCPP_PUBLIC
+  void cleanup_wait_set();
+
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
 
