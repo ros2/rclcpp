@@ -28,9 +28,7 @@ public:
     param_prefix("my_prefix"),
     param1_name(param_prefix + ".my_param_1"),
     param2_name(param_prefix + ".my_param_2"),
-    param3_name(param_prefix + ".my_param_3"),
-    param_value1(true),
-    param_value2(false)
+    param3_name(param_prefix + ".my_param_3")
   {
   }
 
@@ -39,8 +37,8 @@ public:
     rclcpp::init(0, nullptr);
     node = std::make_shared<rclcpp::Node>(node_name);
 
-    node->declare_parameter(param1_name, param_value1);
-    node->declare_parameter(param2_name, param_value2);
+    node->declare_parameter(param1_name);
+    node->declare_parameter(param2_name);
     node->declare_parameter(param3_name);
     node->undeclare_parameter(param3_name);
 
@@ -60,9 +58,6 @@ public:
   const std::string param1_name;
   const std::string param2_name;
   const std::string param3_name;
-
-  const rclcpp::ParameterValue param_value1;
-  const rclcpp::ParameterValue param_value2;
 
 protected:
   rclcpp::Node::SharedPtr node;
@@ -100,13 +95,13 @@ BENCHMARK_F(ParameterTest, set_parameters)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
-    rclcpp::Parameter(param1_name, param_value1),
-    rclcpp::Parameter(param2_name, param_value2),
+    rclcpp::Parameter(param1_name, true),
+    rclcpp::Parameter(param2_name, false),
   };
   const std::vector<rclcpp::Parameter> param_values2
   {
-    rclcpp::Parameter(param1_name, param_value2),
-    rclcpp::Parameter(param2_name, param_value1),
+    rclcpp::Parameter(param1_name, false),
+    rclcpp::Parameter(param2_name, true),
   };
 
   reset_heap_counters();
@@ -121,13 +116,13 @@ BENCHMARK_F(ParameterTest, set_parameters_atomically)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
-    rclcpp::Parameter(param1_name, param_value1),
-    rclcpp::Parameter(param2_name, param_value2),
+    rclcpp::Parameter(param1_name, true),
+    rclcpp::Parameter(param2_name, false),
   };
   const std::vector<rclcpp::Parameter> param_values2
   {
-    rclcpp::Parameter(param1_name, param_value2),
-    rclcpp::Parameter(param2_name, param_value1),
+    rclcpp::Parameter(param1_name, false),
+    rclcpp::Parameter(param2_name, true),
   };
 
   reset_heap_counters();
@@ -142,13 +137,13 @@ BENCHMARK_F(ParameterTest, set_parameters_callback)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
-    rclcpp::Parameter(param1_name, param_value1),
-    rclcpp::Parameter(param2_name, param_value2),
+    rclcpp::Parameter(param1_name, true),
+    rclcpp::Parameter(param2_name, false),
   };
   const std::vector<rclcpp::Parameter> param_values2
   {
-    rclcpp::Parameter(param1_name, param_value2),
-    rclcpp::Parameter(param2_name, param_value1),
+    rclcpp::Parameter(param1_name, false),
+    rclcpp::Parameter(param2_name, true),
   };
 
   rcl_interfaces::msg::SetParametersResult callback_result;
