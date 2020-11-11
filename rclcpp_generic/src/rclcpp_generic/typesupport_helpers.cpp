@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rosbag2_cpp/typesupport_helpers.hpp"
+#include "rclcpp_generic/typesupport_helpers.hpp"
 
 #include <memory>
 #include <sstream>
@@ -28,7 +28,7 @@
 
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
-namespace rosbag2_cpp
+namespace rclcpp_generic
 {
 
 std::string get_typesupport_library_path(
@@ -73,7 +73,7 @@ const std::pair<std::string, std::string> extract_type_and_package(const std::st
   return {package_name, type_name};
 }
 
-const std::tuple<std::string, std::string, std::string>
+std::tuple<std::string, std::string, std::string>
 extract_type_identifier(const std::string & full_type)
 {
   char type_separator = '/';
@@ -152,4 +152,4 @@ get_typesupport_handle(
   }
 }
 
-}  // namespace rosbag2_cpp
+}  // namespace rclcpp_generic

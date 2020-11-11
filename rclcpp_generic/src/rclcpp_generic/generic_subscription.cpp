@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "generic_subscription.hpp"
+#include "rclcpp_generic/generic_subscription.hpp"
 
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "rclcpp/any_subscription_callback.hpp"
-#include "rclcpp/subscription.hpp"
-
-#include "rosbag2_transport/logging.hpp"
+#include "rcl/subscription.h"
+#include "rclcpp_generic/typesupport_helpers.hpp"
 
 namespace
 {
@@ -32,24 +31,49 @@ rcl_subscription_options_t rosbag2_get_subscription_options(const rclcpp::QoS & 
 }
 }  // unnamed namespace
 
-namespace rosbag2_transport
+namespace rclcpp_generic
 {
+
+std::shared_ptr<GenericSubscription> GenericSubscription::create(
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  auto ts_lib = rclcpp_generic::get_typesupport_library(
+    topic_type, "rosidl_typesupport_cpp");
+
+  // Cannot use make_shared because constructor is private
+  std::shared_ptr<GenericSubscription> subscription(new GenericSubscription(
+      topics_interface->get_node_base_interface(),
+      std::move(ts_lib),
+      topic_name,
+      topic_type,
+      qos,
+      callback));
+
+  topics_interface->add_subscription(subscription, std::move(group));
+
+  return subscription;
+}
 
 GenericSubscription::GenericSubscription(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  const rosidl_message_type_support_t & ts,
+  const std::shared_ptr<rcpputils::SharedLibrary> ts_lib,
   const std::string & topic_name,
+  const std::string & topic_type,
   const rclcpp::QoS & qos,
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback)
 : SubscriptionBase(
     node_base,
-    ts,
+    *rclcpp_generic::get_typesupport_handle(
+      topic_type, "rosidl_typesupport_cpp", ts_lib),
     topic_name,
     rosbag2_get_subscription_options(qos),
     true),
-  default_allocator_(rcutils_get_default_allocator()),
-  callback_(callback),
-  qos_(qos)
+  callback_(callback)
 {}
 
 std::shared_ptr<void> GenericSubscription::create_message()
@@ -59,7 +83,7 @@ std::shared_ptr<void> GenericSubscription::create_message()
 
 std::shared_ptr<rclcpp::SerializedMessage> GenericSubscription::create_serialized_message()
 {
-  return borrow_serialized_message(0);
+  return std::make_shared<rclcpp::SerializedMessage>(0);
 }
 
 void GenericSubscription::handle_message(
@@ -89,15 +113,4 @@ void GenericSubscription::return_serialized_message(
   message.reset();
 }
 
-const rclcpp::QoS & GenericSubscription::qos_profile() const
-{
-  return qos_;
-}
-
-std::shared_ptr<rclcpp::SerializedMessage>
-GenericSubscription::borrow_serialized_message(size_t capacity)
-{
-  return std::make_shared<rclcpp::SerializedMessage>(capacity);
-}
-
-}  // namespace rosbag2_transport
+}  // namespace rclcpp_generic

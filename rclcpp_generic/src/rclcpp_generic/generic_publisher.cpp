@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "generic_publisher.hpp"
+#include "rclcpp_generic/generic_publisher.hpp"
 
 #include <memory>
 #include <string>
+#include <utility>
+
+#include "rclcpp_generic/typesupport_helpers.hpp"
 
 namespace
 {
@@ -27,15 +30,32 @@ rcl_publisher_options_t rosbag2_get_publisher_options(const rclcpp::QoS & qos)
 }
 }  // unnamed namespace
 
-namespace rosbag2_transport
+namespace rclcpp_generic
 {
+
+std::shared_ptr<GenericPublisher> GenericPublisher::create(
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
+  const std::string & topic_name, const std::string & topic_type, const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  auto ts_lib = rclcpp_generic::get_typesupport_library(
+    topic_type, "rosidl_typesupport_cpp");
+  // Cannot use make_shared because constructor is private
+  std::shared_ptr<GenericPublisher> pub(new GenericPublisher(
+      topics_interface->get_node_base_interface(), std::move(ts_lib), topic_name, topic_type, qos));
+  topics_interface->add_publisher(pub, std::move(group));
+  return pub;
+}
 
 GenericPublisher::GenericPublisher(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  const rosidl_message_type_support_t & type_support,
+  std::shared_ptr<rcpputils::SharedLibrary> ts_lib,
   const std::string & topic_name,
+  const std::string & topic_type,
   const rclcpp::QoS & qos)
-: rclcpp::PublisherBase(node_base, topic_name, type_support, rosbag2_get_publisher_options(qos))
+: rclcpp::PublisherBase(node_base, topic_name, *rclcpp_generic::get_typesupport_handle(
+      topic_type, "rosidl_typesupport_cpp", ts_lib), rosbag2_get_publisher_options(qos)), ts_lib_(
+    ts_lib)
 {}
 
 void GenericPublisher::publish(std::shared_ptr<rmw_serialized_message_t> message)
@@ -48,4 +68,4 @@ void GenericPublisher::publish(std::shared_ptr<rmw_serialized_message_t> message
   }
 }
 
-}  // namespace rosbag2_transport
+}  // namespace rclcpp_generic

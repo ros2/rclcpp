@@ -12,38 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSBAG2_CPP__TYPESUPPORT_HELPERS_HPP_
-#define ROSBAG2_CPP__TYPESUPPORT_HELPERS_HPP_
+#ifndef RCLCPP_GENERIC__TYPESUPPORT_HELPERS_HPP_
+#define RCLCPP_GENERIC__TYPESUPPORT_HELPERS_HPP_
 
+#include <memory>
 #include <string>
 #include <tuple>
-#include <utility>
-#include <memory>
 
-#include "rosbag2_cpp/visibility_control.hpp"
+#include "rclcpp_generic/visibility_control.hpp"
 
 #include "rcpputils/shared_library.hpp"
 
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
-namespace rosbag2_cpp
+namespace rclcpp_generic
 {
 
-ROSBAG2_CPP_PUBLIC
+RCLCPP_GENERIC_PUBLIC
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier);
 
-ROSBAG2_CPP_PUBLIC
+RCLCPP_GENERIC_PUBLIC
 const rosidl_message_type_support_t *
 get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
   std::shared_ptr<rcpputils::SharedLibrary> library);
 
-ROSBAG2_CPP_PUBLIC
-const std::tuple<std::string, std::string, std::string>
+RCLCPP_GENERIC_PUBLIC
+std::tuple<std::string, std::string, std::string>
 extract_type_identifier(const std::string & full_type);
 
-}  // namespace rosbag2_cpp
+}  // namespace rclcpp_generic
 
-#endif  // ROSBAG2_CPP__TYPESUPPORT_HELPERS_HPP_
+#endif  // RCLCPP_GENERIC__TYPESUPPORT_HELPERS_HPP_

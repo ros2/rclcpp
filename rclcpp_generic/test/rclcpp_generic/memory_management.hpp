@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSBAG2_TEST_COMMON__MEMORY_MANAGEMENT_HPP_
-#define ROSBAG2_TEST_COMMON__MEMORY_MANAGEMENT_HPP_
+#ifndef RCLCPP_GENERIC__MEMORY_MANAGEMENT_HPP_
+#define RCLCPP_GENERIC__MEMORY_MANAGEMENT_HPP_
 
 #include <memory>
 #include <string>
@@ -21,7 +21,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rcutils/error_handling.h"
 
-namespace rosbag2_test_common
+namespace rclcpp_generic
 {
 class MemoryManagement
 {
@@ -59,7 +59,7 @@ public:
       message.get());
     if (error != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rosbag2_test_common", "Leaking memory. Error: %s",
+        "rclcpp_generic", "Leaking memory. Error: %s",
         rcutils_get_error_string().str);
     }
     return message;
@@ -97,7 +97,7 @@ private:
         delete msg;
         if (error != RCUTILS_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
-            "rosbag2_test_common", "Leaking memory. Error: %s",
+            "rclcpp_generic", "Leaking memory. Error: %s",
             rcutils_get_error_string().str);
         }
       });
@@ -107,6 +107,6 @@ private:
   rcutils_allocator_t rcutils_allocator_;
 };
 
-}  // namespace rosbag2_test_common
+}  // namespace rclcpp_generic
 
-#endif  // ROSBAG2_TEST_COMMON__MEMORY_MANAGEMENT_HPP_
+#endif  // RCLCPP_GENERIC__MEMORY_MANAGEMENT_HPP_
