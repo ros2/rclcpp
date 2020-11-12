@@ -164,10 +164,9 @@ AsyncParametersClient::describe_parameters(
       rclcpp::Client<rcl_interfaces::srv::DescribeParameters>::SharedFuture cb_f)
     {
       std::vector<rcl_interfaces::msg::ParameterDescriptor> descriptors;
-      auto & descs = cb_f.get()->descriptors;
-      for (auto & desc : descs) {
-        descriptors.push_back(
-          static_cast<rcl_interfaces::msg::ParameterDescriptor>(desc));
+      std::vector<rcl_interfaces::msg::ParameterDescriptor> & descs = cb_f.get()->descriptors;
+      for (rcl_interfaces::msg::ParameterDescriptor & desc : descs) {
+        descriptors.push_back(desc);
       }
       promise_result->set_value(descriptors);
       if (callback != nullptr) {
@@ -378,11 +377,9 @@ SyncParametersClient::describe_parameters(const std::vector<std::string> & param
   auto f = async_parameters_client_->describe_parameters(parameter_names);
 
   using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_,
-      f) == rclcpp::FutureReturnCode::SUCCESS)
-  {
+  rclcpp::FutureReturnCode future =
+    spin_node_until_future_complete(*executor_, node_base_interface_, f);
+  if (future == rclcpp::FutureReturnCode::SUCCESS) {
     return f.get();
   }
   return std::vector<rcl_interfaces::msg::ParameterDescriptor>();

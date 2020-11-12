@@ -15,6 +15,8 @@
 #ifndef RCLCPP__PARAMETER_CLIENT_HPP_
 #define RCLCPP__PARAMETER_CLIENT_HPP_
 
+#include <functional>
+#include <future>
 #include <memory>
 #include <string>
 #include <utility>
