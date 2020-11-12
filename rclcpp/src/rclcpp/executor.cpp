@@ -40,10 +40,11 @@ using rclcpp::Executor;
 using rclcpp::ExecutorOptions;
 using rclcpp::FutureReturnCode;
 
-namespace {
+namespace
+{
 
 std::shared_ptr<rcl_guard_condition_t>
-CreateShutdownGuardCondition(std::shared_ptr<rclcpp::Context> context)
+create_shutdown_guard_condition(std::shared_ptr<rclcpp::Context> context)
 {
   auto custom_deleter = [](rcl_guard_condition_t * guard_condition) {
       rcl_ret_t ret = rcl_guard_condition_fini(guard_condition);
@@ -101,7 +102,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   }
 
   // Register a shutdown hook for the executor with context
-  shutdown_guard_condition_ = CreateShutdownGuardCondition(context_);
+  shutdown_guard_condition_ = create_shutdown_guard_condition(context_);
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)

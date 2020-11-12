@@ -45,7 +45,7 @@ public:
 
     graph_listener_ =
       std::make_shared<rclcpp::graph_listener::GraphListener>(
-      *rclcpp::contexts::get_global_default_context());
+      rclcpp::contexts::get_global_default_context());
   }
 
   void TearDown()
@@ -85,7 +85,7 @@ TEST_F(TestGraphListener, error_construct_graph_listener) {
   RCLCPP_EXPECT_THROW_EQ(
   {
     auto graph_listener_error =
-    std::make_shared<rclcpp::graph_listener::GraphListener>(*get_global_default_context());
+    std::make_shared<rclcpp::graph_listener::GraphListener>(get_global_default_context());
     graph_listener_error.reset();
   }, std::runtime_error("failed to create interrupt guard condition: error not set"));
 }
@@ -117,7 +117,7 @@ class TestGraphListenerProtectedMethods : public rclcpp::graph_listener::GraphLi
 {
 public:
   explicit TestGraphListenerProtectedMethods(std::shared_ptr<rclcpp::Context> parent_context)
-  : rclcpp::graph_listener::GraphListener{*parent_context}
+  : rclcpp::graph_listener::GraphListener{parent_context}
   {}
 
   void run_protected()

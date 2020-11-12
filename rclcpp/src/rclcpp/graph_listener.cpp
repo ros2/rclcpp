@@ -37,8 +37,10 @@ namespace rclcpp
 namespace graph_listener
 {
 
-GraphListener::GraphListener(rclcpp::Context & parent_context)
-: rcl_parent_context_(parent_context.get_rcl_context()),
+GraphListener::GraphListener(const std::shared_ptr<Context> & parent_context)
+:
+  weak_parent_context_(parent_context),
+  rcl_parent_context_(parent_context->get_rcl_context()),
   is_started_(false),
   is_shutdown_(false)
 {
@@ -53,19 +55,6 @@ GraphListener::GraphListener(rclcpp::Context & parent_context)
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
-
-  // Register an on_shutdown hook to shtudown the graph listener.
-  // This is important to ensure that the wait set is finalized before
-  // destruction of static objects occurs.
-  std::weak_ptr<GraphListener> weak_this = shared_from_this();
-  parent_context.on_shutdown(
-    [weak_this]() {
-      auto shared_this = weak_this.lock();
-      if (shared_this) {
-        // should not throw from on_shutdown if it can be avoided
-        shared_this->shutdown(std::nothrow);
-      }
-    });
 }
 
 GraphListener::~GraphListener()
@@ -97,7 +86,20 @@ GraphListener::start_if_not_started()
   if (is_shutdown_.load()) {
     throw GraphListenerShutdownError();
   }
-  if (!is_started_) {
+  auto parent_context = weak_parent_context_.lock();
+  if (!is_started_ && parent_context) {
+    // Register an on_shutdown hook to shtudown the graph listener.
+    // This is important to ensure that the wait set is finalized before
+    // destruction of static objects occurs.
+    std::weak_ptr<GraphListener> weak_this = shared_from_this();
+      parent_context->on_shutdown(
+      [weak_this]() {
+        auto shared_this = weak_this.lock();
+        if (shared_this) {
+          // should not throw from on_shutdown if it can be avoided
+          shared_this->shutdown(std::nothrow);
+        }
+      });
     // Initialize the wait set before starting.
     init_wait_set();
     // Start the listener thread.

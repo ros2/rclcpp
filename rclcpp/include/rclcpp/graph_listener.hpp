@@ -63,7 +63,7 @@ class GraphListener : public std::enable_shared_from_this<GraphListener>
 {
 public:
   RCLCPP_PUBLIC
-  explicit GraphListener(rclcpp::Context & parent_context);
+  explicit GraphListener(const rclcpp::Context::SharedPtr & parent_context);
 
   RCLCPP_PUBLIC
   virtual ~GraphListener();
@@ -168,14 +168,6 @@ protected:
   void
   cleanup_wait_set();
 
-  RCLCPP_PUBLIC
-  void
-  init_shutdown_guard_condition();
-
-  RCLCPP_PUBLIC
-  void
-  cleanup_shutdown_guard_condition(); 
-
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
 
@@ -183,6 +175,7 @@ private:
   void
   __shutdown();
 
+  std::weak_ptr<rclcpp::Context> weak_parent_context_;
   std::shared_ptr<rcl_context_t> rcl_parent_context_;
 
   std::thread listener_thread_;
