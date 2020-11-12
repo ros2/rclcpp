@@ -73,9 +73,7 @@ BENCHMARK_F(ServicePerformanceTest, construct_service_no_client)(benchmark::Stat
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 
-    pause_performance_measurements(state);
-    service.reset();
-    resume_performance_measurements(state);
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(state, {service.reset();});
   }
 }
 
@@ -91,9 +89,7 @@ BENCHMARK_F(ServicePerformanceTest, construct_service_empty_srv)(benchmark::Stat
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 
-    pause_performance_measurements(state);
-    service.reset();
-    resume_performance_measurements(state);
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(state, {service.reset();});
   }
 }
 
@@ -102,16 +98,19 @@ BENCHMARK_F(ServicePerformanceTest, destroy_service_empty_srv)(benchmark::State 
     &ServicePerformanceTest::ServiceCallback,
     this, std::placeholders::_1, std::placeholders::_2);
   auto outer_service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
-
+  std::shared_ptr<rclcpp::Service<test_msgs::srv::Empty>> inner_service(nullptr);
   reset_heap_counters();
   for (auto _ : state) {
-    pause_performance_measurements(state);
-    auto service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
-    resume_performance_measurements(state);
-    benchmark::DoNotOptimize(service);
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      inner_service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
+    });
+
+    benchmark::DoNotOptimize(inner_service);
     benchmark::ClobberMemory();
 
-    service.reset();
+    inner_service.reset();
   }
 }
 
@@ -120,20 +119,20 @@ BENCHMARK_F(ServicePerformanceTest, async_send_response)(benchmark::State & stat
     &ServicePerformanceTest::ServiceCallback,
     this, std::placeholders::_1, std::placeholders::_2);
   auto service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
-
+  std::shared_future<std::shared_ptr<test_msgs::srv::Empty::Response>> response_future{};
   reset_heap_counters();
   for (auto _ : state) {
-    pause_performance_measurements(state);
-    // Clear executor queue
-    rclcpp::spin_some(node->get_node_base_interface());
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      // Clear executor queue
+      rclcpp::spin_some(node->get_node_base_interface());
 
-    auto request = std::make_shared<test_msgs::srv::Empty::Request>();
-    auto future = empty_client->async_send_request(request);
-    resume_performance_measurements(state);
-    benchmark::DoNotOptimize(service);
-    benchmark::ClobberMemory();
+      auto request = std::make_shared<test_msgs::srv::Empty::Request>();
+      response_future = empty_client->async_send_request(request);
+    });
 
-    rclcpp::spin_until_future_complete(node->get_node_base_interface(), future);
+    rclcpp::spin_until_future_complete(node->get_node_base_interface(), response_future);
   }
   if (callback_count == 0) {
     state.SkipWithError("Service callback was not called");

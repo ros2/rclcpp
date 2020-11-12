@@ -50,25 +50,28 @@ BENCHMARK_F(NodePerformanceTest, create_node)(benchmark::State & state)
     benchmark::ClobberMemory();
 
     // Ensure destruction of node is not counted toward timing
-    pause_performance_measurements(state);
-    node.reset();
-    resume_performance_measurements(state);
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      node.reset();
+    });
   }
 }
 
 BENCHMARK_F(NodePerformanceTest, destroy_node)(benchmark::State & state)
 {
   // Warmup and prime caches
-  auto outer_node = std::make_shared<rclcpp::Node>("node");
-  outer_node.reset();
+  auto node = std::make_shared<rclcpp::Node>("node");
+  node.reset();
 
   reset_heap_counters();
   for (auto _ : state) {
     // Using pointer to separate construction and destruction in timing
-    pause_performance_measurements(state);
-    auto node = std::make_shared<rclcpp::Node>("node");
-    resume_performance_measurements(state);
-
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      node = std::make_shared<rclcpp::Node>("node");
+    });
     benchmark::DoNotOptimize(node);
     benchmark::ClobberMemory();
 
