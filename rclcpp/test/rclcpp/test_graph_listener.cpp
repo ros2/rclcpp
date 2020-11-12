@@ -143,7 +143,9 @@ TEST_F(TestGraphListener, error_run_graph_listener_destroy_context) {
   auto graph_listener_error =
     std::make_shared<TestGraphListenerProtectedMethods>(context_to_destroy);
   context_to_destroy.reset();
-  EXPECT_NO_THROW(graph_listener_error->run_protected());
+  EXPECT_THROW(
+    graph_listener_error->run_protected(),
+    rclcpp::exceptions::RCLError);
 }
 
 TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_set_clear) {
@@ -168,26 +170,6 @@ TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_set_add_guard_condi
   RCLCPP_EXPECT_THROW_EQ(
     graph_listener_test->run_protected(),
     std::runtime_error("failed to add interrupt guard condition to wait set: error not set"));
-}
-
-TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_set_add_guard_condition_twice) {
-  auto global_context = rclcpp::contexts::get_global_default_context();
-  auto graph_listener_test =
-    std::make_shared<TestGraphListenerProtectedMethods>(global_context);
-  graph_listener_test->mock_init_wait_set();
-  auto mock = mocking_utils::patch(
-    "lib:rclcpp", rcl_wait_set_add_guard_condition, [](auto, ...) {
-      static int counter = 1;
-      if (counter == 1) {
-        counter++;
-        return RCL_RET_OK;
-      } else {
-        return RCL_RET_ERROR;
-      }
-    });
-  RCLCPP_EXPECT_THROW_EQ(
-    graph_listener_test->run_protected(),
-    std::runtime_error("failed to add shutdown guard condition to wait set: error not set"));
 }
 
 TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_error) {

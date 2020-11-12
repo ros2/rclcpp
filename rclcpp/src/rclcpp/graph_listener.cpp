@@ -38,8 +38,7 @@ namespace graph_listener
 {
 
 GraphListener::GraphListener(const std::shared_ptr<Context> & parent_context)
-:
-  weak_parent_context_(parent_context),
+: weak_parent_context_(parent_context),
   rcl_parent_context_(parent_context->get_rcl_context()),
   is_started_(false),
   is_shutdown_(false)
@@ -92,7 +91,7 @@ GraphListener::start_if_not_started()
     // This is important to ensure that the wait set is finalized before
     // destruction of static objects occurs.
     std::weak_ptr<GraphListener> weak_this = shared_from_this();
-      parent_context->on_shutdown(
+    parent_context->on_shutdown(
       [weak_this]() {
         auto shared_this = weak_this.lock();
         if (shared_this) {
