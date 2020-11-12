@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "rcl/error_handling.h"
@@ -137,7 +138,7 @@ public:
   take_data(std::shared_ptr<void> & data) override
   {
     if (data) {
-      throw std::runtime_error("Should not be data in the pointer");
+      throw std::runtime_error("'data' is not empty");
     }
 
     EventCallbackInfoT callback_info;
