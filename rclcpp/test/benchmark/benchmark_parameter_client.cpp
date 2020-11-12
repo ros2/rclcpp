@@ -20,10 +20,10 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-class ParameterClientTest : public performance_test_fixture::PerformanceTest
+class NodeParametersInterfaceTest : public performance_test_fixture::PerformanceTest
 {
 public:
-  ParameterClientTest()
+  NodeParametersInterfaceTest()
   : node_name("my_node"),
     param_prefix("my_prefix"),
     param1_name(param_prefix + ".my_param_1"),
@@ -63,7 +63,7 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-BENCHMARK_F(ParameterClientTest, declare_undeclare)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, declare_undeclare)(benchmark::State & state)
 {
   for (auto _ : state) {
     node->declare_parameter(param3_name);
@@ -71,7 +71,7 @@ BENCHMARK_F(ParameterClientTest, declare_undeclare)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, has_parameter_hit)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, has_parameter_hit)(benchmark::State & state)
 {
   for (auto _ : state) {
     if (!node->has_parameter(param1_name)) {
@@ -81,7 +81,7 @@ BENCHMARK_F(ParameterClientTest, has_parameter_hit)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, has_parameter_miss)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, has_parameter_miss)(benchmark::State & state)
 {
   for (auto _ : state) {
     if (node->has_parameter(param3_name)) {
@@ -91,7 +91,7 @@ BENCHMARK_F(ParameterClientTest, has_parameter_miss)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, set_parameters_bool)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_bool)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -112,7 +112,7 @@ BENCHMARK_F(ParameterClientTest, set_parameters_bool)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, set_parameters_atomically_bool)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_atomically_bool)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -133,7 +133,7 @@ BENCHMARK_F(ParameterClientTest, set_parameters_atomically_bool)(benchmark::Stat
   }
 }
 
-BENCHMARK_F(ParameterClientTest, set_parameters_callback_bool)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_callback_bool)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -170,7 +170,7 @@ BENCHMARK_F(ParameterClientTest, set_parameters_callback_bool)(benchmark::State 
   node->remove_on_set_parameters_callback(handle.get());
 }
 
-BENCHMARK_F(ParameterClientTest, set_parameters_string)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_string)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -191,7 +191,7 @@ BENCHMARK_F(ParameterClientTest, set_parameters_string)(benchmark::State & state
   }
 }
 
-BENCHMARK_F(ParameterClientTest, set_parameters_array)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_array)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -212,7 +212,7 @@ BENCHMARK_F(ParameterClientTest, set_parameters_array)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, get_parameter)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, get_parameter)(benchmark::State & state)
 {
   rclcpp::Parameter param1_value;
 
@@ -223,7 +223,7 @@ BENCHMARK_F(ParameterClientTest, get_parameter)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, list_parameters_hit)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, list_parameters_hit)(benchmark::State & state)
 {
   rcl_interfaces::msg::ListParametersResult param_list;
   const std::vector<std::string> prefixes
@@ -242,7 +242,7 @@ BENCHMARK_F(ParameterClientTest, list_parameters_hit)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterClientTest, list_parameters_miss)(benchmark::State & state)
+BENCHMARK_F(NodeParametersInterfaceTest, list_parameters_miss)(benchmark::State & state)
 {
   rcl_interfaces::msg::ListParametersResult param_list;
   const std::vector<std::string> prefixes
