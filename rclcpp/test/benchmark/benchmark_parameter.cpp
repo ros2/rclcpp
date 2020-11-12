@@ -91,7 +91,7 @@ BENCHMARK_F(ParameterTest, has_parameter_miss)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterTest, set_parameters)(benchmark::State & state)
+BENCHMARK_F(ParameterTest, set_parameters_bool)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -112,7 +112,7 @@ BENCHMARK_F(ParameterTest, set_parameters)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterTest, set_parameters_atomically)(benchmark::State & state)
+BENCHMARK_F(ParameterTest, set_parameters_atomically_bool)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -133,7 +133,7 @@ BENCHMARK_F(ParameterTest, set_parameters_atomically)(benchmark::State & state)
   }
 }
 
-BENCHMARK_F(ParameterTest, set_parameters_callback)(benchmark::State & state)
+BENCHMARK_F(ParameterTest, set_parameters_callback_bool)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
@@ -168,6 +168,48 @@ BENCHMARK_F(ParameterTest, set_parameters_callback)(benchmark::State & state)
   }
 
   node->remove_on_set_parameters_callback(handle.get());
+}
+
+BENCHMARK_F(ParameterTest, set_parameters_string)(benchmark::State & state)
+{
+  const std::vector<rclcpp::Parameter> param_values1
+  {
+    rclcpp::Parameter(param1_name, "param 1 value A"),
+    rclcpp::Parameter(param2_name, "param 2 value B"),
+  };
+  const std::vector<rclcpp::Parameter> param_values2
+  {
+    rclcpp::Parameter(param1_name, "param 1 value B"),
+    rclcpp::Parameter(param2_name, "param 2 value A"),
+  };
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    node->set_parameters(param_values2);
+    node->set_parameters(param_values1);
+  }
+}
+
+BENCHMARK_F(ParameterTest, set_parameters_array)(benchmark::State & state)
+{
+  const std::vector<rclcpp::Parameter> param_values1
+  {
+    rclcpp::Parameter(param1_name, std::vector<int> { 0, 1, 2 }),
+    rclcpp::Parameter(param2_name, std::vector<int> { 3, 4, 5 }),
+  };
+  const std::vector<rclcpp::Parameter> param_values2
+  {
+    rclcpp::Parameter(param1_name, std::vector<int> { 4, 5, 6 }),
+    rclcpp::Parameter(param2_name, std::vector<int> { 7, 8, 9 }),
+  };
+
+  reset_heap_counters();
+
+  for (auto _ : state) {
+    node->set_parameters(param_values2);
+    node->set_parameters(param_values1);
+  }
 }
 
 BENCHMARK_F(ParameterTest, get_parameter)(benchmark::State & state)
