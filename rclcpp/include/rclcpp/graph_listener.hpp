@@ -63,7 +63,7 @@ class GraphListener : public std::enable_shared_from_this<GraphListener>
 {
 public:
   RCLCPP_PUBLIC
-  explicit GraphListener(std::shared_ptr<rclcpp::Context> parent_context);
+  explicit GraphListener(rclcpp::Context & parent_context);
 
   RCLCPP_PUBLIC
   virtual ~GraphListener();
@@ -161,10 +161,20 @@ protected:
   run_loop();
 
   RCLCPP_PUBLIC
-  void init_wait_set();
+  void
+  init_wait_set();
 
   RCLCPP_PUBLIC
-  void cleanup_wait_set();
+  void
+  cleanup_wait_set();
+
+  RCLCPP_PUBLIC
+  void
+  init_shutdown_guard_condition();
+
+  RCLCPP_PUBLIC
+  void
+  cleanup_shutdown_guard_condition(); 
 
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
@@ -173,7 +183,7 @@ private:
   void
   __shutdown();
 
-  rclcpp::Context::WeakPtr parent_context_;
+  std::shared_ptr<rcl_context_t> rcl_parent_context_;
 
   std::thread listener_thread_;
   bool is_started_;
@@ -185,7 +195,6 @@ private:
   std::vector<rclcpp::node_interfaces::NodeGraphInterface *> node_graph_interfaces_;
 
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
-  std::shared_ptr<rcl_guard_condition_t> shutdown_guard_condition_;
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 };
 
