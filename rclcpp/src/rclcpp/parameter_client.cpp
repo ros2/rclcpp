@@ -144,6 +144,41 @@ AsyncParametersClient::get_parameters(
   return future_result;
 }
 
+std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>
+AsyncParametersClient::describe_parameters(
+  const std::vector<std::string> & names,
+  std::function<
+    void(std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>)
+  > callback)
+{
+  auto promise_result =
+    std::make_shared<std::promise<std::vector<rcl_interfaces::msg::ParameterDescriptor>>>();
+  auto future_result = promise_result->get_future().share();
+
+  auto request = std::make_shared<rcl_interfaces::srv::DescribeParameters::Request>();
+  request->names = names;
+
+  describe_parameters_client_->async_send_request(
+    request,
+    [promise_result, future_result, callback](
+      rclcpp::Client<rcl_interfaces::srv::DescribeParameters>::SharedFuture cb_f)
+    {
+      std::vector<rcl_interfaces::msg::ParameterDescriptor> descriptors;
+      auto & descs = cb_f.get()->descriptors;
+      for (auto & desc : descs) {
+        descriptors.push_back(
+          static_cast<rcl_interfaces::msg::ParameterDescriptor>(desc));
+      }
+      promise_result->set_value(descriptors);
+      if (callback != nullptr) {
+        callback(future_result);
+      }
+    }
+  );
+
+  return future_result;
+}
+
 std::shared_future<std::vector<rclcpp::ParameterType>>
 AsyncParametersClient::get_parameter_types(
   const std::vector<std::string> & names,
@@ -335,6 +370,22 @@ SyncParametersClient::has_parameter(const std::string & parameter_name)
   names.push_back(parameter_name);
   auto vars = list_parameters(names, 1);
   return vars.names.size() > 0;
+}
+
+std::vector<rcl_interfaces::msg::ParameterDescriptor>
+SyncParametersClient::describe_parameters(const std::vector<std::string> & parameter_names)
+{
+  auto f = async_parameters_client_->describe_parameters(parameter_names);
+
+  using rclcpp::executors::spin_node_until_future_complete;
+  if (
+    spin_node_until_future_complete(
+      *executor_, node_base_interface_,
+      f) == rclcpp::FutureReturnCode::SUCCESS)
+  {
+    return f.get();
+  }
+  return std::vector<rcl_interfaces::msg::ParameterDescriptor>();
 }
 
 std::vector<rclcpp::ParameterType>

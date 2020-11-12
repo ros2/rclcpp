@@ -121,6 +121,14 @@ public:
     > callback = nullptr);
 
   RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>
+  describe_parameters(
+    const std::vector<std::string> & names,
+    std::function<
+      void(std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>)
+    > callback = nullptr);
+
+  RCLCPP_PUBLIC
   std::shared_future<std::vector<rclcpp::ParameterType>>
   get_parameter_types(
     const std::vector<std::string> & names,
@@ -377,6 +385,10 @@ public:
         })
     );
   }
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(const std::vector<std::string> & parameter_names);
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterType>
