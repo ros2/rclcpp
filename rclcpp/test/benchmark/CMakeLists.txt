@@ -26,6 +26,11 @@ if(TARGET benchmark_node)
   target_link_libraries(benchmark_node ${PROJECT_NAME})
 endif()
 
+add_performance_test(benchmark_node_parameters_interface benchmark_node_parameters_interface.cpp)
+if(TARGET benchmark_node_parameters_interface)
+  target_link_libraries(benchmark_node_parameters_interface ${PROJECT_NAME})
+endif()
+
 add_performance_test(benchmark_service benchmark_service.cpp)
 if(TARGET benchmark_service)
   target_link_libraries(benchmark_service ${PROJECT_NAME})
