@@ -134,22 +134,18 @@ public:
   }
 
   /// Take data so that the callback cannot be scheduled again
-  void
-  take_data(std::shared_ptr<void> & data) override
+  std::shared_ptr<void>
+  take_data() override
   {
-    if (data) {
-      throw std::runtime_error("'data' is not empty");
-    }
-
     EventCallbackInfoT callback_info;
     rcl_ret_t ret = rcl_take_event(&event_handle_, &callback_info);
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "Couldn't take event info: %s", rcl_get_error_string().str);
-      return;
+      return nullptr;
     }
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<EventCallbackInfoT>(
         callback_info));
   }

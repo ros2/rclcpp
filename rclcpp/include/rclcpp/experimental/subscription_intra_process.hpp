@@ -121,12 +121,9 @@ public:
     return buffer_->has_data();
   }
 
-  void take_data(std::shared_ptr<void> & data)
+  std::shared_ptr<void>
+  take_data()
   {
-    if (data) {
-      throw std::runtime_error("'data' is not empty");
-    }
-
     ConstMessageSharedPtr shared_msg;
     MessageUniquePtr unique_msg;
 
@@ -135,7 +132,7 @@ public:
     } else {
       unique_msg = buffer_->consume_unique();
     }
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
         std::pair<ConstMessageSharedPtr, MessageUniquePtr>(
           shared_msg, std::move(unique_msg)))

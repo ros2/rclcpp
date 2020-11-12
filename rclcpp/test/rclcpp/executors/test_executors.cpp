@@ -436,10 +436,10 @@ public:
     return true;
   }
 
-  void
-  take_data(std::shared_ptr<void> & data) override
+  std::shared_ptr<void>
+  take_data() override
   {
-    (void) data;
+    return nullptr;
   }
 
   void

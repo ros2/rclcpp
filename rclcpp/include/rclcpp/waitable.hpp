@@ -153,14 +153,13 @@ public:
    * // Update the Waitable
    * waitable.update(wait_set);
    * // Execute any entities of the Waitable that may be ready
-   * std::shared_ptr<void> data;
-   * waitable.take_data(data);
+   * std::shared_ptr<void> data = waitable.take_data();
    * ```
    */
   RCLCPP_PUBLIC
   virtual
-  void
-  take_data(std::shared_ptr<void> & data) = 0;
+  std::shared_ptr<void>
+  take_data() = 0;
 
   /// Execute data that is passed in.
   /**
@@ -181,8 +180,7 @@ public:
    * // Update the Waitable
    * waitable.update(wait_set);
    * // Execute any entities of the Waitable that may be ready
-   * std::shared_ptr<void> data;
-   * waitable.take_data(data);
+   * std::shared_ptr<void> data = waitable.take_data();
    * waitable.execute(data);
    * ```
    */

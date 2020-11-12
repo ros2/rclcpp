@@ -118,8 +118,8 @@ public:
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  take_data(std::shared_ptr<void> & data) override;
+  std::shared_ptr<void>
+  take_data() override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC

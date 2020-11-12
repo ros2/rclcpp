@@ -88,10 +88,10 @@ StaticExecutorEntitiesCollector::fini()
   exec_list_.clear();
 }
 
-void
-StaticExecutorEntitiesCollector::take_data(std::shared_ptr<void> & data)
+std::shared_ptr<void>
+StaticExecutorEntitiesCollector::take_data()
 {
-  (void) data;
+  return nullptr;
 }
 
 void

@@ -285,8 +285,7 @@ TEST_F(TestQosEvent, execute) {
   rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)> handler(
     callback, rcl_publisher_event_init, rcl_handle, event_type);
 
-  std::shared_ptr<void> data;
-  handler.take_data(data);
+  std::shared_ptr<void> data = handler.take_data();
   EXPECT_NO_THROW(handler.execute(data));
   EXPECT_TRUE(handler_callback_executed);
 
@@ -294,8 +293,7 @@ TEST_F(TestQosEvent, execute) {
     handler_callback_executed = false;
     // Logs error and returns early
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_take_event, RCL_RET_ERROR);
-    std::shared_ptr<void> data;
-    handler.take_data(data);
+    std::shared_ptr<void> data = handler.take_data();
     EXPECT_THROW(handler.execute(data), std::runtime_error);
     EXPECT_FALSE(handler_callback_executed);
   }

@@ -830,7 +830,7 @@ Executor::get_next_ready_executable_from_map(
     // Check the waitables to see if there are any that are ready
     memory_strategy_->get_next_waitable(any_executable, weak_groups_to_nodes);
     if (any_executable.waitable) {
-      any_executable.waitable->take_data(any_executable.data);
+      any_executable.data = any_executable.waitable->take_data();
       success = true;
     }
   }

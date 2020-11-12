@@ -384,8 +384,7 @@ BENCHMARK_F(
   reset_heap_counters();
 
   for (auto _ : st) {
-    std::shared_ptr<void> data;
-    entities_collector_->take_data(data);
+    std::shared_ptr<void> data = entities_collector_->take_data();
     entities_collector_->execute(data);
   }
 }

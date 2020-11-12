@@ -382,25 +382,21 @@ ClientBase::generate_goal_id()
   return goal_id;
 }
 
-void
-ClientBase::take_data(std::shared_ptr<void> & data)
+std::shared_ptr<void>
+ClientBase::take_data()
 {
-  if (data) {
-    throw std::runtime_error("'data' is not empty");
-  }
-
   if (pimpl_->is_feedback_ready) {
     std::shared_ptr<void> feedback_message = this->create_feedback_message();
     rcl_ret_t ret = rcl_action_take_feedback(
       pimpl_->client_handle.get(), feedback_message.get());
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, std::shared_ptr<void>>>(
         ret, feedback_message));
   } else if (pimpl_->is_status_ready) {
     std::shared_ptr<void> status_message = this->create_status_message();
     rcl_ret_t ret = rcl_action_take_status(
       pimpl_->client_handle.get(), status_message.get());
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, std::shared_ptr<void>>>(
         ret, status_message));
   } else if (pimpl_->is_goal_response_ready) {
@@ -408,7 +404,7 @@ ClientBase::take_data(std::shared_ptr<void> & data)
     std::shared_ptr<void> goal_response = this->create_goal_response();
     rcl_ret_t ret = rcl_action_take_goal_response(
       pimpl_->client_handle.get(), &response_header, goal_response.get());
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, rmw_request_id_t, std::shared_ptr<void>>>(
         ret, response_header, goal_response));
   } else if (pimpl_->is_result_response_ready) {
@@ -416,7 +412,7 @@ ClientBase::take_data(std::shared_ptr<void> & data)
     std::shared_ptr<void> result_response = this->create_result_response();
     rcl_ret_t ret = rcl_action_take_result_response(
       pimpl_->client_handle.get(), &response_header, result_response.get());
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, rmw_request_id_t, std::shared_ptr<void>>>(
         ret, response_header, result_response));
   } else if (pimpl_->is_cancel_response_ready) {
@@ -424,7 +420,7 @@ ClientBase::take_data(std::shared_ptr<void> & data)
     std::shared_ptr<void> cancel_response = this->create_cancel_response();
     rcl_ret_t ret = rcl_action_take_cancel_response(
       pimpl_->client_handle.get(), &response_header, cancel_response.get());
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, rmw_request_id_t, std::shared_ptr<void>>>(
         ret, response_header, cancel_response));
   } else {

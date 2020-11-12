@@ -79,8 +79,8 @@ public:
 
   /// Prepare the waitable for execution.
   RCLCPP_PUBLIC
-  void
-  take_data(std::shared_ptr<void> & data) override;
+  std::shared_ptr<void>
+  take_data() override;
 
   /// Function to add_handles_to_wait_set and wait for work and
   /**

@@ -190,13 +190,9 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
          pimpl_->goal_expired_;
 }
 
-void
-ServerBase::take_data(std::shared_ptr<void> & data)
+std::shared_ptr<void>
+ServerBase::take_data()
 {
-  if (data) {
-    throw std::runtime_error("'data' is not empty");
-  }
-
   if (pimpl_->goal_request_ready_) {
     rcl_ret_t ret;
     rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
@@ -210,7 +206,7 @@ ServerBase::take_data(std::shared_ptr<void> & data)
       &request_header,
       message.get());
 
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared
       <std::tuple<rcl_ret_t, rcl_action_goal_info_t, rmw_request_id_t, std::shared_ptr<void>>>(
         ret,
@@ -229,7 +225,7 @@ ServerBase::take_data(std::shared_ptr<void> & data)
       &request_header,
       request.get());
 
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared
       <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
       rmw_request_id_t>>(ret, request, request_header));
@@ -242,11 +238,11 @@ ServerBase::take_data(std::shared_ptr<void> & data)
     ret = rcl_action_take_result_request(
       pimpl_->action_server_.get(), &request_header, result_request.get());
 
-    data = std::static_pointer_cast<void>(
+    return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(
         ret, result_request, request_header));
   } else if (pimpl_->goal_expired_) {
-    return;
+    return nullptr;
   } else {
     throw std::runtime_error("Taking data from action server but nothing is ready");
   }

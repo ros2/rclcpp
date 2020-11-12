@@ -55,11 +55,7 @@ public:
 
   bool is_ready(rcl_wait_set_t *) override {return is_ready_;}
 
-  void
-  take_data(std::shared_ptr<void> & data) override
-  {
-    (void) data;
-  }
+  std::shared_ptr<void> take_data() override {return nullptr;}
 
   void
   execute(std::shared_ptr<void> & data) override {(void)data;}
