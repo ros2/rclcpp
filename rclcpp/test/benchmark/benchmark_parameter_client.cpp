@@ -195,13 +195,13 @@ BENCHMARK_F(ParameterClientTest, set_parameters_array)(benchmark::State & state)
 {
   const std::vector<rclcpp::Parameter> param_values1
   {
-    rclcpp::Parameter(param1_name, std::vector<int> { 0, 1, 2 }),
-    rclcpp::Parameter(param2_name, std::vector<int> { 3, 4, 5 }),
+    rclcpp::Parameter(param1_name, std::vector<int> {0, 1, 2}),
+    rclcpp::Parameter(param2_name, std::vector<int> {3, 4, 5}),
   };
   const std::vector<rclcpp::Parameter> param_values2
   {
-    rclcpp::Parameter(param1_name, std::vector<int> { 4, 5, 6 }),
-    rclcpp::Parameter(param2_name, std::vector<int> { 7, 8, 9 }),
+    rclcpp::Parameter(param1_name, std::vector<int> {4, 5, 6}),
+    rclcpp::Parameter(param2_name, std::vector<int> {7, 8, 9}),
   };
 
   reset_heap_counters();
