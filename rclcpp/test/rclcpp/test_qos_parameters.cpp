@@ -96,7 +96,7 @@ TEST(TestQosParameters, declare_with_callback) {
   EXPECT_THROW(
     rclcpp::detail::declare_qos_parameters(
       {
-        rclcpp::QosOverridingOptions::kDefaultPolicies,
+        {rclcpp::QosPolicyKind::Lifespan},
         [](const rclcpp::QoS &) {
           return rclcpp::QosCallbackResult{};
         }
@@ -123,4 +123,150 @@ TEST(TestQosParameters, declare_with_callback) {
   //  *INDENT-ON*
 
   rclcpp::shutdown();
+}
+
+constexpr int64_t kDuration{1000000};
+
+TEST(TestQosParameters, declare_qos_subscription_parameters) {
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>(
+    "my_node", "/ns", rclcpp::NodeOptions().parameter_overrides(
+  {
+    rclcpp::Parameter(
+      "qos_overrides./my/fully/qualified/topic_name.subscription.reliability", "best_effort"),
+    rclcpp::Parameter(
+      "qos_overrides./my/fully/qualified/topic_name.subscription.deadline", kDuration),
+    rclcpp::Parameter(
+      "qos_overrides./my/fully/qualified/topic_name.subscription.liveliness_lease_duration",
+      kDuration),
+  }));
+
+  for (size_t i = 0; i < 2; ++i) {
+    // The first iteration will declare parameters, the second will get the previosuly declared
+    // ones, check both have the same result.
+    rclcpp::QoS qos{rclcpp::KeepLast(10)};
+    qos = rclcpp::detail::declare_qos_parameters(
+    {
+      rclcpp::QosPolicyKind::AvoidRosNamespaceConventions, rclcpp::QosPolicyKind::Deadline,
+      rclcpp::QosPolicyKind::Depth, rclcpp::QosPolicyKind::Durability,
+      // lifespan will be ignored
+      rclcpp::QosPolicyKind::History, rclcpp::QosPolicyKind::Lifespan,
+      rclcpp::QosPolicyKind::Liveliness, rclcpp::QosPolicyKind::LivelinessLeaseDuration,
+      rclcpp::QosPolicyKind::Reliability
+    },
+      node,
+      "/my/fully/qualified/topic_name",
+      qos,
+      rclcpp::detail::SubscriptionQosParametersTraits{});
+
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.avoid_ros_namespace_conventions"
+      ).get_value<bool>(), false);
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.deadline"
+      ).get_value<int64_t>(), kDuration);
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.depth"
+      ).get_value<int64_t>(), 10);
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.durability"
+      ).get_value<std::string>(), "volatile");
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.history"
+      ).get_value<std::string>(), "keep_last");
+    EXPECT_FALSE(
+      node->has_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.lifespan"));
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.liveliness"
+      ).get_value<std::string>(), "system_default");
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.liveliness_lease_duration"
+      ).get_value<int64_t>(), kDuration);
+    EXPECT_EQ(
+      node->get_parameter(
+        "qos_overrides./my/fully/qualified/topic_name.subscription.reliability"
+      ).get_value<std::string>(),
+      "best_effort");
+
+    std::map<std::string, rclcpp::Parameter> qos_params;
+    EXPECT_TRUE(
+      node->get_node_parameters_interface()->get_parameters_by_prefix(
+        "qos_overrides./my/fully/qualified/topic_name.subscription", qos_params));
+    EXPECT_EQ(8u, qos_params.size());
+  }
+  rclcpp::shutdown();
+}
+
+TEST(TestQosParameters, declare_with_id) {
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+
+  rclcpp::QoS qos{rclcpp::KeepLast{10}};
+  qos = rclcpp::detail::declare_qos_parameters(
+    {rclcpp::QosOverridingOptions::kDefaultPolicies, nullptr, "my_id"},
+    node,
+    "/my/fully/qualified/topic_name",
+    qos,
+    rclcpp::detail::PublisherQosParametersTraits{});
+
+  std::map<std::string, rclcpp::Parameter> qos_params;
+  EXPECT_TRUE(
+    node->get_node_parameters_interface()->get_parameters_by_prefix(
+      "qos_overrides./my/fully/qualified/topic_name.publisher_my_id", qos_params));
+  EXPECT_EQ(3u, qos_params.size());
+
+  rclcpp::shutdown();
+}
+
+TEST(TestQosParameters, declare_no_parameters_interface) {
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+
+  rclcpp::QoS qos{rclcpp::KeepLast{10}};
+  auto node_base_interface = node->get_node_base_interface();
+  EXPECT_THROW(
+    rclcpp::detail::declare_qos_parameters(
+      rclcpp::QosOverridingOptions::kDefaultPolicies,
+      node_base_interface,
+      "/my/fully/qualified/topic_name",
+      qos,
+      rclcpp::detail::PublisherQosParametersTraits{}),
+    std::runtime_error);
+
+  qos = rclcpp::detail::declare_qos_parameters(
+    rclcpp::QosOverridingOptions{},
+    node_base_interface,
+    "/my/fully/qualified/topic_name",
+    qos,
+    rclcpp::detail::PublisherQosParametersTraits{});
+
+  std::map<std::string, rclcpp::Parameter> qos_params;
+  EXPECT_FALSE(
+    node->get_node_parameters_interface()->get_parameters_by_prefix("qos_overrides", qos_params));
+
+  rclcpp::shutdown();
+}
+
+TEST(TestQosParameters, internal_functions_failure_modes) {
+  rclcpp::QoS qos{rclcpp::KeepLast{10}};
+  EXPECT_THROW(
+    rclcpp::detail::apply_qos_override(
+      rclcpp::QosPolicyKind::Invalid, rclcpp::ParameterValue{}, qos),
+    std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::detail::get_default_qos_param_value(
+      rclcpp::QosPolicyKind::Invalid, qos),
+    std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::detail::check_if_stringified_policy_is_null(
+      nullptr, rclcpp::QosPolicyKind::Reliability),
+    std::invalid_argument);
 }

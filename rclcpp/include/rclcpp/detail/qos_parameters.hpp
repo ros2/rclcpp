@@ -195,9 +195,9 @@ declare_qos_parameters(
   EntityQosParametersTraits)
 {
   if (options.policy_kinds.size()) {
-    RCLCPP_WARN(
-      rclcpp::get_logger("rclcpp"),
-      "qos override options ignored because no parameter interface was provided");
+    std::runtime_error exc{
+      "passed non-default qos overriding options without providing a parameters interface"};
+    throw exc;
   }
   return default_qos;
 }
@@ -252,7 +252,7 @@ apply_qos_override(
         reliability, RELIABILITY, value, qos);
       break;
     default:
-      throw std::runtime_error{"unknown QosPolicyKind"};
+      throw std::invalid_argument{"unknown QosPolicyKind"};
   }
 }
 
