@@ -22,19 +22,6 @@
 #include "rclcpp/qos_overriding_options.hpp"
 #include "rclcpp/detail/qos_parameters.hpp"
 
-TEST(TestQosParameters, test_overriding_options) {
-  {
-    rclcpp::QosOverridingOptions options{rclcpp::QosOverridingOptions::kDefaultPolicies};
-    EXPECT_EQ(options.id, "");
-    EXPECT_EQ(options.validation_callback, nullptr);
-    EXPECT_THAT(
-      options.policy_kinds, testing::ElementsAre(
-        rclcpp::QosPolicyKind::History,
-        rclcpp::QosPolicyKind::Depth,
-        rclcpp::QosPolicyKind::Reliability));
-  }
-}
-
 TEST(TestQosParameters, declare) {
   rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>(

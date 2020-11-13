@@ -369,6 +369,12 @@ if(TARGET test_qos_event)
     mimick
   )
 endif()
+ament_add_gmock(test_qos_overriding_options test_qos_overriding_options.cpp)
+if(TARGET test_qos_overriding_options)
+  target_link_libraries(test_qos_overriding_options
+    ${PROJECT_NAME}
+  )
+endif()
 ament_add_gmock(test_qos_parameters test_qos_parameters.cpp)
 if(TARGET test_qos_parameters)
   target_link_libraries(test_qos_parameters
