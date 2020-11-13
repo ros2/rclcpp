@@ -152,6 +152,14 @@ TEST_F(TestPublisher, various_creation_signatures) {
     (void)publisher;
   }
   {
+    rclcpp::PublisherOptions options;
+    options.qos_overriding_options = rclcpp::QosOverridingOptions{
+      rclcpp::QosOverridingOptions::kDefaultPolicies};
+    auto publisher =
+      rclcpp::create_publisher<Empty>(node, "topic", 42, options);
+    (void)publisher;
+  }
+  {
     auto node_parameters = node->get_node_parameters_interface();
     auto node_topics = node->get_node_topics_interface();
     auto publisher = rclcpp::create_publisher<Empty>(
