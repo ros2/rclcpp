@@ -84,7 +84,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  spin_some(std::chrono::nanoseconds max_duration) override;
+  spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0)) override;
 
   RCLCPP_PUBLIC
   void
