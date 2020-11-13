@@ -25,6 +25,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
@@ -40,55 +41,9 @@ using rclcpp::Executor;
 using rclcpp::ExecutorOptions;
 using rclcpp::FutureReturnCode;
 
-namespace
-{
-
-std::shared_ptr<rcl_guard_condition_t>
-create_shutdown_guard_condition(std::shared_ptr<rclcpp::Context> context)
-{
-  auto custom_deleter = [](rcl_guard_condition_t * guard_condition) {
-      rcl_ret_t ret = rcl_guard_condition_fini(guard_condition);
-      if (RCL_RET_OK != ret) {
-        RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"),
-          "Failed to finalize shutdown_guard_condition, leaking memory!");
-      }
-    };
-
-  auto shutdown_guard_condition =
-    std::shared_ptr<rcl_guard_condition_t>(new rcl_guard_condition_t, custom_deleter);
-  *shutdown_guard_condition = rcl_get_zero_initialized_guard_condition();
-
-  rcl_ret_t ret = rcl_guard_condition_init(
-    shutdown_guard_condition.get(),
-    context->get_rcl_context().get(),
-    rcl_guard_condition_get_default_options());
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to create shutdown guard condition");
-  }
-
-  context->on_shutdown(
-    [weak_shutdown_guard_condition =
-    std::weak_ptr<rcl_guard_condition_t>(shutdown_guard_condition)]()
-    {
-      auto shared_guard_condition = weak_shutdown_guard_condition.lock();
-      if (nullptr != shared_guard_condition) {
-        rcl_ret_t status = rcl_trigger_guard_condition(shared_guard_condition.get());
-        if (status != RCL_RET_OK) {
-          RCUTILS_LOG_ERROR_NAMED(
-            "rclcpp",
-            "failed to trigger guard condition in Context shutdown callback(): %s",
-            rcl_get_error_string().str);
-        }
-      }
-    });
-  return shutdown_guard_condition;
-}
-
-}  // namespace
-
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
+  shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   memory_strategy_(options.memory_strategy)
 {
   // Store the context for later use.
@@ -101,14 +56,17 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
     throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
   }
 
-  // Register a shutdown hook for the executor with context
-  shutdown_guard_condition_ = create_shutdown_guard_condition(context_);
+  context_->on_shutdown(
+    [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{shutdown_guard_condition_}]() {
+      auto strong_gc = weak_gc.lock();
+      if (strong_gc) {
+        strong_gc->trigger();
+      }
+    });
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-
-  // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(shutdown_guard_condition_.get());
+  memory_strategy_->add_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
@@ -179,7 +137,7 @@ Executor::~Executor()
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
-  memory_strategy_->remove_guard_condition(shutdown_guard_condition_.get());
+  memory_strategy_->remove_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
