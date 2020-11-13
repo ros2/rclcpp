@@ -75,8 +75,6 @@ TEST_F(TestCreateSubscription, create_separated_node_topics_and_parameters) {
   auto node_topics = node->get_node_topics_interface();
   auto subscription = rclcpp::create_subscription<test_msgs::msg::Empty>(
     node_parameters, node_topics, "topic_name", qos, callback, options);
-  auto subscription2 = rclcpp::create_subscription<test_msgs::msg::Empty>(
-    node_parameters, node_topics, "topic_name", qos, std::move(callback), options);
 
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());

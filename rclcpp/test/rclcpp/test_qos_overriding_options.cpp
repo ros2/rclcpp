@@ -17,20 +17,18 @@
 #include "rclcpp/qos_overriding_options.hpp"
 
 TEST(TestQosOverridingOptions, test_overriding_options) {
-  {
-    rclcpp::QosOverridingOptions options{rclcpp::QosOverridingOptions::kDefaultPolicies};
-    EXPECT_EQ(options.id, "");
-    EXPECT_EQ(options.validation_callback, nullptr);
-    EXPECT_THAT(
-      options.policy_kinds, testing::ElementsAre(
-        rclcpp::QosPolicyKind::History,
-        rclcpp::QosPolicyKind::Depth,
-        rclcpp::QosPolicyKind::Reliability));
-  }
+  rclcpp::QosOverridingOptions options{rclcpp::QosOverridingOptions::kDefaultPolicies};
+  EXPECT_EQ(options.id, "");
+  EXPECT_EQ(options.validation_callback, nullptr);
+  EXPECT_THAT(
+    options.policy_kinds, testing::ElementsAre(
+      rclcpp::QosPolicyKind::History,
+      rclcpp::QosPolicyKind::Depth,
+      rclcpp::QosPolicyKind::Reliability));
 }
 
 TEST(TestQosOverridingOptions, test_qos_policy_kind_to_cstr) {
-    EXPECT_THROW(
-      rclcpp::qos_policy_kind_to_cstr(rclcpp::QosPolicyKind::Invalid),
-      std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::qos_policy_kind_to_cstr(rclcpp::QosPolicyKind::Invalid),
+    std::invalid_argument);
 }
