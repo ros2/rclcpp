@@ -26,8 +26,10 @@
 
 #include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_parameters_interface.hpp" //added
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp" //added
 
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_timer.hpp"
@@ -95,10 +97,13 @@ create_subscription(
 
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
-
-  if (rclcpp::detail::resolve_enable_topic_statistics(
-      options,
-      *node_topics->get_node_base_interface()))
+  
+  using rclcpp::node_interfaces::get_node_parameters_interface; //added
+  auto node_parameters = get_node_parameters_interface(std::forward<NodeT>(node)); //added
+  node_parameters->declare_parameter("enable_statistics", rclcpp::ParameterValue(false)); //added  
+  
+  if (rclcpp::detail::resolve_enable_topic_statistics(options,*node_topics->get_node_base_interface())||
+  node_parameters->get_parameter("enable_statistics").as_bool()) //added
   {
     if (options.topic_stats_options.publish_period <= std::chrono::milliseconds(0)) {
       throw std::invalid_argument(
@@ -117,14 +122,8 @@ create_subscription(
       rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
       >(node_topics->get_node_base_interface()->get_name(), publisher);
 
-    std::weak_ptr<
-      rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
-    > weak_subscription_topic_stats(subscription_topic_stats);
-    auto sub_call_back = [weak_subscription_topic_stats]() {
-        auto subscription_topic_stats = weak_subscription_topic_stats.lock();
-        if (subscription_topic_stats) {
-          subscription_topic_stats->publish_message();
-        }
+    auto sub_call_back = [subscription_topic_stats]() {
+        subscription_topic_stats->publish_message();
       };
 
     auto node_timer_interface = node_topics->get_node_timers_interface();
