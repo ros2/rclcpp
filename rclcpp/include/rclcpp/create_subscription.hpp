@@ -26,10 +26,10 @@
 
 #include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
-#include "rclcpp/node_interfaces/get_node_parameters_interface.hpp" //added
+#include "rclcpp/node_interfaces/get_node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
-#include "rclcpp/node_interfaces/node_parameters_interface.hpp" //added
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_timer.hpp"
@@ -98,19 +98,19 @@ create_subscription(
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
   
-  using rclcpp::node_interfaces::get_node_parameters_interface; //added
-  auto node_parameters = get_node_parameters_interface(std::forward<NodeT>(node)); //added
+  using rclcpp::node_interfaces::get_node_parameters_interface;
+  auto node_parameters = get_node_parameters_interface(std::forward<NodeT>(node));
   
-  node_parameters->declare_parameter("stats_enabled", rclcpp::ParameterValue()); //added  
-  rclcpp::Parameter stats_enabled; //added
-  node_parameters->get_parameter("stats_enabled", stats_enabled); //added
+  node_parameters->declare_parameter("stats_enabled", rclcpp::ParameterValue());  
+  rclcpp::Parameter stats_enabled;
+  node_parameters->get_parameter("stats_enabled", stats_enabled);
   
   if (((stats_enabled.get_type()!= rclcpp::PARAMETER_NOT_SET)&&(stats_enabled.as_bool()==true))||
-  ((stats_enabled.get_type()== rclcpp::PARAMETER_NOT_SET)&&(rclcpp::detail::resolve_enable_topic_statistics(options,*node_topics->get_node_base_interface())))) //modified
+  ((stats_enabled.get_type()== rclcpp::PARAMETER_NOT_SET)&&(rclcpp::detail::resolve_enable_topic_statistics(options,*node_topics->get_node_base_interface()))))
   {	
-  	node_parameters->declare_parameter("stats_period", rclcpp::ParameterValue()); //added
-  	rclcpp::Parameter stats_period; //added
-		node_parameters->get_parameter("stats_period", stats_period); //added
+  	node_parameters->declare_parameter("stats_period", rclcpp::ParameterValue());
+  	rclcpp::Parameter stats_period;
+		node_parameters->get_parameter("stats_period", stats_period);
 		
 	  if ((stats_period.get_type()!= rclcpp::PARAMETER_NOT_SET)&&(stats_period.as_double()<=0)) {
 			throw std::invalid_argument(
@@ -124,15 +124,15 @@ create_subscription(
 	            " ms");
 	  }
 	  
-		node_parameters->declare_parameter("stats_topic", rclcpp::ParameterValue()); //added
-		rclcpp::Parameter stats_topic; //added
-		node_parameters->get_parameter("stats_topic", stats_topic); //added
+		node_parameters->declare_parameter("stats_topic", rclcpp::ParameterValue());
+		rclcpp::Parameter stats_topic;
+		node_parameters->get_parameter("stats_topic", stats_topic);
           
 	  std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
 	    create_publisher<statistics_msgs::msg::MetricsMessage>(
 	    node,
 	    (stats_topic.get_type()!= rclcpp::PARAMETER_NOT_SET) ? stats_topic.as_string() : options.topic_stats_options.publish_topic, 
-	    qos); //modified
+	    qos);
 
 	  subscription_topic_stats = std::make_shared<
 	    rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
@@ -157,7 +157,7 @@ create_subscription(
 	    options.callback_group,
 	    node_topics->get_node_base_interface(),
 	    node_timer_interface
-	  ); //modified
+	  );
 
 	  subscription_topic_stats->set_publisher_timer(timer);
   }
