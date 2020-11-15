@@ -110,56 +110,56 @@ create_subscription(
   {	
   	node_parameters->declare_parameter("stats_period", rclcpp::ParameterValue());	//declared stats_period with type PARAMETER_NOT_SET
   	rclcpp::Parameter stats_period;
-		node_parameters->get_parameter("stats_period", stats_period);
-		
-		if ((stats_period.get_type()!= rclcpp::PARAMETER_NOT_SET)&&(stats_period.as_double()<=0)) {
-		throw std::invalid_argument(
-			          "stats_period must be greater than 0, specified value of " +
-			          std::to_string(stats_period.as_double()) +" ms");
-	  } else if ((stats_period.get_type()== rclcpp::PARAMETER_NOT_SET)&&(options.topic_stats_options.publish_period <= std::chrono::milliseconds(0))) {
-	    	throw std::invalid_argument(
-	            "topic_stats_options.publish_period must be greater than 0, specified value of " +
-	            std::to_string(options.topic_stats_options.publish_period.count()) +
-	            " ms");
-	  }
-	  
-		node_parameters->declare_parameter("stats_topic", rclcpp::ParameterValue());	//declared stats_topic with type PARAMETER_NOT_SET
-		rclcpp::Parameter stats_topic;
-		node_parameters->get_parameter("stats_topic", stats_topic);
-		        
-		std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
-			  create_publisher<statistics_msgs::msg::MetricsMessage>(
-			  node,
-			  (stats_topic.get_type()!= rclcpp::PARAMETER_NOT_SET) ? stats_topic.as_string() : options.topic_stats_options.publish_topic,
-			  qos);	//run-time configuration has prioirty over code-configuration
+	node_parameters->get_parameter("stats_period", stats_period);
+	
+	if ((stats_period.get_type()!= rclcpp::PARAMETER_NOT_SET)&&(stats_period.as_double()<=0)) {
+	throw std::invalid_argument(
+		          "stats_period must be greater than 0, specified value of " +
+		          std::to_string(stats_period.as_double()) +" ms");
+  	} else if ((stats_period.get_type()== rclcpp::PARAMETER_NOT_SET)&&(options.topic_stats_options.publish_period <= std::chrono::milliseconds(0))) {
+    	throw std::invalid_argument(
+            "topic_stats_options.publish_period must be greater than 0, specified value of " +
+            std::to_string(options.topic_stats_options.publish_period.count()) +
+            " ms");
+  	}
+  
+	node_parameters->declare_parameter("stats_topic", rclcpp::ParameterValue());	//declared stats_topic with type PARAMETER_NOT_SET
+	rclcpp::Parameter stats_topic;
+	node_parameters->get_parameter("stats_topic", stats_topic);
+	        
+	std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
+		  create_publisher<statistics_msgs::msg::MetricsMessage>(
+		  node,
+		  (stats_topic.get_type()!= rclcpp::PARAMETER_NOT_SET) ? stats_topic.as_string() : options.topic_stats_options.publish_topic,
+		  qos);	//run-time configuration has prioirty over code-configuration
 
-		subscription_topic_stats = std::make_shared<
-			  rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
-			  >(node_topics->get_node_base_interface()->get_name(), publisher);
-
-		std::weak_ptr<
+	subscription_topic_stats = std::make_shared<
 		  rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
-		> weak_subscription_topic_stats(subscription_topic_stats);
-		auto sub_call_back = [weak_subscription_topic_stats]() {
-		  auto subscription_topic_stats = weak_subscription_topic_stats.lock();
-		  if (subscription_topic_stats) {
-		    subscription_topic_stats->publish_message();
-		  }
-		};
+		  >(node_topics->get_node_base_interface()->get_name(), publisher);
 
-		auto node_timer_interface = node_topics->get_node_timers_interface();
+	std::weak_ptr<
+	  rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
+	> weak_subscription_topic_stats(subscription_topic_stats);
+	auto sub_call_back = [weak_subscription_topic_stats]() {
+	  auto subscription_topic_stats = weak_subscription_topic_stats.lock();
+	  if (subscription_topic_stats) {
+	    subscription_topic_stats->publish_message();
+	  }
+	};
 
-		auto timer = create_wall_timer(
-			  std::chrono::duration_cast<std::chrono::nanoseconds>(
-			    (stats_period.get_type()!= rclcpp::PARAMETER_NOT_SET) ? 						
-			    std::chrono::seconds(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::milliseconds((int)stats_period.as_double()*1000))) : options.topic_stats_options.publish_period),
-			  sub_call_back,
-			  options.callback_group,
-			  node_topics->get_node_base_interface(),
-			  node_timer_interface
-			); //run-time configuration has prioirty over code-configuration
+	auto node_timer_interface = node_topics->get_node_timers_interface();
 
-	  subscription_topic_stats->set_publisher_timer(timer);
+	auto timer = create_wall_timer(
+		  std::chrono::duration_cast<std::chrono::nanoseconds>(
+		    (stats_period.get_type()!= rclcpp::PARAMETER_NOT_SET) ? 						
+		    std::chrono::seconds(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::milliseconds((int)stats_period.as_double()*1000))) : options.topic_stats_options.publish_period),
+		  sub_call_back,
+		  options.callback_group,
+		  node_topics->get_node_base_interface(),
+		  node_timer_interface
+		); //run-time configuration has prioirty over code-configuration
+
+  	subscription_topic_stats->set_publisher_timer(timer);
   }
 
   auto factory = rclcpp::create_subscription_factory<MessageT>(
