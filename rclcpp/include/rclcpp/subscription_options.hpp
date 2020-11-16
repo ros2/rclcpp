@@ -26,7 +26,6 @@
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
-#include "rclcpp/qos_overriding_options.hpp"
 #include "rclcpp/topic_statistics_state.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -73,8 +72,6 @@ struct SubscriptionOptionsBase
   };
 
   TopicStatisticsOptions topic_stats_options;
-
-  QosOverridingOptions qos_overriding_options;
 };
 
 /// Structure containing optional configuration for Subscriptions.

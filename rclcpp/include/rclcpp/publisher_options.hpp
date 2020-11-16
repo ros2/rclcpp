@@ -26,7 +26,6 @@
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
-#include "rclcpp/qos_overriding_options.hpp"
 
 namespace rclcpp
 {
@@ -51,8 +50,6 @@ struct PublisherOptionsBase
   /// Optional RMW implementation specific payload to be used during creation of the publisher.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificPublisherPayload>
   rmw_implementation_payload = nullptr;
-
-  QosOverridingOptions qos_overriding_options;
 };
 
 /// Structure containing optional configuration for Publishers.
