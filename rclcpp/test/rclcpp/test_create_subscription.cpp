@@ -16,7 +16,6 @@
 
 #include <chrono>
 #include <memory>
-#include <utility>
 
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/node.hpp"
