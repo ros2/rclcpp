@@ -26,6 +26,7 @@
 namespace rclcpp
 {
 
+inline
 const char *
 qos_policy_kind_to_cstr(const QosPolicyKind & qpk)
 {
@@ -36,6 +37,7 @@ qos_policy_kind_to_cstr(const QosPolicyKind & qpk)
   return ret;
 }
 
+inline
 std::ostream &
 operator<<(std::ostream & oss, const QosPolicyKind & qpk)
 {
