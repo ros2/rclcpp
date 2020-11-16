@@ -67,6 +67,7 @@ NodeParameters::NodeParameters(
   }
 
   if (start_parameter_event_publisher) {
+    // TODO(ivanpauno): Qos of the `/parameters_event` topic should be somehow overridable.
     events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
       node_topics,
       "/parameter_events",
