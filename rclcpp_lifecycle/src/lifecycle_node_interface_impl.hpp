@@ -265,6 +265,7 @@ public:
       throw std::runtime_error(
               "Can't get available states. State machine is not initialized.");
     }
+    resp->available_states.reserve(state_machine_.transition_map.states_size);
     for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
       lifecycle_msgs::msg::State state;
       state.id = static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
@@ -286,6 +287,7 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
+    resp->available_transitions.reserve(state_machine_.current_state->valid_transition_size);
     for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
       auto rcl_transition = state_machine_.current_state->valid_transitions[i];
       lifecycle_msgs::msg::TransitionDescription trans_desc;
@@ -312,6 +314,7 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
+    resp->available_transitions.reserve(state_machine_.transition_map.transitions_size);
     for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
       auto rcl_transition = state_machine_.transition_map.transitions[i];
       lifecycle_msgs::msg::TransitionDescription trans_desc;
@@ -336,9 +339,10 @@ public:
   get_available_states()
   {
     std::vector<State> states;
+    states.reserve(state_machine_.transition_map.states_size);
+
     for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
-      State state(&state_machine_.transition_map.states[i]);
-      states.push_back(state);
+      states.emplace_back(&state_machine_.transition_map.states[i]);
     }
     return states;
   }
@@ -347,11 +351,10 @@ public:
   get_available_transitions()
   {
     std::vector<Transition> transitions;
+    transitions.reserve(state_machine_.transition_map.transitions_size);
 
     for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
-      Transition transition(
-        &state_machine_.transition_map.transitions[i]);
-      transitions.push_back(transition);
+      transitions.emplace_back(&state_machine_.transition_map.transitions[i]);
     }
     return transitions;
   }
