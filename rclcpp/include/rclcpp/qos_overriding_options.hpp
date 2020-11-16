@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "rclcpp/qos.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rmw/qos_policy_kind.h"
@@ -30,7 +31,7 @@
 namespace rclcpp
 {
 
-enum class QosPolicyKind
+enum class RCLCPP_PUBLIC_TYPE QosPolicyKind
 {
   AvoidRosNamespaceConventions = RMW_QOS_POLICY_AVOID_ROS_NAMESPACE_CONVENTIONS,
   Deadline = RMW_QOS_POLICY_DEADLINE,
@@ -44,9 +45,11 @@ enum class QosPolicyKind
   Invalid = RMW_QOS_POLICY_INVALID,
 };
 
+RCLCPP_PUBLIC
 const char *
 qos_policy_kind_to_cstr(const QosPolicyKind & qpk);
 
+RCLCPP_PUBLIC
 std::ostream &
 operator<<(std::ostream & os, const QosPolicyKind & qpk);
 
@@ -83,7 +86,7 @@ class QosParameters;
  *          depth: 10
  * ```
  */
-struct QosOverridingOptions
+struct RCLCPP_PUBLIC_TYPE QosOverridingOptions
 {
   /// Id of the entity requesting to create parameters.
   std::string id;
