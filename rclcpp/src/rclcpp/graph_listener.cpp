@@ -33,7 +33,6 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 namespace rclcpp
 {
-
 namespace graph_listener
 {
 
