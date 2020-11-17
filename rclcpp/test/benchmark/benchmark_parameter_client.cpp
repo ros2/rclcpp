@@ -28,7 +28,7 @@ public:
   {
   }
 
-  void SetUp(benchmark::State &)
+  virtual void SetUp(benchmark::State &)
   {
     remote_context = std::make_shared<rclcpp::Context>();
     remote_context->init(0, nullptr, rclcpp::InitOptions().auto_initialize_logging(false));
@@ -45,7 +45,7 @@ public:
     remote_thread = std::thread(&rclcpp::executors::SingleThreadedExecutor::spin, remote_executor);
   }
 
-  void TearDown(benchmark::State &)
+  virtual void TearDown(benchmark::State &)
   {
     remote_executor->cancel();
     remote_context->shutdown("Test is complete");
@@ -77,7 +77,7 @@ public:
   {
   }
 
-  void SetUp(benchmark::State & state)
+  virtual void SetUp(benchmark::State & state)
   {
     RemoteNodeTest::SetUp(state);
 
@@ -98,7 +98,7 @@ public:
     }
   }
 
-  void TearDown(benchmark::State & state)
+  virtual void TearDown(benchmark::State & state)
   {
     RemoteNodeTest::TearDown(state);
 
@@ -117,6 +117,11 @@ protected:
   rclcpp::Node::SharedPtr node;
   rclcpp::SyncParametersClient::SharedPtr params_client;
 };
+
+static bool result_is_successful(rcl_interfaces::msg::SetParametersResult result)
+{
+  return result.successful;
+}
 
 BENCHMARK_F(ParameterClientTest, create_destroy_client)(benchmark::State & state)
 {
@@ -164,8 +169,18 @@ BENCHMARK_F(ParameterClientTest, set_parameters_bool)(benchmark::State & state)
   };
 
   for (auto _ : state) {
-    params_client->set_parameters(param_values2);
-    params_client->set_parameters(param_values1);
+    std::vector<rcl_interfaces::msg::SetParametersResult> results =
+      params_client->set_parameters(param_values2);
+    if (!std::all_of(results.begin(), results.end(), result_is_successful)) {
+      state.SkipWithError("Failed to set one or more parameters");
+      break;
+    }
+
+    results = params_client->set_parameters(param_values1);
+    if (!std::all_of(results.begin(), results.end(), result_is_successful)) {
+      state.SkipWithError("Failed to set one or more parameters");
+      break;
+    }
   }
 }
 
@@ -183,8 +198,18 @@ BENCHMARK_F(ParameterClientTest, set_parameters_atomically_bool)(benchmark::Stat
   };
 
   for (auto _ : state) {
-    params_client->set_parameters_atomically(param_values2);
-    params_client->set_parameters_atomically(param_values1);
+    rcl_interfaces::msg::SetParametersResult result =
+      params_client->set_parameters_atomically(param_values2);
+    if (!result.successful) {
+      state.SkipWithError(("Failed to set parameters: " + result.reason).c_str());
+      break;
+    }
+
+    result = params_client->set_parameters_atomically(param_values1);
+    if (!result.successful) {
+      state.SkipWithError(("Failed to set parameters: " + result.reason).c_str());
+      break;
+    }
   }
 }
 
@@ -202,8 +227,18 @@ BENCHMARK_F(ParameterClientTest, set_parameters_string)(benchmark::State & state
   };
 
   for (auto _ : state) {
-    params_client->set_parameters(param_values2);
-    params_client->set_parameters(param_values1);
+    std::vector<rcl_interfaces::msg::SetParametersResult> results =
+      params_client->set_parameters(param_values2);
+    if (!std::all_of(results.begin(), results.end(), result_is_successful)) {
+      state.SkipWithError("Failed to set one or more parameters");
+      break;
+    }
+
+    results = params_client->set_parameters(param_values1);
+    if (!std::all_of(results.begin(), results.end(), result_is_successful)) {
+      state.SkipWithError("Failed to set one or more parameters");
+      break;
+    }
   }
 }
 
@@ -221,28 +256,42 @@ BENCHMARK_F(ParameterClientTest, set_parameters_array)(benchmark::State & state)
   };
 
   for (auto _ : state) {
-    params_client->set_parameters(param_values2);
-    params_client->set_parameters(param_values1);
+    std::vector<rcl_interfaces::msg::SetParametersResult> results =
+      params_client->set_parameters(param_values2);
+    if (!std::all_of(results.begin(), results.end(), result_is_successful)) {
+      state.SkipWithError("Failed to set one or more parameters");
+      break;
+    }
+
+    results = params_client->set_parameters(param_values1);
+    if (!std::all_of(results.begin(), results.end(), result_is_successful)) {
+      state.SkipWithError("Failed to set one or more parameters");
+      break;
+    }
   }
 }
 
 BENCHMARK_F(ParameterClientTest, get_parameters)(benchmark::State & state)
 {
   for (auto _ : state) {
-    params_client->get_parameters({param1_name});
+    std::vector<rclcpp::Parameter> results = params_client->get_parameters({param1_name});
+    if (results.size() != 1 || results[0].get_name() != param1_name) {
+      state.SkipWithError("Got the wrong parameter(s)");
+      break;
+    }
   }
 }
 
 BENCHMARK_F(ParameterClientTest, list_parameters_hit)(benchmark::State & state)
 {
-  rcl_interfaces::msg::ListParametersResult param_list;
   const std::vector<std::string> prefixes
   {
     param_prefix,
   };
 
   for (auto _ : state) {
-    param_list = params_client->list_parameters(prefixes, 10);
+    rcl_interfaces::msg::ListParametersResult param_list =
+      params_client->list_parameters(prefixes, 10);
     if (param_list.names.size() != 2) {
       state.SkipWithError("Expected parameters");
       break;
@@ -252,14 +301,14 @@ BENCHMARK_F(ParameterClientTest, list_parameters_hit)(benchmark::State & state)
 
 BENCHMARK_F(ParameterClientTest, list_parameters_miss)(benchmark::State & state)
 {
-  rcl_interfaces::msg::ListParametersResult param_list;
   const std::vector<std::string> prefixes
   {
     "your_prefix",
   };
 
   for (auto _ : state) {
-    param_list = params_client->list_parameters(prefixes, 10);
+    rcl_interfaces::msg::ListParametersResult param_list =
+      params_client->list_parameters(prefixes, 10);
     if (param_list.names.size() != 0) {
       state.SkipWithError("Expected no parameters");
       break;
