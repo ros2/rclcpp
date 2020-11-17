@@ -28,7 +28,7 @@ public:
   {
   }
 
-  virtual void SetUp(benchmark::State &)
+  void SetUp(benchmark::State &)
   {
     remote_context = std::make_shared<rclcpp::Context>();
     remote_context->init(0, nullptr, rclcpp::InitOptions().auto_initialize_logging(false));
@@ -45,7 +45,7 @@ public:
     remote_thread = std::thread(&rclcpp::executors::SingleThreadedExecutor::spin, remote_executor);
   }
 
-  virtual void TearDown(benchmark::State &)
+  void TearDown(benchmark::State &)
   {
     remote_executor->cancel();
     remote_context->shutdown("Test is complete");
@@ -77,7 +77,7 @@ public:
   {
   }
 
-  virtual void SetUp(benchmark::State & state)
+  void SetUp(benchmark::State & state) override
   {
     RemoteNodeTest::SetUp(state);
 
@@ -98,7 +98,7 @@ public:
     }
   }
 
-  virtual void TearDown(benchmark::State & state)
+  void TearDown(benchmark::State & state) override
   {
     RemoteNodeTest::TearDown(state);
 
