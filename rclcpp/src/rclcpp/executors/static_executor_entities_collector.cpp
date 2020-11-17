@@ -77,7 +77,8 @@ StaticExecutorEntitiesCollector::init(
   // Add executor's guard condition
   memory_strategy_->add_guard_condition(executor_guard_condition);
   // Get memory strategy and executable list. Prepare wait_set_
-  execute();
+  std::shared_ptr<void> shared_ptr;
+  execute(shared_ptr);
 }
 
 void
@@ -87,9 +88,16 @@ StaticExecutorEntitiesCollector::fini()
   exec_list_.clear();
 }
 
-void
-StaticExecutorEntitiesCollector::execute()
+std::shared_ptr<void>
+StaticExecutorEntitiesCollector::take_data()
 {
+  return nullptr;
+}
+
+void
+StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
+{
+  (void) data;
   // Fill memory strategy with entities coming from weak_nodes_
   fill_memory_strategy();
   // Fill exec_list_ with entities coming from weak_nodes_ (same as memory strategy)
