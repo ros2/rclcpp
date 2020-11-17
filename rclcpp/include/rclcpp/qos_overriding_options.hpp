@@ -131,7 +131,7 @@ public:
 
   /// Construct passing a list of QoS policies and a verification callback.
   /**
-   * Same that `QosOverridingOptions` constrctor, but only declares the default policies:
+   * Same as `QosOverridingOptions` constructor, but only declares the default policies:
    *
    * History, Depth, Reliability.
    */
