@@ -36,7 +36,7 @@ TEST(TestQosParameters, declare) {
     // ones, check both have the same result.
     rclcpp::QoS qos{rclcpp::KeepLast(10)};
     qos = rclcpp::detail::declare_qos_parameters(
-      rclcpp::QosOverridingOptions::kDefaultPolicies,
+      rclcpp::QosOverridingOptions::with_default_policies(),
       node,
       "/my/fully/qualified/topic_name",
       qos,
@@ -95,14 +95,11 @@ TEST(TestQosParameters, declare_with_callback) {
     rclcpp::exceptions::InvalidQosOverridesException);
 
   rclcpp::detail::declare_qos_parameters(
-    {
-      rclcpp::QosOverridingOptions::kDefaultPolicies,
-      [](const rclcpp::QoS &) {
-        rclcpp::QosCallbackResult result;
-        result.successful = true;
-        return result;
-      }
-    },
+    rclcpp::QosOverridingOptions::with_default_policies([](const rclcpp::QoS &) {
+      rclcpp::QosCallbackResult result;
+      result.successful = true;
+      return result;
+    }),
     node,
     "/my/fully/qualified/topic_name",
     qos,
@@ -198,7 +195,7 @@ TEST(TestQosParameters, declare_with_id) {
 
   rclcpp::QoS qos{rclcpp::KeepLast{10}};
   qos = rclcpp::detail::declare_qos_parameters(
-    {rclcpp::QosOverridingOptions::kDefaultPolicies, nullptr, "my_id"},
+    rclcpp::QosOverridingOptions::with_default_policies(nullptr, "my_id"),
     node,
     "/my/fully/qualified/topic_name",
     qos,
@@ -221,7 +218,7 @@ TEST(TestQosParameters, declare_no_parameters_interface) {
   auto node_base_interface = node->get_node_base_interface();
   EXPECT_THROW(
     rclcpp::detail::declare_qos_parameters(
-      rclcpp::QosOverridingOptions::kDefaultPolicies,
+      rclcpp::QosOverridingOptions::with_default_policies(),
       node_base_interface,
       "/my/fully/qualified/topic_name",
       qos,

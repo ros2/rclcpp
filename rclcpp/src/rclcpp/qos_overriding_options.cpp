@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "rmw/qos_policy_kind.h"
 #include "rmw/qos_string_conversions.h"
@@ -42,16 +43,42 @@ operator<<(std::ostream & oss, const QosPolicyKind & qpk)
   return oss << qos_policy_kind_to_cstr(qpk);
 }
 
-std::initializer_list<QosPolicyKind> QosOverridingOptions::kDefaultPolicies =
+static std::initializer_list<QosPolicyKind> kDefaultPolicies =
 {QosPolicyKind::History, QosPolicyKind::Depth, QosPolicyKind::Reliability};
 
 QosOverridingOptions::QosOverridingOptions(
   std::initializer_list<QosPolicyKind> policy_kinds,
   QosCallback validation_callback,
   std::string id)
-: id{std::move(id)},
-  policy_kinds{policy_kinds},
-  validation_callback{std::move(validation_callback)}
+: id_{std::move(id)},
+  policy_kinds_{policy_kinds},
+  validation_callback_{std::move(validation_callback)}
 {}
+
+QosOverridingOptions
+QosOverridingOptions::with_default_policies(
+  QosCallback validation_callback,
+  std::string id)
+{
+  return QosOverridingOptions{kDefaultPolicies, validation_callback, id};
+}
+
+const std::string &
+QosOverridingOptions::get_id() const
+{
+  return id_;
+}
+
+const std::vector<QosPolicyKind> &
+QosOverridingOptions::get_policy_kinds() const
+{
+  return policy_kinds_;
+}
+
+const QosCallback &
+QosOverridingOptions::get_validation_callback() const
+{
+  return validation_callback_;
+}
 
 }  // namespace rclcpp

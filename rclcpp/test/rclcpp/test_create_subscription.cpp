@@ -54,8 +54,7 @@ TEST_F(TestCreateSubscription, create_with_overriding_options) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
-  options.qos_overriding_options = rclcpp::QosOverridingOptions{
-    rclcpp::QosOverridingOptions::kDefaultPolicies};
+  options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
   auto subscription =
     rclcpp::create_subscription<test_msgs::msg::Empty>(node, "topic_name", qos, callback, options);

@@ -132,11 +132,12 @@ declare_qos_parameters(
 {
   auto & parameters_interface = *rclcpp::node_interfaces::get_node_parameters_interface(node);
   std::string param_prefix;
+  const auto & id = options.get_id();
   {
     std::ostringstream oss{"qos_overrides.", std::ios::ate};
     oss << topic_name << "." << EntityQosParametersTraits::entity_type();
-    if (!options.id.empty()) {
-      oss << "_" << options.id;
+    if (!id.empty()) {
+      oss << "_" << id;
     }
     oss << ".";
     param_prefix = oss.str();
@@ -145,15 +146,15 @@ declare_qos_parameters(
   {
     std::ostringstream oss{"} for ", std::ios::ate};
     oss << EntityQosParametersTraits::entity_type() << " {" << topic_name << "}";
-    if (!options.id.empty()) {
-      oss << " with id {" << options.id << "}";
+    if (!id.empty()) {
+      oss << " with id {" << id << "}";
     }
     param_description_suffix = oss.str();
   }
   rclcpp::QoS qos = default_qos;
   for (auto policy : EntityQosParametersTraits::allowed_policies()) {
     if (
-      std::count(options.policy_kinds.begin(), options.policy_kinds.end(), policy))
+      std::count(options.get_policy_kinds().begin(), options.get_policy_kinds().end(), policy))
     {
       std::ostringstream param_name{param_prefix, std::ios::ate};
       param_name << qos_policy_kind_to_cstr(policy);
@@ -168,8 +169,9 @@ declare_qos_parameters(
       ::rclcpp::detail::apply_qos_override(policy, value, qos);
     }
   }
-  if (options.validation_callback) {
-    auto result = options.validation_callback(qos);
+  const auto & validation_callback = options.get_validation_callback();
+  if (validation_callback) {
+    auto result = validation_callback(qos);
     if (!result.successful) {
       throw rclcpp::exceptions::InvalidQosOverridesException{
               "validation callback failed: " + result.reason};
@@ -194,7 +196,7 @@ declare_qos_parameters(
   const ::rclcpp::QoS & default_qos,
   EntityQosParametersTraits)
 {
-  if (options.policy_kinds.size()) {
+  if (options.get_policy_kinds().size()) {
     std::runtime_error exc{
       "passed non-default qos overriding options without providing a parameters interface"};
     throw exc;
@@ -273,8 +275,8 @@ const char *
 check_if_stringified_policy_is_null(const char * policy_value_stringified, QosPolicyKind kind)
 {
   if (!policy_value_stringified) {
-    std::ostringstream oss{"unknown ", std::ios::ate};
-    oss << kind << " QoS policy value: {" << policy_value_stringified << "}";
+    std::ostringstream oss{"unknown value for policy kind {", std::ios::ate};
+    oss << kind << "}";
     throw std::invalid_argument{oss.str()};
   }
   return policy_value_stringified;

@@ -126,7 +126,7 @@ create_subscription(
     subscription_topic_stats
   );
 
-  const rclcpp::QoS & actual_qos = options.qos_overriding_options.policy_kinds.size() ?
+  const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
     rclcpp::detail::declare_qos_parameters(
     options.qos_overriding_options, node_parameters,
     node_topics_interface->resolve_topic_name(topic_name),

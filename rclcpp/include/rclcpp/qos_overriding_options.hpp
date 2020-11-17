@@ -86,16 +86,11 @@ class QosParameters;
  *          depth: 10
  * ```
  */
-struct RCLCPP_PUBLIC_TYPE QosOverridingOptions
+class QosOverridingOptions
 {
-  /// Id of the entity requesting to create parameters.
-  std::string id;
-  /// Policy kinds that are allowed to be reconfigured.
-  std::vector<QosPolicyKind> policy_kinds;
-  /// Validation callback that will be called to verify the profile.
-  QosCallback validation_callback;
-
+public:
   /// Default constructor, no overrides allowed.
+  RCLCPP_PUBLIC
   QosOverridingOptions() = default;
 
   /// Construct passing a list of qos policies that and a verification callback.
@@ -116,12 +111,42 @@ struct RCLCPP_PUBLIC_TYPE QosOverridingOptions
    *   the qos profile set by the user.
    * \param id id of the entity.
    */
+  RCLCPP_PUBLIC
   QosOverridingOptions(
     std::initializer_list<QosPolicyKind> policy_kinds,
     QosCallback validation_callback = nullptr,
     std::string id = {});
 
-  static std::initializer_list<QosPolicyKind> kDefaultPolicies;
+  RCLCPP_PUBLIC
+  const std::string &
+  get_id() const;
+
+  RCLCPP_PUBLIC
+  const std::vector<QosPolicyKind> &
+  get_policy_kinds() const;
+
+  RCLCPP_PUBLIC
+  const QosCallback &
+  get_validation_callback() const;
+
+  /// Construct passing a list of qos policies that and a verification callback.
+  /**
+   * Same that `QosOverridingOptions` constrctor, but only declares the default policies:
+   *
+   * History, Depth, Reliability.
+   */
+  RCLCPP_PUBLIC
+  static
+  QosOverridingOptions
+  with_default_policies(QosCallback validation_callback = nullptr, std::string id = {});
+
+private:
+  /// \internal Id of the entity requesting to create parameters.
+  std::string id_;
+  /// \internal Policy kinds that are allowed to be reconfigured.
+  std::vector<QosPolicyKind> policy_kinds_;
+  /// \internal Validation callback that will be called to verify the profile.
+  QosCallback validation_callback_;
 };
 
 }  // namespace rclcpp

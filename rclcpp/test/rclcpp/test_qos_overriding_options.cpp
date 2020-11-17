@@ -17,11 +17,11 @@
 #include "rclcpp/qos_overriding_options.hpp"
 
 TEST(TestQosOverridingOptions, test_overriding_options) {
-  rclcpp::QosOverridingOptions options{rclcpp::QosOverridingOptions::kDefaultPolicies};
-  EXPECT_EQ(options.id, "");
-  EXPECT_EQ(options.validation_callback, nullptr);
+  auto options = rclcpp::QosOverridingOptions::with_default_policies();
+  EXPECT_EQ(options.get_id(), "");
+  EXPECT_EQ(options.get_validation_callback(), nullptr);
   EXPECT_THAT(
-    options.policy_kinds, testing::ElementsAre(
+    options.get_policy_kinds(), testing::ElementsAre(
       rclcpp::QosPolicyKind::History,
       rclcpp::QosPolicyKind::Depth,
       rclcpp::QosPolicyKind::Reliability));
