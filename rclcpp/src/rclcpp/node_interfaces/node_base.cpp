@@ -70,6 +70,7 @@ NodeBase::NodeBase(
   std::shared_ptr<std::recursive_mutex> logging_mutex = get_global_logging_mutex();
   {
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+    // TODO(ivanpauno): /rosout Qos should be reconfigurable.
     // TODO(ivanpauno): Instead of mutually excluding rcl_node_init with the global logger mutex,
     // rcl_logging_rosout_init_publisher_for_node could be decoupled from there and be called
     // here directly.

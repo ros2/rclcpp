@@ -282,6 +282,13 @@ class ParameterModifiedInCallbackException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
+/// Thrown if the QoS overrides provided aren't valid.
+class InvalidQosOverridesException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
 }  // namespace exceptions
 }  // namespace rclcpp
 
