@@ -145,9 +145,7 @@ public:
         "Couldn't take event info: %s", rcl_get_error_string().str);
       return nullptr;
     }
-    return std::static_pointer_cast<void>(
-      std::make_shared<EventCallbackInfoT>(
-        callback_info));
+    return std::static_pointer_cast<void>(std::make_shared<EventCallbackInfoT>(callback_info));
   }
 
   /// Execute any entities of the Waitable that are ready.

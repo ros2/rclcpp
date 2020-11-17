@@ -77,7 +77,11 @@ public:
   void
   execute(std::shared_ptr<void> & data) override;
 
-  /// Prepare the waitable for execution.
+  /// Take the data so that it can be consumed with `execute`.
+  /**
+   * For `StaticExecutorEntitiesCollector`, this always return `nullptr`.
+   * \sa rclcpp::Waitable::take_data()
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<void>
   take_data() override;
