@@ -326,7 +326,6 @@ public:
       trans_desc.start_state.label = rcl_transition.start->label;
       trans_desc.goal_state.id = static_cast<uint8_t>(rcl_transition.goal->id);
       trans_desc.goal_state.label = rcl_transition.goal->label;
-      resp->available_transitions.push_back(trans_desc);
     }
   }
 
