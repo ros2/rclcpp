@@ -129,7 +129,7 @@ public:
   const QosCallback &
   get_validation_callback() const;
 
-  /// Construct passing a list of qos policies that and a verification callback.
+  /// Construct passing a list of QoS policies and a verification callback.
   /**
    * Same that `QosOverridingOptions` constrctor, but only declares the default policies:
    *
