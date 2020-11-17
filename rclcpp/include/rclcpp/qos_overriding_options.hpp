@@ -93,7 +93,7 @@ public:
   RCLCPP_PUBLIC
   QosOverridingOptions() = default;
 
-  /// Construct passing a list of qos policies that and a verification callback.
+  /// Construct passing a list of QoS policies and a verification callback.
   /**
    * This constructor is implicit, e.g.:
    * ```cpp
