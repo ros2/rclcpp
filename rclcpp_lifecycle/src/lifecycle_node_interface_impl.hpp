@@ -265,7 +265,7 @@ public:
       throw std::runtime_error(
               "Can't get available states. State machine is not initialized.");
     }
-    for (size_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
       lifecycle_msgs::msg::State state;
       state.id = static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
       state.label = static_cast<std::string>(state_machine_.transition_map.states[i].label);
@@ -286,7 +286,7 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
-    for (size_t i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
       auto rcl_transition = state_machine_.current_state->valid_transitions[i];
       lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = static_cast<uint8_t>(rcl_transition.id);
@@ -312,7 +312,7 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
-    for (size_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
       auto rcl_transition = state_machine_.transition_map.transitions[i];
       lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = static_cast<uint8_t>(rcl_transition.id);
@@ -336,7 +336,7 @@ public:
   get_available_states()
   {
     std::vector<State> states;
-    for (size_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
       State state(&state_machine_.transition_map.states[i]);
       states.push_back(state);
     }
@@ -348,7 +348,7 @@ public:
   {
     std::vector<Transition> transitions;
 
-    for (size_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
       Transition transition(
         &state_machine_.transition_map.transitions[i]);
       transitions.push_back(transition);
