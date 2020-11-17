@@ -25,6 +25,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
@@ -42,27 +43,34 @@ using rclcpp::FutureReturnCode;
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
+  shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   memory_strategy_(options.memory_strategy)
 {
+  // Store the context for later use.
+  context_ = options.context;
+
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(
-    &interrupt_guard_condition_, options.context->get_rcl_context().get(), guard_condition_options);
+    &interrupt_guard_condition_, context_->get_rcl_context().get(), guard_condition_options);
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
   }
 
+  context_->on_shutdown(
+    [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{shutdown_guard_condition_}]() {
+      auto strong_gc = weak_gc.lock();
+      if (strong_gc) {
+        strong_gc->trigger();
+      }
+    });
+
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-
-  // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(options.context->get_interrupt_guard_condition(&wait_set_));
+  memory_strategy_->add_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
   rcl_allocator_t allocator = memory_strategy_->get_allocator();
-
-  // Store the context for later use.
-  context_ = options.context;
 
   ret = rcl_wait_set_init(
     &wait_set_,
@@ -129,8 +137,7 @@ Executor::~Executor()
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
-  memory_strategy_->remove_guard_condition(context_->get_interrupt_guard_condition(&wait_set_));
-  context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
+  memory_strategy_->remove_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>

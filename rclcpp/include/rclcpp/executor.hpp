@@ -31,6 +31,7 @@
 #include "rcl/wait.h"
 
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/executor_options.hpp"
 #include "rclcpp/future_return_code.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -524,6 +525,8 @@ protected:
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
+
+  std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
 
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();

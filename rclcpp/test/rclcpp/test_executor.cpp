@@ -90,10 +90,9 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
 TEST_F(TestExecutor, constructor_bad_guard_condition_init) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
-  RCLCPP_EXPECT_THROW_EQ(
+  EXPECT_THROW(
     new DummyExecutor(),
-    std::runtime_error(
-      "Failed to create interrupt guard condition in Executor constructor: error not set"));
+    rclcpp::exceptions::RCLError);
 }
 
 TEST_F(TestExecutor, constructor_bad_wait_set_init) {
