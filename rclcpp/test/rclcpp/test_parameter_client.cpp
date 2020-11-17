@@ -348,6 +348,44 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     auto callback = [&callback_called](
       std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> result)
       {
+        // We expect the result to be empty since we tried to get a parameter that didn't exist.
+        if (result.valid() && result.get().size() == 0) {
+          callback_called = true;
+        }
+      };
+    std::vector<std::string> names{"foo", "baz"};
+    std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
+      asynchronous_client->describe_parameters(names, callback);
+    auto return_code = rclcpp::spin_until_future_complete(
+      node, future, std::chrono::milliseconds(100));
+    ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+    ASSERT_TRUE(callback_called);
+  }
+
+  {
+    bool callback_called = false;
+    auto callback = [&callback_called](
+      std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> result)
+      {
+        // We expect the result to be empty since we tried to get a parameter that didn't exist.
+        if (result.valid() && result.get().size() == 0) {
+          callback_called = true;
+        }
+      };
+    std::vector<std::string> names{"baz", "foo"};
+    std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
+      asynchronous_client->describe_parameters(names, callback);
+    auto return_code = rclcpp::spin_until_future_complete(
+      node, future, std::chrono::milliseconds(100));
+    ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+    ASSERT_TRUE(callback_called);
+  }
+
+  {
+    bool callback_called = false;
+    auto callback = [&callback_called](
+      std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> result)
+      {
         if (result.valid() && result.get().size() == 2) {
           callback_called = true;
         }
@@ -396,6 +434,20 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters) {
     ASSERT_EQ("", parameter_descs[0].description);
     ASSERT_EQ("", parameter_descs[0].additional_constraints);
     ASSERT_FALSE(parameter_descs[0].read_only);
+  }
+
+  {
+    std::vector<std::string> names{"foo", "baz"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      synchronous_client->describe_parameters(names);
+    ASSERT_EQ(0u, parameter_descs.size());
+  }
+
+  {
+    std::vector<std::string> names{"baz", "foo"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      synchronous_client->describe_parameters(names);
+    ASSERT_EQ(0u, parameter_descs.size());
   }
 
   {
