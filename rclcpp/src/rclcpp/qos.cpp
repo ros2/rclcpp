@@ -206,6 +206,39 @@ QoS::avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions)
   return *this;
 }
 
+rmw_qos_history_policy_t
+QoS::get_history() const {return rmw_qos_profile_.history;}
+
+size_t
+QoS::get_depth() const {return rmw_qos_profile_.depth;}
+
+rmw_qos_reliability_policy_t
+QoS::get_reliability() const {return rmw_qos_profile_.reliability;}
+
+rmw_qos_durability_policy_t
+QoS::get_durability() const {return rmw_qos_profile_.durability;}
+
+Duration
+QoS::get_deadline() const {return Duration::from_rmw_time(rmw_qos_profile_.deadline);}
+
+Duration
+QoS::get_lifespan() const {return Duration::from_rmw_time(rmw_qos_profile_.lifespan);}
+
+rmw_qos_liveliness_policy_t
+QoS::get_liveliness() const {return rmw_qos_profile_.liveliness;}
+
+Duration
+QoS::get_liveliness_lease_duration() const
+{
+  return Duration::from_rmw_time(rmw_qos_profile_.liveliness_lease_duration);
+}
+
+bool
+QoS::get_avoid_ros_namespace_conventions() const
+{
+  return rmw_qos_profile_.avoid_ros_namespace_conventions;
+}
+
 namespace
 {
 /// Check if two rmw_time_t have the same values.

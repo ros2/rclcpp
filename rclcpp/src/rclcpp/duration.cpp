@@ -247,6 +247,26 @@ Duration::to_rmw_time() const
 }
 
 Duration
+Duration::from_rmw_time(rmw_time_t duration)
+{
+  Duration ret;
+  constexpr rcl_duration_value_t limit = std::numeric_limits<rcl_duration_value_t>::max();
+  if (duration.sec > limit || duration.nsec > limit) {
+    // saturate if will overflow
+    ret.rcl_duration_.nanoseconds = limit;
+    return ret;
+  }
+  uint64_t total_ns = RCL_S_TO_NS(duration.sec) + duration.nsec;
+  if (total_ns < duration.nsec) {
+    // saturate if will overflow
+    ret.rcl_duration_.nanoseconds = limit;
+    return ret;
+  }
+  ret.rcl_duration_.nanoseconds = static_cast<rcl_duration_value_t>(total_ns);
+  return ret;
+}
+
+Duration
 Duration::from_seconds(double seconds)
 {
   Duration ret;

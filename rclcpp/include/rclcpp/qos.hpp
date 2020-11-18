@@ -153,6 +153,33 @@ public:
   QoS &
   avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions);
 
+  rmw_qos_history_policy_t
+  get_history() const;
+
+  size_t
+  get_depth() const;
+
+  rmw_qos_reliability_policy_t
+  get_reliability() const;
+
+  rmw_qos_durability_policy_t
+  get_durability() const;
+
+  rclcpp::Duration
+  get_deadline() const;
+
+  rclcpp::Duration
+  get_lifespan() const;
+
+  rmw_qos_liveliness_policy_t
+  get_liveliness() const;
+
+  rclcpp::Duration
+  get_liveliness_lease_duration() const;
+
+  bool
+  get_avoid_ros_namespace_conventions() const;
+
 private:
   rmw_qos_profile_t rmw_qos_profile_;
 };
