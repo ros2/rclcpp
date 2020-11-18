@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Move ownership of shutdown_guard_condition to executors/graph_listener (`#1404 <https://github.com/ros2/rclcpp/issues/1404>`_)
+* Add options to automatically declare qos parameters when creating a publisher/subscription (`#1465 <https://github.com/ros2/rclcpp/issues/1465>`_)
+* Add `take_data` to `Waitable` and `data` to `AnyExecutable` (`#1241 <https://github.com/ros2/rclcpp/issues/1241>`_)
+* Add benchmarks for node parameters interface (`#1444 <https://github.com/ros2/rclcpp/issues/1444>`_)
+* Remove allocation from executor::remove_node() (`#1448 <https://github.com/ros2/rclcpp/issues/1448>`_)
+* Fix test crashes on CentOS 7 (`#1449 <https://github.com/ros2/rclcpp/issues/1449>`_)
+* Bump rclcpp packages to Quality Level 2 (`#1445 <https://github.com/ros2/rclcpp/issues/1445>`_)
+* Added executor benchmark tests (`#1413 <https://github.com/ros2/rclcpp/issues/1413>`_)
+* Add fully-qualified namespace to WeakCallbackGroupsToNodesMap (`#1435 <https://github.com/ros2/rclcpp/issues/1435>`_)
+* Contributors: Alejandro Hernández Cordero, Audrow Nash, Chris Lalancette, Ivan Santiago Paunovic, Louise Poubel, Scott K Logan, brawner
+
 5.1.0 (2020-11-02)
 ------------------
 * Deprecate Duration(rcl_duration_value_t) in favor of static Duration::from_nanoseconds(rcl_duration_value_t) (`#1432 <https://github.com/ros2/rclcpp/issues/1432>`_)
