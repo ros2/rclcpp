@@ -38,6 +38,7 @@
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/parameter_service.hpp"
+#include "rclcpp/qos.hpp"
 
 #include "lifecycle_node_interface_impl.hpp"  // implementation
 
@@ -97,7 +98,8 @@ LifecycleNode::LifecycleNode(
       node_services_,
       node_logging_,
       node_clock_,
-      node_parameters_
+      node_parameters_,
+      options.clock_qos()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),

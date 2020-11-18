@@ -27,6 +27,7 @@
 namespace rclcpp
 {
 
+RCLCPP_PUBLIC
 std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind);
 
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
@@ -161,6 +162,26 @@ RCLCPP_PUBLIC
 bool operator==(const QoS & left, const QoS & right);
 RCLCPP_PUBLIC
 bool operator!=(const QoS & left, const QoS & right);
+
+/**
+ * Clock QoS class
+ *    - History: Keep last,
+ *    - Depth: 1,
+ *    - Reliability: Best effort,
+ *    - Durability: Volatile,
+ *    - Deadline: Default,
+ *    - Lifespan: Default,
+ *    - Liveliness: System default,
+ *    - Liveliness lease duration: default,
+ *    - avoid ros namespace conventions: false
+ */
+class RCLCPP_PUBLIC ClockQoS : public QoS
+{
+public:
+  explicit
+  ClockQoS(
+    const QoSInitialization & qos_initialization = KeepLast(1));
+};
 
 /**
  * Sensor Data QoS class

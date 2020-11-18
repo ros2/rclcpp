@@ -46,6 +46,8 @@ public:
    *   - enable_topic_statistics = false
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
+   *   - clock_qos = rclcpp::ClockQoS()
+   *   - rosout_qos = rclcpp::RosoutQoS()
    *   - parameter_event_qos = rclcpp::ParameterEventQoS
    *     - with history setting and depth from rmw_qos_profile_parameter_events
    *   - parameter_event_publisher_options = rclcpp::PublisherOptionsBase
@@ -243,6 +245,19 @@ public:
   NodeOptions &
   start_parameter_event_publisher(bool start_parameter_event_publisher);
 
+  /// Return a reference to the clock QoS.
+  RCLCPP_PUBLIC
+  const rclcpp::QoS &
+  clock_qos() const;
+
+  /// Set the clock QoS.
+  /**
+   * The QoS settings to be used for the publisher on /clock topic, if enabled.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  clock_qos(const rclcpp::QoS & clock_qos);
+
   /// Return a reference to the parameter_event_qos QoS.
   RCLCPP_PUBLIC
   const rclcpp::QoS &
@@ -256,12 +271,12 @@ public:
   NodeOptions &
   parameter_event_qos(const rclcpp::QoS & parameter_event_qos);
 
-  /// Return a reference to the rosout_qos QoS.
+  /// Return a reference to the rosout QoS.
   RCLCPP_PUBLIC
   const rclcpp::QoS &
   rosout_qos() const;
 
-  /// Set the rosout_qos QoS.
+  /// Set the rosout QoS.
   /**
    * The QoS settings to be used for the publisher on /rosout topic, if enabled.
    */
@@ -366,6 +381,8 @@ private:
   bool start_parameter_services_ {true};
 
   bool start_parameter_event_publisher_ {true};
+
+  rclcpp::QoS clock_qos_ = rclcpp::ClockQoS();
 
   rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)

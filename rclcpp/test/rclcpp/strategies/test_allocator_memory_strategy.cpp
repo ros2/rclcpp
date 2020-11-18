@@ -49,7 +49,16 @@ public:
     return test_waitable_result;
   }
 
-  void execute() override {}
+  std::shared_ptr<void>
+  take_data() override
+  {
+    return nullptr;
+  }
+
+  void execute(std::shared_ptr<void> & data) override
+  {
+    (void) data;
+  }
 };
 
 struct RclWaitSetSizes
@@ -86,6 +95,7 @@ public:
 
   void TearDown() override
   {
+    allocator_memory_strategy_.reset();
     rclcpp::shutdown();
   }
 

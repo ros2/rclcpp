@@ -332,7 +332,7 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
 TEST_F(TestClient, construction_and_destruction_rcl_errors)
 {
   {
-    auto mock = mocking_utils::inject_on_return(
+    auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp_action", rcl_action_client_fini, RCL_RET_ERROR);
     // It just logs an error message and continues
     EXPECT_NO_THROW(

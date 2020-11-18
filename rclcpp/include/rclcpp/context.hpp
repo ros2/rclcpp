@@ -248,67 +248,6 @@ public:
   void
   interrupt_all_sleep_for();
 
-  /// Get a handle to the guard condition which is triggered when interrupted.
-  /**
-   * This guard condition is triggered any time interrupt_all_wait_sets() is
-   * called, which may be called by the user, or shutdown().
-   * And in turn, shutdown() may be called by the user, the destructor of this
-   * context, or the signal handler if installed and shutdown_on_sigint is true
-   * for this context.
-   *
-   * The first time that this function is called for a given wait set a new guard
-   * condition will be created and returned; thereafter the same guard condition
-   * will be returned for the same wait set.
-   * This mechanism is designed to ensure that the same guard condition is not
-   * reused across wait sets (e.g., when using multiple executors in the same
-   * process).
-   * This method will throw an exception if initialization of the guard
-   * condition fails.
-   *
-   * The returned guard condition needs to be released with the
-   * release_interrupt_guard_condition() method in order to reclaim resources.
-   *
-   * \param[in] wait_set Pointer to the rcl_wait_set_t that will be using the
-   *   resulting guard condition.
-   * \return Pointer to the guard condition.
-   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
-   */
-  RCLCPP_PUBLIC
-  rcl_guard_condition_t *
-  get_interrupt_guard_condition(rcl_wait_set_t * wait_set);
-
-  /// Release the previously allocated guard condition which is triggered when interrupted.
-  /**
-   * If you previously called get_interrupt_guard_condition() for a given wait
-   * set to get a interrupt guard condition, then you should call
-   * release_interrupt_guard_condition() when you're done, to free that
-   * condition.
-   * Will throw an exception if get_interrupt_guard_condition() wasn't
-   * previously called for the given wait set.
-   *
-   * After calling this, the pointer returned by get_interrupt_guard_condition()
-   * for the given wait_set is invalid.
-   *
-   * \param[in] wait_set Pointer to the rcl_wait_set_t that was using the
-   *   resulting guard condition.
-   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
-   * \throws std::runtime_error if a nonexistent wait set is trying to release sigint guard condition.
-   */
-  RCLCPP_PUBLIC
-  void
-  release_interrupt_guard_condition(rcl_wait_set_t * wait_set);
-
-  /// Nothrow version of release_interrupt_guard_condition(), logs to RCLCPP_ERROR instead.
-  RCLCPP_PUBLIC
-  void
-  release_interrupt_guard_condition(rcl_wait_set_t * wait_set, const std::nothrow_t &) noexcept;
-
-  /// Interrupt any blocking executors, or wait sets associated with this context.
-  RCLCPP_PUBLIC
-  virtual
-  void
-  interrupt_all_wait_sets();
-
   /// Return a singleton instance for the SubContext type, constructing one if necessary.
   template<typename SubContext, typename ... Args>
   std::shared_ptr<SubContext>
@@ -367,11 +306,6 @@ private:
   std::condition_variable interrupt_condition_variable_;
   /// Mutex for protecting the global condition variable.
   std::mutex interrupt_mutex_;
-
-  /// Mutex to protect sigint_guard_cond_handles_.
-  std::mutex interrupt_guard_cond_handles_mutex_;
-  /// Guard conditions for interrupting of associated wait sets on interrupt_all_wait_sets().
-  std::unordered_map<rcl_wait_set_t *, rcl_guard_condition_t> interrupt_guard_cond_handles_;
 
   /// Keep shared ownership of global vector of weak contexts
   std::shared_ptr<WeakContextsWrapper> weak_contexts_;

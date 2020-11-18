@@ -193,6 +193,7 @@ public:
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
     entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+    RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
     while (rclcpp::ok(this->context_)) {
       // Do one set of work.

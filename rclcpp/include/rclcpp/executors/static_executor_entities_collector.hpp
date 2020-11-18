@@ -64,12 +64,27 @@ public:
   void
   init(
     rcl_wait_set_t * p_wait_set,
-    rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
+    rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
     rcl_guard_condition_t * executor_guard_condition);
 
+  /// Finalize StaticExecutorEntitiesCollector to clear resources
   RCLCPP_PUBLIC
   void
-  execute() override;
+  fini();
+
+  /// Execute the waitable.
+  RCLCPP_PUBLIC
+  void
+  execute(std::shared_ptr<void> & data) override;
+
+  /// Take the data so that it can be consumed with `execute`.
+  /**
+   * For `StaticExecutorEntitiesCollector`, this always return `nullptr`.
+   * \sa rclcpp::Waitable::take_data()
+   */
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data() override;
 
   /// Function to add_handles_to_wait_set and wait for work and
   /**

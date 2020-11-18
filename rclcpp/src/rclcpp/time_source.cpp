@@ -33,17 +33,16 @@
 namespace rclcpp
 {
 
-TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node)
+TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node, const rclcpp::QoS & qos)
 : logger_(rclcpp::get_logger("rclcpp")),
-  clock_subscription_(nullptr),
-  ros_time_active_(false)
+  qos_(qos)
 {
   this->attachNode(node);
 }
 
-TimeSource::TimeSource()
+TimeSource::TimeSource(const rclcpp::QoS & qos)
 : logger_(rclcpp::get_logger("rclcpp")),
-  ros_time_active_(false)
+  qos_(qos)
 {
 }
 

@@ -115,9 +115,9 @@ public:
   }
 };
 
-// TYPED_TEST_CASE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
+// TYPED_TEST_SUITE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
 // is updated.
-TYPED_TEST_CASE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
+TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 
 // StaticSingleThreadedExecutor is not included in these tests for now, due to:
 // https://github.com/ros2/rclcpp/issues/1219
@@ -125,7 +125,7 @@ using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor>;
-TYPED_TEST_CASE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
+TYPED_TEST_SUITE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
 TYPED_TEST(TestExecutors, detachOnDestruction) {
@@ -410,6 +410,14 @@ public:
     }
   }
 
+  ~TestWaitable()
+  {
+    rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
+    if (RCL_RET_OK != ret) {
+      fprintf(stderr, "failed to call rcl_guard_condition_fini\n");
+    }
+  }
+
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
@@ -428,9 +436,16 @@ public:
     return true;
   }
 
-  void
-  execute() override
+  std::shared_ptr<void>
+  take_data() override
   {
+    return nullptr;
+  }
+
+  void
+  execute(std::shared_ptr<void> & data) override
+  {
+    (void) data;
     count_++;
     std::this_thread::sleep_for(1ms);
   }
@@ -525,4 +540,73 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
   executor.cancel();
 
   spinner.join();
+}
+
+// Check spin_node_until_future_complete with node base pointer
+TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodeBasePtr) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
+
+  auto shared_future = future.share();
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, this->node->get_node_base_interface(), shared_future, 1s);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
+// Check spin_node_until_future_complete with node pointer
+TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodePtr) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
+
+  auto shared_future = future.share();
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, this->node, shared_future, 1s);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
+// Check spin_until_future_complete with node base pointer (instantiates its own executor)
+TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
+  rclcpp::init(0, nullptr);
+
+  {
+    auto node = std::make_shared<rclcpp::Node>("node");
+
+    std::promise<bool> promise;
+    std::future<bool> future = promise.get_future();
+    promise.set_value(true);
+
+    auto shared_future = future.share();
+    auto ret = rclcpp::spin_until_future_complete(
+      node->get_node_base_interface(), shared_future, 1s);
+    EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+  }
+
+  rclcpp::shutdown();
+}
+
+// Check spin_until_future_complete with node pointer (instantiates its own executor)
+TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr) {
+  rclcpp::init(0, nullptr);
+
+  {
+    auto node = std::make_shared<rclcpp::Node>("node");
+
+    std::promise<bool> promise;
+    std::future<bool> future = promise.get_future();
+    promise.set_value(true);
+
+    auto shared_future = future.share();
+    auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
+    EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+  }
+
+  rclcpp::shutdown();
 }

@@ -101,7 +101,9 @@ public:
   ComponentManager(
     std::weak_ptr<rclcpp::Executor> executor,
     std::string node_name = "ComponentManager",
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
+    .start_parameter_services(false)
+    .start_parameter_event_publisher(false));
 
   RCLCPP_COMPONENTS_PUBLIC
   virtual ~ComponentManager();

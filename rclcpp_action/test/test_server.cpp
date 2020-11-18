@@ -29,6 +29,10 @@
 #include "rclcpp_action/server.hpp"
 #include "./mocking_utils/patch.hpp"
 
+// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
+// that this test can complete fully, or adjust the timeout as necessary.
+// See https://github.com/ros2/rmw_connext/issues/325 for resolution
+
 using Fibonacci = test_msgs::action::Fibonacci;
 using CancelResponse = typename Fibonacci::Impl::CancelGoalService::Response;
 using GoalUUID = rclcpp_action::GoalUUID;
@@ -1152,7 +1156,7 @@ TEST_F(TestGoalRequestServer, publish_status_publish_status_errors)
 
 TEST_F(TestGoalRequestServer, execute_goal_request_received_take_failed)
 {
-  auto mock = mocking_utils::inject_on_return(
+  auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
   try {
     SendClientGoalRequest(std::chrono::milliseconds(100));

@@ -67,6 +67,7 @@ NodeOptions &
 NodeOptions::operator=(const NodeOptions & other)
 {
   if (this != &other) {
+    this->node_options_.reset();
     this->context_ = other.context_;
     this->arguments_ = other.arguments_;
     this->parameter_overrides_ = other.parameter_overrides_;
@@ -75,12 +76,15 @@ NodeOptions::operator=(const NodeOptions & other)
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->enable_topic_statistics_ = other.enable_topic_statistics_;
     this->start_parameter_services_ = other.start_parameter_services_;
+    this->start_parameter_event_publisher_ = other.start_parameter_event_publisher_;
+    this->clock_qos_ = other.clock_qos_;
+    this->parameter_event_qos_ = other.parameter_event_qos_;
     this->rosout_qos_ = other.rosout_qos_;
-    this->allocator_ = other.allocator_;
+    this->parameter_event_publisher_options_ = other.parameter_event_publisher_options_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
     this->automatically_declare_parameters_from_overrides_ =
       other.automatically_declare_parameters_from_overrides_;
-    this->node_options_.reset();
+    this->allocator_ = other.allocator_;
   }
   return *this;
 }
@@ -252,6 +256,19 @@ NodeOptions &
 NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publisher)
 {
   this->start_parameter_event_publisher_ = start_parameter_event_publisher;
+  return *this;
+}
+
+const rclcpp::QoS &
+NodeOptions::clock_qos() const
+{
+  return this->clock_qos_;
+}
+
+NodeOptions &
+NodeOptions::clock_qos(const rclcpp::QoS & clock_qos)
+{
+  this->clock_qos_ = clock_qos;
   return *this;
 }
 

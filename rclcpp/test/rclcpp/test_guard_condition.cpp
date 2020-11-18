@@ -18,6 +18,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "../mocking_utils/patch.hpp"
+
 class TestGuardCondition : public ::testing::Test
 {
 protected:
@@ -54,6 +56,14 @@ TEST_F(TestGuardCondition, construction_and_destruction) {
       (void)gc;
     }, rclcpp::exceptions::RCLInvalidArgument);
   }
+
+  {
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
+    auto gc = std::make_shared<rclcpp::GuardCondition>();
+    // This just logs an error on destruction
+    EXPECT_NO_THROW(gc.reset());
+  }
 }
 
 /*
@@ -82,6 +92,13 @@ TEST_F(TestGuardCondition, get_rcl_guard_condition) {
 TEST_F(TestGuardCondition, trigger) {
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
-    gc->trigger();
+    EXPECT_NO_THROW(gc->trigger());
+
+    {
+      auto mock = mocking_utils::patch_and_return(
+        "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+      auto gc = std::make_shared<rclcpp::GuardCondition>();
+      EXPECT_THROW(gc->trigger(), rclcpp::exceptions::RCLError);
+    }
   }
 }

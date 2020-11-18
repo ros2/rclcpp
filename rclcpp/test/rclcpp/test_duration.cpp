@@ -25,6 +25,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/duration.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 using namespace std::chrono_literals;
 
@@ -67,7 +68,7 @@ TEST_F(TestDuration, operators) {
 TEST_F(TestDuration, chrono_overloads) {
   int64_t ns = 123456789l;
   auto chrono_ns = std::chrono::nanoseconds(ns);
-  auto d1 = rclcpp::Duration(ns);
+  auto d1 = rclcpp::Duration::from_nanoseconds(ns);
   auto d2 = rclcpp::Duration(chrono_ns);
   auto d3 = rclcpp::Duration(123456789ns);
   EXPECT_EQ(d1, d2);
@@ -84,11 +85,11 @@ TEST_F(TestDuration, chrono_overloads) {
 }
 
 TEST_F(TestDuration, overflows) {
-  rclcpp::Duration max(std::numeric_limits<rcl_duration_value_t>::max());
-  rclcpp::Duration min(std::numeric_limits<rcl_duration_value_t>::min());
+  auto max = rclcpp::Duration::from_nanoseconds(std::numeric_limits<rcl_duration_value_t>::max());
+  auto min = rclcpp::Duration::from_nanoseconds(std::numeric_limits<rcl_duration_value_t>::min());
 
-  rclcpp::Duration one(1);
-  rclcpp::Duration negative_one(-1);
+  rclcpp::Duration one(1ns);
+  rclcpp::Duration negative_one(-1ns);
 
   EXPECT_THROW(max + one, std::overflow_error);
   EXPECT_THROW(min - one, std::underflow_error);
@@ -105,7 +106,7 @@ TEST_F(TestDuration, overflows) {
 }
 
 TEST_F(TestDuration, negative_duration) {
-  rclcpp::Duration assignable_duration = rclcpp::Duration(0) - rclcpp::Duration(5, 0);
+  rclcpp::Duration assignable_duration = rclcpp::Duration(0ns) - rclcpp::Duration(5, 0);
 
   {
     // avoid windows converting a literal number less than -INT_MAX to unsigned int C4146
@@ -139,22 +140,24 @@ static const int64_t ONE_SEC_IN_NS = 1000 * 1000 * 1000;
 static const int64_t ONE_AND_HALF_SEC_IN_NS = 3 * HALF_SEC_IN_NS;
 
 TEST_F(TestDuration, from_seconds) {
-  EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration::from_seconds(0.0));
-  EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration::from_seconds(0));
+  EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration::from_seconds(0.0));
+  EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration::from_seconds(0));
   EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(1.5));
-  EXPECT_EQ(rclcpp::Duration(-ONE_AND_HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(-1.5));
+  EXPECT_EQ(
+    rclcpp::Duration::from_nanoseconds(-ONE_AND_HALF_SEC_IN_NS),
+    rclcpp::Duration::from_seconds(-1.5));
 }
 
 TEST_F(TestDuration, std_chrono_constructors) {
-  EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0.0s));
-  EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0s));
+  EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration(0.0s));
+  EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration(0s));
   EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration(1.5s));
   EXPECT_EQ(rclcpp::Duration(-1, 0), rclcpp::Duration(-1s));
 }
 
 TEST_F(TestDuration, conversions) {
   {
-    const rclcpp::Duration duration(HALF_SEC_IN_NS);
+    auto duration = rclcpp::Duration::from_nanoseconds(HALF_SEC_IN_NS);
     const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, 0);
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
@@ -169,7 +172,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    const rclcpp::Duration duration(ONE_SEC_IN_NS);
+    auto duration = rclcpp::Duration::from_nanoseconds(ONE_SEC_IN_NS);
     const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, 1);
     EXPECT_EQ(duration_msg.nanosec, 0u);
@@ -184,7 +187,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    const rclcpp::Duration duration(ONE_AND_HALF_SEC_IN_NS);
+    auto duration = rclcpp::Duration::from_nanoseconds(ONE_AND_HALF_SEC_IN_NS);
     auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, 1);
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
@@ -199,7 +202,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    rclcpp::Duration duration(-HALF_SEC_IN_NS);
+    auto duration = rclcpp::Duration::from_nanoseconds(-HALF_SEC_IN_NS);
     auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, -1);
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
@@ -212,7 +215,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    rclcpp::Duration duration(-ONE_SEC_IN_NS);
+    auto duration = rclcpp::Duration::from_nanoseconds(-ONE_SEC_IN_NS);
     auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, -1);
     EXPECT_EQ(duration_msg.nanosec, 0u);
@@ -225,7 +228,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    rclcpp::Duration duration(-ONE_AND_HALF_SEC_IN_NS);
+    auto duration = rclcpp::Duration::from_nanoseconds(-ONE_AND_HALF_SEC_IN_NS);
     auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, -2);
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
@@ -236,4 +239,28 @@ TEST_F(TestDuration, conversions) {
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), -ONE_AND_HALF_SEC_IN_NS);
   }
+}
+
+TEST_F(TestDuration, test_some_constructors) {
+  builtin_interfaces::msg::Duration duration_msg;
+  duration_msg.sec = 1;
+  duration_msg.nanosec = 1000;
+  rclcpp::Duration duration_from_msg(duration_msg);
+  EXPECT_EQ(RCL_S_TO_NS(1) + 1000, duration_from_msg.nanoseconds());
+
+  rcl_duration_t duration_struct;
+  duration_struct.nanoseconds = 4000;
+  rclcpp::Duration duration_from_struct(duration_struct);
+  EXPECT_EQ(4000, duration_from_struct.nanoseconds());
+}
+
+TEST_F(TestDuration, test_some_exceptions) {
+  rclcpp::Duration test_duration(0ns);
+  RCLCPP_EXPECT_THROW_EQ(
+    test_duration =
+    rclcpp::Duration::from_nanoseconds(INT64_MAX) - rclcpp::Duration(-1ns),
+    std::overflow_error("duration subtraction leads to int64_t overflow"));
+  RCLCPP_EXPECT_THROW_EQ(
+    test_duration = test_duration * (std::numeric_limits<double>::infinity()),
+    std::runtime_error("abnormal scale in rclcpp::Duration"));
 }

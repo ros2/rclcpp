@@ -25,6 +25,9 @@
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "../mocking_utils/patch.hpp"
+#include "../utils/rclcpp_gtest_macros.hpp"
+
 using namespace std::chrono_literals;
 
 /// Timer testing bring up and teardown
@@ -207,4 +210,74 @@ TEST_F(TestTimer, callback_with_timer) {
     executor->spin_once(std::chrono::milliseconds(10));
   }
   EXPECT_EQ(timer.get(), timer_ptr);
+  EXPECT_LE(std::chrono::nanoseconds(0).count(), timer_ptr->time_until_trigger().count());
+  EXPECT_FALSE(timer_ptr->is_ready());
+}
+
+TEST_F(TestTimer, callback_with_period_zero) {
+  rclcpp::TimerBase * timer_ptr = nullptr;
+  timer = test_node->create_wall_timer(
+    std::chrono::milliseconds(0),
+    [&timer_ptr](rclcpp::TimerBase & timer) {
+      timer_ptr = &timer;
+    });
+  auto start = std::chrono::steady_clock::now();
+  while (nullptr == timer_ptr &&
+    (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
+  {
+    executor->spin_once(std::chrono::milliseconds(10));
+  }
+  ASSERT_EQ(timer.get(), timer_ptr);
+  EXPECT_GE(std::chrono::nanoseconds(0).count(), timer_ptr->time_until_trigger().count());
+  EXPECT_TRUE(timer_ptr->is_ready());
+}
+
+/// Test internal failures using mocks
+TEST_F(TestTimer, test_failures_with_exceptions)
+{
+  // expect clean state, don't run otherwise
+  test_initial_conditions(timer, has_timer_run);
+  {
+    std::shared_ptr<rclcpp::TimerBase> timer_to_test_destructor;
+    // Test destructor failure, just logs a msg
+    auto mock = mocking_utils::inject_on_return("lib:rclcpp", rcl_timer_fini, RCL_RET_ERROR);
+    EXPECT_NO_THROW(
+    {
+      timer_to_test_destructor =
+      test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
+      timer_to_test_destructor.reset();
+    });
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_timer_cancel, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+      timer->cancel(), std::runtime_error("Couldn't cancel timer: error not set"));
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_timer_is_canceled, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+      timer->is_canceled(),
+      std::runtime_error("Couldn't get timer cancelled state: error not set"));
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_timer_reset, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+      timer->reset(), std::runtime_error("Couldn't reset timer: error not set"));
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_timer_is_ready, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+      timer->is_ready(), std::runtime_error("Failed to check timer: error not set"));
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_timer_get_time_until_next_call, RCL_RET_ERROR);
+    RCLCPP_EXPECT_THROW_EQ(
+      timer->time_until_trigger(),
+      std::runtime_error("Timer could not get time until next call: error not set"));
+  }
 }

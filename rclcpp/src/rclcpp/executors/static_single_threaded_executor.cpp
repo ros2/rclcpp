@@ -42,6 +42,7 @@ StaticSingleThreadedExecutor::spin()
   // Set memory_strategy_ and exec_list_ based on weak_nodes_
   // Prepare wait_set_ based on memory_strategy_
   entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   while (rclcpp::ok(this->context_) && spinning.load()) {
     // Refresh wait set and wait for work
@@ -175,7 +176,8 @@ StaticSingleThreadedExecutor::execute_ready_executables()
   // Execute all the ready waitables
   for (size_t i = 0; i < entities_collector_->get_number_of_waitables(); ++i) {
     if (entities_collector_->get_waitable(i)->is_ready(&wait_set_)) {
-      entities_collector_->get_waitable(i)->execute();
+      std::shared_ptr<void> shared_ptr;
+      entities_collector_->get_waitable(i)->execute(shared_ptr);
     }
   }
 }

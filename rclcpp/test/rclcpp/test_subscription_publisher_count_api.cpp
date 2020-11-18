@@ -129,7 +129,7 @@ struct TwoContextsPerTest
 };
 
 using AllTestDescriptions = ::testing::Types<OneContextPerTest, TwoContextsPerTest>;
-TYPED_TEST_CASE(TestSubscriptionPublisherCount, AllTestDescriptions, PrintTestDescription);
+TYPED_TEST_SUITE(TestSubscriptionPublisherCount, AllTestDescriptions, PrintTestDescription);
 
 
 using test_msgs::msg::Empty;

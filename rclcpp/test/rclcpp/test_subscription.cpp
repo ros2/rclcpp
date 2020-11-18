@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
@@ -27,6 +28,10 @@
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+
+// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
+// that this test can complete fully, or adjust the timeout as necessary.
+// See https://github.com/ros2/rmw_connext/issues/325 for resolution
 
 using namespace std::chrono_literals;
 
@@ -461,6 +466,29 @@ TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {
   }
 }
 
+/*
+   Testing subscription with invalid use_intra_process_comm
+ */
+TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws_intraprocess) {
+  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = static_cast<rclcpp::IntraProcessSetting>(5);
+
+  initialize();
+  rclcpp::QoS qos = GetParam().qos;
+  auto callback = std::bind(
+    &TestSubscriptionInvalidIntraprocessQos::OnMessage,
+    this,
+    std::placeholders::_1);
+
+  RCLCPP_EXPECT_THROW_EQ(
+    {auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+        "topic",
+        qos,
+        callback,
+        options);},
+    std::runtime_error("Unrecognized IntraProcessSetting value"));
+}
+
 static std::vector<TestParameters> invalid_qos_profiles()
 {
   std::vector<TestParameters> parameters;
@@ -478,7 +506,7 @@ static std::vector<TestParameters> invalid_qos_profiles()
   return parameters;
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
   ::testing::ValuesIn(invalid_qos_profiles()),
   ::testing::PrintToStringParamName());

@@ -74,6 +74,8 @@ if(BUILD_TESTING)
   set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
 
+  add_subdirectory(test/benchmark)
+
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   if(TARGET test_client)
     ament_target_dependencies(test_client
@@ -86,7 +88,7 @@ if(BUILD_TESTING)
     )
   endif()
 
-  ament_add_gtest(test_server test/test_server.cpp)
+  ament_add_gtest(test_server test/test_server.cpp TIMEOUT 180)
   if(TARGET test_server)
     ament_target_dependencies(test_server
       "rcutils"
