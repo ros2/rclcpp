@@ -45,14 +45,20 @@ protected:
   void SetUp()
   {
     node = std::make_shared<rclcpp::Node>("test_parameter_client", "/ns");
+    node_with_option =
+      std::make_shared<rclcpp::Node>(
+      "test_parameter_client_allow_undeclare", "/ns",
+      rclcpp::NodeOptions().allow_undeclared_parameters(true));
   }
 
   void TearDown()
   {
     node.reset();
+    node_with_option.reset();
   }
 
   rclcpp::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr node_with_option;
 };
 
 /*
@@ -340,6 +346,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
     ASSERT_EQ("", parameter_descs[0].description);
     ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
     ASSERT_TRUE(callback_called);
   }
 
@@ -402,10 +409,12 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
     ASSERT_EQ("", parameter_descs[0].description);
     ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
     ASSERT_EQ("bar", parameter_descs[1].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_descs[1].type);
     ASSERT_EQ("", parameter_descs[1].description);
     ASSERT_EQ("", parameter_descs[1].additional_constraints);
+    ASSERT_FALSE(parameter_descs[1].read_only);
     ASSERT_TRUE(callback_called);
   }
 }
@@ -462,6 +471,157 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters) {
     ASSERT_FALSE(parameter_descs[0].read_only);
     ASSERT_EQ("bar", parameter_descs[1].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_descs[1].type);
+    ASSERT_EQ("", parameter_descs[1].description);
+    ASSERT_EQ("", parameter_descs[1].additional_constraints);
+    ASSERT_FALSE(parameter_descs[1].read_only);
+  }
+}
+
+/*
+  Coverage for async describe_parameters with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, async_parameter_describe_parameters_allow_undeclared) {
+  node_with_option->declare_parameter("foo", 4);
+  node_with_option->declare_parameter("bar", "this is bar");
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
+
+  {
+    bool callback_called = false;
+    auto callback = [&callback_called](
+      std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> result)
+      {
+        // We expect the result to be defaut since we tried to get a parameter that didn't exist.
+        if (result.valid() && result.get().size() == 1) {
+          callback_called = true;
+        }
+      };
+    std::vector<std::string> names{"none"};
+    std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
+      asynchronous_client->describe_parameters(names, callback);
+    auto return_code = rclcpp::spin_until_future_complete(
+      node_with_option, future, std::chrono::milliseconds(100));
+    ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
+    ASSERT_EQ(1u, parameter_descs.size());
+    ASSERT_EQ("none", parameter_descs[0].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[0].type);
+    ASSERT_EQ("", parameter_descs[0].description);
+    ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
+    ASSERT_TRUE(callback_called);
+  }
+
+  {
+    bool callback_called = false;
+    auto callback = [&callback_called](
+      std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> result)
+      {
+        if (result.valid() && result.get().size() == 2) {
+          callback_called = true;
+        }
+      };
+    std::vector<std::string> names{"foo", "baz"};
+    std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
+      asynchronous_client->describe_parameters(names, callback);
+    auto return_code = rclcpp::spin_until_future_complete(
+      node_with_option, future, std::chrono::milliseconds(100));
+    ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
+    ASSERT_EQ(2u, parameter_descs.size());
+    ASSERT_EQ("foo", parameter_descs[0].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
+    ASSERT_EQ("", parameter_descs[0].description);
+    ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
+    ASSERT_EQ("baz", parameter_descs[1].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[1].type);
+    ASSERT_EQ("", parameter_descs[1].description);
+    ASSERT_EQ("", parameter_descs[1].additional_constraints);
+    ASSERT_FALSE(parameter_descs[1].read_only);
+    ASSERT_TRUE(callback_called);
+  }
+
+  {
+    bool callback_called = false;
+    auto callback = [&callback_called](
+      std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> result)
+      {
+        if (result.valid() && result.get().size() == 2) {
+          callback_called = true;
+        }
+      };
+    std::vector<std::string> names{"baz", "foo"};
+    std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
+      asynchronous_client->describe_parameters(names, callback);
+    auto return_code = rclcpp::spin_until_future_complete(
+      node_with_option, future, std::chrono::milliseconds(100));
+    ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
+    ASSERT_EQ(2u, parameter_descs.size());
+    ASSERT_EQ("baz", parameter_descs[0].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[0].type);
+    ASSERT_EQ("", parameter_descs[0].description);
+    ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
+    ASSERT_EQ("foo", parameter_descs[1].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[1].type);
+    ASSERT_EQ("", parameter_descs[1].description);
+    ASSERT_EQ("", parameter_descs[1].additional_constraints);
+    ASSERT_FALSE(parameter_descs[1].read_only);
+    ASSERT_TRUE(callback_called);
+  }
+}
+/*
+  Coverage for sync describe_parameters with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, sync_parameter_describe_parameters_allow_undeclared) {
+  node_with_option->declare_parameter("foo", 4);
+  node_with_option->declare_parameter("bar", "this is bar");
+  auto synchronous_client =
+    std::make_shared<rclcpp::SyncParametersClient>(node_with_option);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      synchronous_client->describe_parameters(names);
+    ASSERT_EQ(1u, parameter_descs.size());
+    ASSERT_EQ("none", parameter_descs[0].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[0].type);
+    ASSERT_EQ("", parameter_descs[0].description);
+    ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
+  }
+
+  {
+    std::vector<std::string> names{"foo", "baz"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      synchronous_client->describe_parameters(names);
+    ASSERT_EQ(2u, parameter_descs.size());
+    ASSERT_EQ("foo", parameter_descs[0].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
+    ASSERT_EQ("", parameter_descs[0].description);
+    ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
+    ASSERT_EQ("baz", parameter_descs[1].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[1].type);
+    ASSERT_EQ("", parameter_descs[1].description);
+    ASSERT_EQ("", parameter_descs[1].additional_constraints);
+    ASSERT_FALSE(parameter_descs[1].read_only);
+  }
+
+  {
+    std::vector<std::string> names{"baz", "foo"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      synchronous_client->describe_parameters(names);
+    ASSERT_EQ(2u, parameter_descs.size());
+    ASSERT_EQ("baz", parameter_descs[0].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[0].type);
+    ASSERT_EQ("", parameter_descs[0].description);
+    ASSERT_EQ("", parameter_descs[0].additional_constraints);
+    ASSERT_FALSE(parameter_descs[0].read_only);
+    ASSERT_EQ("foo", parameter_descs[1].name);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[1].type);
     ASSERT_EQ("", parameter_descs[1].description);
     ASSERT_EQ("", parameter_descs[1].additional_constraints);
     ASSERT_FALSE(parameter_descs[1].read_only);
