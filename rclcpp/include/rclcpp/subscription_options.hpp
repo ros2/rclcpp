@@ -102,10 +102,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result = rcl_subscription_get_default_options();
-    using AllocatorTraits = std::allocator_traits<Allocator>;
-    using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-    auto message_alloc = std::make_shared<MessageAllocatorT>(*allocator.get());
-    result.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc);
+    result.allocator = get_rcl_allocator(*this->get_allocator());
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
 
