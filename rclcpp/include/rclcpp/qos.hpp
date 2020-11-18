@@ -30,6 +30,38 @@ namespace rclcpp
 RCLCPP_PUBLIC
 std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind);
 
+enum class HistoryPolicy
+{
+  KeepLast = RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+  KeepAll = RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+  SystemDefault = RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+  Unknown = RMW_QOS_POLICY_HISTORY_UNKNOWN,
+};
+
+enum class ReliabilityPolicy
+{
+  BestEffort = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+  Reliable = RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+  SystemDefault = RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
+  Unknown = RMW_QOS_POLICY_RELIABILITY_UNKNOWN,
+};
+
+enum class DurabilityPolicy
+{
+  Volatile = RMW_QOS_POLICY_DURABILITY_VOLATILE,
+  TransientLocal = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+  SystemDefault = RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+  Unknown = RMW_QOS_POLICY_DURABILITY_UNKNOWN,
+};
+
+enum class LivelinessPolicy
+{
+  Automatic = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC,
+  ManualByTopic = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC,
+  SystemDefault = RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+  Unknown = RMW_QOS_POLICY_LIVELINESS_UNKNOWN,
+};
+
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
 struct RCLCPP_PUBLIC QoSInitialization
 {
@@ -84,6 +116,10 @@ public:
 
   /// Set the history policy.
   QoS &
+  history(HistoryPolicy history);
+
+  /// Set the history policy.
+  QoS &
   history(rmw_qos_history_policy_t history);
 
   /// Set the history to keep last.
@@ -98,6 +134,10 @@ public:
   QoS &
   reliability(rmw_qos_reliability_policy_t reliability);
 
+  /// Set the reliability setting.
+  QoS &
+  reliability(ReliabilityPolicy reliability);
+
   /// Set the reliability setting to reliable.
   QoS &
   reliable();
@@ -109,6 +149,10 @@ public:
   /// Set the durability setting.
   QoS &
   durability(rmw_qos_durability_policy_t durability);
+
+  /// Set the durability setting.
+  QoS &
+  durability(DurabilityPolicy durability);
 
   /// Set the durability setting to volatile.
   /**
@@ -141,6 +185,10 @@ public:
   QoS &
   liveliness(rmw_qos_liveliness_policy_t liveliness);
 
+  /// Set the liveliness setting.
+  QoS &
+  liveliness(LivelinessPolicy liveliness);
+
   /// Set the liveliness_lease_duration setting.
   QoS &
   liveliness_lease_duration(rmw_time_t liveliness_lease_duration);
@@ -153,16 +201,16 @@ public:
   QoS &
   avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions);
 
-  rmw_qos_history_policy_t
+  HistoryPolicy
   get_history() const;
 
   size_t
   get_depth() const;
 
-  rmw_qos_reliability_policy_t
+  ReliabilityPolicy
   get_reliability() const;
 
-  rmw_qos_durability_policy_t
+  DurabilityPolicy
   get_durability() const;
 
   rclcpp::Duration
@@ -171,7 +219,7 @@ public:
   rclcpp::Duration
   get_lifespan() const;
 
-  rmw_qos_liveliness_policy_t
+  LivelinessPolicy
   get_liveliness() const;
 
   rclcpp::Duration
