@@ -80,7 +80,6 @@ if(BUILD_TESTING)
     target_link_libraries(benchmark_transition ${PROJECT_NAME})
   endif()
 
-
   ament_add_gtest(test_lifecycle_node test/test_lifecycle_node.cpp TIMEOUT 120)
   if(TARGET test_lifecycle_node)
     ament_target_dependencies(test_lifecycle_node

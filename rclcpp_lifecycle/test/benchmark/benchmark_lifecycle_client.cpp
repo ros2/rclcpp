@@ -31,7 +31,7 @@
  * Benchmarks for measuring performance of a lifecycle_node client.
  *
  * A service client of a lifecycle node is not a class that's explicitly part of ros2 core,
- * but it is the expected interface for interactiving with a lifecycle node, so for that reason
+ * but it is the expected interface for interacting with a lifecycle node, so for that reason
  * this benchmark exists.
  */
 
@@ -203,7 +203,7 @@ public:
     executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     executor->add_node(lifecycle_node->get_node_base_interface());
     executor->add_node(lifecycle_client->get_node_base_interface());
-    spinner_ = std::thread([this]() {executor->spin();});
+    spinner_ = std::thread(&rclcpp::executors::SingleThreadedExecutor::spin, executor);
     performance_test_fixture::PerformanceTest::SetUp(state);
   }
 

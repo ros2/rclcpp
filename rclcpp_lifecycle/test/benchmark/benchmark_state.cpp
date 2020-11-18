@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "performance_test_fixture/performance_test_fixture.hpp"
 #include "rclcpp_lifecycle/transition.hpp"
 
