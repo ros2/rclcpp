@@ -28,8 +28,10 @@ public:
   {
   }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
   void SetUp(benchmark::State &)
   {
     remote_context = std::make_shared<rclcpp::Context>();
@@ -57,7 +59,9 @@ public:
     remote_executor.reset();
     remote_context.reset();
   }
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
   const std::string remote_node_name;
 
