@@ -223,12 +223,12 @@ private:
     // Remove events associated with this entity from the local event queue
     {
       std::unique_lock<std::mutex> lock(execution_mutex_);
-      local_event_queue_.erase(
+      execution_event_queue_.erase(
         std::remove_if(
-          local_event_queue_.begin(), local_event_queue_.end(),
+          execution_event_queue_.begin(), execution_event_queue_.end(),
           [&entity](ExecutorEvent event) {
             return event.entity == entity;
-          }), local_event_queue_.end());
+          }), execution_event_queue_.end());
     }
   }
 
@@ -244,7 +244,7 @@ private:
 
   // We use two instances of EventQueue to allow threads to push events while we execute them
   EventQueue event_queue_;
-  EventQueue local_event_queue_;
+  EventQueue execution_event_queue_;
 
   EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
   EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;
