@@ -140,14 +140,14 @@ TEST_F(TestNode, RegisterParameterCallback)
 
 TEST_F(TestNode, SameParameterDifferentNode)
 {
-  int int_param_node1;
-  int int_param_node2;
+  int64_t int_param_node1;
+  int64_t int_param_node2;
 
   auto cb1 = [&int_param_node1](const rclcpp::Parameter & p) {
-      int_param_node1 = p.get_value<int>();
+      int_param_node1 = p.get_value<int64_t>();
     };
   auto cb2 = [&int_param_node2](const rclcpp::Parameter & p) {
-      int_param_node2 = p.get_value<int>();
+      int_param_node2 = p.get_value<int64_t>();
     };
 
   // Set individual parameters
@@ -201,7 +201,7 @@ TEST_F(TestNode, EventCallback)
   using rclcpp::ParameterEventsSubscriber;
 
   double double_param = 0.0;
-  int int_param = 0;
+  int64_t int_param = 0;
   bool bool_param{false};
   bool received{false};
 
@@ -218,7 +218,7 @@ TEST_F(TestNode, EventCallback)
 
       rclcpp::Parameter p;
       if (ParameterEventsSubscriber::get_parameter_from_event(*event, p, "my_int", node_name)) {
-        int_param = p.get_value<int>();
+        int_param = p.get_value<int64_t>();
       }
       try {
         p = ParameterEventsSubscriber::get_parameter_from_event(*event, "my_double", node_name);
@@ -226,7 +226,7 @@ TEST_F(TestNode, EventCallback)
       } catch (...) {
       }
 
-      product = int_param * double_param;
+      product = static_cast<double>(int_param) * double_param;
     };
 
   auto cb2 =

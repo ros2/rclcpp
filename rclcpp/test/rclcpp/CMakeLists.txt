@@ -323,6 +323,16 @@ if(TARGET test_parameter)
   )
   target_link_libraries(test_parameter ${PROJECT_NAME})
 endif()
+ament_add_gtest(test_parameter_events_subscriber test_parameter_events_subscriber.cpp)
+if(TARGET test_parameter_events_subscriber)
+  ament_target_dependencies(test_parameter_events_subscriber
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_generator_cpp"
+    "rosidl_typesupport_cpp"
+  )
+  target_link_libraries(test_parameter_events_subscriber ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_parameter_map test_parameter_map.cpp)
 if(TARGET test_parameter_map)
   target_link_libraries(test_parameter_map ${PROJECT_NAME})

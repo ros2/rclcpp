@@ -67,9 +67,9 @@ public:
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
   {
-    node_base_ = rclcpp::node_interfaces::get_node_base_interface(node);
-    node_logging_ = rclcpp::node_interfaces::get_node_logging_interface(node);
-    auto node_topics = rclcpp::node_interfaces::get_node_topics_interface(node);
+    node_base_ = node->get_node_base_interface();
+    node_logging_ = node->get_node_logging_interface();
+    auto node_topics = node->get_node_topics_interface();
 
     event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node_topics, "/parameter_events", qos,
@@ -194,8 +194,8 @@ protected:
   std::string resolve_path(const std::string & path);
 
   // Node Interfaces used for base and logging.
-  rclcpp::node_interfaces::NodeBaseInterface * node_base_;
-  rclcpp::node_interfaces::NodeLoggingInterface * node_logging_;
+  std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_;
+  std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_;
 
   // *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   // Hash function for string pair required in std::unordered_map
