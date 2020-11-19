@@ -1,3 +1,4 @@
+find_package(ament_cmake_google_benchmark REQUIRED)
 find_package(performance_test_fixture REQUIRED)
 
 # These benchmarks are only being created and run for the default RMW
@@ -29,6 +30,11 @@ endif()
 add_performance_test(benchmark_node_parameters_interface benchmark_node_parameters_interface.cpp)
 if(TARGET benchmark_node_parameters_interface)
   target_link_libraries(benchmark_node_parameters_interface ${PROJECT_NAME})
+endif()
+
+ament_add_google_benchmark(benchmark_parameter_client benchmark_parameter_client.cpp)
+if(TARGET benchmark_parameter_client)
+  target_link_libraries(benchmark_parameter_client ${PROJECT_NAME})
 endif()
 
 add_performance_test(benchmark_service benchmark_service.cpp)
