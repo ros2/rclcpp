@@ -209,7 +209,7 @@ private:
     // We need to unset the callbacks to make sure that after removing events from the
     // queues, this entity will not push anymore before being completely destroyed.
     // This assumes that all supported entities implement this function.
-    entity->set_listener_callback(nullptr, nullptr);
+    entity->set_events_executor_callback(nullptr, nullptr);
 
     // Remove events associated with this entity from the event queue
     {

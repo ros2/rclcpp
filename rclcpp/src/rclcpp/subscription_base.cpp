@@ -294,7 +294,7 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
 }
 
 void
-SubscriptionBase::set_listener_callback(
+SubscriptionBase::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
   rmw_listener_cb_t executor_callback) const
 {

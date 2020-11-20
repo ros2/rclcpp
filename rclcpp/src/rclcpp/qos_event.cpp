@@ -73,7 +73,7 @@ QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
 }
 
 void
-QOSEventHandlerBase::set_listener_callback(
+QOSEventHandlerBase::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
   rmw_listener_cb_t executor_callback) const
 {

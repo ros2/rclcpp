@@ -45,7 +45,7 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 }
 
 void
-SubscriptionIntraProcessBase::set_listener_callback(
+SubscriptionIntraProcessBase::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
   rmw_listener_cb_t executor_callback) const
 {
