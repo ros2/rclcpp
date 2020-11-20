@@ -90,11 +90,11 @@ ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 }
 
 void
-ServiceBase::set_events_executor_callback(
+ServiceBase::set_listener_callback(
   const rclcpp::executors::EventsExecutor * executor,
   rmw_listener_cb_t executor_callback) const
 {
-  rcl_ret_t ret = rcl_service_set_events_executor_callback(
+  rcl_ret_t ret = rcl_service_set_listener_callback(
     executor,
     executor_callback,
     this,

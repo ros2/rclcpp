@@ -61,7 +61,7 @@ Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 }
 
 void
-Waitable::set_events_executor_callback(
+Waitable::set_listener_callback(
   const rclcpp::executors::EventsExecutor * executor,
   rmw_listener_cb_t executor_callback) const
 {
@@ -69,7 +69,7 @@ Waitable::set_events_executor_callback(
   (void)executor_callback;
 
   throw std::runtime_error(
-          "Custom waitables should override set_events_executor_callback() to use events executor");
+          "Custom waitables should override set_listener_callback() to use events executor");
 }
 
 void

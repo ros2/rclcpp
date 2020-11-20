@@ -174,7 +174,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  set_events_executor_callback(
+  set_listener_callback(
     const rclcpp::executors::EventsExecutor * executor,
     rmw_listener_cb_t executor_callback) const;
 

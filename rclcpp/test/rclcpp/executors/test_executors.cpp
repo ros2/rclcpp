@@ -465,11 +465,11 @@ public:
   }
 
   void
-  set_events_executor_callback(
+  set_listener_callback(
     const rclcpp::executors::EventsExecutor * executor,
     rmw_listener_cb_t executor_callback) const override
   {
-    rcl_ret_t ret = rcl_guard_condition_set_events_executor_callback(
+    rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
       executor,
       executor_callback,
       this,

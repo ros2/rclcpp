@@ -40,7 +40,7 @@ EventsExecutor::EventsExecutor(
   executor_notifier_ = std::make_shared<EventsExecutorNotifyWaitable>();
   executor_notifier_->add_guard_condition(context_interrupt_gc);
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
-  executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
+  executor_notifier_->set_listener_callback(this, &EventsExecutor::push_event);
   executor_notifier_->set_on_destruction_callback(
     std::bind(
       &EventsExecutor::remove_entity<rclcpp::Waitable>,
