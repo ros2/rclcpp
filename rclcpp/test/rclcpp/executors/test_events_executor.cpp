@@ -54,7 +54,7 @@ TEST_F(TestEventsExecutor, notify_waitable)
 
   {
     auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp", rcl_guard_condition_set_events_executor_callback, RCL_RET_ERROR);
+      "lib:rclcpp", rcl_guard_condition_set_listener_callback, RCL_RET_ERROR);
     EXPECT_THROW(std::make_shared<EventsExecutor>(), std::runtime_error);
   }
 }

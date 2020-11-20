@@ -26,7 +26,7 @@
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node.hpp"
 
-#include "rmw/executor_event_types.h"
+#include "rmw/listener_event_types.h"
 
 namespace rclcpp
 {
@@ -176,13 +176,13 @@ private:
 
   // Event queue implementation is a deque only to
   // facilitate the removal of events from expired entities.
-  using EventQueue = std::deque<ExecutorEvent>;
+  using EventQueue = std::deque<rmw_listener_event_t>;
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
   static void
-  push_event(const void * executor_ptr, ExecutorEvent event)
+  push_event(const void * executor_ptr, rmw_listener_event_t event)
   {
     // Cast executor_ptr to this (need to remove constness)
     auto this_executor = const_cast<executors::EventsExecutor *>(
@@ -217,18 +217,18 @@ private:
       event_queue_.erase(
         std::remove_if(
           event_queue_.begin(), event_queue_.end(),
-          [&entity](ExecutorEvent event) {return event.entity == entity;}), event_queue_.end());
+          [&entity](rmw_listener_event_t event) {return event.entity == entity;}), event_queue_.end());
     }
 
     // Remove events associated with this entity from the local event queue
     {
       std::unique_lock<std::mutex> lock(execution_mutex_);
-      local_event_queue_.erase(
+      execution_event_queue_.erase(
         std::remove_if(
-          local_event_queue_.begin(), local_event_queue_.end(),
-          [&entity](ExecutorEvent event) {
+          execution_event_queue_.begin(), execution_event_queue_.end(),
+          [&entity](rmw_listener_event_t event) {
             return event.entity == entity;
-          }), local_event_queue_.end());
+          }), execution_event_queue_.end());
     }
   }
 
@@ -240,11 +240,11 @@ private:
   // Execute a single event
   RCLCPP_PUBLIC
   void
-  execute_event(const ExecutorEvent & event);
+  execute_event(const rmw_listener_event_t & event);
 
   // We use two instances of EventQueue to allow threads to push events while we execute them
   EventQueue event_queue_;
-  EventQueue local_event_queue_;
+  EventQueue execution_event_queue_;
 
   EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
   EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;

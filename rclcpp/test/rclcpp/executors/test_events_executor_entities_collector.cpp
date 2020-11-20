@@ -165,7 +165,7 @@ TEST_F(TestEventsExecutorEntitiesCollector, test_fancy_name)
 
   {
     auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp", rcl_guard_condition_set_events_executor_callback, RCL_RET_ERROR);
+      "lib:rclcpp", rcl_guard_condition_set_listener_callback, RCL_RET_ERROR);
 
     EXPECT_THROW(
       entities_collector_->add_node(node2->get_node_base_interface()),
