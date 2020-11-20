@@ -189,7 +189,7 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
-  ExecutorEvent event;
+  rmw_listener_event_t event;
   bool has_event = false;
 
   {
@@ -255,7 +255,7 @@ void
 EventsExecutor::consume_all_events(EventQueue & event_queue)
 {
   while (!event_queue.empty()) {
-    ExecutorEvent event = event_queue.front();
+    rmw_listener_event_t event = event_queue.front();
     event_queue.pop_front();
 
     this->execute_event(event);
@@ -263,7 +263,7 @@ EventsExecutor::consume_all_events(EventQueue & event_queue)
 }
 
 void
-EventsExecutor::execute_event(const ExecutorEvent & event)
+EventsExecutor::execute_event(const rmw_listener_event_t & event)
 {
   switch (event.type) {
     case SUBSCRIPTION_EVENT:
