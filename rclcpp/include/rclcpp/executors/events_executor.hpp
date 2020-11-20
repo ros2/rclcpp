@@ -20,13 +20,13 @@
 #include <memory>
 #include <vector>
 
-#include "rcutils/executor_event_types.h"
-
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
 #include "rclcpp/executors/events_executor_notify_waitable.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node.hpp"
+
+#include "rmw/executor_event_types.h"
 
 namespace rclcpp
 {
