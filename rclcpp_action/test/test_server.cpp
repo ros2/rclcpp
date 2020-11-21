@@ -1221,3 +1221,92 @@ TEST_F(TestCancelRequestServer, publish_status_send_cancel_response_errors)
 
   EXPECT_THROW(SendClientCancelRequest(), std::runtime_error);
 }
+
+class TestDeadlockServer : public TestServer
+{
+public:
+  void SetUp()
+  {
+    node_ = std::make_shared<rclcpp::Node>("goal_request", "/rclcpp_action/goal_request");
+    uuid1_ = {{1, 2, 3, 4, 5, 6, 70, 80, 9, 1, 11, 120, 13, 140, 15, 160}};
+    uuid2_ = {{2, 2, 3, 4, 5, 6, 70, 80, 9, 1, 11, 120, 13, 140, 15, 160}};
+    action_server_ = rclcpp_action::create_server<Fibonacci>(
+      node_, "fibonacci",
+      [this](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        // instead of making a deadlock, check if it can acquire the lock in a second
+        std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
+        this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+      },
+      [this](std::shared_ptr<GoalHandle>) {
+        // instead of making a deadlock, check if it can acquire the lock in a second
+        std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
+        this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        return rclcpp_action::CancelResponse::ACCEPT;
+      },
+      [this](std::shared_ptr<GoalHandle> handle) {
+        // instead of making a deadlock, check if it can acquire the lock in a second
+        std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
+        this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        goal_handle_ = handle;
+      });
+  }
+
+  void GoalSucceeded()
+  {
+    std::lock_guard<std::recursive_timed_mutex> lock(server_mutex_);
+    rclcpp::sleep_for(std::chrono::milliseconds(100));
+    auto result = std::make_shared<Fibonacci::Result>();
+    result->sequence = {5, 8, 13, 21};
+    goal_handle_->succeed(result);
+  }
+
+  void GoalCanceled()
+  {
+    std::lock_guard<std::recursive_timed_mutex> lock(server_mutex_);
+    rclcpp::sleep_for(std::chrono::milliseconds(100));
+    auto result = std::make_shared<Fibonacci::Result>();
+    goal_handle_->canceled(result);
+  }
+
+  void TryLockFor(
+    std::unique_lock<std::recursive_timed_mutex> & lock,
+    std::chrono::milliseconds timeout
+  )
+  {
+    ASSERT_TRUE(lock.try_lock_for(timeout));
+  }
+
+protected:
+  std::recursive_timed_mutex server_mutex_;
+  GoalUUID uuid1_, uuid2_;
+  std::shared_ptr<rclcpp::Node> node_;
+  std::shared_ptr<rclcpp_action::Server<Fibonacci>> action_server_;
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+  std::shared_ptr<GoalHandle> goal_handle_;
+};
+
+TEST_F(TestDeadlockServer, deadlock_while_succeed)
+{
+  send_goal_request(node_, uuid1_);
+  // this will lock wrapper's mutex and intentionally wait 100ms for calling succeed
+  // to try to acquire the lock of rclcpp_action mutex
+  std::thread t(&TestDeadlockServer::GoalSucceeded, this);
+  // after the wrapper's mutex is locked and before succeed is called
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  // call next goal request to intentionally reproduce deadlock
+  // this first locks rclcpp_action mutex and then call callback to lock wrapper's mutex
+  send_goal_request(node_, uuid2_);
+  t.join();
+}
+
+TEST_F(TestDeadlockServer, deadlock_while_canceled)
+{
+  send_goal_request(node_, uuid1_);
+  send_cancel_request(node_, uuid1_);
+  std::thread t(&TestDeadlockServer::GoalCanceled, this);
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  send_goal_request(node_, uuid2_);  // deadlock here
+  t.join();
+}
