@@ -47,6 +47,8 @@ public:
 
   // Lock everything except user callbacks
   std::recursive_mutex action_server_reentrant_mutex_;
+  // Lock to gurantee the call order of user callbacks in execute_goal_request_received
+  std::recursive_mutex goal_request_mutex_;
 
   std::shared_ptr<rcl_action_server_t> action_server_;
 
@@ -286,16 +288,20 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
   rmw_request_id_t request_header = std::get<2>(*shared_ptr);
   std::shared_ptr<void> message = std::get<3>(*shared_ptr);
 
-
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> goal_lock(pimpl_->goal_request_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
 
   pimpl_->goal_request_ready_ = false;
 
   GoalUUID uuid = get_goal_id_from_goal_request(message.get());
   convert(uuid, &goal_info);
 
+  lock.unlock();
+
   // Call user's callback, getting the user's response and a ros message to send back
   auto response_pair = call_handle_goal_callback(uuid, message);
+
+  lock.lock();
 
   ret = rcl_action_send_goal_response(
     pimpl_->action_server_.get(),
@@ -346,6 +352,8 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     // publish status since a goal's state has changed (was accepted or has begun execution)
     publish_status();
 
+    lock.unlock();
+
     // Tell user to start executing action
     call_goal_accepted_callback(handle, uuid, message);
   }
@@ -359,7 +367,7 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
     <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
       rmw_request_id_t>>(data);
   auto ret = std::get<0>(*shared_ptr);
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
     // Ignore take failure because connext fails if it receives a sample without valid data.
     // This happens when a client shuts down and connext receives a sample saying the client is
@@ -396,6 +404,8 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
     }
   });
 
+  lock.unlock();
+
   auto response = std::make_shared<action_msgs::srv::CancelGoal::Response>();
 
   response->return_code = cancel_response.msg.return_code;
@@ -414,6 +424,8 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
       response->goals_canceling.push_back(cpp_info);
     }
   }
+
+  lock.lock();
 
   // If the user rejects all individual requests to cancel goals,
   // then we consider the top-level cancel request as rejected.
