@@ -694,13 +694,21 @@ public:
   std::vector<State>
   get_available_states();
 
+  /// Return a list with the current available transitions.
+  /**
+   * \return list with the current available transitions.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<Transition>
+  get_available_transitions();
+
   /// Return a list with the available transitions.
   /**
    * \return list with the available transitions.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>
-  get_available_transitions();
+  get_transition_graph();
 
   /// Trigger the specified transition.
   /*

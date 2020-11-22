@@ -486,6 +486,12 @@ LifecycleNode::get_available_transitions()
   return impl_->get_available_transitions();
 }
 
+std::vector<Transition>
+LifecycleNode::get_transition_graph()
+{
+  return impl_->get_transition_graph();
+}
+
 const State &
 LifecycleNode::trigger_transition(const Transition & transition)
 {
