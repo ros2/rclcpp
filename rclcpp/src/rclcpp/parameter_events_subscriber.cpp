@@ -157,10 +157,6 @@ ParameterEventsSubscriber::event_callback(
   const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  const std::string & node_name = event->node;
-
-  //RCLCPP_INFO(node_logging_->get_logger().get_child(
-      //"ParameterEventsSubscriber"), "Parameter event received for node: %s", node_name.c_str());
 
   for (auto it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
