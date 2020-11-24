@@ -2,6 +2,10 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.15 (2020-11-24)
+-------------------
+* Type conversions fixes. (`#901 <https://github.com/ros2/rclcpp/issues/901>`_) (`#1209 <https://github.com/ros2/rclcpp/issues/1209>`_)
+* Contributors: Michel Hidalgo, Monika Idzik
 
 0.7.14 (2020-07-10)
 -------------------

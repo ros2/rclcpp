@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.15 (2020-11-24)
+-------------------
+* Fix implementation of NodeOptions::use_global_arguments(). (`#1176 <https://github.com/ros2/rclcpp/issues/1176>`_) (`#1206 <https://github.com/ros2/rclcpp/issues/1206>`_)
+* Fix conversion of negative durations to messages. (`#1188 <https://github.com/ros2/rclcpp/issues/1188>`_) (`#1207 <https://github.com/ros2/rclcpp/issues/1207>`_)
+* Type conversions fixes. (`#901 <https://github.com/ros2/rclcpp/issues/901>`_) (`#1209 <https://github.com/ros2/rclcpp/issues/1209>`_)
+* Add operator!= for duration (`#1236 <https://github.com/ros2/rclcpp/issues/1236>`_) (`#1277 <https://github.com/ros2/rclcpp/issues/1277>`_)
+* Contributors: Ivan Santiago Paunovic, Michel Hidalgo, Monika Idzik
+
 0.7.14 (2020-07-10)
 -------------------
 * Fixed doxygen warnings. (`#1208 <https://github.com/ros2/rclcpp/issues/1208>`_)

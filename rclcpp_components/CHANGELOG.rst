@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.15 (2020-11-24)
+-------------------
+
 0.7.14 (2020-07-10)
 -------------------
 * Added rclcpp_components Doxyfile. (`#1201 <https://github.com/ros2/rclcpp/issues/1201>`_)
