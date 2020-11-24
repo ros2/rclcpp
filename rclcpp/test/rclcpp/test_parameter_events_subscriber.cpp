@@ -17,7 +17,6 @@
 
 #include "gtest/gtest.h"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/parameter_events_subscriber.hpp"
 
 class TestParameterEventsSubscriber : public rclcpp::ParameterEventsSubscriber
 {
@@ -296,7 +295,7 @@ TEST_F(TestNode, MultipleParameterCallbacks)
 
   // Test removal of parameter callback by name
   received_2 = false;
-  ParamSubscriber->remove_parameter_callback("my_int");
+  ParamSubscriber->remove_parameter_callback(h2.get());
   ParamSubscriber->test_event(same_node_int);
   EXPECT_EQ(received_2, false);
 

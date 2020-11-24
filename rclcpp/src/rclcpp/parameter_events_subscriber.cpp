@@ -109,16 +109,6 @@ ParameterEventsSubscriber::remove_parameter_callback(
   }
 }
 
-void
-ParameterEventsSubscriber::remove_parameter_callback(
-  const std::string & parameter_name,
-  const std::string & node_name)
-{
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  auto full_node_name = resolve_path(node_name);
-  parameter_callbacks_.erase({parameter_name, full_node_name});
-}
-
 bool
 ParameterEventsSubscriber::get_parameter_from_event(
   const rcl_interfaces::msg::ParameterEvent & event,
@@ -168,8 +158,9 @@ ParameterEventsSubscriber::event_callback(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   const std::string & node_name = event->node;
-  RCLCPP_DEBUG(node_logging_->get_logger().get_child(
-      "ParameterEventsSubscriber"), "Parameter event received for node: %s", node_name.c_str());
+
+  //RCLCPP_INFO(node_logging_->get_logger().get_child(
+      //"ParameterEventsSubscriber"), "Parameter event received for node: %s", node_name.c_str());
 
   for (auto it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
@@ -204,9 +195,10 @@ ParameterEventsSubscriber::resolve_path(const std::string & path)
     full_path = node_base_->get_fully_qualified_name();
   } else {
     full_path = path;
-    if (*full_path.begin() != '/') {
-      const std::vector<std::string> paths{node_base_->get_namespace(), full_path};
-      full_path = rcpputils::join(paths, "/");
+    if (*path.begin() != '/') {
+      auto ns = node_base_->get_namespace();
+      const std::vector<std::string> paths{ns, path};
+      full_path = (ns == std::string("/"))? ns + path : rcpputils::join(paths, "/");
     }
   }
 

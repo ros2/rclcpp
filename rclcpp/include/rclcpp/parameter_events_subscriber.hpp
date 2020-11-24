@@ -67,9 +67,9 @@ public:
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
   {
-    node_base_ = node->get_node_base_interface();
-    node_logging_ = node->get_node_logging_interface();
-    auto node_topics = node->get_node_topics_interface();
+    node_base_ = rclcpp::node_interfaces::get_node_base_interface(node);
+    node_logging_ = rclcpp::node_interfaces::get_node_logging_interface(node);
+    auto node_topics = rclcpp::node_interfaces::get_node_topics_interface(node);
 
     event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node_topics, "/parameter_events", qos,
@@ -81,10 +81,9 @@ public:
 
   /// Set a custom callback for parameter events.
   /**
-   * Repeated calls to this function will overwrite the callback.
+   * Multiple callbacks are allowed.
    *
    * \param[in] callback Function callback to be evaluated on event.
-   * \param[in] node_namespaces Vector of namespaces for which a subscription will be created.
    */
   RCLCPP_PUBLIC
   ParameterEventCallbackHandle::SharedPtr
@@ -129,21 +128,6 @@ public:
   void
   remove_parameter_callback(
     const ParameterCallbackHandle * const handle);
-
-  /// Remove a custom callback for a specified parameter given its name and respective node.
-  /**
-   * If a node_name is not provided, defaults to the current node.
-   * The {parameter_name, node_name} key on the parameter_callbacks_ map will be erased, removing
-   * all callback associated with that parameter.
-   *
-   * \param[in] parameter_name Name of parameter.
-   * \param[in] node_name Name of node which hosts the parameter.
-   */
-  RCLCPP_PUBLIC
-  void
-  remove_parameter_callback(
-    const std::string & parameter_name,
-    const std::string & node_name = "");
 
   /// Get a rclcpp::Parameter from parameter event, return true if parameter name & node in event.
   /**
