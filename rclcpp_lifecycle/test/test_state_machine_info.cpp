@@ -18,8 +18,14 @@
 #include <utility>
 #include <vector>
 
+#include "lifecycle_msgs/msg/state.hpp"
+#include "lifecycle_msgs/msg/transition.hpp"
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+
+using lifecycle_msgs::msg::State;
+using lifecycle_msgs::msg::Transition;
 
 class TestStateMachineInfo : public ::testing::Test
 {
@@ -54,24 +60,88 @@ TEST_F(TestStateMachineInfo, available_states) {
 
 TEST_F(TestStateMachineInfo, available_transitions) {
   auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
-  std::vector<rclcpp_lifecycle::Transition> current_available_transitions =
-    test_node->get_available_transitions();
+  std::vector<rclcpp_lifecycle::Transition> current_available_transitions;
+
+  // PRIMARY_STATE_UNCONFIGURED
+  current_available_transitions = test_node->get_available_transitions();
   EXPECT_EQ(2u, current_available_transitions.size());
-  for (rclcpp_lifecycle::Transition & transition : current_available_transitions) {
-    EXPECT_FALSE(transition.label().empty());
+  EXPECT_EQ(
+    current_available_transitions[0].id(),
+    Transition::TRANSITION_CONFIGURE);
+  EXPECT_EQ(
+    current_available_transitions[1].id(),
+    Transition::TRANSITION_UNCONFIGURED_SHUTDOWN);
+  current_available_transitions.clear();
 
-    EXPECT_TRUE(
-      transition.start_state().id() <= 4 ||
-      (transition.start_state().id() >= 10 &&
-      (transition.start_state().id() <= 15)));
-    EXPECT_FALSE(transition.start_state().label().empty());
+  // PRIMARY_STATE_INACTIVE
+  ASSERT_EQ(
+    State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+  current_available_transitions = test_node->get_available_transitions();
+  EXPECT_EQ(3u, current_available_transitions.size());
+  EXPECT_EQ(
+    current_available_transitions[0].id(),
+    Transition::TRANSITION_CLEANUP);
+  EXPECT_EQ(
+    current_available_transitions[1].id(),
+    Transition::TRANSITION_ACTIVATE);
+  EXPECT_EQ(
+    current_available_transitions[2].id(),
+    Transition::TRANSITION_INACTIVE_SHUTDOWN);
+  current_available_transitions.clear();
 
-    EXPECT_TRUE(
-      transition.goal_state().id() <= 4 ||
-      (transition.goal_state().id() >= 10 &&
-      (transition.goal_state().id() <= 15)));
-    EXPECT_FALSE(transition.goal_state().label().empty());
-  }
+  // PRIMARY_STATE_ACTIVE
+  ASSERT_EQ(
+    State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+  current_available_transitions = test_node->get_available_transitions();
+  EXPECT_EQ(2u, current_available_transitions.size());
+  EXPECT_EQ(
+    current_available_transitions[0].id(),
+    Transition::TRANSITION_DEACTIVATE);
+  EXPECT_EQ(
+    current_available_transitions[1].id(),
+    Transition::TRANSITION_ACTIVE_SHUTDOWN);
+  current_available_transitions.clear();
+
+  // PRIMARY_STATE_INACTIVE
+  ASSERT_EQ(
+    State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+  current_available_transitions = test_node->get_available_transitions();
+  EXPECT_EQ(3u, current_available_transitions.size());
+  EXPECT_EQ(
+    current_available_transitions[0].id(),
+    Transition::TRANSITION_CLEANUP);
+  EXPECT_EQ(
+    current_available_transitions[1].id(),
+    Transition::TRANSITION_ACTIVATE);
+  EXPECT_EQ(
+    current_available_transitions[2].id(),
+    Transition::TRANSITION_INACTIVE_SHUTDOWN);
+  current_available_transitions.clear();
+
+  // PRIMARY_STATE_UNCONFIGURED
+  ASSERT_EQ(
+    State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+  current_available_transitions = test_node->get_available_transitions();
+  EXPECT_EQ(2u, current_available_transitions.size());
+  EXPECT_EQ(
+    current_available_transitions[0].id(),
+    Transition::TRANSITION_CONFIGURE);
+  EXPECT_EQ(
+    current_available_transitions[1].id(),
+    Transition::TRANSITION_UNCONFIGURED_SHUTDOWN);
+  current_available_transitions.clear();
+
+  // PRIMARY_STATE_FINALIZED
+  ASSERT_EQ(
+    State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN)).id());
+  current_available_transitions = test_node->get_available_transitions();
+  EXPECT_EQ(0u, current_available_transitions.size());
+  current_available_transitions.clear();
 }
 
 TEST_F(TestStateMachineInfo, transition_graph) {

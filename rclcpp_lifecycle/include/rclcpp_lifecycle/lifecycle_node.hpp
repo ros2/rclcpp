@@ -702,9 +702,9 @@ public:
   std::vector<Transition>
   get_available_transitions();
 
-  /// Return a list with the available transitions.
+  /// Return a list with all the transitions.
   /**
-   * \return list with the available transitions.
+   * \return list with all the transitions in the transition graph.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>

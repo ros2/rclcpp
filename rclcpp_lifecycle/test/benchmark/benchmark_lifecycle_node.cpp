@@ -136,7 +136,9 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_transition_graph)(benchmark::State & sta
     constexpr size_t expected_transitions = 25u;
     const auto & transitions = node->get_transition_graph();
     if (transitions.size() != expected_transitions) {
-      const std::string msg = std::to_string(transitions.size());
+      const std::string msg =
+        std::string("Expected number of transitions did not match actual: ") +
+        std::to_string(transitions.size());
       state.SkipWithError(msg.c_str());
     }
     benchmark::DoNotOptimize(transitions);
