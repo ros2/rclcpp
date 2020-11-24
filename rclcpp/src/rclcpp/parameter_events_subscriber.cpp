@@ -152,6 +152,23 @@ ParameterEventsSubscriber::get_parameter_from_event(
   return p;
 }
 
+std::vector<rclcpp::Parameter>
+ParameterEventsSubscriber::get_parameters_from_event(
+  const rcl_interfaces::msg::ParameterEvent & event)
+{
+  std::vector<rclcpp::Parameter> params;
+
+  for (auto & new_parameter : event.new_parameters) {
+    params.push_back(rclcpp::Parameter::from_parameter_msg(new_parameter));
+  }
+
+  for (auto & changed_parameter : event.changed_parameters) {
+    params.push_back(rclcpp::Parameter::from_parameter_msg(changed_parameter));
+  }
+
+  return params;
+}
+
 void
 ParameterEventsSubscriber::event_callback(
   const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
@@ -194,7 +211,7 @@ ParameterEventsSubscriber::resolve_path(const std::string & path)
     if (*path.begin() != '/') {
       auto ns = node_base_->get_namespace();
       const std::vector<std::string> paths{ns, path};
-      full_path = (ns == std::string("/"))? ns + path : rcpputils::join(paths, "/");
+      full_path = (ns == std::string("/")) ? ns + path : rcpputils::join(paths, "/");
     }
   }
 

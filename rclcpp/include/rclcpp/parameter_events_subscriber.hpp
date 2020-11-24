@@ -16,6 +16,7 @@
 #define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 
 #include <list>
+#include <memory>
 #include <string>
 #include <utility>
 #include <unordered_map>
@@ -166,6 +167,16 @@ public:
     const rcl_interfaces::msg::ParameterEvent & event,
     const std::string parameter_name,
     const std::string node_name = "");
+
+  /// Get all rclcpp::Parameter values from a parameter event
+  /**
+   * \param[in] event Event msg to be inspected.
+   * \returns A vector rclcpp::Parameter values from the event
+   */
+  RCLCPP_PUBLIC
+  static std::vector<rclcpp::Parameter>
+  get_parameters_from_event(
+    const rcl_interfaces::msg::ParameterEvent & event);
 
   using CallbacksContainerType = std::list<ParameterCallbackHandle::WeakPtr>;
 

@@ -182,7 +182,6 @@ TEST_F(TestNode, GetParameterFromEvent)
   EXPECT_FALSE(
     ParameterEventsSubscriber::get_parameter_from_event(*diff_ns_bool, p, "my_int", node_name));
 
-
   EXPECT_NO_THROW(
     ParameterEventsSubscriber::get_parameter_from_event(*multiple, "my_int", node_name));
   // Throws if parameter not with correct node name
@@ -193,6 +192,50 @@ TEST_F(TestNode, GetParameterFromEvent)
   EXPECT_THROW(
     ParameterEventsSubscriber::get_parameter_from_event(*diff_ns_bool, "my_int", node_name),
     std::runtime_error);
+}
+
+TEST_F(TestNode, GetParametersFromEvent)
+{
+  using rclcpp::ParameterEventsSubscriber;
+  std::string node_name = node->get_fully_qualified_name();
+
+  auto params = ParameterEventsSubscriber::get_parameters_from_event(*multiple);
+  EXPECT_EQ(params.size(), 2u);
+  bool found_int = false;
+  bool found_double = false;
+  for (auto & p : params) {
+    if (p.get_name() == std::string("my_int")) {
+      found_int = true;
+      EXPECT_EQ(p.get_value<int>(), 1);
+    } else if (p.get_name() == std::string("my_double")) {
+      found_double = true;
+      EXPECT_EQ(p.get_value<double>(), 1.0);
+    }
+  }
+  EXPECT_EQ(found_int, true);
+  EXPECT_EQ(found_double, true);
+
+  params = ParameterEventsSubscriber::get_parameters_from_event(*remote_node_string);
+  EXPECT_EQ(params.size(), 1u);
+  bool found_string = false;
+  for (auto & p : params) {
+    if (p.get_name() == std::string("my_string")) {
+      found_string = true;
+      EXPECT_EQ(p.get_value<std::string>(), std::string("test"));
+    }
+  }
+  EXPECT_EQ(found_string, true);
+
+  params = ParameterEventsSubscriber::get_parameters_from_event(*diff_ns_bool);
+  EXPECT_EQ(params.size(), 1u);
+  bool found_bool = false;
+  for (auto & p : params) {
+    if (p.get_name() == std::string("my_bool")) {
+      found_bool = true;
+      EXPECT_EQ(p.get_value<bool>(), true);
+    }
+  }
+  EXPECT_EQ(found_bool, true);
 }
 
 TEST_F(TestNode, EventCallback)
