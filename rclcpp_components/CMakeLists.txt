@@ -65,6 +65,10 @@ endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_google_benchmark REQUIRED)
+  find_package(benchmark REQUIRED)
+  # Give cppcheck hints about macro definitions coming from outside this package
+  get_target_property(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS benchmark::benchmark INTERFACE_INCLUDE_DIRECTORIES)
   ament_lint_auto_find_test_dependencies()
 
   set(components "")
@@ -108,6 +112,14 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_component_manager_api)
     target_link_libraries(test_component_manager_api component_manager)
+  endif()
+
+  ament_add_google_benchmark(benchmark_components
+    test/benchmark/benchmark_components.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET benchmark_components)
+    target_link_libraries(benchmark_components component_manager)
   endif()
 endif()
 
