@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,6 +106,8 @@ BENCHMARK_F(ComponentTest, create_node_instance)(benchmark::State & state)
     return;
   }
 
+  // Choosing resource 0 - the other two test components were shown empirically to yield
+  // the same performance charactarisitics, so they shouldn't need their own benchmarks.
   const std::shared_ptr<rclcpp_components::NodeFactory> factory =
     manager->create_component_factory(resources[0]);
 
@@ -113,5 +115,7 @@ BENCHMARK_F(ComponentTest, create_node_instance)(benchmark::State & state)
 
   for (auto _ : state) {
     rclcpp_components::NodeInstanceWrapper node = factory->create_node_instance(options);
+    benchmark::DoNotOptimize(node);
+    benchmark::ClobberMemory();
   }
 }
