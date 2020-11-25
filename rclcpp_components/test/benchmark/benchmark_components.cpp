@@ -30,6 +30,10 @@ public:
   {
   }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
   void SetUp(benchmark::State &) override
   {
     rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_WARN);
@@ -55,6 +59,9 @@ public:
     executor.reset();
     context.reset();
   }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
   const std::string component_manager_name;
 
