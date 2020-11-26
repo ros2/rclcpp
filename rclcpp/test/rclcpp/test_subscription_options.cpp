@@ -54,6 +54,16 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
+TEST_F(TestSubscriptionOptions, subscription_options_constructor) {
+  rclcpp::SubscriptionOptions option1;
+  EXPECT_EQ(option1.callback_group, nullptr);
+
+  auto group = std::make_shared<rclcpp::CallbackGroup>(rclcpp::CallbackGroupType::Reentrant);
+  rclcpp::SubscriptionOptions option2;
+  option2.set_callback_group(group);
+  EXPECT_EQ(option2.callback_group, group);
+}
+
 TEST_F(TestSubscriptionOptions, topic_statistics_options_default_and_set) {
   auto options = rclcpp::SubscriptionOptions();
 

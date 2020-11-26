@@ -75,6 +75,14 @@ struct SubscriptionOptionsBase
   TopicStatisticsOptions topic_stats_options;
 
   QosOverridingOptions qos_overriding_options;
+
+  /// Set callback group, parameter idiom style.
+  SubscriptionOptionsBase &
+  set_callback_group(rclcpp::CallbackGroup::SharedPtr group)
+  {
+    callback_group = group;
+    return *this;
+  }
 };
 
 /// Structure containing optional configuration for Subscriptions.
