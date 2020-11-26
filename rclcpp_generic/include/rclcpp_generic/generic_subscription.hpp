@@ -40,6 +40,7 @@ namespace rclcpp_generic
 class GenericSubscription : public rclcpp::SubscriptionBase
 {
 public:
+  // cppcheck-suppress unknownMacro
   RCLCPP_SMART_PTR_DEFINITIONS(GenericSubscription)
 
   /**

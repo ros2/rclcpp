@@ -38,6 +38,7 @@ namespace rclcpp_generic
 class GenericPublisher : public rclcpp::PublisherBase
 {
 public:
+  // cppcheck-suppress unknownMacro
   RCLCPP_SMART_PTR_DEFINITIONS(GenericPublisher)
 
   /**

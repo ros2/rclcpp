@@ -21,18 +21,18 @@
 #include "rcl/subscription.h"
 #include "rclcpp_generic/typesupport_helpers.hpp"
 
+namespace rclcpp_generic
+{
+
 namespace
 {
-rcl_subscription_options_t rosbag2_get_subscription_options(const rclcpp::QoS & qos)
+rcl_subscription_options_t get_subscription_options(const rclcpp::QoS & qos)
 {
   auto options = rcl_subscription_get_default_options();
   options.qos = qos.get_rmw_qos_profile();
   return options;
 }
 }  // unnamed namespace
-
-namespace rclcpp_generic
-{
 
 std::shared_ptr<GenericSubscription> GenericSubscription::create(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
@@ -71,7 +71,7 @@ GenericSubscription::GenericSubscription(
     *rclcpp_generic::get_typesupport_handle(
       topic_type, "rosidl_typesupport_cpp", ts_lib),
     topic_name,
-    rosbag2_get_subscription_options(qos),
+    get_subscription_options(qos),
     true),
   callback_(callback)
 {}

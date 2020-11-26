@@ -20,18 +20,18 @@
 
 #include "rclcpp_generic/typesupport_helpers.hpp"
 
+namespace rclcpp_generic
+{
+
 namespace
 {
-rcl_publisher_options_t rosbag2_get_publisher_options(const rclcpp::QoS & qos)
+rcl_publisher_options_t get_publisher_options(const rclcpp::QoS & qos)
 {
   auto options = rcl_publisher_get_default_options();
   options.qos = qos.get_rmw_qos_profile();
   return options;
 }
 }  // unnamed namespace
-
-namespace rclcpp_generic
-{
 
 std::shared_ptr<GenericPublisher> GenericPublisher::create(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
@@ -54,7 +54,7 @@ GenericPublisher::GenericPublisher(
   const std::string & topic_type,
   const rclcpp::QoS & qos)
 : rclcpp::PublisherBase(node_base, topic_name, *rclcpp_generic::get_typesupport_handle(
-      topic_type, "rosidl_typesupport_cpp", ts_lib), rosbag2_get_publisher_options(qos)), ts_lib_(
+      topic_type, "rosidl_typesupport_cpp", ts_lib), get_publisher_options(qos)), ts_lib_(
     ts_lib)
 {}
 

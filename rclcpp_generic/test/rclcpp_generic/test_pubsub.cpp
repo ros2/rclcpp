@@ -33,10 +33,10 @@
 using namespace ::testing;  // NOLINT
 using namespace rclcpp_generic;  // NOLINT
 
-class RosBag2NodeFixture : public Test
+class RclcppGenericNodeFixture : public Test
 {
 public:
-  RosBag2NodeFixture()
+  RclcppGenericNodeFixture()
   {
     node_ = std::make_shared<rclcpp::Node>("pubsub");
     publisher_node_ = std::make_shared<rclcpp::Node>(
@@ -116,7 +116,7 @@ public:
 };
 
 
-TEST_F(RosBag2NodeFixture, publisher_and_subscriber_work)
+TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
 {
   // We currently publish more messages because they can get lost
   std::vector<std::string> test_messages = {"Hello World", "Hello World"};
@@ -145,7 +145,7 @@ TEST_F(RosBag2NodeFixture, publisher_and_subscriber_work)
   EXPECT_THAT(subscribed_messages[0], StrEq("Hello World"));
 }
 
-TEST_F(RosBag2NodeFixture, generic_subscription_uses_qos)
+TEST_F(RclcppGenericNodeFixture, generic_subscription_uses_qos)
 {
   // If the GenericSubscription does not use the provided QoS profile,
   // its request will be incompatible with the Publisher's offer and no messages will be passed.
@@ -166,7 +166,7 @@ TEST_F(RosBag2NodeFixture, generic_subscription_uses_qos)
   ASSERT_TRUE(wait_for(connected, 5s));
 }
 
-TEST_F(RosBag2NodeFixture, generic_publisher_uses_qos)
+TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
 {
   // If the GenericPublisher does not use the provided QoS profile,
   // its offer will be incompatible with the Subscription's request and no messages will be passed.
