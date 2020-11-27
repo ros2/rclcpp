@@ -19,12 +19,16 @@
 #include <string>
 #include <vector>
 
+#include "rcutils/strdup.h"
+#include "rcutils/types/string_array.h"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/qos_event.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -44,6 +48,20 @@ SubscriptionBase::SubscriptionBase(
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
+  // finalize subscription_options
+  RCLCPP_SCOPE_EXIT(
+  {
+    rcl_ret_t ret = rcl_subscription_options_fini(
+      const_cast<rcl_subscription_options_t *>(&subscription_options));
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
+        "Failed to fini subscription option: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  });
+
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
       if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {
@@ -325,4 +343,84 @@ std::vector<rclcpp::NetworkFlowEndpoint> SubscriptionBase::get_network_flow_endp
   }
 
   return network_flow_endpoint_vector;
+}
+
+bool
+SubscriptionBase::is_cft_supported() const
+{
+  return rcl_subscription_is_cft_supported(subscription_handle_.get());
+}
+
+void
+SubscriptionBase::set_cft_expression_parameters(
+  const std::string & filter_expression,
+  const std::vector<std::string> & expression_parameters)
+{
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  rcutils_string_array_t parameters;
+  parameters = rcutils_get_zero_initialized_string_array();
+  rcutils_ret_t rcutils_ret = rcutils_string_array_init(
+    &parameters, expression_parameters.size(), &allocator);
+  if (RCUTILS_RET_OK != rcutils_ret) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      RCL_RET_ERROR,
+      "failed to initialize string array for expression parameters");
+  }
+  RCLCPP_SCOPE_EXIT(
+  {
+    rcutils_ret_t rcutils_ret = rcutils_string_array_fini(&parameters);
+    if (RCUTILS_RET_OK != rcutils_ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
+        "failed to finalize parameters: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  });
+
+  for (size_t i = 0; i < expression_parameters.size(); ++i) {
+    parameters.data[i] = rcutils_strdup(expression_parameters[i].c_str(), allocator);
+  }
+  rcl_ret_t ret = rcl_subscription_set_cft_expression_parameters(
+    subscription_handle_.get(),
+    filter_expression.c_str(),
+    &parameters);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set cft expression parameters");
+  }
+}
+
+void
+SubscriptionBase::get_cft_expression_parameters(
+  std::string & filter_expression,
+  std::vector<std::string> & expression_parameters) const
+{
+  char * expression = NULL;
+  rcutils_string_array_t parameters;
+  parameters = rcutils_get_zero_initialized_string_array();
+  rcl_ret_t ret = rcl_subscription_get_cft_expression_parameters(
+    subscription_handle_.get(),
+    &expression,
+    &parameters);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get cft expression parameters");
+  }
+
+  filter_expression = expression;
+  for (size_t i = 0; i < parameters.size; ++i) {
+    expression_parameters.push_back(parameters.data[i]);
+  }
+
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  allocator.deallocate(expression, allocator.state);
+  rcutils_ret_t rcutils_ret = rcutils_string_array_fini(&parameters);
+  if (RCUTILS_RET_OK != rcutils_ret) {
+    RCLCPP_ERROR(
+      rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
+      "failed to finalize parameters: %s",
+      rcl_get_error_string().str);
+    rcl_reset_error();
+  }
 }
