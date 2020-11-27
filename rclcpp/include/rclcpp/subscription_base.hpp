@@ -491,6 +491,41 @@ public:
     event_handlers_[event_type]->clear_on_ready_callback();
   }
 
+  /// Check if subscription instance can support content filter topic feature.
+  /**
+   * Depending on the middleware and the message type, this will return true if the middleware
+   * can support content filter topic feature.
+   *
+   * \return boolean flag indicating if middleware can support content filter topic feature.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_cft_supported() const;
+
+  /// Set the filter expression and expression parameters for the subscription.
+  /**
+   * \param[in] filter_expression An filter expression to set.
+   * \param[in] expression_parameters Array of expression parameters to set.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  set_cft_expression_parameters(
+    const std::string & filter_expression,
+    const std::vector<std::string> & expression_parameters);
+
+  /// Get the filter expression and expression parameters for the subscription.
+  /**
+   * \param[out] filter_expression An filter expression to get.
+   * \param[out] expression_parameters Array of expression parameters to get.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  get_cft_expression_parameters(
+    std::string & filter_expression,
+    std::vector<std::string> & expression_parameters) const;
+
 protected:
   template<typename EventCallbackT>
   void

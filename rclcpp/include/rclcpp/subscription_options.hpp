@@ -21,6 +21,9 @@
 #include <type_traits>
 #include <vector>
 
+#include "rcutils/strdup.h"
+#include "rcutils/types/string_array.h"
+
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/detail/rmw_implementation_specific_subscription_payload.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
@@ -81,6 +84,17 @@ struct SubscriptionOptionsBase
   TopicStatisticsOptions topic_stats_options;
 
   QosOverridingOptions qos_overriding_options;
+
+  // Options to configure content filtered topic in the subscription.
+  struct ContentFilterOptions
+  {
+    // Filter expression like SQL statement
+    std::string filter_expression;
+    // Expression parameters for filter expression
+    std::vector<std::string> expression_parameters;
+  };
+
+  ContentFilterOptions content_filter_options;
 };
 
 /// Structure containing optional configuration for Subscriptions.
@@ -121,6 +135,62 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     // Apply payload to rcl_subscription_options if necessary.
     if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
       rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
+    }
+
+    auto fail_clean = [&result]()
+      {
+        rcl_ret_t ret = rcl_subscription_options_fini(&result);
+        if (RCL_RET_OK != ret) {
+          RCLCPP_ERROR(
+            rclcpp::get_logger("rclcpp"),
+            "Failed to fini subscription option: %s",
+            rcl_get_error_string().str);
+          rcl_reset_error();
+        }
+      };
+
+    // utils, string -> char *
+    // utils, vector<string> -> rcutils_string_array_t *
+
+    // Copy content_filter_options into rcl_subscription_options if necessary.
+    if (!content_filter_options.filter_expression.empty()) {
+      char * expression =
+        rcutils_strdup(content_filter_options.filter_expression.c_str(), allocator);
+      if (!expression) {
+        throw std::runtime_error("failed to allocate memory for filter expression");
+      }
+      result.rmw_subscription_options.filter_expression = expression;
+    }
+
+    if (!content_filter_options.expression_parameters.empty()) {
+      rcutils_string_array_t * parameters =
+        static_cast<rcutils_string_array_t *>(allocator.allocate(
+          sizeof(rcutils_string_array_t),
+          allocator.state));
+      if (!parameters) {
+        fail_clean();
+        throw std::runtime_error("failed to allocate memory for expression parameters");
+      }
+      rcutils_ret_t ret = rcutils_string_array_init(
+        parameters, content_filter_options.expression_parameters.size(), &allocator);
+      if (RCUTILS_RET_OK != ret) {
+        fail_clean();
+        rclcpp::exceptions::throw_from_rcl_error(
+          RCL_RET_ERROR,
+          "failed to initialize string array for expression parameters");
+      }
+
+      for (size_t i = 0; i < content_filter_options.expression_parameters.size(); ++i) {
+        char * parameter =
+          rcutils_strdup(content_filter_options.expression_parameters[i].c_str(), allocator);
+        if (!parameter) {
+          fail_clean();
+          throw std::runtime_error("failed to allocate memory for expression parameters");
+        }
+        parameters->data[i] = parameter;
+      }
+
+      result.rmw_subscription_options.expression_parameters = parameters;
     }
 
     return result;
