@@ -229,6 +229,41 @@ TEST_F(TestNodeGraph, get_service_names_and_types_by_node)
   EXPECT_FALSE(services_of_node2.find("/ns/node1_service") != services_of_node2.end());
 }
 
+
+TEST_F(TestNodeGraph, get_client_names_and_types_by_node)
+{
+  auto client = node()->create_client<test_msgs::srv::Empty>("node1_service");
+
+  const std::string node2_name = "node2";
+  auto node2 = std::make_shared<rclcpp::Node>(node2_name, node_namespace);
+
+  // rcl_get_client_names_and_types_by_node() expects the node to exist, otherwise it fails
+  EXPECT_THROW(
+    node_graph()->get_client_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
+    std::runtime_error);
+
+  // Check that node1_service exists for node1 but not node2. This shouldn't exercise graph
+  // discovery as node_graph belongs to node1 anyway. This is just to test the API itself.
+  auto services_of_node1 =
+    node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace);
+  auto services_of_node2 =
+    node_graph()->get_client_names_and_types_by_node(node2_name, absolute_namespace);
+
+  auto start = std::chrono::steady_clock::now();
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+    services_of_node1 =
+      node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace);
+    services_of_node2 =
+      node_graph()->get_client_names_and_types_by_node(node2_name, absolute_namespace);
+    if (services_of_node1.find("/ns/node1_service") != services_of_node1.end()) {
+      break;
+    }
+  }
+
+  EXPECT_TRUE(services_of_node1.find("/ns/node1_service") != services_of_node1.end());
+  EXPECT_FALSE(services_of_node2.find("/ns/node1_service") != services_of_node2.end());
+}
+
 TEST_F(TestNodeGraph, get_service_names_and_types_by_node_rcl_errors)
 {
   auto callback = [](
@@ -248,6 +283,22 @@ TEST_F(TestNodeGraph, get_service_names_and_types_by_node_rcl_errors)
       " service names and types, leaking memory: error not set"));
 }
 
+
+TEST_F(TestNodeGraph, get_client_names_and_types_by_node_rcl_errors)
+{
+  auto client = node()->create_client<test_msgs::srv::Empty>("node1_service");
+
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_client_names_and_types_by_node, RCL_RET_ERROR);
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->get_client_names_and_types_by_node(node_name, node_namespace),
+    std::runtime_error(
+      "failed to get service names and types by node: error not set, failed also to cleanup"
+      " service names and types, leaking memory: error not set"));
+}
+
 TEST_F(TestNodeGraph, get_service_names_and_types_by_node_names_and_types_fini_error)
 {
   auto callback = [](
@@ -260,6 +311,17 @@ TEST_F(TestNodeGraph, get_service_names_and_types_by_node_names_and_types_fini_e
 
   EXPECT_THROW(
     node_graph()->get_service_names_and_types_by_node(node_name, absolute_namespace),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestNodeGraph, get_client_names_and_types_by_node_names_and_types_fini_error)
+{
+  auto client = node()->create_client<test_msgs::srv::Empty>("node1_service");
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+
+  EXPECT_THROW(
+    node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace),
     rclcpp::exceptions::RCLError);
 }
 
