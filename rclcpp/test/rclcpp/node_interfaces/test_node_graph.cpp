@@ -122,6 +122,10 @@ TEST_F(TestNodeGraph, construct_from_node)
   auto names_and_namespaces = node_graph()->get_node_names_and_namespaces();
   EXPECT_EQ(1u, names_and_namespaces.size());
 
+  auto names_namespaces_and_enclaves =
+    node_graph()->get_node_names_with_enclaves();
+  EXPECT_EQ(1u, names_namespaces_and_enclaves.size());
+
   EXPECT_EQ(0u, node_graph()->count_publishers("not_a_topic"));
   EXPECT_EQ(0u, node_graph()->count_subscribers("not_a_topic"));
   EXPECT_NE(nullptr, node_graph()->get_graph_guard_condition());
@@ -265,6 +269,13 @@ TEST_F(TestNodeGraph, get_node_names_and_namespaces)
   EXPECT_EQ(1u, names_and_namespaces.size());
 }
 
+TEST_F(TestNodeGraph, get_node_names_with_enclaves)
+{
+  auto names_namespaces_and_enclaves =
+    node_graph()->get_node_names_with_enclaves();
+  EXPECT_EQ(1u, names_namespaces_and_enclaves.size());
+}
+
 TEST_F(TestNodeGraph, get_node_names_and_namespaces_rcl_errors)
 {
   auto mock = mocking_utils::patch_and_return(
@@ -278,6 +289,20 @@ TEST_F(TestNodeGraph, get_node_names_and_namespaces_rcl_errors)
       " error not set, failed also to cleanup node namespaces, leaking memory: error not set"));
 }
 
+TEST_F(TestNodeGraph, get_node_names_with_enclaves_rcl_errors)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_node_names_with_enclaves, RCL_RET_ERROR);
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcutils_string_array_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->get_node_names_with_enclaves(),
+    std::runtime_error(
+      "failed to get node names with enclaves: error not set, failed also to cleanup node names, "
+      "leaking memory: error not set, failed also to cleanup node namespaces, leaking memory: "
+      "error not set, failed also to cleanup node enclaves, leaking memory: error not set"));
+}
+
 TEST_F(TestNodeGraph, get_node_names_and_namespaces_fini_errors)
 {
   auto mock_names_fini = mocking_utils::patch_and_return(
@@ -285,6 +310,17 @@ TEST_F(TestNodeGraph, get_node_names_and_namespaces_fini_errors)
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_node_names_and_namespaces(),
     std::runtime_error("could not destroy node names, could not destroy node namespaces"));
+}
+
+TEST_F(TestNodeGraph, get_node_names_with_enclaves_fini_errors)
+{
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcutils_string_array_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->get_node_names_with_enclaves(),
+    std::runtime_error(
+      "could not destroy node names, could not destroy node namespaces, "
+      "could not destroy node enclaves"));
 }
 
 TEST_F(TestNodeGraph, count_publishers_rcl_error)
