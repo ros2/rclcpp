@@ -183,6 +183,20 @@ public:
     const std::string & node_name,
     const std::string & namespace_) const = 0;
 
+  /// Return a map of existing service client names and types with a specific node.
+  /**
+   * The returned names are the actual names used and do not have remap rules applied.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const = 0;
+
   /// Return a vector of existing node names (string).
   /*
    * The returned names are the actual names used and do not have remap rules applied.
