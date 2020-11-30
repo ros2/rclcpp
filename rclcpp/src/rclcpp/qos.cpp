@@ -236,46 +236,46 @@ QoS::avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions)
 }
 
 HistoryPolicy
-QoS::get_history() const
+QoS::history() const
 {
   return static_cast<HistoryPolicy>(rmw_qos_profile_.history);
 }
 
 size_t
-QoS::get_depth() const {return rmw_qos_profile_.depth;}
+QoS::depth() const {return rmw_qos_profile_.depth;}
 
 ReliabilityPolicy
-QoS::get_reliability() const
+QoS::reliability() const
 {
   return static_cast<ReliabilityPolicy>(rmw_qos_profile_.reliability);
 }
 
 DurabilityPolicy
-QoS::get_durability() const
+QoS::durability() const
 {
   return static_cast<DurabilityPolicy>(rmw_qos_profile_.durability);
 }
 
 Duration
-QoS::get_deadline() const {return Duration::from_rmw_time(rmw_qos_profile_.deadline);}
+QoS::deadline() const {return Duration::from_rmw_time(rmw_qos_profile_.deadline);}
 
 Duration
-QoS::get_lifespan() const {return Duration::from_rmw_time(rmw_qos_profile_.lifespan);}
+QoS::lifespan() const {return Duration::from_rmw_time(rmw_qos_profile_.lifespan);}
 
 LivelinessPolicy
-QoS::get_liveliness() const
+QoS::liveliness() const
 {
   return static_cast<LivelinessPolicy>(rmw_qos_profile_.liveliness);
 }
 
 Duration
-QoS::get_liveliness_lease_duration() const
+QoS::liveliness_lease_duration() const
 {
   return Duration::from_rmw_time(rmw_qos_profile_.liveliness_lease_duration);
 }
 
 bool
-QoS::get_avoid_ros_namespace_conventions() const
+QoS::avoid_ros_namespace_conventions() const
 {
   return rmw_qos_profile_.avoid_ros_namespace_conventions;
 }

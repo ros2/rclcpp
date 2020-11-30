@@ -201,32 +201,41 @@ public:
   QoS &
   avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions);
 
+  /// Get the history qos policy.
   HistoryPolicy
-  get_history() const;
+  history() const;
 
+  /// Get the history depth.
   size_t
-  get_depth() const;
+  depth() const;
 
+  /// Get the reliability policy.
   ReliabilityPolicy
-  get_reliability() const;
+  reliability() const;
 
+  /// Get the durability policy.
   DurabilityPolicy
-  get_durability() const;
+  durability() const;
 
+  /// Get the deadline duration setting.
   rclcpp::Duration
-  get_deadline() const;
+  deadline() const;
 
+  /// Get the lifespan duration setting.
   rclcpp::Duration
-  get_lifespan() const;
+  lifespan() const;
 
+  /// Get the liveliness policy.
   LivelinessPolicy
-  get_liveliness() const;
+  liveliness() const;
 
+  /// Get the liveliness lease duration setting.
   rclcpp::Duration
-  get_liveliness_lease_duration() const;
+  liveliness_lease_duration() const;
 
+  /// Get the `avoid ros namespace convention` setting.
   bool
-  get_avoid_ros_namespace_conventions() const;
+  avoid_ros_namespace_conventions() const;
 
 private:
   rmw_qos_profile_t rmw_qos_profile_;
