@@ -191,6 +191,15 @@ public:
   std::vector<std::string>
   get_node_names() const = 0;
 
+  /// Return a vector of existing node names, namespaces and enclaves (tuple of string).
+  /*
+   * The returned names are the actual names used and do not have remap rules applied.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::tuple<std::string, std::string, std::string>>
+  get_node_names_with_enclaves() const = 0;
+
   /// Return a vector of existing node names and namespaces (pair of string).
   /*
    * The returned names are the actual names used and do not have remap rules applied.

@@ -75,6 +75,10 @@ public:
   get_node_names() const override;
 
   RCLCPP_PUBLIC
+  std::vector<std::tuple<std::string, std::string, std::string>>
+  get_node_names_with_enclaves() const override;
+
+  RCLCPP_PUBLIC
   std::vector<std::pair<std::string, std::string>>
   get_node_names_and_namespaces() const override;
 
