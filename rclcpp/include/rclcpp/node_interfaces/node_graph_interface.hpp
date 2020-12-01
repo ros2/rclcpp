@@ -183,7 +183,7 @@ public:
     const std::string & node_name,
     const std::string & namespace_) const = 0;
 
-  /// Return a map of existing service client names and types with a specific node.
+  /// Return a map of existing service names and types with a specific node.
   /**
    * This function only considers clients - not service servers.
    * The returned names are the actual names used and do not have remap rules applied.
@@ -198,9 +198,9 @@ public:
     const std::string & node_name,
     const std::string & namespace_) const = 0;
 
-  /// Return a map of existing publisher topic names to list of topic types for a specific node.
+  /// Return a map of existing topic names to list of topic types for a specific node.
   /**
-   * This function only considers publications - not subscriptions.
+   * This function only considers publishers - not subscribers.
    * The returned names are the actual names used and do not have remap rules applied.
    *
    * \param[in] node_name name of the node
@@ -215,9 +215,9 @@ public:
     const std::string & namespace_,
     bool no_demangle = false) const = 0;
 
-  /// Return a map of existing subscriber topic names to list of topic types for a specific node.
+  /// Return a map of existing topic names to list of topic types for a specific node.
   /**
-   * This function only considers subscriptions - not publications.
+   * This function only considers subscribers - not publishers.
    * The returned names are the actual names used and do not have remap rules applied.
    *
    * \param[in] node_name name of the node
