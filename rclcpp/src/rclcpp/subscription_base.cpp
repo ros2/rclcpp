@@ -288,3 +288,34 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   }
   throw std::runtime_error("given pointer_to_subscription_part does not match any part");
 }
+
+std::vector<rclcpp::NetworkFlow> SubscriptionBase::get_network_flow() const
+{
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcl_network_flow_array_t network_flow_array = rcl_get_zero_initialized_network_flow_array();
+  rcl_ret_t ret = rcl_subscription_get_network_flow(
+    subscription_handle_.get(), &allocator, &network_flow_array);
+  if (RCL_RET_OK != ret) {
+    auto error_msg = std::string("Error obtaining network flows of subscription: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    if (RCL_RET_OK != rcl_network_flow_array_fini(&network_flow_array, &allocator)) {
+      error_msg += std::string(". Also error cleaning up network flow array: ") +
+        rcl_get_error_string().str;
+      rcl_reset_error();
+    }
+    rclcpp::exceptions::throw_from_rcl_error(ret, error_msg);
+  }
+
+  std::vector<rclcpp::NetworkFlow> network_flow_vector;
+  for (size_t i = 0; i < network_flow_array.size; ++i) {
+    network_flow_vector.push_back(rclcpp::NetworkFlow(network_flow_array.network_flow[i]));
+  }
+
+  ret = rcl_network_flow_array_fini(&network_flow_array, &allocator);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "error cleaning up network flow array");
+  }
+
+  return network_flow_vector;
+}

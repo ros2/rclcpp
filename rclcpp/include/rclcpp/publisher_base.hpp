@@ -28,6 +28,7 @@
 #include "rcl/publisher.h"
 
 #include "rclcpp/macros.hpp"
+#include "rclcpp/network_flow.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -192,6 +193,15 @@ public:
   setup_intra_process(
     uint64_t intra_process_publisher_id,
     IntraProcessManagerSharedPtr ipm);
+
+  /// Get network flow
+  /**
+   * Describes network flows that this publisher is sending messages out on
+   * \return vector of NetworkFlow
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::NetworkFlow>
+  get_network_flow() const;
 
 protected:
   template<typename EventCallbackT>

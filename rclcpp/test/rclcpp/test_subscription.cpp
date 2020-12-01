@@ -506,3 +506,37 @@ INSTANTIATE_TEST_SUITE_P(
   TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
   ::testing::ValuesIn(invalid_qos_profiles()),
   ::testing::PrintToStringParamName());
+
+TEST_F(TestSubscription, get_network_flow_errors) {
+  initialize();
+  const rclcpp::QoS subscription_qos(1);
+  auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr msg) {
+      (void)msg;
+    };
+  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+    "topic", subscription_qos, subscription_callback);
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_subscription_get_network_flow, RCL_RET_ERROR);
+    auto mock_network_flow_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_array_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      subscription->get_network_flow(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock_network_flow_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_array_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      subscription->get_network_flow(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_subscription_get_network_flow, RCL_RET_OK);
+    auto mock_network_flow_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_array_fini, RCL_RET_OK);
+    EXPECT_NO_THROW(subscription->get_network_flow());
+  }
+}
