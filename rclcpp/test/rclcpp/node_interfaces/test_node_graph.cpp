@@ -229,7 +229,6 @@ TEST_F(TestNodeGraph, get_service_names_and_types_by_node)
   EXPECT_FALSE(services_of_node2.find("/ns/node1_service") != services_of_node2.end());
 }
 
-
 TEST_F(TestNodeGraph, get_client_names_and_types_by_node)
 {
   auto client = node()->create_client<test_msgs::srv::Empty>("node1_service");
@@ -322,6 +321,144 @@ TEST_F(TestNodeGraph, get_client_names_and_types_by_node_names_and_types_fini_er
 
   EXPECT_THROW(
     node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node)
+{
+  const rclcpp::QoS publisher_qos(1);
+  auto publisher = node()->create_publisher<test_msgs::msg::Empty>("node1_topic", publisher_qos);
+
+  const std::string node2_name = "node2";
+  auto node2 = std::make_shared<rclcpp::Node>(node2_name, node_namespace);
+
+  // rcl_get_publisher_names_and_types_by_node() expects the node to exist, otherwise it fails
+  EXPECT_THROW(
+    node_graph()->get_publisher_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
+    std::runtime_error);
+
+  // Check that node1_topic exists for node1 but not node2. This shouldn't exercise graph
+  // discovery as node_graph belongs to node1 anyway. This is just to test the API itself.
+  auto topics_of_node1 =
+    node_graph()->get_publisher_names_and_types_by_node(node_name, absolute_namespace);
+  auto topics_of_node2 =
+    node_graph()->get_publisher_names_and_types_by_node(node2_name, absolute_namespace);
+
+  auto start = std::chrono::steady_clock::now();
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+    topics_of_node1 =
+      node_graph()->get_publisher_names_and_types_by_node(node_name, absolute_namespace);
+    topics_of_node2 =
+      node_graph()->get_publisher_names_and_types_by_node(node2_name, absolute_namespace);
+    if (topics_of_node1.find("/ns/node1_topic") != topics_of_node1.end()) {
+      break;
+    }
+  }
+
+  EXPECT_TRUE(topics_of_node1.find("/ns/node1_topic") != topics_of_node1.end());
+  EXPECT_FALSE(topics_of_node2.find("/ns/node1_topic") != topics_of_node2.end());
+}
+
+TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node)
+{
+  const rclcpp::QoS subscriber_qos(10);
+  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  auto subscription =
+    node()->create_subscription<test_msgs::msg::Empty>(
+    "node1_topic", subscriber_qos, std::move(callback));
+
+  const std::string node2_name = "node2";
+  auto node2 = std::make_shared<rclcpp::Node>(node2_name, node_namespace);
+
+  // rcl_get_subscriber_names_and_types_by_node() expects the node to exist, otherwise it fails
+  EXPECT_THROW(
+    node_graph()->get_subscriber_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
+    std::runtime_error);
+
+  // Check that node1_topic exists for node1 but not node2. This shouldn't exercise graph
+  // discovery as node_graph belongs to node1 anyway. This is just to test the API itself.
+  auto topics_of_node1 =
+    node_graph()->get_subscriber_names_and_types_by_node(node_name, absolute_namespace);
+  auto topics_of_node2 =
+    node_graph()->get_subscriber_names_and_types_by_node(node2_name, absolute_namespace);
+
+  auto start = std::chrono::steady_clock::now();
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+    topics_of_node1 =
+      node_graph()->get_subscriber_names_and_types_by_node(node_name, absolute_namespace);
+    topics_of_node2 =
+      node_graph()->get_subscriber_names_and_types_by_node(node2_name, absolute_namespace);
+    if (topics_of_node1.find("/ns/node1_topic") != topics_of_node1.end()) {
+      break;
+    }
+  }
+
+  EXPECT_TRUE(topics_of_node1.find("/ns/node1_topic") != topics_of_node1.end());
+  EXPECT_FALSE(topics_of_node2.find("/ns/node1_topic") != topics_of_node2.end());
+}
+
+TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_rcl_errors)
+{
+  const rclcpp::QoS publisher_qos(1);
+  auto publisher = node()->create_publisher<test_msgs::msg::Empty>("topic", publisher_qos);
+
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_publisher_names_and_types_by_node, RCL_RET_ERROR);
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->get_publisher_names_and_types_by_node(node_name, node_namespace),
+    std::runtime_error(
+      "failed to get topic names and types by node: error not set, failed also to cleanup"
+      " topic names and types, leaking memory: error not set"));
+}
+
+
+TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_rcl_errors)
+{
+  const rclcpp::QoS subscriber_qos(10);
+  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  auto subscription =
+    node()->create_subscription<test_msgs::msg::Empty>(
+    "topic", subscriber_qos, std::move(callback));
+
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_get_subscriber_names_and_types_by_node, RCL_RET_ERROR);
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->get_subscriber_names_and_types_by_node(node_name, node_namespace),
+    std::runtime_error(
+      "failed to get topic names and types by node: error not set, failed also to cleanup"
+      " topic names and types, leaking memory: error not set"));
+}
+
+TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_names_and_types_fini_error)
+{
+  const rclcpp::QoS publisher_qos(1);
+  auto publisher = node()->create_publisher<test_msgs::msg::Empty>("topic", publisher_qos);
+
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+
+  EXPECT_THROW(
+    node_graph()->get_publisher_names_and_types_by_node(node_name, absolute_namespace),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_names_and_types_fini_error)
+{
+  const rclcpp::QoS subscriber_qos(10);
+  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  auto subscription =
+    node()->create_subscription<test_msgs::msg::Empty>(
+    "topic", subscriber_qos, std::move(callback));
+
+  auto mock_names_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+
+  EXPECT_THROW(
+    node_graph()->get_subscriber_names_and_types_by_node(node_name, absolute_namespace),
     rclcpp::exceptions::RCLError);
 }
 
