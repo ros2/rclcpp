@@ -185,6 +185,7 @@ public:
 
   /// Return a map of existing service client names and types with a specific node.
   /**
+   * This function only considers clients - not service servers.
    * The returned names are the actual names used and do not have remap rules applied.
    *
    * \param[in] node_name name of the node
@@ -196,6 +197,40 @@ public:
   get_client_names_and_types_by_node(
     const std::string & node_name,
     const std::string & namespace_) const = 0;
+
+  /// Return a map of existing publisher topic names to list of topic types for a specific node.
+  /**
+   * This function only considers publications - not subscriptions.
+   * The returned names are the actual names used and do not have remap rules applied.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   * \param[in] no_demangle if true, topic names and types are not demangled
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_publisher_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_,
+    bool no_demangle = false) const = 0;
+
+  /// Return a map of existing subscriber topic names to list of topic types for a specific node.
+  /**
+   * This function only considers subscriptions - not publications.
+   * The returned names are the actual names used and do not have remap rules applied.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   * \param[in] no_demangle if true, topic names and types are not demangled
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_subscriber_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_,
+    bool no_demangle = false) const = 0;
 
   /// Return a vector of existing node names (string).
   /*
