@@ -76,11 +76,67 @@ struct SubscriptionOptionsBase
 
   QosOverridingOptions qos_overriding_options;
 
+  /// Enable use_default_callbacks setting.
+  SubscriptionOptionsBase &
+  enable_use_default_callbacks()
+  {
+    use_default_callbacks = true;
+    return *this;
+  }
+
+  /// Enable use_default_callbacks setting.
+  SubscriptionOptionsBase &
+  disable_use_default_callbacks()
+  {
+    use_default_callbacks = false;
+    return *this;
+  }
+
+  /// Enable ignore_local_publications setting.
+  SubscriptionOptionsBase &
+  enable_ignore_local_publications()
+  {
+    ignore_local_publications = true;
+    return *this;
+  }
+
+  /// Disable ignore_local_publications setting.
+  SubscriptionOptionsBase &
+  disable_ignore_local_publications()
+  {
+    ignore_local_publications = false;
+    return *this;
+  }
+
   /// Set callback group, parameter idiom style.
   SubscriptionOptionsBase &
   set_callback_group(rclcpp::CallbackGroup::SharedPtr group)
   {
     callback_group = group;
+    return *this;
+  }
+
+  /// Enable intra_process_comm setting.
+  SubscriptionOptionsBase &
+  enable_use_intra_process_comm()
+  {
+    use_intra_process_comm = IntraProcessSetting::Enable;
+    return *this;
+  }
+
+  /// Disable intra_process_comm setting.
+  SubscriptionOptionsBase &
+  disable_use_intra_process_comm()
+  {
+    use_intra_process_comm = IntraProcessSetting::Disable;
+    return *this;
+  }
+
+  /// Clear intra_process_comm setting
+  SubscriptionOptionsBase &
+  clear_use_intra_process_comm()
+  {
+    use_intra_process_comm = IntraProcessSetting::NodeDefault;
     return *this;
   }
 };

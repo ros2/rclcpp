@@ -54,16 +54,6 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-TEST_F(TestSubscriptionOptions, subscription_options_constructor) {
-  rclcpp::SubscriptionOptions option1;
-  EXPECT_EQ(option1.callback_group, nullptr);
-
-  auto group = std::make_shared<rclcpp::CallbackGroup>(rclcpp::CallbackGroupType::Reentrant);
-  rclcpp::SubscriptionOptions option2;
-  option2.set_callback_group(group);
-  EXPECT_EQ(option2.callback_group, group);
-}
-
 TEST_F(TestSubscriptionOptions, topic_statistics_options_default_and_set) {
   auto options = rclcpp::SubscriptionOptions();
 
@@ -110,4 +100,37 @@ TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
       subscription_options,
       *(node->get_node_base_interface())),
     std::runtime_error("Unrecognized EnableTopicStatistics value"));
+}
+
+TEST_F(TestSubscriptionOptions, use_default_callbacks_setters) {
+  auto option = rclcpp::SubscriptionOptions().disable_use_default_callbacks();
+  EXPECT_EQ(option.use_default_callbacks, false);
+
+  option.enable_use_default_callbacks();
+  EXPECT_EQ(option.use_default_callbacks, true);
+}
+
+TEST_F(TestSubscriptionOptions, ignore_local_publications_setters) {
+  auto option = rclcpp::SubscriptionOptions().disable_ignore_local_publications();
+  EXPECT_EQ(option.ignore_local_publications, false);
+
+  option.enable_ignore_local_publications();
+  EXPECT_EQ(option.ignore_local_publications, true);
+}
+
+TEST_F(TestSubscriptionOptions, callback_group_setters) {
+  auto group = std::make_shared<rclcpp::CallbackGroup>(rclcpp::CallbackGroupType::Reentrant);
+  auto option = rclcpp::SubscriptionOptions().set_callback_group(group);
+  EXPECT_EQ(option.callback_group, group);
+}
+
+TEST_F(TestSubscriptionOptions, use_intra_process_com_setters) {
+  auto option = rclcpp::SubscriptionOptions().enable_use_intra_process_comm();
+  EXPECT_EQ(option.use_intra_process_comm, rclcpp::IntraProcessSetting::Enable);
+
+  option.disable_use_intra_process_comm();
+  EXPECT_EQ(option.use_intra_process_comm, rclcpp::IntraProcessSetting::Disable);
+
+  option.clear_use_intra_process_comm();
+  EXPECT_EQ(option.use_intra_process_comm, rclcpp::IntraProcessSetting::NodeDefault);
 }
