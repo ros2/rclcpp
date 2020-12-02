@@ -120,10 +120,25 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_available_states)(benchmark::State & sta
 
 BENCHMARK_F(BenchmarkLifecycleNode, get_available_transitions)(benchmark::State & state) {
   for (auto _ : state) {
-    constexpr size_t expected_transitions = 25u;
+    constexpr size_t expected_transitions = 2u;
     const auto & transitions = node->get_available_transitions();
     if (transitions.size() != expected_transitions) {
       const std::string msg = std::to_string(transitions.size());
+      state.SkipWithError(msg.c_str());
+    }
+    benchmark::DoNotOptimize(transitions);
+    benchmark::ClobberMemory();
+  }
+}
+
+BENCHMARK_F(BenchmarkLifecycleNode, get_transition_graph)(benchmark::State & state) {
+  for (auto _ : state) {
+    constexpr size_t expected_transitions = 25u;
+    const auto & transitions = node->get_transition_graph();
+    if (transitions.size() != expected_transitions) {
+      const std::string msg =
+        std::string("Expected number of transitions did not match actual: ") +
+        std::to_string(transitions.size());
       state.SkipWithError(msg.c_str());
     }
     benchmark::DoNotOptimize(transitions);
