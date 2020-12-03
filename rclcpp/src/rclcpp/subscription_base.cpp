@@ -408,6 +408,9 @@ SubscriptionBase::set_cft_expression_parameters(
 
   for (size_t i = 0; i < expression_parameters.size(); ++i) {
     parameters.data[i] = rcutils_strdup(expression_parameters[i].c_str(), allocator);
+    if (!parameters.data[i]) {
+      throw std::runtime_error("failed to allocate memory for expression parameters");
+    }
   }
   rcl_ret_t ret = rcl_subscription_set_cft_expression_parameters(
     subscription_handle_.get(),
