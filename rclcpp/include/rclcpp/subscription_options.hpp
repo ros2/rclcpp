@@ -76,39 +76,23 @@ struct SubscriptionOptionsBase
 
   QosOverridingOptions qos_overriding_options;
 
-  /// Enable use_default_callbacks setting.
+  /// Set use_default_callbacks.
   SubscriptionOptionsBase &
-  enable_use_default_callbacks()
+  set_use_default_callbacks(bool uses)
   {
-    use_default_callbacks = true;
+    use_default_callbacks = uses;
     return *this;
   }
 
-  /// Enable use_default_callbacks setting.
+  /// Set ignore_local_publications.
   SubscriptionOptionsBase &
-  disable_use_default_callbacks()
+  set_ignore_local_publications(bool ignores)
   {
-    use_default_callbacks = false;
+    ignore_local_publications = ignores;
     return *this;
   }
 
-  /// Enable ignore_local_publications setting.
-  SubscriptionOptionsBase &
-  enable_ignore_local_publications()
-  {
-    ignore_local_publications = true;
-    return *this;
-  }
-
-  /// Disable ignore_local_publications setting.
-  SubscriptionOptionsBase &
-  disable_ignore_local_publications()
-  {
-    ignore_local_publications = false;
-    return *this;
-  }
-
-  /// Set callback group, parameter idiom style.
+  /// Set callback group.
   SubscriptionOptionsBase &
   set_callback_group(rclcpp::CallbackGroup::SharedPtr group)
   {
@@ -116,27 +100,11 @@ struct SubscriptionOptionsBase
     return *this;
   }
 
-  /// Enable intra_process_comm setting.
+  /// Set intra_process_comm.
   SubscriptionOptionsBase &
-  enable_use_intra_process_comm()
+  set_use_intra_process_comm(bool uses)
   {
-    use_intra_process_comm = IntraProcessSetting::Enable;
-    return *this;
-  }
-
-  /// Disable intra_process_comm setting.
-  SubscriptionOptionsBase &
-  disable_use_intra_process_comm()
-  {
-    use_intra_process_comm = IntraProcessSetting::Disable;
-    return *this;
-  }
-
-  /// Clear intra_process_comm setting
-  SubscriptionOptionsBase &
-  clear_use_intra_process_comm()
-  {
-    use_intra_process_comm = IntraProcessSetting::NodeDefault;
+    use_intra_process_comm = uses ? IntraProcessSetting::Enable : IntraProcessSetting::Disable;
     return *this;
   }
 };
