@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.5 (2020-12-04)
+------------------
+* Warn about unused result of add_on_set_parameters_callback (`#1238 <https://github.com/ros2/rclcpp/issues/1238>`_) (`#1243 <https://github.com/ros2/rclcpp/issues/1243>`_)
+* fix exception message on rcl_clock_init. (`#1194 <https://github.com/ros2/rclcpp/issues/1194>`_)
+* Check if context is valid when looping in spin_some (`#1167 <https://github.com/ros2/rclcpp/issues/1167>`_)
+* Fix spin_until_future_complete: check spinning value (`#1023 <https://github.com/ros2/rclcpp/issues/1023>`_)
+* Fix lock-order-inversion (potential deadlock) (`#1135 <https://github.com/ros2/rclcpp/issues/1135>`_) (`#1137 <https://github.com/ros2/rclcpp/issues/1137>`_)
+* Don't specify calling convention in std::_Binder template (`#952 <https://github.com/ros2/rclcpp/issues/952>`_) (`#1006 <https://github.com/ros2/rclcpp/issues/1006>`_)
+* Add missing service callback registration tracepoint (`#986 <https://github.com/ros2/rclcpp/issues/986>`_) (`#1004 <https://github.com/ros2/rclcpp/issues/1004>`_)
+* Allow node clock use in logging macros (`#969 <https://github.com/ros2/rclcpp/issues/969>`_) (`#970 <https://github.com/ros2/rclcpp/issues/970>`_) (`#981 <https://github.com/ros2/rclcpp/issues/981>`_)
+* Complete published event message when declaring a parameter (`#928 <https://github.com/ros2/rclcpp/issues/928>`_) (`#966 <https://github.com/ros2/rclcpp/issues/966>`_)
+* Contributors: Christophe Bedard, DongheeYe, Ivan Santiago Paunovic, Jacob Perron, Sean Kelly, Shane Loretz, tomoya
+
 0.8.4 (2020-01-17)
 ------------------
 * Intra-process subscriber should use RMW actual qos (ros2`#913 <https://github.com/ros2/rclcpp/issues/913>`_) (`#914 <https://github.com/ros2/rclcpp/issues/914>`_) (`#965 <https://github.com/ros2/rclcpp/issues/965>`_)
