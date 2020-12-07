@@ -77,6 +77,7 @@ struct SubscriptionOptionsBase
   QosOverridingOptions qos_overriding_options;
 
   /// Set use_default_callbacks.
+  RCLCPP_PUBLIC
   SubscriptionOptionsBase &
   set_use_default_callbacks(bool uses)
   {
@@ -85,6 +86,7 @@ struct SubscriptionOptionsBase
   }
 
   /// Set ignore_local_publications.
+  RCLCPP_PUBLIC
   SubscriptionOptionsBase &
   set_ignore_local_publications(bool ignores)
   {
@@ -93,6 +95,7 @@ struct SubscriptionOptionsBase
   }
 
   /// Set callback group.
+  RCLCPP_PUBLIC
   SubscriptionOptionsBase &
   set_callback_group(rclcpp::CallbackGroup::SharedPtr group)
   {
@@ -101,6 +104,7 @@ struct SubscriptionOptionsBase
   }
 
   /// Set intra_process_comm.
+  RCLCPP_PUBLIC
   SubscriptionOptionsBase &
   set_use_intra_process_comm(bool uses)
   {
