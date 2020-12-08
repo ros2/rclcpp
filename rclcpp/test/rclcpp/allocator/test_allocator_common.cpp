@@ -23,6 +23,8 @@ TEST(TestAllocatorCommon, retyped_allocate) {
   void * untyped_allocator = &allocator;
   void * allocated_mem =
     rclcpp::allocator::retyped_allocate<std::allocator<char>>(1u, untyped_allocator);
+  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
+  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != allocated_mem);
 
   auto code = [&untyped_allocator, allocated_mem]() {
@@ -32,10 +34,14 @@ TEST(TestAllocatorCommon, retyped_allocate) {
   EXPECT_NO_THROW(code());
 
   allocated_mem = allocator.allocate(1);
+  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
+  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != allocated_mem);
   void * reallocated_mem =
     rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
     allocated_mem, 2u, untyped_allocator);
+  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
+  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != reallocated_mem);
 
   auto code2 = [&untyped_allocator, reallocated_mem]() {
