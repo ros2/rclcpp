@@ -91,11 +91,17 @@ TEST(TestQoS, setters_and_getters) {
   qos.reliable();
   EXPECT_EQ(rclcpp::ReliabilityPolicy::Reliable, qos.reliability());
 
+  qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
+  EXPECT_EQ(rclcpp::ReliabilityPolicy::BestEffort, qos.reliability());
+
   qos.durability_volatile();
   EXPECT_EQ(rclcpp::DurabilityPolicy::Volatile, qos.durability());
 
   qos.transient_local();
   EXPECT_EQ(rclcpp::DurabilityPolicy::TransientLocal, qos.durability());
+
+  qos.durability(rclcpp::DurabilityPolicy::Volatile);
+  EXPECT_EQ(rclcpp::DurabilityPolicy::Volatile, qos.durability());
 
   qos.history(RMW_QOS_POLICY_HISTORY_KEEP_ALL);
   EXPECT_EQ(rclcpp::HistoryPolicy::KeepAll, qos.history());

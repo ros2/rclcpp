@@ -257,7 +257,7 @@ Duration::from_rmw_time(rmw_time_t duration)
     return ret;
   }
   uint64_t total_ns = RCL_S_TO_NS(duration.sec) + duration.nsec;
-  if (total_ns < duration.nsec) {
+  if (total_ns > limit) {
     // saturate if will overflow
     ret.rcl_duration_.nanoseconds = limit;
     return ret;
