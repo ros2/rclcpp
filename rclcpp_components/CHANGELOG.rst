@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (2020-12-09)
+------------------
+* Update QD to QL 1 (`#1480 <https://github.com/ros2/rclcpp/issues/1480>`_)
+* Add benchmarks for components (`#1479 <https://github.com/ros2/rclcpp/issues/1479>`_)
+* Contributors: Alejandro Hernández Cordero, Louise Poubel, Scott K Logan, Stephen Brawner
+
 2.2.0 (2020-10-07)
 ------------------
 * Include original exception in ComponentManagerException (`#1157 <https://github.com/ros2/rclcpp/issues/1157>`_) (`#1223 <https://github.com/ros2/rclcpp/issues/1223>`_)

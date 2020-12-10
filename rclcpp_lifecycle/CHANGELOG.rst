@@ -3,6 +3,17 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.3.0 (2020-12-09)
+------------------
+* Reserve vector capacities and use emplace_back for constructing vectors (`#1464 <https://github.com/ros2/rclcpp/issues/1464>`_) (`#1489 <https://github.com/ros2/rclcpp/issues/1489>`_)
+* Change uint8_t iterator variables to size_t (`#1461 <https://github.com/ros2/rclcpp/issues/1461>`_) (`#1488 <https://github.com/ros2/rclcpp/issues/1488>`_)
+* Update QD to QL 1 (`#1480 <https://github.com/ros2/rclcpp/issues/1480>`_)
+* Benchmark lifecycle features (`#1462 <https://github.com/ros2/rclcpp/issues/1462>`_) (`#1471 <https://github.com/ros2/rclcpp/issues/1471>`_)
+* Fix race in test_lifecycle_service_client (`#1204 <https://github.com/ros2/rclcpp/issues/1204>`_)
+* Increase test coverage of rclcpp_lifecycle to 96% (`#1298 <https://github.com/ros2/rclcpp/issues/1298>`_)
+* Add missing tests for rclcpp lifecycle (`#1240 <https://github.com/ros2/rclcpp/issues/1240>`_)
+* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Jacob Perron, Louise Poubel, Stephen Brawner
+
 2.2.0 (2020-10-07)
 ------------------
 * Log error instead of throwing exception in Transition and State reset() mark no except (`#1297 <https://github.com/ros2/rclcpp/issues/1297>`_) (`#1378 <https://github.com/ros2/rclcpp/issues/1378>`_)

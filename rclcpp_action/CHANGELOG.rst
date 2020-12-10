@@ -3,6 +3,16 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.3.0 (2020-12-09)
+------------------
+* Update QD to QL 1 (`#1480 <https://github.com/ros2/rclcpp/issues/1480>`_)
+* Add rclcpp_action action_server benchmarks (`#1433 <https://github.com/ros2/rclcpp/issues/1433>`_)
+* Benchmark rclcpp_action action_client (`#1429 <https://github.com/ros2/rclcpp/issues/1429>`_)
+* Increase test timeout necessary for Connext (`#1256 <https://github.com/ros2/rclcpp/issues/1256>`_)
+* Increase coverage rclcpp_action to 95% (`#1290 <https://github.com/ros2/rclcpp/issues/1290>`_)
+* Increase rclcpp_action test coverage (`#1153 <https://github.com/ros2/rclcpp/issues/1153>`_)
+* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Louise Poubel, Michel Hidalgo, Stephen Brawner, ahcorde, brawner
+
 2.2.0 (2020-10-07)
 ------------------
 
