@@ -152,7 +152,7 @@ TEST_F(TestDuration, from_rmw_time) {
   constexpr auto max_rcl_duration = std::numeric_limits<rcl_duration_value_t>::max();
   {
     rmw_time_t rmw_duration{};
-    rmw_duration.sec = max_rcl_duration + 1uLL;
+    rmw_duration.sec = RCL_NS_TO_S(max_rcl_duration) + 1uLL;
     EXPECT_EQ(rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds(), max_rcl_duration);
   }
   {
@@ -162,8 +162,8 @@ TEST_F(TestDuration, from_rmw_time) {
   }
   {
     rmw_time_t rmw_duration{};
-    rmw_duration.nsec = 0uLL;
-    rmw_duration.sec = RCL_NS_TO_S(max_rcl_duration) + 1uLL;
+    rmw_duration.nsec = max_rcl_duration;
+    rmw_duration.sec = RCL_NS_TO_S(max_rcl_duration);
     EXPECT_EQ(rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds(), max_rcl_duration);
   }
   {
