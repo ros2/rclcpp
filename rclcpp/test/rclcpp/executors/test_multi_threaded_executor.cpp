@@ -32,8 +32,17 @@ protected:
   {
     rclcpp::init(0, nullptr);
   }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
 };
 
+// While this tolerance is a little wide, if the bug occurs, the timer increment will
+// happen almost instantly. The purpose of this test is not to measure the jitter
+// in timers, just assert that a reasonable amount of time has passed.
 constexpr std::chrono::milliseconds PERIOD_MS = 1000ms;
 constexpr double PERIOD = PERIOD_MS.count() / 1000.0;
 constexpr double TOLERANCE = PERIOD / 4.0;
@@ -52,7 +61,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   }
 #endif
 
-  bool yield_before_execute = true;
+  constexpr bool yield_before_execute = true;
 
   rclcpp::executors::MultiThreadedExecutor executor(
     rclcpp::ExecutorOptions(), 2u, yield_before_execute);
@@ -66,14 +75,11 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
   rclcpp::Clock system_clock(RCL_STEADY_TIME);
   std::mutex last_mutex;
-  auto last = system_clock.now();
+  rclcpp::Time last;
 
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex, &last]() {
-      // While this tolerance is a little wide, if the bug occurs, the next step will
-      // happen almost instantly. The purpose of this test is not to measure the jitter
-      // in timers, just assert that a reasonable amount of time has passed.
       rclcpp::Time now = system_clock.now();
       timer_count++;
 
@@ -81,19 +87,22 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
         executor.cancel();
       }
 
+      double diff;
       {
         std::lock_guard<std::mutex> lock(last_mutex);
-        double diff = static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
+        diff = static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
         last = now;
+      }
 
-        if (diff < PERIOD - TOLERANCE) {
-          executor.cancel();
-          ASSERT_GT(diff, PERIOD - TOLERANCE);
-        }
+      if (diff < PERIOD - TOLERANCE) {
+        executor.cancel();
+        ASSERT_GT(diff, PERIOD - TOLERANCE);
       }
     };
 
   auto timer = node->create_wall_timer(PERIOD_MS, timer_callback, cbg);
   executor.add_node(node);
+  // Initialize last *right* before we start spinning
+  last = system_clock.now();
   executor.spin();
 }
