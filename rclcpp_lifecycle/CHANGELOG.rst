@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+6.1.0 (2020-12-10)
+------------------
 * add LifecycleNode::get_transition_graph to match services. (`#1472 <https://github.com/ros2/rclcpp/issues/1472>`_)
 * Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
 * Benchmark lifecycle features (`#1462 <https://github.com/ros2/rclcpp/issues/1462>`_)

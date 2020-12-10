@@ -2,8 +2,8 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.1.0 (2020-12-10)
+------------------
 * Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
 * Add benchmarks for components (`#1476 <https://github.com/ros2/rclcpp/issues/1476>`_)
 * Contributors: Scott K Logan, Stephen Brawner

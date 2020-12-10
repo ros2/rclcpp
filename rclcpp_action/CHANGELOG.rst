@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+6.1.0 (2020-12-10)
+------------------
 * Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
 * Contributors: Stephen Brawner
 
