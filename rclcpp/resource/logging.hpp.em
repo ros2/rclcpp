@@ -153,7 +153,7 @@ def get_rclcpp_suffix_from_features(features):
 @[ if 'stream' not in feature_combination]@
       __VA_ARGS__); \
 @[ else]@
-      "%s", ss.str()); \
+      "%s", ss.str().c_str()); \
 @[ end if]@
   } while (0)
 
