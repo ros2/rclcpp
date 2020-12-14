@@ -15,6 +15,8 @@
 #ifndef RCLCPP__PARAMETER_CLIENT_HPP_
 #define RCLCPP__PARAMETER_CLIENT_HPP_
 
+#include <functional>
+#include <future>
 #include <memory>
 #include <string>
 #include <utility>
@@ -118,6 +120,14 @@ public:
     const std::vector<std::string> & names,
     std::function<
       void(std::shared_future<std::vector<rclcpp::Parameter>>)
+    > callback = nullptr);
+
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>
+  describe_parameters(
+    const std::vector<std::string> & names,
+    std::function<
+      void(std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>)
     > callback = nullptr);
 
   RCLCPP_PUBLIC
@@ -377,6 +387,10 @@ public:
         })
     );
   }
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(const std::vector<std::string> & parameter_names);
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterType>
