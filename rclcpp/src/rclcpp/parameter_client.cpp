@@ -163,12 +163,7 @@ AsyncParametersClient::describe_parameters(
     [promise_result, future_result, callback](
       rclcpp::Client<rcl_interfaces::srv::DescribeParameters>::SharedFuture cb_f)
     {
-      std::vector<rcl_interfaces::msg::ParameterDescriptor> descriptors;
-      std::vector<rcl_interfaces::msg::ParameterDescriptor> & descs = cb_f.get()->descriptors;
-      for (rcl_interfaces::msg::ParameterDescriptor & desc : descs) {
-        descriptors.push_back(desc);
-      }
-      promise_result->set_value(descriptors);
+      promise_result->set_value(cb_f.get()->descriptors);
       if (callback != nullptr) {
         callback(future_result);
       }
