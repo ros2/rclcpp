@@ -277,7 +277,6 @@ public:
       return;
     }
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
-    any_callback_.dispatch(typed_message, message_info);
 
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
@@ -285,6 +284,8 @@ public:
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
       subscription_topic_statistics_->handle_message(*typed_message, time);
     }
+
+    any_callback_.dispatch(typed_message, message_info);
   }
 
   void
