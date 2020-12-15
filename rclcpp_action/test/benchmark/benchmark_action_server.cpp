@@ -187,8 +187,8 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_cancel_goal)(benchmark::S
 
     rclcpp::spin_until_future_complete(node, future_cancel, std::chrono::seconds(1));
     auto cancel_response = future_cancel.get();
-    using CancelResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
-    if (CancelResponse::ERROR_NONE != cancel_response->return_code) {
+    using CancelActionResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
+    if (CancelActionResponse::ERROR_NONE != cancel_response->return_code) {
       state.SkipWithError("Cancel request did not succeed");
       break;
     }
@@ -247,12 +247,12 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_set_success)(benchmark::S
   // too wide, they at least could agree it was fine. In my testing MSVC errored if goal_order was
   // not captured, but clang would warn if it was explicitly captured.
   const auto result = [&]() {
-      auto result = std::make_shared<Fibonacci::Result>();
+      auto action_result = std::make_shared<Fibonacci::Result>();
       for (int i = 0; i < goal_order; ++i) {
         // Not the fibonacci sequence, but that's not important to this benchmark
-        result->sequence.push_back(i);
+        action_result->sequence.push_back(i);
       }
-      return result;
+      return action_result;
     } ();
 
   reset_heap_counters();
@@ -291,12 +291,12 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_abort)(benchmark::State &
 
   // Capturing with & because MSVC and Clang disagree about how to capture goal_order
   const auto result = [&]() {
-      auto result = std::make_shared<Fibonacci::Result>();
+      auto action_result = std::make_shared<Fibonacci::Result>();
       for (int i = 0; i < goal_order; ++i) {
         // Not the fibonacci sequence, but that's not important to this benchmark
-        result->sequence.push_back(i);
+        action_result->sequence.push_back(i);
       }
-      return result;
+      return action_result;
     } ();
 
   reset_heap_counters();
