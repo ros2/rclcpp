@@ -14,7 +14,6 @@
 
 #include <memory>
 #include <string>
-#include <cstdarg>
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
