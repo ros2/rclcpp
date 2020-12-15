@@ -41,11 +41,8 @@ EventsExecutor::EventsExecutor(
   executor_notifier_->add_guard_condition(context_interrupt_gc);
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
   executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
-  executor_notifier_->set_on_destruction_callback(
-    std::bind(
-      &EventsExecutor::remove_entity<rclcpp::Waitable>,
-      this,
-      std::placeholders::_1));
+  entities_collector_->add_waitable(executor_notifier_);
+  entities_collector_->add_waitable(entities_collector_);
 }
 
 void
@@ -268,33 +265,53 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
   switch (event.type) {
     case SUBSCRIPTION_EVENT:
       {
-        auto subscription = const_cast<rclcpp::SubscriptionBase *>(
-          static_cast<const rclcpp::SubscriptionBase *>(event.entity));
-        execute_subscription(subscription);
+        auto subscription = entities_collector_->subscription_get_shared(event.entity);
+
+        if(subscription) {
+          execute_subscription(subscription);
+        } else {
+           RCUTILS_LOG_WARN_NAMED(
+            "events_executor.cpp",
+            "Failed to find subscription. Either not found or expired.");
+        }
         break;
       }
 
     case SERVICE_EVENT:
       {
-        auto service = const_cast<rclcpp::ServiceBase *>(
-          static_cast<const rclcpp::ServiceBase *>(event.entity));
-        execute_service(service);
+        auto service = entities_collector_->service_get_shared(event.entity);
+
+        if(service) {
+          execute_service(service);
+        } else {
+          throw std::runtime_error("Failed to find service. Either not found or expired.");
+        }
         break;
       }
 
     case CLIENT_EVENT:
       {
-        auto client = const_cast<rclcpp::ClientBase *>(
-          static_cast<const rclcpp::ClientBase *>(event.entity));
-        execute_client(client);
+        auto client = entities_collector_->client_get_shared(event.entity);
+
+        if(client) {
+          execute_client(client);
+        } else {
+          throw std::runtime_error("Failed to find client. Either not found or expired.");
+        }
         break;
       }
 
     case WAITABLE_EVENT:
       {
-        auto waitable = const_cast<rclcpp::Waitable *>(
-          static_cast<const rclcpp::Waitable *>(event.entity));
-        waitable->execute();
+        auto waitable = entities_collector_->waitable_get_shared(event.entity);
+
+        if(waitable) {
+          waitable->execute();
+        } else {
+          RCUTILS_LOG_WARN_NAMED(
+            "events_executor.cpp",
+            "Failed to find waitable. Either not found or expired.");
+        }
         break;
       }
   }

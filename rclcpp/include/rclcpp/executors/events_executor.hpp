@@ -198,40 +198,6 @@ private:
     this_executor->event_queue_cv_.notify_one();
   }
 
-  // This function allows to remove an entity from the EventsExecutor.
-  // Entities are any of SubscriptionBase, PublisherBase, ClientBase, ServerBase, Waitable.
-  // After an entity has been removed using this API, it can be safely destroyed without the risk
-  // that the executor would try to access it again.
-  template<typename T>
-  void
-  remove_entity(T * entity)
-  {
-    // We need to unset the callbacks to make sure that after removing events from the
-    // queues, this entity will not push anymore before being completely destroyed.
-    // This assumes that all supported entities implement this function.
-    entity->set_events_executor_callback(nullptr, nullptr);
-
-    // Remove events associated with this entity from the event queue
-    {
-      std::unique_lock<std::mutex> lock(push_mutex_);
-      event_queue_.erase(
-        std::remove_if(
-          event_queue_.begin(), event_queue_.end(),
-          [&entity](rmw_listener_event_t event) {return event.entity == entity;}), event_queue_.end());
-    }
-
-    // Remove events associated with this entity from the local event queue
-    {
-      std::unique_lock<std::mutex> lock(execution_mutex_);
-      execution_event_queue_.erase(
-        std::remove_if(
-          execution_event_queue_.begin(), execution_event_queue_.end(),
-          [&entity](rmw_listener_event_t event) {
-            return event.entity == entity;
-          }), execution_event_queue_.end());
-    }
-  }
-
   /// Extract and execute events from the queue until it is empty
   RCLCPP_PUBLIC
   void

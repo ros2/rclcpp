@@ -178,13 +178,6 @@ public:
     const rclcpp::executors::EventsExecutor * executor,
     rmw_listener_cb_t executor_callback) const;
 
-  RCLCPP_PUBLIC
-  void
-  set_on_destruction_callback(std::function<void(Waitable *)> on_destruction_callback);
-
-protected:
-  std::function<void(Waitable *)> on_destruction_callback_;
-
 private:
   std::atomic<bool> in_use_by_wait_set_{false};
 };  // class Waitable

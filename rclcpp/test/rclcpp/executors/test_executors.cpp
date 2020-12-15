@@ -418,10 +418,6 @@ public:
 
   ~TestWaitable()
   {
-    if (on_destruction_callback_) {
-      on_destruction_callback_(this);
-    }
-
     rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
     if (RCL_RET_OK != ret) {
       fprintf(stderr, "failed to call rcl_guard_condition_fini\n");

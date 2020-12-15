@@ -141,6 +141,50 @@ public:
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_automatically_added_callback_groups_from_nodes();
 
+  ///
+  /**
+   * Get the subscription shared pointer corresponding
+   * to the type erased raw subscription pointer
+   */
+  RCLCPP_PUBLIC
+  rclcpp::SubscriptionBase::SharedPtr
+  subscription_get_shared(const void * subscription);
+
+  ///
+  /**
+   * Get the client shared pointer corresponding
+   * to the type erased raw client pointer
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ClientBase::SharedPtr
+  client_get_shared(const void * client);
+
+  ///
+  /**
+   * Get the service shared pointer corresponding
+   * to the type erased raw service pointer
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ServiceBase::SharedPtr
+  service_get_shared(const void * service);
+
+  ///
+  /**
+   * Get the waitable shared pointer corresponding
+   * to the type erased raw waitable pointer
+   */
+  RCLCPP_PUBLIC
+  rclcpp::Waitable::SharedPtr
+  waitable_get_shared(const void * waitable);
+
+  ///
+  /**
+   * Add a weak pointer to a waitable
+   */
+  RCLCPP_PUBLIC
+  void
+  add_waitable(rclcpp::Waitable::SharedPtr waitable);
+
 private:
   void
   set_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
@@ -190,6 +234,15 @@ private:
 
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+  // Vector of weak pointers to subscriptions registered in the executor
+  std::vector<rclcpp::SubscriptionBase::WeakPtr> weak_subscriptions_;
+  // Vector of weak pointers to services registered in the executor
+  std::vector<rclcpp::ServiceBase::WeakPtr> weak_services_;
+  // Vector of weak pointers to clients registered in the executor
+  std::vector<rclcpp::ClientBase::WeakPtr> weak_clients_;
+  // Vector of weak pointers to waitables registered in the executor
+  std::vector<rclcpp::Waitable::WeakPtr> weak_waitables_;
+
   /// Executor using this entities collector object
   EventsExecutor * associated_executor_ = nullptr;
   /// Instance of the timers manager used by the associated executor

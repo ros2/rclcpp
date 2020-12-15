@@ -70,11 +70,15 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     }
   }
 
-  // Clear all lists
+  // Clear all containers
+  weak_nodes_.clear();
+  weak_clients_.clear();
+  weak_services_.clear();
+  weak_waitables_.clear();
+  weak_subscriptions_.clear();
+  weak_nodes_to_guard_conditions_.clear();
   weak_groups_associated_with_executor_to_nodes_.clear();
   weak_groups_to_nodes_associated_with_executor_.clear();
-  weak_nodes_to_guard_conditions_.clear();
-  weak_nodes_.clear();
 }
 
 void
@@ -227,11 +231,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         subscription->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        subscription->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::SubscriptionBase>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_subscriptions_.push_back(subscription);
       }
       return false;
     });
@@ -241,11 +241,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         service->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        service->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::ServiceBase>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_services_.push_back(service);
       }
       return false;
     });
@@ -255,11 +251,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         client->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        client->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::ClientBase>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_clients_.push_back(client);
       }
       return false;
     });
@@ -269,11 +261,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         waitable->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        waitable->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::Waitable>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_waitables_.push_back(waitable);
       }
       return false;
     });
@@ -298,7 +286,16 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
       if (subscription) {
         subscription->set_events_executor_callback(nullptr, nullptr);
-        subscription->set_on_destruction_callback(nullptr);
+        // Remove subscription weak pointer
+        auto subscription_it = weak_subscriptions_.begin();
+        while (subscription_it != weak_subscriptions_.end()) {
+          bool matched = (subscription_it->lock() == subscription);
+          if (matched) {
+            weak_subscriptions_.erase(subscription_it);
+            break;
+          }
+          ++subscription_it;
+        }
       }
       return false;
     });
@@ -306,7 +303,17 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::ServiceBase::SharedPtr & service) {
       if (service) {
         service->set_events_executor_callback(nullptr, nullptr);
-        service->set_on_destruction_callback(nullptr);
+        // Remove service weak pointer
+        auto service_it = weak_services_.begin();
+        while (service_it != weak_services_.end()) {
+          bool matched = (service_it->lock() == service);
+          if (matched) {
+            weak_services_.erase(service_it);
+            break;
+          }
+          ++service_it;
+        }
+
       }
       return false;
     });
@@ -314,7 +321,16 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::ClientBase::SharedPtr & client) {
       if (client) {
         client->set_events_executor_callback(nullptr, nullptr);
-        client->set_on_destruction_callback(nullptr);
+        // Remove client weak pointer
+        auto client_it = weak_clients_.begin();
+        while (client_it != weak_clients_.end()) {
+          bool matched = (client_it->lock() == client);
+          if (matched) {
+            weak_clients_.erase(client_it);
+            break;
+          }
+          ++client_it;
+        }
       }
       return false;
     });
@@ -322,7 +338,16 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::Waitable::SharedPtr & waitable) {
       if (waitable) {
         waitable->set_events_executor_callback(nullptr, nullptr);
-        waitable->set_on_destruction_callback(nullptr);
+        // Remove waitable weak pointer
+        auto waitable_it = weak_waitables_.begin();
+        while (waitable_it != weak_waitables_.end()) {
+          bool matched = (waitable_it->lock() == waitable);
+          if (matched) {
+            weak_waitables_.erase(waitable_it);
+            break;
+          }
+          ++waitable_it;
+        }
       }
       return false;
     });
@@ -510,4 +535,70 @@ EventsExecutorEntitiesCollector::unset_guard_condition_callback(
   if (ret != RCL_RET_OK) {
     throw std::runtime_error("Couldn't unset guard condition event callback");
   }
+}
+
+rclcpp::SubscriptionBase::SharedPtr
+EventsExecutorEntitiesCollector::subscription_get_shared(const void * subscription)
+{
+  // Check if this subscription is currently stored here
+  for (auto & weak_sub_it : weak_subscriptions_) {
+    if (auto sub_shared_ptr = weak_sub_it.lock()) {
+      if (sub_shared_ptr.get() == subscription) {
+        return sub_shared_ptr;
+      }
+    }
+  }
+  // The subscription was either not found or expired
+  return nullptr;
+}
+
+rclcpp::ClientBase::SharedPtr
+EventsExecutorEntitiesCollector::client_get_shared(const void * client)
+{
+  // Check if this client is currently stored here
+  for (auto & weak_client_it : weak_clients_) {
+    if (auto client_shared_ptr = weak_client_it.lock()) {
+      if (client_shared_ptr.get() == client) {
+        return client_shared_ptr;
+      }
+    }
+  }
+  // The client was either not found or expired
+  return nullptr;
+}
+
+rclcpp::ServiceBase::SharedPtr
+EventsExecutorEntitiesCollector::service_get_shared(const void * service)
+{
+  // Check if this service is currently stored here
+  for (auto & weak_service_it : weak_services_) {
+    if (auto service_shared_ptr = weak_service_it.lock()) {
+      if (service_shared_ptr.get() == service) {
+        return service_shared_ptr;
+      }
+    }
+  }
+  // The service was either not found or expired
+  return nullptr;
+}
+
+rclcpp::Waitable::SharedPtr
+EventsExecutorEntitiesCollector::waitable_get_shared(const void * waitable)
+{
+  // Check if this waitable is currently stored here
+  for (auto & weak_waitable_it : weak_waitables_) {
+    if (auto waitable_shared_ptr = weak_waitable_it.lock()) {
+      if (waitable_shared_ptr.get() == waitable) {
+        return waitable_shared_ptr;
+      }
+    }
+  }
+  // The waitable was either not found or expired
+  return nullptr;
+}
+
+void
+EventsExecutorEntitiesCollector::add_waitable(rclcpp::Waitable::SharedPtr waitable)
+{
+  weak_waitables_.push_back(waitable);
 }

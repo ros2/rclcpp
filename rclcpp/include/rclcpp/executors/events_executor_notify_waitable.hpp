@@ -40,12 +40,7 @@ public:
 
   // Destructor
   RCLCPP_PUBLIC
-  virtual ~EventsExecutorNotifyWaitable()
-  {
-    if (on_destruction_callback_) {
-      on_destruction_callback_(this);
-    }
-  }
+  virtual ~EventsExecutorNotifyWaitable() = default;
 
   // The function is a no-op, since we only care of waking up the executor
   RCLCPP_PUBLIC
