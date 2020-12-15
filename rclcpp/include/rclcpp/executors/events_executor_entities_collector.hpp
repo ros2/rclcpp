@@ -234,14 +234,14 @@ private:
 
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
-  // Vector of weak pointers to subscriptions registered in the executor
-  std::vector<rclcpp::SubscriptionBase::WeakPtr> weak_subscriptions_;
-  // Vector of weak pointers to services registered in the executor
-  std::vector<rclcpp::ServiceBase::WeakPtr> weak_services_;
-  // Vector of weak pointers to clients registered in the executor
-  std::vector<rclcpp::ClientBase::WeakPtr> weak_clients_;
-  // Vector of weak pointers to waitables registered in the executor
-  std::vector<rclcpp::Waitable::WeakPtr> weak_waitables_;
+  // Map of weak pointers to subscriptions registered in the executor
+  std::map<const void *, rclcpp::SubscriptionBase::WeakPtr> weak_subscriptions_map_;
+  // Map of weak pointers to services registered in the executor
+  std::map<const void *, rclcpp::ServiceBase::WeakPtr> weak_services_map_;
+  // Map of weak pointers to clients registered in the executor
+  std::map<const void *, rclcpp::ClientBase::WeakPtr> weak_clients_map_;
+  // Map of weak pointers to waitables registered in the executor
+  std::map<const void *, rclcpp::Waitable::WeakPtr> weak_waitables_map_;
 
   /// Executor using this entities collector object
   EventsExecutor * associated_executor_ = nullptr;
