@@ -474,10 +474,10 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
 
   if (result_response) {
     // Send the result now
-    rcl_ret_t ret = rcl_action_send_result_response(
+    rcl_ret_t rcl_ret = rcl_action_send_result_response(
       pimpl_->action_server_.get(), &request_header, result_response.get());
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+    if (RCL_RET_OK != rcl_ret) {
+      rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
   } else {
     // Store the request so it can be responded to later
