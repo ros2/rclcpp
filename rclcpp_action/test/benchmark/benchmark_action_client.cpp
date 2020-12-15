@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <string>
+#include <cstdarg>
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -81,7 +82,7 @@ public:
 
     // Should be checked by the server above
     assert(goal->order > 0);
-    result->sequence.resize(goal->order);
+    result->sequence.resize(static_cast<size_t>(goal->order));
     result->sequence[0] = 0;
     if (goal->order == 1) {
       current_goal_handle->succeed(result);
