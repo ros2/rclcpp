@@ -283,14 +283,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
       if (subscription) {
         subscription->set_events_executor_callback(nullptr, nullptr);
-        // Remove subscription from map
-        for (const auto & pair : weak_subscriptions_map_) {
-          if (auto subscription_shared_ptr = pair.second.lock()) {
-            if(subscription == subscription_shared_ptr) {
-              weak_subscriptions_map_.erase(pair.first);
-            }
-          }
-        }
+        weak_subscriptions_map_.erase(subscription.get());
       }
       return false;
     });
@@ -298,14 +291,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::ServiceBase::SharedPtr & service) {
       if (service) {
         service->set_events_executor_callback(nullptr, nullptr);
-        // Remove service from map
-        for (const auto & pair : weak_services_map_) {
-          if (auto service_shared_ptr = pair.second.lock()) {
-            if(service == service_shared_ptr) {
-              weak_services_map_.erase(pair.first);
-            }
-          }
-        }
+        weak_services_map_.erase(service.get());
       }
       return false;
     });
@@ -313,14 +299,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::ClientBase::SharedPtr & client) {
       if (client) {
         client->set_events_executor_callback(nullptr, nullptr);
-        // Remove client from map
-        for (const auto & pair : weak_clients_map_) {
-          if (auto client_shared_ptr = pair.second.lock()) {
-            if(client == client_shared_ptr) {
-              weak_clients_map_.erase(pair.first);
-            }
-          }
-        }
+        weak_clients_map_.erase(client.get());
       }
       return false;
     });
@@ -328,14 +307,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::Waitable::SharedPtr & waitable) {
       if (waitable) {
         waitable->set_events_executor_callback(nullptr, nullptr);
-        // Remove waitable from map
-        for (const auto & pair : weak_waitables_map_) {
-          if (auto waitable_shared_ptr = pair.second.lock()) {
-            if(waitable == waitable_shared_ptr) {
-              weak_waitables_map_.erase(pair.first);
-            }
-          }
-        }
+        weak_waitables_map_.erase(waitable.get());
       }
       return false;
     });
