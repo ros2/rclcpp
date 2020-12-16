@@ -278,14 +278,19 @@ public:
     }
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
 
+    std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now());
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      // get current time before executing callback to exclude callback duration from topic statistics result.
+      now = std::chrono::system_clock::now();
     }
 
     any_callback_.dispatch(typed_message, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      subscription_topic_statistics_->handle_message(*typed_message, time);
+    }
   }
 
   void
