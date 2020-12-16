@@ -280,7 +280,8 @@ public:
 
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
-      // get current time before executing callback to exclude callback duration from topic statistics result.
+      // get current time before executing callback to
+      // exclude callback duration from topic statistics result.
       now = std::chrono::system_clock::now();
     }
 
