@@ -73,6 +73,7 @@ void TimersManager::stop()
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
     timers_updated_ = true;
+    heap_.release_timers();
   }
   timers_cv_.notify_one();
 
