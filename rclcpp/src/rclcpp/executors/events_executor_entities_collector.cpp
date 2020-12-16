@@ -218,8 +218,6 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
     [this](const rclcpp::TimerBase::SharedPtr & timer) {
       if (timer) {
         timers_manager_->add_timer(timer);
-        timer->set_on_destruction_callback(
-          std::bind(&TimersManager::remove_timer_raw, timers_manager_, std::placeholders::_1));
       }
       return false;
     });
@@ -276,7 +274,6 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::TimerBase::SharedPtr & timer) {
       if (timer) {
         timers_manager_->remove_timer(timer);
-        timer->set_on_destruction_callback(nullptr);
       }
       return false;
     });
@@ -537,7 +534,7 @@ EventsExecutorEntitiesCollector::subscription_get_shared(const void * subscripti
     return subscription_shared_ptr;
   }
 
-  // The waitable expired, return a null pointer
+  // The subscription expired, return a null pointer
   return nullptr;
 }
 

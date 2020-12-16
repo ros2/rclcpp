@@ -121,12 +121,6 @@ public:
    */
   void remove_timer(rclcpp::TimerBase::SharedPtr timer);
 
-  /**
-   * @brief Remove a single timer stored in the object, passed as a raw ptr.
-   * @param timer the timer to remove.
-   */
-  void remove_timer_raw(rclcpp::TimerBase * timer);
-
   // This is what the TimersManager uses to denote a duration forever.
   // We don't use std::chrono::nanoseconds::max because it will overflow.
   // See https://en.cppreference.com/w/cpp/thread/condition_variable/wait_for
@@ -135,7 +129,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
 
-  using TimerPtr = rclcpp::TimerBase *;
+  using TimerPtr = rclcpp::TimerBase::SharedPtr;
 
   /**
    * @brief This struct provides convenient access to a MinHeap of timers.
@@ -147,11 +141,31 @@ private:
     void add_timer(TimerPtr timer)
     {
       // Nothing to do if the timer is already stored here
-      auto it = std::find(timers_.begin(), timers_.end(), timer);
-      if (it != timers_.end()) {
-        return;
+      for(const auto & weak_timer : weak_timers_) {
+        bool matched = (weak_timer.lock() == timer);
+        if (matched) {
+          return;
+        }
       }
-      timers_.push_back(timer);
+
+      weak_timers_.push_back(timer);
+    }
+
+    void own_timers()
+    {
+      auto weak_timer_it = weak_timers_.begin();
+
+      while (weak_timer_it != weak_timers_.end()) {
+        if (auto timer_shared_ptr = weak_timer_it->lock()) {
+          // The timer is valid, add it to owned timers vector
+          timers_.push_back(timer_shared_ptr);
+        } else {
+          // The timer went out of scope, remove it
+          weak_timers_.erase(weak_timer_it);
+        }
+        weak_timer_it++;
+      }
+
       std::make_heap(timers_.begin(), timers_.end(), timer_greater);
     }
 
@@ -170,13 +184,19 @@ private:
 
     void remove_timer(TimerPtr timer)
     {
-      // Nothing to do if the timer is not stored here
-      auto it = std::find(timers_.begin(), timers_.end(), timer);
-      if (it == timers_.end()) {
-        return;
+      auto weak_timer_it = weak_timers_.begin();
+
+      while (weak_timer_it != weak_timers_.end()) {
+        bool matched = (weak_timer_it->lock() == timer);
+        if (matched) {
+          weak_timers_.erase(weak_timer_it);
+          break;
+        }
+        weak_timer_it++;
       }
-      timers_.erase(it);
-      std::make_heap(timers_.begin(), timers_.end(), timer_greater);
+      if ((weak_timer_it == weak_timers_.end()) && (!weak_timers_.empty())) {
+        throw std::runtime_error("Tried to remove timer not stored in the timers manager.");
+      }
     }
 
     TimerPtr & front()
@@ -194,7 +214,7 @@ private:
       return timers_.empty();
     }
 
-    void clear()
+    void release_timers()
     {
       timers_.clear();
     }
@@ -204,8 +224,10 @@ private:
       return a->time_until_trigger() > b->time_until_trigger();
     }
 
-    // Vector of pointers to timers used to implement the priority queue
+    // Vector of temporary owned timers used to implement the priority queue
     std::vector<TimerPtr> timers_;
+    // Vector of weak pointers to timers registered in the executor
+    std::vector<rclcpp::TimerBase::WeakPtr> weak_timers_;
   };
 
   /**

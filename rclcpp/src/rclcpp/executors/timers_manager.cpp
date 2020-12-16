@@ -43,7 +43,7 @@ void TimersManager::add_timer(rclcpp::TimerBase::SharedPtr timer)
 
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
-    heap_.add_timer(timer.get());
+    heap_.add_timer(timer);
     timers_updated_ = true;
   }
 
@@ -164,10 +164,14 @@ void TimersManager::run_timers()
 
     // Get timeout before next timer expires
     auto time_to_sleep = this->get_head_timeout_unsafe();
+    // Release timers ownership
+    heap_.release_timers();
     // Wait until timeout or notification that timers have been updated
     timers_cv_.wait_for(timers_lock, time_to_sleep, [this]() {return timers_updated_;});
     // Reset timers updated flag
     timers_updated_ = false;
+    // Own timer during execution
+    heap_.own_timers();
     // Execute timers
     this->execute_ready_timers_unsafe();
   }
@@ -182,7 +186,7 @@ void TimersManager::clear()
   {
     // Lock mutex and then clear all data structures
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
-    heap_.clear();
+    heap_.release_timers();
 
     timers_updated_ = true;
   }
@@ -191,12 +195,7 @@ void TimersManager::clear()
   timers_cv_.notify_one();
 }
 
-void TimersManager::remove_timer(rclcpp::TimerBase::SharedPtr timer)
-{
-  this->remove_timer_raw(timer.get());
-}
-
-void TimersManager::remove_timer_raw(rclcpp::TimerBase * timer)
+void TimersManager::remove_timer(TimerPtr timer)
 {
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
