@@ -498,55 +498,31 @@ EventsExecutorEntitiesCollector::unset_guard_condition_callback(
 }
 
 rclcpp::SubscriptionBase::SharedPtr
-EventsExecutorEntitiesCollector::subscription_get_shared(const void * subscription)
+EventsExecutorEntitiesCollector::get_subscription(const void * subscription)
 {
   auto subscription_weak_ptr = weak_subscriptions_map_.at(subscription);
-
-  if(auto subscription_shared_ptr = subscription_weak_ptr.lock()) {
-    return subscription_shared_ptr;
-  }
-
-  // The subscription expired, return a null pointer
-  return nullptr;
+  return subscription_weak_ptr.lock();
 }
 
 rclcpp::ClientBase::SharedPtr
-EventsExecutorEntitiesCollector::client_get_shared(const void * client)
+EventsExecutorEntitiesCollector::get_client(const void * client)
 {
   auto client_weak_ptr = weak_clients_map_.at(client);
-
-  if(auto client_shared_ptr = client_weak_ptr.lock()) {
-    return client_shared_ptr;
-  }
-
-  // The client expired, return a null pointer
-  return nullptr;
+  return client_weak_ptr.lock();
 }
 
 rclcpp::ServiceBase::SharedPtr
-EventsExecutorEntitiesCollector::service_get_shared(const void * service)
+EventsExecutorEntitiesCollector::get_service(const void * service)
 {
   auto service_weak_ptr = weak_services_map_.at(service);
-
-  if(auto service_shared_ptr = service_weak_ptr.lock()) {
-    return service_shared_ptr;
-  }
-
-  // The service expired, return a null pointer
-  return nullptr;
+  return service_weak_ptr.lock();
 }
 
 rclcpp::Waitable::SharedPtr
-EventsExecutorEntitiesCollector::waitable_get_shared(const void * waitable)
+EventsExecutorEntitiesCollector::get_waitable(const void * waitable)
 {
   auto waitable_weak_ptr = weak_waitables_map_.at(waitable);
-
-  if(auto waitable_shared_ptr = waitable_weak_ptr.lock()) {
-    return waitable_shared_ptr;
-  }
-
-  // The waitable expired, return a null pointer
-  return nullptr;
+  return waitable_weak_ptr.lock();
 }
 
 void

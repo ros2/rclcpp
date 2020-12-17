@@ -265,52 +265,40 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
   switch (event.type) {
     case SUBSCRIPTION_EVENT:
       {
-        auto subscription = entities_collector_->subscription_get_shared(event.entity);
+        auto subscription = entities_collector_->get_subscription(event.entity);
 
         if(subscription) {
           execute_subscription(subscription);
-        } else {
-           RCUTILS_LOG_WARN_NAMED(
-            "events_executor.cpp",
-            "Failed to find subscription. Either not found or expired.");
         }
         break;
       }
 
     case SERVICE_EVENT:
       {
-        auto service = entities_collector_->service_get_shared(event.entity);
+        auto service = entities_collector_->get_service(event.entity);
 
         if(service) {
           execute_service(service);
-        } else {
-          throw std::runtime_error("Failed to find service. Either not found or expired.");
         }
         break;
       }
 
     case CLIENT_EVENT:
       {
-        auto client = entities_collector_->client_get_shared(event.entity);
+        auto client = entities_collector_->get_client(event.entity);
 
         if(client) {
           execute_client(client);
-        } else {
-          throw std::runtime_error("Failed to find client. Either not found or expired.");
         }
         break;
       }
 
     case WAITABLE_EVENT:
       {
-        auto waitable = entities_collector_->waitable_get_shared(event.entity);
+        auto waitable = entities_collector_->get_waitable(event.entity);
 
         if(waitable) {
           waitable->execute();
-        } else {
-          RCUTILS_LOG_WARN_NAMED(
-            "events_executor.cpp",
-            "Failed to find waitable. Either not found or expired.");
         }
         break;
       }

@@ -148,7 +148,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
-  subscription_get_shared(const void * subscription);
+  get_subscription(const void * subscription);
 
   ///
   /**
@@ -157,7 +157,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::ClientBase::SharedPtr
-  client_get_shared(const void * client);
+  get_client(const void * client);
 
   ///
   /**
@@ -166,7 +166,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::ServiceBase::SharedPtr
-  service_get_shared(const void * service);
+  get_service(const void * service);
 
   ///
   /**
@@ -175,7 +175,7 @@ public:
    */
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
-  waitable_get_shared(const void * waitable);
+  get_waitable(const void * waitable);
 
   ///
   /**
