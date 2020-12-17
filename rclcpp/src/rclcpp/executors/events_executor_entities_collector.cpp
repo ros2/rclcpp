@@ -501,28 +501,56 @@ rclcpp::SubscriptionBase::SharedPtr
 EventsExecutorEntitiesCollector::get_subscription(const void * subscription)
 {
   auto subscription_weak_ptr = weak_subscriptions_map_.at(subscription);
-  return subscription_weak_ptr.lock();
+
+  if(auto subscription_shared_ptr = subscription_weak_ptr.lock()) {
+    return subscription_shared_ptr;
+  }
+
+  // The subscription expired, remove from map
+  weak_subscriptions_map_.erase(subscription);
+  return nullptr;
 }
 
 rclcpp::ClientBase::SharedPtr
 EventsExecutorEntitiesCollector::get_client(const void * client)
 {
   auto client_weak_ptr = weak_clients_map_.at(client);
-  return client_weak_ptr.lock();
+
+  if(auto client_shared_ptr = client_weak_ptr.lock()) {
+    return client_shared_ptr;
+  }
+
+  // The client expired, remove from map
+  weak_clients_map_.erase(client);
+  return nullptr;
 }
 
 rclcpp::ServiceBase::SharedPtr
 EventsExecutorEntitiesCollector::get_service(const void * service)
 {
   auto service_weak_ptr = weak_services_map_.at(service);
-  return service_weak_ptr.lock();
+
+  if(auto service_shared_ptr = service_weak_ptr.lock()) {
+    return service_shared_ptr;
+  }
+
+  // The service expired, remove from map
+  weak_services_map_.erase(service);
+  return nullptr;
 }
 
 rclcpp::Waitable::SharedPtr
 EventsExecutorEntitiesCollector::get_waitable(const void * waitable)
 {
   auto waitable_weak_ptr = weak_waitables_map_.at(waitable);
-  return waitable_weak_ptr.lock();
+
+  if(auto waitable_shared_ptr = waitable_weak_ptr.lock()) {
+    return waitable_shared_ptr;
+  }
+
+  // The waitable expired, remove from map
+  weak_waitables_map_.erase(waitable);
+  return nullptr;
 }
 
 void
