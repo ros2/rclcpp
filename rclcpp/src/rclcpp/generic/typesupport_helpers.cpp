@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp_generic/typesupport_helpers.hpp"
+#include "rclcpp/generic/typesupport_helpers.hpp"
 
 #include <memory>
 #include <sstream>

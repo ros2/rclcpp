@@ -5,6 +5,7 @@ project(rclcpp)
 find_package(Threads REQUIRED)
 
 find_package(ament_cmake_ros REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
 find_package(rcl REQUIRED)
@@ -57,6 +58,9 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/future_return_code.cpp
+  src/rclcpp/generic/generic_publisher.cpp
+  src/rclcpp/generic/generic_subscription.cpp
+  src/rclcpp/generic/typesupport_helpers.cpp
   src/rclcpp/graph_listener.cpp
   src/rclcpp/guard_condition.cpp
   src/rclcpp/init_options.cpp
@@ -179,6 +183,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
+  "ament_index_cpp"
   "libstatistics_collector"
   "rcl"
   "rcl_yaml_param_parser"
@@ -209,6 +214,7 @@ ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(${PROJECT_NAME})
 
+ament_export_dependencies(ament_index_cpp)
 ament_export_dependencies(libstatistics_collector)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rcpputils)

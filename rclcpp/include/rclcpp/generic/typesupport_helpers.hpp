@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_GENERIC__TYPESUPPORT_HELPERS_HPP_
-#define RCLCPP_GENERIC__TYPESUPPORT_HELPERS_HPP_
+#ifndef RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_
+#define RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_
 
 #include <memory>
 #include <string>
 #include <tuple>
 
-#include "rclcpp_generic/visibility_control.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 #include "rcpputils/shared_library.hpp"
 
@@ -28,21 +28,21 @@
 namespace rclcpp_generic
 {
 
-RCLCPP_GENERIC_PUBLIC
+RCLCPP_PUBLIC
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier);
 
-RCLCPP_GENERIC_PUBLIC
+RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
   std::shared_ptr<rcpputils::SharedLibrary> library);
 
-RCLCPP_GENERIC_PUBLIC
+RCLCPP_PUBLIC
 std::tuple<std::string, std::string, std::string>
 extract_type_identifier(const std::string & full_type);
 
 }  // namespace rclcpp_generic
 
-#endif  // RCLCPP_GENERIC__TYPESUPPORT_HELPERS_HPP_
+#endif  // RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_

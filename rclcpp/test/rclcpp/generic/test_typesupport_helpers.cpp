@@ -20,7 +20,7 @@
 
 #include "rcpputils/shared_library.hpp"
 
-#include "rclcpp_generic/typesupport_helpers.hpp"
+#include "rclcpp/generic/typesupport_helpers.hpp"
 
 using namespace ::testing;  // NOLINT
 

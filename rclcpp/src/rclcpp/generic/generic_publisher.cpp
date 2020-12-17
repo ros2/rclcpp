@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp_generic/generic_publisher.hpp"
+#include "rclcpp/generic/generic_publisher.hpp"
 
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "rclcpp_generic/typesupport_helpers.hpp"
+#include "rclcpp/generic/typesupport_helpers.hpp"
 
 namespace rclcpp_generic
 {

@@ -368,6 +368,22 @@ if(TARGET test_qos)
     ${PROJECT_NAME}
   )
 endif()
+function(test_pubsub_for_rmw_implementation)
+  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+  ament_add_gmock(test_pubsub${target_suffix} generic/test_pubsub.cpp
+    ENV ${rmw_implementation_env_var}
+  )
+  if(TARGET test_pubsub${target_suffix})
+    target_link_libraries(test_pubsub${target_suffix} ${PROJECT_NAME})
+    target_include_directories(test_pubsub${target_suffix} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rclcpp/src/generic>)
+    ament_target_dependencies(test_pubsub${target_suffix}
+      "rcpputils"
+      "rosidl_typesupport_cpp"
+      "test_msgs"
+    )
+  endif()
+endfunction()
+call_for_each_rmw_implementation(test_pubsub_for_rmw_implementation)
 ament_add_gtest(test_qos_event test_qos_event.cpp)
 if(TARGET test_qos_event)
   ament_target_dependencies(test_qos_event
@@ -472,6 +488,14 @@ if(TARGET test_type_support)
     "test_msgs"
   )
   target_link_libraries(test_type_support ${PROJECT_NAME})
+endif()
+ament_add_gmock(test_typesupport_helpers generic/test_typesupport_helpers.cpp)
+if(TARGET test_typesupport_helpers)
+  ament_target_dependencies(test_typesupport_helpers
+    "rcpputils"
+    "rosidl_runtime_cpp"
+  )
+  target_link_libraries(test_typesupport_helpers ${PROJECT_NAME})
 endif()
 ament_add_gtest(test_find_weak_nodes test_find_weak_nodes.cpp)
 if(TARGET test_find_weak_nodes)

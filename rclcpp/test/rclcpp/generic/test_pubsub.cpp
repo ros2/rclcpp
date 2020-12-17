@@ -27,8 +27,8 @@
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
-#include "rclcpp_generic/generic_publisher.hpp"
-#include "rclcpp_generic/generic_subscription.hpp"
+#include "rclcpp/generic/generic_publisher.hpp"
+#include "rclcpp/generic/generic_subscription.hpp"
 
 using namespace ::testing;  // NOLINT
 using namespace rclcpp_generic;  // NOLINT

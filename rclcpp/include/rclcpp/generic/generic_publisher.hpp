@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_GENERIC__GENERIC_PUBLISHER_HPP_
-#define RCLCPP_GENERIC__GENERIC_PUBLISHER_HPP_
+#ifndef RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_
+#define RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_
 
 #include <memory>
 #include <string>
@@ -89,4 +89,4 @@ private:
 
 }  // namespace rclcpp_generic
 
-#endif  // RCLCPP_GENERIC__GENERIC_PUBLISHER_HPP_
+#endif  // RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_
