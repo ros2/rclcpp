@@ -56,6 +56,8 @@ namespace executors
  * so timers may be executed out of order.
  *
  */
+using TimerPtr = rclcpp::TimerBase::SharedPtr;
+
 class TimersManager
 {
 public:
@@ -91,12 +93,7 @@ public:
   /**
    * @brief Acquire ownership of timers and make heap
    */
-  void own_timers();
-
-  /**
-   * @brief Release ownership of timers
-   */
-  void release_timers();
+  void own_timers(std::vector<TimerPtr> & timers);
 
   /**
    * @brief Executes all the timers currently ready when the function is invoked
@@ -139,7 +136,6 @@ public:
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
 
-  using TimerPtr = rclcpp::TimerBase::SharedPtr;
 
   /**
    * @brief This struct provides convenient access to a MinHeap of timers.
@@ -148,67 +144,28 @@ private:
    */
   struct TimersHeap
   {
-    void add_timer(TimerPtr timer)
+    void make_heap(std::vector<TimerPtr> & timers)
     {
-      timers_.push_back(timer);
-    }
-
-    void make_heap()
-    {
-      std::make_heap(timers_.begin(), timers_.end(), timer_greater);
+      std::make_heap(timers.begin(), timers.end(), timer_greater);
     }
 
     /**
     * @brief Restore a valid heap after the root value is replaced.
     */
-    void heapify_root()
+    void heapify_root(std::vector<TimerPtr> & timers)
     {
       // Push the modified element (i.e. the current root) at the bottom of the heap
-      timers_.push_back(timers_[0]);
+      timers.push_back(timers[0]);
       // Exchange first and last elements and reheapify
-      std::pop_heap(timers_.begin(), timers_.end(), timer_greater);
+      std::pop_heap(timers.begin(), timers.end(), timer_greater);
       // Remove last element
-      timers_.pop_back();
-    }
-
-    void remove_timer(TimerPtr timer)
-    {
-      // Nothing to do if the timer is not stored here
-      auto it = std::find(timers_.begin(), timers_.end(), timer);
-      if (it == timers_.end()) {
-        return;
-      }
-      timers_.erase(it);
-      std::make_heap(timers_.begin(), timers_.end(), timer_greater);
-    }
-
-    TimerPtr & front()
-    {
-      return timers_.front();
-    }
-
-    const TimerPtr & front() const
-    {
-      return timers_.front();
-    }
-
-    bool empty()
-    {
-      return timers_.empty();
-    }
-
-    void clear()
-    {
-      timers_.clear();
+      timers.pop_back();
     }
 
     static bool timer_greater(TimerPtr a, TimerPtr b)
     {
       return a->time_until_trigger() > b->time_until_trigger();
     }
-
-    // Vector of pointers to timers used to implement the priority queue
-    std::vector<TimerPtr> timers_;
   };
 
   /**

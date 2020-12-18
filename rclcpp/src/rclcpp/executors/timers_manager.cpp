@@ -83,7 +83,6 @@ void TimersManager::stop()
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
     timers_updated_ = true;
-    this->release_timers();
   }
   timers_cv_.notify_one();
 
@@ -93,14 +92,14 @@ void TimersManager::stop()
   }
 }
 
-void TimersManager::own_timers()
+void TimersManager::own_timers(std::vector<TimerPtr> & timers)
 {
   auto it = weak_timers_.begin();
 
   while (it != weak_timers_.end()) {
     if (auto timer_shared_ptr = it->lock()) {
       // The timer is valid, own it and add to heap
-      heap_.add_timer(timer_shared_ptr);
+      timers.push_back(timer_shared_ptr);
     } else {
       // The timer went out of scope, remove it
       weak_timers_.erase(it);
@@ -108,30 +107,20 @@ void TimersManager::own_timers()
     it++;
   }
 
-  heap_.make_heap();
+  heap_.make_heap(timers);
 }
-
-void TimersManager::release_timers()
-{
-  heap_.clear();
-}
-
 
 std::chrono::nanoseconds TimersManager::get_head_timeout()
 {
-  this->own_timers();
+  // Vector of pointers to timers used to implement the priority queue
+  std::vector<TimerPtr> timers;
+  this->own_timers(timers);
 
-  std::unique_lock<std::mutex> lock(timers_mutex_);
-
-  if (heap_.empty()) {
+  if (timers.empty()) {
     return MAX_TIME;
   }
 
-  auto time_until_trigger = (heap_.front())->time_until_trigger();
-
-  this->release_timers();
-
-  return time_until_trigger;
+  return (timers.front())->time_until_trigger();
 }
 
 void TimersManager::execute_ready_timers()
@@ -154,34 +143,38 @@ bool TimersManager::execute_head_timer()
             "TimersManager::execute_head_timer() can't be used while timers thread is running");
   }
 
-  std::unique_lock<std::mutex> lock(timers_mutex_);
+  std::unique_lock<std::mutex> lock(timers_mutex_); //needed?
 
-  this->own_timers();
+  // Vector of pointers to timers used to implement the priority queue
+  std::vector<TimerPtr> timers;
+
+  this->own_timers(timers);
 
   // Nothing to do if we don't have any timer
-  if (heap_.empty()) {
+  if (timers.empty()) {
     return false;
   }
 
-  TimerPtr head = heap_.front();
+  TimerPtr head = timers.front();
   if (head->is_ready()) {
     // Head timer is ready, execute and re-heapify
     head->execute_callback();
-    this->release_timers();
     return true;
   } else {
     // Head timer was not ready yet
-    this->release_timers();
     return false;
   }
 }
 
 std::chrono::nanoseconds TimersManager::execute_ready_timers_unsafe()
 {
-  this->own_timers();
+  // Vector of pointers to timers used to implement the priority queue
+  std::vector<TimerPtr> timers;
+
+  this->own_timers(timers);
 
   // Nothing to do if we don't have any timer
-  if (heap_.empty()) {
+  if (timers.empty()) {
     return MAX_TIME;
   }
 
@@ -190,21 +183,19 @@ std::chrono::nanoseconds TimersManager::execute_ready_timers_unsafe()
   // time required for executing the timers is longer than their period.
 
   auto start = std::chrono::steady_clock::now();
-  TimerPtr head = heap_.front();
+
+  TimerPtr head = timers.front();
+
   while (head->is_ready() && this->timer_was_ready_at_tp(head, start)) {
     // Execute head timer
     head->execute_callback();
     // Executing a timer will result in updating its time_until_trigger, so re-heapify
-    heap_.heapify_root();
+    heap_.heapify_root(timers);
     // Get new head timer
-    head = heap_.front();
+    head = timers.front();
   }
 
-  auto time_until_trigger = (heap_.front())->time_until_trigger();
-
-  this->release_timers();
-
-  return time_until_trigger;
+  return (timers.front())->time_until_trigger();
 }
 
 void TimersManager::run_timers()
@@ -233,7 +224,7 @@ void TimersManager::clear()
   {
     // Lock mutex and then clear all data structures
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
-    heap_.clear();
+    weak_timers_.clear();
 
     timers_updated_ = true;
   }
