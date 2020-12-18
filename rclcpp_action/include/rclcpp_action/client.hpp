@@ -268,12 +268,104 @@ public:
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
   using WrappedResult = typename GoalHandle::WrappedResult;
-  using GoalResponseCallback = std::function<void (typename GoalHandle::SharedPtr)>;
   using FeedbackCallback = typename GoalHandle::FeedbackCallback;
   using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
   using CancelCallback = std::function<void (typename CancelResponse::SharedPtr)>;
+
+  /// Compatibility wrapper for `goal_response_callback`.
+  class GoalResponseCallback
+  {
+  public:
+    using NewSignature = std::function<void (typename GoalHandle::SharedPtr)>;
+    using OldSignature = std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
+
+    GoalResponseCallback() = default;
+
+    GoalResponseCallback(std::nullptr_t) {}
+
+    // implicit constructor
+    [[deprecated(
+      "Use new goal response callback signature "
+      "`std::function<void (Client<ActionT>::GoalHandle::SharedPtr)>` "
+      "instead of the old "
+      "`std::function<void (std::shared_future<Client<ActionT>::GoalHandle::SharedPtr>)>`.\n"
+      "e.g.:\n"
+      "```cpp\n"
+      "Client<ActionT>::SendGoalOptions options;\n"
+      "options.goal_response_callback = [](Client<ActionT>::GoalHandle::SharedPtr goal) {\n"
+      "  // do something with `goal` here\n"
+      "};")]]
+    GoalResponseCallback(OldSignature old_callback) : old_callback_(std::move(old_callback)) {}
+
+    // implicit constructor
+    GoalResponseCallback(NewSignature new_callback) : new_callback_(std::move(new_callback)) {}
+
+    GoalResponseCallback &
+    operator=(OldSignature old_callback) {old_callback_ = std::move(old_callback); return *this;}
+
+    // implicit constructor
+    GoalResponseCallback &
+    operator=(NewSignature new_callback) {new_callback_ = std::move(new_callback); return *this;}
+
+    void
+    operator()(typename GoalHandle::SharedPtr goal_handle) const {
+      if (RCUTILS_LIKELY(static_cast<bool>(new_callback_))) {
+        new_callback_(std::move(goal_handle));
+        return;
+      }
+      if (static_cast<bool>(old_callback_)) {
+        throw std::runtime_error{
+          "Cannot call GoalResponseCallback(GoalHandle::SharedPtr) if using the old goal response callback signature."};
+      }
+      throw std::bad_function_call{};
+    }
+
+    [[deprecated(
+      "Calling "
+      "`void goal_response_callback("
+      "   std::shared_future<Client<ActionT>::GoalHandle::SharedPtr> goal_handle_shared_future)`"
+      " is deprecated.")]]
+    void
+    operator()(std::shared_future<typename GoalHandle::SharedPtr> goal_handle_future) const {
+      if (RCUTILS_LIKELY(static_cast<bool>(old_callback_))) {
+        old_callback_(std::move(goal_handle_future));
+        return;
+      }
+      if (RCUTILS_LIKELY(static_cast<bool>(new_callback_))) {
+        new_callback_(std::move(goal_handle_future).get_future().share());
+        return;
+      }
+      throw std::bad_function_call{};
+    }
+
+    operator bool() const noexcept {
+      return new_callback_ || old_callback_;
+    }
+
+  private:
+    friend class Client;
+    void
+    operator()(
+      typename GoalHandle::SharedPtr goal_handle,
+      std::shared_future<typename GoalHandle::SharedPtr> goal_handle_future) const
+    {
+      if (RCUTILS_LIKELY(static_cast<bool>(new_callback_))) {
+        new_callback_(std::move(goal_handle));
+        return;
+      }
+      if (RCUTILS_LIKELY(static_cast<bool>(old_callback_))) {
+        old_callback_(std::move(goal_handle_future));
+        return;
+      }
+      throw std::bad_function_call{};
+    }
+
+    // Consumer of the class will first try to use new_callback_ and if it is `nullptr`, old_callback_ will be used.
+    NewSignature new_callback_;
+    OldSignature old_callback_;
+  };
 
   /// Options for sending a goal.
   /**
@@ -363,7 +455,7 @@ public:
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
           if (options.goal_response_callback) {
-            options.goal_response_callback(nullptr);
+            options.goal_response_callback(nullptr, promise->get_future().share());
           }
           return;
         }
@@ -379,7 +471,7 @@ public:
         }
         promise->set_value(goal_handle);
         if (options.goal_response_callback) {
-          options.goal_response_callback(goal_handle);
+          options.goal_response_callback(goal_handle, promise->get_future().share());
         }
 
         if (options.result_callback) {
