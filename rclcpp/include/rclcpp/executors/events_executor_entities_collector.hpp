@@ -144,38 +144,38 @@ public:
   ///
   /**
    * Get the subscription shared pointer corresponding
-   * to the type erased raw subscription pointer
+   * to the subscription identifier
    */
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
-  get_subscription(const void * subscription);
+  get_subscription(const void * subscription_id);
 
   ///
   /**
    * Get the client shared pointer corresponding
-   * to the type erased raw client pointer
+   * to the client identifier
    */
   RCLCPP_PUBLIC
   rclcpp::ClientBase::SharedPtr
-  get_client(const void * client);
+  get_client(const void * client_id);
 
   ///
   /**
    * Get the service shared pointer corresponding
-   * to the type erased raw service pointer
+   * to the service identifier
    */
   RCLCPP_PUBLIC
   rclcpp::ServiceBase::SharedPtr
-  get_service(const void * service);
+  get_service(const void * service_id);
 
   ///
   /**
    * Get the waitable shared pointer corresponding
-   * to the type erased raw waitable pointer
+   * to the waitable identifier
    */
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
-  get_waitable(const void * waitable);
+  get_waitable(const void * waitable_id);
 
   ///
   /**
