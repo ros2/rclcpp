@@ -89,6 +89,16 @@ public:
   void stop();
 
   /**
+   * @brief Acquire ownership of timers and make heap
+   */
+  void own_timers();
+
+  /**
+   * @brief Release ownership of timers
+   */
+  void release_timers();
+
+  /**
    * @brief Executes all the timers currently ready when the function is invoked
    * while keeping the heap correctly sorted.
    */
@@ -140,32 +150,11 @@ private:
   {
     void add_timer(TimerPtr timer)
     {
-      // Nothing to do if the timer is already stored here
-      for(const auto & weak_timer : weak_timers_) {
-        bool matched = (weak_timer.lock() == timer);
-        if (matched) {
-          return;
-        }
-      }
-
-      weak_timers_.push_back(timer);
+      timers_.push_back(timer);
     }
 
-    void own_timers()
+    void make_heap()
     {
-      auto weak_timer_it = weak_timers_.begin();
-
-      while (weak_timer_it != weak_timers_.end()) {
-        if (auto timer_shared_ptr = weak_timer_it->lock()) {
-          // The timer is valid, add it to owned timers vector
-          timers_.push_back(timer_shared_ptr);
-        } else {
-          // The timer went out of scope, remove it
-          weak_timers_.erase(weak_timer_it);
-        }
-        weak_timer_it++;
-      }
-
       std::make_heap(timers_.begin(), timers_.end(), timer_greater);
     }
 
@@ -184,19 +173,13 @@ private:
 
     void remove_timer(TimerPtr timer)
     {
-      auto weak_timer_it = weak_timers_.begin();
-
-      while (weak_timer_it != weak_timers_.end()) {
-        bool matched = (weak_timer_it->lock() == timer);
-        if (matched) {
-          weak_timers_.erase(weak_timer_it);
-          break;
-        }
-        weak_timer_it++;
+      // Nothing to do if the timer is not stored here
+      auto it = std::find(timers_.begin(), timers_.end(), timer);
+      if (it == timers_.end()) {
+        return;
       }
-      if ((weak_timer_it == weak_timers_.end()) && (!weak_timers_.empty())) {
-        throw std::runtime_error("Tried to remove timer not stored in the timers manager.");
-      }
+      timers_.erase(it);
+      std::make_heap(timers_.begin(), timers_.end(), timer_greater);
     }
 
     TimerPtr & front()
@@ -214,7 +197,7 @@ private:
       return timers_.empty();
     }
 
-    void release_timers()
+    void clear()
     {
       timers_.clear();
     }
@@ -224,10 +207,8 @@ private:
       return a->time_until_trigger() > b->time_until_trigger();
     }
 
-    // Vector of temporary owned timers used to implement the priority queue
+    // Vector of pointers to timers used to implement the priority queue
     std::vector<TimerPtr> timers_;
-    // Vector of weak pointers to timers registered in the executor
-    std::vector<rclcpp::TimerBase::WeakPtr> weak_timers_;
   };
 
   /**
@@ -237,27 +218,14 @@ private:
   void run_timers();
 
   /**
-   * @brief Get the amount of time before the next timer expires.
+   * @brief Executes all the timers currently ready when the function is invoked
+   * while keeping the heap correctly sorted.
    * This function is not thread safe, acquire a mutex before calling it.
-   *
    * @return std::chrono::nanoseconds to wait,
    * the returned value could be negative if the timer is already expired
    * or MAX_TIME if the heap is empty.
    */
-  std::chrono::nanoseconds get_head_timeout_unsafe()
-  {
-    if (heap_.empty()) {
-      return MAX_TIME;
-    }
-    return (heap_.front())->time_until_trigger();
-  }
-
-  /**
-   * @brief Executes all the timers currently ready when the function is invoked
-   * while keeping the heap correctly sorted.
-   * This function is not thread safe, acquire a mutex before calling it.
-   */
-  void execute_ready_timers_unsafe();
+  std::chrono::nanoseconds execute_ready_timers_unsafe();
 
   /**
    * @brief Helper function that checks whether a timer was already ready
@@ -289,6 +257,8 @@ private:
   std::shared_ptr<rclcpp::Context> context_;
   // MinHeap of timers
   TimersHeap heap_;
+  // Vector of weak pointers to registered timers
+  std::vector<rclcpp::TimerBase::WeakPtr> weak_timers_;
 };
 
 }  // namespace executors
