@@ -341,22 +341,6 @@ AsyncParametersClient::wait_for_service_nanoseconds(std::chrono::nanoseconds tim
   return true;
 }
 
-std::vector<rclcpp::Parameter>
-SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_names)
-{
-  auto f = async_parameters_client_->get_parameters(parameter_names);
-  using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_,
-      f) == rclcpp::FutureReturnCode::SUCCESS)
-  {
-    return f.get();
-  }
-  // Return an empty vector if unsuccessful
-  return std::vector<rclcpp::Parameter>();
-}
-
 bool
 SyncParametersClient::has_parameter(const std::string & parameter_name)
 {
@@ -364,88 +348,4 @@ SyncParametersClient::has_parameter(const std::string & parameter_name)
   names.push_back(parameter_name);
   auto vars = list_parameters(names, 1);
   return vars.names.size() > 0;
-}
-
-std::vector<rcl_interfaces::msg::ParameterDescriptor>
-SyncParametersClient::describe_parameters(const std::vector<std::string> & parameter_names)
-{
-  auto f = async_parameters_client_->describe_parameters(parameter_names);
-
-  using rclcpp::executors::spin_node_until_future_complete;
-  rclcpp::FutureReturnCode future =
-    spin_node_until_future_complete(*executor_, node_base_interface_, f);
-  if (future == rclcpp::FutureReturnCode::SUCCESS) {
-    return f.get();
-  }
-  return std::vector<rcl_interfaces::msg::ParameterDescriptor>();
-}
-
-std::vector<rclcpp::ParameterType>
-SyncParametersClient::get_parameter_types(const std::vector<std::string> & parameter_names)
-{
-  auto f = async_parameters_client_->get_parameter_types(parameter_names);
-
-  using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_,
-      f) == rclcpp::FutureReturnCode::SUCCESS)
-  {
-    return f.get();
-  }
-  return std::vector<rclcpp::ParameterType>();
-}
-
-std::vector<rcl_interfaces::msg::SetParametersResult>
-SyncParametersClient::set_parameters(
-  const std::vector<rclcpp::Parameter> & parameters)
-{
-  auto f = async_parameters_client_->set_parameters(parameters);
-
-  using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_,
-      f) == rclcpp::FutureReturnCode::SUCCESS)
-  {
-    return f.get();
-  }
-  return std::vector<rcl_interfaces::msg::SetParametersResult>();
-}
-
-rcl_interfaces::msg::SetParametersResult
-SyncParametersClient::set_parameters_atomically(
-  const std::vector<rclcpp::Parameter> & parameters)
-{
-  auto f = async_parameters_client_->set_parameters_atomically(parameters);
-
-  using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_,
-      f) == rclcpp::FutureReturnCode::SUCCESS)
-  {
-    return f.get();
-  }
-
-  throw std::runtime_error("Unable to get result of set parameters service call.");
-}
-
-rcl_interfaces::msg::ListParametersResult
-SyncParametersClient::list_parameters(
-  const std::vector<std::string> & parameter_prefixes,
-  uint64_t depth)
-{
-  auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
-
-  using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_,
-      f) == rclcpp::FutureReturnCode::SUCCESS)
-  {
-    return f.get();
-  }
-
-  throw std::runtime_error("Unable to get result of list parameters service call.");
 }
