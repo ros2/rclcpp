@@ -144,7 +144,7 @@ public:
   ///
   /**
    * Get the subscription shared pointer corresponding
-   * to the subscription identifier
+   * to a subscription identifier
    */
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
@@ -153,7 +153,7 @@ public:
   ///
   /**
    * Get the client shared pointer corresponding
-   * to the client identifier
+   * to a client identifier
    */
   RCLCPP_PUBLIC
   rclcpp::ClientBase::SharedPtr
@@ -162,7 +162,7 @@ public:
   ///
   /**
    * Get the service shared pointer corresponding
-   * to the service identifier
+   * to a service identifier
    */
   RCLCPP_PUBLIC
   rclcpp::ServiceBase::SharedPtr
@@ -171,7 +171,7 @@ public:
   ///
   /**
    * Get the waitable shared pointer corresponding
-   * to the waitable identifier
+   * to a waitable identifier
    */
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
