@@ -506,8 +506,11 @@ EventsExecutorEntitiesCollector::get_subscription(const void * subscription)
     return subscription_shared_ptr;
   }
 
-  // The subscription expired, remove from map
-  weak_subscriptions_map_.erase(subscription);
+  // The subscription expired, remove from map if not previously removed
+  if (weak_subscriptions_map_.find(subscription) != weak_subscriptions_map_.end()) {
+    weak_subscriptions_map_.erase(subscription);
+  }
+
   return nullptr;
 }
 
@@ -520,8 +523,10 @@ EventsExecutorEntitiesCollector::get_client(const void * client)
     return client_shared_ptr;
   }
 
-  // The client expired, remove from map
-  weak_clients_map_.erase(client);
+  // The client expired, remove from map if not previously removed
+  if (weak_clients_map_.find(client) != weak_clients_map_.end()) {
+    weak_clients_map_.erase(client);
+  }
   return nullptr;
 }
 
@@ -534,8 +539,10 @@ EventsExecutorEntitiesCollector::get_service(const void * service)
     return service_shared_ptr;
   }
 
-  // The service expired, remove from map
-  weak_services_map_.erase(service);
+  // The service expired, remove from map if not previously removed
+  if (weak_services_map_.find(service) != weak_services_map_.end()) {
+    weak_services_map_.erase(service);
+  }
   return nullptr;
 }
 
@@ -548,8 +555,10 @@ EventsExecutorEntitiesCollector::get_waitable(const void * waitable)
     return waitable_shared_ptr;
   }
 
-  // The waitable expired, remove from map
-  weak_waitables_map_.erase(waitable);
+  // The waitable expired, remove from map if not previously removed
+  if (weak_waitables_map_.find(waitable) != weak_waitables_map_.end()) {
+    weak_waitables_map_.erase(waitable);
+  }
   return nullptr;
 }
 
