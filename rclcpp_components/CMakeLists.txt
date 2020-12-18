@@ -7,7 +7,10 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
+  add_compile_options(
+    -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual
+    -Wformat=2 -Wconversion -Wshadow -Wsign-conversion -Wold-style-cast -Wcast-qual
+  )
 endif()
 
 find_package(ament_cmake_ros REQUIRED)

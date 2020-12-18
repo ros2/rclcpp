@@ -85,8 +85,8 @@ TEST_F(TestComponentManager, create_component_factory_invalid)
     rclcpp_components::ComponentManagerException);
 
   // Test valid library with invalid class
-  auto resources = manager->get_component_resources("rclcpp_components");
-  auto factory = manager->create_component_factory({"foo_class", resources[0].second});
+  auto component_resources = manager->get_component_resources("rclcpp_components");
+  auto factory = manager->create_component_factory({"foo_class", component_resources[0].second});
   EXPECT_EQ(nullptr, factory);
 
   // Test improperly formed resources file

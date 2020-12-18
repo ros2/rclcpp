@@ -151,10 +151,9 @@ def get_rclcpp_suffix_from_features(features):
 @[ end if]@
       logger.get_name(), \
 @[ if 'stream' not in feature_combination]@
-      rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
-        RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
+      __VA_ARGS__); \
 @[ else]@
-      "%s", rclcpp::get_c_string(ss.str())); \
+      "%s", ss.str().c_str()); \
 @[ end if]@
   } while (0)
 
