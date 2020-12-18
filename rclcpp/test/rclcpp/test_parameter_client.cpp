@@ -28,6 +28,8 @@
 
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
+using namespace std::chrono_literals;
+
 class TestParameterClient : public ::testing::Test
 {
 public:
@@ -293,7 +295,7 @@ TEST_F(TestParameterClient, sync_parameter_get_parameter_types) {
   auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
   std::vector<std::string> names{"foo"};
   std::vector<rclcpp::ParameterType> parameter_types =
-    synchronous_client->get_parameter_types(names);
+    synchronous_client->get_parameter_types(names, 100ms);
   ASSERT_EQ(1u, parameter_types.size());
   ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
 }
@@ -429,14 +431,14 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters) {
   {
     std::vector<std::string> names{"none"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(0u, parameter_descs.size());
   }
 
   {
     std::vector<std::string> names{"foo"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(1u, parameter_descs.size());
     ASSERT_EQ("foo", parameter_descs[0].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
@@ -448,21 +450,21 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters) {
   {
     std::vector<std::string> names{"foo", "baz"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(0u, parameter_descs.size());
   }
 
   {
     std::vector<std::string> names{"baz", "foo"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(0u, parameter_descs.size());
   }
 
   {
     std::vector<std::string> names{"foo", "bar"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(2u, parameter_descs.size());
     ASSERT_EQ("foo", parameter_descs[0].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
@@ -584,7 +586,7 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters_allow_undeclared)
   {
     std::vector<std::string> names{"none"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(1u, parameter_descs.size());
     ASSERT_EQ("none", parameter_descs[0].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[0].type);
@@ -596,7 +598,7 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters_allow_undeclared)
   {
     std::vector<std::string> names{"foo", "baz"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(2u, parameter_descs.size());
     ASSERT_EQ("foo", parameter_descs[0].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
@@ -613,7 +615,7 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters_allow_undeclared)
   {
     std::vector<std::string> names{"baz", "foo"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
-      synchronous_client->describe_parameters(names);
+      synchronous_client->describe_parameters(names, 100ms);
     ASSERT_EQ(2u, parameter_descs.size());
     ASSERT_EQ("baz", parameter_descs[0].name);
     ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_descs[0].type);
