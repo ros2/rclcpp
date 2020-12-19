@@ -25,12 +25,12 @@ TEST(TestActionTypes, goal_uuid_to_string) {
   EXPECT_STREQ("0123456789abcdef", rclcpp_action::to_string(goal_id).c_str());
 
   for (uint8_t i = 0; i < UUID_SIZE; ++i) {
-    goal_id[i] = 16u + i;
+    goal_id[i] = static_cast<uint8_t>(16u + i);
   }
   EXPECT_STREQ("101112131415161718191a1b1c1d1e1f", rclcpp_action::to_string(goal_id).c_str());
 
   for (uint8_t i = 0; i < UUID_SIZE; ++i) {
-    goal_id[i] = std::numeric_limits<uint8_t>::max() - i;
+    goal_id[i] = static_cast<uint8_t>(std::numeric_limits<uint8_t>::max() - i);
   }
   EXPECT_STREQ("fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0", rclcpp_action::to_string(goal_id).c_str());
 }
