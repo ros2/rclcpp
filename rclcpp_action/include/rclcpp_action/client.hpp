@@ -277,13 +277,13 @@ public:
   /// Compatibility wrapper for `goal_response_callback`.
   class GoalResponseCallback
   {
-  public:
+public:
     using NewSignature = std::function<void (typename GoalHandle::SharedPtr)>;
     using OldSignature = std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
 
     GoalResponseCallback() = default;
 
-    GoalResponseCallback(std::nullptr_t) {}
+    GoalResponseCallback(std::nullptr_t) {}  // NOLINT, intentionally implicit.
 
     // implicit constructor
     [[deprecated(
@@ -297,27 +297,29 @@ public:
       "options.goal_response_callback = [](Client<ActionT>::GoalHandle::SharedPtr goal) {\n"
       "  // do something with `goal` here\n"
       "};")]]
-    GoalResponseCallback(OldSignature old_callback) : old_callback_(std::move(old_callback)) {}
+    GoalResponseCallback(OldSignature old_callback)  // NOLINT, intentionally implicit.
+    : old_callback_(std::move(old_callback)) {}
 
-    // implicit constructor
-    GoalResponseCallback(NewSignature new_callback) : new_callback_(std::move(new_callback)) {}
+    GoalResponseCallback(NewSignature new_callback)  // NOLINT, intentionally implicit.
+    : new_callback_(std::move(new_callback)) {}
 
     GoalResponseCallback &
     operator=(OldSignature old_callback) {old_callback_ = std::move(old_callback); return *this;}
 
-    // implicit constructor
     GoalResponseCallback &
     operator=(NewSignature new_callback) {new_callback_ = std::move(new_callback); return *this;}
 
     void
-    operator()(typename GoalHandle::SharedPtr goal_handle) const {
+    operator()(typename GoalHandle::SharedPtr goal_handle) const
+    {
       if (new_callback_) {
         new_callback_(std::move(goal_handle));
         return;
       }
       if (old_callback_) {
         throw std::runtime_error{
-          "Cannot call GoalResponseCallback(GoalHandle::SharedPtr) if using the old goal response callback signature."};
+                "Cannot call GoalResponseCallback(GoalHandle::SharedPtr) "
+                "if using the old goal response callback signature."};
       }
       throw std::bad_function_call{};
     }
@@ -328,7 +330,8 @@ public:
       "   std::shared_future<Client<ActionT>::GoalHandle::SharedPtr> goal_handle_shared_future)`"
       " is deprecated.")]]
     void
-    operator()(std::shared_future<typename GoalHandle::SharedPtr> goal_handle_future) const {
+    operator()(std::shared_future<typename GoalHandle::SharedPtr> goal_handle_future) const
+    {
       if (old_callback_) {
         old_callback_(std::move(goal_handle_future));
         return;
@@ -344,7 +347,7 @@ public:
       return new_callback_ || old_callback_;
     }
 
-  private:
+private:
     friend class Client;
     void
     operator()(
@@ -362,7 +365,6 @@ public:
       throw std::bad_function_call{};
     }
 
-    // Consumer of the class will first try to use new_callback_ and if it is `nullptr`, old_callback_ will be used.
     NewSignature new_callback_;
     OldSignature old_callback_;
   };
