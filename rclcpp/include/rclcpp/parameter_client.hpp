@@ -348,17 +348,10 @@ public:
     const std::vector<std::string> & parameter_names,
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
-    auto f = async_parameters_client_->get_parameters(parameter_names);
-    using rclcpp::executors::spin_node_until_future_complete;
-    if (
-      spin_node_until_future_complete(
-        *executor_, node_base_interface_, f,
-        timeout) == rclcpp::FutureReturnCode::SUCCESS)
-    {
-      return f.get();
-    }
-    // Return an empty vector if unsuccessful
-    return std::vector<rclcpp::Parameter>();
+    return get_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
   }
 
   RCLCPP_PUBLIC
@@ -409,15 +402,10 @@ public:
     const std::vector<std::string> & parameter_names,
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
-    auto f = async_parameters_client_->describe_parameters(parameter_names);
-
-    using rclcpp::executors::spin_node_until_future_complete;
-    rclcpp::FutureReturnCode future =
-      spin_node_until_future_complete(*executor_, node_base_interface_, f, timeout);
-    if (future == rclcpp::FutureReturnCode::SUCCESS) {
-      return f.get();
-    }
-    return std::vector<rcl_interfaces::msg::ParameterDescriptor>();
+    return describe_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
   }
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
@@ -426,17 +414,10 @@ public:
     const std::vector<std::string> & parameter_names,
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
-    auto f = async_parameters_client_->get_parameter_types(parameter_names);
-
-    using rclcpp::executors::spin_node_until_future_complete;
-    if (
-      spin_node_until_future_complete(
-        *executor_, node_base_interface_, f,
-        timeout) == rclcpp::FutureReturnCode::SUCCESS)
-    {
-      return f.get();
-    }
-    return std::vector<rclcpp::ParameterType>();
+    return get_parameter_types(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
   }
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
@@ -445,17 +426,10 @@ public:
     const std::vector<rclcpp::Parameter> & parameters,
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
-    auto f = async_parameters_client_->set_parameters(parameters);
-
-    using rclcpp::executors::spin_node_until_future_complete;
-    if (
-      spin_node_until_future_complete(
-        *executor_, node_base_interface_, f,
-        timeout) == rclcpp::FutureReturnCode::SUCCESS)
-    {
-      return f.get();
-    }
-    return std::vector<rcl_interfaces::msg::SetParametersResult>();
+    return set_parameters(
+      parameters,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
   }
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
@@ -464,18 +438,10 @@ public:
     const std::vector<rclcpp::Parameter> & parameters,
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
-    auto f = async_parameters_client_->set_parameters_atomically(parameters);
-
-    using rclcpp::executors::spin_node_until_future_complete;
-    if (
-      spin_node_until_future_complete(
-        *executor_, node_base_interface_, f,
-        timeout) == rclcpp::FutureReturnCode::SUCCESS)
-    {
-      return f.get();
-    }
-
-    throw std::runtime_error("Unable to get result of set parameters service call.");
+    return set_parameters_atomically(
+      parameters,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
   }
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
@@ -485,18 +451,11 @@ public:
     uint64_t depth,
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
-    auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
-
-    using rclcpp::executors::spin_node_until_future_complete;
-    if (
-      spin_node_until_future_complete(
-        *executor_, node_base_interface_, f,
-        timeout) == rclcpp::FutureReturnCode::SUCCESS)
-    {
-      return f.get();
-    }
-
-    throw std::runtime_error("Unable to get result of list parameters service call.");
+    return list_parameters(
+      parameter_prefixes,
+      depth,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
   }
 
   template<typename CallbackT>
@@ -539,6 +498,44 @@ public:
   {
     return async_parameters_client_->wait_for_service(timeout);
   }
+
+protected:
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::Parameter>
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterType>
+  get_parameter_types(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::ListParametersResult
+  list_parameters(
+    const std::vector<std::string> & parameter_prefixes,
+    uint64_t depth,
+    std::chrono::nanoseconds timeout);
 
 private:
   rclcpp::Executor::SharedPtr executor_;
