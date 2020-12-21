@@ -457,7 +457,7 @@ private:
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
           if (options.goal_response_callback) {
-            options.goal_response_callback(nullptr, promise->get_future().share());
+            options.goal_response_callback(nullptr, future);
           }
           return;
         }
@@ -473,7 +473,7 @@ private:
         }
         promise->set_value(goal_handle);
         if (options.goal_response_callback) {
-          options.goal_response_callback(goal_handle, promise->get_future().share());
+          options.goal_response_callback(goal_handle, future);
         }
 
         if (options.result_callback) {
