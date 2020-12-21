@@ -311,11 +311,11 @@ public:
 
     void
     operator()(typename GoalHandle::SharedPtr goal_handle) const {
-      if (RCUTILS_LIKELY(static_cast<bool>(new_callback_))) {
+      if (new_callback_) {
         new_callback_(std::move(goal_handle));
         return;
       }
-      if (static_cast<bool>(old_callback_)) {
+      if (old_callback_) {
         throw std::runtime_error{
           "Cannot call GoalResponseCallback(GoalHandle::SharedPtr) if using the old goal response callback signature."};
       }
@@ -329,11 +329,11 @@ public:
       " is deprecated.")]]
     void
     operator()(std::shared_future<typename GoalHandle::SharedPtr> goal_handle_future) const {
-      if (RCUTILS_LIKELY(static_cast<bool>(old_callback_))) {
+      if (old_callback_) {
         old_callback_(std::move(goal_handle_future));
         return;
       }
-      if (RCUTILS_LIKELY(static_cast<bool>(new_callback_))) {
+      if (new_callback_) {
         new_callback_(std::move(goal_handle_future).get_future().share());
         return;
       }
@@ -351,11 +351,11 @@ public:
       typename GoalHandle::SharedPtr goal_handle,
       std::shared_future<typename GoalHandle::SharedPtr> goal_handle_future) const
     {
-      if (RCUTILS_LIKELY(static_cast<bool>(new_callback_))) {
+      if (new_callback_) {
         new_callback_(std::move(goal_handle));
         return;
       }
-      if (RCUTILS_LIKELY(static_cast<bool>(old_callback_))) {
+      if (old_callback_) {
         old_callback_(std::move(goal_handle_future));
         return;
       }
