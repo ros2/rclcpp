@@ -61,12 +61,12 @@ TEST_F(TestParameterService, get_parameter_types) {
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
 
   const std::vector<std::string> declared_parameters = {"parameter1"};
-  const auto parameter_types = client->get_parameter_types(declared_parameters, 100ms);
+  const auto parameter_types = client->get_parameter_types(declared_parameters, 10s);
   ASSERT_EQ(1u, parameter_types.size());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
 
   const std::vector<std::string> undeclared_parameters = {"parameter2"};
-  const auto undeclared_parameter_types = client->get_parameter_types(undeclared_parameters, 100ms);
+  const auto undeclared_parameter_types = client->get_parameter_types(undeclared_parameters, 10s);
   EXPECT_EQ(0u, undeclared_parameter_types.size());
 }
 
@@ -77,7 +77,7 @@ TEST_F(TestParameterService, set_parameters) {
   const std::vector<rclcpp::Parameter> parameters = {
     rclcpp::Parameter("parameter1", 0),
   };
-  client->set_parameters(parameters, 100ms);
+  client->set_parameters(parameters, 10s);
   EXPECT_EQ(0, client->get_parameter("parameter1", 100));
 }
 
@@ -88,15 +88,15 @@ TEST_F(TestParameterService, set_parameters_atomically) {
   const std::vector<rclcpp::Parameter> parameters = {
     rclcpp::Parameter("parameter1", 0),
   };
-  client->set_parameters_atomically(parameters, 100ms);
+  client->set_parameters_atomically(parameters, 10s);
   EXPECT_EQ(0, client->get_parameter("parameter1", 100));
 }
 
 TEST_F(TestParameterService, list_parameters) {
-  const size_t number_parameters_in_basic_node = client->list_parameters({}, 1, 100ms).names.size();
+  const size_t number_parameters_in_basic_node = client->list_parameters({}, 1, 10s).names.size();
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
 
-  const auto list_result = client->list_parameters({}, 1, 100ms);
+  const auto list_result = client->list_parameters({}, 1, 10s);
   EXPECT_EQ(1u + number_parameters_in_basic_node, list_result.names.size());
 }
 
