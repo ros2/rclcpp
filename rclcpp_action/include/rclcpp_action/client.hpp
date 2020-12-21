@@ -340,7 +340,7 @@ public:
       throw std::bad_function_call{};
     }
 
-    operator bool() const noexcept {
+    explicit operator bool() const noexcept {
       return new_callback_ || old_callback_;
     }
 
