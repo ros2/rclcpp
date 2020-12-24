@@ -104,16 +104,16 @@ TEST_F(TestParameterService, describe_parameters) {
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
 
   {
-    std::vector<std::string> names{"parameter1"};
+    const std::vector<std::string> names{"parameter1"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
       client->describe_parameters(names, 10s);
-    EXPECT_EQ(1u, parameter_descs.size());
+    ASSERT_EQ(1u, parameter_descs.size());
     EXPECT_EQ("parameter1", parameter_descs[0].name);
     EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
   }
 
   {
-    std::vector<std::string> names{"undeclared_parameter"};
+    const std::vector<std::string> names{"undeclared_parameter"};
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
       client->describe_parameters(names, 10s);
     EXPECT_EQ(0u, parameter_descs.size());
