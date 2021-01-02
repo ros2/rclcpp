@@ -2572,3 +2572,23 @@ TEST_F(TestNode, create_sub_node_rmw_validate_namespace_error) {
       rclcpp::exceptions::RCLError);
   }
 }
+
+TEST_F(TestNode, change_default_callback_group_type) {
+  auto mutex_node = std::make_shared<rclcpp::Node>(
+    "node",
+    rclcpp::NodeOptions().default_callback_group_type(rclcpp::CallbackGroupType::MutuallyExclusive)
+  );
+  EXPECT_EQ(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    mutex_node->get_node_base_interface()->get_default_callback_group()->type()
+  );
+
+  auto reentrant_node = std::make_shared<rclcpp::Node>(
+    "node",
+    rclcpp::NodeOptions().default_callback_group_type(rclcpp::CallbackGroupType::Reentrant)
+  );
+  EXPECT_EQ(
+    rclcpp::CallbackGroupType::Reentrant,
+    reentrant_node->get_node_base_interface()->get_default_callback_group()->type()
+  );
+}
