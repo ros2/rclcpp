@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "rcl/node_options.h"
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/parameter.hpp"
@@ -355,6 +356,16 @@ public:
   NodeOptions &
   allocator(rcl_allocator_t allocator);
 
+  /// Return the type of the default callback group used in a Node
+  RCLCPP_PUBLIC
+  const rclcpp::CallbackGroupType &
+  default_callback_group_type() const;
+
+  /// Set the type of the default callback group used in a Node
+  RCLCPP_PUBLIC
+  NodeOptions &
+  default_callback_group_type(rclcpp::CallbackGroupType cb_group_type);
+
 private:
   // This is mutable to allow for a const accessor which lazily creates the node options instance.
   /// Underlying rcl_node_options structure.
@@ -397,6 +408,8 @@ private:
   bool automatically_declare_parameters_from_overrides_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
+
+  rclcpp::CallbackGroupType default_callback_group_type_ {CallbackGroupType::MutuallyExclusive};
 };
 
 }  // namespace rclcpp

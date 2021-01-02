@@ -34,7 +34,8 @@ public:
       rclcpp::contexts::get_global_default_context(),
       *options.get_rcl_node_options(),
       options.use_intra_process_comms(),
-      options.enable_topic_statistics());
+      options.enable_topic_statistics(),
+      options.default_callback_group_type());
   }
 };
 

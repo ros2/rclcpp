@@ -355,4 +355,17 @@ NodeOptions::allocator(rcl_allocator_t allocator)
   return *this;
 }
 
+const CallbackGroupType &
+NodeOptions::default_callback_group_type() const
+{
+  return this->default_callback_group_type_;
+}
+
+NodeOptions &
+NodeOptions::default_callback_group_type(CallbackGroupType cb_group_type)
+{
+  this->default_callback_group_type_ = cb_group_type;
+  return *this;
+}
+
 }  // namespace rclcpp

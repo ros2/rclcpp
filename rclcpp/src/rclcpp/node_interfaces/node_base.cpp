@@ -37,7 +37,8 @@ NodeBase::NodeBase(
   rclcpp::Context::SharedPtr context,
   const rcl_node_options_t & rcl_node_options,
   bool use_intra_process_default,
-  bool enable_topic_statistics_default)
+  bool enable_topic_statistics_default,
+  rclcpp::CallbackGroupType default_callback_group_type)
 : context_(context),
   use_intra_process_default_(use_intra_process_default),
   enable_topic_statistics_default_(enable_topic_statistics_default),
@@ -147,8 +148,7 @@ NodeBase::NodeBase(
     });
 
   // Create the default callback group.
-  using rclcpp::CallbackGroupType;
-  default_callback_group_ = create_callback_group(CallbackGroupType::MutuallyExclusive);
+  default_callback_group_ = create_callback_group(default_callback_group_type);
 
   // Indicate the notify_guard_condition is now valid.
   notify_guard_condition_is_valid_ = true;
