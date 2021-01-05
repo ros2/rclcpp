@@ -21,7 +21,9 @@
 #include "rcl/subscription.h"
 #include "rclcpp/generic/typesupport_helpers.hpp"
 
-namespace rclcpp_generic
+namespace rclcpp
+{
+namespace generic
 {
 
 namespace
@@ -42,7 +44,7 @@ std::shared_ptr<GenericSubscription> GenericSubscription::create(
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  auto ts_lib = rclcpp_generic::get_typesupport_library(
+  auto ts_lib = rclcpp::generic::get_typesupport_library(
     topic_type, "rosidl_typesupport_cpp");
 
   // Cannot use make_shared because constructor is private
@@ -68,7 +70,7 @@ GenericSubscription::GenericSubscription(
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback)
 : SubscriptionBase(
     node_base,
-    *rclcpp_generic::get_typesupport_handle(
+    *rclcpp::generic::get_typesupport_handle(
       topic_type, "rosidl_typesupport_cpp", ts_lib),
     topic_name,
     get_subscription_options(qos),
@@ -113,4 +115,5 @@ void GenericSubscription::return_serialized_message(
   message.reset();
 }
 
-}  // namespace rclcpp_generic
+}  // namespace generic
+}  // namespace rclcpp

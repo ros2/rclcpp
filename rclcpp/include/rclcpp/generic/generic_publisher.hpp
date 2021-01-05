@@ -26,7 +26,9 @@
 #include "rclcpp/callback_group.hpp"
 #include "rcpputils/shared_library.hpp"
 
-namespace rclcpp_generic
+namespace rclcpp
+{
+namespace generic
 {
 
 /**
@@ -87,6 +89,7 @@ private:
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
 };
 
-}  // namespace rclcpp_generic
+}  // namespace generic
+}  // namespace rclcpp
 
 #endif  // RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_

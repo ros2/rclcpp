@@ -25,7 +25,9 @@
 
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
-namespace rclcpp_generic
+namespace rclcpp
+{
+namespace generic
 {
 
 RCLCPP_PUBLIC
@@ -43,6 +45,7 @@ RCLCPP_PUBLIC
 std::tuple<std::string, std::string, std::string>
 extract_type_identifier(const std::string & full_type);
 
-}  // namespace rclcpp_generic
+}  // namespace generic
+}  // namespace rclcpp
 
 #endif  // RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_

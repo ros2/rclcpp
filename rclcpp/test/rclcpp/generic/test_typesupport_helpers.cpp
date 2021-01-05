@@ -25,22 +25,22 @@
 using namespace ::testing;  // NOLINT
 
 TEST(TypesupportHelpersTest, throws_exception_if_filetype_has_no_type) {
-  EXPECT_ANY_THROW(rclcpp_generic::extract_type_identifier("just_a_package_name"));
+  EXPECT_ANY_THROW(rclcpp::generic::extract_type_identifier("just_a_package_name"));
 }
 
 TEST(TypesupportHelpersTest, throws_exception_if_filetype_has_slash_at_the_start_only) {
-  EXPECT_ANY_THROW(rclcpp_generic::extract_type_identifier("/name_with_slash_at_start"));
+  EXPECT_ANY_THROW(rclcpp::generic::extract_type_identifier("/name_with_slash_at_start"));
 }
 
 TEST(TypesupportHelpersTest, throws_exception_if_filetype_has_slash_at_the_end_only) {
-  EXPECT_ANY_THROW(rclcpp_generic::extract_type_identifier("name_with_slash_at_end/"));
+  EXPECT_ANY_THROW(rclcpp::generic::extract_type_identifier("name_with_slash_at_end/"));
 }
 
 TEST(TypesupportHelpersTest, separates_into_package_and_name_for_correct_package) {
   std::string package;
   std::string middle_module;
   std::string name;
-  std::tie(package, middle_module, name) = rclcpp_generic::extract_type_identifier("package/name");
+  std::tie(package, middle_module, name) = rclcpp::generic::extract_type_identifier("package/name");
 
   EXPECT_THAT(package, StrEq("package"));
   EXPECT_THAT(middle_module, StrEq(""));
@@ -52,7 +52,7 @@ TEST(TypesupportHelpersTest, separates_into_package_and_name_for_multiple_slashe
   std::string middle_module;
   std::string name;
   std::tie(package, middle_module, name) =
-    rclcpp_generic::extract_type_identifier("package/middle_module/name");
+    rclcpp::generic::extract_type_identifier("package/middle_module/name");
 
   EXPECT_THAT(package, StrEq("package"));
   EXPECT_THAT(middle_module, StrEq("middle_module"));
@@ -62,21 +62,21 @@ TEST(TypesupportHelpersTest, separates_into_package_and_name_for_multiple_slashe
 TEST(TypesupportHelpersTest, throws_exception_if_library_is_not_initialized) {
   std::shared_ptr<rcpputils::SharedLibrary> library;
   EXPECT_THROW(
-    rclcpp_generic::get_typesupport_library("invalid/message", "rosidl_typesupport_cpp"),
+    rclcpp::generic::get_typesupport_library("invalid/message", "rosidl_typesupport_cpp"),
     std::runtime_error);
 }
 
 TEST(TypesupportHelpersTest, throws_exception_if_library_cannot_be_found) {
   EXPECT_THROW(
-    rclcpp_generic::get_typesupport_library("invalid/message", "rosidl_typesupport_cpp"),
+    rclcpp::generic::get_typesupport_library("invalid/message", "rosidl_typesupport_cpp"),
     std::runtime_error);
 }
 
 TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_legacy_library) {
   try {
-    auto library = rclcpp_generic::get_typesupport_library(
+    auto library = rclcpp::generic::get_typesupport_library(
       "test_msgs/BasicTypes", "rosidl_typesupport_cpp");
-    auto string_typesupport = rclcpp_generic::get_typesupport_handle(
+    auto string_typesupport = rclcpp::generic::get_typesupport_handle(
       "test_msgs/BasicTypes", "rosidl_typesupport_cpp", library);
 
     EXPECT_THAT(
@@ -89,9 +89,9 @@ TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_legacy_library) {
 
 TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_library) {
   try {
-    auto library = rclcpp_generic::get_typesupport_library(
+    auto library = rclcpp::generic::get_typesupport_library(
       "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp");
-    auto string_typesupport = rclcpp_generic::get_typesupport_handle(
+    auto string_typesupport = rclcpp::generic::get_typesupport_handle(
       "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp", library);
 
     EXPECT_THAT(

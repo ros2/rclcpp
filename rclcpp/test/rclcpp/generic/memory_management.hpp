@@ -21,7 +21,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rcutils/error_handling.h"
 
-namespace rclcpp_generic
+namespace rclcpp
+{
+namespace generic
 {
 class MemoryManagement
 {
@@ -59,7 +61,7 @@ public:
       message.get());
     if (error != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp_generic", "Leaking memory. Error: %s",
+        "rclcpp::generic", "Leaking memory. Error: %s",
         rcutils_get_error_string().str);
     }
     return message;
@@ -97,7 +99,7 @@ private:
         delete msg;
         if (error != RCUTILS_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
-            "rclcpp_generic", "Leaking memory. Error: %s",
+            "rclcpp::generic", "Leaking memory. Error: %s",
             rcutils_get_error_string().str);
         }
       });
@@ -107,6 +109,7 @@ private:
   rcutils_allocator_t rcutils_allocator_;
 };
 
-}  // namespace rclcpp_generic
+}  // namespace generic
+}  // namespace rclcpp
 
 #endif  // RCLCPP__GENERIC__MEMORY_MANAGEMENT_HPP_

@@ -20,7 +20,9 @@
 
 #include "rclcpp/generic/typesupport_helpers.hpp"
 
-namespace rclcpp_generic
+namespace rclcpp
+{
+namespace generic
 {
 
 namespace
@@ -38,7 +40,7 @@ std::shared_ptr<GenericPublisher> GenericPublisher::create(
   const std::string & topic_name, const std::string & topic_type, const rclcpp::QoS & qos,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  auto ts_lib = rclcpp_generic::get_typesupport_library(
+  auto ts_lib = rclcpp::generic::get_typesupport_library(
     topic_type, "rosidl_typesupport_cpp");
   // Cannot use make_shared because constructor is private
   std::shared_ptr<GenericPublisher> pub(new GenericPublisher(
@@ -53,7 +55,7 @@ GenericPublisher::GenericPublisher(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos)
-: rclcpp::PublisherBase(node_base, topic_name, *rclcpp_generic::get_typesupport_handle(
+: rclcpp::PublisherBase(node_base, topic_name, *rclcpp::generic::get_typesupport_handle(
       topic_type, "rosidl_typesupport_cpp", ts_lib), get_publisher_options(qos)), ts_lib_(
     ts_lib)
 {}
@@ -68,4 +70,5 @@ void GenericPublisher::publish(std::shared_ptr<rmw_serialized_message_t> message
   }
 }
 
-}  // namespace rclcpp_generic
+}  // namespace generic
+}  // namespace rclcpp

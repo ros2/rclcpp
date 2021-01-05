@@ -1,6 +1,6 @@
-# `rclcpp_generic`
+# `rclcpp/generic`
 
-`rclcpp_generic` contains a publisher and subscription for serialized messages.
+`rclcpp/generic` contains a publisher and subscription for serialized messages.
 
 ## How to use it
 You specify a topic name, like "/my_node/velocity", and its type, like "geometry_msgs/Twist" or the newer variant "geometry_msgs/msg/Twist".
@@ -8,7 +8,7 @@ You specify a topic name, like "/my_node/velocity", and its type, like "geometry
 For a publisher, in a node:
 
 ```cpp
-GenericPublisher::SharedPtr pub = rclcpp_generic::GenericPublisher::create(
+GenericPublisher::SharedPtr pub = rclcpp::GenericPublisher::create(
   get_node_topics_interface(),
   "/my_node/velocity",
   "geometry_msgs/Twist",
@@ -17,7 +17,7 @@ GenericPublisher::SharedPtr pub = rclcpp_generic::GenericPublisher::create(
 
 And for a subscription, in a node:
 ```cpp
-GenericSubscription::SharedPtr sub = rclcpp_generic::GenericSubscription::create(
+GenericSubscription::SharedPtr sub = rclcpp::GenericSubscription::create(
   get_node_topics_interface(), "/my_node/velocity", "geometry_msgs/Twist", rclcpp::QoS{1},
   [this](std::shared_ptr<rclcpp::SerializedMessage> msg) {RCLCPP_INFO(this->get_logger(), "Got message");});
 ```

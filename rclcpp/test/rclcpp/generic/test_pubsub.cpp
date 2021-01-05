@@ -31,7 +31,7 @@
 #include "rclcpp/generic/generic_subscription.hpp"
 
 using namespace ::testing;  // NOLINT
-using namespace rclcpp_generic;  // NOLINT
+using namespace rclcpp::generic;  // NOLINT
 
 class RclcppGenericNodeFixture : public Test
 {

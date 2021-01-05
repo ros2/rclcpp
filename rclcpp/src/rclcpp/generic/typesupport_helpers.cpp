@@ -28,7 +28,9 @@
 
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
-namespace rclcpp_generic
+namespace rclcpp
+{
+namespace generic
 {
 
 std::string get_typesupport_library_path(
@@ -152,4 +154,5 @@ get_typesupport_handle(
   }
 }
 
-}  // namespace rclcpp_generic
+}  // namespace generic
+}  // namespace rclcpp
