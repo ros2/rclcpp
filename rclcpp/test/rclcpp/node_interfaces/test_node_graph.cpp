@@ -66,6 +66,47 @@ protected:
 
   const rclcpp::node_interfaces::NodeGraph * node_graph() const {return node_graph_;}
 
+  size_t get_num_topics()
+  {
+    constexpr std::chrono::milliseconds timeout(100);
+
+    int tries = 0;
+    size_t num_topics = 0;
+    while (num_topics < 1u && tries++ < 5) {
+      auto event = node()->get_graph_event();
+      EXPECT_NO_THROW(node()->wait_for_graph_change(event, timeout));
+
+      auto topic_names_and_types = node_graph()->get_topic_names_and_types();
+      num_topics = topic_names_and_types.size();
+    }
+
+    // Run notify_graph_change() here to remove the graph_event users we created
+    // in the loop above.
+    node_graph_->notify_graph_change();
+
+    return num_topics;
+  }
+
+  size_t get_num_services()
+  {
+    constexpr std::chrono::milliseconds timeout(100);
+
+    int tries = 0;
+    size_t num_services = 0;
+    while (num_services < 1u && tries++ < 5) {
+      auto event = node()->get_graph_event();
+      EXPECT_NO_THROW(node()->wait_for_graph_change(event, timeout));
+
+      auto service_names_and_types = node_graph()->get_service_names_and_types();
+      num_services = service_names_and_types.size();
+    }
+
+    // Run notify_graph_change() here to remove the graph_event users we created
+    // in the loop above.
+    node_graph_->notify_graph_change();
+    return num_services;
+  }
+
 private:
   std::shared_ptr<rclcpp::Node> node_;
   rclcpp::node_interfaces::NodeGraph * node_graph_;
@@ -73,11 +114,9 @@ private:
 
 TEST_F(TestNodeGraph, construct_from_node)
 {
-  auto topic_names_and_types = node_graph()->get_topic_names_and_types(false);
-  EXPECT_LT(0u, topic_names_and_types.size());
+  EXPECT_LT(0u, get_num_topics());
 
-  auto service_names_and_types = node_graph()->get_service_names_and_types();
-  EXPECT_LT(0u, service_names_and_types.size());
+  EXPECT_LT(0u, get_num_services());
 
   auto names = node_graph()->get_node_names();
   EXPECT_EQ(1u, names.size());
@@ -96,8 +135,7 @@ TEST_F(TestNodeGraph, construct_from_node)
 
 TEST_F(TestNodeGraph, get_topic_names_and_types)
 {
-  auto topic_names_and_types = node_graph()->get_topic_names_and_types();
-  EXPECT_LT(0u, topic_names_and_types.size());
+  ASSERT_LT(0u, get_num_topics());
 }
 
 TEST_F(TestNodeGraph, get_topic_names_and_types_rcl_error)
@@ -126,8 +164,7 @@ TEST_F(TestNodeGraph, get_topic_names_and_types_rcl_names_and_types_fini_error)
 
 TEST_F(TestNodeGraph, get_service_names_and_types)
 {
-  auto service_names_and_types = node_graph()->get_service_names_and_types();
-  EXPECT_LT(0u, service_names_and_types.size());
+  ASSERT_LT(0u, get_num_services());
 }
 
 TEST_F(TestNodeGraph, get_service_names_and_types_rcl_error)
@@ -309,8 +346,18 @@ TEST_F(TestNodeGraph, get_info_by_topic)
 
   EXPECT_EQ(0u, node_graph()->get_publishers_info_by_topic("topic", true).size());
 
-  auto publishers = node_graph()->get_publishers_info_by_topic("topic", false);
-  ASSERT_EQ(1u, publishers.size());
+  constexpr std::chrono::milliseconds timeout(100);
+  int tries = 0;
+  size_t num_publishers = 0;
+  std::vector<rclcpp::TopicEndpointInfo> publishers;
+  while (num_publishers < 1u && tries++ < 5) {
+    auto event = node()->get_graph_event();
+    EXPECT_NO_THROW(node()->wait_for_graph_change(event, timeout));
+
+    publishers = node_graph()->get_publishers_info_by_topic("topic", false);
+    num_publishers = publishers.size();
+  }
+  ASSERT_EQ(1u, num_publishers);
 
   auto publisher_endpoint_info = publishers[0];
   const auto const_publisher_endpoint_info = publisher_endpoint_info;
