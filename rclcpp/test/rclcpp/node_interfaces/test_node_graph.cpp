@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "rcl/graph.h"
 #include "rcl/node_options.h"
