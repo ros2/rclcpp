@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -67,45 +68,45 @@ protected:
 
   const rclcpp::node_interfaces::NodeGraph * node_graph() const {return node_graph_;}
 
-  size_t get_num_topics()
+  size_t get_num_graph_things(std::function<size_t()> predicate)
   {
     constexpr std::chrono::milliseconds timeout(100);
 
-    int tries = 0;
-    size_t num_topics = 0;
-    while (num_topics < 1u && tries++ < 5) {
+    size_t tries = 0;
+    size_t num_things = 0;
+    while (tries++ < 5) {
+      num_things = predicate();
+      if (num_things >= 1) {
+        break;
+      }
+
       auto event = node()->get_graph_event();
       EXPECT_NO_THROW(node()->wait_for_graph_change(event, timeout));
-
-      auto topic_names_and_types = node_graph()->get_topic_names_and_types();
-      num_topics = topic_names_and_types.size();
     }
 
     // Run notify_graph_change() here to remove the graph_event users we created
     // in the loop above.
     node_graph_->notify_graph_change();
 
-    return num_topics;
+    return num_things;
+  }
+
+  size_t get_num_topics()
+  {
+    return get_num_graph_things(
+      [this]() -> size_t {
+        auto topic_names_and_types = node_graph()->get_topic_names_and_types();
+        return topic_names_and_types.size();
+      });
   }
 
   size_t get_num_services()
   {
-    constexpr std::chrono::milliseconds timeout(100);
-
-    int tries = 0;
-    size_t num_services = 0;
-    while (num_services < 1u && tries++ < 5) {
-      auto event = node()->get_graph_event();
-      EXPECT_NO_THROW(node()->wait_for_graph_change(event, timeout));
-
-      auto service_names_and_types = node_graph()->get_service_names_and_types();
-      num_services = service_names_and_types.size();
-    }
-
-    // Run notify_graph_change() here to remove the graph_event users we created
-    // in the loop above.
-    node_graph_->notify_graph_change();
-    return num_services;
+    return get_num_graph_things(
+      [this]() -> size_t {
+        auto service_names_and_types = node_graph()->get_service_names_and_types();
+        return service_names_and_types.size();
+      });
   }
 
 private:
@@ -347,17 +348,12 @@ TEST_F(TestNodeGraph, get_info_by_topic)
 
   EXPECT_EQ(0u, node_graph()->get_publishers_info_by_topic("topic", true).size());
 
-  constexpr std::chrono::milliseconds timeout(100);
-  int tries = 0;
-  size_t num_publishers = 0;
   std::vector<rclcpp::TopicEndpointInfo> publishers;
-  while (num_publishers < 1u && tries++ < 5) {
-    auto event = node()->get_graph_event();
-    EXPECT_NO_THROW(node()->wait_for_graph_change(event, timeout));
-
-    publishers = node_graph()->get_publishers_info_by_topic("topic", false);
-    num_publishers = publishers.size();
-  }
+  size_t num_publishers = get_num_graph_things(
+    [this, &publishers]() {
+      publishers = node_graph()->get_publishers_info_by_topic("topic", false);
+      return publishers.size();
+    });
   ASSERT_EQ(1u, num_publishers);
 
   auto publisher_endpoint_info = publishers[0];
