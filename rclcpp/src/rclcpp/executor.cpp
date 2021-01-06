@@ -736,7 +736,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   rcl_ret_t status =
     rcl_wait(&wait_set_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
-
   if (status == RCL_RET_WAIT_SET_EMPTY) {
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
