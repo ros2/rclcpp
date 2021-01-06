@@ -19,6 +19,8 @@
 #include <memory>
 #include <thread>
 
+#include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -114,7 +116,84 @@ private:
 
 using WallRate = GenericRate<std::chrono::system_clock>;
 using SteadyRate = GenericRate<std::chrono::steady_clock>;
-using Rate = WallRate;
+using Rate [[deprecated("Use rclcpp::WallRate explicitly instead.")]] = WallRate;
+
+class ROSRate : public RateBase
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(ROSRate)
+
+  explicit ROSRate(rclcpp::Clock::SharedPtr clock, double rate)
+  : ROSRate(clock, rclcpp::Duration::from_seconds(1.0 / rate))
+  {
+  }
+  explicit ROSRate(rclcpp::Clock::SharedPtr clock, rclcpp::Duration period)
+  : clock_(clock), period_(period), last_interval_(clock->now())
+  {
+  }
+
+  virtual bool
+  sleep()
+  {
+    const auto now = clock_->now();
+    // Time of next interval
+    auto next_interval = last_interval_ + period_;
+    // Detect backwards time flow
+    if (now < last_interval_) {
+      // Best thing to do is to set the next_interval to now + period
+      next_interval = now + period_;
+    }
+    // Update the interval
+    last_interval_ += period_;
+
+    // If the time_to_sleep is negative or zero, don't sleep
+    auto time_to_sleep = next_interval - now;
+    if (time_to_sleep <= rclcpp::Duration(0, 0)) {
+      // If an entire cycle was missed then reset next interval.
+      // This might happen if the loop took more than a cycle.
+      // Or if time jumps forward.
+      if (now > next_interval + period_) {
+        last_interval_ = now + period_;
+      }
+      // Either way do not sleep and return false
+      return false;
+    }
+
+    // loop for handling the case that clock is slower than a chrono clock
+    // e.g. in case of use_sim_time
+    while (time_to_sleep > rclcpp::Duration(0, 0)) {
+      // Sleep (will get interrupted by ctrl-c, may not sleep full time)
+      rclcpp::sleep_for(time_to_sleep.to_chrono<std::chrono::nanoseconds>());
+      time_to_sleep = next_interval - clock_->now();
+    }
+    return true;
+  }
+
+  virtual bool
+  is_steady() const
+  {
+    return false;
+  }
+
+  virtual void
+  reset()
+  {
+    last_interval_ = clock_->now();
+  }
+
+  rclcpp::Duration
+  period() const
+  {
+    return period_;
+  }
+
+private:
+  RCLCPP_DISABLE_COPY(ROSRate)
+
+  rclcpp::Clock::SharedPtr clock_;
+  rclcpp::Duration period_;
+  rclcpp::Time last_interval_;
+};
 
 }  // namespace rclcpp
 
