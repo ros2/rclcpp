@@ -127,23 +127,27 @@ public:
   /**
    * \param[in] node_name Name of the node.
    * \param[in] options Additional options to control creation of the node.
+   * \param[in] enable_communication_interface Deciding whether the communication interface of the underlying rcl_lifecycle_node shall be enabled.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   explicit LifecycleNode(
     const std::string & node_name,
-    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+    const rclcpp::NodeOptions & options = rclcpp::NodeOptions(),
+    bool enable_communication_interface = true);
 
   /// Create a node based on the node name and a rclcpp::Context.
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
    * \param[in] options Additional options to control creation of the node.
+   * \param[in] enable_communication_interface Deciding whether the communication interface of the underlying rcl_lifecycle_node shall be enabled.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
     const std::string & node_name,
     const std::string & namespace_,
-    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+    const rclcpp::NodeOptions & options = rclcpp::NodeOptions(),
+    bool enable_communication_interface = true);
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();

@@ -47,17 +47,20 @@ namespace rclcpp_lifecycle
 
 LifecycleNode::LifecycleNode(
   const std::string & node_name,
-  const rclcpp::NodeOptions & options)
+  const rclcpp::NodeOptions & options,
+  bool enable_communication_interface)
 : LifecycleNode(
     node_name,
     "",
-    options)
+    options,
+    enable_communication_interface)
 {}
 
 LifecycleNode::LifecycleNode(
   const std::string & node_name,
   const std::string & namespace_,
-  const rclcpp::NodeOptions & options)
+  const rclcpp::NodeOptions & options,
+  bool enable_communication_interface)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
       node_name,
       namespace_,
@@ -105,7 +108,7 @@ LifecycleNode::LifecycleNode(
   node_options_(options),
   impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
 {
-  impl_->init();
+  impl_->init(enable_communication_interface);
 
   register_on_configure(
     std::bind(
