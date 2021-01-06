@@ -518,7 +518,7 @@ protected:
    */
   RCLCPP_PUBLIC
   virtual void
-  add_callback_groups_from_nodes_associated_to_executor();
+  add_callback_groups_from_nodes_associated_to_executor() RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;

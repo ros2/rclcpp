@@ -179,7 +179,6 @@ Executor::get_automatically_added_callback_groups_from_nodes()
 void
 Executor::add_callback_groups_from_nodes_associated_to_executor()
 {
-  std::lock_guard<std::mutex> guard{mutex_};
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {

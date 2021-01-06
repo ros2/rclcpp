@@ -54,7 +54,7 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr local_get_node_by_group(
     rclcpp::CallbackGroup::SharedPtr group)
   {
-    std::lock_guard<std::mutex> guard_{mutex_}; // only to make happy the TSA
+    std::lock_guard<std::mutex> guard_{mutex_};  // only to make the TSA happy
     return get_node_by_group(weak_groups_to_nodes_, group);
   }
 
