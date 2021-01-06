@@ -476,7 +476,7 @@ protected:
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    bool notify = true);
+    bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Remove a callback group from the executor.
   /**
@@ -487,7 +487,7 @@ protected:
   remove_callback_group_from_map(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    bool notify = true);
+    bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
 
   RCLCPP_PUBLIC
   bool
@@ -532,10 +532,11 @@ protected:
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 
   // Mutex to protect the subsequent memory_strategy_.
-  std::mutex memory_strategy_mutex_;
+  mutable std::mutex mutex_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
-  memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
+  memory_strategy::MemoryStrategy::SharedPtr
+  memory_strategy_ RCPPUTILS_TSA_PT_GUARDED_BY(mutex_);
 
   /// The context associated with this executor.
   std::shared_ptr<rclcpp::Context> context_;
@@ -552,19 +553,24 @@ protected:
     WeakNodesToGuardConditionsMap;
 
   /// maps nodes to guard conditions
-  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+  WeakNodesToGuardConditionsMap
+  weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// maps callback groups associated to nodes
-  WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
+  WeakCallbackGroupsToNodesMap
+  weak_groups_associated_with_executor_to_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// maps callback groups to nodes associated with executor
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
+  WeakCallbackGroupsToNodesMap
+  weak_groups_to_nodes_associated_with_executor_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// maps all callback groups to nodes
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
+  WeakCallbackGroupsToNodesMap
+  weak_groups_to_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// nodes that are associated with the executor
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>
+  weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
 namespace executor
