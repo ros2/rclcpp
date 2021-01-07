@@ -32,7 +32,7 @@ namespace generic
 {
 
 /**
- * This class is an implementation of an rclcpp::PublisherBase for serialized messages whose topic
+ * This class is an implementation of an rclcpp::PublisherBase for serialized messages whose type
  * is not known at compile time (hence templating does not work).
  *
  * It does not support intra-process handling.
@@ -43,32 +43,9 @@ public:
   // cppcheck-suppress unknownMacro
   RCLCPP_SMART_PTR_DEFINITIONS(GenericPublisher)
 
+  /// Constructor.
   /**
-   * Factory method.
-   *
-   * The returned pointer will never be empty, but this function can throw various exceptions, for
-   * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
-   *
-   * \param topics_interface NodeTopicsInterface pointer used in parts of the setup
-   * \param topic_name Topic name
-   * \param topic_type Topic type
-   * \param qos QoS settings
-   * \param group Callback group
-   */
-  static std::shared_ptr<GenericPublisher> create(
-    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
-    const std::string & topic_name,
-    const std::string & topic_type,
-    const rclcpp::QoS & qos,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  virtual ~GenericPublisher() = default;
-
-  void publish(std::shared_ptr<rmw_serialized_message_t> message);
-
-private:
-  /**
-   * Constructor. In order to properly publish to a topic, this publisher needs to be added to
+   * In order to properly publish to a topic, this publisher needs to be added to
    * the node_topic_interface of the node passed into this constructor.
    *
    * \param node_base Pointer to parent node's NodeBaseInterface
@@ -84,6 +61,10 @@ private:
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos);
+
+  virtual ~GenericPublisher() = default;
+
+  void publish(std::shared_ptr<rmw_serialized_message_t> message);
 
   // The type support library should stay loaded, so it is stored in the GenericPublisher
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;

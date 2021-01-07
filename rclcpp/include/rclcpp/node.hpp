@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -41,6 +42,8 @@
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
+#include "rclcpp/generic/generic_publisher.hpp"
+#include "rclcpp/generic/generic_subscription.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
@@ -264,6 +267,40 @@ public:
     const std::string & service_name,
     CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a GenericPublisher.
+  /**
+   * The returned pointer will never be empty, but this function can throw various exceptions, for
+   * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
+   *
+   * \param topic_name Topic name
+   * \param topic_type Topic type
+   * \param qos QoS settings
+   * \param group Callback group
+   */
+  std::shared_ptr<rclcpp::generic::GenericPublisher> create_generic_publisher(
+    const std::string & topic_name,
+    const std::string & topic_type,
+    const rclcpp::QoS & qos,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a GenericSubscription.
+  /**
+   * The returned pointer will never be empty, but this function can throw various exceptions, for
+   * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
+   *
+   * \param topic_name Topic name
+   * \param topic_type Topic type
+   * \param qos QoS settings
+   * \param callback Callback for new messages of serialized form
+   * \param group Callback group
+   */
+  std::shared_ptr<rclcpp::generic::GenericSubscription> create_generic_subscription(
+    const std::string & topic_name,
+    const std::string & topic_type,
+    const rclcpp::QoS & qos,
+    std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Declare and initialize a parameter, return the effective value.

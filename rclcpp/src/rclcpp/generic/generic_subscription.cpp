@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "rcl/subscription.h"
 #include "rclcpp/generic/typesupport_helpers.hpp"
@@ -35,31 +34,6 @@ rcl_subscription_options_t get_subscription_options(const rclcpp::QoS & qos)
   return options;
 }
 }  // unnamed namespace
-
-std::shared_ptr<GenericSubscription> GenericSubscription::create(
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
-  const std::string & topic_name,
-  const std::string & topic_type,
-  const rclcpp::QoS & qos,
-  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  auto ts_lib = rclcpp::generic::get_typesupport_library(
-    topic_type, "rosidl_typesupport_cpp");
-
-  // Cannot use make_shared because constructor is private
-  std::shared_ptr<GenericSubscription> subscription(new GenericSubscription(
-      topics_interface->get_node_base_interface(),
-      std::move(ts_lib),
-      topic_name,
-      topic_type,
-      qos,
-      callback));
-
-  topics_interface->add_subscription(subscription, std::move(group));
-
-  return subscription;
-}
 
 GenericSubscription::GenericSubscription(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,

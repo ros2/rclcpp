@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "rclcpp/generic/typesupport_helpers.hpp"
 
@@ -34,20 +33,6 @@ rcl_publisher_options_t get_publisher_options(const rclcpp::QoS & qos)
   return options;
 }
 }  // unnamed namespace
-
-std::shared_ptr<GenericPublisher> GenericPublisher::create(
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
-  const std::string & topic_name, const std::string & topic_type, const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  auto ts_lib = rclcpp::generic::get_typesupport_library(
-    topic_type, "rosidl_typesupport_cpp");
-  // Cannot use make_shared because constructor is private
-  std::shared_ptr<GenericPublisher> pub(new GenericPublisher(
-      topics_interface->get_node_base_interface(), std::move(ts_lib), topic_name, topic_type, qos));
-  topics_interface->add_publisher(pub, std::move(group));
-  return pub;
-}
 
 GenericPublisher::GenericPublisher(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,

@@ -25,6 +25,8 @@
 
 #include "rclcpp/detail/qos_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/generic/create_generic_publisher.hpp"
+#include "rclcpp/generic/create_generic_subscription.hpp"
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"

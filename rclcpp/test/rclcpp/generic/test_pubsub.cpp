@@ -65,8 +65,7 @@ public:
   {
     std::vector<std::string> messages;
     size_t counter = 0;
-    auto subscription = GenericSubscription::create(
-      node_->get_node_topics_interface(),
+    auto subscription = node_->create_generic_subscription(
       topic_name, type, rclcpp::QoS(1),
       [&counter, &messages](std::shared_ptr<rclcpp::SerializedMessage> message) {
         test_msgs::msg::Strings string_message;
@@ -123,8 +122,7 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
   std::string topic_name = "string_topic";
   std::string type = "test_msgs/Strings";
 
-  auto publisher = GenericPublisher::create(
-    node_->get_node_topics_interface(),
+  auto publisher = node_->create_generic_publisher(
     topic_name, type, rclcpp::QoS(1));
 
   auto subscriber_future_ = std::async(
@@ -155,8 +153,7 @@ TEST_F(RclcppGenericNodeFixture, generic_subscription_uses_qos)
   rclcpp::QoS qos = rclcpp::SensorDataQoS();
 
   auto publisher = node_->create_publisher<test_msgs::msg::Strings>(topic_name, qos);
-  auto subscription = GenericSubscription::create(
-    node_->get_node_topics_interface(),
+  auto subscription = node_->create_generic_subscription(
     topic_name, topic_type, qos,
     [](std::shared_ptr<rclcpp::SerializedMessage>/* message */) {});
   auto connected = [publisher, subscription]() -> bool {
@@ -175,8 +172,7 @@ TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
   std::string topic_type = "test_msgs/Strings";
   rclcpp::QoS qos = rclcpp::QoS(1).transient_local();
 
-  auto publisher = GenericPublisher::create(
-    node_->get_node_topics_interface(), topic_name, topic_type, qos);
+  auto publisher = node_->create_generic_publisher(topic_name, topic_type, qos);
   auto subscription = node_->create_subscription<test_msgs::msg::Strings>(
     topic_name, qos,
     [](std::shared_ptr<test_msgs::msg::Strings>/* message */) {});

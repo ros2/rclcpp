@@ -58,6 +58,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/future_return_code.cpp
+  src/rclcpp/generic/create_generic_publisher.cpp
+  src/rclcpp/generic/create_generic_subscription.cpp
   src/rclcpp/generic/generic_publisher.cpp
   src/rclcpp/generic/generic_subscription.cpp
   src/rclcpp/generic/typesupport_helpers.cpp
