@@ -76,6 +76,18 @@ RCLCPP_PUBLIC
 Logger
 get_node_logger(const rcl_node_t * node);
 
+/// Get the current logging directory.
+/**
+ * For more details of how the logging directory is determined,
+ * see \ref rcl_logging_get_logging_directory.
+ *
+ * \returns the logging directory being used.
+ * \throws rclcpp::exceptions::RCLError if an unexpected error occurs.
+ */
+RCLCPP_PUBLIC
+rcpputils::fs::path
+get_logging_directory();
+
 class Logger
 {
 public:
@@ -162,16 +174,6 @@ public:
   RCLCPP_PUBLIC
   void
   set_level(Level level);
-
-  /// Get the current logging directory.
-  /**
-   * For more details of how the logging directory is determined,
-   * see \ref rcl_logging_get_logging_directory.
-   */
-  RCLCPP_PUBLIC
-  static
-  rcpputils::fs::path
-  get_logging_directory();
 };
 
 }  // namespace rclcpp

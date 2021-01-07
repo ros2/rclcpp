@@ -48,6 +48,20 @@ get_node_logger(const rcl_node_t * node)
   return rclcpp::get_logger(logger_name);
 }
 
+rcpputils::fs::path
+get_logging_directory()
+{
+  char * log_dir = NULL;
+  auto allocator = rcutils_get_default_allocator();
+  rcl_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  std::string path{log_dir};
+  allocator.deallocate(log_dir, allocator.state);
+  return path;
+}
+
 void
 Logger::set_level(Level level)
 {
@@ -64,20 +78,6 @@ Logger::set_level(Level level)
       RCL_RET_ERROR, "Couldn't set logger level",
       rcutils_get_error_state(), rcutils_reset_error);
   }
-}
-
-rcpputils::fs::path
-Logger::get_logging_directory()
-{
-  char * log_dir = NULL;
-  auto allocator = rcutils_get_default_allocator();
-  rcl_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  std::string path{log_dir};
-  allocator.deallocate(log_dir, allocator.state);
-  return path;
 }
 
 }  // namespace rclcpp

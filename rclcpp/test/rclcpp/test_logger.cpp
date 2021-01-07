@@ -161,14 +161,12 @@ TEST(TestLogger, set_level) {
 }
 
 TEST(TestLogger, get_logging_directory) {
-  rclcpp::Logger logger = rclcpp::get_logger("test_logger");
-
   ASSERT_EQ(true, rcutils_set_env("HOME", "/fake_home_dir"));
   ASSERT_EQ(true, rcutils_set_env("USERPROFILE", nullptr));
   ASSERT_EQ(true, rcutils_set_env("ROS_LOG_DIR", nullptr));
   ASSERT_EQ(true, rcutils_set_env("ROS_HOME", nullptr));
 
-  auto path = logger.get_logging_directory();
+  auto path = rclcpp::get_logging_directory();
   auto expected_path = rcpputils::fs::path{"/fake_home_dir"} / ".ros" / "log";
 
   // TODO(ivanpauno): Add operator== to rcpputils::fs::path
