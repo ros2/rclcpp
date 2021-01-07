@@ -67,14 +67,17 @@ Logger::set_level(Level level)
 }
 
 rcpputils::fs::path
-Logger::get_logging_directory() const
+Logger::get_logging_directory()
 {
   char * log_dir = NULL;
   auto allocator = rcutils_get_default_allocator();
-  rcl_logging_get_logging_directory(allocator, &log_dir);
-  std::string ret{log_dir};
+  rcl_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  std::string path{log_dir};
   allocator.deallocate(log_dir, allocator.state);
-  return ret;
+  return path;
 }
 
 }  // namespace rclcpp

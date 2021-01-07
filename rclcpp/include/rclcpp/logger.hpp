@@ -163,9 +163,15 @@ public:
   void
   set_level(Level level);
 
+  /// Get the current logging directory.
+  /**
+   * For more details of how the logging directory is determined,
+   * see \ref rcl_logging_get_logging_directory.
+   */
   RCLCPP_PUBLIC
+  static
   rcpputils::fs::path
-  get_logging_directory() const;
+  get_logging_directory();
 };
 
 }  // namespace rclcpp
