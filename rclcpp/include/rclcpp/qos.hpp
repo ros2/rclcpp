@@ -102,7 +102,7 @@ struct RCLCPP_PUBLIC KeepLast : public rclcpp::QoSInitialization
 class RCLCPP_PUBLIC QoS
 {
 public:
-  /// Constructor which allows creating a QoS by specifying only the history policy and history depth.
+  /// Create a QoS by specifying only the history policy and history depth.
   /**
    * When using the default initial profile, the defaults will include:
    *
