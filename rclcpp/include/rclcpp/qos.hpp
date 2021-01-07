@@ -90,10 +90,32 @@ struct RCLCPP_PUBLIC KeepLast : public rclcpp::QoSInitialization
 };
 
 /// Encapsulation of Quality of Service settings.
+/**
+ * Quality of Service settings control the behavior of publishers, subscriptions,
+ * and other entities, and includes things like how data is sent or resent,
+ * how data is buffered on the publishing and subscribing side, and other things.
+ * See:
+ *   <a href="https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings">
+ *     https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings
+ *   </a>
+ */
 class RCLCPP_PUBLIC QoS
 {
 public:
-  /// Constructor which allows you to construct a QoS by giving the only required settings.
+  /// Create a QoS by specifying only the history policy and history depth.
+  /**
+   * When using the default initial profile, the defaults will include:
+   *
+   *   - \link rclcpp::ReliabilityPolicy::Reliable ReliabilityPolicy::Reliable\endlink
+   *   - \link rclcpp::DurabilityPolicy::Volatile DurabilityPolicy::Volatile\endlink
+   *
+   * See rmw_qos_profile_default for a full list of default settings.
+   * If some other rmw_qos_profile_t is passed to initial_profile, then the defaults will derive from
+   * that profile instead.
+   *
+   * \param[in] qos_initialization Specifies history policy and history depth.
+   * \param[in] initial_profile The rmw_qos_profile_t instance on which to base the default settings.
+   */
   explicit
   QoS(
     const QoSInitialization & qos_initialization,
@@ -101,7 +123,11 @@ public:
 
   /// Conversion constructor to ease construction in the common case of just specifying depth.
   /**
-   * Convenience constructor, equivalent to QoS(KeepLast(history_depth)).
+   * This is a convenience constructor that calls QoS(KeepLast(history_depth)).
+   *
+   * \param[in] history_depth How many messages can be queued when publishing
+   *   with a Publisher, or how many messages can be queued before being replaced
+   *   by a Subscription.
    */
   // cppcheck-suppress noExplicitConstructor
   QoS(size_t history_depth);  // NOLINT(runtime/explicit): conversion constructor
