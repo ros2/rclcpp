@@ -14,6 +14,8 @@
 
 #include <string>
 
+#include "rcl_logging_interface/rcl_logging_interface.h"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
@@ -62,6 +64,17 @@ Logger::set_level(Level level)
       RCL_RET_ERROR, "Couldn't set logger level",
       rcutils_get_error_state(), rcutils_reset_error);
   }
+}
+
+rcpputils::fs::path
+Logger::get_logging_directory() const
+{
+  char * log_dir = NULL;
+  auto allocator = rcutils_get_default_allocator();
+  rcl_logging_get_logging_directory(allocator, &log_dir);
+  std::string ret{log_dir};
+  allocator.deallocate(log_dir, allocator.state);
+  return ret;
 }
 
 }  // namespace rclcpp

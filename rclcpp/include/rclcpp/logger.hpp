@@ -22,6 +22,7 @@
 
 #include "rcl/node.h"
 #include "rcutils/logging.h"
+#include "rcpputils/filesystem_helper.hpp"
 
 /**
  * \def RCLCPP_LOGGING_ENABLED
@@ -161,6 +162,10 @@ public:
   RCLCPP_PUBLIC
   void
   set_level(Level level);
+
+  RCLCPP_PUBLIC
+  rcpputils::fs::path
+  get_logging_directory() const;
 };
 
 }  // namespace rclcpp
