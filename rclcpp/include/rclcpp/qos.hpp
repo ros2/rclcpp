@@ -90,10 +90,24 @@ struct RCLCPP_PUBLIC KeepLast : public rclcpp::QoSInitialization
 };
 
 /// Encapsulation of Quality of Service settings.
+/**
+ * Quality of Service settings contains parameters for the underlying middleware, typically DDS,
+ * to tune communication between nodes. See
+ * <a href="https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/">
+ About Quality of Service Settings</a> for an explanation.
+ */
 class RCLCPP_PUBLIC QoS
 {
 public:
-  /// Constructor which allows you to construct a QoS by giving the only required settings.
+  /// Constructor which allows creating a QoS by specifying only the history policy and history depth.
+  /**
+   * When using the default initial profile, this uses \link rclcpp::ReliabilityPolicy::Reliable
+   * ReliabilityPolicy::Reliable\endlink and \link rclcpp::DurabilityPolicy::Volatile
+   * DurabilityPolicy::Volatile\endlink. See the global variable rmw_qos_profile_default for a full list.
+   *
+   * \param[in] qos_initialization Specifies history policy and history depth.
+   * \param[in] initial_profile Specifies other settings.
+   */
   explicit
   QoS(
     const QoSInitialization & qos_initialization,
@@ -101,7 +115,11 @@ public:
 
   /// Conversion constructor to ease construction in the common case of just specifying depth.
   /**
-   * Convenience constructor, equivalent to QoS(KeepLast(history_depth)).
+   * This is a convenience constructor that calls
+   * QoS(const QoSInitialization&, const rmw_qos_profile_t &) with the first argument set
+   * to KeepLast(history_depth) and the second argument equal to the default.
+   *
+   * \param[in] history_depth How many messages can be queued up by the node.
    */
   // cppcheck-suppress noExplicitConstructor
   QoS(size_t history_depth);  // NOLINT(runtime/explicit): conversion constructor
