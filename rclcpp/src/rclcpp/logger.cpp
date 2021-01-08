@@ -53,8 +53,8 @@ get_logging_directory()
 {
   char * log_dir = NULL;
   auto allocator = rcutils_get_default_allocator();
-  rcl_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
-  if (RCL_RET_OK != ret) {
+  rcl_logging_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
+  if (RCL_LOGGING_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
   std::string path{log_dir};
