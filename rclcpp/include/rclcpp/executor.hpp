@@ -448,7 +448,7 @@ protected:
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(
-    WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
     rclcpp::CallbackGroup::SharedPtr group);
 
   /// Return true if the node has been added to this executor.
@@ -460,7 +460,7 @@ protected:
   bool
   has_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const;
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
@@ -497,7 +497,7 @@ protected:
   bool
   get_next_ready_executable_from_map(
     AnyExecutable & any_executable,
-    WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   RCLCPP_PUBLIC
   bool

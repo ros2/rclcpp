@@ -753,7 +753,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 Executor::get_node_by_group(
-  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
   rclcpp::CallbackGroup::SharedPtr group)
 {
   if (!group) {
@@ -812,7 +812,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 bool
 Executor::get_next_ready_executable_from_map(
   AnyExecutable & any_executable,
-  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes)
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   bool success = false;
   std::lock_guard<std::mutex> guard{mutex_};
@@ -902,7 +902,7 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
 bool
 Executor::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const
 {
   return std::find_if(
     weak_groups_to_nodes.begin(),
