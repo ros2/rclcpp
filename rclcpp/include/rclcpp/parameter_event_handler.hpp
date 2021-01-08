@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__PARAMETER_EVENT_MONITOR_HPP_
-#define RCLCPP__PARAMETER_EVENT_MONITOR_HPP_
+#ifndef RCLCPP__PARAMETER_EVENT_HANDLER_HPP_
+#define RCLCPP__PARAMETER_EVENT_HANDLER_HPP_
 
 #include <list>
 #include <memory>
@@ -58,7 +58,7 @@ struct ParameterEventCallbackHandle
   ParameterEventCallbackType callback;
 };
 
-class ParameterEventMonitor
+class ParameterEventHandler
 {
 public:
   /// Construct a parameter events monitor.
@@ -67,7 +67,7 @@ public:
    * \param[in] qos The QoS settings to use for any subscriptions.
    */
   template<typename NodeT>
-  ParameterEventMonitor(
+  ParameterEventHandler(
     NodeT node,
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
@@ -78,7 +78,7 @@ public:
 
     event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node_topics, "/parameter_events", qos,
-      std::bind(&ParameterEventMonitor::event_callback, this, std::placeholders::_1));
+      std::bind(&ParameterEventHandler::event_callback, this, std::placeholders::_1));
   }
 
   using ParameterEventCallbackType =
@@ -238,4 +238,4 @@ protected:
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__PARAMETER_EVENT_MONITOR_HPP_
+#endif  // RCLCPP__PARAMETER_EVENT_HANDLER_HPP_

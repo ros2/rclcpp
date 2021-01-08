@@ -19,14 +19,14 @@
 #include <utility>
 #include <vector>
 
-#include "rclcpp/parameter_event_monitor.hpp"
+#include "rclcpp/parameter_event_handler.hpp"
 #include "rcpputils/join.hpp"
 
 namespace rclcpp
 {
 
 ParameterEventCallbackHandle::SharedPtr
-ParameterEventMonitor::add_parameter_event_callback(
+ParameterEventHandler::add_parameter_event_callback(
   ParameterEventCallbackType callback)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -55,7 +55,7 @@ struct HandleCompare
 };
 
 void
-ParameterEventMonitor::remove_parameter_event_callback(
+ParameterEventHandler::remove_parameter_event_callback(
   const ParameterEventCallbackHandle * const handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -71,7 +71,7 @@ ParameterEventMonitor::remove_parameter_event_callback(
 }
 
 ParameterCallbackHandle::SharedPtr
-ParameterEventMonitor::add_parameter_callback(
+ParameterEventHandler::add_parameter_callback(
   const std::string & parameter_name,
   ParameterCallbackType callback,
   const std::string & node_name)
@@ -90,7 +90,7 @@ ParameterEventMonitor::add_parameter_callback(
 }
 
 void
-ParameterEventMonitor::remove_parameter_callback(
+ParameterEventHandler::remove_parameter_callback(
   const ParameterCallbackHandle * const handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -110,7 +110,7 @@ ParameterEventMonitor::remove_parameter_callback(
 }
 
 bool
-ParameterEventMonitor::get_parameter_from_event(
+ParameterEventHandler::get_parameter_from_event(
   const rcl_interfaces::msg::ParameterEvent & event,
   rclcpp::Parameter & parameter,
   const std::string parameter_name,
@@ -138,7 +138,7 @@ ParameterEventMonitor::get_parameter_from_event(
 }
 
 rclcpp::Parameter
-ParameterEventMonitor::get_parameter_from_event(
+ParameterEventHandler::get_parameter_from_event(
   const rcl_interfaces::msg::ParameterEvent & event,
   const std::string parameter_name,
   const std::string node_name)
@@ -153,7 +153,7 @@ ParameterEventMonitor::get_parameter_from_event(
 }
 
 std::vector<rclcpp::Parameter>
-ParameterEventMonitor::get_parameters_from_event(
+ParameterEventHandler::get_parameters_from_event(
   const rcl_interfaces::msg::ParameterEvent & event)
 {
   std::vector<rclcpp::Parameter> params;
@@ -170,7 +170,7 @@ ParameterEventMonitor::get_parameters_from_event(
 }
 
 void
-ParameterEventMonitor::event_callback(
+ParameterEventHandler::event_callback(
   const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -200,7 +200,7 @@ ParameterEventMonitor::event_callback(
 }
 
 std::string
-ParameterEventMonitor::resolve_path(const std::string & path)
+ParameterEventHandler::resolve_path(const std::string & path)
 {
   std::string full_path;
 

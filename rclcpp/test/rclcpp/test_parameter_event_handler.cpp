@@ -18,11 +18,11 @@
 #include "gtest/gtest.h"
 #include "rclcpp/rclcpp.hpp"
 
-class TestParameterEventMonitor : public rclcpp::ParameterEventMonitor
+class TestParameterEventHandler : public rclcpp::ParameterEventHandler
 {
 public:
-  explicit TestParameterEventMonitor(rclcpp::Node::SharedPtr node)
-  : ParameterEventMonitor(node)
+  explicit TestParameterEventHandler(rclcpp::Node::SharedPtr node)
+  : ParameterEventHandler(node)
   {}
 
   void test_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
@@ -48,7 +48,7 @@ protected:
     remote_node_name = "/remote_node";
     diff_ns_name = "/ns/remote_node";
 
-    param_monitor = std::make_shared<TestParameterEventMonitor>(node);
+    param_handler = std::make_shared<TestParameterEventHandler>(node);
 
     same_node_int = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
     same_node_double = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
@@ -92,7 +92,7 @@ protected:
   void TearDown()
   {
     node.reset();
-    param_monitor.reset();
+    param_handler.reset();
   }
 
   rcl_interfaces::msg::ParameterEvent::SharedPtr same_node_int;
@@ -105,7 +105,7 @@ protected:
   rclcpp::Node::SharedPtr node;
   std::string remote_node_name;
   std::string diff_ns_name;
-  std::shared_ptr<TestParameterEventMonitor> param_monitor;
+  std::shared_ptr<TestParameterEventHandler> param_handler;
 };
 
 TEST_F(TestNode, RegisterParameterCallback)
@@ -113,25 +113,25 @@ TEST_F(TestNode, RegisterParameterCallback)
   bool received;
   auto cb = [&received](const rclcpp::Parameter &) {received = true;};
 
-  auto h1 = param_monitor->add_parameter_callback("my_double", cb);
-  auto h2 = param_monitor->add_parameter_callback("my_int", cb);
-  auto h3 = param_monitor->add_parameter_callback("my_string", cb, remote_node_name);
-  auto h4 = param_monitor->add_parameter_callback("my_bool", cb, diff_ns_name);
+  auto h1 = param_handler->add_parameter_callback("my_double", cb);
+  auto h2 = param_handler->add_parameter_callback("my_int", cb);
+  auto h3 = param_handler->add_parameter_callback("my_string", cb, remote_node_name);
+  auto h4 = param_handler->add_parameter_callback("my_bool", cb, diff_ns_name);
 
   received = false;
-  param_monitor->test_event(same_node_double);
+  param_handler->test_event(same_node_double);
   EXPECT_EQ(received, true);
 
   received = false;
-  param_monitor->test_event(same_node_int);
+  param_handler->test_event(same_node_int);
   EXPECT_EQ(received, true);
 
   received = false;
-  param_monitor->test_event(remote_node_string);
+  param_handler->test_event(remote_node_string);
   EXPECT_EQ(received, true);
 
   received = false;
-  param_monitor->test_event(diff_ns_bool);
+  param_handler->test_event(diff_ns_bool);
   EXPECT_EQ(received, true);
 }
 
@@ -148,56 +148,56 @@ TEST_F(TestNode, SameParameterDifferentNode)
     };
 
   // Set individual parameters
-  auto h1 = param_monitor->add_parameter_callback("my_int", cb1);
-  auto h2 = param_monitor->add_parameter_callback("my_int", cb2, remote_node_name);
+  auto h1 = param_handler->add_parameter_callback("my_int", cb1);
+  auto h2 = param_handler->add_parameter_callback("my_int", cb2, remote_node_name);
 
-  param_monitor->test_event(same_node_int);
+  param_handler->test_event(same_node_int);
   EXPECT_EQ(int_param_node1, 1);
   EXPECT_NE(int_param_node2, 1);
 
   int_param_node1 = 0;
   int_param_node2 = 0;
 
-  param_monitor->test_event(diff_node_int);
+  param_handler->test_event(diff_node_int);
   EXPECT_NE(int_param_node1, 1);
   EXPECT_EQ(int_param_node2, 1);
 }
 
 TEST_F(TestNode, GetParameterFromEvent)
 {
-  using rclcpp::ParameterEventMonitor;
+  using rclcpp::ParameterEventHandler;
   std::string node_name = node->get_fully_qualified_name();
   std::string wrong_name = "/wrong_node_name";
 
   rclcpp::Parameter p;
   EXPECT_TRUE(
-    ParameterEventMonitor::get_parameter_from_event(*multiple, p, "my_int", node_name));
+    ParameterEventHandler::get_parameter_from_event(*multiple, p, "my_int", node_name));
   EXPECT_EQ(p.get_value<int>(), 1);
   // False if parameter not with correct node name
   EXPECT_FALSE(
-    ParameterEventMonitor::get_parameter_from_event(*multiple, p, "my_int", wrong_name));
+    ParameterEventHandler::get_parameter_from_event(*multiple, p, "my_int", wrong_name));
   // False if parameter not part of event
   EXPECT_FALSE(
-    ParameterEventMonitor::get_parameter_from_event(*diff_ns_bool, p, "my_int", node_name));
+    ParameterEventHandler::get_parameter_from_event(*diff_ns_bool, p, "my_int", node_name));
 
   EXPECT_NO_THROW(
-    ParameterEventMonitor::get_parameter_from_event(*multiple, "my_int", node_name));
+    ParameterEventHandler::get_parameter_from_event(*multiple, "my_int", node_name));
   // Throws if parameter not with correct node name
   EXPECT_THROW(
-    ParameterEventMonitor::get_parameter_from_event(*multiple, "my_int", wrong_name),
+    ParameterEventHandler::get_parameter_from_event(*multiple, "my_int", wrong_name),
     std::runtime_error);
   // Throws if parameter not part of event
   EXPECT_THROW(
-    ParameterEventMonitor::get_parameter_from_event(*diff_ns_bool, "my_int", node_name),
+    ParameterEventHandler::get_parameter_from_event(*diff_ns_bool, "my_int", node_name),
     std::runtime_error);
 }
 
 TEST_F(TestNode, GetParametersFromEvent)
 {
-  using rclcpp::ParameterEventMonitor;
+  using rclcpp::ParameterEventHandler;
   std::string node_name = node->get_fully_qualified_name();
 
-  auto params = ParameterEventMonitor::get_parameters_from_event(*multiple);
+  auto params = ParameterEventHandler::get_parameters_from_event(*multiple);
   EXPECT_EQ(params.size(), 2u);
   bool found_int = false;
   bool found_double = false;
@@ -213,7 +213,7 @@ TEST_F(TestNode, GetParametersFromEvent)
   EXPECT_EQ(found_int, true);
   EXPECT_EQ(found_double, true);
 
-  params = ParameterEventMonitor::get_parameters_from_event(*remote_node_string);
+  params = ParameterEventHandler::get_parameters_from_event(*remote_node_string);
   EXPECT_EQ(params.size(), 1u);
   bool found_string = false;
   for (auto & p : params) {
@@ -224,7 +224,7 @@ TEST_F(TestNode, GetParametersFromEvent)
   }
   EXPECT_EQ(found_string, true);
 
-  params = ParameterEventMonitor::get_parameters_from_event(*diff_ns_bool);
+  params = ParameterEventHandler::get_parameters_from_event(*diff_ns_bool);
   EXPECT_EQ(params.size(), 1u);
   bool found_bool = false;
   for (auto & p : params) {
@@ -238,7 +238,7 @@ TEST_F(TestNode, GetParametersFromEvent)
 
 TEST_F(TestNode, EventCallback)
 {
-  using rclcpp::ParameterEventMonitor;
+  using rclcpp::ParameterEventHandler;
 
   double double_param = 0.0;
   int64_t int_param = 0;
@@ -257,11 +257,11 @@ TEST_F(TestNode, EventCallback)
       }
 
       rclcpp::Parameter p;
-      if (ParameterEventMonitor::get_parameter_from_event(*event, p, "my_int", node_name)) {
+      if (ParameterEventHandler::get_parameter_from_event(*event, p, "my_int", node_name)) {
         int_param = p.get_value<int64_t>();
       }
       try {
-        p = ParameterEventMonitor::get_parameter_from_event(*event, "my_double", node_name);
+        p = ParameterEventHandler::get_parameter_from_event(*event, "my_double", node_name);
         double_param = p.get_value<double>();
       } catch (...) {
       }
@@ -274,7 +274,7 @@ TEST_F(TestNode, EventCallback)
     {
       rclcpp::Parameter p;
       if (event->node == diff_ns_name) {
-        if (ParameterEventMonitor::get_parameter_from_event(
+        if (ParameterEventHandler::get_parameter_from_event(
             *event, p, "my_bool", diff_ns_name))
         {
           bool_param = p.get_value<bool>();
@@ -282,30 +282,30 @@ TEST_F(TestNode, EventCallback)
       }
     };
 
-  auto event_handle = param_monitor->add_parameter_event_callback(cb);
-  auto event_handle2 = param_monitor->add_parameter_event_callback(cb2);
+  auto event_handle = param_handler->add_parameter_event_callback(cb);
+  auto event_handle2 = param_handler->add_parameter_event_callback(cb2);
 
   bool_param = false;
-  param_monitor->test_event(multiple);
+  param_handler->test_event(multiple);
   EXPECT_EQ(received, true);
   EXPECT_EQ(product, 1.0);
   EXPECT_EQ(bool_param, false);
 
-  param_monitor->test_event(diff_ns_bool);
+  param_handler->test_event(diff_ns_bool);
   EXPECT_EQ(bool_param, true);
 
   // Test removal of event callback
   received = false;
   bool_param = false;
-  param_monitor->remove_parameter_event_callback(event_handle.get());
-  param_monitor->test_event(multiple);
-  param_monitor->test_event(diff_ns_bool);
+  param_handler->remove_parameter_event_callback(event_handle.get());
+  param_handler->test_event(multiple);
+  param_handler->test_event(diff_ns_bool);
   EXPECT_EQ(received, false);
   EXPECT_EQ(bool_param, true);
 
   // Should throw if callback handle no longer exists or already removed
   EXPECT_THROW(
-    param_monitor->remove_parameter_event_callback(event_handle.get()), std::runtime_error);
+    param_handler->remove_parameter_event_callback(event_handle.get()), std::runtime_error);
 }
 
 TEST_F(TestNode, MultipleParameterCallbacks)
@@ -317,30 +317,30 @@ TEST_F(TestNode, MultipleParameterCallbacks)
   auto cb2 = [&received_2](const rclcpp::Parameter &) {received_2 = true;};
   auto cb3 = [](const rclcpp::Parameter &) { /*do nothing*/};
 
-  auto h1 = param_monitor->add_parameter_callback("my_int", cb1);
-  auto h2 = param_monitor->add_parameter_callback("my_int", cb2);
-  auto h3 = param_monitor->add_parameter_callback("my_double", cb3);
+  auto h1 = param_handler->add_parameter_callback("my_int", cb1);
+  auto h2 = param_handler->add_parameter_callback("my_int", cb2);
+  auto h3 = param_handler->add_parameter_callback("my_double", cb3);
 
   // Test multiple callbacks per parameter
-  param_monitor->test_event(same_node_int);
+  param_handler->test_event(same_node_int);
   EXPECT_EQ(received_1, true);
   EXPECT_EQ(received_2, true);
 
   // Test removal of parameter callback by callback handle
   received_1 = false;
   received_2 = false;
-  param_monitor->remove_parameter_callback(h1.get());
-  param_monitor->test_event(same_node_int);
+  param_handler->remove_parameter_callback(h1.get());
+  param_handler->test_event(same_node_int);
   EXPECT_EQ(received_1, false);
   EXPECT_EQ(received_2, true);
 
   // Test removal of parameter callback by name
   received_2 = false;
-  param_monitor->remove_parameter_callback(h2.get());
-  param_monitor->test_event(same_node_int);
+  param_handler->remove_parameter_callback(h2.get());
+  param_handler->test_event(same_node_int);
   EXPECT_EQ(received_2, false);
 
   // Should throw if callback handle no longer exists or already removed
-  EXPECT_THROW(param_monitor->remove_parameter_callback(h1.get()), std::runtime_error);
-  EXPECT_THROW(param_monitor->remove_parameter_callback(h2.get()), std::runtime_error);
+  EXPECT_THROW(param_handler->remove_parameter_callback(h1.get()), std::runtime_error);
+  EXPECT_THROW(param_handler->remove_parameter_callback(h2.get()), std::runtime_error);
 }
