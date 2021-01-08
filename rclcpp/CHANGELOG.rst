@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.2.0 (2021-01-08)
+------------------
 * Better documentation for the QoS class (`#1508 <https://github.com/ros2/rclcpp/issues/1508>`_)
 * Modify excluding callback duration from topic statistics (`#1492 <https://github.com/ros2/rclcpp/issues/1492>`_)
 * Make the test of graph users more robust. (`#1504 <https://github.com/ros2/rclcpp/issues/1504>`_)

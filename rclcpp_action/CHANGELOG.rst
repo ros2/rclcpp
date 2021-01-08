@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+6.2.0 (2021-01-08)
+------------------
 * Goal response callback compatibility shim with deprecation of old signature (`#1495 <https://github.com/ros2/rclcpp/issues/1495>`_)
 * [rclcpp_action] Add warnings (`#1405 <https://github.com/ros2/rclcpp/issues/1405>`_)
 * Contributors: Audrow Nash, Ivan Santiago Paunovic
