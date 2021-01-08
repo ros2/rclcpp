@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
-#define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
+#ifndef RCLCPP__PARAMETER_EVENT_MONITOR_HPP_
+#define RCLCPP__PARAMETER_EVENT_MONITOR_HPP_
 
 #include <list>
 #include <memory>
 #include <string>
-#include <utility>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
-#include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/node_interfaces/get_node_base_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_logging_interface.hpp"
@@ -33,6 +32,7 @@
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rcl_interfaces/msg/parameter_event.hpp"
 
 namespace rclcpp
 {
@@ -58,12 +58,16 @@ struct ParameterEventCallbackHandle
   ParameterEventCallbackType callback;
 };
 
-class ParameterEventsSubscriber
+class ParameterEventMonitor
 {
 public:
-  /// Construct a subscriber to parameter events
+  /// Construct a parameter events monitor.
+  /**
+   * \param[in] node The node to use to create any required subscribers.
+   * \param[in] qos The QoS settings to use for any subscriptions.
+   */
   template<typename NodeT>
-  ParameterEventsSubscriber(
+  ParameterEventMonitor(
     NodeT node,
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
@@ -74,26 +78,27 @@ public:
 
     event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node_topics, "/parameter_events", qos,
-      std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
+      std::bind(&ParameterEventMonitor::event_callback, this, std::placeholders::_1));
   }
 
   using ParameterEventCallbackType =
     ParameterEventCallbackHandle::ParameterEventCallbackType;
 
-  /// Set a custom callback for parameter events.
+  /// Set a callback for all parameter events.
   /**
-   * Multiple callbacks are allowed.
+   * This function may be called multiple times to set multiple parameter event callbacks.
    *
-   * \param[in] callback Function callback to be evaluated on event.
+   * \param[in] callback Function callback to be invoked on parameter updates.
+   * \returns A handle used to refer to the callback.
    */
   RCLCPP_PUBLIC
   ParameterEventCallbackHandle::SharedPtr
   add_parameter_event_callback(
     ParameterEventCallbackType callback);
 
-  /// Remove parameter event callback.
+  /// Remove parameter event callback registered with add_parameter_event_callback.
   /**
-   * Calling this function will set the event callback to nullptr.
+   * \param[in] handle Pointer to the handle for the callback to remove.
    */
   RCLCPP_PUBLIC
   void
@@ -102,13 +107,14 @@ public:
 
   using ParameterCallbackType = ParameterCallbackHandle::ParameterCallbackType;
 
-  /// Add a custom callback for a specified parameter.
+  /// Add a callback for a specified parameter.
   /**
    * If a node_name is not provided, defaults to the current node.
    *
-   * \param[in] parameter_name Name of parameter.
-   * \param[in] callback Function callback to be evaluated upon parameter event.
+   * \param[in] parameter_name Name of parameter to monitor.
+   * \param[in] callback Function callback to be invoked upon parameter update.
    * \param[in] node_name Name of node which hosts the parameter.
+   * \returns A handle used to refer to the callback.
    */
   RCLCPP_PUBLIC
   ParameterCallbackHandle::SharedPtr
@@ -117,7 +123,7 @@ public:
     ParameterCallbackType callback,
     const std::string & node_name = "");
 
-  /// Remove a custom callback for a specified parameter given its callback handle.
+  /// Remove a parameter callback registered with add_parameter_callback.
   /**
    * The parameter name and node name are inspected from the callback handle. The callback handle
    * is erased from the list of callback handles on the {parameter_name, node_name} in the map.
@@ -130,7 +136,7 @@ public:
   remove_parameter_callback(
     const ParameterCallbackHandle * const handle);
 
-  /// Get a rclcpp::Parameter from parameter event, return true if parameter name & node in event.
+  /// Get an rclcpp::Parameter from a parameter event.
   /**
    * If a node_name is not provided, defaults to the current node.
    *
@@ -138,7 +144,8 @@ public:
    * \param[out] parameter Reference to rclcpp::Parameter to be assigned.
    * \param[in] parameter_name Name of parameter.
    * \param[in] node_name Name of node which hosts the parameter.
-   * \returns true if requested parameter name & node is in event, false otherwise
+   * \returns Output parameter is set with requested parameter info and returns true if
+   * requested parameter name and node is in event. Otherwise, returns false.
    */
   RCLCPP_PUBLIC
   static bool
@@ -148,7 +155,7 @@ public:
     const std::string parameter_name,
     const std::string node_name = "");
 
-  /// Get a rclcpp::Parameter from parameter event
+  /// Get an rclcpp::Parameter from parameter event
   /**
    * If a node_name is not provided, defaults to the current node.
    *
@@ -159,7 +166,7 @@ public:
    * \param[in] event Event msg to be inspected.
    * \param[in] parameter_name Name of parameter.
    * \param[in] node_name Name of node which hosts the parameter.
-   * \returns The resultant rclcpp::Parameter from the event
+   * \returns The resultant rclcpp::Parameter from the event.
    */
   RCLCPP_PUBLIC
   static rclcpp::Parameter
@@ -171,7 +178,7 @@ public:
   /// Get all rclcpp::Parameter values from a parameter event
   /**
    * \param[in] event Event msg to be inspected.
-   * \returns A vector rclcpp::Parameter values from the event
+   * \returns A vector rclcpp::Parameter values from the event.
    */
   RCLCPP_PUBLIC
   static std::vector<rclcpp::Parameter>
@@ -215,7 +222,7 @@ protected:
   };
   // *INDENT-ON*
 
-  // Map container for registered parameters.
+  // Map container for registered parameters
   std::unordered_map<
     std::pair<std::string, std::string>,
     CallbacksContainerType,
@@ -231,4 +238,4 @@ protected:
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
+#endif  // RCLCPP__PARAMETER_EVENT_MONITOR_HPP_
