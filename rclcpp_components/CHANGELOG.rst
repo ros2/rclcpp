@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use std compliant non-method std::filesystem::exists function (`#1502 <https://github.com/ros2/rclcpp/issues/1502>`_)
+* Fix string literal warnings (`#1442 <https://github.com/ros2/rclcpp/issues/1442>`_)
+* Contributors: Audrow Nash, Josh Langsfeld
+
 6.1.0 (2020-12-10)
 ------------------
 * Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
