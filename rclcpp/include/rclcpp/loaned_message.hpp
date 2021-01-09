@@ -130,10 +130,26 @@ public:
    */
   virtual ~LoanedMessage()
   {
+    auto error_logger = rclcpp::get_logger("LoanedMessage");
+
     if (message_ == nullptr) {
       return;
     }
-    destroy_message(pub_, message_, message_allocator_);
+
+    if (pub_.can_loan_messages()) {
+      // return allocated memory to the middleware
+      auto ret =
+        rcl_return_loaned_message_from_publisher(pub_.get_publisher_handle().get(), message_);
+      if (ret != RCL_RET_OK) {
+        RCLCPP_ERROR(
+          error_logger, "rcl_deallocate_loaned_message failed: %s", rcl_get_error_string().str);
+        rcl_reset_error();
+      }
+    } else {
+      // call destructor before deallocating
+      message_->~MessageT();
+      message_allocator_.deallocate(message_, 1);
+    }
     message_ = nullptr;
   }
 
@@ -167,8 +183,10 @@ public:
   /**
    * A call to `release()` will unmanage the memory for the ROS message.
    * That means that the destructor of this class will not free the memory on scope exit.
-   * The memory is freed when the unique pointer goes out instead, and the unique pointer
-   * will keep the publisher alive until it is destroyed.
+   * If the message is loaned from the middleware but not be published, the user needs to call
+   * `rcl_return_loaned_message_from_publisher` manually.
+   * If the memory is from the local allocator, the memory is freed when the unique pointer
+   * goes out instead, and the unique pointer will keep the publisher alive until it is destroyed.
    *
    * \return std::unique_ptr to the message instance.
    */
@@ -177,10 +195,17 @@ public:
   {
     auto msg = message_;
     message_ = nullptr;
+
+    if (pub_.can_loan_messages()) {
+      return std::unique_ptr<MessageT, std::function<void(MessageT *)>>(msg, [](MessageT *) {});
+    }
+
     return std::unique_ptr<MessageT, std::function<void(MessageT *)>>(
       msg,
-      [pub = pub_, allocator = message_allocator_](MessageT * msg_ptr) {
-        LoanedMessage::destroy_message(pub, msg_ptr, allocator);
+      [ = ](MessageT * msg_ptr) {
+        // call destructor before deallocating
+        msg_ptr->~MessageT();
+        message_allocator_.deallocate(msg_ptr, 1);
       });
   }
 
@@ -193,30 +218,6 @@ protected:
 
   /// Deleted copy constructor to preserve memory integrity.
   LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
-
-private:
-  static void destroy_message(
-    const rclcpp::PublisherBase & pub,
-    MessageT * msg_ptr,
-    std::allocator<MessageT> allocator)
-  {
-    auto error_logger = rclcpp::get_logger("LoanedMessage");
-
-    if (pub.can_loan_messages()) {
-      // return allocated memory to the middleware
-      auto ret =
-        rcl_return_loaned_message_from_publisher(pub.get_publisher_handle().get(), msg_ptr);
-      if (ret != RCL_RET_OK) {
-        RCLCPP_ERROR(
-          error_logger, "rcl_deallocate_loaned_message failed: %s", rcl_get_error_string().str);
-        rcl_reset_error();
-      }
-    } else {
-      // call destructor before deallocating
-      msg_ptr->~MessageT();
-      allocator.deallocate(msg_ptr, 1);
-    }
-  }
 };
 
 }  // namespace rclcpp
