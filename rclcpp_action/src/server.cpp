@@ -286,9 +286,6 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
   rmw_request_id_t request_header = std::get<2>(*shared_ptr);
   std::shared_ptr<void> message = std::get<3>(*shared_ptr);
 
-
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
-
   pimpl_->goal_request_ready_ = false;
 
   GoalUUID uuid = get_goal_id_from_goal_request(message.get());
@@ -297,10 +294,13 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
   // Call user's callback, getting the user's response and a ros message to send back
   auto response_pair = call_handle_goal_callback(uuid, message);
 
-  ret = rcl_action_send_goal_response(
-    pimpl_->action_server_.get(),
-    &request_header,
-    response_pair.second.get());
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+    ret = rcl_action_send_goal_response(
+      pimpl_->action_server_.get(),
+      &request_header,
+      response_pair.second.get());
+  }
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -325,7 +325,10 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
         }
       };
     rcl_action_goal_handle_t * rcl_handle;
-    rcl_handle = rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info);
+    {
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+      rcl_handle = rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info);
+    }
     if (!rcl_handle) {
       throw std::runtime_error("Failed to accept new goal\n");
     }
@@ -334,11 +337,17 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     // Copy out goal handle since action server storage disappears when it is fini'd
     *handle = *rcl_handle;
 
-    pimpl_->goal_handles_[uuid] = handle;
+    {
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+      pimpl_->goal_handles_[uuid] = handle;
+    }
 
     if (GoalResponse::ACCEPT_AND_EXECUTE == status) {
       // Change status to executing
-      ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
+      {
+        std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+        ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
+      }
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
@@ -359,7 +368,6 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
     <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
       rmw_request_id_t>>(data);
   auto ret = std::get<0>(*shared_ptr);
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
     // Ignore take failure because connext fails if it receives a sample without valid data.
     // This happens when a client shuts down and connext receives a sample saying the client is
@@ -380,10 +388,14 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
   // Get a list of goal info that should be attempted to be cancelled
   rcl_action_cancel_response_t cancel_response = rcl_action_get_zero_initialized_cancel_response();
 
-  ret = rcl_action_process_cancel_request(
-    pimpl_->action_server_.get(),
-    &cancel_request,
-    &cancel_response);
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+    ret = rcl_action_process_cancel_request(
+      pimpl_->action_server_.get(),
+      &cancel_request,
+      &cancel_response);
+  }
+
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -426,8 +438,12 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
     publish_status();
   }
 
-  ret = rcl_action_send_cancel_response(
-    pimpl_->action_server_.get(), &request_header, response.get());
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+    ret = rcl_action_send_cancel_response(
+      pimpl_->action_server_.get(), &request_header, response.get());
+  }
+
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
