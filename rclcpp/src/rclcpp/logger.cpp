@@ -14,8 +14,6 @@
 
 #include <string>
 
-#include "rcl_logging_interface/rcl_logging_interface.h"
-
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
@@ -46,20 +44,6 @@ get_node_logger(const rcl_node_t * node)
     return logger;
   }
   return rclcpp::get_logger(logger_name);
-}
-
-rcpputils::fs::path
-get_logging_directory()
-{
-  char * log_dir = NULL;
-  auto allocator = rcutils_get_default_allocator();
-  rcl_logging_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
-  if (RCL_LOGGING_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  std::string path{log_dir};
-  allocator.deallocate(log_dir, allocator.state);
-  return path;
 }
 
 void
