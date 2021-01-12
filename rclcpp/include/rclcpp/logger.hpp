@@ -22,11 +22,6 @@
 
 #include "rcl/node.h"
 #include "rcutils/logging.h"
-#ifdef _WIN32
-# ifndef NOMINMAX
-#   define NOMINMAX
-# endif
-#endif
 #include "rcpputils/filesystem_helper.hpp"
 
 /**
