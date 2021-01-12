@@ -45,7 +45,7 @@ public:
   {
   }
 
-  // Lock everything except user callbacks
+  // Lock for action_server_
   std::recursive_mutex action_server_reentrant_mutex_;
 
   std::shared_ptr<rcl_action_server_t> action_server_;
@@ -62,6 +62,9 @@ public:
   bool cancel_request_ready_ = false;
   bool result_request_ready_ = false;
   bool goal_expired_ = false;
+
+  // Lock for unordered_maps
+  std::recursive_mutex unordered_map_mutex_;
 
   // Results to be kept until the goal expires after reaching a terminal state
   std::unordered_map<GoalUUID, std::shared_ptr<void>> goal_results_;
@@ -338,7 +341,7 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     *handle = *rcl_handle;
 
     {
-      std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
       pimpl_->goal_handles_[uuid] = handle;
     }
 
@@ -453,7 +456,6 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(data);
   auto ret = std::get<0>(*shared_ptr);
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
     // Ignore take failure because connext fails if it receives a sample without valid data.
     // This happens when a client shuts down and connext receives a sample saying the client is
@@ -473,7 +475,10 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
   rcl_action_goal_info_t goal_info;
   convert(uuid, &goal_info);
   bool goal_exists;
-  goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+    goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
+  }
   if (!goal_exists) {
     // Goal does not exists
     result_response = create_result_response(action_msgs::msg::GoalStatus::STATUS_UNKNOWN);
@@ -487,6 +492,7 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
 
   if (result_response) {
     // Send the result now
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     rcl_ret_t ret = rcl_action_send_result_response(
       pimpl_->action_server_.get(), &request_header, result_response.get());
     if (RCL_RET_OK != ret) {
@@ -494,6 +500,7 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
     }
   } else {
     // Store the request so it can be responded to later
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
     pimpl_->result_requests_[uuid].push_back(request_header);
   }
   data.reset();
@@ -508,9 +515,11 @@ ServerBase::execute_check_expired_goals()
 
   // Loop in case more than 1 goal expired
   while (num_expired > 0u) {
-    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     rcl_ret_t ret;
-    ret = rcl_action_expire_goals(pimpl_->action_server_.get(), expired_goals, 1, &num_expired);
+    {
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+      ret = rcl_action_expire_goals(pimpl_->action_server_.get(), expired_goals, 1, &num_expired);
+    }
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     } else if (num_expired) {
@@ -518,6 +527,7 @@ ServerBase::execute_check_expired_goals()
       GoalUUID uuid;
       convert(expired_goals[0], &uuid);
       RCLCPP_DEBUG(pimpl_->logger_, "Expired goal %s", to_string(uuid).c_str());
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
       pimpl_->goal_results_.erase(uuid);
       pimpl_->result_requests_.erase(uuid);
       pimpl_->goal_handles_.erase(uuid);
@@ -590,20 +600,26 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
   // Check that the goal exists
   rcl_action_goal_info_t goal_info;
   convert(uuid, &goal_info);
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   bool goal_exists;
-  goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+    goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
+  }
 
   if (!goal_exists) {
     throw std::runtime_error("Asked to publish result for goal that does not exist");
   }
 
-  pimpl_->goal_results_[uuid] = result_msg;
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
+    pimpl_->goal_results_[uuid] = result_msg;
+  }
 
   // if there are clients who already asked for the result, send it to them
   auto iter = pimpl_->result_requests_.find(uuid);
   if (iter != pimpl_->result_requests_.end()) {
     for (auto & request_header : iter->second) {
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
       rcl_ret_t ret = rcl_action_send_result_response(
         pimpl_->action_server_.get(), &request_header, result_msg.get());
       if (RCL_RET_OK != ret) {
