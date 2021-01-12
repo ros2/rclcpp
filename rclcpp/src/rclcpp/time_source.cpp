@@ -233,11 +233,21 @@ void TimeSource::create_clock_sub()
     return;
   }
 
+  rclcpp::SubscriptionOptions options;
+  options.qos_overriding_options = rclcpp::QosOverridingOptions({
+    rclcpp::QosPolicyKind::Depth,
+    rclcpp::QosPolicyKind::Durability,
+    rclcpp::QosPolicyKind::History,
+    rclcpp::QosPolicyKind::Reliability,
+  });
+
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
+    node_parameters_,
     node_topics_,
     "/clock",
     rclcpp::QoS(KeepLast(1)).best_effort(),
-    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1)
+    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
+    options
   );
 }
 
