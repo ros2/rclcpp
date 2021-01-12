@@ -344,10 +344,7 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
 
     if (GoalResponse::ACCEPT_AND_EXECUTE == status) {
       // Change status to executing
-      {
-        std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
-        ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
-      }
+      ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
