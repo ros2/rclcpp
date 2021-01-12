@@ -137,6 +137,9 @@ public:
   static Duration
   from_nanoseconds(rcl_duration_value_t nanoseconds);
 
+  static Duration
+  from_rmw_time(rmw_time_t duration);
+
   /// Convert Duration into a std::chrono::Duration.
   template<class DurationT>
   DurationT

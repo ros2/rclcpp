@@ -223,7 +223,7 @@ ComponentManager::OnLoadNode(
     response->error_message = "Failed to find class with the requested plugin name.";
     response->success = false;
   } catch (const ComponentManagerException & ex) {
-    RCLCPP_ERROR(get_logger(), ex.what());
+    RCLCPP_ERROR(get_logger(), "%s", ex.what());
     response->error_message = ex.what();
     response->success = false;
   }
@@ -244,7 +244,7 @@ ComponentManager::OnUnloadNode(
     std::stringstream ss;
     ss << "No node found with unique_id: " << request->unique_id;
     response->error_message = ss.str();
-    RCLCPP_WARN(get_logger(), ss.str());
+    RCLCPP_WARN(get_logger(), "%s", ss.str().c_str());
   } else {
     if (auto exec = executor_.lock()) {
       exec->remove_node(wrapper->second.get_node_base_interface());

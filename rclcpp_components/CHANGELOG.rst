@@ -2,6 +2,18 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.0 (2021-01-08)
+------------------
+* Use std compliant non-method std::filesystem::exists function (`#1502 <https://github.com/ros2/rclcpp/issues/1502>`_)
+* Fix string literal warnings (`#1442 <https://github.com/ros2/rclcpp/issues/1442>`_)
+* Contributors: Audrow Nash, Josh Langsfeld
+
+6.1.0 (2020-12-10)
+------------------
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Add benchmarks for components (`#1476 <https://github.com/ros2/rclcpp/issues/1476>`_)
+* Contributors: Scott K Logan, Stephen Brawner
+
 6.0.0 (2020-11-18)
 ------------------
 * Bump rclcpp packages to Quality Level 2 (`#1445 <https://github.com/ros2/rclcpp/issues/1445>`_)

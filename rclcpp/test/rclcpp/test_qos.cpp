@@ -78,33 +78,41 @@ TEST(TestQoS, equality_namespace) {
   EXPECT_NE(a, b);
 }
 
-TEST(TestQoS, setters) {
+TEST(TestQoS, setters_and_getters) {
   rclcpp::QoS qos(10);
 
   qos.keep_all();
-  EXPECT_EQ(RMW_QOS_POLICY_HISTORY_KEEP_ALL, qos.get_rmw_qos_profile().history);
+  EXPECT_EQ(rclcpp::HistoryPolicy::KeepAll, qos.history());
 
   qos.keep_last(20);
-  EXPECT_EQ(RMW_QOS_POLICY_HISTORY_KEEP_LAST, qos.get_rmw_qos_profile().history);
-  EXPECT_EQ(20u, qos.get_rmw_qos_profile().depth);
+  EXPECT_EQ(rclcpp::HistoryPolicy::KeepLast, qos.history());
+  EXPECT_EQ(20u, qos.depth());
 
   qos.reliable();
-  EXPECT_EQ(RMW_QOS_POLICY_RELIABILITY_RELIABLE, qos.get_rmw_qos_profile().reliability);
+  EXPECT_EQ(rclcpp::ReliabilityPolicy::Reliable, qos.reliability());
+
+  qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
+  EXPECT_EQ(rclcpp::ReliabilityPolicy::BestEffort, qos.reliability());
 
   qos.durability_volatile();
-  EXPECT_EQ(RMW_QOS_POLICY_DURABILITY_VOLATILE, qos.get_rmw_qos_profile().durability);
+  EXPECT_EQ(rclcpp::DurabilityPolicy::Volatile, qos.durability());
 
   qos.transient_local();
-  EXPECT_EQ(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL, qos.get_rmw_qos_profile().durability);
+  EXPECT_EQ(rclcpp::DurabilityPolicy::TransientLocal, qos.durability());
+
+  qos.durability(rclcpp::DurabilityPolicy::Volatile);
+  EXPECT_EQ(rclcpp::DurabilityPolicy::Volatile, qos.durability());
 
   qos.history(RMW_QOS_POLICY_HISTORY_KEEP_ALL);
-  EXPECT_EQ(RMW_QOS_POLICY_HISTORY_KEEP_ALL, qos.get_rmw_qos_profile().history);
+  EXPECT_EQ(rclcpp::HistoryPolicy::KeepAll, qos.history());
 
-  constexpr size_t duration_ns = 12345;
+  qos.history(rclcpp::HistoryPolicy::KeepLast);
+  EXPECT_EQ(rclcpp::HistoryPolicy::KeepLast, qos.history());
+
+  constexpr rcl_duration_value_t duration_ns = 12345;
   constexpr std::chrono::nanoseconds duration(duration_ns);
   qos.deadline(duration);
-  EXPECT_EQ(0u, qos.get_rmw_qos_profile().deadline.sec);
-  EXPECT_EQ(duration_ns, qos.get_rmw_qos_profile().deadline.nsec);
+  EXPECT_EQ(duration_ns, qos.deadline().nanoseconds());
 
   const rmw_time_t rmw_time {0, 54321};
   qos.deadline(rmw_time);
@@ -112,28 +120,29 @@ TEST(TestQoS, setters) {
   EXPECT_EQ(rmw_time.nsec, qos.get_rmw_qos_profile().deadline.nsec);
 
   qos.lifespan(duration);
-  EXPECT_EQ(0u, qos.get_rmw_qos_profile().lifespan.sec);
-  EXPECT_EQ(duration_ns, qos.get_rmw_qos_profile().lifespan.nsec);
+  EXPECT_EQ(duration_ns, qos.lifespan().nanoseconds());
 
   qos.lifespan(rmw_time);
   EXPECT_EQ(rmw_time.sec, qos.get_rmw_qos_profile().lifespan.sec);
   EXPECT_EQ(rmw_time.nsec, qos.get_rmw_qos_profile().lifespan.nsec);
 
   qos.liveliness(RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC);
-  EXPECT_EQ(RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC, qos.get_rmw_qos_profile().liveliness);
+  EXPECT_EQ(rclcpp::LivelinessPolicy::ManualByTopic, qos.liveliness());
+
+  qos.liveliness(rclcpp::LivelinessPolicy::Automatic);
+  EXPECT_EQ(rclcpp::LivelinessPolicy::Automatic, qos.liveliness());
 
   qos.liveliness_lease_duration(duration);
-  EXPECT_EQ(0u, qos.get_rmw_qos_profile().liveliness_lease_duration.sec);
-  EXPECT_EQ(duration_ns, qos.get_rmw_qos_profile().liveliness_lease_duration.nsec);
+  EXPECT_EQ(duration_ns, qos.liveliness_lease_duration().nanoseconds());
 
   qos.liveliness_lease_duration(rmw_time);
   EXPECT_EQ(rmw_time.sec, qos.get_rmw_qos_profile().liveliness_lease_duration.sec);
   EXPECT_EQ(rmw_time.nsec, qos.get_rmw_qos_profile().liveliness_lease_duration.nsec);
 
   qos.avoid_ros_namespace_conventions(true);
-  EXPECT_TRUE(qos.get_rmw_qos_profile().avoid_ros_namespace_conventions);
+  EXPECT_TRUE(qos.avoid_ros_namespace_conventions());
   qos.avoid_ros_namespace_conventions(false);
-  EXPECT_FALSE(qos.get_rmw_qos_profile().avoid_ros_namespace_conventions);
+  EXPECT_FALSE(qos.avoid_ros_namespace_conventions());
 }
 
 bool operator==(const rmw_qos_profile_t & lhs, const rmw_qos_profile_t & rhs)

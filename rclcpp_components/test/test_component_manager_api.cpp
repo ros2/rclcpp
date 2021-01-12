@@ -45,10 +45,10 @@ TEST_F(TestComponentManager, components_api)
   exec->add_node(manager);
   exec->add_node(node);
 
-  auto client = node->create_client<composition_interfaces::srv::LoadNode>(
+  auto composition_client = node->create_client<composition_interfaces::srv::LoadNode>(
     "/ComponentManager/_container/load_node");
 
-  if (!client->wait_for_service(20s)) {
+  if (!composition_client->wait_for_service(20s)) {
     ASSERT_TRUE(false) << "service not available after waiting";
   }
 
@@ -57,7 +57,7 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
@@ -71,7 +71,7 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentBar";
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
@@ -87,7 +87,7 @@ TEST_F(TestComponentManager, components_api)
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
     request->node_name = "test_component_baz";
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
@@ -104,7 +104,7 @@ TEST_F(TestComponentManager, components_api)
     request->node_namespace = "/ns";
     request->node_name = "test_component_bing";
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
@@ -119,7 +119,7 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponent";
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
@@ -134,7 +134,7 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components_foo";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
@@ -151,7 +151,7 @@ TEST_F(TestComponentManager, components_api)
     request->node_name = "test_component_remap";
     request->remap_rules.push_back("alice:=bob");
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
@@ -170,7 +170,7 @@ TEST_F(TestComponentManager, components_api)
       rclcpp::ParameterValue(true));
     request->extra_arguments.push_back(use_intraprocess_comms.to_parameter_msg());
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
@@ -191,7 +191,7 @@ TEST_F(TestComponentManager, components_api)
       rclcpp::ParameterValue("hello"));
     request->extra_arguments.push_back(use_intraprocess_comms.to_parameter_msg());
 
-    auto result = client->async_send_request(request);
+    auto result = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
@@ -226,23 +226,23 @@ TEST_F(TestComponentManager, components_api)
       auto result = client->async_send_request(request);
       auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-      auto node_names = result.get()->full_node_names;
-      auto unique_ids = result.get()->unique_ids;
+      auto result_node_names = result.get()->full_node_names;
+      auto result_unique_ids = result.get()->unique_ids;
 
-      EXPECT_EQ(node_names.size(), 6u);
-      EXPECT_EQ(node_names[0], "/test_component_foo");
-      EXPECT_EQ(node_names[1], "/test_component_bar");
-      EXPECT_EQ(node_names[2], "/test_component_baz");
-      EXPECT_EQ(node_names[3], "/ns/test_component_bing");
-      EXPECT_EQ(node_names[4], "/test_component_remap");
-      EXPECT_EQ(node_names[5], "/test_component_intra_process");
-      EXPECT_EQ(unique_ids.size(), 6u);
-      EXPECT_EQ(unique_ids[0], 1u);
-      EXPECT_EQ(unique_ids[1], 2u);
-      EXPECT_EQ(unique_ids[2], 3u);
-      EXPECT_EQ(unique_ids[3], 4u);
-      EXPECT_EQ(unique_ids[4], 5u);
-      EXPECT_EQ(unique_ids[5], 6u);
+      EXPECT_EQ(result_node_names.size(), 6u);
+      EXPECT_EQ(result_node_names[0], "/test_component_foo");
+      EXPECT_EQ(result_node_names[1], "/test_component_bar");
+      EXPECT_EQ(result_node_names[2], "/test_component_baz");
+      EXPECT_EQ(result_node_names[3], "/ns/test_component_bing");
+      EXPECT_EQ(result_node_names[4], "/test_component_remap");
+      EXPECT_EQ(result_node_names[5], "/test_component_intra_process");
+      EXPECT_EQ(result_unique_ids.size(), 6u);
+      EXPECT_EQ(result_unique_ids[0], 1u);
+      EXPECT_EQ(result_unique_ids[1], 2u);
+      EXPECT_EQ(result_unique_ids[2], 3u);
+      EXPECT_EQ(result_unique_ids[3], 4u);
+      EXPECT_EQ(result_unique_ids[4], 5u);
+      EXPECT_EQ(result_unique_ids[5], 6u);
     }
   }
 
@@ -290,21 +290,21 @@ TEST_F(TestComponentManager, components_api)
       auto result = client->async_send_request(request);
       auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-      auto node_names = result.get()->full_node_names;
-      auto unique_ids = result.get()->unique_ids;
+      auto result_node_names = result.get()->full_node_names;
+      auto result_unique_ids = result.get()->unique_ids;
 
-      EXPECT_EQ(node_names.size(), 5u);
-      EXPECT_EQ(node_names[0], "/test_component_bar");
-      EXPECT_EQ(node_names[1], "/test_component_baz");
-      EXPECT_EQ(node_names[2], "/ns/test_component_bing");
-      EXPECT_EQ(node_names[3], "/test_component_remap");
-      EXPECT_EQ(node_names[4], "/test_component_intra_process");
-      EXPECT_EQ(unique_ids.size(), 5u);
-      EXPECT_EQ(unique_ids[0], 2u);
-      EXPECT_EQ(unique_ids[1], 3u);
-      EXPECT_EQ(unique_ids[2], 4u);
-      EXPECT_EQ(unique_ids[3], 5u);
-      EXPECT_EQ(unique_ids[4], 6u);
+      EXPECT_EQ(result_node_names.size(), 5u);
+      EXPECT_EQ(result_node_names[0], "/test_component_bar");
+      EXPECT_EQ(result_node_names[1], "/test_component_baz");
+      EXPECT_EQ(result_node_names[2], "/ns/test_component_bing");
+      EXPECT_EQ(result_node_names[3], "/test_component_remap");
+      EXPECT_EQ(result_node_names[4], "/test_component_intra_process");
+      EXPECT_EQ(result_unique_ids.size(), 5u);
+      EXPECT_EQ(result_unique_ids[0], 2u);
+      EXPECT_EQ(result_unique_ids[1], 3u);
+      EXPECT_EQ(result_unique_ids[2], 4u);
+      EXPECT_EQ(result_unique_ids[3], 5u);
+      EXPECT_EQ(result_unique_ids[4], 6u);
     }
   }
 }

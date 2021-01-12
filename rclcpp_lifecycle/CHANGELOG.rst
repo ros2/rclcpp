@@ -3,6 +3,16 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+6.2.0 (2021-01-08)
+------------------
+
+6.1.0 (2020-12-10)
+------------------
+* add LifecycleNode::get_transition_graph to match services. (`#1472 <https://github.com/ros2/rclcpp/issues/1472>`_)
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Benchmark lifecycle features (`#1462 <https://github.com/ros2/rclcpp/issues/1462>`_)
+* Contributors: Stephen Brawner, brawner, tomoya
+
 6.0.0 (2020-11-18)
 ------------------
 * Reserve vector capacities and use emplace_back for constructing vectors (`#1464 <https://github.com/ros2/rclcpp/issues/1464>`_)

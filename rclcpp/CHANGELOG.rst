@@ -2,6 +2,28 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.0 (2021-01-08)
+------------------
+* Better documentation for the QoS class (`#1508 <https://github.com/ros2/rclcpp/issues/1508>`_)
+* Modify excluding callback duration from topic statistics (`#1492 <https://github.com/ros2/rclcpp/issues/1492>`_)
+* Make the test of graph users more robust. (`#1504 <https://github.com/ros2/rclcpp/issues/1504>`_)
+* Make sure to wait for graph change events in test_node_graph. (`#1503 <https://github.com/ros2/rclcpp/issues/1503>`_)
+* add timeout to SyncParametersClient methods (`#1493 <https://github.com/ros2/rclcpp/issues/1493>`_)
+* Fix wrong test expectations (`#1497 <https://github.com/ros2/rclcpp/issues/1497>`_)
+* Update create_publisher/subscription documentation, clarifying when a parameters interface is required (`#1494 <https://github.com/ros2/rclcpp/issues/1494>`_)
+* Fix string literal warnings (`#1442 <https://github.com/ros2/rclcpp/issues/1442>`_)
+* support describe_parameters methods to parameter client. (`#1453 <https://github.com/ros2/rclcpp/issues/1453>`_)
+* Contributors: Audrow Nash, Chris Lalancette, Ivan Santiago Paunovic, Nikolai Morin, hsgwa, tomoya
+
+6.1.0 (2020-12-10)
+------------------
+* Add getters to rclcpp::qos and rclcpp::Policy enum classes (`#1467 <https://github.com/ros2/rclcpp/issues/1467>`_)
+* Change nullptr checks to use ASSERT_TRUE. (`#1486 <https://github.com/ros2/rclcpp/issues/1486>`_)
+* Adjust logic around finding and erasing guard_condition (`#1474 <https://github.com/ros2/rclcpp/issues/1474>`_)
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Add performance tests for parameter transport (`#1463 <https://github.com/ros2/rclcpp/issues/1463>`_)
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic, Scott K Logan, Stephen Brawner
+
 6.0.0 (2020-11-18)
 ------------------
 * Move ownership of shutdown_guard_condition to executors/graph_listener (`#1404 <https://github.com/ros2/rclcpp/issues/1404>`_)

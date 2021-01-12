@@ -15,6 +15,8 @@
 #ifndef RCLCPP__PARAMETER_CLIENT_HPP_
 #define RCLCPP__PARAMETER_CLIENT_HPP_
 
+#include <functional>
+#include <future>
 #include <memory>
 #include <string>
 #include <utility>
@@ -118,6 +120,14 @@ public:
     const std::vector<std::string> & names,
     std::function<
       void(std::shared_future<std::vector<rclcpp::Parameter>>)
+    > callback = nullptr);
+
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>
+  describe_parameters(
+    const std::vector<std::string> & names,
+    std::function<
+      void(std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>)
     > callback = nullptr);
 
   RCLCPP_PUBLIC
@@ -332,9 +342,17 @@ public:
       qos_profile);
   }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & parameter_names);
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return get_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   RCLCPP_PUBLIC
   bool
@@ -378,23 +396,67 @@ public:
     );
   }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return describe_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rclcpp::ParameterType>
-  get_parameter_types(const std::vector<std::string> & parameter_names);
+  get_parameter_types(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return get_parameter_types(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return set_parameters(
+      parameters,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return set_parameters_atomically(
+      parameters,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   rcl_interfaces::msg::ListParametersResult
   list_parameters(
     const std::vector<std::string> & parameter_prefixes,
-    uint64_t depth);
+    uint64_t depth,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return list_parameters(
+      parameter_prefixes,
+      depth,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   template<typename CallbackT>
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
@@ -436,6 +498,44 @@ public:
   {
     return async_parameters_client_->wait_for_service(timeout);
   }
+
+protected:
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::Parameter>
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterType>
+  get_parameter_types(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::ListParametersResult
+  list_parameters(
+    const std::vector<std::string> & parameter_prefixes,
+    uint64_t depth,
+    std::chrono::nanoseconds timeout);
 
 private:
   rclcpp::Executor::SharedPtr executor_;

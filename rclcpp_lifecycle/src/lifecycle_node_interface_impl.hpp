@@ -352,6 +352,18 @@ public:
   get_available_transitions()
   {
     std::vector<Transition> transitions;
+    transitions.reserve(state_machine_.current_state->valid_transition_size);
+
+    for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+      transitions.emplace_back(&state_machine_.current_state->valid_transitions[i]);
+    }
+    return transitions;
+  }
+
+  std::vector<Transition>
+  get_transition_graph()
+  {
+    std::vector<Transition> transitions;
     transitions.reserve(state_machine_.transition_map.transitions_size);
 
     for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {

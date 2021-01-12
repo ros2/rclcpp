@@ -683,8 +683,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
         if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
           invalid_group_ptrs.push_back(weak_group_ptr);
           auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
-          weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
-          memory_strategy_->remove_guard_condition(node_guard_pair->second);
+          if (node_guard_pair != weak_nodes_to_guard_conditions_.end()) {
+            auto guard_condition = node_guard_pair->second;
+            weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
+            memory_strategy_->remove_guard_condition(guard_condition);
+          }
         }
       }
       std::for_each(

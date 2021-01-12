@@ -81,7 +81,7 @@ public:
 
     // Should be checked by the server above
     assert(goal->order > 0);
-    result->sequence.resize(goal->order);
+    result->sequence.resize(static_cast<size_t>(goal->order));
     result->sequence[0] = 0;
     if (goal->order == 1) {
       current_goal_handle->succeed(result);
@@ -92,7 +92,7 @@ public:
       current_goal_handle->succeed(result);
       return;
     }
-    for (int i = 2; i < goal->order; ++i) {
+    for (size_t i = 2; i < static_cast<size_t>(goal->order); ++i) {
       result->sequence[i] =
         result->sequence[i - 1] + result->sequence[i - 2];
     }
@@ -310,8 +310,8 @@ BENCHMARK_F(ActionClientPerformanceTest, async_cancel_goal)(benchmark::State & s
     rclcpp::spin_until_future_complete(node, future_cancel, std::chrono::seconds(1));
     auto cancel_response = future_cancel.get();
 
-    using CancelResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
-    if (CancelResponse::ERROR_NONE != cancel_response->return_code) {
+    using CancelActionResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
+    if (CancelActionResponse::ERROR_NONE != cancel_response->return_code) {
       state.SkipWithError("Cancel request did not succeed");
       break;
     }
@@ -345,8 +345,8 @@ BENCHMARK_F(ActionClientPerformanceTest, async_cancel_all_goals)(benchmark::Stat
     rclcpp::spin_until_future_complete(node, future_cancel_all, std::chrono::seconds(1));
     auto cancel_response = future_cancel_all.get();
 
-    using CancelResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
-    if (CancelResponse::ERROR_NONE != cancel_response->return_code) {
+    using CancelActionResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
+    if (CancelActionResponse::ERROR_NONE != cancel_response->return_code) {
       state.SkipWithError("Cancel request did not succeed");
       break;
     }
