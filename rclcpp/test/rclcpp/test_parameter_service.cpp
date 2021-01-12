@@ -101,41 +101,21 @@ TEST_F(TestParameterService, list_parameters) {
 }
 
 TEST_F(TestParameterService, describe_parameters) {
-  // There is no current API in ParameterClient for calling the describe_parameters service
-  // Update this test when https://github.com/ros2/rclcpp/issues/1354 is resolved
-
-  const std::string describe_parameters_service_name =
-    node->get_fully_qualified_name() + std::string("/") +
-    rclcpp::parameter_service_names::describe_parameters;
-  using ServiceT = rcl_interfaces::srv::DescribeParameters;
-  auto client =
-    node->create_client<ServiceT>(describe_parameters_service_name);
-
-  ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(1)));
   node->declare_parameter("parameter1", rclcpp::ParameterValue(42));
 
   {
-    auto request = std::make_shared<rcl_interfaces::srv::DescribeParameters::Request>();
-    request->names.push_back("parameter1");
-    auto future = client->async_send_request(request);
-
-    rclcpp::spin_until_future_complete(node, future, std::chrono::seconds(1));
-    auto response = future.get();
-    ASSERT_NE(nullptr, response);
-    EXPECT_EQ(1u, response->descriptors.size());
-
-    auto descriptor = response->descriptors[0];
-    EXPECT_EQ("parameter1", descriptor.name);
-    EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER, descriptor.type);
+    const std::vector<std::string> names{"parameter1"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      client->describe_parameters(names, 10s);
+    ASSERT_EQ(1u, parameter_descs.size());
+    EXPECT_EQ("parameter1", parameter_descs[0].name);
+    EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_descs[0].type);
   }
-  {
-    auto request = std::make_shared<rcl_interfaces::srv::DescribeParameters::Request>();
-    request->names.push_back("undeclared_parameter");
-    auto future = client->async_send_request(request);
 
-    rclcpp::spin_until_future_complete(node, future, std::chrono::seconds(1));
-    auto response = future.get();
-    ASSERT_NE(nullptr, response);
-    EXPECT_EQ(0u, response->descriptors.size());
+  {
+    const std::vector<std::string> names{"undeclared_parameter"};
+    std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs =
+      client->describe_parameters(names, 10s);
+    EXPECT_EQ(0u, parameter_descs.size());
   }
 }
