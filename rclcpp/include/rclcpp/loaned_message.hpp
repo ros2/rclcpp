@@ -186,7 +186,7 @@ public:
    * If the message is loaned from the middleware but not be published, the user needs to call
    * `rcl_return_loaned_message_from_publisher` manually.
    * If the memory is from the local allocator, the memory is freed when the unique pointer
-   * goes out instead, and the unique pointer will keep the publisher alive until it is destroyed.
+   * goes out instead.
    *
    * \return std::unique_ptr to the message instance.
    */
@@ -202,10 +202,10 @@ public:
 
     return std::unique_ptr<MessageT, std::function<void(MessageT *)>>(
       msg,
-      [ = ](MessageT * msg_ptr) {
+      [allocator = message_allocator_](MessageT * msg_ptr) mutable {
         // call destructor before deallocating
         msg_ptr->~MessageT();
-        message_allocator_.deallocate(msg_ptr, 1);
+        allocator.deallocate(msg_ptr, 1);
       });
   }
 
