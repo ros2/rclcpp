@@ -339,12 +339,99 @@ TEST_F(TestParameterClient, async_parameter_list_parameters) {
  */
 TEST_F(TestParameterClient, sync_parameter_get_parameter_types) {
   node->declare_parameter("foo", 4);
+  node->declare_parameter("bar", "this is bar");
   auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  std::vector<std::string> names{"foo"};
-  std::vector<rclcpp::ParameterType> parameter_types =
-    synchronous_client->get_parameter_types(names, 10s);
-  ASSERT_EQ(1u, parameter_types.size());
-  ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(0u, parameter_types.size());
+  }
+
+  {
+    std::vector<std::string> names{"none", "foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(0u, parameter_types.size());
+  }
+
+  {
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(2u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[1]);
+  }
+}
+
+/*
+  Coverage for sync get_parameter_types with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, sync_parameter_get_parameter_types_allow_undeclared) {
+  node_with_option->declare_parameter("foo", 4);
+  node_with_option->declare_parameter("bar", "this is bar");
+  auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node_with_option);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"none", "foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(3u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_types[0]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[1]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[2]);
+  }
+
+  {
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(2u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[1]);
+  }
 }
 
 /*
