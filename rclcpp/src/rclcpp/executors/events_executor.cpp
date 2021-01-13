@@ -147,14 +147,16 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
     event_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
   }
 
-  // Keep executing until work available or timeout expired
+  auto timeout = timers_manager_->get_head_timeout();
+
+  // Keep executing until no more work to do or timeout expired
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     std::unique_lock<std::mutex> execution_lock(execution_mutex_);
     std::swap(execution_event_queue_, event_queue_);
     push_lock.unlock();
 
-    bool ready_timer = timers_manager_->get_head_timeout() < 0ns;
+    bool ready_timer = timeout < 0ns;
     bool has_events = !execution_event_queue_.empty();
     if (!ready_timer && !has_events) {
       // Exit as there is no more work to do
@@ -165,7 +167,7 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
     this->consume_all_events(execution_event_queue_);
     execution_lock.unlock();
 
-    timers_manager_->execute_ready_timers();
+    timeout = timers_manager_->execute_ready_timers();
   }
 }
 

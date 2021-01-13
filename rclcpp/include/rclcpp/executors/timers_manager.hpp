@@ -91,15 +91,13 @@ public:
   void stop();
 
   /**
-   * @brief Acquire ownership of timers and make heap
-   */
-  void own_timers(std::vector<TimerPtr> & timers);
-
-  /**
    * @brief Executes all the timers currently ready when the function is invoked
    * while keeping the heap correctly sorted.
+   * @return std::chrono::nanoseconds for next timer to expire,
+   * the returned value could be negative if the timer is already expired
+   * or MAX_TIME if the heap is empty.
    */
-  void execute_ready_timers();
+  std::chrono::nanoseconds execute_ready_timers();
 
   /**
    * @brief Executes one ready timer if available
@@ -144,9 +142,52 @@ private:
    */
   struct TimersHeap
   {
-    void make_heap(std::vector<TimerPtr> & timers)
+
+    void make_heap(std::vector<rclcpp::TimerBase::WeakPtr> & weak_timers)
     {
+      std::vector<TimerPtr> timers;
+
+      auto it = weak_timers.begin();
+
+      while (it != weak_timers.end()) {
+        if (auto timer_shared_ptr = it->lock()) {
+          // The timer is valid, own it and add to heap
+          timers.push_back(timer_shared_ptr);
+        } else {
+          // The timer went out of scope, remove it
+          weak_timers.erase(it);
+        }
+        it++;
+      }
+
       std::make_heap(timers.begin(), timers.end(), timer_greater);
+
+      heapified_weak_timers_.clear();
+
+      for(auto & timer : timers) {
+        heapified_weak_timers_.push_back(timer);
+      }
+    }
+
+    void own_timers_heap(std::vector<TimerPtr> & timers)
+    {
+      auto it = heapified_weak_timers_.begin();
+
+      while (it != heapified_weak_timers_.end()) {
+        if (auto timer_shared_ptr = it->lock()) {
+          // The timer is valid, own it and add to heap
+          timers.push_back(timer_shared_ptr);
+        } else {
+          // The timer went out of scope, remove it
+          heapified_weak_timers_.erase(it);
+        }
+        it++;
+      }
+    }
+
+    bool empty()
+    {
+      return heapified_weak_timers_.empty();
     }
 
     /**
@@ -156,16 +197,27 @@ private:
     {
       // Push the modified element (i.e. the current root) at the bottom of the heap
       timers.push_back(timers[0]);
-      // Exchange first and last elements and reheapify
+
+      // Exchange first and last-1 elements and reheapify
       std::pop_heap(timers.begin(), timers.end(), timer_greater);
+
       // Remove last element
       timers.pop_back();
+
+      heapified_weak_timers_.clear();
+
+      for(auto & timer : timers) {
+        heapified_weak_timers_.push_back(timer);
+      }
     }
+
 
     static bool timer_greater(TimerPtr a, TimerPtr b)
     {
       return a->time_until_trigger() > b->time_until_trigger();
     }
+
+    std::vector<rclcpp::TimerBase::WeakPtr> heapified_weak_timers_;
   };
 
   /**
@@ -178,11 +230,11 @@ private:
    * @brief Executes all the timers currently ready when the function is invoked
    * while keeping the heap correctly sorted.
    * This function is not thread safe, acquire a mutex before calling it.
-   * @return std::chrono::nanoseconds to wait,
+   * @return std::chrono::nanoseconds for next timer to expire,
    * the returned value could be negative if the timer is already expired
    * or MAX_TIME if the heap is empty.
    */
-  std::chrono::nanoseconds execute_ready_timers_unsafe();
+  std::chrono::nanoseconds execute_ready_timers_unsafe(TimersHeap & heap);
 
   /**
    * @brief Helper function that checks whether a timer was already ready
@@ -212,8 +264,6 @@ private:
   std::atomic<bool> running_ {false};
   // Context of the parent executor
   std::shared_ptr<rclcpp::Context> context_;
-  // MinHeap of timers
-  TimersHeap heap_;
   // Vector of weak pointers to registered timers
   std::vector<rclcpp::TimerBase::WeakPtr> weak_timers_;
 };
