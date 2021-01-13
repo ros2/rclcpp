@@ -41,12 +41,13 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::GetParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::GetParameters::Response> response)
     {
-      for (const auto & name : request->names) {
-        // Default construct param to NOT_SET
-        rclcpp::Parameter param;
-        node_params->get_parameter(name, param);
-        // push back NOT_SET when get_parameter() call fails
-        response->values.push_back(param.get_value_message());
+      try {
+        auto parameters = node_params->get_parameters(request->names);
+        for (const auto param : parameters) {
+          response->values.push_back(param.get_value_message());
+        }
+      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+        RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
       }
     },
     qos_profile, nullptr);

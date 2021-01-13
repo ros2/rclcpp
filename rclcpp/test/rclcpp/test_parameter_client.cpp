@@ -226,7 +226,8 @@ TEST_F(TestParameterClient, async_parameter_get_parameters) {
   bool callback_called = false;
   auto callback = [&callback_called](std::shared_future<std::vector<rclcpp::Parameter>> result)
     {
-      if (result.valid() && result.get().size() == 1 && result.get()[0].get_name() == "foo") {
+      // We expect the result to be empty since we tried to get a parameter that didn't exist.
+      if (result.valid() && result.get().size() == 0) {
         callback_called = true;
       }
     };
