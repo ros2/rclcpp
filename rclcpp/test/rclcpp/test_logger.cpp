@@ -17,6 +17,8 @@
 #include <memory>
 #include <string>
 
+#include "rcutils/env.h"
+
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
@@ -156,4 +158,23 @@ TEST(TestLogger, set_level) {
 
   rcutils_logging_set_output_handler(previous_output_handler);
   EXPECT_EQ(RCUTILS_RET_OK, rcutils_logging_shutdown());
+}
+
+TEST(TestLogger, get_logging_directory) {
+  ASSERT_EQ(true, rcutils_set_env("HOME", "/fake_home_dir"));
+  ASSERT_EQ(true, rcutils_set_env("USERPROFILE", nullptr));
+  ASSERT_EQ(true, rcutils_set_env("ROS_LOG_DIR", nullptr));
+  ASSERT_EQ(true, rcutils_set_env("ROS_HOME", nullptr));
+
+  auto path = rclcpp::get_logging_directory();
+  auto expected_path = rcpputils::fs::path{"/fake_home_dir"} / ".ros" / "log";
+
+  // TODO(ivanpauno): Add operator== to rcpputils::fs::path
+  auto it = path.cbegin();
+  auto eit = expected_path.cbegin();
+  for (; it != path.cend() && eit != expected_path.cend(); ++it, ++eit) {
+    EXPECT_EQ(*eit, *it);
+  }
+  EXPECT_EQ(it, path.cend());
+  EXPECT_EQ(eit, expected_path.cend());
 }
