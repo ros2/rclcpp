@@ -219,6 +219,30 @@ TEST_F(TestParameterClient, async_parameter_get_parameter_types) {
 }
 
 /*
+  Coverage for async get_parameter_types with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, async_parameter_get_parameter_types_allow_undeclared) {
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
+  bool callback_called = false;
+  auto callback = [&callback_called](std::shared_future<std::vector<rclcpp::ParameterType>> result)
+    {
+      if (result.valid() && result.get().size() == 1 &&
+        result.get()[0] == rclcpp::PARAMETER_NOT_SET)
+      {
+        callback_called = true;
+      }
+    };
+  std::vector<std::string> names{"foo"};
+  std::shared_future<std::vector<rclcpp::ParameterType>> future =
+    asynchronous_client->get_parameter_types(names, callback);
+  auto return_code = rclcpp::spin_until_future_complete(
+    node_with_option, future, std::chrono::milliseconds(100));
+  ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+  ASSERT_TRUE(callback_called);
+}
+
+/*
   Coverage for async get_parameters
  */
 TEST_F(TestParameterClient, async_parameter_get_parameters) {
@@ -236,6 +260,28 @@ TEST_F(TestParameterClient, async_parameter_get_parameters) {
     names, callback);
   auto return_code = rclcpp::spin_until_future_complete(
     node, future, std::chrono::milliseconds(100));
+  ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+  ASSERT_TRUE(callback_called);
+}
+
+/*
+  Coverage for async get_parameters with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, async_parameter_get_parameters_allow_undeclared) {
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
+  bool callback_called = false;
+  auto callback = [&callback_called](std::shared_future<std::vector<rclcpp::Parameter>> result)
+    {
+      if (result.valid() && result.get().size() == 1 && result.get()[0].get_name() == "foo") {
+        callback_called = true;
+      }
+    };
+  std::vector<std::string> names{"foo"};
+  std::shared_future<std::vector<rclcpp::Parameter>> future = asynchronous_client->get_parameters(
+    names, callback);
+  auto return_code = rclcpp::spin_until_future_complete(
+    node_with_option, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
 }
