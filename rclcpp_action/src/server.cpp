@@ -58,10 +58,10 @@ public:
   size_t num_services_ = 0;
   size_t num_guard_conditions_ = 0;
 
-  bool goal_request_ready_ = false;
-  bool cancel_request_ready_ = false;
-  bool result_request_ready_ = false;
-  bool goal_expired_ = false;
+  std::atomic<bool> goal_request_ready_{false};
+  std::atomic<bool> cancel_request_ready_{false};
+  std::atomic<bool> result_request_ready_{false};
+  std::atomic<bool> goal_expired_{false};
 
   // Lock for unordered_maps
   std::recursive_mutex unordered_map_mutex_;
@@ -174,29 +174,41 @@ ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
-  rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
-    wait_set,
-    pimpl_->action_server_.get(),
-    &pimpl_->goal_request_ready_,
-    &pimpl_->cancel_request_ready_,
-    &pimpl_->result_request_ready_,
-    &pimpl_->goal_expired_);
+  bool goal_request_ready;
+  bool cancel_request_ready;
+  bool result_request_ready;
+  bool goal_expired;
+  rcl_ret_t ret;
+  {
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
+    ret = rcl_action_server_wait_set_get_entities_ready(
+      wait_set,
+      pimpl_->action_server_.get(),
+      &goal_request_ready,
+      &cancel_request_ready,
+      &result_request_ready,
+      &goal_expired);
+  }
+
+  pimpl_->goal_request_ready_ = goal_request_ready;
+  pimpl_->cancel_request_ready_ = cancel_request_ready;
+  pimpl_->result_request_ready_ = result_request_ready;
+  pimpl_->goal_expired_ = goal_expired;
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  return pimpl_->goal_request_ready_ ||
-         pimpl_->cancel_request_ready_ ||
-         pimpl_->result_request_ready_ ||
-         pimpl_->goal_expired_;
+  return pimpl_->goal_request_ready_.load() ||
+         pimpl_->cancel_request_ready_.load() ||
+         pimpl_->result_request_ready_.load() ||
+         pimpl_->goal_expired_.load();
 }
 
 std::shared_ptr<void>
 ServerBase::take_data()
 {
-  if (pimpl_->goal_request_ready_) {
+  if (pimpl_->goal_request_ready_.load()) {
     rcl_ret_t ret;
     rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
     rmw_request_id_t request_header;
@@ -215,7 +227,7 @@ ServerBase::take_data()
         ret,
         goal_info,
         request_header, message));
-  } else if (pimpl_->cancel_request_ready_) {
+  } else if (pimpl_->cancel_request_ready_.load()) {
     rcl_ret_t ret;
     rmw_request_id_t request_header;
 
@@ -232,7 +244,7 @@ ServerBase::take_data()
       std::make_shared
       <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
       rmw_request_id_t>>(ret, request, request_header));
-  } else if (pimpl_->result_request_ready_) {
+  } else if (pimpl_->result_request_ready_.load()) {
     rcl_ret_t ret;
     // Get the result request message
     rmw_request_id_t request_header;
@@ -244,7 +256,7 @@ ServerBase::take_data()
     return std::static_pointer_cast<void>(
       std::make_shared<std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(
         ret, result_request, request_header));
-  } else if (pimpl_->goal_expired_) {
+  } else if (pimpl_->goal_expired_.load()) {
     return nullptr;
   } else {
     throw std::runtime_error("Taking data from action server but nothing is ready");
@@ -254,17 +266,17 @@ ServerBase::take_data()
 void
 ServerBase::execute(std::shared_ptr<void> & data)
 {
-  if (!data && !pimpl_->goal_expired_) {
+  if (!data && !pimpl_->goal_expired_.load()) {
     throw std::runtime_error("'data' is empty");
   }
 
-  if (pimpl_->goal_request_ready_) {
+  if (pimpl_->goal_request_ready_.load()) {
     execute_goal_request_received(data);
-  } else if (pimpl_->cancel_request_ready_) {
+  } else if (pimpl_->cancel_request_ready_.load()) {
     execute_cancel_request_received(data);
-  } else if (pimpl_->result_request_ready_) {
+  } else if (pimpl_->result_request_ready_.load()) {
     execute_result_request_received(data);
-  } else if (pimpl_->goal_expired_) {
+  } else if (pimpl_->goal_expired_.load()) {
     execute_check_expired_goals();
   } else {
     throw std::runtime_error("Executing action server but nothing is ready");
@@ -289,7 +301,10 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
   rmw_request_id_t request_header = std::get<2>(*shared_ptr);
   std::shared_ptr<void> message = std::get<3>(*shared_ptr);
 
-  pimpl_->goal_request_ready_ = false;
+  bool expected = true;
+  if (!pimpl_->goal_request_ready_.compare_exchange_strong(expected, false)) {
+    return;
+  }
 
   GoalUUID uuid = get_goal_id_from_goal_request(message.get());
   convert(uuid, &goal_info);
