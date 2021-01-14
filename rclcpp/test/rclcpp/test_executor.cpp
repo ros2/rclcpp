@@ -21,6 +21,7 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -54,6 +55,7 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr local_get_node_by_group(
     rclcpp::CallbackGroup::SharedPtr group)
   {
+    std::lock_guard<std::mutex> guard_{mutex_};  // only to make the TSA happy
     return get_node_by_group(weak_groups_to_nodes_, group);
   }
 
@@ -86,6 +88,35 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, ==)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
+
+TEST_F(TestExecutor, add_remove_node_thread_safe) {
+  using namespace std::chrono_literals;
+
+  // Create an Executor
+  rclcpp::executors::SingleThreadedExecutor executor;
+
+  auto future = std::async(std::launch::async, [&executor] {executor.spin();});
+
+  // Add and remove nodes repeatedly
+  // Test that this does not cause a segfault
+  size_t num_nodes = 100;
+  for (size_t i = 0; i < num_nodes; ++i) {
+    std::ostringstream name;
+    name << "node_" << i;
+    auto node = std::make_shared<rclcpp::Node>(name.str());
+    executor.add_node(node);
+    // Sleeping here helps exaggerate the issue
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    executor.remove_node(node);
+  }
+  std::future_status future_status = std::future_status::timeout;
+  do {
+    executor.cancel();
+    future_status = future.wait_for(1s);
+  } while (future_status == std::future_status::timeout);
+  EXPECT_EQ(future_status, std::future_status::ready);
+  future.get();
+}
 
 TEST_F(TestExecutor, constructor_bad_guard_condition_init) {
   auto mock = mocking_utils::patch_and_return(
