@@ -143,6 +143,7 @@ TEST_F(TestTimersManager, timers_thread_exclusive_usage)
 
   timers_manager->start();
 
+  EXPECT_THROW(timers_manager->start(), std::exception);
   EXPECT_THROW(timers_manager->get_head_timeout(), std::exception);
   EXPECT_THROW(timers_manager->execute_ready_timers(), std::exception);
   EXPECT_THROW(timers_manager->execute_head_timer(), std::exception);

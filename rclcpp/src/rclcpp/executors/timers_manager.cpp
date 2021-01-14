@@ -41,24 +41,17 @@ void TimersManager::add_timer(rclcpp::TimerBase::SharedPtr timer)
     throw std::invalid_argument("TimersManager::add_timer() trying to add nullptr timer");
   }
 
+  bool added = false;
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
-
-    // Nothing to do if the timer is already stored here
-    for(const auto & weak_timer : weak_timers_) {
-      bool matched = (weak_timer.lock() == timer);
-
-      if (matched) {
-        return;
-      }
-    }
-
-    weak_timers_.push_back(timer);
-    timers_updated_ = true;
+    added = weak_timers_heap_.add_timer(timer);
+    timers_updated_ = timers_updated_ || added;
   }
 
-  // Notify that a timer has been added to the vector of weak timers
-  timers_cv_.notify_one();
+  if (added) {
+    // Notify that a timer has been added
+    timers_cv_.notify_one();
+  }
 }
 
 void TimersManager::start()
@@ -80,6 +73,7 @@ void TimersManager::stop()
     return;
   }
 
+  // Notify the timers manager thread to wake up
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
     timers_updated_ = true;
@@ -92,6 +86,19 @@ void TimersManager::stop()
   }
 }
 
+std::chrono::nanoseconds TimersManager::get_head_timeout()
+{
+  // Do not allow to interfere with the thread running
+  if (running_) {
+    throw std::runtime_error(
+            "TimersManager::get_head_timeout() can't be used while timers thread is running");
+  }
+
+  std::unique_lock<std::mutex> lock(timers_mutex_);
+  TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
+  return this->get_head_timeout_unsafe(timers_heap);
+}
+
 std::chrono::nanoseconds TimersManager::execute_ready_timers()
 {
   // Do not allow to interfere with the thread running
@@ -102,11 +109,11 @@ std::chrono::nanoseconds TimersManager::execute_ready_timers()
 
   std::unique_lock<std::mutex> lock(timers_mutex_);
 
-  // Generate heapified weak timers
-  TimersHeap heap;
-  heap.make_heap(weak_timers_);
+  TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
+  this->execute_ready_timers_unsafe(timers_heap);
+  weak_timers_heap_.store(timers_heap);
 
-  return this->execute_ready_timers_unsafe(heap);
+  return this->get_head_timeout_unsafe(timers_heap);
 }
 
 bool TimersManager::execute_head_timer()
@@ -119,24 +126,18 @@ bool TimersManager::execute_head_timer()
 
   std::unique_lock<std::mutex> lock(timers_mutex_);
 
-  // Generate heapified weak timers
-  TimersHeap heap;
-  heap.make_heap(weak_timers_);
-
+  TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
   // Nothing to do if we don't have any timer
-  if (heap.empty()) {
+  if (timers_heap.empty()) {
     return false;
   }
 
-  // Own timers during the following operations
-  std::vector<TimerPtr> timers;
-  heap.own_timers_heap(timers);
-
-  TimerPtr head = timers.front();
-
+  TimerPtr head = timers_heap.front();
   if (head->is_ready()) {
     // Head timer is ready, execute
     head->execute_callback();
+    timers_heap.heapify_root();
+    weak_timers_heap_.store(timers_heap);
     return true;
   } else {
     // Head timer was not ready yet
@@ -144,68 +145,36 @@ bool TimersManager::execute_head_timer()
   }
 }
 
-std::chrono::nanoseconds TimersManager::get_head_timeout()
-{
-  std::unique_lock<std::mutex> lock(timers_mutex_);
-
-  TimersHeap heap;
-  // Generate heapified weak timers
-  heap.make_heap(weak_timers_);
-
-  if (heap.empty()) {
-    return MAX_TIME;
-  }
-
-  // Own timers during the following operations
-  std::vector<TimerPtr> timers;
-  heap.own_timers_heap(timers);
-
-  return (timers.front())->time_until_trigger();
-}
-
-std::chrono::nanoseconds TimersManager::execute_ready_timers_unsafe(TimersHeap & heap)
+void TimersManager::execute_ready_timers_unsafe(TimersHeap & heap)
 {
   // Nothing to do if we don't have any timer
   if (heap.empty()) {
-    return MAX_TIME;
+    return;
   }
-
-  // Own timers during the following operations
-  std::vector<TimerPtr> timers;
-  heap.own_timers_heap(timers);
-
-
-  auto start = std::chrono::steady_clock::now();
-
-  TimerPtr head = timers.front();
 
   // Keep executing timers until they are ready and they were already ready when we started.
   // The second check prevents this function from blocking indefinitely if the
   // time required for executing the timers is longer than their period.
 
-  while (head->is_ready() && this->timer_was_ready_at_tp(head, start)) {
+  TimerPtr head = heap.front();
+  auto start_time = std::chrono::steady_clock::now();
+  while (head->is_ready() && this->timer_was_ready_at_tp(head, start_time)) {
     // Execute head timer
     head->execute_callback();
     // Executing a timer will result in updating its time_until_trigger, so re-heapify
-    heap.heapify_root(timers);
+    heap.heapify_root();
     // Get new head timer
-    head = timers.front();
+    head = heap.front();
   }
-
-  return (timers.front())->time_until_trigger();
 }
 
 void TimersManager::run_timers()
 {
-  auto time_to_sleep = this->get_head_timeout();
-
-  TimersHeap heap;
-
+  std::chrono::nanoseconds time_to_sleep;
   {
-    // Protect weak_timers_
     std::unique_lock<std::mutex> lock(timers_mutex_);
-    // Generate heapified weak timers
-    heap.make_heap(weak_timers_);
+    TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
+    time_to_sleep = this->get_head_timeout_unsafe(timers_heap);
   }
 
   while (rclcpp::ok(context_) && running_) {
@@ -214,15 +183,17 @@ void TimersManager::run_timers()
 
     // Wait until timeout or notification that timers have been updated
     timers_cv_.wait_for(timers_lock, time_to_sleep, [this]() {return timers_updated_;});
-
-    // If timers_updated_, update the heap:
-    if(timers_updated_) {
-      heap.make_heap(weak_timers_);
-    }
     // Reset timers updated flag
     timers_updated_ = false;
+
+    // Get ownership of timers
+    TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
     // Execute timers
-    time_to_sleep = this->execute_ready_timers_unsafe(heap);
+    this->execute_ready_timers_unsafe(timers_heap);
+    // Store updated order of elements to efficiently re-use it next iteration
+    weak_timers_heap_.store(timers_heap);
+    // Get next timeout
+    time_to_sleep = this->get_head_timeout_unsafe(timers_heap);
   }
 
   // Make sure the running flag is set to false when we exit from this function
@@ -235,7 +206,7 @@ void TimersManager::clear()
   {
     // Lock mutex and then clear all data structures
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
-    weak_timers_.clear();
+    weak_timers_heap_.clear();
 
     timers_updated_ = true;
   }
@@ -246,30 +217,16 @@ void TimersManager::clear()
 
 void TimersManager::remove_timer(TimerPtr timer)
 {
+  bool removed = false;
   {
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
+    removed = weak_timers_heap_.remove_timer(timer);
 
-    bool matched = false;
-    auto it = weak_timers_.begin();
-
-    while (it != weak_timers_.end()) {
-      matched = (it->lock() == timer);
-
-      if (matched) {
-        weak_timers_.erase(it);
-        break;
-      }
-
-      it++;
-    }
-
-    if ((it == weak_timers_.end()) && !matched ) {
-      throw std::runtime_error("Tried to remove timer not stored in the timers manager.");
-    }
-
-    timers_updated_ = true;
+    timers_updated_ = timers_updated_ || removed;
   }
 
-  // Notify timers thread such that it can re-compute its timeout
-  timers_cv_.notify_one();
+  if (removed) {
+    // Notify timers thread such that it can re-compute its timeout
+    timers_cv_.notify_one();
+  }
 }
