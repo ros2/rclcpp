@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "rclcpp/context.hpp"
@@ -147,7 +148,7 @@ private:
    */
   class WeakTimersHeap
   {
-  public:
+public:
     /**
      * @brief Try to add a new timer to the heap.
      * After the addition, the heap property is preserved.
@@ -177,12 +178,12 @@ private:
     {
       TimersHeap locked_heap = this->validate_and_lock();
       bool removed = locked_heap.remove_timer(std::move(timer));
-    
+
       if (removed) {
         // Re-create the weak heap with the timer removed
         this->store(locked_heap);
       }
-      
+
       return removed;
     }
 
@@ -208,7 +209,7 @@ private:
           it = weak_heap_.erase(it);
           any_timer_destroyed = true;
         }
-      }  
+      }
 
       // If a timer has gone out of scope, then the remaining elements may not represent
       // a valid heap anymore. We need to re heapify the timers heap.
@@ -218,13 +219,13 @@ private:
         this->store(locked_heap);
       }
 
-      return locked_heap;    
+      return locked_heap;
     }
 
     /**
      * @brief This function allows to recreate the heap of weak pointers
      * from an heap of owned pointers.
-     * @param heap 
+     * @param heap timers heap to store as weak pointers
      */
     void store(const TimersHeap & heap)
     {
@@ -242,7 +243,7 @@ private:
       weak_heap_.clear();
     }
 
-  private:
+private:
     std::vector<WeakTimerPtr> weak_heap_;
   };
 
@@ -253,7 +254,7 @@ private:
    */
   class TimersHeap
   {
-  public:
+public:
     /**
      * @brief Try to add a new timer to the heap.
      * After the addition, the heap property is preserved.
@@ -291,7 +292,7 @@ private:
       owned_heap_.erase(it);
       std::make_heap(owned_heap_.begin(), owned_heap_.end(), timer_greater);
 
-      return true;    
+      return true;
     }
 
     /**
@@ -341,14 +342,14 @@ private:
      */
     void heapify()
     {
-        std::make_heap(owned_heap_.begin(), owned_heap_.end(), timer_greater);
+      std::make_heap(owned_heap_.begin(), owned_heap_.end(), timer_greater);
     }
 
     /**
      * @brief Convenience function that allows to push an element at the bottom of the heap.
      * It will not perform any check on whether the heap remains valid or not.
      * Those checks are responsibility of the calling code.
-     * 
+     *
      * @param timer timer to push at the back of the data structure representing the heap
      */
     void push_back(TimerPtr timer)
@@ -360,10 +361,9 @@ private:
      * @brief Friend declaration to allow the store function to access the underlying
      * heap container
      */
-    friend void WeakTimersHeap::store(const TimersHeap& heap);
+    friend void WeakTimersHeap::store(const TimersHeap & heap);
 
-  private:
-
+private:
     /**
      * @brief Comparison function between timers.
      */

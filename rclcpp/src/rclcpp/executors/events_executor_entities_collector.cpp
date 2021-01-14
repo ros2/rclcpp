@@ -506,7 +506,7 @@ EventsExecutorEntitiesCollector::get_subscription(const void * subscription_id)
     auto subscription_weak_ptr = it->second;
     auto subscription_shared_ptr = subscription_weak_ptr.lock();
 
-    if(subscription_shared_ptr) {
+    if (subscription_shared_ptr) {
       return subscription_shared_ptr;
     }
 
@@ -525,7 +525,7 @@ EventsExecutorEntitiesCollector::get_client(const void * client_id)
     auto client_weak_ptr = it->second;
     auto client_shared_ptr = client_weak_ptr.lock();
 
-    if(client_shared_ptr) {
+    if (client_shared_ptr) {
       return client_shared_ptr;
     }
 
@@ -544,7 +544,7 @@ EventsExecutorEntitiesCollector::get_service(const void * service_id)
     auto service_weak_ptr = it->second;
     auto service_shared_ptr = service_weak_ptr.lock();
 
-    if(service_shared_ptr) {
+    if (service_shared_ptr) {
       return service_shared_ptr;
     }
 
@@ -563,7 +563,7 @@ EventsExecutorEntitiesCollector::get_waitable(const void * waitable_id)
     auto waitable_weak_ptr = it->second;
     auto waitable_shared_ptr = waitable_weak_ptr.lock();
 
-    if(waitable_shared_ptr) {
+    if (waitable_shared_ptr) {
       return waitable_shared_ptr;
     }
 

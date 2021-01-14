@@ -274,7 +274,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto subscription = entities_collector_->get_subscription(event.entity);
 
-        if(subscription) {
+        if (subscription) {
           execute_subscription(subscription);
         }
         break;
@@ -284,7 +284,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto service = entities_collector_->get_service(event.entity);
 
-        if(service) {
+        if (service) {
           execute_service(service);
         }
         break;
@@ -294,7 +294,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto client = entities_collector_->get_client(event.entity);
 
-        if(client) {
+        if (client) {
           execute_client(client);
         }
         break;
@@ -304,7 +304,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto waitable = entities_collector_->get_waitable(event.entity);
 
-        if(waitable) {
+        if (waitable) {
           waitable->execute();
         }
         break;
