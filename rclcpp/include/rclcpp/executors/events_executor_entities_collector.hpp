@@ -18,6 +18,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/executors/event_waitable.hpp"

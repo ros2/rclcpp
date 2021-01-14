@@ -16,8 +16,8 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_HPP_
 
 #include <chrono>
-#include <deque>
 #include <memory>
+#include <queue>
 #include <vector>
 
 #include "rclcpp/executor.hpp"
@@ -174,9 +174,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
-  // Event queue implementation is a deque only to
-  // facilitate the removal of events from expired entities.
-  using EventQueue = std::deque<rmw_listener_event_t>;
+  using EventQueue = std::queue<rmw_listener_event_t>;
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
@@ -192,7 +190,7 @@ private:
     {
       std::unique_lock<std::mutex> lock(this_executor->push_mutex_);
 
-      this_executor->event_queue_.push_back(event);
+      this_executor->event_queue_.push(event);
     }
     // Notify that the event queue has some events in it.
     this_executor->event_queue_cv_.notify_one();
@@ -208,12 +206,12 @@ private:
   void
   execute_event(const rmw_listener_event_t & event);
 
-  // We use two instances of EventQueue to allow threads to push events while we execute them
+  // Queue where entities can push events
   EventQueue event_queue_;
-  EventQueue execution_event_queue_;
 
   EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
   EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;
+
   // Mutex to protect the insertion of events in the queue
   std::mutex push_mutex_;
   // Variable used to notify when an event is added to the queue

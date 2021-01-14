@@ -56,18 +56,21 @@ EventsExecutor::spin()
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
+  // Local event queue to allow entities to push events while we execute them
+  EventQueue execution_event_queue;
+
   timers_manager_->start();
 
   while (rclcpp::ok(context_) && spinning.load()) {
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     // We wait here until something has been pushed to the event queue
     event_queue_cv_.wait(push_lock, has_event_predicate);
-    // We got an event! Swap queues while we hold both mutexes
-    std::swap(execution_event_queue_, event_queue_);
-    // After swapping the queues, we don't need the push lock anymore
+    // We got an event! Swap queues
+    std::swap(execution_event_queue, event_queue_);
+    // After swapping the queues, we don't need the lock anymore
     push_lock.unlock();
-    // Consume events while under the execution lock only
-    this->consume_all_events(execution_event_queue_);
+    // Consume all available events, this queue will be empty at the end of the function
+    this->consume_all_events(execution_event_queue);
   }
   timers_manager_->stop();
 }
@@ -93,22 +96,27 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
+  // Local event queue to allow entities to push events while we execute them
+  EventQueue execution_event_queue;
+
   // Select the smallest between input max_duration and timer timeout
   auto next_timer_timeout = timers_manager_->get_head_timeout();
   if (next_timer_timeout < max_duration) {
     max_duration = next_timer_timeout;
   }
 
-
-  // Wait until timeout or event
   std::unique_lock<std::mutex> push_lock(push_mutex_);
+  // Wait until timeout or event
   event_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
-  std::swap(execution_event_queue_, event_queue_);
+  // Time to swap queues as the wait is over
+  std::swap(execution_event_queue, event_queue_);
+  // After swapping the queues, we don't need the lock anymore
   push_lock.unlock();
-  this->consume_all_events(execution_event_queue_);
-  execution_lock.unlock();
 
+  // Execute all ready timers
   timers_manager_->execute_ready_timers();
+  // Consume all available events, this queue will be empty at the end of the function
+  this->consume_all_events(execution_event_queue);
 }
 
 void
@@ -126,21 +134,23 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !event_queue_.empty();};
 
+  // Local event queue to allow entities to push events while we execute them
+  EventQueue execution_event_queue;
+
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
       auto elapsed_time = std::chrono::steady_clock::now() - start;
       return elapsed_time < max_duration;
     };
 
-  // Wait once
-  // Select the smallest between input timeout and timer timeout
+  // Select the smallest between input max duration and timer timeout
   auto next_timer_timeout = timers_manager_->get_head_timeout();
   if (next_timer_timeout < max_duration) {
     max_duration = next_timer_timeout;
   }
 
   {
-    // Wait until timeout or event
+    // Wait once until timeout or event
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     event_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
   }
@@ -150,21 +160,19 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   // Keep executing until no more work to do or timeout expired
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     std::unique_lock<std::mutex> push_lock(push_mutex_);
-    std::swap(execution_event_queue_, event_queue_);
+    std::swap(execution_event_queue, event_queue_);
     push_lock.unlock();
 
-    bool ready_timer = timeout < 0ns;
-    bool has_events = !execution_event_queue_.empty();
+    // Exit if there is no more work to do
+    const bool ready_timer = timeout < 0ns;
+    const bool has_events = !execution_event_queue.empty();
     if (!ready_timer && !has_events) {
-      // Exit as there is no more work to do
       break;
     }
+
     // Execute all ready work
-
-    this->consume_all_events(execution_event_queue_);
-    execution_lock.unlock();
-
     timeout = timers_manager_->execute_ready_timers();
+    this->consume_all_events(execution_event_queue);
   }
 }
 
@@ -197,7 +205,7 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
     has_event = !event_queue_.empty();
     if (has_event) {
       event = event_queue_.front();
-      event_queue_.pop_front();
+      event_queue_.pop();
     }
   }
 
@@ -252,7 +260,7 @@ EventsExecutor::consume_all_events(EventQueue & event_queue)
 {
   while (!event_queue.empty()) {
     rmw_listener_event_t event = event_queue.front();
-    event_queue.pop_front();
+    event_queue.pop();
 
     this->execute_event(event);
   }
@@ -266,7 +274,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto subscription = entities_collector_->get_subscription(event.entity);
 
-        if(subscription) {
+        if (subscription) {
           execute_subscription(subscription);
         }
         break;
@@ -276,7 +284,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto service = entities_collector_->get_service(event.entity);
 
-        if(service) {
+        if (service) {
           execute_service(service);
         }
         break;
@@ -286,7 +294,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto client = entities_collector_->get_client(event.entity);
 
-        if(client) {
+        if (client) {
           execute_client(client);
         }
         break;
@@ -296,7 +304,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
       {
         auto waitable = entities_collector_->get_waitable(event.entity);
 
-        if(waitable) {
+        if (waitable) {
           waitable->execute();
         }
         break;
