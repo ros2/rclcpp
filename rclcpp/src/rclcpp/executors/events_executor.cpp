@@ -62,7 +62,6 @@ EventsExecutor::spin()
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     // We wait here until something has been pushed to the event queue
     event_queue_cv_.wait(push_lock, has_event_predicate);
-    std::unique_lock<std::mutex> execution_lock(execution_mutex_);
     // We got an event! Swap queues while we hold both mutexes
     std::swap(execution_event_queue_, event_queue_);
     // After swapping the queues, we don't need the push lock anymore
@@ -104,7 +103,6 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   // Wait until timeout or event
   std::unique_lock<std::mutex> push_lock(push_mutex_);
   event_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
-  std::unique_lock<std::mutex> execution_lock(execution_mutex_);
   std::swap(execution_event_queue_, event_queue_);
   push_lock.unlock();
   this->consume_all_events(execution_event_queue_);
@@ -152,7 +150,6 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   // Keep executing until no more work to do or timeout expired
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     std::unique_lock<std::mutex> push_lock(push_mutex_);
-    std::unique_lock<std::mutex> execution_lock(execution_mutex_);
     std::swap(execution_event_queue_, event_queue_);
     push_lock.unlock();
 

@@ -216,8 +216,6 @@ private:
   EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;
   // Mutex to protect the insertion of events in the queue
   std::mutex push_mutex_;
-  // Mutex to protect the execution of events
-  std::mutex execution_mutex_;
   // Variable used to notify when an event is added to the queue
   std::condition_variable event_queue_cv_;
   // Timers manager
