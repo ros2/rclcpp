@@ -172,7 +172,6 @@ private:
     void own_timers_heap(std::vector<TimerPtr> & timers)
     {
       auto it = heapified_weak_timers_.begin();
-      bool invalid_heap = false;
 
       while (it != heapified_weak_timers_.end()) {
         if (auto timer_shared_ptr = it->lock()) {
@@ -181,19 +180,8 @@ private:
         } else {
           // The timer went out of scope, remove it
           heapified_weak_timers_.erase(it);
-          invalid_heap = true;
         }
         it++;
-      }
-
-      // If the vector of weak timers is not a heap anymore, recreate heap.
-      if (invalid_heap) {
-        std::make_heap(timers.begin(), timers.end(), timer_greater);
-        heapified_weak_timers_.clear();
-
-        for(auto & timer : timers) {
-          heapified_weak_timers_.push_back(timer);
-        }
       }
     }
 
