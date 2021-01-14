@@ -106,7 +106,6 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
   std::swap(execution_event_queue_, event_queue_);
   push_lock.unlock();
   this->consume_all_events(execution_event_queue_);
-  execution_lock.unlock();
 
   timers_manager_->execute_ready_timers();
 }
@@ -162,7 +161,6 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
     // Execute all ready work
 
     this->consume_all_events(execution_event_queue_);
-    execution_lock.unlock();
 
     timeout = timers_manager_->execute_ready_timers();
   }

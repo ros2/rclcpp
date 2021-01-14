@@ -56,7 +56,6 @@ namespace executors
  * so timers may be executed out of order.
  *
  */
-using TimerPtr = rclcpp::TimerBase::SharedPtr;
 
 class TimersManager
 {
@@ -134,6 +133,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
 
+  using TimerPtr = rclcpp::TimerBase::SharedPtr;
 
   /**
    * @brief This struct provides convenient access to a MinHeap of timers.
