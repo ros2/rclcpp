@@ -74,8 +74,9 @@ public:
   ~TimersManager();
 
   /**
-   * @brief Adds a new TimerBase to the storage.
-   * This object will keep ownership of the timer.
+   * @brief Adds a new TimerBase::WeakPtr to the storage.
+   * This object will store a weak pointer of the added timer
+   * in a heap data structure.
    * @param timer the timer to be added
    */
   void add_timer(rclcpp::TimerBase::SharedPtr timer);
