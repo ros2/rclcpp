@@ -40,7 +40,8 @@ namespace executors
  *
  * Timers management
  * This class provides APIs to add and remove timers.
- * This class keeps ownership of the added timers through a shared pointer.
+ * It keeps a list of weak pointers from added timers, and owns them only when
+ * have expired and need to be executed.
  * Timers are kept ordered in a binary-heap priority queue.
  * Calls to add/remove APIs will temporarily block the execution of the timers and
  * will require to reorder the internal priority queue of timers.
