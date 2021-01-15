@@ -94,8 +94,6 @@ public:
       HpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
 
       void lock() {
-        // next_to_access_.lock; data_.lock; next_to_access.unlock();
-        std::lock_guard<std::mutex> nag{parent_.next_to_access_};
         parent_.data_.lock();
       }
 
@@ -112,13 +110,8 @@ public:
       LpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
 
       void lock() {
-        // low_prio_.lock(); next_to_access_.lock(); data_.lock(); next_to_access_.unlock();
-
-        // The whole trick here is that only one low priority thread can be waiting to take the
-        // data mutex, while all high priority thread can rapidly pass the next_to_access mutex to
-        // wait on the data mutex.
+        // low_prio_.lock(); data_.lock();
         std::unique_lock<std::mutex> lpg{parent_.low_prio_};
-        std::lock_guard<std::mutex> nag{parent_.next_to_access_};
         parent_.data_.lock();
         lpg.release();
       }
@@ -136,8 +129,9 @@ private:
     LpMutex lp() {return LpMutex{*this};}
   
 private:
+    // Implementation detail: the whole idea here is that only one low priority thread can be
+    // trying to take the data_ mutex, while all high priority threads are already waiting there.
     std::mutex low_prio_;
-    std::mutex next_to_access_;
     std::mutex data_;
   };
 
