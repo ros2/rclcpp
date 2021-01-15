@@ -129,3 +129,9 @@ NodeTopics::get_node_timers_interface() const
 {
   return node_timers_;
 }
+
+std::string
+NodeTopics::resolve_topic_name(const std::string & name, bool only_expand) const
+{
+  return node_base_->resolve_topic_or_service_name(name, false, only_expand);
+}

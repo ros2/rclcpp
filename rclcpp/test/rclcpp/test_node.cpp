@@ -43,6 +43,11 @@ protected:
     rclcpp::init(0, nullptr);
   }
 
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   void SetUp() override
   {
     test_resources_path /= "test_node";

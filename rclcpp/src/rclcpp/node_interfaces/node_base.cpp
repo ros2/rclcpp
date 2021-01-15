@@ -70,6 +70,7 @@ NodeBase::NodeBase(
   std::shared_ptr<std::recursive_mutex> logging_mutex = get_global_logging_mutex();
   {
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+    // TODO(ivanpauno): /rosout Qos should be reconfigurable.
     // TODO(ivanpauno): Instead of mutually excluding rcl_node_init with the global logger mutex,
     // rcl_logging_rosout_init_publisher_for_node could be decoupled from there and be called
     // here directly.
@@ -287,4 +288,25 @@ bool
 NodeBase::get_enable_topic_statistics_default() const
 {
   return enable_topic_statistics_default_;
+}
+
+std::string
+NodeBase::resolve_topic_or_service_name(
+  const std::string & name, bool is_service, bool only_expand) const
+{
+  char * output_cstr = NULL;
+  auto allocator = rcl_get_default_allocator();
+  rcl_ret_t ret = rcl_node_resolve_name(
+    node_handle_.get(),
+    name.c_str(),
+    allocator,
+    is_service,
+    only_expand,
+    &output_cstr);
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "failed to resolve name", rcl_get_error_state());
+  }
+  std::string output{output_cstr};
+  allocator.deallocate(output_cstr, allocator.state);
+  return output;
 }

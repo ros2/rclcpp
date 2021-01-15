@@ -51,9 +51,10 @@ TEST_F(TestComponentManager, get_component_resources_valid)
   EXPECT_EQ("test_rclcpp_components::TestComponentBar", resources[1].first);
   EXPECT_EQ("test_rclcpp_components::TestComponentNoNode", resources[2].first);
 
-  EXPECT_TRUE(rcpputils::fs::path(resources[0].second).exists());
-  EXPECT_TRUE(rcpputils::fs::path(resources[1].second).exists());
-  EXPECT_TRUE(rcpputils::fs::path(resources[2].second).exists());
+  namespace fs = rcpputils::fs;
+  EXPECT_TRUE(fs::exists(fs::path(resources[0].second)));
+  EXPECT_TRUE(fs::exists(fs::path(resources[1].second)));
+  EXPECT_TRUE(fs::exists(fs::path(resources[2].second)));
 }
 
 TEST_F(TestComponentManager, create_component_factory_valid)
@@ -85,8 +86,8 @@ TEST_F(TestComponentManager, create_component_factory_invalid)
     rclcpp_components::ComponentManagerException);
 
   // Test valid library with invalid class
-  auto resources = manager->get_component_resources("rclcpp_components");
-  auto factory = manager->create_component_factory({"foo_class", resources[0].second});
+  auto component_resources = manager->get_component_resources("rclcpp_components");
+  auto factory = manager->create_component_factory({"foo_class", component_resources[0].second});
   EXPECT_EQ(nullptr, factory);
 
   // Test improperly formed resources file

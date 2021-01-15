@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "rcl/node_options.h"
 #include "rclcpp/node.hpp"
@@ -80,7 +81,9 @@ public:
   void SetUp()
   {
     rclcpp::init(0, nullptr);
-    node = std::make_shared<rclcpp::Node>("node", "ns");
+    rclcpp::NodeOptions options{};
+    options.arguments(std::vector<std::string>{"-r", "foo:=bar"});
+    node = std::make_shared<rclcpp::Node>("node", "ns", options);
 
     // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
     // the proper type is being tested and covered.
@@ -153,4 +156,14 @@ TEST_F(TestNodeTopics, add_subscription_rcl_trigger_guard_condition_error)
   RCLCPP_EXPECT_THROW_EQ(
     node_topics->add_subscription(subscription, callback_group),
     std::runtime_error("failed to notify wait set on subscription creation: error not set"));
+}
+
+TEST_F(TestNodeTopics, resolve_topic_name)
+{
+  EXPECT_EQ("/ns/bar", node_topics->resolve_topic_name("foo", false));
+  EXPECT_EQ("/ns/foo", node_topics->resolve_topic_name("foo", true));
+  EXPECT_EQ("/foo", node_topics->resolve_topic_name("/foo", true));
+  EXPECT_THROW(
+    node_topics->resolve_topic_name("this is not a valid name!~>", true),
+    rclcpp::exceptions::RCLError);
 }

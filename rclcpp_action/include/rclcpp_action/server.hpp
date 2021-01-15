@@ -118,11 +118,15 @@ public:
   bool
   is_ready(rcl_wait_set_t *) override;
 
+  RCLCPP_ACTION_PUBLIC
+  std::shared_ptr<void>
+  take_data() override;
+
   /// Act on entities in the wait set which are ready to be acted upon.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
 
   // End Waitables API
   // -----------------
@@ -229,19 +233,19 @@ private:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_goal_request_received();
+  execute_goal_request_received(std::shared_ptr<void> & data);
 
   /// Handle a request to cancel goals on the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_cancel_request_received();
+  execute_cancel_request_received(std::shared_ptr<void> & data);
 
   /// Handle a request to get the result of an action
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_result_request_received();
+  execute_result_request_received(std::shared_ptr<void> & data);
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
@@ -377,31 +381,31 @@ protected:
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
 
     std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state =
-      [weak_this](const GoalUUID & uuid, std::shared_ptr<void> result_message)
+      [weak_this](const GoalUUID & goal_uuid, std::shared_ptr<void> result_message)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
         // Send result message to anyone that asked
-        shared_this->publish_result(uuid, result_message);
+        shared_this->publish_result(goal_uuid, result_message);
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
         // notify base so it can recalculate the expired goal timer
         shared_this->notify_goal_terminal_state();
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
         std::lock_guard<std::mutex> lock(shared_this->goal_handles_mutex_);
-        shared_this->goal_handles_.erase(uuid);
+        shared_this->goal_handles_.erase(goal_uuid);
       };
 
     std::function<void(const GoalUUID &)> on_executing =
-      [weak_this](const GoalUUID & uuid)
+      [weak_this](const GoalUUID & goal_uuid)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
-        (void)uuid;
+        (void)goal_uuid;
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
       };
