@@ -81,6 +81,10 @@ public:
   rclcpp::node_interfaces::NodeTimersInterface *
   get_node_timers_interface() const override;
 
+  RCLCPP_PUBLIC
+  std::string
+  resolve_topic_name(const std::string & name, bool only_expand = false) const override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeTopics)
 

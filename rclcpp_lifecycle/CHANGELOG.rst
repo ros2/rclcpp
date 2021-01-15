@@ -3,6 +3,30 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+6.2.0 (2021-01-08)
+------------------
+
+6.1.0 (2020-12-10)
+------------------
+* add LifecycleNode::get_transition_graph to match services. (`#1472 <https://github.com/ros2/rclcpp/issues/1472>`_)
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Benchmark lifecycle features (`#1462 <https://github.com/ros2/rclcpp/issues/1462>`_)
+* Contributors: Stephen Brawner, brawner, tomoya
+
+6.0.0 (2020-11-18)
+------------------
+* Reserve vector capacities and use emplace_back for constructing vectors (`#1464 <https://github.com/ros2/rclcpp/issues/1464>`_)
+* [rclcpp_lifecycle] Change uint8_t iterator variables to size_t (`#1461 <https://github.com/ros2/rclcpp/issues/1461>`_)
+* Bump rclcpp packages to Quality Level 2 (`#1445 <https://github.com/ros2/rclcpp/issues/1445>`_)
+* Contributors: Louise Poubel, brawner
+
+5.1.0 (2020-11-02)
+------------------
+* Increase test timeouts of slow running tests with rmw_connext_cpp (`#1400 <https://github.com/ros2/rclcpp/issues/1400>`_)
+* Update maintainers (`#1384 <https://github.com/ros2/rclcpp/issues/1384>`_)
+* Add clock qos to node options (`#1375 <https://github.com/ros2/rclcpp/issues/1375>`_)
+* Contributors: Ivan Santiago Paunovic, brawner
+
 5.0.0 (2020-09-18)
 ------------------
 * Increase test coverage of rclcpp_lifecycle to 96% (`#1298 <https://github.com/ros2/rclcpp/issues/1298>`_)

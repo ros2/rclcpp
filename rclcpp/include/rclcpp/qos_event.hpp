@@ -16,6 +16,8 @@
 #define RCLCPP__QOS_EVENT_HPP_
 
 #include <functional>
+#include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "rcl/error_handling.h"
@@ -143,21 +145,31 @@ public:
     }
   }
 
-  /// Execute any entities of the Waitable that are ready.
-  void
-  execute() override
+  /// Take data so that the callback cannot be scheduled again
+  std::shared_ptr<void>
+  take_data() override
   {
     EventCallbackInfoT callback_info;
-
     rcl_ret_t ret = rcl_take_event(&event_handle_, &callback_info);
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "Couldn't take event info: %s", rcl_get_error_string().str);
-      return;
+      return nullptr;
     }
+    return std::static_pointer_cast<void>(std::make_shared<EventCallbackInfoT>(callback_info));
+  }
 
-    event_callback_(callback_info);
+  /// Execute any entities of the Waitable that are ready.
+  void
+  execute(std::shared_ptr<void> & data) override
+  {
+    if (!data) {
+      throw std::runtime_error("'data' is empty");
+    }
+    auto callback_ptr = std::static_pointer_cast<EventCallbackInfoT>(data);
+    event_callback_(*callback_ptr);
+    callback_ptr.reset();
   }
 
 private:

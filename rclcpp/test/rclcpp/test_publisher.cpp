@@ -151,6 +151,20 @@ TEST_F(TestPublisher, various_creation_signatures) {
       rclcpp::create_publisher<Empty>(node, "topic", 42, rclcpp::PublisherOptions());
     (void)publisher;
   }
+  {
+    rclcpp::PublisherOptions options;
+    options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
+    auto publisher =
+      rclcpp::create_publisher<Empty>(node, "topic", 42, options);
+    (void)publisher;
+  }
+  {
+    auto node_parameters = node->get_node_parameters_interface();
+    auto node_topics = node->get_node_topics_interface();
+    auto publisher = rclcpp::create_publisher<Empty>(
+      node_parameters, node_topics, "topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
 }
 
 /*
@@ -489,7 +503,9 @@ TEST_F(TestPublisher, default_incompatible_qos_callback) {
 TEST_F(TestPublisher, run_event_handlers) {
   initialize();
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+
   for (const auto & handler : publisher->get_event_handlers()) {
-    EXPECT_NO_THROW(handler->execute());
+    std::shared_ptr<void> data = handler->take_data();
+    handler->execute(data);
   }
 }

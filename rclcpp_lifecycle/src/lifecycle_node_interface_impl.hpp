@@ -265,11 +265,13 @@ public:
       throw std::runtime_error(
               "Can't get available states. State machine is not initialized.");
     }
-    for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
-      lifecycle_msgs::msg::State state;
-      state.id = static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
-      state.label = static_cast<std::string>(state_machine_.transition_map.states[i].label);
-      resp->available_states.push_back(state);
+
+    resp->available_states.resize(state_machine_.transition_map.states_size);
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
+      resp->available_states[i].id =
+        static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
+      resp->available_states[i].label =
+        static_cast<std::string>(state_machine_.transition_map.states[i].label);
     }
   }
 
@@ -286,16 +288,17 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
-    for (uint8_t i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+    resp->available_transitions.resize(state_machine_.current_state->valid_transition_size);
+    for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+      lifecycle_msgs::msg::TransitionDescription & trans_desc = resp->available_transitions[i];
+
       auto rcl_transition = state_machine_.current_state->valid_transitions[i];
-      lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = static_cast<uint8_t>(rcl_transition.id);
       trans_desc.transition.label = rcl_transition.label;
       trans_desc.start_state.id = static_cast<uint8_t>(rcl_transition.start->id);
       trans_desc.start_state.label = rcl_transition.start->label;
       trans_desc.goal_state.id = static_cast<uint8_t>(rcl_transition.goal->id);
       trans_desc.goal_state.label = rcl_transition.goal->label;
-      resp->available_transitions.push_back(trans_desc);
     }
   }
 
@@ -312,16 +315,17 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
-    for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+    resp->available_transitions.resize(state_machine_.transition_map.transitions_size);
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+      lifecycle_msgs::msg::TransitionDescription & trans_desc = resp->available_transitions[i];
+
       auto rcl_transition = state_machine_.transition_map.transitions[i];
-      lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = static_cast<uint8_t>(rcl_transition.id);
       trans_desc.transition.label = rcl_transition.label;
       trans_desc.start_state.id = static_cast<uint8_t>(rcl_transition.start->id);
       trans_desc.start_state.label = rcl_transition.start->label;
       trans_desc.goal_state.id = static_cast<uint8_t>(rcl_transition.goal->id);
       trans_desc.goal_state.label = rcl_transition.goal->label;
-      resp->available_transitions.push_back(trans_desc);
     }
   }
 
@@ -336,9 +340,10 @@ public:
   get_available_states()
   {
     std::vector<State> states;
-    for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
-      State state(&state_machine_.transition_map.states[i]);
-      states.push_back(state);
+    states.reserve(state_machine_.transition_map.states_size);
+
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
+      states.emplace_back(&state_machine_.transition_map.states[i]);
     }
     return states;
   }
@@ -347,11 +352,22 @@ public:
   get_available_transitions()
   {
     std::vector<Transition> transitions;
+    transitions.reserve(state_machine_.current_state->valid_transition_size);
 
-    for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
-      Transition transition(
-        &state_machine_.transition_map.transitions[i]);
-      transitions.push_back(transition);
+    for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+      transitions.emplace_back(&state_machine_.current_state->valid_transitions[i]);
+    }
+    return transitions;
+  }
+
+  std::vector<Transition>
+  get_transition_graph()
+  {
+    std::vector<Transition> transitions;
+    transitions.reserve(state_machine_.transition_map.transitions_size);
+
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+      transitions.emplace_back(&state_machine_.transition_map.transitions[i]);
     }
     return transitions;
   }

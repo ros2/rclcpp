@@ -77,7 +77,8 @@ StaticExecutorEntitiesCollector::init(
   // Add executor's guard condition
   memory_strategy_->add_guard_condition(executor_guard_condition);
   // Get memory strategy and executable list. Prepare wait_set_
-  execute();
+  std::shared_ptr<void> shared_ptr;
+  execute(shared_ptr);
 }
 
 void
@@ -87,9 +88,16 @@ StaticExecutorEntitiesCollector::fini()
   exec_list_.clear();
 }
 
-void
-StaticExecutorEntitiesCollector::execute()
+std::shared_ptr<void>
+StaticExecutorEntitiesCollector::take_data()
 {
+  return nullptr;
+}
+
+void
+StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
+{
+  (void) data;
   // Fill memory strategy with entities coming from weak_nodes_
   fill_memory_strategy();
   // Fill exec_list_ with entities coming from weak_nodes_ (same as memory strategy)
@@ -155,7 +163,8 @@ StaticExecutorEntitiesCollector::fill_executable_list()
 }
 void
 StaticExecutorEntitiesCollector::fill_executable_list_from_map(
-  const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
@@ -297,7 +306,7 @@ bool
 StaticExecutorEntitiesCollector::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   // If the callback_group already has an executor
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
@@ -341,7 +350,7 @@ StaticExecutorEntitiesCollector::remove_callback_group(
 bool
 StaticExecutorEntitiesCollector::remove_callback_group_from_map(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
-  WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr;
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
@@ -437,7 +446,8 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
 bool
 StaticExecutorEntitiesCollector::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes) const
 {
   return std::find_if(
     weak_groups_to_nodes.begin(),

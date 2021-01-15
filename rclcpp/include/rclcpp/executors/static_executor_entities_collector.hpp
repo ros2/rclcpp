@@ -72,9 +72,19 @@ public:
   void
   fini();
 
+  /// Execute the waitable.
   RCLCPP_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
+
+  /// Take the data so that it can be consumed with `execute`.
+  /**
+   * For `StaticExecutorEntitiesCollector`, this always return `nullptr`.
+   * \sa rclcpp::Waitable::take_data()
+   */
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data() override;
 
   /// Function to add_handles_to_wait_set and wait for work and
   /**

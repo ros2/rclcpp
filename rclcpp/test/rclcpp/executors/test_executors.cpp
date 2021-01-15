@@ -444,9 +444,16 @@ public:
     return true;
   }
 
-  void
-  execute() override
+  std::shared_ptr<void>
+  take_data() override
   {
+    return nullptr;
+  }
+
+  void
+  execute(std::shared_ptr<void> & data) override
+  {
+    (void) data;
     count_++;
     std::this_thread::sleep_for(3ms);
   }

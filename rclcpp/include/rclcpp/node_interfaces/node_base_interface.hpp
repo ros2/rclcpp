@@ -163,6 +163,13 @@ public:
   virtual
   bool
   get_enable_topic_statistics_default() const = 0;
+
+  /// Expand and remap a given topic or service name.
+  RCLCPP_PUBLIC
+  virtual
+  std::string
+  resolve_topic_or_service_name(
+    const std::string & name, bool is_service, bool only_expand = false) const = 0;
 };
 
 }  // namespace node_interfaces

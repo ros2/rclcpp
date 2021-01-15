@@ -13,7 +13,10 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
+  add_compile_options(
+    -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual
+    -Wformat=2 -Wconversion -Wshadow -Wsign-conversion -Wcast-qual
+  )
 endif()
 
 set(${PROJECT_NAME}_SRCS
@@ -73,6 +76,8 @@ if(BUILD_TESTING)
   # Give cppcheck hints about macro definitions coming from outside this package
   set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
+
+  add_subdirectory(test/benchmark)
 
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   if(TARGET test_client)
