@@ -81,7 +81,67 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
-  std::mutex wait_mutex_;
+  /// \internal A mutex that has two locking mechanism, one with higher priority than the other.
+  /**
+   * After the current mutex owner release the lock, a thread that used the high
+   * priority mechanism will have priority over threads that used the low priority mechanism.
+   */
+  class MutexTwoPriorities {
+public:
+    class HpMutex
+    {
+public:
+      HpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+
+      void lock() {
+        // next_to_access_.lock; data_.lock; next_to_access.unlock();
+        std::lock_guard<std::mutex> nag{parent_.next_to_access_};
+        parent_.data_.lock();
+      }
+
+      void unlock() {
+        parent_.data_.unlock();
+      }
+private:
+      MutexTwoPriorities & parent_;
+    };
+
+    class LpMutex
+    {
+public:
+      LpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+
+      void lock() {
+        // low_prio_.lock(); next_to_access_.lock(); data_.lock(); next_to_access_.unlock();
+
+        // The whole trick here is that only one low priority thread can be waiting to take the
+        // data mutex, while all high priority thread can rapidly pass the next_to_access mutex to
+        // wait on the data mutex.
+        std::unique_lock<std::mutex> lpg{parent_.low_prio_};
+        std::lock_guard<std::mutex> nag{parent_.next_to_access_};
+        parent_.data_.lock();
+        lpg.release();
+      }
+
+      void unlock() {
+        // data_.unlock(); low_prio_.unlock()
+        std::lock_guard<std::mutex> lpg{parent_.low_prio_, std::adopt_lock};
+        parent_.data_.unlock();
+      }
+private:
+      MutexTwoPriorities & parent_;
+    };
+
+    HpMutex hp() {return HpMutex{*this};}
+    LpMutex lp() {return LpMutex{*this};}
+  
+private:
+    std::mutex low_prio_;
+    std::mutex next_to_access_;
+    std::mutex data_;
+  };
+
+  MutexTwoPriorities wait_mutex_;
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;

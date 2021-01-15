@@ -44,6 +44,7 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
+  using MutexTwoPriorities = rclcpp::executors::MultiThreadedExecutor::MutexTwoPriorities;
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
@@ -51,7 +52,8 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
-    std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+    auto lp_wait_mutex = wait_mutex_.lp();
+    std::lock_guard<MutexTwoPriorities::LpMutex> wait_lock(lp_wait_mutex);
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
       auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
       threads.emplace_back(func);
@@ -73,10 +75,12 @@ MultiThreadedExecutor::get_number_of_threads()
 void
 MultiThreadedExecutor::run(size_t)
 {
+  using MutexTwoPriorities = rclcpp::executors::MultiThreadedExecutor::MutexTwoPriorities;
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {
-      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      auto lp_wait_mutex = wait_mutex_.lp();
+      std::lock_guard<MutexTwoPriorities::LpMutex> wait_lock(lp_wait_mutex);
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
@@ -103,7 +107,8 @@ MultiThreadedExecutor::run(size_t)
     execute_any_executable(any_exec);
 
     if (any_exec.timer) {
-      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      auto hp_wait_mutex = wait_mutex_.hp();
+      std::lock_guard<MutexTwoPriorities::HpMutex> wait_lock(hp_wait_mutex);
       auto it = scheduled_timers_.find(any_exec.timer);
       if (it != scheduled_timers_.end()) {
         scheduled_timers_.erase(it);
