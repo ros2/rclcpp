@@ -70,11 +70,22 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
     }
   }
 
-  // Clear all lists
+  // Clear all containers
+  weak_nodes_.clear();
+  weak_clients_map_.clear();
+  weak_services_map_.clear();
+  weak_waitables_map_.clear();
+  weak_subscriptions_map_.clear();
+  weak_nodes_to_guard_conditions_.clear();
   weak_groups_associated_with_executor_to_nodes_.clear();
   weak_groups_to_nodes_associated_with_executor_.clear();
-  weak_nodes_to_guard_conditions_.clear();
-  weak_nodes_.clear();
+}
+
+void
+EventsExecutorEntitiesCollector::init()
+{
+  // Add the EventsExecutorEntitiesCollector shared_ptr to waitables map
+  add_waitable(this->shared_from_this());
 }
 
 void
@@ -214,8 +225,6 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
     [this](const rclcpp::TimerBase::SharedPtr & timer) {
       if (timer) {
         timers_manager_->add_timer(timer);
-        timer->set_on_destruction_callback(
-          std::bind(&TimersManager::remove_timer_raw, timers_manager_, std::placeholders::_1));
       }
       return false;
     });
@@ -227,11 +236,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         subscription->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        subscription->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::SubscriptionBase>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_subscriptions_map_.emplace(subscription.get(), subscription);
       }
       return false;
     });
@@ -241,11 +246,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         service->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        service->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::ServiceBase>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_services_map_.emplace(service.get(), service);
       }
       return false;
     });
@@ -255,11 +256,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         client->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        client->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::ClientBase>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_clients_map_.emplace(client.get(), client);
       }
       return false;
     });
@@ -269,11 +266,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
         waitable->set_events_executor_callback(
           associated_executor_,
           &EventsExecutor::push_event);
-        waitable->set_on_destruction_callback(
-          std::bind(
-            &EventsExecutor::remove_entity<rclcpp::Waitable>,
-            associated_executor_,
-            std::placeholders::_1));
+        weak_waitables_map_.emplace(waitable.get(), waitable);
       }
       return false;
     });
@@ -288,7 +281,6 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::TimerBase::SharedPtr & timer) {
       if (timer) {
         timers_manager_->remove_timer(timer);
-        timer->set_on_destruction_callback(nullptr);
       }
       return false;
     });
@@ -298,7 +290,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
       if (subscription) {
         subscription->set_events_executor_callback(nullptr, nullptr);
-        subscription->set_on_destruction_callback(nullptr);
+        weak_subscriptions_map_.erase(subscription.get());
       }
       return false;
     });
@@ -306,7 +298,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::ServiceBase::SharedPtr & service) {
       if (service) {
         service->set_events_executor_callback(nullptr, nullptr);
-        service->set_on_destruction_callback(nullptr);
+        weak_services_map_.erase(service.get());
       }
       return false;
     });
@@ -314,7 +306,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::ClientBase::SharedPtr & client) {
       if (client) {
         client->set_events_executor_callback(nullptr, nullptr);
-        client->set_on_destruction_callback(nullptr);
+        weak_clients_map_.erase(client.get());
       }
       return false;
     });
@@ -322,7 +314,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
     [this](const rclcpp::Waitable::SharedPtr & waitable) {
       if (waitable) {
         waitable->set_events_executor_callback(nullptr, nullptr);
-        waitable->set_on_destruction_callback(nullptr);
+        weak_waitables_map_.erase(waitable.get());
       }
       return false;
     });
@@ -510,4 +502,86 @@ EventsExecutorEntitiesCollector::unset_guard_condition_callback(
   if (ret != RCL_RET_OK) {
     throw std::runtime_error("Couldn't unset guard condition event callback");
   }
+}
+
+rclcpp::SubscriptionBase::SharedPtr
+EventsExecutorEntitiesCollector::get_subscription(const void * subscription_id)
+{
+  auto it = weak_subscriptions_map_.find(subscription_id);
+
+  if (it != weak_subscriptions_map_.end()) {
+    auto subscription_weak_ptr = it->second;
+    auto subscription_shared_ptr = subscription_weak_ptr.lock();
+
+    if (subscription_shared_ptr) {
+      return subscription_shared_ptr;
+    }
+
+    // The subscription expired, remove from map
+    weak_subscriptions_map_.erase(it);
+  }
+  return nullptr;
+}
+
+rclcpp::ClientBase::SharedPtr
+EventsExecutorEntitiesCollector::get_client(const void * client_id)
+{
+  auto it = weak_clients_map_.find(client_id);
+
+  if (it != weak_clients_map_.end()) {
+    auto client_weak_ptr = it->second;
+    auto client_shared_ptr = client_weak_ptr.lock();
+
+    if (client_shared_ptr) {
+      return client_shared_ptr;
+    }
+
+    // The client expired, remove from map
+    weak_clients_map_.erase(it);
+  }
+  return nullptr;
+}
+
+rclcpp::ServiceBase::SharedPtr
+EventsExecutorEntitiesCollector::get_service(const void * service_id)
+{
+  auto it = weak_services_map_.find(service_id);
+
+  if (it != weak_services_map_.end()) {
+    auto service_weak_ptr = it->second;
+    auto service_shared_ptr = service_weak_ptr.lock();
+
+    if (service_shared_ptr) {
+      return service_shared_ptr;
+    }
+
+    // The service expired, remove from map
+    weak_services_map_.erase(it);
+  }
+  return nullptr;
+}
+
+rclcpp::Waitable::SharedPtr
+EventsExecutorEntitiesCollector::get_waitable(const void * waitable_id)
+{
+  auto it = weak_waitables_map_.find(waitable_id);
+
+  if (it != weak_waitables_map_.end()) {
+    auto waitable_weak_ptr = it->second;
+    auto waitable_shared_ptr = waitable_weak_ptr.lock();
+
+    if (waitable_shared_ptr) {
+      return waitable_shared_ptr;
+    }
+
+    // The waitable expired, remove from map
+    weak_waitables_map_.erase(it);
+  }
+  return nullptr;
+}
+
+void
+EventsExecutorEntitiesCollector::add_waitable(rclcpp::Waitable::SharedPtr waitable)
+{
+  weak_waitables_map_.emplace(waitable.get(), waitable);
 }

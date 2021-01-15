@@ -16,8 +16,8 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_HPP_
 
 #include <chrono>
-#include <deque>
 #include <memory>
+#include <queue>
 #include <vector>
 
 #include "rclcpp/executor.hpp"
@@ -174,9 +174,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
-  // Event queue implementation is a deque only to
-  // facilitate the removal of events from expired entities.
-  using EventQueue = std::deque<rmw_listener_event_t>;
+  using EventQueue = std::queue<rmw_listener_event_t>;
 
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
@@ -192,44 +190,10 @@ private:
     {
       std::unique_lock<std::mutex> lock(this_executor->push_mutex_);
 
-      this_executor->event_queue_.push_back(event);
+      this_executor->event_queue_.push(event);
     }
     // Notify that the event queue has some events in it.
     this_executor->event_queue_cv_.notify_one();
-  }
-
-  // This function allows to remove an entity from the EventsExecutor.
-  // Entities are any of SubscriptionBase, PublisherBase, ClientBase, ServerBase, Waitable.
-  // After an entity has been removed using this API, it can be safely destroyed without the risk
-  // that the executor would try to access it again.
-  template<typename T>
-  void
-  remove_entity(T * entity)
-  {
-    // We need to unset the callbacks to make sure that after removing events from the
-    // queues, this entity will not push anymore before being completely destroyed.
-    // This assumes that all supported entities implement this function.
-    entity->set_events_executor_callback(nullptr, nullptr);
-
-    // Remove events associated with this entity from the event queue
-    {
-      std::unique_lock<std::mutex> lock(push_mutex_);
-      event_queue_.erase(
-        std::remove_if(
-          event_queue_.begin(), event_queue_.end(),
-          [&entity](rmw_listener_event_t event) {return event.entity == entity;}), event_queue_.end());
-    }
-
-    // Remove events associated with this entity from the local event queue
-    {
-      std::unique_lock<std::mutex> lock(execution_mutex_);
-      execution_event_queue_.erase(
-        std::remove_if(
-          execution_event_queue_.begin(), execution_event_queue_.end(),
-          [&entity](rmw_listener_event_t event) {
-            return event.entity == entity;
-          }), execution_event_queue_.end());
-    }
   }
 
   /// Extract and execute events from the queue until it is empty
@@ -242,16 +206,14 @@ private:
   void
   execute_event(const rmw_listener_event_t & event);
 
-  // We use two instances of EventQueue to allow threads to push events while we execute them
+  // Queue where entities can push events
   EventQueue event_queue_;
-  EventQueue execution_event_queue_;
 
   EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
   EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;
+
   // Mutex to protect the insertion of events in the queue
   std::mutex push_mutex_;
-  // Mutex to protect the execution of events
-  std::mutex execution_mutex_;
   // Variable used to notify when an event is added to the queue
   std::condition_variable event_queue_cv_;
   // Timers manager

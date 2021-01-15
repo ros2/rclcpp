@@ -18,6 +18,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/executors/event_waitable.hpp"
@@ -48,7 +49,9 @@ class EventsExecutor;
  * When this occurs, the execute API takes care of handling changes
  * in the entities currently used by the executor.
  */
-class EventsExecutorEntitiesCollector final : public EventWaitable
+class EventsExecutorEntitiesCollector final
+: public EventWaitable,
+  public std::enable_shared_from_this<EventsExecutorEntitiesCollector>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
@@ -61,6 +64,10 @@ public:
   // Destructor
   RCLCPP_PUBLIC
   ~EventsExecutorEntitiesCollector();
+
+  // Initialize entities collector
+  RCLCPP_PUBLIC
+  void init();
 
   // The purpose of "execute" is handling the situation of a new entity added to
   // a node, while the executor is already spinning.
@@ -141,6 +148,50 @@ public:
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_automatically_added_callback_groups_from_nodes();
 
+  ///
+  /**
+   * Get the subscription shared pointer corresponding
+   * to a subscription identifier
+   */
+  RCLCPP_PUBLIC
+  rclcpp::SubscriptionBase::SharedPtr
+  get_subscription(const void * subscription_id);
+
+  ///
+  /**
+   * Get the client shared pointer corresponding
+   * to a client identifier
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ClientBase::SharedPtr
+  get_client(const void * client_id);
+
+  ///
+  /**
+   * Get the service shared pointer corresponding
+   * to a service identifier
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ServiceBase::SharedPtr
+  get_service(const void * service_id);
+
+  ///
+  /**
+   * Get the waitable shared pointer corresponding
+   * to a waitable identifier
+   */
+  RCLCPP_PUBLIC
+  rclcpp::Waitable::SharedPtr
+  get_waitable(const void * waitable_id);
+
+  ///
+  /**
+   * Add a weak pointer to a waitable
+   */
+  RCLCPP_PUBLIC
+  void
+  add_waitable(rclcpp::Waitable::SharedPtr waitable);
+
 private:
   void
   set_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
@@ -190,6 +241,15 @@ private:
 
   /// List of weak nodes registered in the events executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+
+  // Maps: entity identifiers to weak pointers from the entities registered in the executor
+  // so in the case of an event providing and ID, we can retrieve and own the corresponding
+  // entity while it performs work
+  std::unordered_map<const void *, rclcpp::SubscriptionBase::WeakPtr> weak_subscriptions_map_;
+  std::unordered_map<const void *, rclcpp::ServiceBase::WeakPtr> weak_services_map_;
+  std::unordered_map<const void *, rclcpp::ClientBase::WeakPtr> weak_clients_map_;
+  std::unordered_map<const void *, rclcpp::Waitable::WeakPtr> weak_waitables_map_;
+
   /// Executor using this entities collector object
   EventsExecutor * associated_executor_ = nullptr;
   /// Instance of the timers manager used by the associated executor

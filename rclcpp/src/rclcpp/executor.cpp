@@ -557,12 +557,6 @@ take_and_do_error_handling(
 void
 Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
-  execute_subscription(subscription.get());
-}
-
-void
-Executor::execute_subscription(rclcpp::SubscriptionBase * subscription)
-{
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
@@ -637,12 +631,6 @@ Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
 void
 Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 {
-  execute_service(service.get());
-}
-
-void
-Executor::execute_service(rclcpp::ServiceBase * service)
-{
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
   take_and_do_error_handling(
@@ -654,12 +642,6 @@ Executor::execute_service(rclcpp::ServiceBase * service)
 
 void
 Executor::execute_client(rclcpp::ClientBase::SharedPtr client)
-{
-  execute_client(client.get());
-}
-
-void
-Executor::execute_client(rclcpp::ClientBase * client)
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();

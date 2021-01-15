@@ -35,10 +35,6 @@ UnsupportedEventTypeException::UnsupportedEventTypeException(
 
 QOSEventHandlerBase::~QOSEventHandlerBase()
 {
-  if (on_destruction_callback_) {
-    on_destruction_callback_(this);
-  }
-
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",

@@ -132,10 +132,6 @@ public:
     const rclcpp::executors::EventsExecutor * executor,
     rmw_listener_cb_t executor_callback) const;
 
-  RCLCPP_PUBLIC
-  void
-  set_on_destruction_callback(std::function<void(ServiceBase *)> on_destruction_callback);
-
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
@@ -146,8 +142,6 @@ protected:
   RCLCPP_PUBLIC
   const rcl_node_t *
   get_rcl_node_handle() const;
-
-  std::function<void(ServiceBase *)> on_destruction_callback_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
 

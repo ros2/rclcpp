@@ -71,10 +71,3 @@ Waitable::set_events_executor_callback(
   throw std::runtime_error(
           "Custom waitables should override set_events_executor_callback() to use events executor");
 }
-
-void
-Waitable::set_on_destruction_callback(
-  std::function<void(Waitable *)> on_destruction_callback)
-{
-  on_destruction_callback_ = on_destruction_callback;
-}
