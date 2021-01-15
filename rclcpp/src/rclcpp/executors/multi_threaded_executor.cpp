@@ -113,7 +113,7 @@ MultiThreadedExecutor::run(size_t)
       // DON'T DELETE THE scheduled_timers_mutex_ AND REPLACE IT WITH THE wait_mutex_ here.
       // Now, this mutex will only compete with ONE worker thread that's is trying to insert
       // a timer.
-      // (and also, N other worker threads also trying to delete a timer).
+      // (and also, N other worker threads trying to delete a timer).
       // If the wait_mutex_ is used here, this will compete with all the other worker threads!!!
       // If we're waiting too long too remove the scheduled timer, maybe we are discarding a timer
       // execution that we shouldn't!
