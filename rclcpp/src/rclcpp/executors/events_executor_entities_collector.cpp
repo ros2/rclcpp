@@ -82,6 +82,13 @@ EventsExecutorEntitiesCollector::~EventsExecutorEntitiesCollector()
 }
 
 void
+EventsExecutorEntitiesCollector::init()
+{
+  // Add the EventsExecutorEntitiesCollector shared_ptr to waitables map
+  add_waitable(this->shared_from_this());
+}
+
+void
 EventsExecutorEntitiesCollector::add_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {

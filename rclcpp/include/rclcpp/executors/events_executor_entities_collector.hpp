@@ -49,7 +49,9 @@ class EventsExecutor;
  * When this occurs, the execute API takes care of handling changes
  * in the entities currently used by the executor.
  */
-class EventsExecutorEntitiesCollector final : public EventWaitable
+class EventsExecutorEntitiesCollector final
+: public EventWaitable,
+  public std::enable_shared_from_this<EventsExecutorEntitiesCollector>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutorEntitiesCollector)
@@ -62,6 +64,10 @@ public:
   // Destructor
   RCLCPP_PUBLIC
   ~EventsExecutorEntitiesCollector();
+
+  // Initialize entities collector
+  RCLCPP_PUBLIC
+  void init();
 
   // The purpose of "execute" is handling the situation of a new entity added to
   // a node, while the executor is already spinning.
@@ -237,6 +243,8 @@ private:
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
   // Maps: entity identifiers to weak pointers from the entities registered in the executor
+  // so in the case of an event providing and ID, we can retrieve and own the corresponding
+  // entity while it performs work
   std::unordered_map<const void *, rclcpp::SubscriptionBase::WeakPtr> weak_subscriptions_map_;
   std::unordered_map<const void *, rclcpp::ServiceBase::WeakPtr> weak_services_map_;
   std::unordered_map<const void *, rclcpp::ClientBase::WeakPtr> weak_clients_map_;

@@ -31,6 +31,7 @@ EventsExecutor::EventsExecutor(
 {
   timers_manager_ = std::make_shared<TimersManager>(context_);
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this);
+  entities_collector_->init();
 
   // This API uses the wait_set only as a token to identify different executors.
   auto context_interrupt_gc = options.context->get_interrupt_guard_condition(&wait_set_);
@@ -42,7 +43,6 @@ EventsExecutor::EventsExecutor(
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
   executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
   entities_collector_->add_waitable(executor_notifier_);
-  entities_collector_->add_waitable(entities_collector_);
 }
 
 void
