@@ -157,7 +157,7 @@ TEST_F(TestEventsExecutorEntitiesCollector, remove_node_opposite_order)
   EXPECT_NO_THROW(entities_collector_->remove_node(node2->get_node_base_interface()));
 }
 
-TEST_F(TestEventsExecutorEntitiesCollector, test_fancy_name)
+TEST_F(TestEventsExecutorEntitiesCollector, test_rcl_exception)
 {
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
   auto node2 = std::make_shared<rclcpp::Node>("node2", "ns");

@@ -186,7 +186,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_duplicate_callback_groups)
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_to_executor)
 {
-  rclcpp::executors::EventsExecutor executor;
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   executor.add_node(node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
