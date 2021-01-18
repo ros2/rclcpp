@@ -302,8 +302,8 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
         auto waitable = entities_collector_->get_waitable(event.entity);
 
         if (waitable) {
-          std::shared_ptr<void> shared_ptr;
-          waitable->execute(shared_ptr);
+          auto data = waitable->take_data();
+          waitable->execute(data);
         }
         break;
       }

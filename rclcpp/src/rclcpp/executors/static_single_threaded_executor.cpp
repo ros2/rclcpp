@@ -176,8 +176,9 @@ StaticSingleThreadedExecutor::execute_ready_executables()
   // Execute all the ready waitables
   for (size_t i = 0; i < entities_collector_->get_number_of_waitables(); ++i) {
     if (entities_collector_->get_waitable(i)->is_ready(&wait_set_)) {
-      std::shared_ptr<void> shared_ptr;
-      entities_collector_->get_waitable(i)->execute(shared_ptr);
+      auto waitable = entities_collector_->get_waitable(i);
+      auto data = waitable->take_data();
+      waitable->execute(data);
     }
   }
 }
