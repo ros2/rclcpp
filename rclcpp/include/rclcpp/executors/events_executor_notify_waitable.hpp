@@ -80,7 +80,7 @@ public:
 
   RCLCPP_PUBLIC
   std::shared_ptr<void>
-  take_data()
+  take_data() override
   {
     // This waitable doesn't handle any data, return void ptr
     return nullptr;

@@ -55,7 +55,11 @@ public:
 
   virtual
   std::shared_ptr<void>
-  take_data();
+  take_data()
+  {
+    throw std::runtime_error("Custom EventWaitable's should define their own take_data");
+    return nullptr;
+  }
 
   // Stub API: not used by EventsExecutor
   RCLCPP_PUBLIC
