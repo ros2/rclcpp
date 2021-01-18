@@ -86,20 +86,25 @@ private:
    * After the current mutex owner release the lock, a thread that used the high
    * priority mechanism will have priority over threads that used the low priority mechanism.
    */
-  class MutexTwoPriorities {
+  class MutexTwoPriorities
+  {
 public:
     class HpMutex
     {
 public:
-      HpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+      explicit HpMutex(MutexTwoPriorities & parent)
+      : parent_(parent) {}
 
-      void lock() {
+      void lock()
+      {
         parent_.data_.lock();
       }
 
-      void unlock() {
+      void unlock()
+      {
         parent_.data_.unlock();
       }
+
 private:
       MutexTwoPriorities & parent_;
     };
@@ -107,27 +112,31 @@ private:
     class LpMutex
     {
 public:
-      LpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+      explicit LpMutex(MutexTwoPriorities & parent)
+      : parent_(parent) {}
 
-      void lock() {
+      void lock()
+      {
         // low_prio_.lock(); data_.lock();
         std::unique_lock<std::mutex> lpg{parent_.low_prio_};
         parent_.data_.lock();
         lpg.release();
       }
 
-      void unlock() {
+      void unlock()
+      {
         // data_.unlock(); low_prio_.unlock()
         std::lock_guard<std::mutex> lpg{parent_.low_prio_, std::adopt_lock};
         parent_.data_.unlock();
       }
+
 private:
       MutexTwoPriorities & parent_;
     };
 
     HpMutex hp() {return HpMutex{*this};}
     LpMutex lp() {return LpMutex{*this};}
-  
+
 private:
     // Implementation detail: the whole idea here is that only one low priority thread can be
     // trying to take the data_ mutex, while all high priority threads are already waiting there.
