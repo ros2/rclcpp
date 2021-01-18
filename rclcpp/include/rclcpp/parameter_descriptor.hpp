@@ -36,12 +36,12 @@ public:
   explicit ParameterDescriptor(bool static_typing = true) : static_typing_{static_typing} {}
 
   /// Implicit constructor from parameter descriptor message.
-  ParameterDescriptor(
+  ParameterDescriptor(  // NOLINT: implicit conversion constructor
     const rcl_interfaces::msg::ParameterDescriptor & msg)
   : impl_(msg) {}
 
   /// Implicit constructor from a parameter type.
-  ParameterDescriptor(rclcpp::ParameterType type)
+  ParameterDescriptor(rclcpp::ParameterType type)  // NOLINT: implicit conversion constructor
   : static_typing_{type != rclcpp::ParameterType::PARAMETER_NOT_SET} {impl_.allowed_type = type;}
 
   /// Getter of internal message representation.
@@ -52,7 +52,7 @@ public:
   /// Getter of internal message representation.
   const rcl_interfaces::msg::ParameterDescriptor &
   get_msg() const
-  {return impl_;};
+  {return impl_;}
 
   /// Return true if the parameter cannot change its type, false otherwise.
   bool

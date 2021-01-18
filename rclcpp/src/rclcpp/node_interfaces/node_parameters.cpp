@@ -361,8 +361,8 @@ __declare_parameter_common(
   if (parameter_descriptor.is_statically_typed()) {
     if (rclcpp::ParameterType::PARAMETER_NOT_SET == default_value.get_type()) {
       throw std::runtime_error{
-        "If not passing a defaul value, a parameter type must be specified in the descriptor or"
-        "dynamic typing must be allowed"};
+              "If not passing a defaul value, a parameter type must be specified in the descriptor "
+              "or dynamic typing must be allowed"};
     }
     param_info.descriptor.allowed_type = static_cast<uint8_t>(default_value.get_type());
   }
