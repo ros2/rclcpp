@@ -75,7 +75,7 @@ public:
   // If a entity is removed from a node, we should unset its callback
   RCLCPP_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
 
   RCLCPP_PUBLIC
   void

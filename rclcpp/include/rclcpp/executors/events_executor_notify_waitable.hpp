@@ -45,12 +45,14 @@ public:
   // The function is a no-op, since we only care of waking up the executor
   RCLCPP_PUBLIC
   void
-  execute() override
-  {}
+  execute(std::shared_ptr<void> & data) override
+  {
+    (void)data;
+  }
 
   RCLCPP_PUBLIC
   void
-  add_guard_condition(rcl_guard_condition_t * guard_condition)
+  add_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
     notify_guard_conditions_.push_back(guard_condition);
   }
@@ -76,7 +78,7 @@ public:
   }
 
 private:
-  std::list<rcl_guard_condition_t *> notify_guard_conditions_;
+  std::list<const rcl_guard_condition_t *> notify_guard_conditions_;
 };
 
 }  // namespace executors

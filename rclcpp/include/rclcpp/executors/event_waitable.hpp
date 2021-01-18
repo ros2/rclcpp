@@ -54,6 +54,13 @@ public:
   }
 
   // Stub API: not used by EventsExecutor
+  std::shared_ptr<void>
+  take_data() final
+  {
+    return nullptr;
+  }
+
+  // Stub API: not used by EventsExecutor
   RCLCPP_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) final

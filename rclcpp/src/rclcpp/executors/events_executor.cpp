@@ -33,13 +33,10 @@ EventsExecutor::EventsExecutor(
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this);
   entities_collector_->init();
 
-  // This API uses the wait_set only as a token to identify different executors.
-  auto context_interrupt_gc = options.context->get_interrupt_guard_condition(&wait_set_);
-
   // Setup the executor notifier to wake up the executor when some guard conditions are tiggered.
   // The added guard conditions are guaranteed to not go out of scope before the executor itself.
   executor_notifier_ = std::make_shared<EventsExecutorNotifyWaitable>();
-  executor_notifier_->add_guard_condition(context_interrupt_gc);
+  executor_notifier_->add_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
   executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
   entities_collector_->add_waitable(executor_notifier_);
@@ -305,7 +302,8 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
         auto waitable = entities_collector_->get_waitable(event.entity);
 
         if (waitable) {
-          waitable->execute();
+          std::shared_ptr<void> shared_ptr;
+          waitable->execute(shared_ptr);
         }
         break;
       }

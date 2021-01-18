@@ -161,8 +161,9 @@ EventsExecutorEntitiesCollector::add_callback_group(
 }
 
 void
-EventsExecutorEntitiesCollector::execute()
+EventsExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
 {
+  (void)data;
   // This function is called when the associated executor is notified that something changed.
   // We do not know if an entity has been added or removed so we have to rebuild everything.
 
