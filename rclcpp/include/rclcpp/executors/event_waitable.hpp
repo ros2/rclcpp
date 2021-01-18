@@ -53,10 +53,10 @@ public:
     return false;
   }
 
-  // Stub API: not used by EventsExecutor
   std::shared_ptr<void>
   take_data() final
   {
+    // This waitable doesn't handle any data, return empty ptr
     return nullptr;
   }
 
