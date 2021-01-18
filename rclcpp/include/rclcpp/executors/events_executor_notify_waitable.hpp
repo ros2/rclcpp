@@ -77,12 +77,11 @@ public:
     }
   }
 
-
   RCLCPP_PUBLIC
   std::shared_ptr<void>
-  take_data() override
+  take_data()
   {
-    // This waitable doesn't handle any data, return void ptr
+    // This waitable doesn't handle any data
     return nullptr;
   }
 

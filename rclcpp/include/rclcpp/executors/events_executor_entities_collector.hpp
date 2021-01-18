@@ -192,6 +192,14 @@ public:
   void
   add_waitable(rclcpp::Waitable::SharedPtr waitable);
 
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data()
+  {
+    // This waitable doesn't handle any data
+    return nullptr;
+  }
+
 private:
   void
   set_callback_group_entities_callbacks(rclcpp::CallbackGroup::SharedPtr group);
