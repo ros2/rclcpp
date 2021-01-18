@@ -81,13 +81,66 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
-  std::mutex wait_mutex_;
+  /// \internal A mutex that has two locking mechanism, one with higher priority than the other.
+  /**
+   * After the current mutex owner release the lock, a thread that used the high
+   * priority mechanism will have priority over threads that used the low priority mechanism.
+   */
+  class MutexTwoPriorities {
+public:
+    class HpMutex
+    {
+public:
+      HpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+
+      void lock() {
+        parent_.data_.lock();
+      }
+
+      void unlock() {
+        parent_.data_.unlock();
+      }
+private:
+      MutexTwoPriorities & parent_;
+    };
+
+    class LpMutex
+    {
+public:
+      LpMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+
+      void lock() {
+        // low_prio_.lock(); data_.lock();
+        std::unique_lock<std::mutex> lpg{parent_.low_prio_};
+        parent_.data_.lock();
+        lpg.release();
+      }
+
+      void unlock() {
+        // data_.unlock(); low_prio_.unlock()
+        std::lock_guard<std::mutex> lpg{parent_.low_prio_, std::adopt_lock};
+        parent_.data_.unlock();
+      }
+private:
+      MutexTwoPriorities & parent_;
+    };
+
+    HpMutex hp() {return HpMutex{*this};}
+    LpMutex lp() {return LpMutex{*this};}
+  
+private:
+    // Implementation detail: the whole idea here is that only one low priority thread can be
+    // trying to take the data_ mutex, while all high priority threads are already waiting there.
+    std::mutex low_prio_;
+    std::mutex data_;
+  };
+
+  MutexTwoPriorities wait_mutex_;
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
 
   std::set<TimerBase::SharedPtr> scheduled_timers_;
-  std::mutex scheduled_timers_mutex_;
 };
 
 }  // namespace executors

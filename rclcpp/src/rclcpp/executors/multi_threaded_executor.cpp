@@ -44,6 +44,7 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
+  using MutexTwoPriorities = rclcpp::executors::MultiThreadedExecutor::MutexTwoPriorities;
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
@@ -51,7 +52,8 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
-    std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+    auto lp_wait_mutex = wait_mutex_.lp();
+    std::lock_guard<MutexTwoPriorities::LpMutex> wait_lock(lp_wait_mutex);
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
       auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
       threads.emplace_back(func);
@@ -73,10 +75,12 @@ MultiThreadedExecutor::get_number_of_threads()
 void
 MultiThreadedExecutor::run(size_t)
 {
+  using MutexTwoPriorities = rclcpp::executors::MultiThreadedExecutor::MutexTwoPriorities;
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {
-      std::lock_guard<std::mutex> wait_guard{wait_mutex_};
+      auto lp_wait_mutex = wait_mutex_.lp();
+      std::lock_guard<MutexTwoPriorities::LpMutex> wait_lock(lp_wait_mutex);
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
@@ -85,13 +89,6 @@ MultiThreadedExecutor::run(size_t)
       }
       if (any_exec.timer) {
         // Guard against multiple threads getting the same timer.
-
-        // THIS MUST BE DONE WITH BOTH THE WAIT_MUTEX AND SCHEDULED TIMERS MUTEX TAKEN!!
-        // It might seem unnecessary, but you avoid the following race:
-        // Thread A: get timer, context switch.
-        // Thread B: get timer, insert scheduled timer, execute timer, remove scheduled timer.
-        // Thread A: execute timer.
-        std::lock_guard<std::mutex> scheduled_timers_guard{scheduled_timers_mutex_};
         if (scheduled_timers_.count(any_exec.timer) != 0) {
           // Make sure that any_exec's callback group is reset before
           // the lock is released.
@@ -110,15 +107,8 @@ MultiThreadedExecutor::run(size_t)
     execute_any_executable(any_exec);
 
     if (any_exec.timer) {
-      // DON'T DELETE THE scheduled_timers_mutex_ AND REPLACE IT WITH THE wait_mutex_ here.
-      // Now, this mutex will only compete with ONE worker thread that's is trying to insert
-      // a timer.
-      // (and also, N other worker threads also trying to delete a timer).
-      // If the wait_mutex_ is used here, this will compete with all the other worker threads!!!
-      // If we're waiting too long too remove the scheduled timer, maybe we are discarding a timer
-      // execution that we shouldn't!
-      // Of course, this can still happen if the callback is too long ...
-      std::lock_guard<std::mutex> scheduled_timers_guard{scheduled_timers_mutex_};
+      auto hp_wait_mutex = wait_mutex_.hp();
+      std::lock_guard<MutexTwoPriorities::HpMutex> wait_lock(hp_wait_mutex);
       auto it = scheduled_timers_.find(any_exec.timer);
       if (it != scheduled_timers_.end()) {
         scheduled_timers_.erase(it);
