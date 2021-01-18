@@ -234,12 +234,13 @@ void TimeSource::create_clock_sub()
   }
 
   rclcpp::SubscriptionOptions options;
-  options.qos_overriding_options = rclcpp::QosOverridingOptions({
-    rclcpp::QosPolicyKind::Depth,
-    rclcpp::QosPolicyKind::Durability,
-    rclcpp::QosPolicyKind::History,
-    rclcpp::QosPolicyKind::Reliability,
-  });
+  options.qos_overriding_options = rclcpp::QosOverridingOptions(
+    {
+      rclcpp::QosPolicyKind::Depth,
+      rclcpp::QosPolicyKind::Durability,
+      rclcpp::QosPolicyKind::History,
+      rclcpp::QosPolicyKind::Reliability,
+    });
 
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
     node_parameters_,
