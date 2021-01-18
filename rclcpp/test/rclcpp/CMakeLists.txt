@@ -559,7 +559,7 @@ if(TARGET test_executors)
   target_link_libraries(test_executors ${PROJECT_NAME})
 endif()
 
-ament_add_gtest(test_events_executor rclcpp/executors/test_events_executor.cpp
+ament_add_gtest(test_events_executor executors/test_events_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_events_executor)
   ament_target_dependencies(test_events_executor
@@ -568,7 +568,7 @@ if(TARGET test_events_executor)
   target_link_libraries(test_events_executor ${PROJECT_NAME} mimick)
 endif()
 
-ament_add_gtest(test_events_executor_entities_collector rclcpp/executors/test_events_executor_entities_collector.cpp
+ament_add_gtest(test_events_executor_entities_collector executors/test_events_executor_entities_collector.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_events_executor_entities_collector)
   ament_target_dependencies(test_events_executor_entities_collector
@@ -602,7 +602,7 @@ if(TARGET test_static_executor_entities_collector)
   target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick)
 endif()
 
-ament_add_gtest(test_timers_manager rclcpp/executors/test_timers_manager.cpp
+ament_add_gtest(test_timers_manager executors/test_timers_manager.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_timers_manager)
   ament_target_dependencies(test_timers_manager
