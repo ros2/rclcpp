@@ -77,6 +77,15 @@ public:
     }
   }
 
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data()
+  {
+    // This waitable doesn't handle any data, return void ptr
+    return nullptr;
+  }
+
 private:
   std::list<const rcl_guard_condition_t *> notify_guard_conditions_;
 };
