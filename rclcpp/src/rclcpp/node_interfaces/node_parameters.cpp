@@ -138,7 +138,7 @@ NodeParameters::NodeParameters(
         this->declare_parameter(
           pair.first,
           pair.second,
-          rcl_interfaces::msg::ParameterDescriptor(),
+          rclcpp::ParameterDescriptor(false),
           true);
       }
     }
@@ -256,7 +256,8 @@ __check_parameters(
     const rclcpp::ParameterType old_type = item.value.get_type();
     const rclcpp::ParameterType type = parameter.get_type();
     result.successful =
-      !descriptor.static_typing || rclcpp::PARAMETER_NOT_SET == old_type || old_type == type;
+      descriptor.allowed_type == rclcpp::PARAMETER_NOT_SET ||
+      descriptor.allowed_type == type;
     if (!result.successful) {
       result.reason = format_type_reason(
         name, rclcpp::to_string(old_type), rclcpp::to_string(type));
@@ -345,7 +346,7 @@ rcl_interfaces::msg::SetParametersResult
 __declare_parameter_common(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  const rclcpp::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   CallbacksContainerType & callback_container,
@@ -355,7 +356,16 @@ __declare_parameter_common(
 {
   using rclcpp::node_interfaces::ParameterInfo;
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
-  parameter_infos.at(name).descriptor = parameter_descriptor;
+  auto & param_info = parameter_infos.at(name);
+  param_info.descriptor = parameter_descriptor.get_msg();
+  if (parameter_descriptor.is_statically_typed()) {
+    if (rclcpp::ParameterType::PARAMETER_NOT_SET == default_value.get_type()) {
+      throw std::runtime_error{
+        "If not passing a defaul value, a parameter type must be specified in the descriptor or"
+        "dynamic typing must be allowed"};
+    }
+    param_info.descriptor.allowed_type = static_cast<uint8_t>(default_value.get_type());
+  }
 
   // Use the value from the overrides if available, otherwise use the default.
   const rclcpp::ParameterValue * initial_value = &default_value;
@@ -388,7 +398,7 @@ const rclcpp::ParameterValue &
 NodeParameters::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  const rclcpp::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -550,7 +560,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     result = __declare_parameter_common(
       parameter_to_be_declared->get_name(),
       parameter_to_be_declared->get_parameter_value(),
-      rcl_interfaces::msg::ParameterDescriptor(),  // Implicit declare uses default descriptor.
+      rclcpp::ParameterDescriptor(false),  // Implicit declare uses default descriptor.
       staged_parameter_changes,
       parameter_overrides_,
       // Only call callbacks once below

@@ -26,6 +26,7 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_descriptor.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -65,8 +66,8 @@ public:
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
-    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor(),
+    const rclcpp::ParameterDescriptor & parameter_descriptor =
+    rclcpp::ParameterDescriptor(),
     bool ignore_override = false) = 0;
 
   /// Undeclare a parameter.

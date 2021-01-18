@@ -854,9 +854,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     // normal use, change type
     auto name = "parameter"_unq;
     EXPECT_FALSE(node->has_parameter(name));
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.static_typing = false;
-    node->declare_parameter(name, 42, descriptor);
+    node->declare_parameter(name, 42, rclcpp::ParameterDescriptor(false));
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
     EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, "not an integer")).successful);
@@ -932,9 +930,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     // setting type of rclcpp::PARAMETER_NOT_SET,
     // when dynamic typing is allowing and already set to another type, will undeclare
     auto name = "parameter"_unq;
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.static_typing = false;
-    node->declare_parameter(name, 42, descriptor);
+    node->declare_parameter(name, 42, rclcpp::ParameterDescriptor(false));
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
@@ -1451,9 +1447,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     // setting type of rclcpp::PARAMETER_NOT_SET,
     // when already to another type and dynamic typic allowed, will undeclare
     auto name = "parameter"_unq;
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.static_typing = false;
-    node->declare_parameter(name, 42, descriptor);
+    node->declare_parameter(name, 42, rclcpp::ParameterDescriptor(false));
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
@@ -1638,9 +1632,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     // setting type of rclcpp::PARAMETER_NOT_SET,
     // when dynamic typing is allowed and already declared to another type, will undeclare
     auto name = "parameter"_unq;
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.static_typing = false;
-    node->declare_parameter(name, 42, descriptor);
+    node->declare_parameter(name, 42, rclcpp::ParameterDescriptor(false));
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
