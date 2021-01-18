@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_NOTIFY_WAITABLE_HPP_
 
 #include <list>
+#include <memory>
 
 #include "rcl/guard_condition.h"
 #include "rclcpp/executors/event_waitable.hpp"
