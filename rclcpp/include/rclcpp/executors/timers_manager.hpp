@@ -198,8 +198,8 @@ public:
       bool any_timer_destroyed = false;
 
       auto it = weak_heap_.begin();
-      auto end = weak_heap_.end();
-      while (it != end) {
+
+      while (it != weak_heap_.end()) {
         if (auto timer_shared_ptr = it->lock()) {
           // This timer is valid, add it to the vector
           locked_heap.push_back(std::move(timer_shared_ptr));
