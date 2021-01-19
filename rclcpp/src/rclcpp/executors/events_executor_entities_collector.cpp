@@ -142,8 +142,7 @@ EventsExecutorEntitiesCollector::add_callback_group(
     set_guard_condition_callback(node_ptr->get_notify_guard_condition());
 
     // Store node's notify guard condition
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
-    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
+    weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
   }
 
   // Add callback group to weak_groups_to_node
