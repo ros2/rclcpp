@@ -326,7 +326,8 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq);
   {
     // no default, no initial
-    rclcpp::ParameterValue value = node->declare_parameter("parameter"_unq);
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter"_unq, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
   }
   {
@@ -358,9 +359,12 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   {
     // parameter already declared throws
     auto name = "parameter"_unq;
-    node->declare_parameter(name);
+    node->declare_parameter(name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_THROW(
-      {node->declare_parameter(name);},
+    {
+      node->declare_parameter(
+        name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
+    },
       rclcpp::exceptions::ParameterAlreadyDeclaredException);
   }
   {
@@ -492,13 +496,17 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
   auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq, no);
   {
     // no default, with override
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_no_default");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_no_default", rclcpp::ParameterValue{}, rclcpp::ParameterType::PARAMETER_INTEGER);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);
   }
   {
     // no default, with override, and set after
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_no_default_set");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_no_default_set",
+      rclcpp::ParameterValue{},
+      rclcpp::ParameterType::PARAMETER_INTEGER);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);
     // check that the value is changed after a set
@@ -507,8 +515,10 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
   }
   {
     // no default, with override
-    const rclcpp::ParameterValue & value =
-      node->declare_parameter("parameter_no_default_set_cvref");
+    const rclcpp::ParameterValue & value = node->declare_parameter(
+      "parameter_no_default_set_cvref",
+      rclcpp::ParameterValue{},
+      rclcpp::ParameterType::PARAMETER_INTEGER);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);
     // check that the value is changed after a set
@@ -555,9 +565,12 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
   {
     // parameter already declared throws
     auto name = "parameter_already_declared";
-    node->declare_parameter(name);
+    node->declare_parameter(name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_THROW(
-      {node->declare_parameter(name);},
+    {
+      node->declare_parameter(
+        name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
+    },
       rclcpp::exceptions::ParameterAlreadyDeclaredException);
   }
   {
@@ -668,7 +681,7 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
   {
     // parameter already declared throws, even with not_set type
     auto name = "parameter"_unq;
-    node->declare_parameter(name);
+    node->declare_parameter(name, 42);
     EXPECT_THROW(
       {node->declare_parameters<int64_t>("", {{name, 42}});},
       rclcpp::exceptions::ParameterAlreadyDeclaredException);
@@ -727,45 +740,53 @@ TEST_F(TestNode, declare_parameter_with_cli_overrides) {
   // To match parameters YAML file content, use a well-known node name for this test only.
   auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node", no);
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_bool");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_bool", rclcpp::ParameterValue{}, rclcpp::PARAMETER_BOOL);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_BOOL);
     EXPECT_EQ(value.get<bool>(), true);
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_int");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_int", rclcpp::ParameterValue{}, rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int64_t>(), 21);  // set to 42 in CLI, overriden by file
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_double");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_double", rclcpp::ParameterValue{}, rclcpp::PARAMETER_DOUBLE);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE);
     EXPECT_EQ(value.get<double>(), 0.42);
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_string");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_string", rclcpp::ParameterValue{}, rclcpp::PARAMETER_STRING);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_STRING);
     EXPECT_EQ(value.get<std::string>(), "foo");
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_bool_array");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_bool_array", rclcpp::ParameterValue{}, rclcpp::PARAMETER_BOOL_ARRAY);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_BOOL_ARRAY);
     std::vector<bool> expected_value{false, true};
     EXPECT_EQ(value.get<std::vector<bool>>(), expected_value);
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_int_array");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_int_array", rclcpp::ParameterValue{}, rclcpp::PARAMETER_INTEGER_ARRAY);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
     std::vector<int64_t> expected_value{-21, 42};
     EXPECT_EQ(value.get<std::vector<int64_t>>(), expected_value);
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_double_array");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_double_array", rclcpp::ParameterValue{}, rclcpp::PARAMETER_DOUBLE_ARRAY);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
     std::vector<double> expected_value{-1.0, 0.42};
     EXPECT_EQ(value.get<std::vector<double>>(), expected_value);
   }
   {
-    rclcpp::ParameterValue value = node->declare_parameter("parameter_string_array");
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_string_array", rclcpp::ParameterValue{}, rclcpp::PARAMETER_STRING_ARRAY);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_STRING_ARRAY);
     std::vector<std::string> expected_value{"foo", "bar"};
     // set to [baz, baz, baz] in file, overriden by CLI
@@ -778,7 +799,7 @@ TEST_F(TestNode, undeclare_parameter) {
   {
     // normal use
     auto name = "parameter"_unq;
-    node->declare_parameter(name);
+    node->declare_parameter(name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_TRUE(node->has_parameter(name));
     node->undeclare_parameter(name);
     EXPECT_FALSE(node->has_parameter(name));
@@ -790,6 +811,16 @@ TEST_F(TestNode, undeclare_parameter) {
     EXPECT_THROW(
       {node->undeclare_parameter(name);},
       rclcpp::exceptions::ParameterNotDeclaredException);
+  }
+  {
+    // statically typed parameter throws
+    auto name = "parameter"_unq;
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_THROW(
+      {node->undeclare_parameter(name);},
+      rclcpp::exceptions::InvalidParameterTypeException);
+    EXPECT_TRUE(node->has_parameter(name));
   }
   {
     // read only parameter throws
@@ -810,7 +841,7 @@ TEST_F(TestNode, has_parameter) {
   // normal use
   auto name = "parameter"_unq;
   EXPECT_FALSE(node->has_parameter(name));
-  node->declare_parameter(name);
+  node->declare_parameter(name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
   EXPECT_TRUE(node->has_parameter(name));
   node->undeclare_parameter(name);
   EXPECT_FALSE(node->has_parameter(name));
@@ -821,7 +852,7 @@ TEST_F(TestNode, list_parameters) {
   // normal use
   auto name = "parameter"_unq;
   const size_t before_size = node->list_parameters({}, 1u).names.size();
-  node->declare_parameter(name);
+  node->declare_parameter(name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
   EXPECT_EQ(1u + before_size, node->list_parameters({}, 1u).names.size());
   node->undeclare_parameter(name);
   EXPECT_EQ(before_size, node->list_parameters({}, 1u).names.size());
@@ -907,7 +938,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
     auto name = "parameter"_unq;
-    auto value = node->declare_parameter(name);
+    auto value = node->declare_parameter(
+      name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
 
@@ -1424,7 +1456,8 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
     auto name = "parameter"_unq;
-    auto value = node->declare_parameter(name);
+    auto value = node->declare_parameter(
+      name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
 
@@ -1609,7 +1642,8 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
     auto name = "parameter"_unq;
-    auto value = node->declare_parameter(name);
+    auto value = node->declare_parameter(
+      name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
 
@@ -1992,30 +2026,28 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
   {
     // templated version with empty prefix will get all parameters
     auto node_local = std::make_shared<rclcpp::Node>("test_get_parameters_node"_unq);
-    auto name1 = "prefix1.parameter"_unq;
-    auto name2 = "prefix2.parameter"_unq;
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
 
-    node_local->declare_parameter(name1, 42);
-    node_local->declare_parameter(name2, 100);
-    // undeclare so that it doesn't interfere with the test
-    node_local->undeclare_parameter("use_sim_time");
+    node_local->declare_parameter("prefix." + name1, 42);
+    node_local->declare_parameter("prefix." + name2, 100);
 
     {
       std::map<std::string, int64_t> actual;
-      EXPECT_TRUE(node_local->get_parameters("", actual));
+      EXPECT_TRUE(node_local->get_parameters("prefix", actual));
       EXPECT_NE(actual.find(name1), actual.end());
       EXPECT_NE(actual.find(name2), actual.end());
     }
 
     // will throw if set of parameters is non-homogeneous
-    auto name3 = "prefix2.parameter"_unq;
-    node_local->declare_parameter<std::string>(name3, "not an int");
+    auto name3 = "prefix1.parameter"_unq;
+    node_local->declare_parameter<std::string>("prefix." + name3, "not an int");
 
     {
       std::map<std::string, int64_t> actual;
       EXPECT_THROW(
       {
-        node_local->get_parameters("", actual);
+        node_local->get_parameters("prefix", actual);
       },
         rclcpp::exceptions::InvalidParameterTypeException);
     }

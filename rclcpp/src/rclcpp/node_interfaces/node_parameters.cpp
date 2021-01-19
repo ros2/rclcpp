@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <limits>
 #include <map>
@@ -235,8 +236,10 @@ format_type_reason(
   const std::string & name, const std::string & old_type, const std::string & new_type)
 {
   std::ostringstream ss;
-  ss << "Parameter {" << name << "} is of type {" << old_type << "}, setting it to {" <<
-    new_type << "} is not allowed.";
+  // WARN: A condition later depends on this message starting with "Wrong parameter type",
+  // check `declare_parameter` if you modify this!
+  ss << "Wrong parameter type, parameter {" << name << "} is of type {" << old_type <<
+    "}, setting it to {" << new_type << "} is not allowed.";
   return ss.str();
 }
 
@@ -358,11 +361,12 @@ __declare_parameter_common(
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
   auto & param_info = parameter_infos.at(name);
   param_info.descriptor = parameter_descriptor.get_msg();
-  if (parameter_descriptor.is_statically_typed()) {
+  if (parameter_descriptor.do_infer_type_from_value()) {
     if (rclcpp::ParameterType::PARAMETER_NOT_SET == default_value.get_type()) {
-      throw std::runtime_error{
-              "If not passing a defaul value, a parameter type must be specified in the descriptor "
-              "or dynamic typing must be allowed"};
+      throw rclcpp::exceptions::InvalidParameterTypeException{
+              name,
+              "If not passing a default value, a parameter type must be specified in the "
+              "descriptor or dynamic typing must be allowed"};
     }
     param_info.descriptor.allowed_type = static_cast<uint8_t>(default_value.get_type());
   }
@@ -430,6 +434,15 @@ NodeParameters::declare_parameter(
 
   // If it failed to be set, then throw an exception.
   if (!result.successful) {
+    constexpr const char type_error_msg_start[] = "Wrong parameter type";
+    if (
+      0u == std::strncmp(
+        result.reason.c_str(), type_error_msg_start, sizeof(type_error_msg_start) - 1))
+    {
+      // TODO(ivanpauno): Refactor the logic so we don't need the above `strncmp` and we can
+      // detect between both exceptions more elegantly.
+      throw rclcpp::exceptions::InvalidParameterTypeException(name, result.reason);
+    }
     throw rclcpp::exceptions::InvalidParameterValueException(
             "parameter '" + name + "' could not be set: " + result.reason);
   }
@@ -460,6 +473,10 @@ NodeParameters::undeclare_parameter(const std::string & name)
   if (parameter_info->second.descriptor.read_only) {
     throw rclcpp::exceptions::ParameterImmutableException(
             "cannot undeclare parameter '" + name + "' because it is read-only");
+  }
+  if (rclcpp::PARAMETER_NOT_SET != parameter_info->second.descriptor.allowed_type) {
+    throw rclcpp::exceptions::InvalidParameterTypeException{
+            name, "cannot undeclare an statically typed parameter"};
   }
 
   parameters_.erase(parameter_info);

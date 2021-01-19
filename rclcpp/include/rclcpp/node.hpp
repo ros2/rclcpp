@@ -311,8 +311,8 @@ public:
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
-    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor(),
+    const rclcpp::ParameterDescriptor & parameter_descriptor =
+    rclcpp::ParameterDescriptor(),
     bool ignore_override = false);
 
   /// Declare and initialize a parameter with a type.
@@ -341,8 +341,8 @@ public:
   declare_parameter(
     const std::string & name,
     const ParameterT & default_value,
-    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor(),
+    const rclcpp::ParameterDescriptor & parameter_descriptor =
+    rclcpp::ParameterDescriptor(),
     bool ignore_override = false);
 
   /// Declare and initialize several parameters with the same namespace and type.
@@ -401,7 +401,7 @@ public:
     const std::string & namespace_,
     const std::map<
       std::string,
-      std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
+      std::pair<ParameterT, rclcpp::ParameterDescriptor>
     > & parameters,
     bool ignore_overrides = false);
 
