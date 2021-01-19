@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -141,8 +142,7 @@ EventsExecutorEntitiesCollector::add_callback_group(
     set_guard_condition_callback(node_ptr->get_notify_guard_condition());
 
     // Store node's notify guard condition
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
-    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
+    weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
   }
 
   // Add callback group to weak_groups_to_node
@@ -161,8 +161,9 @@ EventsExecutorEntitiesCollector::add_callback_group(
 }
 
 void
-EventsExecutorEntitiesCollector::execute()
+EventsExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
 {
+  (void)data;
   // This function is called when the associated executor is notified that something changed.
   // We do not know if an entity has been added or removed so we have to rebuild everything.
 

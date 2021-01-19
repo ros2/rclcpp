@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS__EVENTS_EXECUTOR_NOTIFY_WAITABLE_HPP_
 
 #include <list>
+#include <memory>
 
 #include "rcl/guard_condition.h"
 #include "rclcpp/executors/event_waitable.hpp"
@@ -45,12 +46,14 @@ public:
   // The function is a no-op, since we only care of waking up the executor
   RCLCPP_PUBLIC
   void
-  execute() override
-  {}
+  execute(std::shared_ptr<void> & data) override
+  {
+    (void)data;
+  }
 
   RCLCPP_PUBLIC
   void
-  add_guard_condition(rcl_guard_condition_t * guard_condition)
+  add_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
     notify_guard_conditions_.push_back(guard_condition);
   }
@@ -75,8 +78,16 @@ public:
     }
   }
 
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data()
+  {
+    // This waitable doesn't handle any data
+    return nullptr;
+  }
+
 private:
-  std::list<rcl_guard_condition_t *> notify_guard_conditions_;
+  std::list<const rcl_guard_condition_t *> notify_guard_conditions_;
 };
 
 }  // namespace executors

@@ -50,7 +50,7 @@ class EventsExecutor;
  * in the entities currently used by the executor.
  */
 class EventsExecutorEntitiesCollector final
-: public EventWaitable,
+  : public EventWaitable,
   public std::enable_shared_from_this<EventsExecutorEntitiesCollector>
 {
 public:
@@ -75,7 +75,7 @@ public:
   // If a entity is removed from a node, we should unset its callback
   RCLCPP_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
 
   RCLCPP_PUBLIC
   void
@@ -191,6 +191,14 @@ public:
   RCLCPP_PUBLIC
   void
   add_waitable(rclcpp::Waitable::SharedPtr waitable);
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data()
+  {
+    // This waitable doesn't handle any data
+    return nullptr;
+  }
 
 private:
   void
