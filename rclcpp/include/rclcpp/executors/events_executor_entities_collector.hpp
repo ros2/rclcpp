@@ -50,7 +50,7 @@ class EventsExecutor;
  * in the entities currently used by the executor.
  */
 class EventsExecutorEntitiesCollector final
-: public EventWaitable,
+  : public EventWaitable,
   public std::enable_shared_from_this<EventsExecutorEntitiesCollector>
 {
 public:
