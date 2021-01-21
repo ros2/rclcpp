@@ -3,6 +3,17 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+6.2.0 (2021-01-08)
+------------------
+* Goal response callback compatibility shim with deprecation of old signature (`#1495 <https://github.com/ros2/rclcpp/issues/1495>`_)
+* [rclcpp_action] Add warnings (`#1405 <https://github.com/ros2/rclcpp/issues/1405>`_)
+* Contributors: Audrow Nash, Ivan Santiago Paunovic
+
+6.1.0 (2020-12-10)
+------------------
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Contributors: Stephen Brawner
+
 6.0.0 (2020-11-18)
 ------------------
 * Add `take_data` to `Waitable` and `data` to `AnyExecutable` (`#1241 <https://github.com/ros2/rclcpp/issues/1241>`_)

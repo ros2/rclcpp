@@ -80,6 +80,10 @@ create_publisher(
 /**
  * The NodeT type only needs to have a method called get_node_topics_interface()
  * which returns a shared_ptr to a NodeTopicsInterface.
+ *
+ * In case `options.qos_overriding_options` is enabling qos parameter overrides,
+ * NodeT must also have a method called get_node_parameters_interface()
+ * which returns a shared_ptr to a NodeParametersInterface.
  */
 template<
   typename MessageT,

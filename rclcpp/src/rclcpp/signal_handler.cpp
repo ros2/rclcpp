@@ -243,7 +243,7 @@ SignalHandler::deferred_signal_handler()
             get_logger(),
             "deferred_signal_handler(): "
             "shutting down rclcpp::Context @ %p, because it had shutdown_on_sigint == true",
-            context_ptr.get());
+            static_cast<void *>(context_ptr.get()));
           context_ptr->shutdown("signal handler");
         }
       }

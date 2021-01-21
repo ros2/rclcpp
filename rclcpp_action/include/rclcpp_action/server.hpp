@@ -381,31 +381,31 @@ protected:
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
 
     std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state =
-      [weak_this](const GoalUUID & uuid, std::shared_ptr<void> result_message)
+      [weak_this](const GoalUUID & goal_uuid, std::shared_ptr<void> result_message)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
         // Send result message to anyone that asked
-        shared_this->publish_result(uuid, result_message);
+        shared_this->publish_result(goal_uuid, result_message);
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
         // notify base so it can recalculate the expired goal timer
         shared_this->notify_goal_terminal_state();
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
         std::lock_guard<std::mutex> lock(shared_this->goal_handles_mutex_);
-        shared_this->goal_handles_.erase(uuid);
+        shared_this->goal_handles_.erase(goal_uuid);
       };
 
     std::function<void(const GoalUUID &)> on_executing =
-      [weak_this](const GoalUUID & uuid)
+      [weak_this](const GoalUUID & goal_uuid)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
-        (void)uuid;
+        (void)goal_uuid;
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
       };

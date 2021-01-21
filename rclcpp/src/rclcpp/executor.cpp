@@ -144,6 +144,7 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_all_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  std::lock_guard<std::mutex> guard{mutex_};
   for (const auto & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
     groups.push_back(group_node_ptr.first);
   }
@@ -157,6 +158,7 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_manually_added_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  std::lock_guard<std::mutex> guard{mutex_};
   for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
     groups.push_back(group_node_ptr.first);
   }
@@ -167,6 +169,7 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_automatically_added_callback_groups_from_nodes()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  std::lock_guard<std::mutex> guard{mutex_};
   for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
     groups.push_back(group_node_ptr.first);
   }
@@ -233,7 +236,6 @@ Executor::add_callback_group_to_map(
       }
     }
     // Add the node's notify condition to the guard condition handles
-    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
     memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
   }
 }
@@ -244,6 +246,7 @@ Executor::add_callback_group(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
+  std::lock_guard<std::mutex> guard{mutex_};
   this->add_callback_group_to_map(
     group_ptr,
     node_ptr,
@@ -259,6 +262,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
+  std::lock_guard<std::mutex> guard{mutex_};
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
@@ -307,7 +311,6 @@ Executor::remove_callback_group_from_map(
         throw_from_rcl_error(ret, "Failed to trigger guard condition on callback group remove");
       }
     }
-    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
     memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
   }
 }
@@ -317,6 +320,7 @@ Executor::remove_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
   bool notify)
 {
+  std::lock_guard<std::mutex> guard{mutex_};
   this->remove_callback_group_from_map(
     group_ptr,
     weak_groups_associated_with_executor_to_nodes_,
@@ -336,6 +340,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
     throw std::runtime_error("Node needs to be associated with an executor.");
   }
 
+  std::lock_guard<std::mutex> guard{mutex_};
   bool found_node = false;
   auto node_it = weak_nodes_.begin();
   while (node_it != weak_nodes_.end()) {
@@ -489,6 +494,7 @@ Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr
   if (memory_strategy == nullptr) {
     throw std::runtime_error("Received NULL memory strategy in executor.");
   }
+  std::lock_guard<std::mutex> guard{mutex_};
   memory_strategy_ = memory_strategy;
 }
 
@@ -662,7 +668,7 @@ void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   {
-    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
+    std::lock_guard<std::mutex> guard(mutex_);
 
     // Check weak_nodes_ to find any callback group that is not owned
     // by an executor and add it to the list of callbackgroups for
@@ -741,12 +747,14 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   // check the null handles in the wait set and remove them from the handles in memory strategy
   // for callback-based entities
+  std::lock_guard<std::mutex> guard(mutex_);
   memory_strategy_->remove_null_handles(&wait_set_);
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 Executor::get_node_by_group(
-  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes,
   rclcpp::CallbackGroup::SharedPtr group)
 {
   if (!group) {
@@ -764,6 +772,7 @@ Executor::get_node_by_group(
 rclcpp::CallbackGroup::SharedPtr
 Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 {
+  std::lock_guard<std::mutex> guard{mutex_};
   for (const auto & pair : weak_groups_associated_with_executor_to_nodes_) {
     auto group = pair.first.lock();
     if (!group) {
@@ -804,9 +813,11 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 bool
 Executor::get_next_ready_executable_from_map(
   AnyExecutable & any_executable,
-  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes)
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes)
 {
   bool success = false;
+  std::lock_guard<std::mutex> guard{mutex_};
   // Check the timers to see if there are any that are ready
   memory_strategy_->get_next_timer(any_executable, weak_groups_to_nodes);
   if (any_executable.timer) {
@@ -893,7 +904,8 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
 bool
 Executor::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes) const
 {
   return std::find_if(
     weak_groups_to_nodes.begin(),

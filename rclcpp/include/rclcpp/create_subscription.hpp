@@ -146,6 +146,10 @@ create_subscription(
  * which returns a shared_ptr to a NodeTopicsInterface, or be a
  * NodeTopicsInterface pointer itself.
  *
+ * In case `options.qos_overriding_options` is enabling qos parameter overrides,
+ * NodeT must also have a method called get_node_parameters_interface()
+ * which returns a shared_ptr to a NodeParametersInterface.
+ *
  * \tparam MessageT
  * \tparam CallbackT
  * \tparam AllocatorT
