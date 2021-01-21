@@ -32,6 +32,20 @@ namespace rclcpp
 {
 class Clock;
 
+/**
+ * Time source that will drive the attached clocks.
+ *
+ * If the attached node `use_sim_time` parameter is `true`, the attached clocks will
+ * be updated based on messages received.
+ *
+ * The subscription to the clock topic created by the time source can have it's qos reconfigured
+ * using parameter overrides, particularly the following ones are accepted:
+ *
+ * - qos_overrides./clock.depth
+ * - qos_overrides./clock.durability
+ * - qos_overrides./clock.history
+ * - qos_overrides./clock.reliability
+ */
 class TimeSource
 {
 public:
