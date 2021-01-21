@@ -66,10 +66,10 @@ public:
   {
     for (auto gc : notify_guard_conditions_) {
       rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
-        executor,
-        executor_callback,
-        this,
         gc,
+        executor_callback,
+        executor,
+        this,
         false);
 
       if (RCL_RET_OK != ret) {

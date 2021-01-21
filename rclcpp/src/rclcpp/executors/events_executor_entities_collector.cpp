@@ -478,10 +478,10 @@ EventsExecutorEntitiesCollector::set_guard_condition_callback(
   const rcl_guard_condition_t * guard_condition)
 {
   rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
-    associated_executor_,
-    &EventsExecutor::push_event,
-    this,
     guard_condition,
+    &EventsExecutor::push_event,
+    associated_executor_,
+    this,
     false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
@@ -494,10 +494,10 @@ EventsExecutorEntitiesCollector::unset_guard_condition_callback(
   const rcl_guard_condition_t * guard_condition)
 {
   rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
-    nullptr,
-    nullptr,
-    nullptr,
     guard_condition,
+    nullptr,
+    nullptr,
+    nullptr,
     false /* Discard previous events */);
 
   if (ret != RCL_RET_OK) {
