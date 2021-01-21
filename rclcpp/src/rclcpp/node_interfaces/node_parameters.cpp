@@ -457,6 +457,18 @@ NodeParameters::declare_parameter(
   return parameters_.at(name).value;
 }
 
+const rclcpp::ParameterValue &
+NodeParameters::declare_parameter(
+  const std::string & name,
+  rclcpp::ParameterType type,
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
+  bool ignore_override)
+{
+  parameter_descriptor.allowed_type = static_cast<uint8_t>(type);
+  return this->declare_parameter(
+    name, rclcpp::ParameterValue{}, {parameter_descriptor, false}, ignore_override);
+}
+
 void
 NodeParameters::undeclare_parameter(const std::string & name)
 {

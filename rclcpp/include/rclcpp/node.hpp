@@ -315,6 +315,22 @@ public:
     rclcpp::ParameterDescriptor(),
     bool ignore_override = false);
 
+  /// Declare and initialize a parameter, return the effective value.
+  /**
+   * Same as:
+   * ```cpp
+   * node.declare_parameter(name, ParameterValue{}, descriptor, ignore_override);
+   * ```
+   */
+  RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  declare_parameter(
+    const std::string & name,
+    rclcpp::ParameterType type,
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor{},
+    bool ignore_override = false);
+
   /// Declare and initialize a parameter with a type.
   /**
    * See the non-templated declare_parameter() on this class for details.

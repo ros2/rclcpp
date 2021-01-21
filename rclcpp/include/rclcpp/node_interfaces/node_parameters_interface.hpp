@@ -70,6 +70,20 @@ public:
     rclcpp::ParameterDescriptor(),
     bool ignore_override = false) = 0;
 
+  /// Declare and initialize a parameter.
+  /**
+   * \sa rclcpp::Node::declare_parameter
+   */
+  RCLCPP_PUBLIC
+  virtual
+  const rclcpp::ParameterValue &
+  declare_parameter(
+    const std::string & name,
+    rclcpp::ParameterType type,
+    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false) = 0;
+
   /// Undeclare a parameter.
   /**
    * \sa rclcpp::Node::undeclare_parameter

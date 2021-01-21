@@ -233,6 +233,20 @@ Node::declare_parameter(
     ignore_override);
 }
 
+const rclcpp::ParameterValue &
+Node::declare_parameter(
+  const std::string & name,
+  rclcpp::ParameterType type,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
+{
+  return this->node_parameters_->declare_parameter(
+    name,
+    type,
+    parameter_descriptor,
+    ignore_override);
+}
+
 void
 Node::undeclare_parameter(const std::string & name)
 {

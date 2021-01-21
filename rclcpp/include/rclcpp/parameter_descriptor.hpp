@@ -27,7 +27,7 @@ namespace rclcpp
  *
  * // declare statically typed parameter, no default value given.
  * node.declare_parameter(
- *   "my_int", rclcpp::ParameterValue{}, rclcpp::ParameterType::INTEGER_PARAMETER);
+ *   "my_int", rclcpp::ParameterType::INTEGER_PARAMETER);
  *
  * // declare statically typed parameter, type inferred from given default, with descriptor.
  * rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -38,10 +38,10 @@ namespace rclcpp
  * rcl_interfaces::msg::ParameterDescriptor descriptor;
  * descriptor.allowed_type = static_cast<uint8_t>(rclcpp::ParameterType::INTEGER_PARAMETER);
  * //>> Set other things in descriptor.<<
- * node.declare_parameter("my_int", rclcpp::ParamterValue{}, {descriptor, false});
+ * node.declare_parameter("my_int", {descriptor, false});
  *
  * // declare parameter that can change of type
- * node.declare_parameter("my_param", rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
+ * node.declare_parameter("my_param", rclcpp::ParameterType::PARAMETER_NOT_SET);
  *
  * // declare parameter that can change of type with default value
  * node.declare_parameter("my_param", 5, rclcpp::ParameterDescriptor{false});
@@ -63,10 +63,6 @@ public:
     const rcl_interfaces::msg::ParameterDescriptor & msg, bool infer_type_from_value = true)
   // NOLINT: implicit conversion constructor
   : impl_(msg), infer_type_from_value_{infer_type_from_value} {}
-
-  /// Implicit constructor from a parameter type.
-  ParameterDescriptor(rclcpp::ParameterType type)  // NOLINT: implicit conversion constructor
-  : infer_type_from_value_{false} {impl_.allowed_type = type;}
 
   /// Getter of internal message representation.
   rcl_interfaces::msg::ParameterDescriptor &

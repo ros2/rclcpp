@@ -112,6 +112,15 @@ public:
     bool ignore_override = false) override;
 
   RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  declare_parameter(
+    const std::string & name,
+    rclcpp::ParameterType type,
+    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false) override;
+
+  RCLCPP_PUBLIC
   void
   undeclare_parameter(const std::string & name) override;
 
