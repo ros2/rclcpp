@@ -327,7 +327,7 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   {
     // no default, no initial
     rclcpp::ParameterValue value = node->declare_parameter(
-      "parameter"_unq, rclcpp::ParameterType::PARAMETER_NOT_SET);
+      "parameter"_unq, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
   }
   {
@@ -362,7 +362,7 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
     node->declare_parameter(name, rclcpp::ParameterValue{}, rclcpp::ParameterDescriptor{false});
     EXPECT_THROW(
     {
-      node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+      node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     },
       rclcpp::exceptions::ParameterAlreadyDeclaredException);
   }
@@ -560,10 +560,10 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
   {
     // parameter already declared throws
     auto name = "parameter_already_declared";
-    node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+    node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     EXPECT_THROW(
     {
-      node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+      node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     },
       rclcpp::exceptions::ParameterAlreadyDeclaredException);
   }
@@ -793,7 +793,7 @@ TEST_F(TestNode, undeclare_parameter) {
   {
     // normal use
     auto name = "parameter"_unq;
-    node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+    node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     EXPECT_TRUE(node->has_parameter(name));
     node->undeclare_parameter(name);
     EXPECT_FALSE(node->has_parameter(name));
@@ -835,7 +835,7 @@ TEST_F(TestNode, has_parameter) {
   // normal use
   auto name = "parameter"_unq;
   EXPECT_FALSE(node->has_parameter(name));
-  node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+  node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
   EXPECT_TRUE(node->has_parameter(name));
   node->undeclare_parameter(name);
   EXPECT_FALSE(node->has_parameter(name));
@@ -846,7 +846,7 @@ TEST_F(TestNode, list_parameters) {
   // normal use
   auto name = "parameter"_unq;
   const size_t before_size = node->list_parameters({}, 1u).names.size();
-  node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+  node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
   EXPECT_EQ(1u + before_size, node->list_parameters({}, 1u).names.size());
   node->undeclare_parameter(name);
   EXPECT_EQ(before_size, node->list_parameters({}, 1u).names.size());
@@ -933,7 +933,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
     auto name = "parameter"_unq;
     auto value = node->declare_parameter(
-      name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+      name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
 
@@ -1451,7 +1451,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
     auto name = "parameter"_unq;
     auto value = node->declare_parameter(
-      name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+      name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
 
@@ -1636,7 +1636,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
     auto name = "parameter"_unq;
-    auto value = node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_NOT_SET);
+    auto value = node->declare_parameter(name, rclcpp::ParameterType::PARAMETER_DYNAMIC);
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
 

@@ -259,7 +259,7 @@ __check_parameters(
     const rclcpp::ParameterType old_type = item.value.get_type();
     const rclcpp::ParameterType type = parameter.get_type();
     result.successful =
-      descriptor.allowed_type == rclcpp::PARAMETER_NOT_SET ||
+      descriptor.allowed_type == rclcpp::PARAMETER_DYNAMIC ||
       descriptor.allowed_type == type;
     if (!result.successful) {
       result.reason = format_type_reason(
@@ -486,7 +486,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
     throw rclcpp::exceptions::ParameterImmutableException(
             "cannot undeclare parameter '" + name + "' because it is read-only");
   }
-  if (rclcpp::PARAMETER_NOT_SET != parameter_info->second.descriptor.allowed_type) {
+  if (rclcpp::PARAMETER_DYNAMIC != parameter_info->second.descriptor.allowed_type) {
     throw rclcpp::exceptions::InvalidParameterTypeException{
             name, "cannot undeclare an statically typed parameter"};
   }
@@ -638,6 +638,11 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     if (rclcpp::PARAMETER_NOT_SET == parameter.get_type()) {
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
+        if (rclcpp::PARAMETER_DYNAMIC != it->second.descriptor.allowed_type) {
+          result.reason = "cannot undeclare an statically typed parameter";
+          result.successful = false;
+          return result;
+        }
         parameters_to_be_undeclared.push_back(&parameter);
       }
     }
