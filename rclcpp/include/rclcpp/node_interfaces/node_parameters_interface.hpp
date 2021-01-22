@@ -30,6 +30,7 @@
 
 namespace rclcpp
 {
+
 namespace node_interfaces
 {
 

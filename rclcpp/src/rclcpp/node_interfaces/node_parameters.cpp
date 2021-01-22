@@ -16,6 +16,7 @@
 
 #include <rcl_yaml_param_parser/parser.h>
 
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -34,6 +35,8 @@
 #include "rclcpp/scope_exit.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/qos_profiles.h"
+
+#include "../detail/resolve_parameter_overrides.hpp"
 
 using rclcpp::node_interfaces::NodeParameters;
 
@@ -86,50 +89,15 @@ NodeParameters::NodeParameters(
     throw std::runtime_error("Need valid node options in NodeParameters");
   }
 
-  std::vector<const rcl_arguments_t *> argument_sources;
-  // global before local so that local overwrites global
+  const rcl_arguments_t * global_args = nullptr;
   if (options->use_global_arguments) {
     auto context_ptr = node_base->get_context()->get_rcl_context();
-    argument_sources.push_back(&(context_ptr->global_arguments));
+    global_args = &(context_ptr->global_arguments);
   }
-  argument_sources.push_back(&options->arguments);
-
-  // Get fully qualified node name post-remapping to use to find node's params in yaml files
   combined_name_ = node_base->get_fully_qualified_name();
 
-  for (const rcl_arguments_t * source : argument_sources) {
-    rcl_params_t * params = NULL;
-    rcl_ret_t ret = rcl_arguments_get_param_overrides(source, &params);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-    if (params) {
-      auto cleanup_params = make_scope_exit(
-        [params]() {
-          rcl_yaml_node_struct_fini(params);
-        });
-      rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
-
-      // Enforce wildcard matching precedence
-      // TODO(cottsay) implement further wildcard matching
-      const std::vector<std::string> node_matching_names{"/**", combined_name_};
-      for (const auto & node_name : node_matching_names) {
-        if (initial_map.count(node_name) > 0) {
-          // Combine parameter yaml files, overwriting values in older ones
-          for (const rclcpp::Parameter & param : initial_map.at(node_name)) {
-            parameter_overrides_[param.get_name()] =
-              rclcpp::ParameterValue(param.get_value_message());
-          }
-        }
-      }
-    }
-  }
-
-  // parameter overrides passed to constructor will overwrite overrides from yaml file sources
-  for (auto & param : parameter_overrides) {
-    parameter_overrides_[param.get_name()] =
-      rclcpp::ParameterValue(param.get_value_message());
-  }
+  parameter_overrides_ = rclcpp::detail::resolve_parameter_overrides(
+    combined_name_, parameter_overrides, &options->arguments, global_args);
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.

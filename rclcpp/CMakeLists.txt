@@ -40,6 +40,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
   src/rclcpp/detail/mutex_two_priorities.cpp
+  src/rclcpp/detail/resolve_parameter_overrides.cpp
   src/rclcpp/detail/rmw_implementation_specific_payload.cpp
   src/rclcpp/detail/rmw_implementation_specific_publisher_payload.cpp
   src/rclcpp/detail/rmw_implementation_specific_subscription_payload.cpp

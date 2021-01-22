@@ -234,7 +234,8 @@ TEST(TestQosParameters, declare_no_parameters_interface) {
 
   std::map<std::string, rclcpp::Parameter> qos_params;
   EXPECT_FALSE(
-    node->get_node_parameters_interface()->get_parameters_by_prefix("qos_overrides", qos_params));
+    node->get_node_parameters_interface()->get_parameters_by_prefix(
+      "qos_overrides./my/fully/qualified/topic_name", qos_params));
 
   rclcpp::shutdown();
 }
