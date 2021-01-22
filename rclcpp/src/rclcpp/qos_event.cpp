@@ -74,10 +74,10 @@ QOSEventHandlerBase::set_events_executor_callback(
   rmw_listener_cb_t executor_callback) const
 {
   rcl_ret_t ret = rcl_event_set_listener_callback(
-    executor,
-    executor_callback,
-    this,
     &event_handle_,
+    executor_callback,
+    executor,
+    this,
     false /* Discard previous events */);
 
   if (RCL_RET_OK != ret) {
