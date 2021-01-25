@@ -261,7 +261,7 @@ public:
     if (this->can_loan_messages()) {
       // we release the ownership from the rclpp::LoanedMessage instance
       // and let the middleware clean up the memory.
-      this->do_loaned_message_publish(loaned_msg.release().get());
+      this->do_loaned_message_publish(std::move(loaned_msg.release()));
     } else {
       // we don't release the ownership, let the middleware copy the ros message
       // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
@@ -310,9 +310,9 @@ protected:
   }
 
   void
-  do_loaned_message_publish(MessageT * msg)
+  do_loaned_message_publish(std::unique_ptr<MessageT, std::function<void(MessageT *)>> msg)
   {
-    auto status = rcl_publish_loaned_message(publisher_handle_.get(), msg, nullptr);
+    auto status = rcl_publish_loaned_message(publisher_handle_.get(), msg.get(), nullptr);
 
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
