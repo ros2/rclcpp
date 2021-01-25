@@ -48,9 +48,9 @@ public:
   // Lock everything except user callbacks
   std::recursive_mutex action_server_reentrant_mutex_;
 
-  std::shared_ptr<rcl_action_server_t> action_server_;
-
   rclcpp::Clock::SharedPtr clock_;
+
+  std::shared_ptr<rcl_action_server_t> action_server_;
 
   size_t num_subscriptions_ = 0;
   size_t num_timers_ = 0;
