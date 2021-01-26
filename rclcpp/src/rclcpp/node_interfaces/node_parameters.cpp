@@ -390,30 +390,34 @@ __declare_parameter_common(
   return result;
 }
 
+static
 const rclcpp::ParameterValue &
-NodeParameters::declare_parameter(
+declare_parameter_helper(
   const std::string & name,
+  rclcpp::ParameterType type,
   const rclcpp::ParameterValue & default_value,
   rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
-  bool ignore_override)
+  bool ignore_override,
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters,
+  const std::map<std::string, rclcpp::ParameterValue> & overrides,
+  CallbacksContainerType & callback_container,
+  const OnParametersSetCallbackType & callback,
+  rclcpp::Publisher<rcl_interfaces::msg::ParameterEvent> * events_publisher,
+  const std::string & combined_name,
+  rclcpp::node_interfaces::NodeClockInterface & node_clock)
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
     throw rclcpp::exceptions::InvalidParametersException("parameter name must not be empty");
   }
 
   // Error if this parameter has already been declared and is different
-  if (__lockless_has_parameter(parameters_, name)) {
+  if (__lockless_has_parameter(parameters, name)) {
     throw rclcpp::exceptions::ParameterAlreadyDeclaredException(
             "parameter '" + name + "' has already been declared");
   }
 
   if (!parameter_descriptor.dynamic_typing) {
-    auto type = parameter_descriptor.type;
     if (rclcpp::PARAMETER_NOT_SET == type) {
       type = default_value.get_type();
     }
@@ -423,7 +427,7 @@ NodeParameters::declare_parameter(
               "cannot declare a statically typed parameter with an uninitialized value"
       };
     }
-    parameter_descriptor.type = type;
+    parameter_descriptor.type = static_cast<uint8_t>(type);
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
@@ -431,10 +435,10 @@ NodeParameters::declare_parameter(
     name,
     default_value,
     parameter_descriptor,
-    parameters_,
-    parameter_overrides_,
-    on_parameters_set_callback_container_,
-    on_parameters_set_callback_,
+    parameters,
+    overrides,
+    callback_container,
+    callback,
     &parameter_event,
     ignore_override);
 
@@ -454,25 +458,67 @@ NodeParameters::declare_parameter(
   }
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
-  if (nullptr != events_publisher_) {
-    parameter_event.node = combined_name_;
-    parameter_event.stamp = node_clock_->get_clock()->now();
-    events_publisher_->publish(parameter_event);
+  if (nullptr != events_publisher) {
+    parameter_event.node = combined_name;
+    parameter_event.stamp = node_clock.get_clock()->now();
+    events_publisher->publish(parameter_event);
   }
 
-  return parameters_.at(name).value;
+  return parameters.at(name).value;
+}
+
+const rclcpp::ParameterValue &
+NodeParameters::declare_parameter(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
+{
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  return declare_parameter_helper(
+    name,
+    rclcpp::PARAMETER_NOT_SET,
+    default_value,
+    parameter_descriptor,
+    ignore_override,
+    parameters_,
+    parameter_overrides_,
+    on_parameters_set_callback_container_,
+    on_parameters_set_callback_,
+    events_publisher_.get(),
+    combined_name_,
+    *node_clock_);
 }
 
 const rclcpp::ParameterValue &
 NodeParameters::declare_parameter(
   const std::string & name,
   rclcpp::ParameterType type,
-  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  parameter_descriptor.type = type;
-  return this->declare_parameter(
-    name, rclcpp::ParameterValue{}, parameter_descriptor, ignore_override);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  if (rclcpp::PARAMETER_NOT_SET == type) {
+    throw std::invalid_argument
+  }
+
+  return declare_parameter_helper(
+    name,
+    type,
+    rclcpp::ParameterValue{},
+    parameter_descriptor,
+    ignore_override,
+    parameters_,
+    parameter_overrides_,
+    on_parameters_set_callback_container_,
+    on_parameters_set_callback_,
+    events_publisher_.get(),
+    combined_name_,
+    *node_clock_);
 }
 
 void

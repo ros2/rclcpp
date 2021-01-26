@@ -108,7 +108,7 @@ public:
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value,
-    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor{},
     bool ignore_override = false) override;
 
@@ -117,7 +117,7 @@ public:
   declare_parameter(
     const std::string & name,
     rclcpp::ParameterType type,
-    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false) override;
 
