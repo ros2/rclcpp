@@ -32,7 +32,8 @@ namespace rclcpp
 enum ParameterType : uint8_t
 {
   PARAMETER_NOT_SET = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET,
-  PARAMETER_DYNAMIC = rcl_interfaces::msg::ParameterType::PARAMETER_DYNAMIC,
+  /// Special value, only used to declare a dynamically typed parameter.
+  /// Not valid as a parameter type.
   PARAMETER_BOOL = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
   PARAMETER_INTEGER = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
   PARAMETER_DOUBLE = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,

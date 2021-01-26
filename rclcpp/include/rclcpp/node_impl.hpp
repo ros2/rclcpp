@@ -157,7 +157,7 @@ auto
 Node::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
-  const rclcpp::ParameterDescriptor & parameter_descriptor,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
   try {
@@ -187,7 +187,7 @@ Node::declare_parameters(
       return this->declare_parameter(
         normalized_namespace + element.first,
         element.second,
-        rclcpp::ParameterDescriptor(),
+        rcl_interfaces::msg::ParameterDescriptor(),
         ignore_overrides);
     }
   );
@@ -200,7 +200,7 @@ Node::declare_parameters(
   const std::string & namespace_,
   const std::map<
     std::string,
-    std::pair<ParameterT, rclcpp::ParameterDescriptor>
+    std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
   > & parameters,
   bool ignore_overrides)
 {

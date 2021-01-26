@@ -133,13 +133,15 @@ NodeParameters::NodeParameters(
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.dynamic_typing = true;
   if (automatically_declare_parameters_from_overrides) {
     for (const auto & pair : this->get_parameter_overrides()) {
       if (!this->has_parameter(pair.first)) {
         this->declare_parameter(
           pair.first,
           pair.second,
-          rclcpp::ParameterDescriptor(false),
+          descriptor,
           true);
       }
     }
@@ -257,10 +259,10 @@ __check_parameters(
     auto item = parameter_infos[name];
     const rcl_interfaces::msg::ParameterDescriptor & descriptor = item.descriptor;
     const rclcpp::ParameterType old_type = item.value.get_type();
-    const rclcpp::ParameterType type = parameter.get_type();
+    const auto type = static_cast<rclcpp::ParameterType>(descriptor.type);
     result.successful =
-      descriptor.allowed_type == rclcpp::PARAMETER_DYNAMIC ||
-      descriptor.allowed_type == type;
+      descriptor.dynamic_typing ||
+      descriptor.type == type;
     if (!result.successful) {
       result.reason = format_type_reason(
         name, rclcpp::to_string(old_type), rclcpp::to_string(type));
@@ -349,7 +351,7 @@ rcl_interfaces::msg::SetParametersResult
 __declare_parameter_common(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rclcpp::ParameterDescriptor & parameter_descriptor,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   CallbacksContainerType & callback_container,
@@ -359,17 +361,7 @@ __declare_parameter_common(
 {
   using rclcpp::node_interfaces::ParameterInfo;
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
-  auto & param_info = parameter_infos.at(name);
-  param_info.descriptor = parameter_descriptor.get_msg();
-  if (parameter_descriptor.do_infer_type_from_value()) {
-    if (rclcpp::ParameterType::PARAMETER_NOT_SET == default_value.get_type()) {
-      throw rclcpp::exceptions::InvalidParameterTypeException{
-              name,
-              "If not passing a default value, a parameter type must be specified in the "
-              "descriptor or dynamic typing must be allowed"};
-    }
-    param_info.descriptor.allowed_type = static_cast<uint8_t>(default_value.get_type());
-  }
+  parameter_infos.at(name).descriptor = parameter_descriptor;
 
   // Use the value from the overrides if available, otherwise use the default.
   const rclcpp::ParameterValue * initial_value = &default_value;
@@ -402,7 +394,7 @@ const rclcpp::ParameterValue &
 NodeParameters::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rclcpp::ParameterDescriptor & parameter_descriptor,
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
   bool ignore_override)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -418,6 +410,20 @@ NodeParameters::declare_parameter(
   if (__lockless_has_parameter(parameters_, name)) {
     throw rclcpp::exceptions::ParameterAlreadyDeclaredException(
             "parameter '" + name + "' has already been declared");
+  }
+
+  if (!parameter_descriptor.dynamic_typing) {
+    auto type = parameter_descriptor.type;
+    if (rclcpp::PARAMETER_NOT_SET == type) {
+      type = default_value.get_type();
+    }
+    if (rclcpp::PARAMETER_NOT_SET == type) {
+      throw rclcpp::exceptions::InvalidParameterTypeException{
+              name,
+              "cannot declare a statically typed parameter with an uninitialized value"
+      };
+    }
+    parameter_descriptor.type = type;
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
@@ -464,9 +470,9 @@ NodeParameters::declare_parameter(
   rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
   bool ignore_override)
 {
-  parameter_descriptor.allowed_type = static_cast<uint8_t>(type);
+  parameter_descriptor.type = type;
   return this->declare_parameter(
-    name, rclcpp::ParameterValue{}, {parameter_descriptor, false}, ignore_override);
+    name, rclcpp::ParameterValue{}, parameter_descriptor, ignore_override);
 }
 
 void
@@ -486,7 +492,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
     throw rclcpp::exceptions::ParameterImmutableException(
             "cannot undeclare parameter '" + name + "' because it is read-only");
   }
-  if (rclcpp::PARAMETER_DYNAMIC != parameter_info->second.descriptor.allowed_type) {
+  if (!parameter_info->second.descriptor.dynamic_typing) {
     throw rclcpp::exceptions::InvalidParameterTypeException{
             name, "cannot undeclare an statically typed parameter"};
   }
@@ -583,13 +589,17 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   rcl_interfaces::msg::ParameterEvent parameter_event_msg;
   parameter_event_msg.node = combined_name_;
   CallbacksContainerType empty_callback_container;
+
+  // Implicit declare uses dynamic type descriptor.
+  rcl_interfaces::msg::ParameterDescriptor descriptor{};
+  descriptor.dynamic_typing = true;
   for (auto parameter_to_be_declared : parameters_to_be_declared) {
     // This should not throw, because we validated the name and checked that
     // the parameter was not already declared.
     result = __declare_parameter_common(
       parameter_to_be_declared->get_name(),
       parameter_to_be_declared->get_parameter_value(),
-      rclcpp::ParameterDescriptor(false),  // Implicit declare uses default descriptor.
+      descriptor,
       staged_parameter_changes,
       parameter_overrides_,
       // Only call callbacks once below
@@ -638,7 +648,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     if (rclcpp::PARAMETER_NOT_SET == parameter.get_type()) {
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
-        if (rclcpp::PARAMETER_DYNAMIC != it->second.descriptor.allowed_type) {
+        if (!it->second.descriptor.dynamic_typing) {
           result.reason = "cannot undeclare an statically typed parameter";
           result.successful = false;
           return result;
