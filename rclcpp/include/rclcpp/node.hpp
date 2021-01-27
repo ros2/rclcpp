@@ -312,7 +312,7 @@ public:
   const rclcpp::ParameterValue &
   declare_parameter(
     const std::string & name,
-    const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
+    const rclcpp::ParameterValue & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
@@ -341,6 +341,21 @@ public:
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor{},
     bool ignore_override = false);
+
+  [[deprecated(
+    "declare_parameter() with only a name is deprecated and will be deleted in the future.\n" \
+    "If you want to declare a parameter that won't change of type without a default value use:\n" \
+    "`node->declare_parameter<ParameterT>(name)`, where e.g. ParameterT=int64_t.\n\n" \
+    "If you want to declare a parameter that can dynamically change of type use:\n" \
+    "```\n" \
+    "rcl_interfaces::msg::ParameterDescriptor descriptor;\n" \
+    "descriptor.dynamic_typing = true;\n" \
+    "node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);" \
+    "```"
+  )]]
+  RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  declare_parameter(const std::string & name);
 
   /// Declare and initialize a parameter with a type.
   /**
