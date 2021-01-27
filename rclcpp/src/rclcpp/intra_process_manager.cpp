@@ -157,7 +157,13 @@ IntraProcessManager::get_subscription_intra_process(uint64_t intra_process_subsc
   if (subscription_it == subscriptions_.end()) {
     return nullptr;
   } else {
-    return subscription_it->second.subscription;
+    auto subscription_weak = subscription_it->second.subscription;
+    if (auto subscription = subscription_weak.lock()) {
+      return subscription;
+    } else {
+      subscriptions_.erase(subscription_it);
+      return nullptr;
+    }
   }
 }
 
