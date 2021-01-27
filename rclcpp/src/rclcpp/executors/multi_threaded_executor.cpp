@@ -52,8 +52,8 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
-    auto low_priority_wait_mutex = wait_mutex_.get_low_priority_mutex();
-    std::lock_guard<MutexTwoPriorities::LowPriorityMutex> wait_lock(low_priority_wait_mutex);
+    auto low_priority_wait_mutex = wait_mutex_.get_low_priority_lockable();
+    std::lock_guard<MutexTwoPriorities::LowPriorityLockable> wait_lock(low_priority_wait_mutex);
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
       auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
       threads.emplace_back(func);
@@ -78,8 +78,8 @@ MultiThreadedExecutor::run(size_t)
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {
-      auto low_priority_wait_mutex = wait_mutex_.get_low_priority_mutex();
-      std::lock_guard<MutexTwoPriorities::LowPriorityMutex> wait_lock(low_priority_wait_mutex);
+      auto low_priority_wait_mutex = wait_mutex_.get_low_priority_lockable();
+      std::lock_guard<MutexTwoPriorities::LowPriorityLockable> wait_lock(low_priority_wait_mutex);
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
@@ -106,8 +106,8 @@ MultiThreadedExecutor::run(size_t)
     execute_any_executable(any_exec);
 
     if (any_exec.timer) {
-      auto high_priority_wait_mutex = wait_mutex_.get_high_priority_mutex();
-      std::lock_guard<MutexTwoPriorities::HighPriorityMutex> wait_lock(high_priority_wait_mutex);
+      auto high_priority_wait_mutex = wait_mutex_.get_high_priority_lockable();
+      std::lock_guard<MutexTwoPriorities::HighPriorityLockable> wait_lock(high_priority_wait_mutex);
       auto it = scheduled_timers_.find(any_exec.timer);
       if (it != scheduled_timers_.end()) {
         scheduled_timers_.erase(it);

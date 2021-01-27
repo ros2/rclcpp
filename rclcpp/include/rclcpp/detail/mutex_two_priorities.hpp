@@ -29,10 +29,10 @@ namespace detail
 class MutexTwoPriorities
 {
 public:
-  class HighPriorityMutex
+  class HighPriorityLockable
   {
 public:
-    explicit HighPriorityMutex(MutexTwoPriorities & parent);
+    explicit HighPriorityLockable(MutexTwoPriorities & parent);
 
     void lock();
 
@@ -42,10 +42,10 @@ private:
     MutexTwoPriorities & parent_;
   };
 
-  class LowPriorityMutex
+  class LowPriorityLockable
   {
 public:
-    explicit LowPriorityMutex(MutexTwoPriorities & parent);
+    explicit LowPriorityLockable(MutexTwoPriorities & parent);
 
     void lock();
 
@@ -55,11 +55,11 @@ private:
     MutexTwoPriorities & parent_;
   };
 
-  HighPriorityMutex
-  get_high_priority_mutex();
+  HighPriorityLockable
+  get_high_priority_lockable();
 
-  LowPriorityMutex
-  get_low_priority_mutex();
+  LowPriorityLockable
+  get_low_priority_lockable();
 
 private:
   // Implementation detail: the idea here is that only one low priority thread can be

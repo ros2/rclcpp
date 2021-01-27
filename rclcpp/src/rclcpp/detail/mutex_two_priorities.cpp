@@ -21,27 +21,31 @@ namespace rclcpp
 namespace detail
 {
 
-using LowPriorityMutex = MutexTwoPriorities::LowPriorityMutex;
-using HighPriorityMutex = MutexTwoPriorities::HighPriorityMutex;
+using LowPriorityLockable = MutexTwoPriorities::LowPriorityLockable;
+using HighPriorityLockable = MutexTwoPriorities::HighPriorityLockable;
 
-HighPriorityMutex::HighPriorityMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+HighPriorityLockable::HighPriorityLockable(MutexTwoPriorities & parent)
+: parent_(parent)
+{}
 
 void
-HighPriorityMutex::lock()
+HighPriorityLockable::lock()
 {
   parent_.data_.lock();
 }
 
 void
-HighPriorityMutex::unlock()
+HighPriorityLockable::unlock()
 {
   parent_.data_.unlock();
 }
 
-LowPriorityMutex::LowPriorityMutex(MutexTwoPriorities & parent) : parent_(parent) {}
+LowPriorityLockable::LowPriorityLockable(MutexTwoPriorities & parent)
+: parent_(parent)
+{}
 
 void
-LowPriorityMutex::lock()
+LowPriorityLockable::lock()
 {
   std::unique_lock<std::mutex> barrier_guard{parent_.barrier_};
   parent_.data_.lock();
@@ -49,22 +53,22 @@ LowPriorityMutex::lock()
 }
 
 void
-LowPriorityMutex::unlock()
+LowPriorityLockable::unlock()
 {
   std::lock_guard<std::mutex> barrier_guard{parent_.barrier_, std::adopt_lock};
   parent_.data_.unlock();
 }
 
-HighPriorityMutex
-MutexTwoPriorities::get_high_priority_mutex()
+HighPriorityLockable
+MutexTwoPriorities::get_high_priority_lockable()
 {
-  return HighPriorityMutex{*this};
+  return HighPriorityLockable{*this};
 }
 
-LowPriorityMutex
-MutexTwoPriorities::get_low_priority_mutex()
+LowPriorityLockable
+MutexTwoPriorities::get_low_priority_lockable()
 {
-  return LowPriorityMutex{*this};
+  return LowPriorityLockable{*this};
 }
 
 }  // namespace detail
