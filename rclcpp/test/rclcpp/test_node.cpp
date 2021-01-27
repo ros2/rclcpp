@@ -2659,3 +2659,54 @@ TEST_F(TestNode, create_sub_node_rmw_validate_namespace_error) {
       rclcpp::exceptions::RCLError);
   }
 }
+
+TEST_F(TestNode, static_and_dynamic_typing) {
+  rclcpp::NodeOptions no;
+  no.parameter_overrides(
+  {
+    {"integer_parameter_override_ok", 43},
+    {"string_parameter_override_should_throw", 43},
+    {"integer_must_provide_override", 43},
+  });
+  auto node = std::make_shared<rclcpp::Node>("node", "ns", no);
+  {
+    auto param = node->declare_parameter("an_int", 42);
+    EXPECT_EQ(42, param);
+    auto result = node->set_parameter({"an_int", "string value"});
+    EXPECT_FALSE(result.successful);
+    result = node->set_parameter({"an_int", 43});
+    EXPECT_TRUE(result.successful);
+    EXPECT_TRUE(node->get_parameter("an_int", param));
+    EXPECT_EQ(43, param);
+  }
+  {
+    auto param = node->declare_parameter("integer_parameter_override_ok", 42);
+    EXPECT_EQ(43, param);
+  }
+  {
+    EXPECT_THROW(
+      node->declare_parameter("string_parameter_override_should_throw", "a string"),
+      rclcpp::exceptions::InvalidParameterTypeException);
+  }
+  {
+    auto param = node->declare_parameter(
+      "integer_must_provide_override", rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(43, param.get<int64_t>());
+  }
+  {
+    EXPECT_THROW(
+      node->declare_parameter("integer_override_not_given", rclcpp::PARAMETER_INTEGER),
+      rclcpp::exceptions::InvalidParameterTypeException);
+  }
+  {
+    EXPECT_THROW(
+      node->declare_parameter("parameter_not_set_is_not_a_valid_type", rclcpp::PARAMETER_NOT_SET),
+      std::invalid_argument);
+  }
+  {
+    EXPECT_THROW(
+      node->declare_parameter(
+        "uninitialized_not_valid_except_dynamic_typing", rclcpp::ParameterValue{}),
+      rclcpp::exceptions::InvalidParameterTypeException);
+  }
+}

@@ -305,6 +305,8 @@ public:
    *   name is invalid.
    * \throws rclcpp::exceptions::InvalidParameterValueException if initial
    *   value fails to be set.
+   * \throws rclcpp::exceptions::InvalidParameterTypeException
+   *   if the type of the default value or override is wrong.
    */
   RCLCPP_PUBLIC
   const rclcpp::ParameterValue &
@@ -317,10 +319,19 @@ public:
 
   /// Declare and initialize a parameter, return the effective value.
   /**
-   * Same as:
-   * ```cpp
-   * node.declare_parameter(name, ParameterValue{}, descriptor, ignore_override);
-   * ```
+   * Same as the previous one, but a default value is not provided and the user
+   * must provide a parameter override of the correct type.
+   *
+   * \param[in] name The name of the parameter.
+   * \param[in] type Desired type of the parameter, which will enforced at runtime.
+   * \param[in] parameter_descriptor An optional, custom description for
+   *   the parameter.
+   * \param[in] ignore_override When `true`, the parameter override is ignored.
+   *    Default to `false`.
+   * \return A const reference to the value of the parameter.
+   * \throws Same as the previous overload taking a default value.
+   * \throws rclcpp::exceptions::InvalidParameterTypeException
+   *   if an override is not provided or the provided override is of the wrong type.
    */
   RCLCPP_PUBLIC
   const rclcpp::ParameterValue &
