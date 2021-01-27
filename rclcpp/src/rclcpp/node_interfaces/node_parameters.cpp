@@ -250,22 +250,31 @@ RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
 __check_parameters(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
-  const std::vector<rclcpp::Parameter> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters,
+  bool allow_undeclared)
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   for (const rclcpp::Parameter & parameter : parameters) {
     std::string name = parameter.get_name();
-    auto item = parameter_infos[name];
-    const rcl_interfaces::msg::ParameterDescriptor & descriptor = item.descriptor;
-    const rclcpp::ParameterType old_type = item.value.get_type();
-    const auto type = static_cast<rclcpp::ParameterType>(descriptor.type);
-    result.successful =
-      descriptor.dynamic_typing ||
-      descriptor.type == type;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    if (allow_undeclared) {
+      auto it = parameter_infos.find(name);
+      if (it != parameter_infos.cend()) {
+        descriptor = it->second.descriptor;
+      } else {
+        // implicitly declared parameters are dinamically typed!
+        descriptor.dynamic_typing = true;
+      }
+    } else {
+      descriptor = parameter_infos[name].descriptor;
+    }
+    const auto new_type = parameter.get_type();
+    const auto specified_type = static_cast<rclcpp::ParameterType>(descriptor.type);
+    result.successful = descriptor.dynamic_typing || specified_type == new_type;
     if (!result.successful) {
       result.reason = format_type_reason(
-        name, rclcpp::to_string(old_type), rclcpp::to_string(type));
+        name, rclcpp::to_string(specified_type), rclcpp::to_string(new_type));
       return result;
     }
     result = __check_parameter_value_in_range(
@@ -319,7 +328,8 @@ __set_parameters_atomically_common(
   const std::vector<rclcpp::Parameter> & parameters,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
   CallbacksContainerType & callback_container,
-  const OnParametersSetCallbackType & callback)
+  const OnParametersSetCallbackType & callback,
+  bool allow_undeclared = false)
 {
   // Call the user callback to see if the new value(s) are allowed.
   rcl_interfaces::msg::SetParametersResult result =
@@ -328,7 +338,7 @@ __set_parameters_atomically_common(
     return result;
   }
   // Check if the value being set complies with the descriptor.
-  result = __check_parameters(parameter_infos, parameters);
+  result = __check_parameters(parameter_infos, parameters, allow_undeclared);
   if (!result.successful) {
     return result;
   }
@@ -503,7 +513,8 @@ NodeParameters::declare_parameter(
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   if (rclcpp::PARAMETER_NOT_SET == type) {
-    throw std::invalid_argument
+    throw std::invalid_argument{
+            "declare_parameter(): the provided parameter type cannot be rclcpp::PARAMETER_NOT_SET"};
   }
 
   return declare_parameter_helper(
@@ -637,7 +648,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   CallbacksContainerType empty_callback_container;
 
   // Implicit declare uses dynamic type descriptor.
-  rcl_interfaces::msg::ParameterDescriptor descriptor{};
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
   descriptor.dynamic_typing = true;
   for (auto parameter_to_be_declared : parameters_to_be_declared) {
     // This should not throw, because we validated the name and checked that
@@ -714,7 +725,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     on_parameters_set_callback_container_,
     // These callbacks are called once. When a callback returns an unsuccessful result,
     // the remaining aren't called.
-    on_parameters_set_callback_);
+    on_parameters_set_callback_,
+    allow_undeclared_);  // allow undeclared
 
   // If not successful, then stop here.
   if (!result.successful) {
