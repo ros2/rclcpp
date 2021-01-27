@@ -372,6 +372,18 @@ public:
     rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
 
+  /// Declare and initialize a parameter with a type.
+  /**
+   * See the non-templated declare_parameter() on this class for details.
+   */
+  template<typename ParameterT>
+  auto
+  declare_parameter(
+    const std::string & name,
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false);
+
   /// Declare and initialize several parameters with the same namespace and type.
   /**
    * For each key in the map, a parameter with a name of "namespace.key"

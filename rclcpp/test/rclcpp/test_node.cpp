@@ -2667,6 +2667,7 @@ TEST_F(TestNode, static_and_dynamic_typing) {
     {"integer_parameter_override_ok", 43},
     {"string_parameter_override_should_throw", 43},
     {"integer_must_provide_override", 43},
+    {"cool_way_of_declaring_a_string_without_a_default", "hello!"}
   });
   auto node = std::make_shared<rclcpp::Node>("node", "ns", no);
   {
@@ -2692,6 +2693,11 @@ TEST_F(TestNode, static_and_dynamic_typing) {
     auto param = node->declare_parameter(
       "integer_must_provide_override", rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(43, param.get<int64_t>());
+  }
+  {
+    auto param = node->declare_parameter<std::string>(
+      "cool_way_of_declaring_a_string_without_a_default");
+    EXPECT_EQ("hello!", param);
   }
   {
     EXPECT_THROW(
