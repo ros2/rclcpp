@@ -1,4 +1,4 @@
-// Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2021 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,18 +32,11 @@ public:
   class HighPriorityMutex
   {
 public:
-    explicit HighPriorityMutex(MutexTwoPriorities & parent)
-    : parent_(parent) {}
+    explicit HighPriorityMutex(MutexTwoPriorities & parent);
 
-    void lock()
-    {
-      parent_.data_.lock();
-    }
+    void lock();
 
-    void unlock()
-    {
-      parent_.data_.unlock();
-    }
+    void unlock();
 
 private:
     MutexTwoPriorities & parent_;
@@ -52,29 +45,21 @@ private:
   class LowPriorityMutex
   {
 public:
-    explicit LowPriorityMutex(MutexTwoPriorities & parent)
-    : parent_(parent) {}
+    explicit LowPriorityMutex(MutexTwoPriorities & parent);
 
-    void lock()
-    {
-      std::unique_lock<std::mutex> barrier_guard{parent_.barrier_};
-      parent_.data_.lock();
-      barrier_guard.release();
-    }
+    void lock();
 
-    void unlock()
-    {
-      // data_.unlock(); low_prio_.unlock()
-      std::lock_guard<std::mutex> barrier_guard{parent_.barrier_, std::adopt_lock};
-      parent_.data_.unlock();
-    }
+    void unlock();
 
 private:
     MutexTwoPriorities & parent_;
   };
 
-  HighPriorityMutex get_high_priority_mutex() {return HighPriorityMutex{*this};}
-  LowPriorityMutex get_low_priority_mutex() {return LowPriorityMutex{*this};}
+  HighPriorityMutex
+  get_high_priority_mutex();
+
+  LowPriorityMutex
+  get_low_priority_mutex();
 
 private:
   // Implementation detail: the idea here is that only one low priority thread can be
@@ -82,7 +67,7 @@ private:
   // All high priority threads are already waiting for the data_ mutex.
   std::mutex barrier_;
   std::mutex data_;
-  };
+};
 
 }  // namespace detail
 }  // namespace rclcpp
