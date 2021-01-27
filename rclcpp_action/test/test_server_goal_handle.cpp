@@ -56,7 +56,16 @@ public:
   void SetUp()
   {
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle =
-      std::make_shared<rcl_action_goal_handle_t>();
+      std::shared_ptr<rcl_action_goal_handle_t>(
+      new rcl_action_goal_handle_t,
+      [](rcl_action_goal_handle_t * p) {
+        if (nullptr == p) {
+          return;
+        }
+        rcl_ret_t ret = rcl_action_goal_handle_fini(p);
+        EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
+        delete p;
+      });
     *rcl_handle.get() = rcl_action_get_zero_initialized_goal_handle();
     rcutils_allocator_t allocator = rcutils_get_default_allocator();
     rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
