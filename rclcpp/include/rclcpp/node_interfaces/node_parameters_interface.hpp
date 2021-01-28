@@ -45,7 +45,7 @@ struct OnSetParametersCallbackHandle
   OnParametersSetCallbackType callback;
 };
 
-#define RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPTRECATE_DECLARE \
+#define RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPRECATE_DECLARE \
   "declare_parameter() with only a name is deprecated and will be deleted in the future.\n" \
   "If you want to declare a parameter that won't change of type without a default value use:\n" \
   "`node_params->declare_parameter(name, type)`, with e.g. type=rclcpp::PARAMETER_INTEGER.\n\n" \
@@ -70,7 +70,7 @@ public:
   /**
    * \sa rclcpp::Node::declare_parameter
    */
-  [[deprecated(RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPTRECATE_DECLARE)]]
+  [[deprecated(RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPRECATE_DECLARE)]]
   virtual
   const rclcpp::ParameterValue &
   declare_parameter(const std::string & name) = 0;

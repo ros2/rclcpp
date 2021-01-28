@@ -112,7 +112,7 @@ public:
 # pragma warning(push)
 # pragma warning(disable: 4996)
 #endif
-  [[deprecated(RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPTRECATE_DECLARE)]]
+  [[deprecated(RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPRECATE_DECLARE)]]
   RCLCPP_PUBLIC
   const rclcpp::ParameterValue &
   declare_parameter(const std::string & name) override;
