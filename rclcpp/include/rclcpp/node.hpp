@@ -346,7 +346,7 @@ public:
     "declare_parameter() with only a name is deprecated and will be deleted in the future.\n" \
     "If you want to declare a parameter that won't change type without a default value use:\n" \
     "`node->declare_parameter<ParameterT>(name)`, where e.g. ParameterT=int64_t.\n\n" \
-    "If you want to declare a parameter that can dynamically change of type use:\n" \
+    "If you want to declare a parameter that can dynamically change type use:\n" \
     "```\n" \
     "rcl_interfaces::msg::ParameterDescriptor descriptor;\n" \
     "descriptor.dynamic_typing = true;\n" \
