@@ -348,7 +348,6 @@ private:
     AllocatorT,
     typename MessageUniquePtr::deleter_type>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
-
 };
 
 }  // namespace rclcpp
