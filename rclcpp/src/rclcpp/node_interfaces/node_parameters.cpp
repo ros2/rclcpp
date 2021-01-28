@@ -133,9 +133,9 @@ NodeParameters::NodeParameters(
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
-  rcl_interfaces::msg::ParameterDescriptor descriptor;
-  descriptor.dynamic_typing = true;
   if (automatically_declare_parameters_from_overrides) {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.dynamic_typing = true;
     for (const auto & pair : this->get_parameter_overrides()) {
       if (!this->has_parameter(pair.first)) {
         this->declare_parameter(
