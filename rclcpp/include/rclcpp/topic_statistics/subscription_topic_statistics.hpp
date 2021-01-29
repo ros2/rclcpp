@@ -152,6 +152,12 @@ public:
       publisher_->publish(msg);
     }
     window_start_ = window_end;
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      for (auto & collector : subscriber_statistics_collectors_) {
+        collector->ClearCurrentMeasurements();
+      }
+    }
   }
 
 protected:
