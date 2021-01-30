@@ -361,8 +361,8 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
-      auto subscription_base_weak = subscription_it->second.subscription;
-      if (auto subscription_base = subscription_base_weak.lock()) {
+      auto subscription_base = subscription_it->second.subscription.lock();
+      if (subscription_base) {
         auto subscription = std::static_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcess<MessageT>
           >(subscription_base);
@@ -392,8 +392,8 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
-      auto subscription_base_weak = subscription_it->second.subscription;
-      if (auto subscription_base = subscription_base_weak.lock()) {
+      auto subscription_base = subscription_it->second.subscription.lock();
+      if (subscription_base) {
         auto subscription = std::static_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcess<MessageT>
           >(subscription_base);
