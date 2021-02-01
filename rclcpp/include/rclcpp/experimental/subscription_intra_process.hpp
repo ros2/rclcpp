@@ -129,14 +129,8 @@ public:
 
     if (any_callback_.use_take_shared_method()) {
       shared_msg = buffer_->consume_shared();
-      if(!shared_msg) {
-        return nullptr;
-      }
     } else {
       unique_msg = buffer_->consume_unique();
-      if(!unique_msg) {
-        return nullptr;
-      }
     }
     return std::static_pointer_cast<void>(
       std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
