@@ -2415,7 +2415,7 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   auto publisher = node->create_publisher<test_msgs::msg::BasicTypes>(topic_name, qos);
   // List should have one item
   auto publisher_list = node->get_publishers_info_by_topic(fq_topic_name);
-  EXPECT_EQ(publisher_list.size(), (size_t)1);
+  ASSERT_EQ(publisher_list.size(), (size_t)1);
   // Subscription list should be empty
   EXPECT_TRUE(node->get_subscriptions_info_by_topic(fq_topic_name).empty());
   // Verify publisher list has the right data.
