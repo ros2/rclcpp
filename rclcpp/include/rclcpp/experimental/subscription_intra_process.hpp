@@ -185,8 +185,7 @@ private:
   execute_impl(std::shared_ptr<void> & data)
   {
     if (!data) {
-      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Subscription intra-process: 'data' is empty");
-      return;
+      throw std::runtime_error("'data' is empty");
     }
 
     rmw_message_info_t msg_info;
