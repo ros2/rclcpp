@@ -127,7 +127,7 @@ public:
   /**
    * This method acquires a lock to prevent race conditions to collectors list.
    */
-  virtual void publish_message()
+  virtual void publish_and_reset_message()
   {
     std::vector<MetricsMessage> msgs;
     rclcpp::Time window_end{get_current_nanoseconds_since_epoch()};
