@@ -136,6 +136,7 @@ public:
       std::lock_guard<std::mutex> lock(mutex_);
       for (auto & collector : subscriber_statistics_collectors_) {
         const auto collected_stats = collector->GetStatisticsResults();
+        collector->ClearCurrentMeasurements();
 
         auto message = libstatistics_collector::collector::GenerateStatisticMessage(
           node_name_,
@@ -152,12 +153,6 @@ public:
       publisher_->publish(msg);
     }
     window_start_ = window_end;
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      for (auto & collector : subscriber_statistics_collectors_) {
-        collector->ClearCurrentMeasurements();
-      }
-    }
   }
 
 protected:
