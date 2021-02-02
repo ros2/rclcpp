@@ -67,7 +67,7 @@ array_to_string(
   type_array << "[";
   type_array.setf(format_flags, std::ios_base::basefield | std::ios::boolalpha);
   type_array << std::showbase;
-  for (const ValType value : array) {
+  for (const ValType & value : array) {
     if (!first_item) {
       type_array << ", ";
     } else {
