@@ -278,7 +278,7 @@ void check_if_statistic_message_is_populated(const MetricsMessage & message_to_c
         EXPECT_LT(0, stats_point.data) << "unexpected avg " << stats_point.data;
         break;
       case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
-        EXPECT_LT(0, stats_point.data) << "unexpected mi n" << stats_point.data;
+        EXPECT_LT(0, stats_point.data) << "unexpected min " << stats_point.data;
         break;
       case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
         EXPECT_LT(0, stats_point.data) << "unexpected max " << stats_point.data;
