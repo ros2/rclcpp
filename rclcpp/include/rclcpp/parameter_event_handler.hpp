@@ -98,12 +98,12 @@ public:
 
   /// Remove parameter event callback registered with add_parameter_event_callback.
   /**
-   * \param[in] handle Pointer to the handle for the callback to remove.
+   * \param[in] callback_handle Handle of the callback to remove.
    */
   RCLCPP_PUBLIC
   void
   remove_parameter_event_callback(
-    const ParameterEventCallbackHandle * const handle);
+    ParameterEventCallbackHandle::SharedPtr callback_handle);
 
   using ParameterCallbackType = ParameterCallbackHandle::ParameterCallbackType;
 
@@ -129,12 +129,12 @@ public:
    * is erased from the list of callback handles on the {parameter_name, node_name} in the map.
    * An error is thrown if the handle does not exist and/or was already removed.
    *
-   * \param[in] handle Pointer to callback handle to be removed.
+   * \param[in] callback_handle Handle of the callback to remove.
    */
   RCLCPP_PUBLIC
   void
   remove_parameter_callback(
-    const ParameterCallbackHandle * const handle);
+    ParameterCallbackHandle::SharedPtr callback_handle);
 
   /// Get an rclcpp::Parameter from a parameter event.
   /**

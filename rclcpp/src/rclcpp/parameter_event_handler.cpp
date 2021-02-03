@@ -56,13 +56,13 @@ struct HandleCompare
 
 void
 ParameterEventHandler::remove_parameter_event_callback(
-  const ParameterEventCallbackHandle * const handle)
+  ParameterEventCallbackHandle::SharedPtr callback_handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto it = std::find_if(
     event_callbacks_.begin(),
     event_callbacks_.end(),
-    HandleCompare<ParameterEventCallbackHandle>(handle));
+    HandleCompare<ParameterEventCallbackHandle>(callback_handle.get()));
   if (it != event_callbacks_.end()) {
     event_callbacks_.erase(it);
   } else {
@@ -91,9 +91,10 @@ ParameterEventHandler::add_parameter_callback(
 
 void
 ParameterEventHandler::remove_parameter_callback(
-  const ParameterCallbackHandle * const handle)
+  ParameterCallbackHandle::SharedPtr callback_handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+  auto handle = callback_handle.get();
   auto & container = parameter_callbacks_[{handle->parameter_name, handle->node_name}];
   auto it = std::find_if(
     container.begin(),
