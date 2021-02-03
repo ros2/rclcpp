@@ -171,11 +171,7 @@ public:
 
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
-      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-        CallbackMessageT,
-        AllocatorT,
-        typename MessageUniquePtr::deleter_type>;
-      auto subscription_intra_process = std::make_shared<SubscriptionIntraProcessT>(
+      subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
         callback,
         options.get_allocator(),
         context,
@@ -185,12 +181,12 @@ public:
       TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
-        static_cast<const void *>(subscription_intra_process.get()));
+        static_cast<const void *>(subscription_intra_process_.get()));
 
       // Add it to the intra process manager.
       using rclcpp::experimental::IntraProcessManager;
       auto ipm = context->get_sub_context<IntraProcessManager>();
-      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
+      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process_);
       this->setup_intra_process(intra_process_subscription_id, ipm);
     }
 
@@ -347,6 +343,11 @@ private:
     message_memory_strategy_;
   /// Component which computes and publishes topic statistics for this subscriber
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
+  using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
+    CallbackMessageT,
+    AllocatorT,
+    typename MessageUniquePtr::deleter_type>;
+  std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 };
 
 }  // namespace rclcpp
