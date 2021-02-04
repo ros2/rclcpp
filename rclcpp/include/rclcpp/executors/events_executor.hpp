@@ -24,6 +24,7 @@
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
 #include "rclcpp/executors/events_executor_notify_waitable.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
+#include "rclcpp/experimental/buffers/events_queue.hpp"
 #include "rclcpp/node.hpp"
 
 #include "rmw/listener_event_types.h"
@@ -59,6 +60,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit EventsExecutor(
+    rclcpp::experimental::buffers::EventsQueue::UniquePtr events_queue,
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
 
   /// Default destrcutor.
@@ -190,10 +192,10 @@ private:
     {
       std::unique_lock<std::mutex> lock(this_executor->push_mutex_);
 
-      this_executor->event_queue_.push(event);
+      this_executor->events_queue_->push(event);
     }
     // Notify that the event queue has some events in it.
-    this_executor->event_queue_cv_.notify_one();
+    this_executor->events_queue_cv_.notify_one();
   }
 
   /// Extract and execute events from the queue until it is empty
@@ -207,7 +209,7 @@ private:
   execute_event(const rmw_listener_event_t & event);
 
   // Queue where entities can push events
-  EventQueue event_queue_;
+  rclcpp::experimental::buffers::EventsQueue::SharedPtr events_queue_;
 
   EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
   EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;
@@ -215,7 +217,7 @@ private:
   // Mutex to protect the insertion of events in the queue
   std::mutex push_mutex_;
   // Variable used to notify when an event is added to the queue
-  std::condition_variable event_queue_cv_;
+  std::condition_variable events_queue_cv_;
   // Timers manager
   std::shared_ptr<TimersManager> timers_manager_;
 };
