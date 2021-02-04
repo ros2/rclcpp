@@ -556,7 +556,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
     switch (type) {
       case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
       case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
-        EXPECT_GT(stats_point.data, message_age_offset);
+        EXPECT_GE(stats_point.data, message_age_offset);
         break;
       default:
         break;
