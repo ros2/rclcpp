@@ -66,9 +66,7 @@ BENCHMARK_F(ClientPerformanceTest, construct_client_no_service)(benchmark::State
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
 
-    state.PauseTiming();
-    client.reset();
-    state.ResumeTiming();
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(state, {client.reset();});
   }
 }
 
@@ -83,9 +81,7 @@ BENCHMARK_F(ClientPerformanceTest, construct_client_empty_srv)(benchmark::State 
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
 
-    state.PauseTiming();
-    client.reset();
-    state.ResumeTiming();
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(state, {client.reset();});
   }
 }
 
@@ -95,34 +91,18 @@ BENCHMARK_F(ClientPerformanceTest, destroy_client_empty_srv)(benchmark::State & 
   outer_client.reset();
 
   reset_heap_counters();
+  std::shared_ptr<rclcpp::Client<test_msgs::srv::Empty>> client(nullptr);
   for (auto _ : state) {
-    state.PauseTiming();
-    auto client = node->create_client<test_msgs::srv::Empty>(empty_service_name);
-    state.ResumeTiming();
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      client = node->create_client<test_msgs::srv::Empty>(empty_service_name);
+    });
+
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
 
     client.reset();
-  }
-}
-
-BENCHMARK_F(ClientPerformanceTest, wait_for_service)(benchmark::State & state) {
-  int count = 0;
-  for (auto _ : state) {
-    state.PauseTiming();
-    const std::string service_name = std::string("service_") + std::to_string(count++);
-    // Create client before service so it has to 'discover' the service after construction
-    auto client = node->create_client<test_msgs::srv::Empty>(service_name);
-    auto callback =
-      [](
-      const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
-    auto service =
-      node->create_service<test_msgs::srv::Empty>(service_name, callback);
-    state.ResumeTiming();
-
-    client->wait_for_service(std::chrono::seconds(1));
-    benchmark::ClobberMemory();
   }
 }
 

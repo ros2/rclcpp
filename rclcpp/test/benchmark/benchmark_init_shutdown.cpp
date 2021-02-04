@@ -28,9 +28,11 @@ BENCHMARK_F(PerformanceTest, rclcpp_init)(benchmark::State & state)
   for (auto _ : state) {
     rclcpp::init(0, nullptr);
 
-    state.PauseTiming();
-    rclcpp::shutdown();
-    state.ResumeTiming();
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      rclcpp::shutdown();
+    });
     benchmark::ClobberMemory();
   }
 }
@@ -43,9 +45,11 @@ BENCHMARK_F(PerformanceTest, rclcpp_shutdown)(benchmark::State & state)
 
   reset_heap_counters();
   for (auto _ : state) {
-    state.PauseTiming();
-    rclcpp::init(0, nullptr);
-    state.ResumeTiming();
+    PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
+      state,
+    {
+      rclcpp::init(0, nullptr);
+    });
 
     rclcpp::shutdown();
     benchmark::ClobberMemory();
