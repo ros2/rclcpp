@@ -101,7 +101,7 @@ create_subscription(
     auto sub_call_back = [weak_subscription_topic_stats]() {
         auto subscription_topic_stats = weak_subscription_topic_stats.lock();
         if (subscription_topic_stats) {
-          subscription_topic_stats->publish_message_and_reset();
+          subscription_topic_stats->publish_message_and_reset_measurements();
         }
       };
 
