@@ -45,8 +45,9 @@ struct PublisherOptionsBase
   /// Whether or not to use default callbacks when user doesn't supply any in event_callbacks
   bool use_default_callbacks = true;
 
-  /// True to generate unique network flow
-  bool unique_network_flow = false;
+  /// Require middleware to generate unique network flow
+  rmw_unique_network_flow_requirement_t require_unique_network_flow =
+    RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED;
 
   /// Callback group in which the waitable items from the publisher should be placed.
   std::shared_ptr<rclcpp::CallbackGroup> callback_group;
@@ -83,7 +84,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
     auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
     result.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc);
     result.qos = qos.get_rmw_qos_profile();
-    result.rmw_publisher_options.unique_network_flow = this->unique_network_flow;
+    result.rmw_publisher_options.require_unique_network_flow = this->require_unique_network_flow;
 
     // Apply payload to rcl_publisher_options if necessary.
     if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {

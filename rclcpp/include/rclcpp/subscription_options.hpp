@@ -45,8 +45,9 @@ struct SubscriptionOptionsBase
   /// True to ignore local publications.
   bool ignore_local_publications = false;
 
-  /// True to generate unique network flow
-  bool unique_network_flow = false;
+  /// Require middleware to generate unique network flow
+  rmw_unique_network_flow_requirement_t require_unique_network_flow =
+    RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED;
 
   /// The callback group for this subscription. NULL to use the default callback group.
   rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
@@ -111,7 +112,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     result.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc);
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
-    result.rmw_subscription_options.unique_network_flow = this->unique_network_flow;
+    result.rmw_subscription_options.require_unique_network_flow = this->require_unique_network_flow;
 
     // Apply payload to rcl_subscription_options if necessary.
     if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
