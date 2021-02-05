@@ -46,7 +46,7 @@ EventsExecutor::EventsExecutor(
   // Get ownership of the queue used to store events.
   events_queue_ = std::move(events_queue);
   // Init the events queue
-  events_queue_->init(entities_collector_);
+  events_queue_->init();
 }
 
 void

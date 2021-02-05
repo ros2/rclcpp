@@ -91,15 +91,12 @@ public:
 
   /**
    * @brief Initializes the queue
-   * @param entities_collector The entities collector associated with the executor
    */
   RCLCPP_PUBLIC
   virtual
   void
-  init(rclcpp::executors::EventsExecutorEntitiesCollector::SharedPtr entities_collector)
+  init()
   {
-    // Entities collector not used in this queue implementation
-    (void)entities_collector;
     // Make sure the queue is empty when we start
     std::queue<rmw_listener_event_t> local_queue;
     std::swap(event_queue_, local_queue);
