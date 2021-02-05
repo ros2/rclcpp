@@ -568,6 +568,15 @@ if(TARGET test_events_executor)
   target_link_libraries(test_events_executor ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_events_queue executors/test_events_queue.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_queue)
+  ament_target_dependencies(test_events_queue
+    "rcl"
+    "test_msgs")
+  target_link_libraries(test_events_queue ${PROJECT_NAME} mimick)
+endif()
+
 ament_add_gtest(test_events_executor_entities_collector executors/test_events_executor_entities_collector.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_events_executor_entities_collector)
