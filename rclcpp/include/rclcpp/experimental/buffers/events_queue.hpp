@@ -17,6 +17,7 @@
 
 #include <queue>
 
+#include "rclcpp/executors/events_executor_entities_collector.hpp"
 #include "rclcpp/macros.hpp"
 
 #include "rmw/listener_event_types.h"
@@ -52,11 +53,12 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  push(rmw_listener_event_t event) = 0;
+  push(const rmw_listener_event_t & event) = 0;
 
   /**
    * @brief removes front element from the queue
-   * @return iterator
+   * The element removed is the "oldest" element in the queue whose
+   * value can be retrieved by calling member front().
    */
   RCLCPP_PUBLIC
   virtual
@@ -70,7 +72,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   rmw_listener_event_t
-  front() = 0;
+  front() const = 0;
 
   /**
    * @brief Test whether queue is empty
@@ -79,10 +81,20 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  empty() = 0;
+  empty() const = 0;
 
   /**
-   * @brief gets a queue with all events accumulated on it
+   * @brief Initializes the queue
+   * @param entities_collector The entities collector associated with the executor
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  init(rclcpp::executors::EventsExecutorEntitiesCollector::SharedPtr entities_collector) = 0;
+
+  /**
+   * @brief gets a queue with all events accumulated on it since
+   * the last call. The member queue is empty when the call returns.
    * @return queue with events
    */
   RCLCPP_PUBLIC

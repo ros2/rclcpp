@@ -25,6 +25,7 @@
 #include "rclcpp/executors/events_executor_notify_waitable.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/experimental/buffers/events_queue.hpp"
+#include "rclcpp/experimental/buffers/simple_events_queue.hpp"
 #include "rclcpp/node.hpp"
 
 #include "rmw/listener_event_types.h"
@@ -56,11 +57,13 @@ public:
 
   /// Default constructor. See the default constructor for Executor.
   /**
+   * \param[in] events_queue The queue used to store events.
    * \param[in] options Options used to configure the executor.
    */
   RCLCPP_PUBLIC
   explicit EventsExecutor(
-    rclcpp::experimental::buffers::EventsQueue::UniquePtr events_queue,
+    rclcpp::experimental::buffers::EventsQueue::UniquePtr events_queue =
+      std::make_unique<rclcpp::experimental::buffers::SimpleEventsQueue>(),
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
 
   /// Default destrcutor.

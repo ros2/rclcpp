@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXPERIMENTAL__BUFFERS__PERFORMANCE_EVENTS_QUEUE_HPP_
-#define RCLCPP__EXPERIMENTAL__BUFFERS__PERFORMANCE_EVENTS_QUEUE_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__BUFFERS__SIMPLE_EVENTS_QUEUE_HPP_
+#define RCLCPP__EXPERIMENTAL__BUFFERS__SIMPLE_EVENTS_QUEUE_HPP_
 
 #include <queue>
 
@@ -33,14 +33,12 @@ namespace buffers
  * the queue, so the queue size could grow unbounded.
  * It does not implement any pruning mechanisms.
  */
-class PerformanceEventsQueue : public EventsQueue
+class SimpleEventsQueue : public EventsQueue
 {
 public:
 
-  using EventQueue = std::queue<rmw_listener_event_t>;
-
   RCLCPP_PUBLIC
-  ~PerformanceEventsQueue() = default;
+  ~SimpleEventsQueue() = default;
 
   /**
    * @brief push event into the queue
@@ -49,14 +47,15 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  push(rmw_listener_event_t event)
+  push(const rmw_listener_event_t & event)
   {
     event_queue_.push(event);
   }
 
   /**
    * @brief removes front element from the queue
-   * @return iterator
+   * The element removed is the "oldest" element in the queue whose
+   * value can be retrieved by calling member front().
    */
   RCLCPP_PUBLIC
   virtual
@@ -73,7 +72,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   rmw_listener_event_t
-  front()
+  front() const
   {
      return event_queue_.front();
   }
@@ -85,27 +84,45 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  empty()
+  empty() const
   {
     return event_queue_.empty();
   }
 
   /**
-   * @brief gets a queue with all events on it
-   * @return queue with events
+   * @brief Initializes the queue
+   * @param entities_collector The entities collector associated with the executor
    */
   RCLCPP_PUBLIC
   virtual
-  EventQueue
+  void
+  init(rclcpp::executors::EventsExecutorEntitiesCollector::SharedPtr entities_collector)
+  {
+    // Entities collector not used in this queue implementation
+    (void)entities_collector;
+    // Make sure the queue is empty when we start
+    std::queue<rmw_listener_event_t> local_queue;
+    std::swap(event_queue_, local_queue);
+  }
+
+
+  /**
+   * @brief gets a queue with all events accumulated on it since
+   * the last call. The member queue is empty when the call returns.
+   * @return std::queue with events
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::queue<rmw_listener_event_t>
   get_all_events()
   {
-    EventQueue local_queue;
+    std::queue<rmw_listener_event_t> local_queue;
     std::swap(event_queue_, local_queue);
     return local_queue;
   }
 
 private:
-  EventQueue event_queue_;
+  std::queue<rmw_listener_event_t> event_queue_;
 };
 
 }  // namespace buffers
@@ -113,4 +130,4 @@ private:
 }  // namespace rclcpp
 
 
-#endif  // RCLCPP__EXPERIMENTAL__BUFFERS__PERFORMANCE_EVENTS_QUEUE_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__BUFFERS__SIMPLE_EVENTS_QUEUE_HPP_

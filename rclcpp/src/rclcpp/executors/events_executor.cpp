@@ -24,10 +24,9 @@
 using namespace std::chrono_literals;
 
 using rclcpp::executors::EventsExecutor;
-using rclcpp::experimental::buffers::EventsQueue;
 
 EventsExecutor::EventsExecutor(
-  EventsQueue::UniquePtr events_queue,
+  rclcpp::experimental::buffers::EventsQueue::UniquePtr events_queue,
   const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
@@ -35,7 +34,6 @@ EventsExecutor::EventsExecutor(
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this);
   entities_collector_->init();
 
-  events_queue_ = std::move(events_queue);
 
   // Setup the executor notifier to wake up the executor when some guard conditions are tiggered.
   // The added guard conditions are guaranteed to not go out of scope before the executor itself.
@@ -44,6 +42,11 @@ EventsExecutor::EventsExecutor(
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
   executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
   entities_collector_->add_waitable(executor_notifier_);
+
+  // Get ownership of the queue used to store events.
+  events_queue_ = std::move(events_queue);
+  // Init the events queue
+  events_queue_->init(entities_collector_);
 }
 
 void
