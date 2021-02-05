@@ -191,7 +191,7 @@ private:
     auto elapsed_time = now - start_time_;
     if (elapsed_time < transition_duration_) {
       // Apply only to the topic statistics in the first half
-      // Subtract offset so message_age is always greater than offset.
+      // Subtract offset so message_age is always >= offset.
       msg.header.stamp = now - message_age_offset_;
     } else {
       msg.header.stamp = now;
