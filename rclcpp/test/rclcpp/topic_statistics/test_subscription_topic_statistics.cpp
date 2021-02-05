@@ -546,6 +546,8 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
   ex.spin_until_future_complete(statistics_listener->GetFuture(), kTestDuration);
 
   const auto received_messages = statistics_listener->GetReceivedMessages();
+  EXPECT_EQ(kNumExpectedMessages, received_messages.size());
+
   auto message_age_offset =
     std::chrono::duration<double, std::milli>(kInitialMessageAgeOffset).count();
 
