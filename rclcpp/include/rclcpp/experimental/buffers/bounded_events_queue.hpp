@@ -37,6 +37,12 @@ class BoundedEventsQueue : public EventsQueue
 {
 public:
   RCLCPP_PUBLIC
+  explicit BoundedEventsQueue(size_t queue_size_limit)
+  {
+    queue_size_limit_ = queue_size_limit;
+  }
+
+  RCLCPP_PUBLIC
   ~BoundedEventsQueue() = default;
 
   /**
@@ -121,21 +127,9 @@ public:
     return local_queue;
   }
 
-  /**
-   * @brief sets the queue size limit
-   * @param limit The queue size limit
-   */
-  RCLCPP_PUBLIC
-  void
-  set_queue_size_limit(size_t queue_size_limit)
-  {
-    queue_size_limit_ = queue_size_limit;
-  }
-
 private:
   std::queue<rmw_listener_event_t> event_queue_;
-
-  size_t queue_size_limit_ = 1000;
+  size_t queue_size_limit_;
 };
 
 }  // namespace buffers

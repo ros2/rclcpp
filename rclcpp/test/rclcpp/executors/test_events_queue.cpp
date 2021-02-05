@@ -41,8 +41,7 @@ public:
 TEST_F(TestEventsQueue, BoundedQueue)
 {
   // Create BoundedEventsQueue and set limit to 10 events.
-  auto bounded_queue = std::make_unique<rclcpp::experimental::buffers::BoundedEventsQueue>();
-  bounded_queue->set_queue_size_limit(10);
+  auto bounded_queue = std::make_unique<rclcpp::experimental::buffers::BoundedEventsQueue>(10);
 
   // Create an events executor using the bounded queue
   EventsExecutor executor_sub(std::move(bounded_queue));
