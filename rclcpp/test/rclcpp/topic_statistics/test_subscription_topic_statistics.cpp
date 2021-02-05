@@ -45,6 +45,7 @@
 
 namespace
 {
+constexpr const std::chrono::seconds defaultStatisticsPublishPeriod{1};
 constexpr const char kTestPubNodeName[]{"test_pub_stats_node"};
 constexpr const char kTestSubNodeName[]{"test_sub_stats_node"};
 constexpr const char kTestSubStatsTopic[]{"/test_sub_stats_topic"};
@@ -53,13 +54,17 @@ constexpr const char kTestTopicStatisticsTopic[]{"/test_topic_statistics_topic"}
 constexpr const char kMessageAgeSourceLabel[]{"message_age"};
 constexpr const char kMessagePeriodSourceLabel[]{"message_period"};
 constexpr const uint64_t kNoSamples{0};
-constexpr const std::chrono::seconds kTestDuration{10};
-constexpr const uint64_t kNumExpectedMessages{8};
-constexpr const uint64_t kNumExpectedMessageAgeMessages{kNumExpectedMessages / 2};
-constexpr const uint64_t kNumExpectedMessagePeriodMessages{kNumExpectedMessages / 2};
-constexpr const std::chrono::seconds kTransitionDuration{
-  std::chrono::seconds{1} *kNumExpectedMessages / 2 / 2};
-constexpr const std::chrono::seconds kInitialMessageAgeOffset{std::chrono::seconds{1}};
+constexpr const std::chrono::seconds kTestTimeout{10};
+constexpr const uint64_t kNumExpectedWindows{4};
+constexpr const uint64_t kNumExpectedMessages{kNumExpectedWindows * 2};
+constexpr const uint64_t kNumExpectedMessageAgeMessages{kNumExpectedWindows};
+constexpr const uint64_t kNumExpectedMessagePeriodMessages{kNumExpectedWindows};
+constexpr const std::chrono::seconds kUnstableMessageAgeWindowDuration{
+  defaultStatisticsPublishPeriod * (kNumExpectedWindows / 2)};
+// kUnstableMessageAgeWindowDuration can take following value.
+// Min: defaultStatisticsPublishPeriod * 2
+// Max: defaultStatisticsPublishPeriod * (kNumExpectedWindows - 2)
+constexpr const std::chrono::seconds kUnstableMessageAgeOffset{std::chrono::seconds{1}};
 }  // namespace
 
 using rclcpp::msg::MessageWithHeader;
@@ -428,7 +433,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // Spin and get future
   ex.spin_until_future_complete(
     statistics_listener->GetFuture(),
-    kTestDuration);
+    kTestTimeout);
 
   // Compare message counts, sample count should be the same as published and received count
   EXPECT_EQ(kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
@@ -493,7 +498,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   // Spin and get future
   ex.spin_until_future_complete(
     statistics_listener->GetFuture(),
-    kTestDuration);
+    kTestTimeout);
 
   // Compare message counts, sample count should be the same as published and received count
   EXPECT_EQ(kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
@@ -527,7 +532,8 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
 {
   // Create a MessageWithHeader publisher
   auto msg_with_header_publisher = std::make_shared<TransitionMessageStampPublisher>(
-    kTestPubNodeName, kTestSubStatsTopic, kTransitionDuration, kInitialMessageAgeOffset);
+    kTestPubNodeName, kTestSubStatsTopic, kUnstableMessageAgeWindowDuration,
+    kUnstableMessageAgeOffset);
 
   // msg_with_header_subscriber has a topic statistics instance as part of its
   // subscription this will listen to and generate statistics
@@ -543,13 +549,13 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
   ex.add_node(msg_with_header_subscriber);
 
   // Spin and get future
-  ex.spin_until_future_complete(statistics_listener->GetFuture(), kTestDuration);
+  ex.spin_until_future_complete(statistics_listener->GetFuture(), kTestTimeout);
 
   const auto received_messages = statistics_listener->GetReceivedMessages();
   EXPECT_EQ(kNumExpectedMessages, received_messages.size());
 
   auto message_age_offset =
-    std::chrono::duration<double, std::milli>(kInitialMessageAgeOffset).count();
+    std::chrono::duration<double, std::milli>(kUnstableMessageAgeOffset).count();
 
   // Check that the first statistic contains the offset inside of its window
   auto head_message = received_messages[0];
