@@ -253,6 +253,7 @@ public:
     // manually enable topic statistics via options
     auto options = rclcpp::SubscriptionOptions();
     options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
+    options.topic_stats_options.publish_period = defaultStatisticsPublishPeriod;
 
     auto callback = [](MessageWithHeader::UniquePtr msg) {
         (void) msg;
