@@ -16,6 +16,7 @@
 #define RCLCPP__EXPERIMENTAL__BUFFERS__SIMPLE_EVENTS_QUEUE_HPP_
 
 #include <queue>
+#include <utility>
 
 #include "rclcpp/executors/events_queue.hpp"
 
@@ -36,7 +37,6 @@ namespace buffers
 class SimpleEventsQueue : public EventsQueue
 {
 public:
-
   RCLCPP_PUBLIC
   ~SimpleEventsQueue() = default;
 
@@ -74,7 +74,7 @@ public:
   rmw_listener_event_t
   front() const
   {
-     return event_queue_.front();
+    return event_queue_.front();
   }
 
   /**

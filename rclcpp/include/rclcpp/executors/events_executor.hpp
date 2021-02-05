@@ -62,8 +62,8 @@ public:
    */
   RCLCPP_PUBLIC
   explicit EventsExecutor(
-    rclcpp::experimental::buffers::EventsQueue::UniquePtr events_queue =
-      std::make_unique<rclcpp::experimental::buffers::SimpleEventsQueue>(),
+    rclcpp::experimental::buffers::EventsQueue::UniquePtr events_queue = std::make_unique<
+      rclcpp::experimental::buffers::SimpleEventsQueue>(),
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
 
   /// Default destrcutor.
