@@ -2,7 +2,7 @@ find_package(ament_cmake_gtest REQUIRED)
 
 find_package(rmw_implementation_cmake REQUIRED)
 
-add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/../resources")
+add_definitions(-DTEST_RESOURCES_DIRECTORY="${TEST_RESOURCES_DIRECTORY}")
 
 rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/Header.msg
