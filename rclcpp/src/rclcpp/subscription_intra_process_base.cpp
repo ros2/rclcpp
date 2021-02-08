@@ -40,7 +40,7 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 void
 SubscriptionIntraProcessBase::set_events_executor_callback(
   const rclcpp::executors::EventsExecutor * executor,
-  rmw_listener_cb_t executor_callback) const
+  rmw_listener_callback_t executor_callback) const
 {
   rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
     &gc_,
