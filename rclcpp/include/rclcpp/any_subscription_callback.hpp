@@ -185,6 +185,12 @@ public:
     ConstMessageSharedPtr message, const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+
+    // If the message is not valid, return.
+    if(!message) {
+      return;
+    }
+
     if (const_shared_ptr_callback_) {
       const_shared_ptr_callback_(message);
     } else if (const_shared_ptr_with_info_callback_) {
@@ -208,6 +214,12 @@ public:
     MessageUniquePtr message, const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+
+    // If the message is not valid, return.
+    if(!message) {
+      return;
+    }
+
     if (shared_ptr_callback_) {
       typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_callback_(shared_message);
