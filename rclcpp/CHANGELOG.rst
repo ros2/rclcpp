@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.3.1 (2021-02-08)
+------------------
+* Reference test resources directly from source tree (`#1543 <https://github.com/ros2/rclcpp/issues/1543>`_)
+* clear statistics after window reset (`#1531 <https://github.com/ros2/rclcpp/issues/1531>`_) (`#1535 <https://github.com/ros2/rclcpp/issues/1535>`_)
+* Fix a minor string error in the topic_statistics test. (`#1541 <https://github.com/ros2/rclcpp/issues/1541>`_)
+* Avoid `Resource deadlock avoided` if use intra_process_comms (`#1530 <https://github.com/ros2/rclcpp/issues/1530>`_)
+* Avoid an object copy in parameter_value.cpp. (`#1538 <https://github.com/ros2/rclcpp/issues/1538>`_)
+* Assert that the publisher_list size is 1. (`#1537 <https://github.com/ros2/rclcpp/issues/1537>`_)
+* Don't access objects after they have been std::move (`#1536 <https://github.com/ros2/rclcpp/issues/1536>`_)
+* Update for checking correct variable (`#1534 <https://github.com/ros2/rclcpp/issues/1534>`_)
+* Destroy msg extracted from LoanedMessage. (`#1305 <https://github.com/ros2/rclcpp/issues/1305>`_)
+* Contributors: Chen Lihui, Chris Lalancette, Ivan Santiago Paunovic, Miaofei Mei, Scott K Logan, William Woodall, hsgwa
+
 6.3.0 (2021-01-25)
 ------------------
 * Add instrumentation for linking a timer to a node (`#1500 <https://github.com/ros2/rclcpp/issues/1500>`_)

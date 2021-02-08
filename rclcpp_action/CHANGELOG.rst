@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+6.3.1 (2021-02-08)
+------------------
+* Finalize rcl_handle to prevent leak (`#1528 <https://github.com/ros2/rclcpp/issues/1528>`_) (`#1529 <https://github.com/ros2/rclcpp/issues/1529>`_)
+* Fix `#1526 <https://github.com/ros2/rclcpp/issues/1526>`_. (`#1527 <https://github.com/ros2/rclcpp/issues/1527>`_)
+* Contributors: y-okumura-isp
+
 6.3.0 (2021-01-25)
 ------------------
 * Fix action server deadlock (`#1285 <https://github.com/ros2/rclcpp/issues/1285>`_) (`#1313 <https://github.com/ros2/rclcpp/issues/1313>`_)
