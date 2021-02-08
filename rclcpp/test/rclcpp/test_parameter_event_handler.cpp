@@ -29,6 +29,11 @@ public:
   {
     event_callback(event);
   }
+
+  size_t num_installed_handlers()
+  {
+    return event_callbacks_.size();
+  }
 };
 
 class TestNode : public ::testing::Test
@@ -282,7 +287,7 @@ TEST_F(TestNode, EventCallback)
       }
     };
 
-  auto event_handle = param_handler->add_parameter_event_callback(cb);
+  auto event_handle1 = param_handler->add_parameter_event_callback(cb);
   auto event_handle2 = param_handler->add_parameter_event_callback(cb2);
 
   bool_param = false;
@@ -297,7 +302,7 @@ TEST_F(TestNode, EventCallback)
   // Test removal of event callback
   received = false;
   bool_param = false;
-  param_handler->remove_parameter_event_callback(event_handle.get());
+  param_handler->remove_parameter_event_callback(event_handle1);
   param_handler->test_event(multiple);
   param_handler->test_event(diff_ns_bool);
   EXPECT_EQ(received, false);
@@ -305,7 +310,7 @@ TEST_F(TestNode, EventCallback)
 
   // Should throw if callback handle no longer exists or already removed
   EXPECT_THROW(
-    param_handler->remove_parameter_event_callback(event_handle.get()), std::runtime_error);
+    param_handler->remove_parameter_event_callback(event_handle1), std::runtime_error);
 }
 
 TEST_F(TestNode, MultipleParameterCallbacks)
@@ -329,18 +334,24 @@ TEST_F(TestNode, MultipleParameterCallbacks)
   // Test removal of parameter callback by callback handle
   received_1 = false;
   received_2 = false;
-  param_handler->remove_parameter_callback(h1.get());
+  param_handler->remove_parameter_callback(h1);
   param_handler->test_event(same_node_int);
   EXPECT_EQ(received_1, false);
   EXPECT_EQ(received_2, true);
 
   // Test removal of parameter callback by name
   received_2 = false;
-  param_handler->remove_parameter_callback(h2.get());
+  param_handler->remove_parameter_callback(h2);
   param_handler->test_event(same_node_int);
   EXPECT_EQ(received_2, false);
 
   // Should throw if callback handle no longer exists or already removed
-  EXPECT_THROW(param_handler->remove_parameter_callback(h1.get()), std::runtime_error);
-  EXPECT_THROW(param_handler->remove_parameter_callback(h2.get()), std::runtime_error);
+  EXPECT_THROW(param_handler->remove_parameter_callback(h1), std::runtime_error);
+  EXPECT_THROW(param_handler->remove_parameter_callback(h2), std::runtime_error);
+
+  param_handler->remove_parameter_callback(h3);
+
+  // All callbacks should have been removed
+  EXPECT_EQ(received_2, 0);
+  EXPECT_EQ(param_handler->num_installed_handlers(), 0UL);
 }
