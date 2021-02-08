@@ -160,7 +160,7 @@ public:
   void
   set_events_executor_callback(
     const rclcpp::executors::EventsExecutor * executor,
-    rmw_listener_cb_t executor_callback) const;
+    rmw_listener_callback_t executor_callback) const;
 
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
