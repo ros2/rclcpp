@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 
 #include "rclcpp/experimental/buffers/simple_events_queue.hpp"
-#include "rclcpp/experimental/buffers/bounded_events_queue.hpp"
 
 using namespace std::chrono_literals;
 
@@ -73,65 +72,6 @@ TEST_F(TestEventsQueue, SimpleQueueTest)
   rmw_listener_event_t front_event = simple_queue->front();
 
   // The events should be equal
-  EXPECT_EQ(push_event.entity, front_event.entity);
-  EXPECT_EQ(push_event.type, front_event.type);
-}
-
-
-TEST_F(TestEventsQueue, BoundedQueueTest)
-{
-  // Create a BoundedEventsQueue with limit of 10 events and a local events queue
-  auto bounded_queue = std::make_unique<rclcpp::experimental::buffers::BoundedEventsQueue>(10);
-  std::queue<rmw_listener_event_t> local_events_queue;
-
-  // Make sure the queue is empty after init
-  bounded_queue->init();
-  EXPECT_TRUE(bounded_queue->empty());
-
-  // Push 11 messages, the eleventh msg should prune the queue
-  // and we should end up with only one event on it
-  for (int i = 0; i < 11; i++) {
-    rmw_listener_event_t stub_event;
-    bounded_queue->push(stub_event);
-  }
-
-  local_events_queue = bounded_queue->get_all_events();
-
-  size_t local_queue_size = local_events_queue.size();
-
-  // The queue size should be 1
-  EXPECT_EQ(1u, local_queue_size);
-
-  // The bounded queue should be empty after taking all events
-  EXPECT_TRUE(bounded_queue->empty());
-
-  // Push 5 messages
-  for (int i = 0; i < 5; i++) {
-    rmw_listener_event_t stub_event;
-    bounded_queue->push(stub_event);
-  }
-
-  // Pop one message
-  bounded_queue->pop();
-
-  local_events_queue = bounded_queue->get_all_events();
-
-  local_queue_size = local_events_queue.size();
-
-  // The local queue size should be 4 as the bounded queue shouldn't have been pruned
-  EXPECT_EQ(4u, local_queue_size);
-
-  // The bounded queue should be empty after taking all events
-  EXPECT_TRUE(bounded_queue->empty());
-
-  // Lets push an event into the queue and get it back
-  rmw_listener_event_t push_event = {bounded_queue.get(), WAITABLE_EVENT};
-
-  bounded_queue->push(push_event);
-
-  rmw_listener_event_t front_event = bounded_queue->front();
-
-  // The events should be the equal
   EXPECT_EQ(push_event.entity, front_event.entity);
   EXPECT_EQ(push_event.type, front_event.type);
 }
