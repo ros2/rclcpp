@@ -2371,15 +2371,12 @@ void expect_qos_profile_eq(
   // Depth and history are skipped because they are not retrieved.
   EXPECT_EQ(qos1.reliability, qos2.reliability);
   EXPECT_EQ(qos1.durability, qos2.durability);
-  EXPECT_EQ(qos1.deadline.sec, qos2.deadline.sec);
-  EXPECT_EQ(qos1.deadline.nsec, qos2.deadline.nsec);
+  EXPECT_EQ(qos1.deadline, qos2.deadline);
   if (is_publisher) {
-    EXPECT_EQ(qos1.lifespan.sec, qos2.lifespan.sec);
-    EXPECT_EQ(qos1.lifespan.nsec, qos2.lifespan.nsec);
+    EXPECT_EQ(qos1.lifespan, qos2.lifespan);
   }
   EXPECT_EQ(qos1.liveliness, qos2.liveliness);
-  EXPECT_EQ(qos1.liveliness_lease_duration.sec, qos2.liveliness_lease_duration.sec);
-  EXPECT_EQ(qos1.liveliness_lease_duration.nsec, qos2.liveliness_lease_duration.nsec);
+  EXPECT_EQ(qos1.liveliness_lease_duration, qos2.liveliness_lease_duration);
 }
 
 // test that calling get_publishers_info_by_topic and get_subscriptions_info_by_topic
@@ -2405,10 +2402,10 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
     10,
     RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
     RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
-    {1, 12345},
-    {20, 9887665},
+    RCUTILS_S_TO_NS(1) + 12345,
+    RCUTILS_S_TO_NS(20) + 9887665,
     RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC,
-    {5, 23456},
+    RCUTILS_S_TO_NS(5) + 23456,
     false
   };
   rclcpp::QoS qos = rclcpp::QoS(qos_initialization, rmw_qos_profile_default);
@@ -2441,10 +2438,10 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
     0,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_VOLATILE,
-    {15, 1678},
-    {29, 2345},
+    RCUTILS_S_TO_NS(15) + 1678,
+    RCUTILS_S_TO_NS(29) + 2345,
     RMW_QOS_POLICY_LIVELINESS_AUTOMATIC,
-    {5, 23456},
+    RCUTILS_S_TO_NS(5) + 23456,
     false
   };
   rclcpp::QoS qos2 = rclcpp::QoS(qos_initialization2, rmw_qos_profile_default2);

@@ -258,17 +258,6 @@ apply_qos_override(
   }
 }
 
-/// Convert `rmw_time_t` to `int64_t` that can be used as a parameter value.
-inline
-int64_t
-rmw_duration_to_int64_t(rmw_time_t rmw_duration)
-{
-  return ::rclcpp::Duration(
-    static_cast<int32_t>(rmw_duration.sec),
-    static_cast<uint32_t>(rmw_duration.nsec)
-  ).nanoseconds();
-}
-
 /// \internal Throw an exception if `policy_value_stringified` is NULL.
 inline
 const char *
@@ -292,7 +281,7 @@ get_default_qos_param_value(rclcpp::QosPolicyKind kind, const rclcpp::QoS & qos)
     case QosPolicyKind::AvoidRosNamespaceConventions:
       return ParameterValue(rmw_qos.avoid_ros_namespace_conventions);
     case QosPolicyKind::Deadline:
-      return ParameterValue(rmw_duration_to_int64_t(rmw_qos.deadline));
+      return ParameterValue(rmw_qos.deadline);
     case QosPolicyKind::Durability:
       return ParameterValue(
         check_if_stringified_policy_is_null(
@@ -304,13 +293,13 @@ get_default_qos_param_value(rclcpp::QosPolicyKind kind, const rclcpp::QoS & qos)
     case QosPolicyKind::Depth:
       return ParameterValue(static_cast<int64_t>(rmw_qos.depth));
     case QosPolicyKind::Lifespan:
-      return ParameterValue(rmw_duration_to_int64_t(rmw_qos.lifespan));
+      return ParameterValue(rmw_qos.lifespan);
     case QosPolicyKind::Liveliness:
       return ParameterValue(
         check_if_stringified_policy_is_null(
           rmw_qos_liveliness_policy_to_str(rmw_qos.liveliness), kind));
     case QosPolicyKind::LivelinessLeaseDuration:
-      return ParameterValue(rmw_duration_to_int64_t(rmw_qos.liveliness_lease_duration));
+      return ParameterValue(rmw_qos.liveliness_lease_duration);
     case QosPolicyKind::Reliability:
       return ParameterValue(
         check_if_stringified_policy_is_null(

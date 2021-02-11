@@ -23,13 +23,6 @@
 #include "rmw/types.h"
 
 bool operator==(
-  const rmw_time_t & lhs,
-  const rmw_time_t & rhs)
-{
-  return lhs.sec == rhs.sec && lhs.nsec == rhs.nsec;
-}
-
-bool operator==(
   const rmw_qos_profile_t & lhs,
   const rmw_qos_profile_t & rhs)
 {
@@ -66,9 +59,7 @@ TEST(TestRosoutQoS, test_rosout_qos_with_default_value) {
    Test `rosout_qos` function with custom value.
  */
 TEST(TestRosoutQoS, test_rosout_qos_with_custom_value) {
-  rmw_time_t life_span;
-  life_span.sec = 10;
-  life_span.nsec = 0;
+  rmw_duration_t life_span = RCUTILS_S_TO_NS(10);
   auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(1000)).transient_local().lifespan(life_span);
   auto options = rclcpp::NodeOptions().rosout_qos(qos_profile);
   rclcpp::QoS rosout_qos = options.rosout_qos();

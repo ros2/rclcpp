@@ -175,7 +175,7 @@ QoS::transient_local()
 }
 
 QoS &
-QoS::deadline(rmw_time_t deadline)
+QoS::deadline(rmw_duration_t deadline)
 {
   rmw_qos_profile_.deadline = deadline;
   return *this;
@@ -184,11 +184,11 @@ QoS::deadline(rmw_time_t deadline)
 QoS &
 QoS::deadline(const rclcpp::Duration & deadline)
 {
-  return this->deadline(deadline.to_rmw_time());
+  return this->deadline(deadline.nanoseconds());
 }
 
 QoS &
-QoS::lifespan(rmw_time_t lifespan)
+QoS::lifespan(rmw_duration_t lifespan)
 {
   rmw_qos_profile_.lifespan = lifespan;
   return *this;
@@ -197,7 +197,7 @@ QoS::lifespan(rmw_time_t lifespan)
 QoS &
 QoS::lifespan(const rclcpp::Duration & lifespan)
 {
-  return this->lifespan(lifespan.to_rmw_time());
+  return this->lifespan(lifespan.nanoseconds());
 }
 
 QoS &
@@ -216,7 +216,7 @@ QoS::liveliness(LivelinessPolicy liveliness)
 
 
 QoS &
-QoS::liveliness_lease_duration(rmw_time_t liveliness_lease_duration)
+QoS::liveliness_lease_duration(rmw_duration_t liveliness_lease_duration)
 {
   rmw_qos_profile_.liveliness_lease_duration = liveliness_lease_duration;
   return *this;
@@ -225,7 +225,7 @@ QoS::liveliness_lease_duration(rmw_time_t liveliness_lease_duration)
 QoS &
 QoS::liveliness_lease_duration(const rclcpp::Duration & liveliness_lease_duration)
 {
-  return this->liveliness_lease_duration(liveliness_lease_duration.to_rmw_time());
+  return this->liveliness_lease_duration(liveliness_lease_duration.nanoseconds());
 }
 
 QoS &
@@ -257,10 +257,10 @@ QoS::durability() const
 }
 
 Duration
-QoS::deadline() const {return Duration::from_rmw_time(rmw_qos_profile_.deadline);}
+QoS::deadline() const {return Duration::from_nanoseconds(rmw_qos_profile_.deadline);}
 
 Duration
-QoS::lifespan() const {return Duration::from_rmw_time(rmw_qos_profile_.lifespan);}
+QoS::lifespan() const {return Duration::from_nanoseconds(rmw_qos_profile_.lifespan);}
 
 LivelinessPolicy
 QoS::liveliness() const
@@ -271,7 +271,7 @@ QoS::liveliness() const
 Duration
 QoS::liveliness_lease_duration() const
 {
-  return Duration::from_rmw_time(rmw_qos_profile_.liveliness_lease_duration);
+  return Duration::from_nanoseconds(rmw_qos_profile_.liveliness_lease_duration);
 }
 
 bool
@@ -279,15 +279,6 @@ QoS::avoid_ros_namespace_conventions() const
 {
   return rmw_qos_profile_.avoid_ros_namespace_conventions;
 }
-
-namespace
-{
-/// Check if two rmw_time_t have the same values.
-bool operator==(const rmw_time_t & left, const rmw_time_t & right)
-{
-  return left.sec == right.sec && left.nsec == right.nsec;
-}
-}  // unnamed namespace
 
 bool operator==(const QoS & left, const QoS & right)
 {

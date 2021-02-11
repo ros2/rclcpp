@@ -46,7 +46,7 @@ TEST(TestQoS, equality_durability) {
 TEST(TestQoS, equality_deadline) {
   rclcpp::QoS a(10);
   rclcpp::QoS b(10);
-  rmw_time_t deadline{0, 1000};
+  rmw_duration_t deadline{1000};
   a.deadline(deadline);
   EXPECT_NE(a, b);
 }
@@ -54,7 +54,7 @@ TEST(TestQoS, equality_deadline) {
 TEST(TestQoS, equality_lifespan) {
   rclcpp::QoS a(10);
   rclcpp::QoS b(10);
-  rmw_time_t lifespan{3, 0};
+  rmw_duration_t lifespan{RCUTILS_S_TO_NS(3)};
   a.lifespan(lifespan);
   EXPECT_NE(a, b);
 }
@@ -62,7 +62,7 @@ TEST(TestQoS, equality_lifespan) {
 TEST(TestQoS, equality_liveliness) {
   rclcpp::QoS a(10);
   rclcpp::QoS b(10);
-  rmw_time_t duration{0, 1000000};
+  rmw_duration_t duration{1000000};
   a.liveliness_lease_duration(duration);
   EXPECT_NE(a, b);
   b.liveliness_lease_duration(duration);
@@ -114,17 +114,15 @@ TEST(TestQoS, setters_and_getters) {
   qos.deadline(duration);
   EXPECT_EQ(duration_ns, qos.deadline().nanoseconds());
 
-  const rmw_time_t rmw_time {0, 54321};
+  const rmw_duration_t rmw_time = 54321;
   qos.deadline(rmw_time);
-  EXPECT_EQ(rmw_time.sec, qos.get_rmw_qos_profile().deadline.sec);
-  EXPECT_EQ(rmw_time.nsec, qos.get_rmw_qos_profile().deadline.nsec);
+  EXPECT_EQ(rmw_time, qos.get_rmw_qos_profile().deadline);
 
   qos.lifespan(duration);
   EXPECT_EQ(duration_ns, qos.lifespan().nanoseconds());
 
   qos.lifespan(rmw_time);
-  EXPECT_EQ(rmw_time.sec, qos.get_rmw_qos_profile().lifespan.sec);
-  EXPECT_EQ(rmw_time.nsec, qos.get_rmw_qos_profile().lifespan.nsec);
+  EXPECT_EQ(rmw_time, qos.get_rmw_qos_profile().lifespan);
 
   qos.liveliness(RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC);
   EXPECT_EQ(rclcpp::LivelinessPolicy::ManualByTopic, qos.liveliness());
@@ -136,8 +134,7 @@ TEST(TestQoS, setters_and_getters) {
   EXPECT_EQ(duration_ns, qos.liveliness_lease_duration().nanoseconds());
 
   qos.liveliness_lease_duration(rmw_time);
-  EXPECT_EQ(rmw_time.sec, qos.get_rmw_qos_profile().liveliness_lease_duration.sec);
-  EXPECT_EQ(rmw_time.nsec, qos.get_rmw_qos_profile().liveliness_lease_duration.nsec);
+  EXPECT_EQ(rmw_time, qos.get_rmw_qos_profile().liveliness_lease_duration);
 
   qos.avoid_ros_namespace_conventions(true);
   EXPECT_TRUE(qos.avoid_ros_namespace_conventions());

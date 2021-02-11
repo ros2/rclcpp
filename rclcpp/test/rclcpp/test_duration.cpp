@@ -148,34 +148,6 @@ TEST_F(TestDuration, from_seconds) {
     rclcpp::Duration::from_seconds(-1.5));
 }
 
-TEST_F(TestDuration, from_rmw_time) {
-  constexpr auto max_rcl_duration = std::numeric_limits<rcl_duration_value_t>::max();
-  {
-    rmw_time_t rmw_duration{};
-    rmw_duration.sec = RCL_NS_TO_S(max_rcl_duration) + 1uLL;
-    EXPECT_EQ(rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds(), max_rcl_duration);
-  }
-  {
-    rmw_time_t rmw_duration{};
-    rmw_duration.nsec = max_rcl_duration + 1uLL;
-    EXPECT_EQ(rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds(), max_rcl_duration);
-  }
-  {
-    rmw_time_t rmw_duration{};
-    rmw_duration.nsec = max_rcl_duration;
-    rmw_duration.sec = RCL_NS_TO_S(max_rcl_duration);
-    EXPECT_EQ(rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds(), max_rcl_duration);
-  }
-  {
-    rmw_time_t rmw_duration{};
-    rmw_duration.sec = 1u;
-    rmw_duration.nsec = 1000u;
-    EXPECT_EQ(
-      rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds(),
-      static_cast<rcl_duration_value_t>(RCL_S_TO_NS(rmw_duration.sec) + rmw_duration.nsec));
-  }
-}
-
 TEST_F(TestDuration, std_chrono_constructors) {
   EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration(0.0s));
   EXPECT_EQ(rclcpp::Duration(0ns), rclcpp::Duration(0s));
@@ -191,10 +163,6 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
     EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), HALF_SEC_IN_NS);
 
-    const auto rmw_time = duration.to_rmw_time();
-    EXPECT_EQ(rmw_time.sec, 0u);
-    EXPECT_EQ(rmw_time.nsec, static_cast<uint64_t>(HALF_SEC_IN_NS));
-
     const auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), HALF_SEC_IN_NS);
   }
@@ -205,10 +173,6 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(duration_msg.sec, 1);
     EXPECT_EQ(duration_msg.nanosec, 0u);
     EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), ONE_SEC_IN_NS);
-
-    const auto rmw_time = duration.to_rmw_time();
-    EXPECT_EQ(rmw_time.sec, 1u);
-    EXPECT_EQ(rmw_time.nsec, 0u);
 
     const auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), ONE_SEC_IN_NS);
@@ -221,10 +185,6 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
     EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), ONE_AND_HALF_SEC_IN_NS);
 
-    auto rmw_time = duration.to_rmw_time();
-    EXPECT_EQ(rmw_time.sec, 1u);
-    EXPECT_EQ(rmw_time.nsec, static_cast<uint64_t>(HALF_SEC_IN_NS));
-
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), ONE_AND_HALF_SEC_IN_NS);
   }
@@ -235,8 +195,6 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(duration_msg.sec, -1);
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
     EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), -HALF_SEC_IN_NS);
-
-    EXPECT_THROW(duration.to_rmw_time(), std::runtime_error);
 
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), -HALF_SEC_IN_NS);
@@ -249,8 +207,6 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(duration_msg.nanosec, 0u);
     EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), -ONE_SEC_IN_NS);
 
-    EXPECT_THROW(duration.to_rmw_time(), std::runtime_error);
-
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), -ONE_SEC_IN_NS);
   }
@@ -261,8 +217,6 @@ TEST_F(TestDuration, conversions) {
     EXPECT_EQ(duration_msg.sec, -2);
     EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
     EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), -ONE_AND_HALF_SEC_IN_NS);
-
-    EXPECT_THROW(duration.to_rmw_time(), std::runtime_error);
 
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), -ONE_AND_HALF_SEC_IN_NS);

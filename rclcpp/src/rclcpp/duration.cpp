@@ -231,42 +231,6 @@ Duration::seconds() const
   return std::chrono::duration<double>(std::chrono::nanoseconds(rcl_duration_.nanoseconds)).count();
 }
 
-rmw_time_t
-Duration::to_rmw_time() const
-{
-  if (rcl_duration_.nanoseconds < 0) {
-    throw std::runtime_error("rmw_time_t cannot be negative");
-  }
-
-  // reuse conversion logic from msg creation
-  builtin_interfaces::msg::Duration msg = *this;
-  rmw_time_t result;
-  result.sec = static_cast<uint64_t>(msg.sec);
-  result.nsec = static_cast<uint64_t>(msg.nanosec);
-  return result;
-}
-
-Duration
-Duration::from_rmw_time(rmw_time_t duration)
-{
-  Duration ret;
-  constexpr rcl_duration_value_t limit_ns = std::numeric_limits<rcl_duration_value_t>::max();
-  constexpr rcl_duration_value_t limit_sec = RCL_NS_TO_S(limit_ns);
-  if (duration.sec > limit_sec || duration.nsec > limit_ns) {
-    // saturate if will overflow
-    ret.rcl_duration_.nanoseconds = limit_ns;
-    return ret;
-  }
-  uint64_t total_ns = RCL_S_TO_NS(duration.sec) + duration.nsec;
-  if (total_ns > limit_ns) {
-    // saturate if will overflow
-    ret.rcl_duration_.nanoseconds = limit_ns;
-    return ret;
-  }
-  ret.rcl_duration_.nanoseconds = static_cast<rcl_duration_value_t>(total_ns);
-  return ret;
-}
-
 Duration
 Duration::from_seconds(double seconds)
 {

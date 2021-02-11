@@ -193,7 +193,7 @@ public:
 
   /// Set the deadline setting.
   QoS &
-  deadline(rmw_time_t deadline);
+  deadline(rmw_duration_t deadline);
 
   /// Set the deadline setting, rclcpp::Duration.
   QoS &
@@ -201,7 +201,7 @@ public:
 
   /// Set the lifespan setting.
   QoS &
-  lifespan(rmw_time_t lifespan);
+  lifespan(rmw_duration_t lifespan);
 
   /// Set the lifespan setting, rclcpp::Duration.
   QoS &
@@ -217,7 +217,7 @@ public:
 
   /// Set the liveliness_lease_duration setting.
   QoS &
-  liveliness_lease_duration(rmw_time_t liveliness_lease_duration);
+  liveliness_lease_duration(rmw_duration_t liveliness_lease_duration);
 
   /// Set the liveliness_lease_duration setting, rclcpp::Duration.
   QoS &
