@@ -187,7 +187,7 @@ public:
     TRACEPOINT(callback_start, static_cast<const void *>(this), true);
 
     // If the message is not valid, return.
-    if(!message) {
+    if (!message) {
       return;
     }
 
@@ -216,7 +216,7 @@ public:
     TRACEPOINT(callback_start, static_cast<const void *>(this), true);
 
     // If the message is not valid, return.
-    if(!message) {
+    if (!message) {
       return;
     }
 
