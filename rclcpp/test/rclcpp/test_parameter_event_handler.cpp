@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "gtest/gtest.h"
 #include "rclcpp/rclcpp.hpp"
@@ -30,9 +32,14 @@ public:
     event_callback(event);
   }
 
-  size_t num_installed_handlers()
+  size_t num_event_callbacks()
   {
     return event_callbacks_.size();
+  }
+
+  size_t num_parameter_callbacks()
+  {
+    return parameter_callbacks_.size();
   }
 };
 
@@ -166,6 +173,10 @@ TEST_F(TestNode, SameParameterDifferentNode)
   param_handler->test_event(diff_node_int);
   EXPECT_NE(int_param_node1, 1);
   EXPECT_EQ(int_param_node2, 1);
+
+  param_handler->remove_parameter_callback(h1);
+  param_handler->remove_parameter_callback(h2);
+  EXPECT_EQ(param_handler->num_parameter_callbacks(), 0UL);
 }
 
 TEST_F(TestNode, GetParameterFromEvent)
@@ -353,5 +364,69 @@ TEST_F(TestNode, MultipleParameterCallbacks)
 
   // All callbacks should have been removed
   EXPECT_EQ(received_2, 0);
-  EXPECT_EQ(param_handler->num_installed_handlers(), 0UL);
+  EXPECT_EQ(param_handler->num_event_callbacks(), 0UL);
+}
+
+TEST_F(TestNode, LastInFirstCallForParameterCallbacks)
+{
+  rclcpp::Time time_1;
+  rclcpp::Time time_2;
+
+  // The callbacks will log the current time for comparison purposes. Add a bit of a stall
+  // to ensure that the time noted in the back-to-back calls isn't the same
+  auto cb1 = [this, &time_1](const rclcpp::Parameter &) {
+      time_1 = node->now();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+  auto cb2 = [this, &time_2](const rclcpp::Parameter &) {
+      time_2 = node->now();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+  auto h1 = param_handler->add_parameter_callback("my_int", cb1);
+  auto h2 = param_handler->add_parameter_callback("my_int", cb2);
+
+  // Test multiple callbacks per parameter
+  param_handler->test_event(same_node_int);
+
+  // The most-recently install handler should be called first
+  EXPECT_EQ(time_2 < time_1, true);
+
+  param_handler->remove_parameter_callback(h1);
+  param_handler->remove_parameter_callback(h2);
+  EXPECT_EQ(param_handler->num_parameter_callbacks(), 0UL);
+}
+
+TEST_F(TestNode, LastInFirstCallForParameterEventCallbacks)
+{
+  rclcpp::Time time_1;
+  rclcpp::Time time_2;
+
+  // The callbacks will log the current time for comparison purposes. Add a bit of a stall
+  // to ensure that the time noted in the back-to-back calls isn't the same
+  auto cb1 =
+    [this, &time_1](const rcl_interfaces::msg::ParameterEvent::SharedPtr &)
+    {
+      time_1 = node->now();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+  auto cb2 =
+    [this, &time_2](const rcl_interfaces::msg::ParameterEvent::SharedPtr &)
+    {
+      time_2 = node->now();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+  auto h1 = param_handler->add_parameter_event_callback(cb1);
+  auto h2 = param_handler->add_parameter_event_callback(cb2);
+
+  // Test multiple callbacks per parameter
+  param_handler->test_event(same_node_int);
+
+  // The most-recently install handler should be called first
+  EXPECT_EQ(time_2 < time_1, true);
+
+  param_handler->remove_parameter_event_callback(h1);
+  param_handler->remove_parameter_event_callback(h2);
+  EXPECT_EQ(param_handler->num_event_callbacks(), 0UL);
 }
