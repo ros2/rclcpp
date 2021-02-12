@@ -65,6 +65,9 @@ public:
     const_shared_ptr_callback_(nullptr), const_shared_ptr_with_info_callback_(nullptr),
     unique_ptr_callback_(nullptr), unique_ptr_with_info_callback_(nullptr)
   {
+    if (allocator == nullptr) {
+      throw std::runtime_error("invalid allocator");
+    }
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
   }
