@@ -272,7 +272,7 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    const rclcpp::executors::EventsExecutor * executor,
+    rclcpp::executors::EventsExecutor * executor,
     rmw_listener_callback_t executor_callback) const;
 
 protected:
