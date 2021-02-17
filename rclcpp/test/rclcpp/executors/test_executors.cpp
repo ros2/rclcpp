@@ -547,11 +547,6 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
       spin_exited = true;
     });
 
-  // Give some time for executor to start spinning
-  // otherwise when it will start looking for work to do it will already find
-  // more than 1 notification
-  std::this_thread::sleep_for(10ms);
-
   // Do some work until sufficient calls to the waitable occur, but keep going until either
   // count becomes too large, spin exits, or the 1 second timeout completes.
   auto start = std::chrono::steady_clock::now();

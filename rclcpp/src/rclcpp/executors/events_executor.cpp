@@ -60,9 +60,6 @@ EventsExecutor::spin()
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !events_queue_->empty();};
 
-  // Local event queue to allow entities to push events while we execute them
-  EventQueue execution_event_queue;
-
   timers_manager_->start();
 
   while (rclcpp::ok(context_) && spinning.load()) {
@@ -70,7 +67,7 @@ EventsExecutor::spin()
     // We wait here until something has been pushed to the event queue
     events_queue_cv_.wait(push_lock, has_event_predicate);
     // Local event queue to allow entities to push events while we execute them
-    execution_event_queue = events_queue_->get_all_events();
+    EventQueue execution_event_queue = events_queue_->get_all_events();
     // Unlock the mutex
     push_lock.unlock();
     // Consume all available events, this queue will be empty at the end of the function
@@ -92,33 +89,44 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
     max_duration = timers_manager_->MAX_TIME;
   }
 
-  // This function will wait until the first of the following events occur:
-  // - The input max_duration is elapsed
-  // - A timer triggers
-  // - An executor event is received and processed
+  auto start = std::chrono::steady_clock::now();
 
-  // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() {return !events_queue_->empty();};
+  auto max_duration_not_elapsed = [max_duration, start]() {
+      auto elapsed_time = std::chrono::steady_clock::now() - start;
+      return elapsed_time < max_duration;
+    };
 
+  // Execute events until timeout or no more work available
+  while (max_duration_not_elapsed()) {
+    bool work_available = false;
 
-  // Select the smallest between input max_duration and timer timeout
-  auto next_timer_timeout = timers_manager_->get_head_timeout();
-  if (next_timer_timeout < max_duration) {
-    max_duration = next_timer_timeout;
+    // Check for ready timers
+    auto next_timer_timeout = timers_manager_->get_head_timeout();
+
+    bool timer_ready = next_timer_timeout < 0ns;
+
+    if (timer_ready) {
+      timers_manager_->execute_head_timer();
+      work_available = true;
+    } else {
+      // Execute first event from queue if it exists
+      std::unique_lock<std::mutex> lock(push_mutex_);
+
+      bool has_event = !events_queue_->empty();
+
+      if (has_event) {
+        rmw_listener_event_t event = events_queue_->front();
+        events_queue_->pop();
+        this->execute_event(event);
+        work_available = true;
+      }
+    }
+
+    // If there's no more work available, exit
+    if (!work_available) {
+      break;
+    }
   }
-
-  std::unique_lock<std::mutex> push_lock(push_mutex_);
-  // Wait until timeout or event
-  events_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
-  // Local event queue to allow entities to push events while we execute them
-  EventQueue execution_event_queue = events_queue_->get_all_events();
-  // We don't need the lock anymore
-  push_lock.unlock();
-
-  // Execute all ready timers
-  timers_manager_->execute_ready_timers();
-  // Consume all available events, this queue will be empty at the end of the function
-  this->consume_all_events(execution_event_queue);
 }
 
 void
@@ -135,9 +143,6 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
 
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !events_queue_->empty();};
-
-  // Local event queue to allow entities to push events while we execute them
-  EventQueue execution_event_queue;
 
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
@@ -162,7 +167,7 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   // Keep executing until no more work to do or timeout expired
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     std::unique_lock<std::mutex> push_lock(push_mutex_);
-    execution_event_queue = events_queue_->get_all_events();
+    EventQueue execution_event_queue = events_queue_->get_all_events();
     push_lock.unlock();
 
     // Exit if there is no more work to do

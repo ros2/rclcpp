@@ -82,10 +82,15 @@ public:
 
   /// Events executor implementation of spin some
   /**
-   * executor.provide_callbacks();
-   * while(condition) {
-   *   executor.spin_some();
-   * }
+   * This function will execute ready timers and events
+   * until timeout or no more work available.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_some();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
    */
   RCLCPP_PUBLIC
   void
