@@ -201,7 +201,7 @@ ClientBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 
 void
 ClientBase::set_events_executor_callback(
-  const rclcpp::executors::EventsExecutor * executor,
+  rclcpp::executors::EventsExecutor * executor,
   rmw_listener_callback_t executor_callback) const
 {
   rcl_ret_t ret = rcl_client_set_listener_callback(

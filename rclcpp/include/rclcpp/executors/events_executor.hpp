@@ -185,16 +185,14 @@ private:
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
   static void
-  push_event(const void * executor_ptr, rmw_listener_event_t event)
+  push_event(void * executor_ptr, rmw_listener_event_t event)
   {
     // Check if the executor pointer is not valid
     if (!executor_ptr) {
       throw std::runtime_error("The executor pointer is not valid.");
     }
 
-    // Cast executor_ptr to this (need to remove constness)
-    auto this_executor = const_cast<executors::EventsExecutor *>(
-      static_cast<const executors::EventsExecutor *>(executor_ptr));
+    auto this_executor = static_cast<executors::EventsExecutor *>(executor_ptr);
 
     // Event queue mutex scope
     {
