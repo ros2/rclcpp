@@ -425,7 +425,9 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
     rclcpp::exceptions::ParameterNotDeclaredException);
 
   // Default descriptor overload
-  test_node->declare_parameter(bool_name, rclcpp::ParameterValue(true));
+  rcl_interfaces::msg::ParameterDescriptor bool_descriptor;
+  bool_descriptor.dynamic_typing = true;
+  test_node->declare_parameter(bool_name, rclcpp::ParameterValue(true), bool_descriptor);
 
   // Explicit descriptor overload
   rcl_interfaces::msg::ParameterDescriptor int_descriptor;
