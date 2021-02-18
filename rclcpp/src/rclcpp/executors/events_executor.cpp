@@ -96,20 +96,76 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
       return elapsed_time < max_duration;
     };
 
-  // Execute events until timeout or no more work available
-  while (max_duration_not_elapsed()) {
-    bool work_available = false;
+  // Get the number of events ready at this time point
+  std::unique_lock<std::mutex> lock(push_mutex_);
+  size_t available_events_at_tp = events_queue_->size();
+  lock.unlock();
 
-    // Check for ready timers
-    auto next_timer_timeout = timers_manager_->get_head_timeout();
+  size_t executed_events = 0;
 
-    bool timer_ready = next_timer_timeout < 0ns;
+  // Checks if all events that were ready when spin_some was called, were executed.
+  auto executed_ready_events_at_tp = [executed_events, available_events_at_tp]() {
+      return executed_events >= available_events_at_tp;
+    };
 
-    if (timer_ready) {
-      timers_manager_->execute_head_timer();
-      work_available = true;
-    } else {
-      // Execute first event from queue if it exists
+  // Execute events and timers ready when spin_some was called,
+  // until timeout or no more work available.
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
+    // Execute first event from queue if it exists
+    if (!executed_ready_events_at_tp()) {
+      std::unique_lock<std::mutex> lock(push_mutex_);
+
+      bool has_event = !events_queue_->empty();
+
+      if (has_event) {
+        rmw_listener_event_t event = events_queue_->front();
+        events_queue_->pop();
+        // std::cout << "Execute event" << std::endl;
+        this->execute_event(event);
+        executed_events++;
+        continue;
+      }
+    }
+
+    // Execute timer, if was ready at start
+    if (timers_manager_->execute_head_timer_if_ready_at_tp(start)) {
+      continue;
+    }
+
+    // If there's no more work available, exit
+    break;
+  }
+}
+
+void
+EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
+{
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_all() called while already spinning");
+  }
+
+  if (max_duration < 0ns) {
+    throw std::invalid_argument("max_duration must be positive");
+  }
+
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
+
+  // In this context a 0 input max_duration means no duration limit
+  if (std::chrono::nanoseconds(0) == max_duration) {
+    max_duration = timers_manager_->MAX_TIME;
+  }
+
+  auto start = std::chrono::steady_clock::now();
+
+  auto max_duration_not_elapsed = [max_duration, start]() {
+      auto elapsed_time = std::chrono::steady_clock::now() - start;
+      return elapsed_time < max_duration;
+    };
+
+  // Execute timer and events until timeout or no more work available
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
+    // Execute first event from queue if it exists
+    {
       std::unique_lock<std::mutex> lock(push_mutex_);
 
       bool has_event = !events_queue_->empty();
@@ -118,68 +174,17 @@ EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
         rmw_listener_event_t event = events_queue_->front();
         events_queue_->pop();
         this->execute_event(event);
-        work_available = true;
+        continue;
       }
     }
 
+    // Execute timer, if was ready
+    if (timers_manager_->execute_head_timer()) {
+      continue;
+    }
+
     // If there's no more work available, exit
-    if (!work_available) {
-      break;
-    }
-  }
-}
-
-void
-EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
-{
-  if (max_duration <= 0ns) {
-    throw std::invalid_argument("max_duration must be positive");
-  }
-
-  if (spinning.exchange(true)) {
-    throw std::runtime_error("spin_some() called while already spinning");
-  }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
-
-  // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() {return !events_queue_->empty();};
-
-  auto start = std::chrono::steady_clock::now();
-  auto max_duration_not_elapsed = [max_duration, start]() {
-      auto elapsed_time = std::chrono::steady_clock::now() - start;
-      return elapsed_time < max_duration;
-    };
-
-  // Select the smallest between input max duration and timer timeout
-  auto next_timer_timeout = timers_manager_->get_head_timeout();
-  if (next_timer_timeout < max_duration) {
-    max_duration = next_timer_timeout;
-  }
-
-  {
-    // Wait once until timeout or event
-    std::unique_lock<std::mutex> push_lock(push_mutex_);
-    events_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
-  }
-
-  auto timeout = timers_manager_->get_head_timeout();
-
-  // Keep executing until no more work to do or timeout expired
-  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-    std::unique_lock<std::mutex> push_lock(push_mutex_);
-    EventQueue execution_event_queue = events_queue_->get_all_events();
-    push_lock.unlock();
-
-    // Exit if there is no more work to do
-    const bool ready_timer = timeout < 0ns;
-    const bool has_events = !execution_event_queue.empty();
-    if (!ready_timer && !has_events) {
-      break;
-    }
-
-    // Execute all ready work
-    timeout = timers_manager_->execute_ready_timers();
-    this->consume_all_events(execution_event_queue);
+    break;
   }
 }
 

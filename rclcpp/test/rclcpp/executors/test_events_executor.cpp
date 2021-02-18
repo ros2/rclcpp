@@ -254,6 +254,9 @@ TEST_F(TestEventsExecutor, spin_all_max_duration)
         t_runs++;
       });
 
+    // Sleep some time for the timer to be ready when spin
+    std::this_thread::sleep_for(10ms);
+
     EventsExecutor executor;
     executor.add_node(node);
 
@@ -265,7 +268,6 @@ TEST_F(TestEventsExecutor, spin_all_max_duration)
   }
 
   EventsExecutor executor;
-  EXPECT_THROW(executor.spin_all(0ms), std::invalid_argument);
   EXPECT_THROW(executor.spin_all(-5ms), std::invalid_argument);
 }
 

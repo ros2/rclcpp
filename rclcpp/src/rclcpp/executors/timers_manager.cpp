@@ -230,3 +230,40 @@ void TimersManager::remove_timer(TimerPtr timer)
     timers_cv_.notify_one();
   }
 }
+
+bool TimersManager::execute_head_timer_if_ready_at_tp(
+  std::chrono::time_point<std::chrono::steady_clock> timepoint)
+{
+  // Do not allow to interfere with the thread running
+  if (running_) {
+    throw std::runtime_error(
+            "TimersManager::execute_head_timer_if_ready_at_tp() can't"
+            "be used while timers thread is running");
+  }
+
+  std::unique_lock<std::mutex> lock(timers_mutex_);
+
+  TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
+
+  // Nothing to do if we don't have any timer
+  if (timers_heap.empty()) {
+    return false;
+  }
+
+  TimerPtr head = timers_heap.front();
+
+  // A ready timer will return a negative duration when calling time_until_trigger
+  auto timepoint_timer_ready = std::chrono::steady_clock::now() + head->time_until_trigger();
+
+  auto timer_was_ready_at_tp = timepoint_timer_ready < timepoint;
+
+  if (timer_was_ready_at_tp) {
+    // Head timer is ready, execute
+    head->execute_callback();
+    timers_heap.heapify_root();
+    weak_timers_heap_.store(timers_heap);
+    return true;
+  } else {
+    return false;
+  }
+}
