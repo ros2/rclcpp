@@ -53,7 +53,7 @@ struct OnSetParametersCallbackHandle
   "```\n" \
   "rcl_interfaces::msg::ParameterDescriptor descriptor;\n" \
   "descriptor.dynamic_typing = true;\n" \
-  "node_params->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);" \
+  "node_params->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);\n" \
   "```"
 
 /// Pure virtual interface class for the NodeParameters part of the Node API.
