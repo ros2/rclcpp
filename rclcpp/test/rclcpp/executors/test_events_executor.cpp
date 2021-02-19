@@ -268,6 +268,7 @@ TEST_F(TestEventsExecutor, spin_all_max_duration)
   }
 
   EventsExecutor executor;
+  EXPECT_THROW(executor.spin_all(0ms), std::invalid_argument);
   EXPECT_THROW(executor.spin_all(-5ms), std::invalid_argument);
 }
 

@@ -101,11 +101,12 @@ public:
   std::chrono::nanoseconds execute_ready_timers();
 
   /**
-   * @brief Executes one ready timer if available
-   *
-   * @return true if there was a timer ready
+   * @brief Executes head timer if ready at time point.
+   * @param tp the timepoint to check for
+   * @return true if head timer was ready at tp
    */
-  bool execute_head_timer();
+  bool execute_head_timer(
+    std::chrono::time_point<std::chrono::steady_clock> tp = TimePoint::max());
 
   /**
    * @brief Get the amount of time before the next timer expires.
@@ -127,18 +128,12 @@ public:
    */
   void remove_timer(rclcpp::TimerBase::SharedPtr timer);
 
-  /**
-   * @brief Executes head timer if ready at time point.
-   * @param tp the timepoint to check for
-   * @return true if head timer was ready at tp
-   */
-  bool execute_head_timer_if_ready_at_tp(
-    std::chrono::time_point<std::chrono::steady_clock> tp);
-
   // This is what the TimersManager uses to denote a duration forever.
   // We don't use std::chrono::nanoseconds::max because it will overflow.
   // See https://en.cppreference.com/w/cpp/thread/condition_variable/wait_for
   static constexpr std::chrono::nanoseconds MAX_TIME = std::chrono::hours(90);
+
+  using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 
 private:
   RCLCPP_DISABLE_COPY(TimersManager)

@@ -501,6 +501,7 @@ TYPED_TEST(TestExecutorsStable, spinAll) {
   // executor.
   bool spin_exited = false;
   std::thread spinner([&spin_exited, &executor, this]() {
+      std::this_thread::sleep_for(10ms);
       executor.spin_all(1s);
       executor.remove_node(this->node, true);
       spin_exited = true;

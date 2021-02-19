@@ -197,6 +197,10 @@ protected:
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
 
+  RCLCPP_PUBLIC
+  void
+  spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
+
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
