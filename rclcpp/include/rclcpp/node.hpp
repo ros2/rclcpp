@@ -342,6 +342,7 @@ public:
     rcl_interfaces::msg::ParameterDescriptor{},
     bool ignore_override = false);
 
+  /// Declare a parameter
   [[deprecated(
     "declare_parameter() with only a name is deprecated and will be deleted in the future.\n" \
     "If you want to declare a parameter that won't change type without a default value use:\n" \
