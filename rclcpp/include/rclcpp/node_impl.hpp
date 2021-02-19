@@ -186,7 +186,8 @@ Node::declare_parameter(
     name,
     value.get_type(),
     parameter_descriptor,
-    ignore_override).get<ParameterT>();
+    ignore_override
+  ).get<ParameterT>();
 }
 
 template<typename ParameterT>
