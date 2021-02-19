@@ -18,6 +18,7 @@
 #include <string>
 
 #include "rclcpp/duration.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rcl/logging_rosout.h"
 #include "rmw/incompatible_qos_events_statuses.h"
@@ -60,6 +61,13 @@ enum class LivelinessPolicy
   ManualByTopic = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC,
   SystemDefault = RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
   Unknown = RMW_QOS_POLICY_LIVELINESS_UNKNOWN,
+};
+
+enum class QoSProfileCompatibility
+{
+  Ok = RMW_QOS_COMPATIBILITY_OK,
+  Warning = RMW_QOS_COMPATIBILITY_WARNING,
+  Error = RMW_QOS_COMPATIBILITY_ERROR,
 };
 
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
@@ -139,6 +147,31 @@ public:
   /// Return the rmw qos profile.
   const rmw_qos_profile_t &
   get_rmw_qos_profile() const;
+
+  /// Check if this QoS profile is compatible with another.
+  /**
+   * Two QoS profiles are compatible if a publisher and subcription
+   * using the QoS policies can communicate with each other.
+   *
+   * This QoS profile is assumed to be for a subscription.
+   *
+   * If there is an unknown policy value in either profile, then an exception is thrown.
+   *
+   * \param[in] publisher_qos: The QoS profile for a publisher.
+   * \param[out] reason: An explanation for any incompatibility.
+   *   Set if the return value is QoSProfileCompatibility::Warning or
+   *   QoSProfileCompatibility::Error.
+   *   Not set if the QoS profiles are compatible.
+   *   This parameter is optional.
+   * \return QoSProfileCompatibility::Ok if the QoS profiles are compatible, or
+   * \return QoSProfileCompatibility::Warning if there is a chance the QoS profiles are not
+   *   compatible (this can happen if some policies are set ot "system default"), or
+   * \return QoSProfileCompatibility::Error if the QoS profiles are not compatible.
+   * \throws rclcpp::exceptions::QoSCheckCompatibilityException if any policy value is "unknown",
+   *   or if an unexpected error occurs.
+   */
+  QoSProfileCompatibility
+  compatible(const QoS & publisher_qos, std::string * reason = nullptr);
 
   /// Set the history policy.
   QoS &
