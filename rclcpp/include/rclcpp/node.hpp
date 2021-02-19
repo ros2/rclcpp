@@ -350,7 +350,7 @@ public:
     "```\n" \
     "rcl_interfaces::msg::ParameterDescriptor descriptor;\n" \
     "descriptor.dynamic_typing = true;\n" \
-    "node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);" \
+    "node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);\n" \
     "```"
   )]]
   RCLCPP_PUBLIC
