@@ -138,12 +138,10 @@ bool TimersManager::execute_head_timer(
 
   bool timer_ready = false;
 
-  if (timepoint != TimePoint::max()) {
-    // A ready timer will return a negative duration when calling time_until_trigger
-    auto timepoint_timer_ready = std::chrono::steady_clock::now() + head->time_until_trigger();
+  auto max_time = std::chrono::time_point<std::chrono::steady_clock>::max();
 
-    // Here we check if the timer was already ready at timepoint
-    timer_ready = timepoint_timer_ready < timepoint;
+  if (timepoint != max_time) {
+    timer_ready = timer_was_ready_at_tp(head, timepoint);
   } else {
     timer_ready = head->is_ready();
   }
