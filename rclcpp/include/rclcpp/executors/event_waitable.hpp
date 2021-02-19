@@ -33,8 +33,6 @@ namespace executors
 class EventWaitable : public rclcpp::Waitable
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(EventWaitable)
-
   // Constructor
   RCLCPP_PUBLIC
   EventWaitable() = default;
