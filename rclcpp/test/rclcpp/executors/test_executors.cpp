@@ -501,6 +501,7 @@ TYPED_TEST(TestExecutorsStable, spinAll) {
   // executor.
   bool spin_exited = false;
   std::thread spinner([&spin_exited, &executor, this]() {
+      std::this_thread::sleep_for(10ms);
       executor.spin_all(1s);
       executor.remove_node(this->node, true);
       spin_exited = true;
@@ -546,11 +547,6 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
       executor.remove_node(this->node, true);
       spin_exited = true;
     });
-
-  // Give some time for executor to start spinning
-  // otherwise when it will start looking for work to do it will already find
-  // more than 1 notification
-  std::this_thread::sleep_for(10ms);
 
   // Do some work until sufficient calls to the waitable occur, but keep going until either
   // count becomes too large, spin exits, or the 1 second timeout completes.

@@ -82,15 +82,36 @@ public:
 
   /// Events executor implementation of spin some
   /**
-   * executor.provide_callbacks();
-   * while(condition) {
-   *   executor.spin_some();
-   * }
+   * This non-blocking function will execute the timers and events
+   * that were ready when this API was called, until timeout or no
+   * more work available. New ready-timers/events arrived while
+   * executing work, won't be taken into account here.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_some();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
    */
   RCLCPP_PUBLIC
   void
   spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0)) override;
 
+  /// Events executor implementation of spin all
+  /**
+   * This non-blocking function will execute timers and events
+   * until timeout or no more work available. If new ready-timers/events
+   * arrive while executing work available, they will be executed
+   * as long as the timeout hasn't expired.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_all();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
+   */
   RCLCPP_PUBLIC
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
@@ -175,6 +196,10 @@ protected:
   RCLCPP_PUBLIC
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
+
+  RCLCPP_PUBLIC
+  void
+  spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
 
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)

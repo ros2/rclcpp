@@ -84,6 +84,15 @@ public:
   empty() const = 0;
 
   /**
+   * @brief Returns the number of elements in the queue.
+   * @return the number of elements in the queue.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  size() const = 0;
+
+  /**
    * @brief Initializes the queue
    */
   RCLCPP_PUBLIC

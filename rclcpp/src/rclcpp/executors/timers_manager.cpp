@@ -116,7 +116,8 @@ std::chrono::nanoseconds TimersManager::execute_ready_timers()
   return this->get_head_timeout_unsafe(timers_heap);
 }
 
-bool TimersManager::execute_head_timer()
+bool TimersManager::execute_head_timer(
+  std::chrono::time_point<std::chrono::steady_clock> timepoint)
 {
   // Do not allow to interfere with the thread running
   if (running_) {
@@ -127,13 +128,25 @@ bool TimersManager::execute_head_timer()
   std::unique_lock<std::mutex> lock(timers_mutex_);
 
   TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
+
   // Nothing to do if we don't have any timer
   if (timers_heap.empty()) {
     return false;
   }
 
   TimerPtr head = timers_heap.front();
-  if (head->is_ready()) {
+
+  bool timer_ready = false;
+
+  auto max_time = std::chrono::time_point<std::chrono::steady_clock>::max();
+
+  if (timepoint != max_time) {
+    timer_ready = timer_was_ready_at_tp(head, timepoint);
+  } else {
+    timer_ready = head->is_ready();
+  }
+
+  if (timer_ready) {
     // Head timer is ready, execute
     head->execute_callback();
     timers_heap.heapify_root();

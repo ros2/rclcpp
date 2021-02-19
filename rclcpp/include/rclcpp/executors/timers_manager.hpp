@@ -101,11 +101,13 @@ public:
   std::chrono::nanoseconds execute_ready_timers();
 
   /**
-   * @brief Executes one ready timer if available
-   *
-   * @return true if there was a timer ready
+   * @brief Executes head timer if ready at time point.
+   * @param tp the timepoint to check for
+   * @return true if head timer was ready at tp
    */
-  bool execute_head_timer();
+  bool execute_head_timer(
+    std::chrono::time_point<std::chrono::steady_clock> tp =
+    std::chrono::time_point<std::chrono::steady_clock>::max());
 
   /**
    * @brief Get the amount of time before the next timer expires.

@@ -60,9 +60,6 @@ EventsExecutor::spin()
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !events_queue_->empty();};
 
-  // Local event queue to allow entities to push events while we execute them
-  EventQueue execution_event_queue;
-
   timers_manager_->start();
 
   while (rclcpp::ok(context_) && spinning.load()) {
@@ -70,7 +67,7 @@ EventsExecutor::spin()
     // We wait here until something has been pushed to the event queue
     events_queue_cv_.wait(push_lock, has_event_predicate);
     // Local event queue to allow entities to push events while we execute them
-    execution_event_queue = events_queue_->get_all_events();
+    EventQueue execution_event_queue = events_queue_->get_all_events();
     // Unlock the mutex
     push_lock.unlock();
     // Consume all available events, this queue will be empty at the end of the function
@@ -82,43 +79,12 @@ EventsExecutor::spin()
 void
 EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
 {
-  if (spinning.exchange(true)) {
-    throw std::runtime_error("spin_some() called while already spinning");
-  }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
-
   // In this context a 0 input max_duration means no duration limit
   if (std::chrono::nanoseconds(0) == max_duration) {
     max_duration = timers_manager_->MAX_TIME;
   }
 
-  // This function will wait until the first of the following events occur:
-  // - The input max_duration is elapsed
-  // - A timer triggers
-  // - An executor event is received and processed
-
-  // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() {return !events_queue_->empty();};
-
-
-  // Select the smallest between input max_duration and timer timeout
-  auto next_timer_timeout = timers_manager_->get_head_timeout();
-  if (next_timer_timeout < max_duration) {
-    max_duration = next_timer_timeout;
-  }
-
-  std::unique_lock<std::mutex> push_lock(push_mutex_);
-  // Wait until timeout or event
-  events_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
-  // Local event queue to allow entities to push events while we execute them
-  EventQueue execution_event_queue = events_queue_->get_all_events();
-  // We don't need the lock anymore
-  push_lock.unlock();
-
-  // Execute all ready timers
-  timers_manager_->execute_ready_timers();
-  // Consume all available events, this queue will be empty at the end of the function
-  this->consume_all_events(execution_event_queue);
+  return this->spin_some_impl(max_duration, false);
 }
 
 void
@@ -127,54 +93,66 @@ EventsExecutor::spin_all(std::chrono::nanoseconds max_duration)
   if (max_duration <= 0ns) {
     throw std::invalid_argument("max_duration must be positive");
   }
+  return this->spin_some_impl(max_duration, true);
+}
 
+void
+EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
+{
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
+
   RCLCPP_SCOPE_EXIT(this->spinning.store(false););
 
-  // When condition variable is notified, check this predicate to proceed
-  auto has_event_predicate = [this]() {return !events_queue_->empty();};
-
-  // Local event queue to allow entities to push events while we execute them
-  EventQueue execution_event_queue;
-
   auto start = std::chrono::steady_clock::now();
+
   auto max_duration_not_elapsed = [max_duration, start]() {
       auto elapsed_time = std::chrono::steady_clock::now() - start;
       return elapsed_time < max_duration;
     };
 
-  // Select the smallest between input max duration and timer timeout
-  auto next_timer_timeout = timers_manager_->get_head_timeout();
-  if (next_timer_timeout < max_duration) {
-    max_duration = next_timer_timeout;
+  size_t ready_events_at_start = 0;
+  size_t executed_events = 0;
+
+  if (!exhaustive) {
+    // Get the number of events ready at start
+    std::unique_lock<std::mutex> lock(push_mutex_);
+    ready_events_at_start = events_queue_->size();
+    lock.unlock();
   }
 
-  {
-    // Wait once until timeout or event
-    std::unique_lock<std::mutex> push_lock(push_mutex_);
-    events_queue_cv_.wait_for(push_lock, max_duration, has_event_predicate);
-  }
-
-  auto timeout = timers_manager_->get_head_timeout();
-
-  // Keep executing until no more work to do or timeout expired
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-    std::unique_lock<std::mutex> push_lock(push_mutex_);
-    execution_event_queue = events_queue_->get_all_events();
-    push_lock.unlock();
+    // Execute first ready event from queue if exists
+    if (exhaustive || (executed_events < ready_events_at_start)) {
+      std::unique_lock<std::mutex> lock(push_mutex_);
+      bool has_event = !events_queue_->empty();
 
-    // Exit if there is no more work to do
-    const bool ready_timer = timeout < 0ns;
-    const bool has_events = !execution_event_queue.empty();
-    if (!ready_timer && !has_events) {
-      break;
+      if (has_event) {
+        rmw_listener_event_t event = events_queue_->front();
+        events_queue_->pop();
+        this->execute_event(event);
+        executed_events++;
+        continue;
+      }
     }
 
-    // Execute all ready work
-    timeout = timers_manager_->execute_ready_timers();
-    this->consume_all_events(execution_event_queue);
+    bool timer_executed;
+
+    if (exhaustive) {
+      // Execute timer if is ready
+      timer_executed = timers_manager_->execute_head_timer();
+    } else {
+      // Execute timer if was ready at start
+      timer_executed = timers_manager_->execute_head_timer(start);
+    }
+
+    if (timer_executed) {
+      continue;
+    }
+
+    // If there's no more work available, exit
+    break;
   }
 }
 

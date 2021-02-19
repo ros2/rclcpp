@@ -90,6 +90,18 @@ public:
   }
 
   /**
+   * @brief Returns the number of elements in the queue.
+   * @return the number of elements in the queue.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  size() const
+  {
+    return event_queue_.size();
+  }
+
+  /**
    * @brief Initializes the queue
    */
   RCLCPP_PUBLIC
