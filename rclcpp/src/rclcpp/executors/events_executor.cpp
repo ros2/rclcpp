@@ -30,10 +30,19 @@ EventsExecutor::EventsExecutor(
   const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
+  // Get ownership of the queue used to store events.
+  if (!events_queue) {
+    throw std::invalid_argument("events_queue can't be a null pointer");
+  }
+  events_queue_ = std::move(events_queue);
+  events_queue_->init();
+
+  // Create timers manager
   timers_manager_ = std::make_shared<TimersManager>(context_);
+
+  // Create entities collector
   entities_collector_ = std::make_shared<EventsExecutorEntitiesCollector>(this);
   entities_collector_->init();
-
 
   // Setup the executor notifier to wake up the executor when some guard conditions are tiggered.
   // The added guard conditions are guaranteed to not go out of scope before the executor itself.
@@ -42,11 +51,6 @@ EventsExecutor::EventsExecutor(
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
   executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
   entities_collector_->add_waitable(executor_notifier_);
-
-  // Get ownership of the queue used to store events.
-  events_queue_ = std::move(events_queue);
-  // Init the events queue
-  events_queue_->init();
 }
 
 void
