@@ -68,7 +68,7 @@ void TimersManager::start()
 void TimersManager::stop()
 {
   // Nothing to do if the timers thread is not running
-  // or if another thred already signaled to stop.
+  // or if another thread already signaled to stop.
   if (!running_.exchange(false)) {
     return;
   }
@@ -99,7 +99,7 @@ std::chrono::nanoseconds TimersManager::get_head_timeout()
   return this->get_head_timeout_unsafe(timers_heap);
 }
 
-std::chrono::nanoseconds TimersManager::execute_ready_timers()
+void TimersManager::execute_ready_timers()
 {
   // Do not allow to interfere with the thread running
   if (running_) {
@@ -112,12 +112,10 @@ std::chrono::nanoseconds TimersManager::execute_ready_timers()
   TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
   this->execute_ready_timers_unsafe(timers_heap);
   weak_timers_heap_.store(timers_heap);
-
-  return this->get_head_timeout_unsafe(timers_heap);
 }
 
 bool TimersManager::execute_head_timer(
-  std::chrono::time_point<std::chrono::steady_clock> timepoint)
+  std::chrono::time_point<std::chrono::steady_clock> tp)
 {
   // Do not allow to interfere with the thread running
   if (running_) {
@@ -137,11 +135,8 @@ bool TimersManager::execute_head_timer(
   TimerPtr head = timers_heap.front();
 
   bool timer_ready = false;
-
-  auto max_time = std::chrono::time_point<std::chrono::steady_clock>::max();
-
-  if (timepoint != max_time) {
-    timer_ready = timer_was_ready_at_tp(head, timepoint);
+  if (tp != std::chrono::time_point<std::chrono::steady_clock>::max()) {
+    timer_ready = timer_was_ready_at_tp(head, tp);
   } else {
     timer_ready = head->is_ready();
   }
@@ -152,10 +147,10 @@ bool TimersManager::execute_head_timer(
     timers_heap.heapify_root();
     weak_timers_heap_.store(timers_heap);
     return true;
-  } else {
-    // Head timer was not ready yet
-    return false;
   }
+
+  // Head timer was not ready yet
+  return false;
 }
 
 void TimersManager::execute_ready_timers_unsafe(TimersHeap & heap)
