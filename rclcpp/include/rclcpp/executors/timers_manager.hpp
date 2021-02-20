@@ -65,7 +65,7 @@ public:
 
   /**
    * @brief Construct a new TimersManager object
-   * 
+   *
    * @param context custom context to be used.
    * Shared ownership of the context is held until destruction.
    */
@@ -79,7 +79,7 @@ public:
   /**
    * @brief Adds a new timer to the storage, maintaining weak ownership of it.
    * Function is thread safe and it can be called regardless of the state of the timers thread.
-   * 
+   *
    * @param timer the timer to add.
    */
   void add_timer(rclcpp::TimerBase::SharedPtr timer);
@@ -88,7 +88,7 @@ public:
    * @brief Remove a single timer from the object storage.
    * Will do nothing if the timer was not being stored here.
    * Function is thread safe and it can be called regardless of the state of the timers thread.
-   * 
+   *
    * @param timer the timer to remove.
    */
   void remove_timer(rclcpp::TimerBase::SharedPtr timer);
@@ -121,7 +121,7 @@ public:
   /**
    * @brief Executes head timer if ready at time point.
    * Function is thread safe, but it will throw an error if the timers thread is running.
-   * 
+   *
    * @param tp the time point to check for, where `max()` denotes that no check will be performed.
    * @return true if head timer was ready at time point.
    */
@@ -132,7 +132,7 @@ public:
   /**
    * @brief Get the amount of time before the next timer expires.
    * Function is thread safe, but it will throw an error if the timers thread is running.
-   * 
+   *
    * @return std::chrono::nanoseconds to wait,
    * the returned value could be negative if the timer is already expired
    * or MAX_TIME if there are no timers stored in the object.
@@ -204,9 +204,25 @@ public:
     }
 
     /**
+     * @brief Returns a const reference to the front element
+     */
+    const WeakTimerPtr & front() const
+    {
+      return weak_heap_.front();
+    }
+
+    /**
+     * @brief Returns whether the heap is empty or not
+     */
+    bool empty() const
+    {
+      return weak_heap_.empty();
+    }
+
+    /**
      * @brief This function restores the current object as a valid heap
      * and it returns a locked version of it.
-     * It is the only public API to access the stored timers.
+     * It is the only public API to access and manipulate the stored timers.
      *
      * @return TimersHeap owned timers corresponding to the current object
      */
@@ -411,13 +427,7 @@ private:
    * or MAX_TIME if the heap is empty.
    * This function is not thread safe, acquire the timers_mutex_ before calling it.
    */
-  std::chrono::nanoseconds get_head_timeout_unsafe(const TimersHeap & heap)
-  {
-    if (heap.empty()) {
-      return MAX_TIME;
-    }
-    return (heap.front())->time_until_trigger();
-  }
+  std::chrono::nanoseconds get_head_timeout_unsafe();
 
   /**
    * @brief Executes all the timers currently ready when the function is invoked
