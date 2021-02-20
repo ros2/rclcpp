@@ -17,8 +17,8 @@
 
 #include <queue>
 
-#include "rclcpp/executors/events_executor_entities_collector.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 #include "rmw/listener_event_types.h"
 
@@ -30,10 +30,14 @@ namespace buffers
 {
 
 /**
- * @brief This abstract class is intended to be used as
- * a wrapper around a queue. The derived classes should chose
- * which container to use and the strategies for push and prune
- * events from the queue.
+ * @brief This abstract class can be used to implement different types of queues
+ * where `rmw_listener_event_t` can be stored.
+ * The derived classes should choose which underlying container to use and
+ * the strategy for pushing and popping events.
+ * For example a queue implementation may be bounded or unbounded and have
+ * different pruning strategies.
+ * Implementations may or may not check the validity of events and decide how to handle
+ * the situation where an event is not valid anymore (e.g. a subscription history cache overruns)
  */
 class EventsQueue
 {
@@ -56,9 +60,7 @@ public:
   push(const rmw_listener_event_t & event) = 0;
 
   /**
-   * @brief removes front element from the queue
-   * The element removed is the "oldest" element in the queue whose
-   * value can be retrieved by calling member front().
+   * @brief removes front element from the queue.
    */
   RCLCPP_PUBLIC
   virtual
@@ -101,14 +103,13 @@ public:
   init() = 0;
 
   /**
-   * @brief gets a queue with all events accumulated on it since
-   * the last call. The member queue is empty when the call returns.
+   * @brief pops out all events stored in the object into an output queue.
    * @return queue with events
    */
   RCLCPP_PUBLIC
   virtual
   std::queue<rmw_listener_event_t>
-  get_all_events() = 0;
+  pop_all_events() = 0;
 };
 
 }  // namespace buffers

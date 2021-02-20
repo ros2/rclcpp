@@ -37,10 +37,16 @@ namespace executors
 
 /// Events executor implementation
 /**
- * This executor is a variation of the standard one that does not uses a waitset.
- * The executor uses an events queue and a timers manager to execute entities from its
+ * This executor uses an events queue and a timers manager to execute entities from its
  * associated nodes and callback groups.
- * This provides improved performance as it allows to skip all the waitset maintenance operations.
+ * The RMW listener APIs are used to collect new events.
+ *
+ * This executor tries to reduce as much as possible the amount of maintenance operations.
+ * This allows to use customized `EventsQueue` classes to achieve different goals such
+ * as very low CPU usage, bounded memory requirement, determinism, etc.
+ *
+ * The executor uses a weak ownership model and it locks entities only while executing
+ * their related events.
  *
  * To run this executor:
  * rclcpp::executors::EventsExecutor executor;
@@ -204,8 +210,6 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
-  using EventQueue = std::queue<rmw_listener_event_t>;
-
   // Executor callback: Push new events into the queue and trigger cv.
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
@@ -228,11 +232,6 @@ private:
     // Notify that the event queue has some events in it.
     this_executor->events_queue_cv_.notify_one();
   }
-
-  /// Extract and execute events from the queue until it is empty
-  RCLCPP_PUBLIC
-  void
-  consume_all_events(EventQueue & queue);
 
   // Execute a single event
   RCLCPP_PUBLIC

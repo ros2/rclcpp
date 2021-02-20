@@ -28,11 +28,10 @@ namespace buffers
 {
 
 /**
- * @brief This class provides a simple queue implementation
- * based on a std::queue. As the objective is having a CPU peformant
- * queue, it does not performs any checks about the size of
- * the queue, so the queue size could grow unbounded.
- * It does not implement any pruning mechanisms.
+ * @brief This class implements an EventsQueue as a simple wrapper around a std::queue.
+ * It does not perform any checks about the size of queue, which can grow
+ * unbounded without being pruned.
+ * The simplicity of this implementation makes it suitable for optimizing CPU usage.
  */
 class SimpleEventsQueue : public EventsQueue
 {
@@ -53,9 +52,7 @@ public:
   }
 
   /**
-   * @brief removes front element from the queue
-   * The element removed is the "oldest" element in the queue whose
-   * value can be retrieved by calling member front().
+   * @brief removes front event from the queue.
    */
   RCLCPP_PUBLIC
   virtual
@@ -114,7 +111,6 @@ public:
     std::swap(event_queue_, local_queue);
   }
 
-
   /**
    * @brief gets a queue with all events accumulated on it since
    * the last call. The member queue is empty when the call returns.
@@ -123,7 +119,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   std::queue<rmw_listener_event_t>
-  get_all_events()
+  pop_all_events()
   {
     std::queue<rmw_listener_event_t> local_queue;
     std::swap(event_queue_, local_queue);

@@ -66,13 +66,19 @@ EventsExecutor::spin()
     std::unique_lock<std::mutex> push_lock(push_mutex_);
     // We wait here until something has been pushed to the event queue
     events_queue_cv_.wait(push_lock, has_event_predicate);
-    // Local event queue to allow entities to push events while we execute them
-    EventQueue execution_event_queue = events_queue_->get_all_events();
+    // Move all events into a local events queue to allow entities to push while we execute them
+    std::queue<rmw_listener_event_t> execution_events_queue = events_queue_->pop_all_events();
     // Unlock the mutex
     push_lock.unlock();
-    // Consume all available events, this queue will be empty at the end of the function
-    this->consume_all_events(execution_event_queue);
+    // Consume all available events
+    while (!execution_events_queue.empty()) {
+      rmw_listener_event_t event = execution_events_queue.front();
+      execution_events_queue.pop();
+      this->execute_event(event);
+    }
   }
+
+  // Stop the timers manager thread when we are done spinning
   timers_manager_->stop();
 }
 
@@ -233,17 +239,6 @@ void
 EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
-}
-
-void
-EventsExecutor::consume_all_events(EventQueue & event_queue)
-{
-  while (!event_queue.empty()) {
-    rmw_listener_event_t event = event_queue.front();
-    event_queue.pop();
-
-    this->execute_event(event);
-  }
 }
 
 void
