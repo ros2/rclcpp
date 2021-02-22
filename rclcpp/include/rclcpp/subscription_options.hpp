@@ -160,37 +160,37 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
         throw std::runtime_error("failed to allocate memory for filter expression");
       }
       result.rmw_subscription_options.filter_expression = expression;
-    }
 
-    if (!content_filter_options.expression_parameters.empty()) {
-      rcutils_string_array_t * parameters =
-        static_cast<rcutils_string_array_t *>(allocator.allocate(
-          sizeof(rcutils_string_array_t),
-          allocator.state));
-      if (!parameters) {
-        fail_clean();
-        throw std::runtime_error("failed to allocate memory for expression parameters");
-      }
-      rcutils_ret_t ret = rcutils_string_array_init(
-        parameters, content_filter_options.expression_parameters.size(), &allocator);
-      if (RCUTILS_RET_OK != ret) {
-        fail_clean();
-        rclcpp::exceptions::throw_from_rcl_error(
-          RCL_RET_ERROR,
-          "failed to initialize string array for expression parameters");
-      }
-
-      for (size_t i = 0; i < content_filter_options.expression_parameters.size(); ++i) {
-        char * parameter =
-          rcutils_strdup(content_filter_options.expression_parameters[i].c_str(), allocator);
-        if (!parameter) {
+      if (!content_filter_options.expression_parameters.empty()) {
+        rcutils_string_array_t * parameters =
+          static_cast<rcutils_string_array_t *>(allocator.allocate(
+            sizeof(rcutils_string_array_t),
+            allocator.state));
+        if (!parameters) {
           fail_clean();
           throw std::runtime_error("failed to allocate memory for expression parameters");
         }
-        parameters->data[i] = parameter;
-      }
+        rcutils_ret_t ret = rcutils_string_array_init(
+          parameters, content_filter_options.expression_parameters.size(), &allocator);
+        if (RCUTILS_RET_OK != ret) {
+          fail_clean();
+          rclcpp::exceptions::throw_from_rcl_error(
+            RCL_RET_ERROR,
+            "failed to initialize string array for expression parameters");
+        }
 
-      result.rmw_subscription_options.expression_parameters = parameters;
+        for (size_t i = 0; i < content_filter_options.expression_parameters.size(); ++i) {
+          char * parameter =
+            rcutils_strdup(content_filter_options.expression_parameters[i].c_str(), allocator);
+          if (!parameter) {
+            fail_clean();
+            throw std::runtime_error("failed to allocate memory for expression parameters");
+          }
+          parameters->data[i] = parameter;
+        }
+
+        result.rmw_subscription_options.expression_parameters = parameters;
+      }
     }
 
     return result;
