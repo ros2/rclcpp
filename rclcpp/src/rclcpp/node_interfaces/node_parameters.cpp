@@ -461,6 +461,9 @@ declare_parameter_helper(
     {
       // TODO(ivanpauno): Refactor the logic so we don't need the above `strncmp` and we can
       // detect between both exceptions more elegantly.
+      if (rclcpp::PARAMETER_NOT_SET == default_value.get_type()) {
+        throw rclcpp::exceptions::NoParameterOverrideProvided(name);
+      }
       throw rclcpp::exceptions::InvalidParameterTypeException(name, result.reason);
     }
     throw rclcpp::exceptions::InvalidParameterValueException(

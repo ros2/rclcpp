@@ -2702,7 +2702,7 @@ TEST_F(TestNode, static_and_dynamic_typing) {
   {
     EXPECT_THROW(
       node->declare_parameter("integer_override_not_given", rclcpp::PARAMETER_INTEGER),
-      rclcpp::exceptions::InvalidParameterTypeException);
+      rclcpp::exceptions::NoParameterOverrideProvided);
   }
   {
     EXPECT_THROW(
