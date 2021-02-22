@@ -18,10 +18,10 @@
 #include <memory>
 #include <string>
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/callback_group.hpp"
 
 namespace rclcpp
 {

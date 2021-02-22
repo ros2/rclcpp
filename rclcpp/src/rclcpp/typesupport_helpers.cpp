@@ -21,11 +21,9 @@
 #include <tuple>
 #include <utility>
 
-#include "ament_index_cpp/get_resources.hpp"
 #include "ament_index_cpp/get_package_prefix.hpp"
-
+#include "ament_index_cpp/get_resources.hpp"
 #include "rcpputils/shared_library.hpp"
-
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
 namespace rclcpp

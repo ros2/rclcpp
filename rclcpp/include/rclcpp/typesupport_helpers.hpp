@@ -19,11 +19,10 @@
 #include <string>
 #include <tuple>
 
-#include "rclcpp/visibility_control.hpp"
-
 #include "rcpputils/shared_library.hpp"
-
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
+
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {

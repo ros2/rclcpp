@@ -19,16 +19,14 @@
 #include <string>
 #include <vector>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/serialization.hpp"
-
-#include "memory_management.hpp"
-
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
+#include "memory_management.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/serialization.hpp"
 
 using namespace ::testing;  // NOLINT
 using namespace rclcpp;  // NOLINT

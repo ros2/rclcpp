@@ -18,8 +18,9 @@
 #include <memory>
 #include <string>
 
-#include "rclcpp/rclcpp.hpp"
 #include "rcutils/error_handling.h"
+
+#include "rclcpp/rclcpp.hpp"
 
 namespace rclcpp
 {
