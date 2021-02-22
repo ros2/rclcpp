@@ -291,7 +291,7 @@ public:
   /**
    * \sa rclcpp::Node::declare_parameter
    */
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   const rclcpp::ParameterValue &
   declare_parameter(
     const std::string & name,
@@ -312,7 +312,7 @@ public:
     "node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);\n" \
     "```"
   )]]
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   const rclcpp::ParameterValue &
   declare_parameter(const std::string & name);
 
