@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__GENERIC__MEMORY_MANAGEMENT_HPP_
-#define RCLCPP__GENERIC__MEMORY_MANAGEMENT_HPP_
+#ifndef RCLCPP__MEMORY_MANAGEMENT_HPP_
+#define RCLCPP__MEMORY_MANAGEMENT_HPP_
 
 #include <memory>
 #include <string>
@@ -22,8 +22,6 @@
 #include "rcutils/error_handling.h"
 
 namespace rclcpp
-{
-namespace generic
 {
 class MemoryManagement
 {
@@ -61,7 +59,7 @@ public:
       message.get());
     if (error != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp::generic", "Leaking memory. Error: %s",
+        "rclcpp", "Leaking memory. Error: %s",
         rcutils_get_error_string().str);
     }
     return message;
@@ -99,7 +97,7 @@ private:
         delete msg;
         if (error != RCUTILS_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
-            "rclcpp::generic", "Leaking memory. Error: %s",
+            "rclcpp", "Leaking memory. Error: %s",
             rcutils_get_error_string().str);
         }
       });
@@ -109,7 +107,6 @@ private:
   rcutils_allocator_t rcutils_allocator_;
 };
 
-}  // namespace generic
 }  // namespace rclcpp
 
-#endif  // RCLCPP__GENERIC__MEMORY_MANAGEMENT_HPP_
+#endif  // RCLCPP__MEMORY_MANAGEMENT_HPP_

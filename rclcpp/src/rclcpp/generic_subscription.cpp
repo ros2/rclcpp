@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/generic/generic_subscription.hpp"
+#include "rclcpp/generic_subscription.hpp"
 
 #include <memory>
 #include <string>
 
 #include "rcl/subscription.h"
-#include "rclcpp/generic/typesupport_helpers.hpp"
+#include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
-{
-namespace generic
 {
 
 namespace
@@ -44,7 +42,7 @@ GenericSubscription::GenericSubscription(
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback)
 : SubscriptionBase(
     node_base,
-    *rclcpp::generic::get_typesupport_handle(
+    *rclcpp::get_typesupport_handle(
       topic_type, "rosidl_typesupport_cpp", ts_lib),
     topic_name,
     get_subscription_options(qos),
@@ -89,5 +87,4 @@ void GenericSubscription::return_serialized_message(
   message.reset();
 }
 
-}  // namespace generic
 }  // namespace rclcpp

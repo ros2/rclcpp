@@ -1,4 +1,4 @@
-// Copyright 2018, Bosch Software Innovations GmbH.
+// Copyright 2020, Apex.AI Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,45 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__GENERIC__CREATE_GENERIC_SUBSCRIPTION_HPP_
-#define RCLCPP__GENERIC__CREATE_GENERIC_SUBSCRIPTION_HPP_
+#ifndef RCLCPP__CREATE_GENERIC_PUBLISHER_HPP_
+#define RCLCPP__CREATE_GENERIC_PUBLISHER_HPP_
 
-#include <functional>
 #include <memory>
 #include <string>
 
-#include "rclcpp/generic/generic_subscription.hpp"
+#include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/callback_group.hpp"
-#include "rclcpp/serialized_message.hpp"
 
 namespace rclcpp
 {
-namespace generic
-{
 
-/// Create and return a GenericSubscription.
+/// Create and return a GenericPublisher.
 /**
  * The returned pointer will never be empty, but this function can throw various exceptions, for
  * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
  *
- * \param topics_interface NodeTopicsInterface pointer used in parts of the setup.
+ * \param topics_interface NodeTopicsInterface pointer used in parts of the setup
  * \param topic_name Topic name
  * \param topic_type Topic type
  * \param qos QoS settings
- * \param callback Callback for new messages of serialized form
  * \param group Callback group
  */
-std::shared_ptr<GenericSubscription> create_generic_subscription(
+std::shared_ptr<GenericPublisher> create_generic_publisher(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
-  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
   rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-}  // namespace generic
 }  // namespace rclcpp
 
-#endif  // RCLCPP__GENERIC__CREATE_GENERIC_SUBSCRIPTION_HPP_
+#endif  // RCLCPP__CREATE_GENERIC_PUBLISHER_HPP_

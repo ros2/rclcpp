@@ -27,11 +27,11 @@
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
-#include "rclcpp/generic/generic_publisher.hpp"
-#include "rclcpp/generic/generic_subscription.hpp"
+#include "rclcpp/generic_publisher.hpp"
+#include "rclcpp/generic_subscription.hpp"
 
 using namespace ::testing;  // NOLINT
-using namespace rclcpp::generic;  // NOLINT
+using namespace rclcpp;  // NOLINT
 
 class RclcppGenericNodeFixture : public Test
 {

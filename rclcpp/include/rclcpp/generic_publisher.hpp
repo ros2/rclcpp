@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_
-#define RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_
+#ifndef RCLCPP__GENERIC_PUBLISHER_HPP_
+#define RCLCPP__GENERIC_PUBLISHER_HPP_
 
 #include <memory>
 #include <string>
@@ -27,8 +27,6 @@
 #include "rcpputils/shared_library.hpp"
 
 namespace rclcpp
-{
-namespace generic
 {
 
 /**
@@ -70,7 +68,6 @@ public:
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
 };
 
-}  // namespace generic
 }  // namespace rclcpp
 
-#endif  // RCLCPP__GENERIC__GENERIC_PUBLISHER_HPP_
+#endif  // RCLCPP__GENERIC_PUBLISHER_HPP_

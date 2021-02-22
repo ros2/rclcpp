@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__GENERIC__GENERIC_SUBSCRIPTION_HPP_
-#define RCLCPP__GENERIC__GENERIC_SUBSCRIPTION_HPP_
+#ifndef RCLCPP__GENERIC_SUBSCRIPTION_HPP_
+#define RCLCPP__GENERIC_SUBSCRIPTION_HPP_
 
 #include <functional>
 #include <memory>
@@ -29,8 +29,6 @@
 #include "rcpputils/shared_library.hpp"
 
 namespace rclcpp
-{
-namespace generic
 {
 
 /**
@@ -90,7 +88,6 @@ private:
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
 };
 
-}  // namespace generic
 }  // namespace rclcpp
 
-#endif  // RCLCPP__GENERIC__GENERIC_SUBSCRIPTION_HPP_
+#endif  // RCLCPP__GENERIC_SUBSCRIPTION_HPP_

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_
-#define RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_
+#ifndef RCLCPP__TYPESUPPORT_HELPERS_HPP_
+#define RCLCPP__TYPESUPPORT_HELPERS_HPP_
 
 #include <memory>
 #include <string>
@@ -26,8 +26,6 @@
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
 namespace rclcpp
-{
-namespace generic
 {
 
 RCLCPP_PUBLIC
@@ -45,7 +43,6 @@ RCLCPP_PUBLIC
 std::tuple<std::string, std::string, std::string>
 extract_type_identifier(const std::string & full_type);
 
-}  // namespace generic
 }  // namespace rclcpp
 
-#endif  // RCLCPP__GENERIC__TYPESUPPORT_HELPERS_HPP_
+#endif  // RCLCPP__TYPESUPPORT_HELPERS_HPP_

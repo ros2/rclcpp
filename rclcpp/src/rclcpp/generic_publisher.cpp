@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/generic/generic_publisher.hpp"
+#include "rclcpp/generic_publisher.hpp"
 
 #include <memory>
 #include <string>
 
-#include "rclcpp/generic/typesupport_helpers.hpp"
+#include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
-{
-namespace generic
 {
 
 namespace
@@ -40,7 +38,7 @@ GenericPublisher::GenericPublisher(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos)
-: rclcpp::PublisherBase(node_base, topic_name, *rclcpp::generic::get_typesupport_handle(
+: rclcpp::PublisherBase(node_base, topic_name, *rclcpp::get_typesupport_handle(
       topic_type, "rosidl_typesupport_cpp", ts_lib), get_publisher_options(qos)), ts_lib_(
     ts_lib)
 {}
@@ -55,5 +53,4 @@ void GenericPublisher::publish(std::shared_ptr<rmw_serialized_message_t> message
   }
 }
 
-}  // namespace generic
 }  // namespace rclcpp

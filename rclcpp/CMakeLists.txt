@@ -58,11 +58,11 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/future_return_code.cpp
-  src/rclcpp/generic/create_generic_publisher.cpp
-  src/rclcpp/generic/create_generic_subscription.cpp
-  src/rclcpp/generic/generic_publisher.cpp
-  src/rclcpp/generic/generic_subscription.cpp
-  src/rclcpp/generic/typesupport_helpers.cpp
+  src/rclcpp/create_generic_publisher.cpp
+  src/rclcpp/create_generic_subscription.cpp
+  src/rclcpp/generic_publisher.cpp
+  src/rclcpp/generic_subscription.cpp
+  src/rclcpp/typesupport_helpers.cpp
   src/rclcpp/graph_listener.cpp
   src/rclcpp/guard_condition.cpp
   src/rclcpp/init_options.cpp

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/generic/typesupport_helpers.hpp"
+#include "rclcpp/typesupport_helpers.hpp"
 
 #include <memory>
 #include <sstream>
@@ -29,8 +29,6 @@
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
 namespace rclcpp
-{
-namespace generic
 {
 
 std::string get_typesupport_library_path(
@@ -154,5 +152,4 @@ get_typesupport_handle(
   }
 }
 
-}  // namespace generic
 }  // namespace rclcpp

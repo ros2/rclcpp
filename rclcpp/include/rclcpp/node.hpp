@@ -42,8 +42,8 @@
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
-#include "rclcpp/generic/generic_publisher.hpp"
-#include "rclcpp/generic/generic_subscription.hpp"
+#include "rclcpp/generic_publisher.hpp"
+#include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
@@ -279,7 +279,7 @@ public:
    * \param qos QoS settings
    * \param group Callback group
    */
-  std::shared_ptr<rclcpp::generic::GenericPublisher> create_generic_publisher(
+  std::shared_ptr<rclcpp::GenericPublisher> create_generic_publisher(
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos,
@@ -296,7 +296,7 @@ public:
    * \param callback Callback for new messages of serialized form
    * \param group Callback group
    */
-  std::shared_ptr<rclcpp::generic::GenericSubscription> create_generic_subscription(
+  std::shared_ptr<rclcpp::GenericSubscription> create_generic_subscription(
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos,
