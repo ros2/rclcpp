@@ -220,6 +220,24 @@ Node::create_callback_group(
 }
 
 const rclcpp::ParameterValue &
+Node::declare_parameter(const std::string & name)
+{
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  return this->node_parameters_->declare_parameter(name);
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
+}
+
+const rclcpp::ParameterValue &
 Node::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
@@ -229,6 +247,20 @@ Node::declare_parameter(
   return this->node_parameters_->declare_parameter(
     name,
     default_value,
+    parameter_descriptor,
+    ignore_override);
+}
+
+const rclcpp::ParameterValue &
+Node::declare_parameter(
+  const std::string & name,
+  rclcpp::ParameterType type,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
+{
+  return this->node_parameters_->declare_parameter(
+    name,
+    type,
     parameter_descriptor,
     ignore_override);
 }

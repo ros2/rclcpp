@@ -30,6 +30,7 @@ public:
     param2_name(param_prefix + ".my_param_2"),
     param3_name(param_prefix + ".my_param_3")
   {
+    dynamically_typed_descriptor.dynamic_typing = true;
   }
 
   void SetUp(benchmark::State & state)
@@ -37,9 +38,12 @@ public:
     rclcpp::init(0, nullptr);
     node = std::make_shared<rclcpp::Node>(node_name);
 
-    node->declare_parameter(param1_name);
-    node->declare_parameter(param2_name);
-    node->declare_parameter(param3_name);
+    node->declare_parameter(
+      param1_name, rclcpp::ParameterValue{}, dynamically_typed_descriptor);
+    node->declare_parameter(
+      param2_name, rclcpp::ParameterValue{}, dynamically_typed_descriptor);
+    node->declare_parameter(
+      param3_name, rclcpp::ParameterValue{}, dynamically_typed_descriptor);
     node->undeclare_parameter(param3_name);
 
     performance_test_fixture::PerformanceTest::SetUp(state);
@@ -58,6 +62,7 @@ public:
   const std::string param1_name;
   const std::string param2_name;
   const std::string param3_name;
+  rcl_interfaces::msg::ParameterDescriptor dynamically_typed_descriptor;
 
 protected:
   rclcpp::Node::SharedPtr node;
@@ -66,7 +71,7 @@ protected:
 BENCHMARK_F(NodeParametersInterfaceTest, declare_undeclare)(benchmark::State & state)
 {
   for (auto _ : state) {
-    node->declare_parameter(param3_name);
+    node->declare_parameter(param3_name, rclcpp::ParameterValue{}, dynamically_typed_descriptor);
     node->undeclare_parameter(param3_name);
   }
 }

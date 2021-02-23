@@ -95,7 +95,9 @@ public:
       param1_name, rclcpp::ParameterValue("param1_value"));
     remote_node->declare_parameter(
       param2_name, rclcpp::ParameterValue(std::vector<int> {1, 2, 3}));
-    remote_node->declare_parameter(param3_name);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.dynamic_typing = true;
+    remote_node->declare_parameter(param3_name, rclcpp::ParameterValue{}, descriptor);
     remote_node->undeclare_parameter(param3_name);
 
     params_client = std::make_shared<rclcpp::SyncParametersClient>(node, remote_node_name);

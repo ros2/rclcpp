@@ -305,15 +305,58 @@ public:
    *   name is invalid.
    * \throws rclcpp::exceptions::InvalidParameterValueException if initial
    *   value fails to be set.
+   * \throws rclcpp::exceptions::InvalidParameterTypeException
+   *   if the type of the default value or override is wrong.
    */
   RCLCPP_PUBLIC
   const rclcpp::ParameterValue &
   declare_parameter(
     const std::string & name,
-    const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
+    const rclcpp::ParameterValue & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
+
+  /// Declare and initialize a parameter, return the effective value.
+  /**
+   * Same as the previous one, but a default value is not provided and the user
+   * must provide a parameter override of the correct type.
+   *
+   * \param[in] name The name of the parameter.
+   * \param[in] type Desired type of the parameter, which will enforced at runtime.
+   * \param[in] parameter_descriptor An optional, custom description for
+   *   the parameter.
+   * \param[in] ignore_override When `true`, the parameter override is ignored.
+   *    Default to `false`.
+   * \return A const reference to the value of the parameter.
+   * \throws Same as the previous overload taking a default value.
+   * \throws rclcpp::exceptions::InvalidParameterTypeException
+   *   if an override is not provided or the provided override is of the wrong type.
+   */
+  RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  declare_parameter(
+    const std::string & name,
+    rclcpp::ParameterType type,
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor{},
+    bool ignore_override = false);
+
+  /// Declare a parameter
+  [[deprecated(
+    "declare_parameter() with only a name is deprecated and will be deleted in the future.\n" \
+    "If you want to declare a parameter that won't change type without a default value use:\n" \
+    "`node->declare_parameter<ParameterT>(name)`, where e.g. ParameterT=int64_t.\n\n" \
+    "If you want to declare a parameter that can dynamically change type use:\n" \
+    "```\n" \
+    "rcl_interfaces::msg::ParameterDescriptor descriptor;\n" \
+    "descriptor.dynamic_typing = true;\n" \
+    "node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);\n" \
+    "```"
+  )]]
+  RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  declare_parameter(const std::string & name);
 
   /// Declare and initialize a parameter with a type.
   /**
@@ -341,6 +384,18 @@ public:
   declare_parameter(
     const std::string & name,
     const ParameterT & default_value,
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false);
+
+  /// Declare and initialize a parameter with a type.
+  /**
+   * See the non-templated declare_parameter() on this class for details.
+   */
+  template<typename ParameterT>
+  auto
+  declare_parameter(
+    const std::string & name,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
