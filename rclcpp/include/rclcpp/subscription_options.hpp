@@ -163,13 +163,15 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 
       if (!content_filter_options.expression_parameters.empty()) {
         rcutils_string_array_t * parameters =
-          static_cast<rcutils_string_array_t *>(allocator.allocate(
+          static_cast<rcutils_string_array_t *>(allocator.zero_allocate(
+            1,
             sizeof(rcutils_string_array_t),
             allocator.state));
         if (!parameters) {
           fail_clean();
           throw std::runtime_error("failed to allocate memory for expression parameters");
         }
+        result.rmw_subscription_options.expression_parameters = parameters;
         rcutils_ret_t ret = rcutils_string_array_init(
           parameters, content_filter_options.expression_parameters.size(), &allocator);
         if (RCUTILS_RET_OK != ret) {
@@ -188,8 +190,6 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
           }
           parameters->data[i] = parameter;
         }
-
-        result.rmw_subscription_options.expression_parameters = parameters;
       }
     }
 

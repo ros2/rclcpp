@@ -48,20 +48,6 @@ SubscriptionBase::SubscriptionBase(
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
-  // finalize subscription_options
-  RCLCPP_SCOPE_EXIT(
-  {
-    rcl_ret_t ret = rcl_subscription_options_fini(
-      const_cast<rcl_subscription_options_t *>(&subscription_options));
-    if (RCL_RET_OK != ret) {
-      RCLCPP_ERROR(
-        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
-        "Failed to fini subscription option: %s",
-        rcl_get_error_string().str);
-      rcl_reset_error();
-    }
-  });
-
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
       if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {

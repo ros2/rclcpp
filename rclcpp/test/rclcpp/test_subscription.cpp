@@ -28,6 +28,7 @@
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "std_msgs/msg/string.hpp"
 
 using namespace std::chrono_literals;
 
@@ -142,6 +143,44 @@ public:
     using test_msgs::msg::Empty;
     auto sub = node->create_subscription<Empty>("topic", 10, callback);
   }
+};
+
+class TestCftSubscription : public ::testing::Test
+{
+public:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("test_cft_subscription", "/ns");
+    rclcpp::SubscriptionOptionsBase options_base;
+    options_base.content_filter_options.filter_expression =
+      "data MATCH 'Hello World: 5' or data MATCH %0";
+    options_base.content_filter_options.expression_parameters = {"'Hello World: 10'"};
+    rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> subscription_options(
+      options_base);
+    auto callback = [](std::shared_ptr<const std_msgs::msg::String>) {};
+    sub = node->create_subscription<std_msgs::msg::String>(
+      "topic", 10, callback, subscription_options);
+  }
+
+  void TearDown()
+  {
+    sub.reset();
+    node.reset();
+  }
+
+protected:
+  rclcpp::Node::SharedPtr node;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
 };
 
 /*
@@ -438,6 +477,42 @@ TEST_F(TestSubscription, handle_loaned_message) {
   test_msgs::msg::Empty msg;
   rclcpp::MessageInfo message_info;
   EXPECT_NO_THROW(sub->handle_loaned_message(&msg, message_info));
+}
+
+TEST_F(TestCftSubscription, is_cft_supported) {
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_subscription_is_cft_supported, false);
+    EXPECT_FALSE(sub->is_cft_supported());
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_subscription_is_cft_supported, true);
+    EXPECT_TRUE(sub->is_cft_supported());
+  }
+}
+
+TEST_F(TestCftSubscription, get_cft_expression_parameters_error) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_subscription_get_cft_expression_parameters, RCL_RET_ERROR);
+
+  std::string filter_expression;
+  std::vector<std::string> expression_parameters;
+  EXPECT_THROW(
+    sub->get_cft_expression_parameters(filter_expression, expression_parameters),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestCftSubscription, set_cft_expression_parameters_error) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_subscription_set_cft_expression_parameters, RCL_RET_ERROR);
+
+  std::string filter_expression = "data MATCH %0";
+  std::string expression_parameter = "'Hello World: 8'";
+  EXPECT_THROW(
+    sub->set_cft_expression_parameters(filter_expression, {expression_parameter}),
+    rclcpp::exceptions::RCLError);
 }
 
 /*
