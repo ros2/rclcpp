@@ -31,6 +31,8 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/get_message_type_support_handle.hpp"
+#include "rclcpp/is_ros_compatible_type.hpp"
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -79,11 +81,15 @@ public:
   : PublisherBase(
       node_base,
       topic,
-      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      rclcpp::get_message_type_support_handle<MessageT>(),
       options.template to_rcl_publisher_options<MessageT>(qos)),
     options_(options),
     message_allocator_(new MessageAllocator(*options.get_allocator().get()))
   {
+    static_assert(
+      rclcpp::is_ros_compatible_type<MessageT>::value,
+      "given message type is not compatible with ROS and cannot be used with a Publisher");
+
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
     if (options_.event_callbacks.deadline_callback) {
