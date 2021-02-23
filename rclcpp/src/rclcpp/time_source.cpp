@@ -178,6 +178,11 @@ TimeSource::~TimeSource()
   {
     this->detachNode();
   }
+
+  if (clock_subscription_) {
+    clock_executor_.cancel();
+    clock_executor_thread_.join();
+  }
 }
 
 void TimeSource::set_clock(
@@ -241,6 +246,8 @@ void TimeSource::create_clock_sub()
       rclcpp::QosPolicyKind::History,
       rclcpp::QosPolicyKind::Reliability,
     });
+  clock_callback_group_ = node_base_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
+  options.callback_group = clock_callback_group_;
 
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
     node_parameters_,
@@ -249,6 +256,11 @@ void TimeSource::create_clock_sub()
     rclcpp::QoS(KeepLast(1)).best_effort(),
     std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
     options
+  );
+
+  clock_executor_thread_ = std::thread([this]() {
+    clock_executor_.add_callback_group(clock_callback_group_, node_base_);
+    clock_executor_.spin();}
   );
 }
 

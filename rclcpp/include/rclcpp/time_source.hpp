@@ -25,6 +25,7 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 
 
@@ -140,6 +141,9 @@ private:
   using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
+  rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
+  rclcpp::executors::SingleThreadedExecutor clock_executor_;
+  std::thread clock_executor_thread_;
 
   // The clock callback itself
   void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);
