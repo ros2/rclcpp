@@ -68,7 +68,7 @@ void TimersManager::start()
 void TimersManager::stop()
 {
   // Nothing to do if the timers thread is not running
-  // or if another thred already signaled to stop.
+  // or if another thread already signaled to stop.
   if (!running_.exchange(false)) {
     return;
   }
@@ -95,11 +95,10 @@ std::chrono::nanoseconds TimersManager::get_head_timeout()
   }
 
   std::unique_lock<std::mutex> lock(timers_mutex_);
-  TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
-  return this->get_head_timeout_unsafe(timers_heap);
+  return this->get_head_timeout_unsafe();
 }
 
-std::chrono::nanoseconds TimersManager::execute_ready_timers()
+void TimersManager::execute_ready_timers()
 {
   // Do not allow to interfere with the thread running
   if (running_) {
@@ -108,16 +107,11 @@ std::chrono::nanoseconds TimersManager::execute_ready_timers()
   }
 
   std::unique_lock<std::mutex> lock(timers_mutex_);
-
-  TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
-  this->execute_ready_timers_unsafe(timers_heap);
-  weak_timers_heap_.store(timers_heap);
-
-  return this->get_head_timeout_unsafe(timers_heap);
+  this->execute_ready_timers_unsafe();
 }
 
 bool TimersManager::execute_head_timer(
-  std::chrono::time_point<std::chrono::steady_clock> timepoint)
+  std::chrono::time_point<std::chrono::steady_clock> tp)
 {
   // Do not allow to interfere with the thread running
   if (running_) {
@@ -137,11 +131,8 @@ bool TimersManager::execute_head_timer(
   TimerPtr head = timers_heap.front();
 
   bool timer_ready = false;
-
-  auto max_time = std::chrono::time_point<std::chrono::steady_clock>::max();
-
-  if (timepoint != max_time) {
-    timer_ready = timer_was_ready_at_tp(head, timepoint);
+  if (tp != std::chrono::time_point<std::chrono::steady_clock>::max()) {
+    timer_ready = timer_was_ready_at_tp(head, tp);
   } else {
     timer_ready = head->is_ready();
   }
@@ -152,16 +143,46 @@ bool TimersManager::execute_head_timer(
     timers_heap.heapify_root();
     weak_timers_heap_.store(timers_heap);
     return true;
-  } else {
-    // Head timer was not ready yet
-    return false;
   }
+
+  // Head timer was not ready yet
+  return false;
 }
 
-void TimersManager::execute_ready_timers_unsafe(TimersHeap & heap)
+std::chrono::nanoseconds TimersManager::get_head_timeout_unsafe()
 {
+  // If we don't have any weak pointer, then we just return maximum timeout
+  if (weak_timers_heap_.empty()) {
+    return MAX_TIME;
+  }
+
+  // Weak heap is not empty, so try to lock the first element
+  TimerPtr head_timer = weak_timers_heap_.front().lock();
+  // If it is still a valid pointer, it is guaranteed to be the correct head
+  if (head_timer != nullptr) {
+    return head_timer->time_until_trigger();
+  }
+
+  // If the first elements has expired, we can't make other assumptions on the heap
+  // and we need to entirely validate it.
+  TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
+
+  // NOTE: the following operations will not modify any element in the heap, so we
+  // don't have to call `weak_timers_heap_.store(locked_heap)` at the end.
+
+  if (locked_heap.empty()) {
+    return MAX_TIME;
+  }
+  return locked_heap.front()->time_until_trigger();
+}
+
+void TimersManager::execute_ready_timers_unsafe()
+{
+  // We start by locking the timers
+  TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
+
   // Nothing to do if we don't have any timer
-  if (heap.empty()) {
+  if (locked_heap.empty()) {
     return;
   }
 
@@ -169,44 +190,36 @@ void TimersManager::execute_ready_timers_unsafe(TimersHeap & heap)
   // The second check prevents this function from blocking indefinitely if the
   // time required for executing the timers is longer than their period.
 
-  TimerPtr head = heap.front();
+  TimerPtr head = locked_heap.front();
   auto start_time = std::chrono::steady_clock::now();
   while (head->is_ready() && this->timer_was_ready_at_tp(head, start_time)) {
     // Execute head timer
     head->execute_callback();
     // Executing a timer will result in updating its time_until_trigger, so re-heapify
-    heap.heapify_root();
+    locked_heap.heapify_root();
     // Get new head timer
-    head = heap.front();
+    head = locked_heap.front();
   }
+
+  // After having performed work on the locked heap we reflect the changes to weak one.
+  // Timers will be already sorted the next time we need them if none went out of scope.
+  weak_timers_heap_.store(locked_heap);
 }
 
 void TimersManager::run_timers()
 {
-  std::chrono::nanoseconds time_to_sleep;
-  {
-    std::unique_lock<std::mutex> lock(timers_mutex_);
-    TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
-    time_to_sleep = this->get_head_timeout_unsafe(timers_heap);
-  }
-
   while (rclcpp::ok(context_) && running_) {
     // Lock mutex
     std::unique_lock<std::mutex> timers_lock(timers_mutex_);
 
+    std::chrono::nanoseconds time_to_sleep = get_head_timeout_unsafe();
     // Wait until timeout or notification that timers have been updated
     timers_cv_.wait_for(timers_lock, time_to_sleep, [this]() {return timers_updated_;});
     // Reset timers updated flag
     timers_updated_ = false;
 
-    // Get ownership of timers
-    TimersHeap timers_heap = weak_timers_heap_.validate_and_lock();
     // Execute timers
-    this->execute_ready_timers_unsafe(timers_heap);
-    // Store updated order of elements to efficiently re-use it next iteration
-    weak_timers_heap_.store(timers_heap);
-    // Get next timeout
-    time_to_sleep = this->get_head_timeout_unsafe(timers_heap);
+    this->execute_ready_timers_unsafe();
   }
 
   // Make sure the running flag is set to false when we exit from this function

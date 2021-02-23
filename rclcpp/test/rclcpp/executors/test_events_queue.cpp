@@ -21,21 +21,7 @@
 
 using namespace std::chrono_literals;
 
-class TestEventsQueue : public ::testing::Test
-{
-public:
-  void SetUp()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  void TearDown()
-  {
-    rclcpp::shutdown();
-  }
-};
-
-TEST_F(TestEventsQueue, SimpleQueueTest)
+TEST(TestEventsQueue, SimpleQueueTest)
 {
   // Create a SimpleEventsQueue and a local queue
   auto simple_queue = std::make_unique<rclcpp::experimental::buffers::SimpleEventsQueue>();
@@ -54,7 +40,7 @@ TEST_F(TestEventsQueue, SimpleQueueTest)
   // Pop one message
   simple_queue->pop();
 
-  local_events_queue = simple_queue->get_all_events();
+  local_events_queue = simple_queue->pop_all_events();
 
   // We should have (11 - 1) events in the local queue
   size_t local_queue_size = local_events_queue.size();
