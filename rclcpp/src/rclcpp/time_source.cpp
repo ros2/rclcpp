@@ -261,9 +261,11 @@ void TimeSource::create_clock_sub()
     options
   );
 
-  clock_executor_thread_ = std::thread([this]() {
-    clock_executor_.add_callback_group(clock_callback_group_, node_base_);
-    clock_executor_.spin();}
+  clock_executor_thread_ = std::thread(
+    [this]() {
+        clock_executor_.add_callback_group(clock_callback_group_, node_base_);
+        clock_executor_.spin();
+    }
   );
 }
 
