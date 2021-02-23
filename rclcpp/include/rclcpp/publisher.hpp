@@ -15,9 +15,6 @@
 #ifndef RCLCPP__PUBLISHER_HPP_
 #define RCLCPP__PUBLISHER_HPP_
 
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -27,6 +24,8 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/publisher.h"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
