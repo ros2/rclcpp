@@ -246,7 +246,10 @@ void TimeSource::create_clock_sub()
       rclcpp::QosPolicyKind::History,
       rclcpp::QosPolicyKind::Reliability,
     });
-  clock_callback_group_ = node_base_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
+  clock_callback_group_ = node_base_->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    false
+  );
   options.callback_group = clock_callback_group_;
 
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
