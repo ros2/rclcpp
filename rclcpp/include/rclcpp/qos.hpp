@@ -63,7 +63,7 @@ enum class LivelinessPolicy
   Unknown = RMW_QOS_POLICY_LIVELINESS_UNKNOWN,
 };
 
-enum class QoSProfileCompatibility
+enum class QoSCompatibility
 {
   Ok = RMW_QOS_COMPATIBILITY_OK,
   Warning = RMW_QOS_COMPATIBILITY_WARNING,
@@ -147,31 +147,6 @@ public:
   /// Return the rmw qos profile.
   const rmw_qos_profile_t &
   get_rmw_qos_profile() const;
-
-  /// Check if this QoS profile is compatible with another.
-  /**
-   * Two QoS profiles are compatible if a publisher and subcription
-   * using the QoS policies can communicate with each other.
-   *
-   * This QoS profile is assumed to be for a subscription.
-   *
-   * If there is an unknown policy value in either profile, then an exception is thrown.
-   *
-   * \param[in] publisher_qos: The QoS profile for a publisher.
-   * \param[out] reason: An explanation for any incompatibility.
-   *   Set if the return value is QoSProfileCompatibility::Warning or
-   *   QoSProfileCompatibility::Error.
-   *   Not set if the QoS profiles are compatible.
-   *   This parameter is optional.
-   * \return QoSProfileCompatibility::Ok if the QoS profiles are compatible, or
-   * \return QoSProfileCompatibility::Warning if there is a chance the QoS profiles are not
-   *   compatible (this can happen if some policies are set ot "system default"), or
-   * \return QoSProfileCompatibility::Error if the QoS profiles are not compatible.
-   * \throws rclcpp::exceptions::QoSCheckCompatibilityException if any policy value is "unknown",
-   *   or if an unexpected error occurs.
-   */
-  QoSProfileCompatibility
-  compatible(const QoS & publisher_qos, std::string * reason = nullptr);
 
   /// Set the history policy.
   QoS &
@@ -305,6 +280,61 @@ RCLCPP_PUBLIC
 bool operator==(const QoS & left, const QoS & right);
 RCLCPP_PUBLIC
 bool operator!=(const QoS & left, const QoS & right);
+
+/// Result type for checking QoS compatibility
+/**
+ * \see rclcpp::qos_check_compatible()
+ */
+struct RCLCPP_PUBLIC QoSCheckCompatibleResult
+{
+  /// Compatibility result.
+  QoSCompatibility compatibility;
+
+  /// Reason for a (possible) incompatibility.
+  /**
+   * Set if compatiblity is QoSCompatibility::Warning or QoSCompatiblity::Error.
+   * Not set if the QoS profiles are compatible.
+   */
+  std::string reason;
+};
+
+/// Check if two QoS profiles are compatible.
+/**
+ * Two QoS profiles are compatible if a publisher and subcription
+ * using the QoS policies can communicate with each other.
+ *
+ * If any policies have value "system default" or "unknown" then it is possible that
+ * compatiblity cannot be determined.
+ * In this case, the value QoSCompatility::Warning is set as part of
+ * the returned structure.
+ *
+ * Example usage:
+ *
+ * ```cpp
+ * rclcpp::QoSCheckCompatibleResult result = rclcpp::qos_check_compatible(
+ *   publisher_qos, subscription_qos);
+ * if (rclcpp::QoSCompatibility::Error != result.compatibility) {
+ *   // QoS not compatible ...
+ *   // result.reason contains info about the incompatibility
+ * } else if (rclcpp::QoSCompatibility::Warning != result.compatibility) {
+ *   // QoS may not be compatible ...
+ *   // result.reason contains info about the possible incompatibility
+ * }
+ * ```
+ *
+ * \param[in] publisher_qos: The QoS profile for a publisher.
+ * \param[in] subscription_qos: The QoS profile for a subscription.
+ * \return Struct with compatiblity set to QoSCompatibility::Ok if the QoS profiles are
+ *   compatible, or
+ * \return Struct with compatibility set to QoSCompatibility::Warning if there is a chance
+ *   the QoS profiles are not compatible, or
+ * \return Struct with compatibility set to QoSCompatibility::Error if the QoS profiles are
+ *   not compatible.
+ * \throws rclcpp::exceptions::QoSCheckCompatibilityException if an unexpected error occurs.
+ */
+RCLCPP_PUBLIC
+QoSCheckCompatibleResult
+qos_check_compatible(const QoS & publisher_qos, const QoS & subscription_qos);
 
 /**
  * Clock QoS class

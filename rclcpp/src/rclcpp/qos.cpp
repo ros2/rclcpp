@@ -94,47 +94,6 @@ QoS::get_rmw_qos_profile() const
   return rmw_qos_profile_;
 }
 
-QoSProfileCompatibility
-QoS::compatible(const QoS & publisher_qos, std::string * reason)
-{
-  rmw_qos_compatibility_type_t compatible;
-  const size_t reason_size = 2048u;
-  char reason_c_str[reason_size] = "";
-  rmw_ret_t ret = rmw_qos_profile_check_compatible(
-    publisher_qos.get_rmw_qos_profile(),
-    this->rmw_qos_profile_,
-    &compatible,
-    reason_c_str,
-    reason_size);
-  if (RMW_RET_OK != ret) {
-    auto error_str = rmw_get_error_string().str;
-    rmw_reset_error();
-    throw rclcpp::exceptions::QoSCheckCompatibleException{error_str};
-  }
-
-  if (reason) {
-    *reason = std::string(reason_c_str);
-  }
-
-  QoSProfileCompatibility compatibility;
-  switch (compatible) {
-    case RMW_QOS_COMPATIBILITY_OK:
-      compatibility = QoSProfileCompatibility::Ok;
-      break;
-    case RMW_QOS_COMPATIBILITY_WARNING:
-      compatibility = QoSProfileCompatibility::Warning;
-      break;
-    case RMW_QOS_COMPATIBILITY_ERROR:
-      compatibility = QoSProfileCompatibility::Error;
-      break;
-    default:
-      throw rclcpp::exceptions::QoSCheckCompatibleException{
-              "Unexpected compatibility value returned by rmw '" + std::to_string(compatible) +
-              "'"};
-  }
-  return compatibility;
-}
-
 QoS &
 QoS::history(rmw_qos_history_policy_t history)
 {
@@ -350,6 +309,45 @@ bool operator==(const QoS & left, const QoS & right)
 bool operator!=(const QoS & left, const QoS & right)
 {
   return !(left == right);
+}
+
+QoSCheckCompatibleResult
+qos_check_compatible(const QoS & publisher_qos, const QoS & subscription_qos)
+{
+  rmw_qos_compatibility_type_t compatible;
+  const size_t reason_size = 2048u;
+  char reason_c_str[reason_size] = "";
+  rmw_ret_t ret = rmw_qos_profile_check_compatible(
+    publisher_qos.get_rmw_qos_profile(),
+    subscription_qos.get_rmw_qos_profile(),
+    &compatible,
+    reason_c_str,
+    reason_size);
+  if (RMW_RET_OK != ret) {
+    auto error_str = rmw_get_error_string().str;
+    rmw_reset_error();
+    throw rclcpp::exceptions::QoSCheckCompatibleException{error_str};
+  }
+
+  QoSCheckCompatibleResult result;
+  result.reason = std::string(reason_c_str);
+
+  switch (compatible) {
+    case RMW_QOS_COMPATIBILITY_OK:
+      result.compatibility = QoSCompatibility::Ok;
+      break;
+    case RMW_QOS_COMPATIBILITY_WARNING:
+      result.compatibility = QoSCompatibility::Warning;
+      break;
+    case RMW_QOS_COMPATIBILITY_ERROR:
+      result.compatibility = QoSCompatibility::Error;
+      break;
+    default:
+      throw rclcpp::exceptions::QoSCheckCompatibleException{
+              "Unexpected compatibility value returned by rmw '" + std::to_string(compatible) +
+              "'"};
+  }
+  return result;
 }
 
 ClockQoS::ClockQoS(const QoSInitialization & qos_initialization)

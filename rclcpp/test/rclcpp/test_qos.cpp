@@ -211,76 +211,42 @@ TEST(TestQoS, policy_name_from_kind) {
     rclcpp::qos_policy_name_from_kind(RMW_QOS_POLICY_LIFESPAN));
 }
 
-TEST(TestQoS, compatible)
+TEST(TestQoS, qos_check_compatible)
 {
   // Compatible
   {
-    rclcpp::SensorDataQoS pub_qos;
-    rclcpp::SensorDataQoS sub_qos;
-    rclcpp::QoSProfileCompatibility ret = sub_qos.compatible(pub_qos);
-    EXPECT_EQ(ret, rclcpp::QoSProfileCompatibility::Ok);
-  }
-
-  // Compatible with reason
-  {
-    rclcpp::SensorDataQoS pub_qos;
-    rclcpp::SensorDataQoS sub_qos;
-    std::string reason;
-    rclcpp::QoSProfileCompatibility ret = sub_qos.compatible(pub_qos, &reason);
-    EXPECT_EQ(ret, rclcpp::QoSProfileCompatibility::Ok);
-    EXPECT_TRUE(reason.empty());
-  }
-
-  // Error on "unknown" in pub
-  {
-    rclcpp::QoS pub_qos(rclcpp::KeepLast(1), rmw_qos_profile_unknown);
-    rclcpp::QoS sub_qos(1);
-    EXPECT_THROW(sub_qos.compatible(pub_qos), rclcpp::exceptions::QoSCheckCompatibleException);
-  }
-
-  // Error on "unknown" in sub
-  {
-    rclcpp::QoS pub_qos(1);
-    rclcpp::QoS sub_qos(rclcpp::KeepLast(1), rmw_qos_profile_unknown);
-    EXPECT_THROW(sub_qos.compatible(pub_qos), rclcpp::exceptions::QoSCheckCompatibleException);
+    rclcpp::QoS qos = rclcpp::QoS(1)
+      .reliable()
+      .durability_volatile()
+      .deadline(rclcpp::Duration(1, 0u))
+      .lifespan(rclcpp::Duration(1, 0u))
+      .liveliness(rclcpp::LivelinessPolicy::Automatic)
+      .liveliness_lease_duration(rclcpp::Duration(1, 0u));
+    rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(qos, qos);
+    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Ok);
+    EXPECT_EQ(ret.reason, std::string(""));
   }
 
   // Note, the following incompatible tests assume we are using a DDS middleware,
   // and may not be valid for other RMWs.
+  // TODO(jacobperron): programmatically check if current RMW is one of the officially
+  //                    supported DDS middlewares before running the following tests
 
   // Incompatible
   {
     rclcpp::QoS pub_qos = rclcpp::QoS(1).best_effort();
     rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
-    rclcpp::QoSProfileCompatibility ret = sub_qos.compatible(pub_qos);
-    EXPECT_EQ(ret, rclcpp::QoSProfileCompatibility::Error);
-  }
-
-  // Incompatible with reason
-  {
-    rclcpp::QoS pub_qos = rclcpp::QoS(1).best_effort();
-    rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
-    std::string reason;
-    rclcpp::QoSProfileCompatibility ret = sub_qos.compatible(pub_qos, &reason);
-    EXPECT_EQ(ret, rclcpp::QoSProfileCompatibility::Error);
-    EXPECT_FALSE(reason.empty());
+    rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(pub_qos, sub_qos);
+    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Error);
+    EXPECT_FALSE(ret.reason.empty());
   }
 
   // Warn of possible incompatibility
   {
     rclcpp::SystemDefaultsQoS pub_qos;
     rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
-    rclcpp::QoSProfileCompatibility ret = sub_qos.compatible(pub_qos);
-    EXPECT_EQ(ret, rclcpp::QoSProfileCompatibility::Warning);
-  }
-
-  // Warn of possible incompatibility with reason
-  {
-    rclcpp::QoS pub_qos = rclcpp::QoS(1).best_effort();
-    rclcpp::SystemDefaultsQoS sub_qos;
-    std::string reason;
-    rclcpp::QoSProfileCompatibility ret = sub_qos.compatible(pub_qos, &reason);
-    EXPECT_EQ(ret, rclcpp::QoSProfileCompatibility::Warning);
-    EXPECT_FALSE(reason.empty());
+    rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(pub_qos, sub_qos);
+    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Warning);
+    EXPECT_FALSE(ret.reason.empty());
   }
 }
