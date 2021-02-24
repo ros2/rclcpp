@@ -161,7 +161,7 @@ public:
    * pub = node->create_publisher<MsgT>("chatter", QoS(10));  // implicitly KeepLast
    * pub = node->create_publisher<MsgT>("chatter", QoS(KeepLast(10)));
    * pub = node->create_publisher<MsgT>("chatter", QoS(KeepAll()));
-   * pub = node->create_publisher<MsgT>("chatter", QoS(1).best_effort().volatile());
+   * pub = node->create_publisher<MsgT>("chatter", QoS(1).best_effort().durability_volatile());
    * {
    *   rclcpp::QoS custom_qos(KeepLast(10), rmw_qos_profile_sensor_data);
    *   pub = node->create_publisher<MsgT>("chatter", custom_qos);
