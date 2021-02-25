@@ -100,8 +100,9 @@ public:
 
   rclcpp::Context::SharedPtr context_;
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
-  std::shared_ptr<rcl_action_client_t> client_handle{nullptr};
+  // node_handle must be destroyed after client_handle to prevent memory leak
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
+  std::shared_ptr<rcl_action_client_t> client_handle{nullptr};
   rclcpp::Logger logger;
 
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
