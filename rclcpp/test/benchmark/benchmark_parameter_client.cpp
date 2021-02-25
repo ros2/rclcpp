@@ -91,12 +91,13 @@ public:
     rclcpp::init(0, nullptr);
     node = std::make_shared<rclcpp::Node>(node_name);
 
-    remote_node->declare_parameter(
-      param1_name, rclcpp::ParameterValue("param1_value"));
-    remote_node->declare_parameter(
-      param2_name, rclcpp::ParameterValue(std::vector<int> {1, 2, 3}));
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.dynamic_typing = true;
+
+    remote_node->declare_parameter(
+      param1_name, rclcpp::ParameterValue("param1_value"), descriptor);
+    remote_node->declare_parameter(
+      param2_name, rclcpp::ParameterValue(std::vector<int> {1, 2, 3}), descriptor);
     remote_node->declare_parameter(param3_name, rclcpp::ParameterValue{}, descriptor);
     remote_node->undeclare_parameter(param3_name);
 
