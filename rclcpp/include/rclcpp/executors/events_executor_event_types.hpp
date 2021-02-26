@@ -37,16 +37,20 @@ struct ExecutorEvent
   ExecutorEventType type;
 };
 
+// The EventsExecutorCallbackData struct is what the listeners
+// will use as argument when calling their callbacks from the
+// RMW implementation. The listeners get a (void *) of this struct,
+// and the executor is in charge to cast it back and use the data.
 struct EventsExecutorCallbackData
 {
   EventsExecutorCallbackData(
-    EventsExecutor * exec,
-    void * id,
-    ExecutorEventType type)
+    EventsExecutor * _executor,
+    void * _entity_id,
+    ExecutorEventType _event_type)
   {
-    executor = exec;
-    entity_id = id;
-    event_type = type;
+    executor = _executor;
+    entity_id = _entity_id;
+    event_type = _event_type;
   }
 
   // Equal operator
@@ -64,14 +68,13 @@ struct EventsExecutorCallbackData
 };
 
 // To be able to use std::unordered_map with an EventsExecutorCallbackData
-// as key, we need a hasher:
+// as key, we need a hasher. We use the entity ID as hash, since it is
+// unique for each EventsExecutorCallbackData object.
 struct KeyHasher
 {
-  size_t operator()(const EventsExecutorCallbackData & k) const
+  size_t operator()(const EventsExecutorCallbackData & key) const
   {
-    return ((std::hash<EventsExecutor *>()(k.executor) ^
-           (std::hash<void *>()(k.entity_id) << 1)) >> 1) ^
-           (std::hash<ExecutorEventType>()(k.event_type) << 1);
+    return std::hash<EventsExecutor *>()(key.entity_id);
   }
 };
 
