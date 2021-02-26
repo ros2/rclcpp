@@ -179,7 +179,7 @@ TimeSource::~TimeSource()
     this->detachNode();
   }
 
-  if (clock_subscription_) {
+  if (clock_executor_thread_.joinable()) {
     clock_executor_.cancel();
     clock_executor_thread_.join();
   }
