@@ -14,62 +14,70 @@
 
 #include <string>
 
-#include "rclcpp/network_flow.hpp"
+#include "rclcpp/network_flow_endpoint.hpp"
 
 namespace rclcpp
 {
 
 const std::string &
-NetworkFlow::transport_protocol() const
+NetworkFlowEndpoint::transport_protocol() const
 {
   return transport_protocol_;
 }
 
 const std::string &
-NetworkFlow::internet_protocol() const
+NetworkFlowEndpoint::internet_protocol() const
 {
   return internet_protocol_;
 }
 
-uint16_t NetworkFlow::transport_port() const
+uint16_t NetworkFlowEndpoint::transport_port() const
 {
   return transport_port_;
 }
 
-uint32_t NetworkFlow::flow_label() const
+uint32_t NetworkFlowEndpoint::flow_label() const
 {
   return flow_label_;
 }
 
+uint8_t NetworkFlowEndpoint::dscp() const
+{
+  return dscp_;
+}
+
 const std::string &
-NetworkFlow::internet_address() const
+NetworkFlowEndpoint::internet_address() const
 {
   return internet_address_;
 }
 
-bool operator==(const NetworkFlow & left, const NetworkFlow & right)
+bool operator==(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right)
 {
   return left.transport_protocol_ == right.transport_protocol_ &&
          left.internet_protocol_ == right.internet_protocol_ &&
          left.transport_port_ == right.transport_port_ &&
          left.flow_label_ == right.flow_label_ &&
+         left.dscp_ == right.dscp_ &&
          left.internet_address_ == right.internet_address_;
 }
 
-bool operator!=(const NetworkFlow & left, const NetworkFlow & right)
+bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right)
 {
   return !(left == right);
 }
 
-std::ostream & operator<<(std::ostream & os, const NetworkFlow & network_flow)
+std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network_flow_endpoint)
 {
-  os << '{' <<
-    "\"transportProtocol\": " << network_flow.transport_protocol_ << ", " <<
-    "\"transportPort\": " << network_flow.transport_port_ << ", " <<
-    "\"internetProtocol\": " << network_flow.internet_protocol_ << ", " <<
-    "\"internetAddress\": " << network_flow.internet_address_ << ", " <<
-    "\"flowLabel\": " << network_flow.flow_label_ << ", " <<
-    '}';
+  // Stream out in JSON-like format
+  os << "{" <<
+    "\"transportProtocol\": \"" << network_flow_endpoint.transport_protocol_ << "\", " <<
+    "\"internetProtocol\": \"" << network_flow_endpoint.internet_protocol_ << "\", " <<
+    "\"transportPort\": \"" << network_flow_endpoint.transport_port_ << "\", " <<
+    "\"flowLabel\": \"" << network_flow_endpoint.flow_label_ << "\", " <<
+    "\"dscp\": \"" << std::to_string(network_flow_endpoint.dscp_) << "\", " <<
+    "\"internetAddress\": \"" << network_flow_endpoint.internet_address_ << "\"" <<
+    "}";
   return os;
 }
 

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NETWORK_FLOW_HPP_
-#define RCLCPP__NETWORK_FLOW_HPP_
+#ifndef RCLCPP__NETWORK_FLOW_ENDPOINT_HPP_
+#define RCLCPP__NETWORK_FLOW_ENDPOINT_HPP_
 
 #include <cstdint>
 #include <string>
 #include <iostream>
 
-#include "rcl/network_flow.h"
+#include "rcl/network_flow_endpoints.h"
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -27,22 +27,25 @@ namespace rclcpp
 {
 
 /**
- * Class describes endpoints of network flow such as transport protocol,
- * internet protocol, transport port, flow label, and internet address
+ * Class describes a network flow endpoint based on the counterpart definition
+ * in the RMW layer.
  */
-class NetworkFlow
+class NetworkFlowEndpoint
 {
 public:
-  /// Construct from rcl_network_flow_t
+  /// Construct from rcl_network_flow_endpoint_t
   RCLCPP_PUBLIC
-  explicit NetworkFlow(const rcl_network_flow_t & network_flow)
+  explicit NetworkFlowEndpoint(const rcl_network_flow_endpoint_t & network_flow_endpoint)
   : transport_protocol_(
-      rcl_network_flow_get_transport_protocol_string(network_flow.transport_protocol)),
+      rcl_network_flow_endpoint_get_transport_protocol_string(network_flow_endpoint.
+      transport_protocol)),
     internet_protocol_(
-        rcl_network_flow_get_internet_protocol_string(network_flow.internet_protocol)),
-    transport_port_(network_flow.transport_port),
-    flow_label_(network_flow.flow_label),
-    internet_address_(network_flow.internet_address)
+      rcl_network_flow_endpoint_get_internet_protocol_string(
+        network_flow_endpoint.internet_protocol)),
+    transport_port_(network_flow_endpoint.transport_port),
+    flow_label_(network_flow_endpoint.flow_label),
+    dscp_(network_flow_endpoint.dscp),
+    internet_address_(network_flow_endpoint.internet_address)
   {
   }
 
@@ -62,37 +65,42 @@ public:
   RCLCPP_PUBLIC
   uint32_t flow_label() const;
 
+  /// Get DSCP
+  RCLCPP_PUBLIC
+  uint8_t dscp() const;
+
   /// Get internet address
   RCLCPP_PUBLIC
   const std::string & internet_address() const;
 
-  /// Compare two NetworkFlow instances
-  friend bool operator==(const NetworkFlow & left, const NetworkFlow & right);
-  friend bool operator!=(const NetworkFlow & left, const NetworkFlow & right);
+  /// Compare two NetworkFlowEndpoint instances
+  friend bool operator==(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
+  friend bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
 
   /// Streaming helper
-  friend std::ostream & operator<<(std::ostream & os, const NetworkFlow & network_flow);
+  friend std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network_flow_endpoint);
 
 private:
   std::string transport_protocol_;
   std::string internet_protocol_;
   uint16_t transport_port_;
   uint32_t flow_label_;
+  uint8_t dscp_;
   std::string internet_address_;
 };
 
-/// Check if two NetworkFlow instances are equal
+/// Check if two NetworkFlowEndpoint instances are equal
 RCLCPP_PUBLIC
-bool operator==(const NetworkFlow & left, const NetworkFlow & right);
+bool operator==(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
 
-/// Check if two NetworkFlow instances are not equal
+/// Check if two NetworkFlowEndpoint instances are not equal
 RCLCPP_PUBLIC
-bool operator!=(const NetworkFlow & left, const NetworkFlow & right);
+bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
 
 /// Streaming helper
 RCLCPP_PUBLIC
-std::ostream & operator<<(std::ostream & os, const NetworkFlow & network_flow);
+std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network_flow);
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NETWORK_FLOW_HPP_
+#endif  // RCLCPP__NETWORK_FLOW_ENDPOINT_HPP_
