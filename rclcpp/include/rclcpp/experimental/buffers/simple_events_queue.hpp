@@ -46,7 +46,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  push(const rmw_listener_event_t & event)
+  push(const rclcpp::executors::ExecutorEvent & event)
   {
     event_queue_.push(event);
   }
@@ -68,7 +68,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  rmw_listener_event_t
+  rclcpp::executors::ExecutorEvent
   front() const
   {
     return event_queue_.front();
@@ -107,7 +107,7 @@ public:
   init()
   {
     // Make sure the queue is empty when we start
-    std::queue<rmw_listener_event_t> local_queue;
+    std::queue<rclcpp::executors::ExecutorEvent> local_queue;
     std::swap(event_queue_, local_queue);
   }
 
@@ -118,16 +118,16 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  std::queue<rmw_listener_event_t>
+  std::queue<rclcpp::executors::ExecutorEvent>
   pop_all_events()
   {
-    std::queue<rmw_listener_event_t> local_queue;
+    std::queue<rclcpp::executors::ExecutorEvent> local_queue;
     std::swap(event_queue_, local_queue);
     return local_queue;
   }
 
 private:
-  std::queue<rmw_listener_event_t> event_queue_;
+  std::queue<rclcpp::executors::ExecutorEvent> event_queue_;
 };
 
 }  // namespace buffers

@@ -469,14 +469,13 @@ public:
 
   void
   set_events_executor_callback(
-    rclcpp::executors::EventsExecutor * executor,
-    rmw_listener_callback_t executor_callback) const override
+    rmw_listener_callback_t executor_callback,
+    const void * executor_callback_data) const override
   {
     rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
       &gc_,
       executor_callback,
-      executor,
-      this,
+      executor_callback_data,
       true /*Use previous events*/);
 
     if (RCL_RET_OK != ret) {

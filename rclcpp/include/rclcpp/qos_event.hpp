@@ -111,8 +111,8 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    rclcpp::executors::EventsExecutor * executor,
-    rmw_listener_callback_t executor_callback) const override;
+    rmw_listener_callback_t executor_callback,
+    const void * executor_callback_data) const override;
 
 protected:
   rcl_event_t event_handle_;

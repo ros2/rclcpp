@@ -49,7 +49,7 @@ EventsExecutor::EventsExecutor(
   executor_notifier_ = std::make_shared<EventsExecutorNotifyWaitable>();
   executor_notifier_->add_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
   executor_notifier_->add_guard_condition(&interrupt_guard_condition_);
-  executor_notifier_->set_events_executor_callback(this, &EventsExecutor::push_event);
+
   entities_collector_->add_waitable(executor_notifier_);
 }
 
@@ -71,12 +71,12 @@ EventsExecutor::spin()
     // We wait here until something has been pushed to the event queue
     events_queue_cv_.wait(push_lock, has_event_predicate);
     // Move all events into a local events queue to allow entities to push while we execute them
-    std::queue<rmw_listener_event_t> execution_events_queue = events_queue_->pop_all_events();
+    std::queue<ExecutorEvent> execution_events_queue = events_queue_->pop_all_events();
     // Unlock the mutex
     push_lock.unlock();
     // Consume all available events
     while (!execution_events_queue.empty()) {
-      rmw_listener_event_t event = execution_events_queue.front();
+      ExecutorEvent event = execution_events_queue.front();
       execution_events_queue.pop();
       this->execute_event(event);
     }
@@ -139,7 +139,7 @@ EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhau
       bool has_event = !events_queue_->empty();
 
       if (has_event) {
-        rmw_listener_event_t event = events_queue_->front();
+        ExecutorEvent event = events_queue_->front();
         events_queue_->pop();
         this->execute_event(event);
         executed_events++;
@@ -183,7 +183,7 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
   // When condition variable is notified, check this predicate to proceed
   auto has_event_predicate = [this]() {return !events_queue_->empty();};
 
-  rmw_listener_event_t event;
+  ExecutorEvent event;
   bool has_event = false;
 
   {
@@ -246,12 +246,12 @@ EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-EventsExecutor::execute_event(const rmw_listener_event_t & event)
+EventsExecutor::execute_event(const ExecutorEvent & event)
 {
   switch (event.type) {
     case SUBSCRIPTION_EVENT:
       {
-        auto subscription = entities_collector_->get_subscription(event.entity);
+        auto subscription = entities_collector_->get_subscription(event.entity_id);
 
         if (subscription) {
           execute_subscription(subscription);
@@ -261,7 +261,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
 
     case SERVICE_EVENT:
       {
-        auto service = entities_collector_->get_service(event.entity);
+        auto service = entities_collector_->get_service(event.entity_id);
 
         if (service) {
           execute_service(service);
@@ -271,7 +271,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
 
     case CLIENT_EVENT:
       {
-        auto client = entities_collector_->get_client(event.entity);
+        auto client = entities_collector_->get_client(event.entity_id);
 
         if (client) {
           execute_client(client);
@@ -281,7 +281,7 @@ EventsExecutor::execute_event(const rmw_listener_event_t & event)
 
     case WAITABLE_EVENT:
       {
-        auto waitable = entities_collector_->get_waitable(event.entity);
+        auto waitable = entities_collector_->get_waitable(event.entity_id);
 
         if (waitable) {
           auto data = waitable->take_data();

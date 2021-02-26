@@ -20,7 +20,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rmw/listener_event_types.h"
+#include "rclcpp/executors/events_executor_event_types.hpp"
 
 namespace rclcpp
 {
@@ -31,7 +31,7 @@ namespace buffers
 
 /**
  * @brief This abstract class can be used to implement different types of queues
- * where `rmw_listener_event_t` can be stored.
+ * where `ExecutorEvent` can be stored.
  * The derived classes should choose which underlying container to use and
  * the strategy for pushing and popping events.
  * For example a queue implementation may be bounded or unbounded and have
@@ -57,7 +57,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  push(const rmw_listener_event_t & event) = 0;
+  push(const rclcpp::executors::ExecutorEvent & event) = 0;
 
   /**
    * @brief removes front element from the queue.
@@ -73,7 +73,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  rmw_listener_event_t
+  rclcpp::executors::ExecutorEvent
   front() const = 0;
 
   /**
@@ -108,7 +108,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  std::queue<rmw_listener_event_t>
+  std::queue<rclcpp::executors::ExecutorEvent>
   pop_all_events() = 0;
 };
 

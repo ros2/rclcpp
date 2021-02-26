@@ -129,8 +129,8 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    rclcpp::executors::EventsExecutor * executor,
-    rmw_listener_callback_t executor_callback) const;
+    rmw_listener_callback_t executor_callback,
+    const void * executor_callback_data) const;
 
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)

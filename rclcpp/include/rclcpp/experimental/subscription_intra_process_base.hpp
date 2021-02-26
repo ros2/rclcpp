@@ -77,8 +77,8 @@ public:
   RCLCPP_PUBLIC
   void
   set_events_executor_callback(
-    rclcpp::executors::EventsExecutor * executor,
-    rmw_listener_callback_t executor_callback) const override;
+    rmw_listener_callback_t executor_callback,
+    const void * executor_callback_data) const override;
 
 protected:
   std::recursive_mutex reentrant_mutex_;

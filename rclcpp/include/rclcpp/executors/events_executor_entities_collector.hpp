@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "rclcpp/executors/event_waitable.hpp"
+#include "rclcpp/executors/events_executor_event_types.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 
@@ -213,6 +214,12 @@ private:
   void
   unset_guard_condition_callback(const rcl_guard_condition_t * guard_condition);
 
+  void
+  remove_callback_data(void * entity_id, ExecutorEventType type);
+
+  const EventsExecutorCallbackData *
+  get_callback_data(void * entity_id, ExecutorEventType type);
+
   /// Return true if the node belongs to the collector
   /**
    * \param[in] group_ptr a node base interface shared pointer
@@ -262,6 +269,8 @@ private:
   EventsExecutor * associated_executor_ = nullptr;
   /// Instance of the timers manager used by the associated executor
   TimersManager::SharedPtr timers_manager_;
+  /// Callback data from entities mapped to a counter of each
+  std::unordered_map<EventsExecutorCallbackData, size_t, KeyHasher> callback_data_map_;
 };
 
 }  // namespace executors
