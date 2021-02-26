@@ -254,6 +254,14 @@ void TimeSource::create_clock_sub()
     );
   }
   options.callback_group = clock_callback_group_;
+  if (!clock_executor_thread_.joinable()) {
+    clock_executor_thread_ = std::thread(
+      [this]() {
+        clock_executor_.add_callback_group(clock_callback_group_, node_base_);
+        clock_executor_.spin();
+      }
+    );
+  }
 
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
     node_parameters_,
