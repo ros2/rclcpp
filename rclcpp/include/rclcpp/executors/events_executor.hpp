@@ -29,7 +29,7 @@
 #include "rclcpp/experimental/buffers/simple_events_queue.hpp"
 #include "rclcpp/node.hpp"
 
-#include "rmw/listener_event_types.h"
+#include "rmw/listener_callback_type.h"
 
 namespace rclcpp
 {
