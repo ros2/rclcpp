@@ -271,19 +271,17 @@ void TimeSource::create_clock_sub()
     std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
     options
   );
-
-  clock_executor_thread_ = std::thread(
-    [this]() {
-      clock_executor_.add_callback_group(clock_callback_group_, node_base_);
-      clock_executor_.spin();
-    }
-  );
 }
 
 void TimeSource::destroy_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
   clock_subscription_.reset();
+  if (clock_executor_thread_.joinable()) {
+    clock_executor_.cancel();
+    clock_executor_thread_.join();
+    clock_executor_.remove_callback_group(clock_callback_group_);
+  }
 }
 
 void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
