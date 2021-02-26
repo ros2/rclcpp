@@ -74,7 +74,7 @@ struct KeyHasher
 {
   size_t operator()(const EventsExecutorCallbackData & key) const
   {
-    return std::hash<EventsExecutor *>()(key.entity_id);
+    return std::hash<void *>()(key.entity_id);
   }
 };
 
