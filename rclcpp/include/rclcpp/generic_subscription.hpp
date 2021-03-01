@@ -36,6 +36,12 @@ namespace rclcpp
  * This class is an implementation of an rclcpp::SubscriptionBase for serialized messages whose topic
  * is not known at compile time (hence templating does not work).
  *
+ * This works for packages installed from the ROS repositories as well as locally built packages,
+ * as long as you ensure that the `AMENT_PREFIX_PATH` environment variable has been populated with
+ * the package's install location, usually by sourcing the appropriate install script. That is
+ * required because it will look up the package install location for the given type, and the
+ * package's dynamic library with the type support information is loaded.
+ *
  * It does not support intra-process handling.
  */
 class GenericSubscription : public rclcpp::SubscriptionBase
@@ -44,8 +50,9 @@ public:
   // cppcheck-suppress unknownMacro
   RCLCPP_SMART_PTR_DEFINITIONS(GenericSubscription)
 
+  /// Constructor.
   /**
-   * Constructor. In order to properly subscribe to a topic, this subscription needs to be added to
+   * In order to properly subscribe to a topic, this subscription needs to be added to
    * the node_topic_interface of the node passed into this constructor.
    *
    * \param node_base Pointer to parent node's NodeBaseInterface
