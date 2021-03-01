@@ -256,7 +256,7 @@ struct PatchTraits<ID, ReturnT(
     mock_type, ReturnT, ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7, ArgT8, ArgT9);
 };
 
-/// Traits specialization for void(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7)
+/// Traits specialization for ReturnT(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7, ArgT8, ArgT9, ArgT10)
 /// free functions.
 /**
  * Necessary for Mimick macros to adjust accordingly when the return
