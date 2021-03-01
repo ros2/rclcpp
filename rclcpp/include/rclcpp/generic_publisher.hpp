@@ -25,6 +25,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/qos.hpp"
 
 namespace rclcpp
@@ -70,7 +71,7 @@ public:
 
   virtual ~GenericPublisher() = default;
 
-  void publish(std::shared_ptr<rmw_serialized_message_t> message);
+  void publish(const rclcpp::SerializedMessage & message);
 
   // The type support library should stay loaded, so it is stored in the GenericPublisher
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;

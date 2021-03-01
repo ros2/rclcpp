@@ -22,11 +22,11 @@
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
-#include "memory_management.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 
 using namespace ::testing;  // NOLINT
 using namespace rclcpp;  // NOLINT
@@ -79,11 +79,14 @@ public:
     return messages;
   }
 
-  std::shared_ptr<rmw_serialized_message_t> serialize_string_message(const std::string & message)
+  rclcpp::SerializedMessage serialize_string_message(const std::string & message)
   {
-    auto string_message = std::make_shared<test_msgs::msg::Strings>();
-    string_message->string_value = message;
-    return memory_management_.serialize_message(string_message);
+    test_msgs::msg::Strings string_message;
+    string_message.string_value = message;
+    rclcpp::Serialization<test_msgs::msg::Strings> ser;
+    SerializedMessage result;
+    ser.serialize_message(&string_message, &result);
+    return result;
   }
 
   void sleep_to_allow_topics_discovery()
@@ -106,7 +109,6 @@ public:
     return true;
   }
 
-  MemoryManagement memory_management_;
   std::shared_ptr<rclcpp::Node> node_;
   rclcpp::Node::SharedPtr publisher_node_;
   std::vector<std::shared_ptr<rclcpp::PublisherBase>> publishers_;
