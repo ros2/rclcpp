@@ -30,15 +30,16 @@
 namespace rclcpp
 {
 
+/// Publisher for serialized messages whose type is not known at compile time.
 /**
- * This class is an implementation of an rclcpp::PublisherBase for serialized messages whose type
- * is not known at compile time (hence templating does not work).
+ * Since the type is not known at compile time, this is not a template, and the dynamic library
+ * containing type support information has to be identified and loaded based on the type name.
  *
  * This works for packages installed from the ROS repositories as well as locally built packages,
  * as long as you ensure that the `AMENT_PREFIX_PATH` environment variable has been populated with
  * the package's install location, usually by sourcing the appropriate install script. That is
- * required because it will look up the package install location for the given type, and the
- * package's dynamic library with the type support information is loaded.
+ * required because it will look up the package install location for the given type, and load the
+ * type support library from there.
  *
  * It does not support intra-process handling.
  */
