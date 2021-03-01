@@ -19,6 +19,7 @@
 
 #include "rcl/subscription.h"
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
@@ -74,6 +75,8 @@ void GenericSubscription::handle_loaned_message(
 {
   (void) message;
   (void) message_info;
+  throw rclcpp::exceptions::UnimplementedError(
+          "handle_loaned_message is not implemented for GenericSubscription");
 }
 
 void GenericSubscription::return_message(std::shared_ptr<void> & message)

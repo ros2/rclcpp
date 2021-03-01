@@ -36,14 +36,13 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
   auto ts_lib = rclcpp::get_typesupport_library(
     topic_type, "rosidl_typesupport_cpp");
 
-  // Cannot use make_shared because constructor is private
-  std::shared_ptr<GenericSubscription> subscription(new GenericSubscription(
-      topics_interface->get_node_base_interface(),
-      std::move(ts_lib),
-      topic_name,
-      topic_type,
-      qos,
-      callback));
+  auto subscription = std::make_shared<GenericSubscription>(
+    topics_interface->get_node_base_interface(),
+    std::move(ts_lib),
+    topic_name,
+    topic_type,
+    qos,
+    callback);
 
   topics_interface->add_subscription(subscription, std::move(group));
 

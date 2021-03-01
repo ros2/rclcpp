@@ -116,12 +116,12 @@ get_typesupport_handle(
   std::tie(package_name, middle_module, type_name) = extract_type_identifier(type);
 
   auto mk_error = [&package_name, &type_name](auto reason) {
-    std::stringstream rcutils_dynamic_loading_error;
-    rcutils_dynamic_loading_error <<
-      "Something went wrong loading the typesupport library for message type " << package_name <<
-      "/" << type_name << ". " << reason;
-    return rcutils_dynamic_loading_error.str();
-  };
+      std::stringstream rcutils_dynamic_loading_error;
+      rcutils_dynamic_loading_error <<
+        "Something went wrong loading the typesupport library for message type " << package_name <<
+        "/" << type_name << ". " << reason;
+      return rcutils_dynamic_loading_error.str();
+    };
 
   try {
     std::string symbol_name = typesupport_identifier + "__get_message_type_support_handle__" +
