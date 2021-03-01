@@ -36,7 +36,7 @@ const rosidl_message_type_support_t *
 get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
-  std::shared_ptr<rcpputils::SharedLibrary> library);
+  rcpputils::SharedLibrary & library);
 
 RCLCPP_PUBLIC
 std::tuple<std::string, std::string, std::string>

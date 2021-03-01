@@ -77,7 +77,7 @@ TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_legacy_library) {
     auto library = rclcpp::get_typesupport_library(
       "test_msgs/BasicTypes", "rosidl_typesupport_cpp");
     auto string_typesupport = rclcpp::get_typesupport_handle(
-      "test_msgs/BasicTypes", "rosidl_typesupport_cpp", library);
+      "test_msgs/BasicTypes", "rosidl_typesupport_cpp", *library);
 
     EXPECT_THAT(
       std::string(string_typesupport->typesupport_identifier),
@@ -92,7 +92,7 @@ TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_library) {
     auto library = rclcpp::get_typesupport_library(
       "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp");
     auto string_typesupport = rclcpp::get_typesupport_handle(
-      "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp", library);
+      "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp", *library);
 
     EXPECT_THAT(
       std::string(string_typesupport->typesupport_identifier),

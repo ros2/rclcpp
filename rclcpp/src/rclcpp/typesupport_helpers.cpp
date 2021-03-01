@@ -108,45 +108,37 @@ const rosidl_message_type_support_t *
 get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
-  std::shared_ptr<rcpputils::SharedLibrary> library)
+  rcpputils::SharedLibrary & library)
 {
-  if (nullptr == library) {
-    throw std::runtime_error(
-            "rcpputils::SharedLibrary not initialized. Call get_typesupport_library first.");
-  }
-
   std::string package_name;
   std::string middle_module;
   std::string type_name;
   std::tie(package_name, middle_module, type_name) = extract_type_identifier(type);
 
-  std::stringstream rcutils_dynamic_loading_error;
-  rcutils_dynamic_loading_error <<
-    "Something went wrong loading the typesupport library for message type " << package_name <<
-    "/" << type_name << ".";
+  auto mk_error = [&package_name, &type_name](auto reason) {
+    std::stringstream rcutils_dynamic_loading_error;
+    rcutils_dynamic_loading_error <<
+      "Something went wrong loading the typesupport library for message type " << package_name <<
+      "/" << type_name << ". " << reason;
+    return rcutils_dynamic_loading_error.str();
+  };
 
   try {
-    auto symbol_name = typesupport_identifier + "__get_message_type_support_handle__" +
+    std::string symbol_name = typesupport_identifier + "__get_message_type_support_handle__" +
       package_name + "__" + (middle_module.empty() ? "msg" : middle_module) + "__" + type_name;
 
-    if (!library->get_symbol(symbol_name)) {
-      throw std::runtime_error{
-              rcutils_dynamic_loading_error.str() +
-              std::string(" Symbol not found.")};
+    if (!library.get_symbol(symbol_name)) {
+      throw std::runtime_error{mk_error("Symbol not found.")};
     }
 
     const rosidl_message_type_support_t * (* get_ts)() = nullptr;
-    get_ts = (decltype(get_ts))library->get_symbol(symbol_name);
-
+    get_ts = reinterpret_cast<decltype(get_ts)>(library.get_symbol(symbol_name));
     if (!get_ts) {
-      throw std::runtime_error{
-              rcutils_dynamic_loading_error.str() +
-              std::string(" Symbol of wrong type.")};
+      throw std::runtime_error{mk_error("Symbol of wrong type.")};
     }
-    auto type_support = get_ts();
-    return type_support;
+    return get_ts();
   } catch (std::runtime_error &) {
-    throw std::runtime_error(rcutils_dynamic_loading_error.str() + " Library could not be found.");
+    throw std::runtime_error{mk_error("Library could not be found.")};
   }
 }
 
