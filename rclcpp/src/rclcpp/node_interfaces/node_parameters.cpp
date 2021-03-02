@@ -389,6 +389,10 @@ __declare_parameter_common(
     callback_container,
     callback);
 
+  if (!result.successful) {
+    return result;
+  }
+
   // Add declared parameters to storage.
   parameters_out[name] = parameter_infos.at(name);
 
