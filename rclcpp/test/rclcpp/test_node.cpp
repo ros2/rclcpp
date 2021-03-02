@@ -620,6 +620,22 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
       {node->declare_parameter("parameter_type_mismatch", 42);},
       rclcpp::exceptions::InvalidParameterTypeException);
   }
+  {
+    // default type and expected type do not match
+    EXPECT_THROW(
+      {node->declare_parameter(
+          "parameter_type_mismatch", rclcpp::ParameterType::PARAMETER_INTEGER);},
+      rclcpp::exceptions::InvalidParameterTypeException);
+  }
+  {
+    // cannot pass an expected type and a descriptor with dynamic_typing=True
+    rcl_interfaces::msg::ParameterDescriptor descriptor{};
+    descriptor.dynamic_typing = true;
+    EXPECT_THROW(
+      {node->declare_parameter(
+          "invalid_argument", rclcpp::ParameterType::PARAMETER_INTEGER, descriptor);},
+      std::invalid_argument);
+  }
 }
 
 TEST_F(TestNode, declare_parameters_with_no_initial_values) {
