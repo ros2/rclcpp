@@ -440,6 +440,14 @@ declare_parameter_helper(
     parameter_descriptor.type = static_cast<uint8_t>(type);
   }
 
+  if (
+    rclcpp::PARAMETER_NOT_SET == default_value.get_type() &&
+    overrides.find(name) == overrides.end() &&
+    parameter_descriptor.dynamic_typing == false)
+  {
+    throw rclcpp::exceptions::NoParameterOverrideProvided(name);
+  }
+
   rcl_interfaces::msg::ParameterEvent parameter_event;
   auto result = __declare_parameter_common(
     name,
@@ -461,9 +469,6 @@ declare_parameter_helper(
     {
       // TODO(ivanpauno): Refactor the logic so we don't need the above `strncmp` and we can
       // detect between both exceptions more elegantly.
-      if (rclcpp::PARAMETER_NOT_SET == default_value.get_type()) {
-        throw rclcpp::exceptions::NoParameterOverrideProvided(name);
-      }
       throw rclcpp::exceptions::InvalidParameterTypeException(name, result.reason);
     }
     throw rclcpp::exceptions::InvalidParameterValueException(
@@ -526,6 +531,12 @@ NodeParameters::declare_parameter(
   if (rclcpp::PARAMETER_NOT_SET == type) {
     throw std::invalid_argument{
             "declare_parameter(): the provided parameter type cannot be rclcpp::PARAMETER_NOT_SET"};
+  }
+
+  if (parameter_descriptor.dynamic_typing == true) {
+    throw std::invalid_argument{
+            "declare_parameter(): cannot declare parameter of specific type and pass descriptor"
+            "with `dynamic_typing=true`"};
   }
 
   return declare_parameter_helper(
