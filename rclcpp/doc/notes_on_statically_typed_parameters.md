@@ -56,7 +56,7 @@ In the current implementation that isn't enforce, but it might make sense to do 
 ## Declaring a parameter without a default value
 
 There might be cases were a default value does not make sense and the user must always provide an override.
-In those cases, the parameter type can be specified explicetly:
+In those cases, the parameter type can be specified explicitly:
 
 ```cpp
 // method signature
