@@ -87,7 +87,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
         last = now;
 
         double diff_exp =
-            static_cast<double>(PERIOD) - static_cast<double>(TOLERANCE);
+          static_cast<double>(PERIOD) - static_cast<double>(TOLERANCE);
         if (diff < diff_exp) {
           executor.cancel();
           ASSERT_GT(diff, diff_exp);
