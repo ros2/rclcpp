@@ -86,10 +86,13 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
         double diff = static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
         last = now;
 
-        if (diff < PERIOD - TOLERANCE) {
+        double diff_exp =
+            static_cast<double>(PERIOD) - static_cast<double>(TOLERANCE);
+        if (diff < diff_exp) {
           executor.cancel();
-          ASSERT_GT(diff, PERIOD - TOLERANCE);
+          ASSERT_GT(diff, diff_exp);
         }
+
       }
     };
 
