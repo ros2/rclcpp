@@ -92,7 +92,6 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
           executor.cancel();
           ASSERT_GT(diff, diff_exp);
         }
-
       }
     };
 
