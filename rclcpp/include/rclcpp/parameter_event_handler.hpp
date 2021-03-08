@@ -30,6 +30,7 @@
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/visibility_control.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 namespace rclcpp
@@ -285,6 +286,7 @@ public:
 
 protected:
   /// Callback for parameter events subscriptions.
+  RCLCPP_PUBLIC
   void
   event_callback(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 
