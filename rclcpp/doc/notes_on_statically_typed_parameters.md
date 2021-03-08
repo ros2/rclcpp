@@ -14,7 +14,7 @@ $ ros2 param get /listener use_sim_time
 String value is: not_a_boolean
 ```
 
-For most use cases, having a static parameter types is enough.
+For most use cases, having static parameter types is enough.
 This notes document some of the decisions that were made when implementing static parameter types enforcement in:
 
 * https://github.com/ros2/rclcpp/pull/1522
