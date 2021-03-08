@@ -47,11 +47,8 @@ The parameter type will be inferred from the default value provided when declari
 
 ## Statically typed parameters when allowing undeclared parameters
 
-When undeclared parameters are allowed, the descriptor of undeclared parameters will have the dynamic typing field set.
-That's because in that case there is no declaration, and it doesn't make much sense to enforce the type of the first value set.
-
-TBD: Should parameters that were declared with the dynamic typing option off enforce that the parameter doesn't change the type even if allow undeclared parameters is set?
-In the current implementation that isn't enforce, but it might make sense to do it for parameters that were declared.
+When undeclared parameters are allowed and a parameter is set without a previous declaration, the parameter will be dynamically typed. This is consistent with other allowed behaviors when undeclared parameters are allowed, e.g. trying to get an undeclared parameter returns "NOT_SET".
+Parameter declarations will remain special and dynamic or static typing will be used based on the parameter descriptor (default to static).
 
 ## Declaring a parameter without a default value
 
@@ -78,7 +75,7 @@ Node.declare_parameter(name: str, param_type: rclpy.Parameter.Type, descriptor: 
 node.declare_paramter('my_integer_parameter', rclpy.Parameter.Type.INTEGER);  # declare an integer parameter
 ```
 
-If the parameter is optional, e.g.: only needed depending on the value of another parameter, the recommended approach is to conditionally declare the parameter:
+If the parameter may be unused, but when used requires a parameter override, then you could conditionally declare it:
 
 ```cpp
 auto mode = node->declare_parameter("mode", "modeA");  // "mode" parameter is an string
