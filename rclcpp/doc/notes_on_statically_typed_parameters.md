@@ -15,7 +15,7 @@ String value is: not_a_boolean
 ```
 
 For most use cases, having static parameter types is enough.
-This notes document some of the decisions that were made when implementing static parameter types enforcement in:
+This article documents some of the decisions that were made when implementing static parameter types enforcement in:
 
 * https://github.com/ros2/rclcpp/pull/1522
 * https://github.com/ros2/rclpy/pull/683
