@@ -409,6 +409,35 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   }
 }
 
+TEST_F(TestNode, declare_parameter_with_allow_undeclared_parameters) {
+  // test cases without initial values
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_node"_unq, "/",
+    rclcpp::NodeOptions{}.allow_undeclared_parameters(true));
+  {
+    // declared parameters static typing is still enforced
+    auto param_name = "parameter"_unq;
+    auto value = node->declare_parameter(param_name, 5);
+    EXPECT_EQ(value, 5);
+    EXPECT_FALSE(node->set_parameter({param_name, "asd"}).successful);
+    auto param = node->get_parameter(param_name);
+    EXPECT_EQ(param.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(param.get_value<int64_t>(), 5);
+  }
+  {
+    // not for automatically declared parameters
+    auto param_name = "parameter"_unq;
+    EXPECT_TRUE(node->set_parameter({param_name, 5}).successful);
+    auto param = node->get_parameter(param_name);
+    EXPECT_EQ(param.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(param.get_value<int64_t>(), 5);
+    EXPECT_TRUE(node->set_parameter({param_name, "asd"}).successful);
+    param = node->get_parameter(param_name);
+    EXPECT_EQ(param.get_type(), rclcpp::PARAMETER_STRING);
+    EXPECT_EQ(param.get_value<std::string>(), "asd");
+  }
+}
+
 auto get_fixed_on_parameter_set_callback(const std::string & name, bool successful)
 {
   return
