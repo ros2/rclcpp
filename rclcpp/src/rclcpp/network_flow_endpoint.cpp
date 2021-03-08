@@ -74,7 +74,7 @@ std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network
     "\"transportProtocol\": \"" << network_flow_endpoint.transport_protocol_ << "\", " <<
     "\"internetProtocol\": \"" << network_flow_endpoint.internet_protocol_ << "\", " <<
     "\"transportPort\": \"" << network_flow_endpoint.transport_port_ << "\", " <<
-    "\"flowLabel\": \"" << network_flow_endpoint.flow_label_ << "\", " <<
+    "\"flowLabel\": \"" << std::to_string(network_flow_endpoint.flow_label_) << "\", " <<
     "\"dscp\": \"" << std::to_string(network_flow_endpoint.dscp_) << "\", " <<
     "\"internetAddress\": \"" << network_flow_endpoint.internet_address_ << "\"" <<
     "}";
