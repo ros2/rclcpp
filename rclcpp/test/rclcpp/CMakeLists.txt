@@ -368,9 +368,9 @@ if(TARGET test_qos)
     ${PROJECT_NAME}
   )
 endif()
-function(test_pubsub_for_rmw_implementation)
+function(test_generic_pubsub_for_rmw_implementation)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_pubsub${target_suffix} test_pubsub.cpp
+  ament_add_gmock(test_pubsub${target_suffix} test_generic_pubsub.cpp
     ENV ${rmw_implementation_env_var}
   )
   if(TARGET test_pubsub${target_suffix})
@@ -383,7 +383,7 @@ function(test_pubsub_for_rmw_implementation)
     )
   endif()
 endfunction()
-call_for_each_rmw_implementation(test_pubsub_for_rmw_implementation)
+call_for_each_rmw_implementation(test_generic_pubsub_for_rmw_implementation)
 ament_add_gtest(test_qos_event test_qos_event.cpp)
 if(TARGET test_qos_event)
   ament_target_dependencies(test_qos_event
