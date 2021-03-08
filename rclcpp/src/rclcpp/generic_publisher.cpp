@@ -38,9 +38,12 @@ GenericPublisher::GenericPublisher(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos)
-: rclcpp::PublisherBase(node_base, topic_name, *rclcpp::get_typesupport_handle(
-      topic_type, "rosidl_typesupport_cpp", *ts_lib), get_publisher_options(qos)), ts_lib_(
-    ts_lib)
+: rclcpp::PublisherBase(
+    node_base,
+    topic_name,
+    *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
+    get_publisher_options(qos)),
+  ts_lib_(ts_lib)
 {}
 
 

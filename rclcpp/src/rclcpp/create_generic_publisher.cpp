@@ -23,13 +23,15 @@
 namespace rclcpp
 {
 
-std::shared_ptr<GenericPublisher> create_generic_publisher(
+std::shared_ptr<GenericPublisher>
+create_generic_publisher(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
-  const std::string & topic_name, const std::string & topic_type, const rclcpp::QoS & qos,
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  auto ts_lib = rclcpp::get_typesupport_library(
-    topic_type, "rosidl_typesupport_cpp");
+  auto ts_lib = rclcpp::get_typesupport_library(topic_type, "rosidl_typesupport_cpp");
   auto pub = std::make_shared<GenericPublisher>(
     topics_interface->get_node_base_interface(), std::move(ts_lib), topic_name, topic_type, qos);
   topics_interface->add_publisher(pub, std::move(group));

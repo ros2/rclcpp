@@ -44,8 +44,7 @@ GenericSubscription::GenericSubscription(
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback)
 : SubscriptionBase(
     node_base,
-    *rclcpp::get_typesupport_handle(
-      topic_type, "rosidl_typesupport_cpp", *ts_lib),
+    *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
     topic_name,
     get_subscription_options(qos),
     true),
