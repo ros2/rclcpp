@@ -22,7 +22,7 @@ This article documents some of the decisions that were made when implementing st
 
 ## Allowing dynamically typed parameters
 
-There might be some scenarios were dynamic typing is desired, so a `dynamic_typing` field was added to the [parameter descriptor](https://github.com/ros2/rcl_interfaces/blob/09b5ed93a733adb9deddc47f9a4a8c6e9f584667/rcl_interfaces/msg/ParameterDescriptor.msg#L25).
+There might be some scenarios where dynamic typing is desired, so a `dynamic_typing` field was added to the [parameter descriptor](https://github.com/ros2/rcl_interfaces/blob/09b5ed93a733adb9deddc47f9a4a8c6e9f584667/rcl_interfaces/msg/ParameterDescriptor.msg#L25).
 It defaults to `false`.
 
 For example:
