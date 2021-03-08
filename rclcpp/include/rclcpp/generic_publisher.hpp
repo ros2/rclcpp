@@ -55,6 +55,9 @@ public:
    * In order to properly publish to a topic, this publisher needs to be added to
    * the node_topic_interface of the node passed into this constructor.
    *
+   * \sa rclcpp::Node::create_generic_publisher() or rclcpp::create_generic_publisher() for
+   * creating an instance of this class and adding it to the node_topic_interface.
+   *
    * \param node_base Pointer to parent node's NodeBaseInterface
    * \param ts_lib Type support library, needs to correspond to topic_type
    * \param topic_name Topic name
@@ -71,8 +74,10 @@ public:
 
   virtual ~GenericPublisher() = default;
 
+  /// Publish a rclcpp::SerializedMessage.
   void publish(const rclcpp::SerializedMessage & message);
 
+private:
   // The type support library should stay loaded, so it is stored in the GenericPublisher
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
 };

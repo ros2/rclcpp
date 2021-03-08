@@ -56,6 +56,9 @@ public:
    * In order to properly subscribe to a topic, this subscription needs to be added to
    * the node_topic_interface of the node passed into this constructor.
    *
+   * \sa rclcpp::Node::create_generic_subscription() or rclcpp::create_generic_subscription() for
+   * creating an instance of this class and adding it to the node_topic_interface.
+   *
    * \param node_base Pointer to parent node's NodeBaseInterface
    * \param ts_lib Type support library, needs to correspond to topic_type
    * \param topic_name Topic name
@@ -78,9 +81,11 @@ public:
 
   std::shared_ptr<rclcpp::SerializedMessage> create_serialized_message() override;
 
+  /// Casts the message to a rclcpp::SerializedMessage and calls the callback.
   void handle_message(
     std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) override;
 
+  /// This function is currently not implemented.
   void handle_loaned_message(
     void * loaned_message, const rclcpp::MessageInfo & message_info) override;
 

@@ -23,8 +23,6 @@
 
 #include "rcl/arguments.h"
 
-#include "rclcpp/create_generic_publisher.hpp"
-#include "rclcpp/create_generic_subscription.hpp"
 #include "rclcpp/detail/qos_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
