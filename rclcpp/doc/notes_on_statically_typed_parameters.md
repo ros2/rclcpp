@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Up to ROS 2 Foxy, all parameters could be changed of type anytime, except the user installed a parameter callback to reject that change.
+Until ROS 2 Foxy, all parameters could change type anytime, except if the user installed a parameter callback to reject a change.
 This could generate confusing errors, for example:
 
 ```
