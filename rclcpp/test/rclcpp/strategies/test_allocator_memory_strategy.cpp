@@ -512,7 +512,7 @@ TEST_F(TestAllocatorMemoryStrategy, number_of_entities_with_subscription) {
   expected_sizes.size_of_subscriptions = 1;
   const std::string implementation_identifier = rmw_get_implementation_identifier();
   if (implementation_identifier == "rmw_cyclonedds_cpp") {
-    // For connext, a subscription will also add an event and waitable
+    // For cyclonedds, a subscription will also add an event and waitable
     expected_sizes.size_of_events += 1;
     expected_sizes.size_of_waitables += 1;
   }
