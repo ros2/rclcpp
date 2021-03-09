@@ -436,6 +436,17 @@ TEST_F(TestNode, declare_parameter_with_allow_undeclared_parameters) {
     EXPECT_EQ(param.get_type(), rclcpp::PARAMETER_STRING);
     EXPECT_EQ(param.get_value<std::string>(), "asd");
   }
+  {
+    // declare after set is invalid
+    auto param_name = "parameter"_unq;
+    EXPECT_TRUE(node->set_parameter({param_name, 5}).successful);
+    auto param = node->get_parameter(param_name);
+    EXPECT_EQ(param.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(param.get_value<int64_t>(), 5);
+    EXPECT_THROW(
+      node->declare_parameter(param_name, 5),
+      rclcpp::exceptions::ParameterAlreadyDeclaredException);
+  }
 }
 
 auto get_fixed_on_parameter_set_callback(const std::string & name, bool successful)
