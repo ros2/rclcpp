@@ -143,6 +143,7 @@ protected:
 template<typename ServiceT>
 class Service : public ServiceBase
 {
+  bool is_async_ = false;
 public:
   using CallbackType = std::function<
     void (
@@ -346,7 +347,9 @@ public:
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto response = std::make_shared<typename ServiceT::Response>();
     any_callback_.dispatch(request_header, typed_request, response);
-    send_response(*request_header, *response);
+    if (!is_async_) {
+        send_response(*request_header, *response);
+    }
   }
 
   void
@@ -357,6 +360,12 @@ public:
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
+  }
+
+  void
+  set_async(bool async)
+  {
+    is_async_ = async;
   }
 
 private:
