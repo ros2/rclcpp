@@ -263,7 +263,7 @@ TEST_F(TestNode, EventCallback)
 
   double product;
   auto cb =
-    [&int_param, &double_param, &product, &bool_param, &received,
+    [&int_param, &double_param, &product, &received,
       this](const rcl_interfaces::msg::ParameterEvent::SharedPtr & event)
     {
       auto node_name = node->get_fully_qualified_name();
