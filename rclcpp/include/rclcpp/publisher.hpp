@@ -38,6 +38,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/publisher_options.hpp"
+#include "rclcpp/type_adapter.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -185,10 +186,20 @@ public:
 
   /// Send a message to the topic for this publisher.
   /**
-   * This function is templated on the input message type, MessageT.
-   * \param[in] msg A shared pointer to the message to send.
+   * This function is enabled if the element_type of the std::unique_ptr is
+   * a ROS message type, as opposed to a TypeAdapter, and that type matches
+   * the type given when creating the publisher.
+   *
+   * This signature allows the user to given ownership of the message to rclcpp,
+   * allowing for more efficient intra-process communication optimizations.
+   *
+   * \param[in] msg A unique pointer to the message to send.
    */
-  virtual void
+  template<typename PublishedT>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<PublishedT>::value &&
+    std::is_same<PublishedT, MessageT>::value
+  >
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!intra_process_is_enabled_) {
@@ -212,7 +223,8 @@ public:
     }
   }
 
-  virtual void
+  virtual
+  void
   publish(const MessageT & msg)
   {
     // Avoid allocating when not using intra process.

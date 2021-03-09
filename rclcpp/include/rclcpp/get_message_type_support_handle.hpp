@@ -21,7 +21,7 @@
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "rclcpp/type_adaptor.hpp"
+#include "rclcpp/type_adapter.hpp"
 
 /// Versions of rosidl_typesupport_cpp::get_message_type_support_handle that handle adapted types.
 
@@ -37,21 +37,23 @@ typename std::enable_if_t<
 >
 get_message_type_support_handle()
 {
+  // TODO(wjwwood): check for nullptr
   return *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 }
 
-/// Specialization for when MessageT is an adapted type using rclcpp::TypeAdaptor.
+/// Specialization for when MessageT is an adapted type using rclcpp::TypeAdapter.
 template<typename AdaptedType>
 constexpr
 typename std::enable_if_t<
   !rosidl_generator_traits::is_message<AdaptedType>::value &&
-  rclcpp::TypeAdaptor<AdaptedType>::is_specialized::value,
+  rclcpp::TypeAdapter<AdaptedType>::is_specialized::value,
   const rosidl_message_type_support_t &
 >
 get_message_type_support_handle()
 {
+  // TODO(wjwwood): check for nullptr
   return *rosidl_typesupport_cpp::get_message_type_support_handle<
-    typename TypeAdaptor<AdaptedType>::ROSMessageType
+    typename TypeAdapter<AdaptedType>::ROSMessageType
   >();
 }
 
@@ -67,7 +69,7 @@ template<
 constexpr
 typename std::enable_if_t<
   !rosidl_generator_traits::is_message<AdaptedType>::value &&
-  !TypeAdaptor<AdaptedType>::is_specialized::value,
+  !TypeAdapter<AdaptedType>::is_specialized::value,
   const rosidl_message_type_support_t &
 >
 get_message_type_support_handle()

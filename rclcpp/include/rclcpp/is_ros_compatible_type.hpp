@@ -17,7 +17,7 @@
 
 #include "rosidl_runtime_cpp/traits.hpp"
 
-#include "rclcpp/type_adaptor.hpp"
+#include "rclcpp/type_adapter.hpp"
 
 namespace rclcpp
 {
@@ -27,7 +27,7 @@ struct is_ros_compatible_type
 {
   static constexpr bool value =
     rosidl_generator_traits::is_message<T>::value ||
-    rclcpp::TypeAdaptor<T>::is_specialized::value;
+    rclcpp::TypeAdapter<T>::is_specialized::value;
 };
 
 }  // namespace rclcpp
