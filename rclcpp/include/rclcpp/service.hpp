@@ -345,7 +345,7 @@ public:
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto response = std::make_shared<typename ServiceT::Response>();
-    if (any_callback_.dispatch(request_header, typed_request, response, this)) {
+    if (any_callback_.dispatch(request_header, typed_request, response)) {
         send_response(*request_header, *response);
     }
   }

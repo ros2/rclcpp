@@ -52,12 +52,13 @@ private:
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<typename ServiceT::Request>,
       std::shared_ptr<typename ServiceT::Response>,
-      Service<ServiceT>*
+      std::shared_ptr<Service<ServiceT>>
     )>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithRequestHeaderCallback shared_ptr_with_request_header_callback_;
   SharedPtrWithRequestHeaderAsyncCallback shared_ptr_with_request_header_async_callback_;
+  std::weak_ptr<Service<ServiceT>> weak_service_;
 
 public:
   AnyServiceCallback()
@@ -109,11 +110,15 @@ public:
     shared_ptr_with_request_header_async_callback_ = callback;
   }
 
+  void set_service(std::weak_ptr<Service<ServiceT>> weak_service)
+  {
+    weak_service_ = weak_service;
+  }
+
   bool dispatch(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<typename ServiceT::Request> request,
-    std::shared_ptr<typename ServiceT::Response> response,
-    Service<ServiceT>* service)
+    std::shared_ptr<typename ServiceT::Response> response)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     bool response_ready_to_send = true;
@@ -123,7 +128,7 @@ public:
     } else if (shared_ptr_with_request_header_callback_ != nullptr) {
       shared_ptr_with_request_header_callback_(request_header, request, response);
     } else if (shared_ptr_with_request_header_async_callback_ != nullptr) {
-      shared_ptr_with_request_header_async_callback_(request_header, request, response, service);
+      shared_ptr_with_request_header_async_callback_(request_header, request, response, weak_service_.lock());
       response_ready_to_send = false;
     } else {
       throw std::runtime_error("unexpected request without any callback set");

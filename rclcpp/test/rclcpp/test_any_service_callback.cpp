@@ -21,7 +21,6 @@
 #include <memory>
 #include <utility>
 
-#include "rclcpp/service.hpp"
 #include "rclcpp/any_service_callback.hpp"
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/srv/empty.h"
@@ -34,8 +33,6 @@ public:
     request_header_ = std::make_shared<rmw_request_id_t>();
     request_ = std::make_shared<test_msgs::srv::Empty::Request>();
     response_ = std::make_shared<test_msgs::srv::Empty::Response>();
-    rclcpp::AnyServiceCallback<test_msgs::srv::Empty> callback;
-    service_ = std::make_shared<rclcpp::Service<test_msgs::srv::Empty>>(nullptr, nullptr, callback);
   }
 
 protected:
@@ -48,7 +45,7 @@ protected:
 
 TEST_F(TestAnyServiceCallback, no_set_and_dispatch_throw) {
   EXPECT_THROW(
-    any_service_callback_.dispatch(request_header_, request_, response_, service_.get()),
+    any_service_callback_.dispatch(request_header_, request_, response_),
     std::runtime_error);
 }
 
@@ -61,7 +58,7 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_no_header) {
 
   any_service_callback_.set(callback);
   EXPECT_NO_THROW(
-    any_service_callback_.dispatch(request_header_, request_, response_, service_.get()));
+    any_service_callback_.dispatch(request_header_, request_, response_));
   EXPECT_EQ(callback_calls, 1);
 }
 
@@ -77,6 +74,6 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_header) {
 
   any_service_callback_.set(callback_with_header);
   EXPECT_NO_THROW(
-    any_service_callback_.dispatch(request_header_, request_, response_, service_.get()));
+    any_service_callback_.dispatch(request_header_, request_, response_));
   EXPECT_EQ(callback_with_header_calls, 1);
 }
