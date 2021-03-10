@@ -136,7 +136,7 @@ private:
   RCLCPP_PUBLIC
   static void
   on_time_jump(
-    const struct rcl_time_jump_t * time_jump,
+    const rcl_time_jump_t * time_jump,
     bool before_jump,
     void * user_data);
 

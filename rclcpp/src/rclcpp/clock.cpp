@@ -113,7 +113,7 @@ Clock::get_clock_mutex() noexcept
 
 void
 Clock::on_time_jump(
-  const struct rcl_time_jump_t * time_jump,
+  const rcl_time_jump_t * time_jump,
   bool before_jump,
   void * user_data)
 {
