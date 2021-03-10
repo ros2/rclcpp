@@ -264,22 +264,6 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /// Create and return an AsyncService.
-  /**
-   * \param[in] service_name The topic to service on.
-   * \param[in] callback User-defined callback function.
-   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
-   * \param[in] group Callback group to call the service.
-   * \return Shared pointer to the created service.
-   */
-  template<typename ServiceT, typename CallbackT>
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service_async(
-    const std::string & service_name,
-    CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
   /// Create and return a GenericPublisher.
   /**
    * The returned pointer will never be empty, but this function can throw various exceptions, for

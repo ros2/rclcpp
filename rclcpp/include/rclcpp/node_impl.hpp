@@ -153,22 +153,6 @@ Node::create_service(
     group);
 }
 
-template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
-Node::create_service_async(
-  const std::string & service_name,
-  CallbackT && callback,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  auto service = create_service<ServiceT, CallbackT>(
-    service_name,
-    std::forward<CallbackT>(callback),
-    qos_profile, group);
-  service->set_async(true);
-  return service;
-}
-
 template<typename AllocatorT>
 std::shared_ptr<rclcpp::GenericPublisher>
 Node::create_generic_publisher(

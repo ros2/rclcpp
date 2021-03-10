@@ -30,6 +30,9 @@ namespace rclcpp
 {
 
 template<typename ServiceT>
+class Service;
+
+template<typename ServiceT>
 class AnyServiceCallback
 {
 private:
@@ -44,13 +47,22 @@ private:
       const std::shared_ptr<typename ServiceT::Request>,
       std::shared_ptr<typename ServiceT::Response>
     )>;
+  using SharedPtrWithRequestHeaderAsyncCallback = std::function<
+    void (
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<typename ServiceT::Request>,
+      std::shared_ptr<typename ServiceT::Response>,
+      Service<ServiceT>*
+    )>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithRequestHeaderCallback shared_ptr_with_request_header_callback_;
+  SharedPtrWithRequestHeaderAsyncCallback shared_ptr_with_request_header_async_callback_;
 
 public:
   AnyServiceCallback()
-  : shared_ptr_callback_(nullptr), shared_ptr_with_request_header_callback_(nullptr)
+  : shared_ptr_callback_(nullptr), shared_ptr_with_request_header_callback_(nullptr),
+    shared_ptr_with_request_header_async_callback_(nullptr)
   {}
 
   AnyServiceCallback(const AnyServiceCallback &) = default;
@@ -83,21 +95,41 @@ public:
     shared_ptr_with_request_header_callback_ = callback;
   }
 
-  void dispatch(
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrWithRequestHeaderAsyncCallback
+      >::value
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
+  {
+    shared_ptr_with_request_header_async_callback_ = callback;
+  }
+
+  bool dispatch(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<typename ServiceT::Request> request,
-    std::shared_ptr<typename ServiceT::Response> response)
+    std::shared_ptr<typename ServiceT::Response> response,
+    Service<ServiceT>* service)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    bool response_ready_to_send = true;
     if (shared_ptr_callback_ != nullptr) {
       (void)request_header;
       shared_ptr_callback_(request, response);
     } else if (shared_ptr_with_request_header_callback_ != nullptr) {
       shared_ptr_with_request_header_callback_(request_header, request, response);
+    } else if (shared_ptr_with_request_header_async_callback_ != nullptr) {
+      shared_ptr_with_request_header_async_callback_(request_header, request, response, service);
+      response_ready_to_send = false;
     } else {
       throw std::runtime_error("unexpected request without any callback set");
     }
     TRACEPOINT(callback_end, static_cast<const void *>(this));
+    return response_ready_to_send;
   }
 
   void register_callback_for_tracing()
