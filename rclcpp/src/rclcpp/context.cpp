@@ -291,7 +291,7 @@ Context::get_domain_id() const
 }
 
 std::string
-Context::shutdown_reason()
+Context::shutdown_reason() const
 {
   std::lock_guard<std::recursive_mutex> lock(init_mutex_);
   return shutdown_reason_;
