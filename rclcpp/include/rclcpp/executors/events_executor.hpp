@@ -228,7 +228,7 @@ private:
     // Event queue mutex scope
     {
       std::unique_lock<std::mutex> lock(this_executor->push_mutex_);
-      this_executor->events_queue_->push({data->entity_id, data->event_type});
+      this_executor->events_queue_->push(data->event);
     }
     // Notify that the event queue has some events in it.
     this_executor->events_queue_cv_.notify_one();

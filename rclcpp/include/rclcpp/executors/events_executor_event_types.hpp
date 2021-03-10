@@ -45,26 +45,21 @@ struct EventsExecutorCallbackData
 {
   EventsExecutorCallbackData(
     EventsExecutor * _executor,
-    void * _entity_id,
-    ExecutorEventType _event_type)
+    ExecutorEvent _event)
   {
     executor = _executor;
-    entity_id = _entity_id;
-    event_type = _event_type;
+    event = _event;
   }
 
   // Equal operator
   bool operator==(const EventsExecutorCallbackData & other) const
   {
-    return (executor == other.executor) &&
-           (entity_id == other.entity_id) &&
-           (event_type == other.event_type);
+    return (event.entity_id == other.event.entity_id);
   }
 
   // Struct members
   EventsExecutor * executor;
-  void * entity_id;
-  ExecutorEventType event_type;
+  ExecutorEvent event;
 };
 
 // To be able to use std::unordered_map with an EventsExecutorCallbackData
@@ -74,7 +69,7 @@ struct KeyHasher
 {
   size_t operator()(const EventsExecutorCallbackData & key) const
   {
-    return std::hash<void *>()(key.entity_id);
+    return std::hash<const void *>()(key.event.entity_id);
   }
 };
 
