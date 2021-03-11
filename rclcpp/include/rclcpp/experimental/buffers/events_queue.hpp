@@ -42,7 +42,7 @@ namespace buffers
 class EventsQueue
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(EventsQueue)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(EventsQueue)
 
   /**
    * @brief Destruct the object.
