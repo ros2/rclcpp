@@ -69,19 +69,18 @@ QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
 }
 
 void
-QOSEventHandlerBase::set_events_executor_callback(
-  rclcpp::executors::EventsExecutor * executor,
-  rmw_listener_callback_t executor_callback) const
+QOSEventHandlerBase::set_listener_callback(
+  rmw_listener_callback_t callback,
+  const void * user_data) const
 {
   rcl_ret_t ret = rcl_event_set_listener_callback(
     &event_handle_,
-    executor_callback,
-    executor,
-    this,
+    callback,
+    user_data,
     false /* Discard previous events */);
 
   if (RCL_RET_OK != ret) {
-    throw std::runtime_error("Couldn't set EventsExecutor's callback in QOSEventHandlerBase");
+    throw std::runtime_error("Couldn't set listener callback to QOSEventHandlerBase");
   }
 }
 

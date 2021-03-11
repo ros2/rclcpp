@@ -271,9 +271,9 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_events_executor_callback(
-    rclcpp::executors::EventsExecutor * executor,
-    rmw_listener_callback_t executor_callback) const;
+  set_listener_callback(
+    rmw_listener_callback_t callback,
+    const void * user_data) const;
 
 protected:
   template<typename EventCallbackT>

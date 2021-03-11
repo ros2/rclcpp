@@ -22,13 +22,14 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/events_executor_entities_collector.hpp"
+#include "rclcpp/executors/events_executor_event_types.hpp"
 #include "rclcpp/executors/events_executor_notify_waitable.hpp"
 #include "rclcpp/executors/timers_manager.hpp"
 #include "rclcpp/experimental/buffers/events_queue.hpp"
 #include "rclcpp/experimental/buffers/simple_events_queue.hpp"
 #include "rclcpp/node.hpp"
 
-#include "rmw/listener_event_types.h"
+#include "rmw/listener_callback_type.h"
 
 namespace rclcpp
 {
@@ -214,20 +215,20 @@ private:
   // This function is called by the DDS entities when an event happened,
   // like a subscription receiving a message.
   static void
-  push_event(void * executor_ptr, rmw_listener_event_t event)
+  push_event(const void * event_data)
   {
-    // Check if the executor pointer is not valid
-    if (!executor_ptr) {
-      throw std::runtime_error("The executor pointer is not valid.");
+    if (!event_data) {
+      throw std::runtime_error("Executor event data not valid.");
     }
 
-    auto this_executor = static_cast<executors::EventsExecutor *>(executor_ptr);
+    auto data = static_cast<const executors::EventsExecutorCallbackData *>(event_data);
+
+    executors::EventsExecutor * this_executor = data->executor;
 
     // Event queue mutex scope
     {
       std::unique_lock<std::mutex> lock(this_executor->push_mutex_);
-
-      this_executor->events_queue_->push(event);
+      this_executor->events_queue_->push(data->event);
     }
     // Notify that the event queue has some events in it.
     this_executor->events_queue_cv_.notify_one();
@@ -236,7 +237,7 @@ private:
   // Execute a single event
   RCLCPP_PUBLIC
   void
-  execute_event(const rmw_listener_event_t & event);
+  execute_event(const ExecutorEvent & event);
 
   // Queue where entities can push events
   rclcpp::experimental::buffers::EventsQueue::SharedPtr events_queue_;

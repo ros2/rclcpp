@@ -25,7 +25,7 @@ TEST(TestEventsQueue, SimpleQueueTest)
 {
   // Create a SimpleEventsQueue and a local queue
   auto simple_queue = std::make_unique<rclcpp::experimental::buffers::SimpleEventsQueue>();
-  std::queue<rmw_listener_event_t> local_events_queue;
+  std::queue<rclcpp::executors::ExecutorEvent> local_events_queue;
 
   // Make sure the queue is empty after init
   simple_queue->init();
@@ -33,7 +33,7 @@ TEST(TestEventsQueue, SimpleQueueTest)
 
   // Push 11 messages
   for (int i = 0; i < 11; i++) {
-    rmw_listener_event_t stub_event;
+    rclcpp::executors::ExecutorEvent stub_event;
     simple_queue->push(stub_event);
   }
 
@@ -52,13 +52,14 @@ TEST(TestEventsQueue, SimpleQueueTest)
   EXPECT_TRUE(simple_queue->empty());
 
   // Lets push an event into the queue and get it back
-  rmw_listener_event_t push_event = {simple_queue.get(), SUBSCRIPTION_EVENT};
+  rclcpp::executors::ExecutorEvent push_event = {simple_queue.get(),
+    rclcpp::executors::ExecutorEventType::SUBSCRIPTION_EVENT};
 
   simple_queue->push(push_event);
 
-  rmw_listener_event_t front_event = simple_queue->front();
+  rclcpp::executors::ExecutorEvent front_event = simple_queue->front();
 
   // The events should be equal
-  EXPECT_EQ(push_event.entity, front_event.entity);
+  EXPECT_EQ(push_event.entity_id, front_event.entity_id);
   EXPECT_EQ(push_event.type, front_event.type);
 }

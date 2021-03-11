@@ -574,7 +574,7 @@ if(TARGET test_events_queue)
   ament_target_dependencies(test_events_queue
     "rcl"
     "test_msgs")
-  target_link_libraries(test_events_queue ${PROJECT_NAME} mimick)
+  target_link_libraries(test_events_queue ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_events_executor_entities_collector executors/test_events_executor_entities_collector.cpp
