@@ -59,9 +59,9 @@ public:
    */
   RCLCPP_PUBLIC
   explicit TimeSource(
-      rclcpp::Node::SharedPtr node,
-      const rclcpp::QoS & qos = rclcpp::ClockQoS(),
-      bool use_clock_thread = true);
+    rclcpp::Node::SharedPtr node,
+    const rclcpp::QoS & qos = rclcpp::ClockQoS(),
+    bool use_clock_thread = true);
 
   /// Empty constructor
   /**
@@ -71,8 +71,8 @@ public:
    */
   RCLCPP_PUBLIC
   explicit TimeSource(
-      const rclcpp::QoS & qos = rclcpp::ClockQoS(),
-      bool use_clock_thread = true);
+    const rclcpp::QoS & qos = rclcpp::ClockQoS(),
+    bool use_clock_thread = true);
 
   /// Attack node to the time source.
   /**
