@@ -238,7 +238,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
       if (subscription) {
         weak_subscriptions_map_.emplace(subscription.get(), subscription);
 
-        subscription->set_events_executor_callback(
+        subscription->set_listener_callback(
           &EventsExecutor::push_event,
           get_callback_data(subscription.get(), SUBSCRIPTION_EVENT));
       }
@@ -249,7 +249,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
       if (service) {
         weak_services_map_.emplace(service.get(), service);
 
-        service->set_events_executor_callback(
+        service->set_listener_callback(
           &EventsExecutor::push_event,
           get_callback_data(service.get(), SERVICE_EVENT));
       }
@@ -260,7 +260,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
       if (client) {
         weak_clients_map_.emplace(client.get(), client);
 
-        client->set_events_executor_callback(
+        client->set_listener_callback(
           &EventsExecutor::push_event,
           get_callback_data(client.get(), CLIENT_EVENT));
       }
@@ -271,7 +271,7 @@ EventsExecutorEntitiesCollector::set_callback_group_entities_callbacks(
       if (waitable) {
         weak_waitables_map_.emplace(waitable.get(), waitable);
 
-        waitable->set_events_executor_callback(
+        waitable->set_listener_callback(
           &EventsExecutor::push_event,
           get_callback_data(waitable.get(), WAITABLE_EVENT));
       }
@@ -296,7 +296,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
   group->find_subscription_ptrs_if(
     [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
       if (subscription) {
-        subscription->set_events_executor_callback(nullptr, nullptr);
+        subscription->set_listener_callback(nullptr, nullptr);
         weak_subscriptions_map_.erase(subscription.get());
         remove_callback_data(subscription.get(), SUBSCRIPTION_EVENT);
       }
@@ -305,7 +305,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
   group->find_service_ptrs_if(
     [this](const rclcpp::ServiceBase::SharedPtr & service) {
       if (service) {
-        service->set_events_executor_callback(nullptr, nullptr);
+        service->set_listener_callback(nullptr, nullptr);
         weak_services_map_.erase(service.get());
         remove_callback_data(service.get(), SERVICE_EVENT);
       }
@@ -314,7 +314,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
   group->find_client_ptrs_if(
     [this](const rclcpp::ClientBase::SharedPtr & client) {
       if (client) {
-        client->set_events_executor_callback(nullptr, nullptr);
+        client->set_listener_callback(nullptr, nullptr);
         weak_clients_map_.erase(client.get());
         remove_callback_data(client.get(), CLIENT_EVENT);
       }
@@ -323,7 +323,7 @@ EventsExecutorEntitiesCollector::unset_callback_group_entities_callbacks(
   group->find_waitable_ptrs_if(
     [this](const rclcpp::Waitable::SharedPtr & waitable) {
       if (waitable) {
-        waitable->set_events_executor_callback(nullptr, nullptr);
+        waitable->set_listener_callback(nullptr, nullptr);
         weak_waitables_map_.erase(waitable.get());
         remove_callback_data(waitable.get(), WAITABLE_EVENT);
       }
@@ -596,7 +596,7 @@ EventsExecutorEntitiesCollector::add_waitable(rclcpp::Waitable::SharedPtr waitab
 {
   weak_waitables_map_.emplace(waitable.get(), waitable);
 
-  waitable->set_events_executor_callback(
+  waitable->set_listener_callback(
     &EventsExecutor::push_event,
     get_callback_data(waitable.get(), WAITABLE_EVENT));
 }
