@@ -33,16 +33,21 @@
 namespace rclcpp
 {
 
-TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node, const rclcpp::QoS & qos)
+TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node,
+                       const rclcpp::QoS & qos,
+                       bool use_clock_thread)
 : logger_(rclcpp::get_logger("rclcpp")),
-  qos_(qos)
+  qos_(qos),
+  use_clock_thread_(use_clock_thread)
 {
   this->attachNode(node);
 }
 
-TimeSource::TimeSource(const rclcpp::QoS & qos)
+TimeSource::TimeSource(const rclcpp::QoS & qos,
+                       bool use_clock_thread)
 : logger_(rclcpp::get_logger("rclcpp")),
-  qos_(qos)
+  qos_(qos),
+  use_clock_thread_(use_clock_thread)
 {
 }
 
@@ -247,20 +252,22 @@ void TimeSource::create_clock_sub()
       rclcpp::QosPolicyKind::Reliability,
     });
 
-  if (clock_callback_group_ == nullptr) {
-    clock_callback_group_ = node_base_->create_callback_group(
-      rclcpp::CallbackGroupType::MutuallyExclusive,
-      false
-    );
-  }
-  options.callback_group = clock_callback_group_;
-  if (!clock_executor_thread_.joinable()) {
-    clock_executor_thread_ = std::thread(
-      [this]() {
-        clock_executor_.add_callback_group(clock_callback_group_, node_base_);
-        clock_executor_.spin();
-      }
-    );
+  if (use_clock_thread_) {
+    if (clock_callback_group_ == nullptr) {
+      clock_callback_group_ = node_base_->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive,
+        false
+      );
+    }
+    options.callback_group = clock_callback_group_;
+    if (!clock_executor_thread_.joinable()) {
+      clock_executor_thread_ = std::thread(
+        [this]() {
+          clock_executor_.add_callback_group(clock_callback_group_, node_base_);
+          clock_executor_.spin();
+        }
+      );
+    }
   }
 
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
