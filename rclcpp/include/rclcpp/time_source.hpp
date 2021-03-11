@@ -58,9 +58,10 @@ public:
    * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
-  explicit TimeSource(rclcpp::Node::SharedPtr node,
-                      const rclcpp::QoS & qos = rclcpp::ClockQoS(),
-                      bool use_clock_thread = true);
+  explicit TimeSource(
+      rclcpp::Node::SharedPtr node,
+      const rclcpp::QoS & qos = rclcpp::ClockQoS(),
+      bool use_clock_thread = true);
 
   /// Empty constructor
   /**
@@ -69,8 +70,9 @@ public:
    * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
-  explicit TimeSource(const rclcpp::QoS & qos = rclcpp::ClockQoS(),
-                     bool use_clock_thread = true);
+  explicit TimeSource(
+      const rclcpp::QoS & qos = rclcpp::ClockQoS(),
+      bool use_clock_thread = true);
 
   /// Attack node to the time source.
   /**

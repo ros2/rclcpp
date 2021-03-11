@@ -33,9 +33,10 @@
 namespace rclcpp
 {
 
-TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node,
-                       const rclcpp::QoS & qos,
-                       bool use_clock_thread)
+TimeSource::TimeSource(
+    std::shared_ptr<rclcpp::Node> node,
+    const rclcpp::QoS & qos,
+    bool use_clock_thread)
 : logger_(rclcpp::get_logger("rclcpp")),
   qos_(qos),
   use_clock_thread_(use_clock_thread)
@@ -43,8 +44,9 @@ TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node,
   this->attachNode(node);
 }
 
-TimeSource::TimeSource(const rclcpp::QoS & qos,
-                       bool use_clock_thread)
+TimeSource::TimeSource(
+    const rclcpp::QoS & qos,
+    bool use_clock_thread)
 : logger_(rclcpp::get_logger("rclcpp")),
   qos_(qos),
   use_clock_thread_(use_clock_thread)
