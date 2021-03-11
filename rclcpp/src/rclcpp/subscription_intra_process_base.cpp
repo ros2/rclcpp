@@ -34,3 +34,19 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 {
   return qos_profile_;
 }
+
+void
+SubscriptionIntraProcessBase::set_listener_callback(
+  rmw_listener_callback_t callback,
+  const void * user_data) const
+{
+  rcl_ret_t ret = rcl_guard_condition_set_listener_callback(
+    &gc_,
+    callback,
+    user_data,
+    true /*Use previous events*/);
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error("Couldn't set guard condition listener callback");
+  }
+}

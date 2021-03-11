@@ -84,3 +84,18 @@ ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
 }
+
+void
+ServiceBase::set_listener_callback(
+  rmw_listener_callback_t callback,
+  const void * user_data) const
+{
+  rcl_ret_t ret = rcl_service_set_listener_callback(
+    service_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error("Couldn't set listener callback to service");
+  }
+}

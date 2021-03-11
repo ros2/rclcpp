@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
+
 #include "rclcpp/waitable.hpp"
 
 using rclcpp::Waitable;
@@ -56,4 +58,16 @@ bool
 Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void
+Waitable::set_listener_callback(
+  rmw_listener_callback_t callback,
+  const void * user_data) const
+{
+  (void)callback;
+  (void)user_data;
+
+  throw std::runtime_error(
+    "Custom waitables should override set_listener_callback() if they want to use RMW listeners");
 }

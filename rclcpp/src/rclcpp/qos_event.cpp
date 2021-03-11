@@ -67,4 +67,20 @@ QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
   return wait_set->events[wait_set_event_index_] == &event_handle_;
 }
 
+void
+QOSEventHandlerBase::set_listener_callback(
+  rmw_listener_callback_t callback,
+  const void * user_data) const
+{
+  rcl_ret_t ret = rcl_event_set_listener_callback(
+    &event_handle_,
+    callback,
+    user_data,
+    true /* Use previous events */);
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error("Couldn't set listener callback to QOSEventHandlerBase");
+  }
+}
+
 }  // namespace rclcpp

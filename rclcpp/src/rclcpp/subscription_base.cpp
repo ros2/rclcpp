@@ -290,7 +290,8 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   throw std::runtime_error("given pointer_to_subscription_part does not match any part");
 }
 
-std::vector<rclcpp::NetworkFlowEndpoint> SubscriptionBase::get_network_flow_endpoints() const
+std::vector<rclcpp::NetworkFlowEndpoint>
+SubscriptionBase::get_network_flow_endpoints() const
 {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcl_network_flow_endpoint_array_t network_flow_endpoint_array =
@@ -325,4 +326,19 @@ std::vector<rclcpp::NetworkFlowEndpoint> SubscriptionBase::get_network_flow_endp
   }
 
   return network_flow_endpoint_vector;
+}
+
+void
+SubscriptionBase::set_listener_callback(
+  rmw_listener_callback_t callback,
+  const void * user_data) const
+{
+  rcl_ret_t ret = rcl_subscription_set_listener_callback(
+    subscription_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    throw std::runtime_error("Couldn't set listener callback to subscription");
+  }
 }

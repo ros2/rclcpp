@@ -283,6 +283,12 @@ public:
   std::vector<rclcpp::NetworkFlowEndpoint>
   get_network_flow_endpoints() const;
 
+  RCLCPP_PUBLIC
+  void
+  set_listener_callback(
+    rmw_listener_callback_t callback,
+    const void * user_data) const;
+
 protected:
   template<typename EventCallbackT>
   void
