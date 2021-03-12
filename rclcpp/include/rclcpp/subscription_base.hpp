@@ -304,7 +304,7 @@ public:
   void
   set_cft_expression_parameters(
     const std::string & filter_expression,
-    const std::vector<std::string> & expression_parameters);
+    const std::vector<std::string> & expression_parameters = {});
 
   /// Get the filter expression and expression parameters for the subscription.
   /**
