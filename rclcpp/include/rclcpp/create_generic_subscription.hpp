@@ -1,4 +1,4 @@
-// Copyright 2018, Bosch Software Innovations GmbH.
+// Copyright 2020, Apex.AI Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

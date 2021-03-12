@@ -491,10 +491,6 @@ if(TARGET test_type_support)
 endif()
 ament_add_gmock(test_typesupport_helpers test_typesupport_helpers.cpp)
 if(TARGET test_typesupport_helpers)
-  ament_target_dependencies(test_typesupport_helpers
-    "rcpputils"
-    "rosidl_runtime_cpp"
-  )
   target_link_libraries(test_typesupport_helpers ${PROJECT_NAME})
 endif()
 ament_add_gtest(test_find_weak_nodes test_find_weak_nodes.cpp)
