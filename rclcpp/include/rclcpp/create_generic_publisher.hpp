@@ -17,11 +17,13 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "rclcpp/callback_group.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
 {
@@ -31,18 +33,30 @@ namespace rclcpp
  * The returned pointer will never be empty, but this function can throw various exceptions, for
  * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
  *
+ * \tparam AllocatorT
  * \param topics_interface NodeTopicsInterface pointer used in parts of the setup
  * \param topic_name Topic name
  * \param topic_type Topic type
  * \param qos QoS settings
- * \param group Callback group
+ * \param options Publisher options
  */
+template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericPublisher> create_generic_publisher(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group = nullptr);
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+  )
+)
+{
+  auto ts_lib = rclcpp::get_typesupport_library(topic_type, "rosidl_typesupport_cpp");
+  auto pub = std::make_shared<GenericPublisher>(
+    topics_interface->get_node_base_interface(), std::move(ts_lib), topic_name, topic_type, qos);
+  topics_interface->add_publisher(pub, options.callback_group);
+  return pub;
+}
 
 }  // namespace rclcpp
 

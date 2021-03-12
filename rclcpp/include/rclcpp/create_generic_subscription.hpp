@@ -18,12 +18,15 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "rclcpp/callback_group.hpp"
+#include "rcl/subscription.h"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
 {
@@ -33,20 +36,41 @@ namespace rclcpp
  * The returned pointer will never be empty, but this function can throw various exceptions, for
  * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
  *
+ * \tparam AllocatorT
  * \param topics_interface NodeTopicsInterface pointer used in parts of the setup.
  * \param topic_name Topic name
  * \param topic_type Topic type
  * \param qos QoS settings
  * \param callback Callback for new messages of serialized form
- * \param group Callback group
+ * \param options Subscription options
  */
+template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericSubscription> create_generic_subscription(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr topics_interface,
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
-  rclcpp::CallbackGroup::SharedPtr group = nullptr);
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  )
+)
+{
+  auto ts_lib = rclcpp::get_typesupport_library(
+    topic_type, "rosidl_typesupport_cpp");
+
+  auto subscription = std::make_shared<GenericSubscription>(
+    topics_interface->get_node_base_interface(),
+    std::move(ts_lib),
+    topic_name,
+    topic_type,
+    qos,
+    callback);
+
+  topics_interface->add_subscription(subscription, options.callback_group);
+
+  return subscription;
+}
 
 }  // namespace rclcpp
 

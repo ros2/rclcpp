@@ -154,29 +154,31 @@ Node::create_service(
     group);
 }
 
-inline
-std::shared_ptr<rclcpp::GenericPublisher> Node::create_generic_publisher(
+template<typename AllocatorT = std::allocator<void>>
+std::shared_ptr<rclcpp::GenericPublisher>
+Node::create_generic_publisher(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
 {
   return rclcpp::create_generic_publisher(
     node_topics_,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     topic_type,
     qos,
-    group
+    options
   );
 }
 
-inline
-std::shared_ptr<rclcpp::GenericSubscription> Node::create_generic_subscription(
+template<typename AllocatorT = std::allocator<void>>
+std::shared_ptr<rclcpp::GenericSubscription>
+Node::create_generic_subscription(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
 {
   return rclcpp::create_generic_subscription(
     node_topics_,
@@ -184,7 +186,7 @@ std::shared_ptr<rclcpp::GenericSubscription> Node::create_generic_subscription(
     topic_type,
     qos,
     std::move(callback),
-    group
+    options
   );
 }
 

@@ -274,34 +274,44 @@ public:
    * The returned pointer will never be empty, but this function can throw various exceptions, for
    * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
    *
-   * \param topic_name Topic name
-   * \param topic_type Topic type
-   * \param qos QoS settings
-   * \param group Callback group
+   * \param[in] topic_name Topic name
+   * \param[in] topic_type Topic type
+   * \param[in] qos QoS settings
+   * \param[in] options Publisher options
+   * \return Shared pointer to the created generic publisher.
    */
+  template<typename AllocatorT = std::allocator<void>>
   std::shared_ptr<rclcpp::GenericPublisher> create_generic_publisher(
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+    )
+  );
 
   /// Create and return a GenericSubscription.
   /**
    * The returned pointer will never be empty, but this function can throw various exceptions, for
    * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
    *
-   * \param topic_name Topic name
-   * \param topic_type Topic type
-   * \param qos QoS settings
-   * \param callback Callback for new messages of serialized form
-   * \param group Callback group
+   * \param[in] topic_name Topic name
+   * \param[in] topic_type Topic type
+   * \param[in] qos QoS settings
+   * \param[in] callback Callback for new messages of serialized form
+   * \param[in] options Subscription options
+   * \return Shared pointer to the created generic subscription.
    */
+  template<typename AllocatorT = std::allocator<void>>
   std::shared_ptr<rclcpp::GenericSubscription> create_generic_subscription(
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos,
     std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+    )
+  );
 
   /// Declare and initialize a parameter, return the effective value.
   /**
