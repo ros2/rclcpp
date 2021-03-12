@@ -124,6 +124,11 @@ public:
   RCLCPP_PUBLIC
   ~TimeSource();
 
+protected:
+  // Dedicated thread for clock subscription.
+  bool use_clock_thread_;
+  std::thread clock_executor_thread_;
+
 private:
   // Preserve the node reference
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
@@ -140,9 +145,6 @@ private:
   // QoS of the clock subscription.
   rclcpp::QoS qos_;
 
-  // Options to use dedicated thread for clock subscription.
-  bool use_clock_thread_;
-
   // The subscription for the clock callback
   using MessageT = rosgraph_msgs::msg::Clock;
   using Alloc = std::allocator<void>;
@@ -151,7 +153,6 @@ private:
   std::mutex clock_sub_lock_;
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
   rclcpp::executors::SingleThreadedExecutor clock_executor_;
-  std::thread clock_executor_thread_;
 
   // The clock callback itself
   void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);

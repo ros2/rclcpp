@@ -516,3 +516,147 @@ TEST_F(TestTimeSource, no_pre_jump_callback) {
   EXPECT_EQ(1, cbo.last_postcallback_id_);
   EXPECT_EQ(1, cbo.post_callback_calls_);
 }
+
+class TestTimeSourceClockOptions : public rclcpp::TimeSource
+{
+public:
+  TestTimeSourceClockOptions(rclcpp::Node::SharedPtr node = nullptr)
+    : rclcpp::TimeSource(node) {
+  }
+
+  bool GetUseClockThreadOption() {
+    return use_clock_thread_;
+  }
+
+  bool IsClockThreadJoinable() {
+    return clock_executor_thread_.joinable();
+  }
+};
+
+TEST_F(TestTimeSource, use_clock_thread_set_by_node_options) {
+  auto node_ = std::make_shared<rclcpp::Node>(
+        "clock_thread_testing_node",
+        rclcpp::NodeOptions().use_clock_thread(false));
+
+  TestTimeSourceClockOptions ts(node_);
+
+  ASSERT_FALSE(ts.GetUseClockThreadOption());
+}
+
+TEST_F(TestTimeSource, check_clock_thread_status) {
+  TestTimeSourceClockOptions ts;
+
+  node->set_parameter(rclcpp::Parameter("use_sim_time", true));
+  ts.attachNode(node);
+  ASSERT_TRUE(ts.IsClockThreadJoinable());
+
+  ts.detachNode();
+  node->set_parameter(rclcpp::Parameter("use_sim_time", false));
+  ts.attachNode(node);
+  ASSERT_FALSE(ts.IsClockThreadJoinable());
+}
+
+class SimClockPublisher : public rclcpp::Node {
+public:
+  SimClockPublisher()
+    : rclcpp::Node("sim_clock_publisher_node") {
+    clock_pub_ = this->create_publisher<rosgraph_msgs::msg::Clock>(
+          "/clock",
+          rclcpp::QoS(1));
+
+    pub_timer_ = this->create_wall_timer(
+          std::chrono::milliseconds(1),
+          std::bind(
+            &SimClockPublisher::timer_callback,
+            this)
+          );
+
+    clock_msg_.clock.sec = 0.0;
+    clock_msg_.clock.nanosec = 0.0;
+  }
+
+  ~SimClockPublisher(){
+    node_executor.cancel();
+    node_thread_.join();
+  }
+
+  void SpinNode(){
+    node_thread_ = std::thread([this]() {
+      node_executor.add_node(this->shared_from_this());
+      node_executor.spin();
+    });
+  }
+
+private:
+  void timer_callback() {
+    clock_msg_.clock.nanosec += 1*1e6;
+    return;
+  }
+
+  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
+  rclcpp::TimerBase::SharedPtr pub_timer_;
+  rosgraph_msgs::msg::Clock clock_msg_;
+  std::thread node_thread_;
+  rclcpp::executors::SingleThreadedExecutor node_executor;
+};
+
+class TestNodeClockUpdated : public rclcpp::Node {
+public:
+  TestNodeClockUpdated()
+    : rclcpp::Node("clock_thread_testing_node") {
+    this->set_parameter(rclcpp::Parameter("use_sim_time", true));
+    timer_ = this->create_wall_timer(
+          std::chrono::milliseconds(100),
+          std::bind(
+            &TestNodeClockUpdated::timer_callback,
+            this)
+          );
+  }
+
+  bool GetIsCallbackFrozen(){
+    return is_callback_frozen_;
+  }
+
+
+private:
+  void timer_callback() {
+    rclcpp::Time start_time = this->now();
+    bool is_time_out = false;
+
+    while (rclcpp::ok()
+           && !is_time_out) {
+      rclcpp::Time time_now = this->now();
+      rclcpp::Duration time_spent = time_now - start_time;
+      RCLCPP_INFO_STREAM(
+            this->get_logger(),
+            " now (s): " << time_now.seconds());
+      rclcpp::sleep_for(100ms);
+      is_time_out = time_spent.seconds() > 1.0;
+    }
+    is_callback_frozen_ = false;
+    return;
+  }
+
+  rclcpp::TimerBase::SharedPtr timer_;
+  bool is_callback_frozen_ = true;
+
+};
+
+
+TEST_F(TestTimeSource, time_updated_in_callback_if_use_clock_thread){
+  SimClockPublisher pub_node;
+  pub_node.SpinNode();
+
+  TestNodeClockUpdated node_;
+
+  // Test if node callback is frozen for 2 seconds
+  auto steady_clock = rclcpp::Clock(RCL_STEADY_TIME);
+  auto start_time = steady_clock.now();
+  while (rclcpp::ok()
+         && (steady_clock.now() - start_time).seconds() < 2.0) {
+    rclcpp::spin_some(node_.get_node_base_interface());
+  }
+
+  ASSERT_TRUE(node_.GetIsCallbackFrozen());
+}
+
