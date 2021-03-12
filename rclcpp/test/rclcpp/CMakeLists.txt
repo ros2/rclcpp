@@ -507,7 +507,6 @@ if(TARGET test_subscription)
     "rmw"
     "rosidl_runtime_cpp"
     "rosidl_typesupport_cpp"
-    "std_msgs"
     "test_msgs"
   )
   target_link_libraries(test_subscription ${PROJECT_NAME} mimick)

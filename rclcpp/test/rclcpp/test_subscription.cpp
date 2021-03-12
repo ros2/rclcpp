@@ -27,8 +27,8 @@
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
 
+#include "test_msgs/msg/basic_types.hpp"
 #include "test_msgs/msg/empty.hpp"
-#include "std_msgs/msg/string.hpp"
 
 using namespace std::chrono_literals;
 
@@ -163,12 +163,12 @@ public:
     node = std::make_shared<rclcpp::Node>("test_cft_subscription", "/ns");
     rclcpp::SubscriptionOptionsBase options_base;
     options_base.content_filter_options.filter_expression =
-      "data MATCH 'Hello World: 5' or data MATCH %0";
-    options_base.content_filter_options.expression_parameters = {"'Hello World: 10'"};
+      "int32_value = %0";
+    options_base.content_filter_options.expression_parameters = {"10"};
     rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> subscription_options(
       options_base);
-    auto callback = [](std::shared_ptr<const std_msgs::msg::String>) {};
-    sub = node->create_subscription<std_msgs::msg::String>(
+    auto callback = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
+    sub = node->create_subscription<test_msgs::msg::BasicTypes>(
       "topic", 10, callback, subscription_options);
   }
 
@@ -180,7 +180,7 @@ public:
 
 protected:
   rclcpp::Node::SharedPtr node;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
+  rclcpp::Subscription<test_msgs::msg::BasicTypes>::SharedPtr sub;
 };
 
 /*
@@ -508,8 +508,8 @@ TEST_F(TestCftSubscription, set_cft_expression_parameters_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_subscription_set_cft_expression_parameters, RCL_RET_ERROR);
 
-  std::string filter_expression = "data MATCH %0";
-  std::string expression_parameter = "'Hello World: 8'";
+  std::string filter_expression = "int32_value = %0";
+  std::string expression_parameter = "100";
   EXPECT_THROW(
     sub->set_cft_expression_parameters(filter_expression, {expression_parameter}),
     rclcpp::exceptions::RCLError);
