@@ -106,3 +106,35 @@ node->declare_parameter("my_param", rclcpp::ParameterValue{});  // not valid, wi
 ```py
 node.declare_parameter("my_param", None);  # not valid, will raise error
 ```
+
+## Possible improvements
+
+### Easier way to declare dynamically typed parameters
+
+Declaring a dynamically typed parameter in `rclcpp` could be considered to be a bit verbose:
+
+```cpp
+rcl_interfaces::msg::ParameterDescriptor descriptor;
+descriptor.dynamic_typing = true;
+
+node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);
+```
+
+the following ways could be supported to make it simpler:
+
+```cpp
+node->declare_parameter(name, rclcpp::PARAMETER_DYNAMIC);
+node->declare_parameter(name, default_value, rclcpp::PARAMETER_DYNAMIC);
+```
+
+or alternatively:
+
+```cpp
+node->declare_parameter(name, default_value, rclcpp::ParameterDescriptor{}.dynamic_typing());
+```
+
+For `rclpy`, there's already a short way to do it:
+
+```py
+node.declare_parameter(name, default_value, rclpy.ParameterDescriptor(dynamic_typing=true));
+```
