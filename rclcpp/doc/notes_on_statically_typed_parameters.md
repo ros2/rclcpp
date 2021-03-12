@@ -63,8 +63,8 @@ Node::declare_parameter<T>(std::string name, rcl_interfaces::msg::ParameterDescr
 Node::declare_parameter(std::string name, rclcpp::ParameterType type, rcl_interfaces::msg::ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor{});
 
 // examples
-node->declare_paramter<int64_t>("my_integer_parameter");  // declare an integer parameter
-node->declare_paramter("another_integer_parameter", rclcpp::ParameterType::PARAMETER_INTEGER);  // another way to do the same
+node->declare_parameter<int64_t>("my_integer_parameter");  // declare an integer parameter
+node->declare_parameter("another_integer_parameter", rclcpp::ParameterType::PARAMETER_INTEGER);  // another way to do the same
 ```
 
 ```py
@@ -72,7 +72,7 @@ node->declare_paramter("another_integer_parameter", rclcpp::ParameterType::PARAM
 Node.declare_parameter(name: str, param_type: rclpy.Parameter.Type, descriptor: rcl_interfaces.msg.ParameterDescriptor = rcl_interfaces.msg.ParameterDescriptor())
 
 # example
-node.declare_paramter('my_integer_parameter', rclpy.Parameter.Type.INTEGER);  # declare an integer parameter
+node.declare_parameter('my_integer_parameter', rclpy.Parameter.Type.INTEGER);  # declare an integer parameter
 ```
 
 If the parameter may be unused, but when used requires a parameter override, then you could conditionally declare it:
