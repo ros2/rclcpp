@@ -375,7 +375,6 @@ function(test_generic_pubsub_for_rmw_implementation)
   )
   if(TARGET test_pubsub${target_suffix})
     target_link_libraries(test_pubsub${target_suffix} ${PROJECT_NAME})
-    target_include_directories(test_pubsub${target_suffix} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rclcpp/src>)
     ament_target_dependencies(test_pubsub${target_suffix}
       "rcpputils"
       "rosidl_typesupport_cpp"
