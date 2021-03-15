@@ -149,6 +149,10 @@ void TimeSource::detachNode()
   sim_time_cb_handler_.reset();
   node_parameters_.reset();
   disable_ros_time();
+  if (clock_executor_thread_.joinable()) {
+    clock_executor_.cancel();
+    clock_executor_thread_.join();
+  }
 }
 
 void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
