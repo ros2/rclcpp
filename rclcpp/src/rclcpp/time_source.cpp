@@ -55,6 +55,7 @@ TimeSource::TimeSource(
 
 void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
 {
+  use_clock_thread_ = node->get_node_options().use_clock_thread();
   attachNode(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
