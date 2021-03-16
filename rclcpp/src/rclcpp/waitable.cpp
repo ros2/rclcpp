@@ -69,5 +69,6 @@ Waitable::set_listener_callback(
   (void)user_data;
 
   throw std::runtime_error(
-    "Custom waitables should override set_listener_callback() if they want to use RMW listeners");
+      "Custom waitables should override set_listener_callback() "
+      "if they want to use RMW listeners");
 }
