@@ -135,7 +135,7 @@ void TimeSource::attachNode(
 void TimeSource::detachNode()
 {
   this->ros_time_active_ = false;
-  clock_subscription_.reset();
+  destroy_clock_sub();
   parameter_subscription_.reset();
   node_base_.reset();
   node_topics_.reset();
@@ -149,10 +149,6 @@ void TimeSource::detachNode()
   sim_time_cb_handler_.reset();
   node_parameters_.reset();
   disable_ros_time();
-  if (clock_executor_thread_.joinable()) {
-    clock_executor_.cancel();
-    clock_executor_thread_.join();
-  }
 }
 
 void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
@@ -189,11 +185,6 @@ TimeSource::~TimeSource()
     node_logging_ || node_clock_ || node_parameters_)
   {
     this->detachNode();
-  }
-
-  if (clock_executor_thread_.joinable()) {
-    clock_executor_.cancel();
-    clock_executor_thread_.join();
   }
 }
 
@@ -290,12 +281,12 @@ void TimeSource::create_clock_sub()
 void TimeSource::destroy_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
-  clock_subscription_.reset();
   if (clock_executor_thread_.joinable()) {
     clock_executor_.cancel();
     clock_executor_thread_.join();
     clock_executor_.remove_callback_group(clock_callback_group_);
   }
+  clock_subscription_.reset();
 }
 
 void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
