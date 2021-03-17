@@ -25,6 +25,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resources.hpp"
 #include "rcpputils/shared_library.hpp"
+#include "rcpputils/find_library.hpp"
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 
 namespace rclcpp
@@ -33,20 +34,12 @@ namespace rclcpp
 std::string get_typesupport_library_path(
   const std::string & package_name, const std::string & typesupport_identifier)
 {
-  const char * filename_prefix;
-  const char * filename_extension;
   const char * dynamic_library_folder;
 #ifdef _WIN32
-  filename_prefix = "";
-  filename_extension = ".dll";
   dynamic_library_folder = "/bin/";
 #elif __APPLE__
-  filename_prefix = "lib";
-  filename_extension = ".dylib";
   dynamic_library_folder = "/lib/";
 #else
-  filename_prefix = "lib";
-  filename_extension = ".so";
   dynamic_library_folder = "/lib/";
 #endif
 
@@ -57,8 +50,8 @@ std::string get_typesupport_library_path(
     throw std::runtime_error(e.what());
   }
 
-  auto library_path = package_prefix + dynamic_library_folder + filename_prefix +
-    package_name + "__" + typesupport_identifier + filename_extension;
+  auto library_path = package_prefix + dynamic_library_folder + rcpputils::kSolibPrefix +
+    package_name + "__" + typesupport_identifier + rcpputils::kSolibExtension;
   return library_path;
 }
 
