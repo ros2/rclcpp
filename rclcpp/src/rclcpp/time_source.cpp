@@ -56,7 +56,6 @@ TimeSource::TimeSource(
 void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
 {
   use_clock_thread_ = node->get_node_options().use_clock_thread();
-  is_clock_executor_cancelled_ = false;
   attachNode(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
@@ -260,9 +259,10 @@ void TimeSource::create_clock_sub()
     if (!clock_executor_thread_.joinable()) {
       clock_executor_thread_ = std::thread(
         [this]() {
+          cancel_clock_executor_promise_ = std::promise<void>{};
+          auto future = cancel_clock_executor_promise_.get_future();
           clock_executor_.add_callback_group(clock_callback_group_, node_base_);
-          clock_executor_.spin();
-          is_clock_executor_cancelled_ = true;
+          clock_executor_.spin_until_future_complete(future);
         }
       );
     }
@@ -282,9 +282,7 @@ void TimeSource::destroy_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
   if (clock_executor_thread_.joinable()) {
-    while (!is_clock_executor_cancelled_) {
-      clock_executor_.cancel();
-    }
+    cancel_clock_executor_promise_.set_value();
     clock_executor_thread_.join();
     clock_executor_.remove_callback_group(clock_callback_group_);
   }

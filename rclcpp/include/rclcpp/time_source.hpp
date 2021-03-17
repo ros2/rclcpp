@@ -153,7 +153,7 @@ private:
   std::mutex clock_sub_lock_;
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
   rclcpp::executors::SingleThreadedExecutor clock_executor_;
-  bool is_clock_executor_cancelled_;
+  std::promise<void> cancel_clock_executor_promise_;
 
   // The clock callback itself
   void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);
