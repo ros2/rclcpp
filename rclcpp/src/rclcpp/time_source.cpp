@@ -252,12 +252,10 @@ void TimeSource::create_clock_sub()
     });
 
   if (use_clock_thread_) {
-    if (clock_callback_group_ == nullptr) {
-      clock_callback_group_ = node_base_->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive,
-        false
-      );
-    }
+    clock_callback_group_ = node_base_->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive,
+      false
+    );
     options.callback_group = clock_callback_group_;
     if (!clock_executor_thread_.joinable()) {
       clock_executor_thread_ = std::thread(
