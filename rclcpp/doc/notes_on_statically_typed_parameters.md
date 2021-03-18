@@ -47,7 +47,8 @@ The parameter type will be inferred from the default value provided when declari
 
 ## Statically typed parameters when allowing undeclared parameters
 
-When undeclared parameters are allowed and a parameter is set without a previous declaration, the parameter will be dynamically typed. This is consistent with other allowed behaviors when undeclared parameters are allowed, e.g. trying to get an undeclared parameter returns "NOT_SET".
+When undeclared parameters are allowed and a parameter is set without a previous declaration, the parameter will be dynamically typed.
+This is consistent with other allowed behaviors when undeclared parameters are allowed, e.g. trying to get an undeclared parameter returns "NOT_SET".
 Parameter declarations will remain special and dynamic or static typing will be used based on the parameter descriptor (default to static).
 
 ## Declaring a parameter without a default value
