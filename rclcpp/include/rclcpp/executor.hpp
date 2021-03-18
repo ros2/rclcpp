@@ -544,7 +544,7 @@ protected:
   RCLCPP_DISABLE_COPY(Executor)
 
   RCLCPP_PUBLIC
-  virtual void
+  void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,

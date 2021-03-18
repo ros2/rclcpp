@@ -261,13 +261,7 @@ public:
   /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
   RCLCPP_PUBLIC
   void
-  spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1)) override
-  {
-    (void)timeout;
-    throw rclcpp::exceptions::UnimplementedError(
-            "spin_once is not implemented for StaticSingleThreadedExecutor, use spin or "
-            "spin_until_future_complete");
-  }
+  spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1)) override;
 
 protected:
   /**
@@ -282,10 +276,6 @@ protected:
   RCLCPP_PUBLIC
   void
   spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
-
-  RCLCPP_PUBLIC
-  void
-  spin_once_impl(std::chrono::nanoseconds timeout) override;
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)

@@ -110,7 +110,7 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 }
 
 void
-StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
+StaticSingleThreadedExecutor::spin_once(std::chrono::nanoseconds timeout)
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
