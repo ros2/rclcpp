@@ -37,9 +37,9 @@ TimeSource::TimeSource(
   std::shared_ptr<rclcpp::Node> node,
   const rclcpp::QoS & qos,
   bool use_clock_thread)
-: logger_(rclcpp::get_logger("rclcpp")),
-  qos_(qos),
-  use_clock_thread_(use_clock_thread)
+: use_clock_thread_(use_clock_thread),
+  logger_(rclcpp::get_logger("rclcpp")),
+  qos_(qos)
 {
   this->attachNode(node);
 }
@@ -47,9 +47,9 @@ TimeSource::TimeSource(
 TimeSource::TimeSource(
   const rclcpp::QoS & qos,
   bool use_clock_thread)
-: logger_(rclcpp::get_logger("rclcpp")),
-  qos_(qos),
-  use_clock_thread_(use_clock_thread)
+: use_clock_thread_(use_clock_thread),
+  logger_(rclcpp::get_logger("rclcpp")),
+  qos_(qos)
 {
 }
 

@@ -656,7 +656,7 @@ private:
   void timer_callback()
   {
     // Increment clock msg and publish it
-    clock_msg_.clock.nanosec += 1 * 1e6;
+    clock_msg_.clock.nanosec += 1000000;
     clock_pub_->publish(clock_msg_);
   }
 
