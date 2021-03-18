@@ -2,6 +2,27 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.0.0 (2021-03-18)
+------------------
+* Document design decisions that were made for statically typed parameters (`#1568 <https://github.com/ros2/rclcpp/issues/1568>`_)
+* Fix doc typo in CallbackGroup constructor (`#1582 <https://github.com/ros2/rclcpp/issues/1582>`_)
+* Enable qos parameter overrides for the /parameter_events topic  (`#1532 <https://github.com/ros2/rclcpp/issues/1532>`_)
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* Remove 'struct' from the rcl_time_jump_t. (`#1577 <https://github.com/ros2/rclcpp/issues/1577>`_)
+* Add tests for declaring statically typed parameters when undeclared parameters are allowed (`#1575 <https://github.com/ros2/rclcpp/issues/1575>`_)
+* Quiet clang memory leak warning on "DoNotOptimize". (`#1571 <https://github.com/ros2/rclcpp/issues/1571>`_)
+* Add ParameterEventsSubscriber class (`#829 <https://github.com/ros2/rclcpp/issues/829>`_)
+* When a parameter change is rejected, the parameters map shouldn't be updated. (`#1567 <https://github.com/ros2/rclcpp/pull/1567>`_)
+* Fix when to throw the NoParameterOverrideProvided exception. (`#1567 <https://github.com/ros2/rclcpp/pull/1567>`_)
+* Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_)
+* Fix benchmark test failure introduced in `#1522 <https://github.com/ros2/rclcpp/issues/1522>`_ (`#1564 <https://github.com/ros2/rclcpp/issues/1564>`_)
+* Fix documented example in create_publisher (`#1558 <https://github.com/ros2/rclcpp/issues/1558>`_)
+* Enforce static parameter types (`#1522 <https://github.com/ros2/rclcpp/issues/1522>`_)
+* Allow timers to keep up the intended rate in MultiThreadedExecutor (`#1516 <https://github.com/ros2/rclcpp/issues/1516>`_)
+* Fix UBSAN warnings in any_subscription_callback. (`#1551 <https://github.com/ros2/rclcpp/issues/1551>`_)
+* Fix runtime error: reference binding to null pointer of type (`#1547 <https://github.com/ros2/rclcpp/issues/1547>`_)
+* Contributors: Andrea Sorbini, Chris Lalancette, Colin MacKenzie, Ivan Santiago Paunovic, Jacob Perron, Steven! Ragnarök, bpwilcox, tomoya
+
 6.3.1 (2021-02-08)
 ------------------
 * Reference test resources directly from source tree (`#1543 <https://github.com/ros2/rclcpp/issues/1543>`_)

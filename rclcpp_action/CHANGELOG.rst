@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+7.0.0 (2021-03-18)
+------------------
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* node_handle must be destroyed after client_handle to prevent memory leak (`#1562 <https://github.com/ros2/rclcpp/issues/1562>`_)
+* Contributors: Andrea Sorbini, Tomoya Fujita
+
 6.3.1 (2021-02-08)
 ------------------
 * Finalize rcl_handle to prevent leak (`#1528 <https://github.com/ros2/rclcpp/issues/1528>`_) (`#1529 <https://github.com/ros2/rclcpp/issues/1529>`_)

@@ -3,6 +3,13 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+7.0.0 (2021-03-18)
+------------------
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_)
+* Enforce static parameter types (`#1522 <https://github.com/ros2/rclcpp/issues/1522>`_)
+* Contributors: Andrea Sorbini, Colin MacKenzie, Ivan Santiago Paunovic
+
 6.3.1 (2021-02-08)
 ------------------
 
