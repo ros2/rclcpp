@@ -85,6 +85,16 @@ if (mode == "modeB") {
 }
 ```
 
+Or, wrap the declaration in a try-catch:
+
+```cpp
+try {
+  node->declare_parameter<int64_t>("param_that_is_optional");
+} catch (const rclcpp::exceptions::NoParameterOverrideProvided &) {
+  // a parameter value was not provided
+}
+```
+
 ## Other migration notes
 
 Declaring a parameter with only a name is deprecated:
