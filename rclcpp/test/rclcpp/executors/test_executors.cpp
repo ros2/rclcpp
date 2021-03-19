@@ -485,7 +485,7 @@ TYPED_TEST(TestExecutors, spinSome) {
   // count becomes too large, spin exits, or the 1 second timeout completes.
   auto start = std::chrono::steady_clock::now();
   while (
-    my_waitable->get_count() <= 10 &&
+    my_waitable->get_count() <= 1 &&
     !spin_exited &&
     (std::chrono::steady_clock::now() - start < 1s))
   {
