@@ -85,13 +85,11 @@ public:
       rclcpp::get_message_type_support_handle<MessageT>(),
       options.template to_rcl_publisher_options<MessageT>(qos)),
     options_(options),
-    message_allocator_(new MessageAllocator(*options.get_allocator().get()))
+    published_type_allocator_(*options.get_allocator()),
+    ros_message_type_allocator_(*options.get_allocator())
   {
-    static_assert(
-      rclcpp::is_ros_compatible_type<MessageT>::value,
-      "given message type is not compatible with ROS and cannot be used with a Publisher");
-
-    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+    allocator::set_allocator_for_deleter(&published_type_deleter_, &published_type_allocator_);
+    allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
 
     if (options_.event_callbacks.deadline_callback) {
       this->add_event_handler(
@@ -176,12 +174,14 @@ public:
    * allocator.
    * \sa rclcpp::LoanedMessage for details of the LoanedMessage class.
    *
-   * \return LoanedMessage containing memory for a ROS message of type MessageT
+   * \return LoanedMessage containing memory for a ROS message of type ROSMessageType
    */
-  rclcpp::LoanedMessage<MessageT, AllocatorT>
+  rclcpp::LoanedMessage<ROSMessageType, AllocatorT>
   borrow_loaned_message()
   {
-    return rclcpp::LoanedMessage<MessageT, AllocatorT>(this, this->get_allocator());
+    return rclcpp::LoanedMessage<ROSMessageType, AllocatorT>(
+      *this,
+      this->get_ros_message_type_allocator());
   }
 
   /// Send a message to the topic for this publisher.
@@ -288,10 +288,23 @@ public:
     }
   }
 
-  std::shared_ptr<MessageAllocator>
+  [[deprecated("use get_published_type_allocator() or get_ros_message_type_allocator() instead")]]
+  std::shared_ptr<PublishedTypeAllocator>
   get_allocator() const
   {
-    return message_allocator_;
+    return std::make_shared<PublishedTypeAllocator>(published_type_allocator_);
+  }
+
+  PublishedTypeAllocator
+  get_published_type_allocator() const
+  {
+    return published_type_allocator_;
+  }
+
+  ROSMessageTypeAllocator
+  get_ros_message_type_allocator() const
+  {
+    return ros_message_type_allocator_;
   }
 
 protected:
@@ -353,7 +366,7 @@ protected:
   }
 
   void
-  do_intra_process_publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  do_intra_process_publish(std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -364,14 +377,15 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    ipm->template do_intra_process_publish<MessageT, AllocatorT>(
+    ipm->template do_intra_process_publish<ROSMessageType, ROSMessageTypeAllocator>(
       intra_process_publisher_id_,
       std::move(msg),
-      message_allocator_);
+      ros_message_type_allocator_);
   }
 
-  std::shared_ptr<const MessageT>
-  do_intra_process_publish_and_return_shared(std::unique_ptr<MessageT, MessageDeleter> msg)
+  std::shared_ptr<const ROSMessageType>
+  do_intra_process_publish_and_return_shared(
+    std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -382,10 +396,10 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    return ipm->template do_intra_process_publish_and_return_shared<MessageT, AllocatorT>(
+    return ipm->template do_intra_process_publish_and_return_shared<ROSMessageType, ROSMessageTypeAllocator>(
       intra_process_publisher_id_,
       std::move(msg),
-      message_allocator_);
+      ros_message_type_allocator_);
   }
 
   /// Copy of original options passed during construction.
@@ -395,9 +409,10 @@ protected:
    */
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> options_;
 
-  std::shared_ptr<MessageAllocator> message_allocator_;
-
-  MessageDeleter message_deleter_;
+  PublishedTypeAllocator published_type_allocator_;
+  PublishedTypeDeleter published_type_deleter_;
+  ROSMessageTypeAllocator ros_message_type_allocator_;
+  ROSMessageTypeDeleter ros_message_type_deleter_;
 };
 
 }  // namespace rclcpp

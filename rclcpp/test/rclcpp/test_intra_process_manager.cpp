@@ -307,7 +307,7 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
   ipm->template do_intra_process_publish<T, Alloc>(
     intra_process_publisher_id_,
     std::move(msg),
-    message_allocator_);
+    *message_allocator_);
 }
 
 }  // namespace mock
