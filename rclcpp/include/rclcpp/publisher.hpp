@@ -51,15 +51,62 @@ template<typename MessageT, typename AllocatorT>
 class LoanedMessage;
 
 /// A publisher publishes messages of any type to a topic.
+/**
+ * MessageT must be a:
+ *
+ * - ROS message type with its own type support (e.g. std_msgs::msgs::String), or a
+ * - rclcpp::TypeAdapter<CustomType, ROSMessageType>
+ *   (e.g. rclcpp::TypeAdapter<std::string, std_msgs::msg::String), or a
+ * - custom type that has been setup as the implicit type for a ROS type using
+ *   RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(custom_type, ros_message_type)
+ *
+ * In the case that MessageT is ROS message type (e.g. std_msgs::msg::String),
+ * both PublishedType and ROSMessageType will be that type.
+ * In the case that MessageT is a TypeAdapter<CustomType, ROSMessageType> type
+ * (e.g. TypeAdapter<std::string, std_msgs::msg::String>), PublishedType will
+ * be the custom type, and ROSMessageType will be the ros message type.
+ *
+ * This is achieved because of the "identity specialization" for TypeAdapter,
+ * which returns itself if it is already a TypeAdapter, and the default
+ * specialization which allows ROSMessageType to be void.
+ * \sa rclcpp::TypeAdapter for more details.
+ */
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
-  using MessageAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
-  using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
-  using MessageDeleter = allocator::Deleter<MessageAllocator, MessageT>;
-  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
-  using MessageSharedPtr = std::shared_ptr<const MessageT>;
+  static_assert(
+    rclcpp::is_ros_compatible_type<MessageT>::value,
+    "given message type is not compatible with ROS and cannot be used with a Publisher");
+
+  /// MessageT::custom_type if MessageT is a TypeAdapter, otherwise just MessageT.
+  using PublishedType = typename rclcpp::TypeAdapter<MessageT>::custom_type;
+  /// MessageT::ros_message_type if MessageT is a TypeAdapter, otherwise just MessageT.
+  using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
+
+  using PublishedTypeAllocatorTraits = allocator::AllocRebind<PublishedType, AllocatorT>;
+  using PublishedTypeAllocator = typename PublishedTypeAllocatorTraits::allocator_type;
+  using PublishedTypeDeleter = allocator::Deleter<PublishedTypeAllocator, PublishedType>;
+
+  using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, AllocatorT>;
+  using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
+  using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
+
+  using MessageAllocatorTraits
+    [[deprecated("use PublishedTypeAllocatorTraits")]] =
+      PublishedTypeAllocatorTraits;
+  using MessageAllocator
+    [[deprecated("use PublishedTypeAllocator")]] =
+      PublishedTypeAllocator;
+  using MessageDeleter
+    [[deprecated("use PublishedTypeDeleter")]] =
+      PublishedTypeDeleter;
+  using MessageUniquePtr
+    [[deprecated("use std::unique_ptr<PublishedType, PublishedTypeDeleter>")]] =
+      std::unique_ptr<PublishedType, PublishedTypeDeleter>;
+  using MessageSharedPtr
+    [[deprecated("use std::shared_ptr<const PublishedType>")]] =
+      std::shared_ptr<const PublishedType>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -184,23 +231,23 @@ public:
       this->get_ros_message_type_allocator());
   }
 
-  /// Send a message to the topic for this publisher.
+  /// Publish a message on the topic.
   /**
-   * This function is enabled if the element_type of the std::unique_ptr is
-   * a ROS message type, as opposed to a TypeAdapter, and that type matches
-   * the type given when creating the publisher.
+   * This signature is enabled if the element_type of the std::unique_ptr is
+   * a ROS message type, as opposed to the custom_type of a TypeAdapter, and
+   * that type matches the type given when creating the publisher.
    *
-   * This signature allows the user to given ownership of the message to rclcpp,
+   * This signature allows the user to give ownership of the message to rclcpp,
    * allowing for more efficient intra-process communication optimizations.
    *
    * \param[in] msg A unique pointer to the message to send.
    */
-  template<typename PublishedT>
+  template<typename T>
   typename std::enable_if_t<
-    rosidl_generator_traits::is_message<PublishedT>::value &&
-    std::is_same<PublishedT, MessageT>::value
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSMessageType>::value
   >
-  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  publish(std::unique_ptr<T, ROSMessageTypeDeleter> msg)
   {
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(*msg);
@@ -223,9 +270,24 @@ public:
     }
   }
 
-  virtual
-  void
-  publish(const MessageT & msg)
+  /// Publish a message on the topic.
+  /**
+   * This signature is enabled if the object being published is
+   * a ROS message type, as opposed to the custom_type of a TypeAdapter, and
+   * that type matches the type given when creating the publisher.
+   *
+   * This signature allows the user to give a reference to a message, which is
+   * copied onto the heap without modification so that a copy can be owned by
+   * rclcpp and ownership of the copy can be moved later if needed.
+   *
+   * \param[in] msg A const reference to the message to send.
+   */
+  template<typename T>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSMessageType>::value
+  >
+  publish(const T & msg)
   {
     // Avoid allocating when not using intra process.
     if (!intra_process_is_enabled_) {
@@ -235,10 +297,75 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // As the message is not const, a copy should be made.
     // A shared_ptr<const MessageT> could also be constructed here.
-    auto ptr = MessageAllocatorTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocatorTraits::construct(*message_allocator_.get(), ptr, msg);
-    MessageUniquePtr unique_msg(ptr, message_deleter_);
+    auto unique_msg = this->duplicate_ros_message_as_unique_ptr(msg);
     this->publish(std::move(unique_msg));
+  }
+
+  /// Publish a message on the topic.
+  /**
+   * This signature is enabled if this class was created with a TypeAdapter and
+   * the element_type of the std::unique_ptr matches the custom_type for the
+   * TypeAdapter used with this class.
+   *
+   * This signature allows the user to give ownership of the message to rclcpp,
+   * allowing for more efficient intra-process communication optimizations.
+   *
+   * \param[in] msg A unique pointer to the message to send.
+   */
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
+    std::is_same<T, PublishedType>::value
+  >
+  publish(std::unique_ptr<T, PublishedTypeDeleter> msg)
+  {
+    // TODO(wjwwood): later update this to give the unique_ptr to the intra
+    // process manager and let it decide if it needs to be converted or not.
+    // For now, convert it unconditionally and pass it the ROSMessageType
+    // publish function specialization.
+    auto unique_ros_msg = this->create_ros_message_unique_ptr();
+    rclcpp::TypeAdapter<MessageT>::convert_to_ros(*msg, *unique_ros_msg);
+    this->publish(std::move(unique_ros_msg));
+  }
+
+  /// Publish a message on the topic.
+  /**
+   * This signature is enabled if this class was created with a TypeAdapter and
+   * the given type matches the custom_type of the TypeAdapter.
+   *
+   * This signature allows the user to give a reference to a message, which is
+   * copied onto the heap without modification so that a copy can be owned by
+   * rclcpp and ownership of the copy can be moved later if needed.
+   *
+   * \param[in] msg A const reference to the message to send.
+   */
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
+    std::is_same<T, PublishedType>::value
+  >
+  publish(const T & msg)
+  {
+    // TODO(wjwwood): later update this to give the unique_ptr to the intra
+    // process manager and let it decide if it needs to be converted or not.
+    // For now, convert it unconditionally and pass it the ROSMessageType
+    // publish function specialization.
+
+    // Avoid allocating when not using intra process.
+    if (!intra_process_is_enabled_) {
+      // Convert to the ROS message equivalent and publish it.
+      ROSMessageType ros_msg;
+      rclcpp::TypeAdapter<MessageT>::convert_to_ros(msg, ros_msg);
+      // In this case we're not using intra process.
+      return this->do_inter_process_publish(ros_msg);
+    }
+    // Otherwise we have to allocate memory in a unique_ptr, convert it,
+    // and pass it along.
+    // As the message is not const, a copy should be made.
+    // A shared_ptr<const MessageT> could also be constructed here.
+    auto unique_ros_msg = this->create_ros_message_unique_ptr();
+    rclcpp::TypeAdapter<MessageT>::convert_to_ros(msg, *unique_ros_msg);
+    this->publish(std::move(unique_ros_msg));
   }
 
   void
@@ -400,6 +527,24 @@ protected:
       intra_process_publisher_id_,
       std::move(msg),
       ros_message_type_allocator_);
+  }
+
+  /// Return a new unique_ptr using the ROSMessageType of the publisher.
+  std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>
+  create_ros_message_unique_ptr()
+  {
+    auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator_, 1);
+    ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator_, ptr);
+    return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, published_type_deleter_);
+  }
+
+  /// Duplicate a given ros message as a unique_ptr.
+  std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>
+  duplicate_ros_message_as_unique_ptr(const ROSMessageType & msg)
+  {
+    auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator_, 1);
+    ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator_, ptr, msg);
+    return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, published_type_deleter_);
   }
 
   /// Copy of original options passed during construction.

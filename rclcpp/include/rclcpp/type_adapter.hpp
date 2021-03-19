@@ -42,7 +42,7 @@ namespace rclcpp
  * `std_msgs::msg::String` ROS message type:
  *
  *     template<>
- *     struct rclcpp::TypeAdapter<std::string>
+ *     struct rclcpp::TypeAdapter<std::string, std_msgs::msg::String>
  *     {
  *       using is_specialized = std::true_type;
  *       using custom_type = std::string;
@@ -99,7 +99,9 @@ struct TypeAdapter
 {
   using is_specialized = std::false_type;
   using custom_type = CustomType;
-  using ros_message_type = ROSMessageType;
+  // In this case, the CustomType is the only thing given, or there is no specialization.
+  // Assign ros_message_type to CustomType for the former case.
+  using ros_message_type = CustomType;
 };
 
 /// Helper template to determine if a type is a TypeAdapter, false specialization.
@@ -149,6 +151,19 @@ struct ImplicitTypeAdapter
 {
   using is_specialized = std::false_type;
 };
+
+/// Specialization of TypeAdapter for ImplicitTypeAdapter.
+/**
+ * This allows for things like this:
+ *
+ *    RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(std::string, std_msgs::msg::String);
+ *    auto pub = node->create_publisher<std::string>("topic", 10);
+ *
+ */
+template<typename T>
+struct TypeAdapter<T, void, std::enable_if_t<ImplicitTypeAdapter<T>::is_specialized::value>>
+: ImplicitTypeAdapter<T>
+{};
 
 /// Assigns the custom type implicitly to the given custom type/ros message type pair.
 /**
