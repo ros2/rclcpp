@@ -283,6 +283,7 @@ void TimeSource::destroy_clock_sub()
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
   if (clock_executor_thread_.joinable()) {
     cancel_clock_executor_promise_.set_value();
+    clock_executor_.cancel();
     clock_executor_thread_.join();
     clock_executor_.remove_callback_group(clock_callback_group_);
   }
