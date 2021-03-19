@@ -67,10 +67,18 @@ Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
   constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
+  constexpr std::int32_t limit_s = std::numeric_limits<std::int32_t>::max();
+  constexpr std::uint32_t limit_ns = std::numeric_limits<std::uint32_t>::max();
   const auto result = std::div(rcl_duration_.nanoseconds, kDivisor);
   if (result.rem >= 0) {
-    msg_duration.sec = static_cast<std::int32_t>(result.quot);
-    msg_duration.nanosec = static_cast<std::uint32_t>(result.rem);
+    // saturate if we will overflow
+    if (result.quot > limit_s) {
+      msg_duration.sec = limit_s;
+      msg_duration.nanosec = limit_ns;
+    } else {
+      msg_duration.sec = static_cast<std::int32_t>(result.quot);
+      msg_duration.nanosec = static_cast<std::uint32_t>(result.rem);
+    }
   } else {
     msg_duration.sec = static_cast<std::int32_t>(result.quot - 1);
     msg_duration.nanosec = static_cast<std::uint32_t>(kDivisor + result.rem);
@@ -238,11 +246,19 @@ Duration::to_rmw_time() const
     throw std::runtime_error("rmw_time_t cannot be negative");
   }
 
-  // reuse conversion logic from msg creation
-  builtin_interfaces::msg::Duration msg = *this;
+  // Purposefully avoid using the same message creation logic to avoid possible overflow
+  // converting from uint64_t to int32_t, then back to uint64_t
   rmw_time_t result;
-  result.sec = static_cast<uint64_t>(msg.sec);
-  result.nsec = static_cast<uint64_t>(msg.nanosec);
+  constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
+  const auto div_result = std::div(rcl_duration_.nanoseconds, kDivisor);
+  if (div_result.rem >= 0) {
+    result.sec = static_cast<uint64_t>(div_result.quot);
+    result.nsec = static_cast<uint64_t>(div_result.rem);
+  } else {
+    result.sec = static_cast<uint64_t>(div_result.quot - 1);
+    result.nsec = static_cast<uint64_t>(kDivisor + div_result.rem);
+  }
+
   return result;
 }
 
