@@ -246,8 +246,8 @@ Duration::to_rmw_time() const
     throw std::runtime_error("rmw_time_t cannot be negative");
   }
 
-  // Purposefully avoid using the same message creation logic to avoid possible overflow
-  // converting from uint64_t to int32_t, then back to uint64_t
+  // Purposefully avoid creating from builtin_interfaces::msg::Duration
+  // to avoid possible overflow converting from int64_t to int32_t, then back to uint64_t
   rmw_time_t result;
   constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
   const auto div_result = std::div(rcl_duration_.nanoseconds, kDivisor);
