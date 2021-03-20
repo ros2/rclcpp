@@ -273,8 +273,8 @@ TEST_F(TestDuration, conversions) {
     auto duration = rclcpp::Duration::from_nanoseconds(MAX_NANOSECONDS);
 
     const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
-    EXPECT_EQ(duration_msg.sec, std::numeric_limits<std::int32_t>::max());
-    EXPECT_EQ(duration_msg.nanosec, std::numeric_limits<std::uint32_t>::max());
+    EXPECT_EQ(duration_msg.sec, std::numeric_limits<int32_t>::max());
+    EXPECT_EQ(duration_msg.nanosec, std::numeric_limits<uint32_t>::max());
 
     auto rmw_time = duration.to_rmw_time();
     EXPECT_EQ(rmw_time.sec, 9223372036u);

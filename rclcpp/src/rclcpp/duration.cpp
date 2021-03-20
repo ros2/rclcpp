@@ -67,8 +67,8 @@ Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
   constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
-  constexpr std::int32_t limit_s = std::numeric_limits<std::int32_t>::max();
-  constexpr std::uint32_t limit_ns = std::numeric_limits<std::uint32_t>::max();
+  constexpr int32_t limit_s = std::numeric_limits<int32_t>::max();
+  constexpr uint32_t limit_ns = std::numeric_limits<uint32_t>::max();
   const auto result = std::div(rcl_duration_.nanoseconds, kDivisor);
   if (result.rem >= 0) {
     // saturate if we will overflow
@@ -76,12 +76,12 @@ Duration::operator builtin_interfaces::msg::Duration() const
       msg_duration.sec = limit_s;
       msg_duration.nanosec = limit_ns;
     } else {
-      msg_duration.sec = static_cast<std::int32_t>(result.quot);
-      msg_duration.nanosec = static_cast<std::uint32_t>(result.rem);
+      msg_duration.sec = static_cast<int32_t>(result.quot);
+      msg_duration.nanosec = static_cast<uint32_t>(result.rem);
     }
   } else {
-    msg_duration.sec = static_cast<std::int32_t>(result.quot - 1);
-    msg_duration.nanosec = static_cast<std::uint32_t>(kDivisor + result.rem);
+    msg_duration.sec = static_cast<int32_t>(result.quot - 1);
+    msg_duration.nanosec = static_cast<uint32_t>(kDivisor + result.rem);
   }
   return msg_duration;
 }
