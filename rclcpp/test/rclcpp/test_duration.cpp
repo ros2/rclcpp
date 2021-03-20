@@ -283,6 +283,19 @@ TEST_F(TestDuration, conversions) {
     auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
     EXPECT_EQ(chrono_duration.count(), MAX_NANOSECONDS);
   }
+
+  {
+    auto duration = rclcpp::Duration::from_nanoseconds(-MAX_NANOSECONDS);
+
+    const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, std::numeric_limits<int32_t>::min());
+    EXPECT_EQ(duration_msg.nanosec, std::numeric_limits<uint32_t>::max());
+
+    EXPECT_THROW(duration.to_rmw_time(), std::runtime_error);
+
+    auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), -MAX_NANOSECONDS);
+  }
 }
 
 TEST_F(TestDuration, test_some_constructors) {
