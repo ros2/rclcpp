@@ -63,10 +63,11 @@ public:
 
   ~LifecycleNodeInterfaceImpl()
   {
+    fprintf(stderr, "oh yeah destructuro\n");
     rcl_node_t * node_handle = node_base_interface_->get_rcl_node_handle();
-    const rcl_node_options_t * node_options = rcl_node_get_options(node_handle);
-    auto ret = rcl_lifecycle_state_machine_fini(
-      &state_machine_, node_handle, &node_options->allocator);
+    fprintf(stderr, "oh yeah end destructuro\n");
+    auto ret = rcl_lifecycle_state_machine_fini(&state_machine_, node_handle);
+    fprintf(stderr, "oh yeah end destructuro222\n");
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_FATAL_NAMED(
         "rclcpp_lifecycle",
@@ -81,6 +82,10 @@ public:
     const rcl_node_options_t * node_options =
       rcl_node_get_options(node_base_interface_->get_rcl_node_handle());
     state_machine_ = rcl_lifecycle_get_zero_initialized_state_machine();
+    auto state_machine_options = rcl_lifecycle_get_default_state_machine_options();
+    state_machine_options.enable_com_interface = enable_communication_interface;
+    state_machine_options.allocator = node_options->allocator;
+
     // The call to initialize the state machine takes
     // currently five different typesupports for all publishers/services
     // created within the RCL_LIFECYCLE structure.
@@ -96,10 +101,9 @@ public:
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableStatesSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
-      enable_communication_interface,
-      true,
-      &node_options->allocator);
+      &state_machine_options);
     if (ret != RCL_RET_OK) {
+      fprintf(stderr, "oh yeah %s\n", node_base_interface_->get_name());
       throw std::runtime_error(
               std::string("Couldn't initialize state machine for node ") +
               node_base_interface_->get_name());
