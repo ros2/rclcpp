@@ -324,7 +324,7 @@ qos_check_compatible(const QoS & publisher_qos, const QoS & subscription_qos)
     reason_c_str,
     reason_size);
   if (RMW_RET_OK != ret) {
-    auto error_str = rmw_get_error_string().str;
+    std::string error_str(rmw_get_error_string().str);
     rmw_reset_error();
     throw rclcpp::exceptions::QoSCheckCompatibleException{error_str};
   }
