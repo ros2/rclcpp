@@ -840,6 +840,9 @@ public:
    *
    * This allows the node developer to control which parameters may be changed.
    *
+   * It is considered bad practice to reject changes for "unknown" parameters as this prevents
+   * other parts of the node (that may be aware of these parameters) from handling them.
+   *
    * Note that the callback is called when declare_parameter() and its variants
    * are called, and so you cannot assume the parameter has been set before
    * this callback, so when checking a new value against the existing one, you
@@ -865,29 +868,6 @@ public:
    * The registered callbacks are called when a parameter is set.
    * When a callback returns a not successful result, the remaining callbacks aren't called.
    * The order of the callback is the reverse from the registration order.
-   *
-   * It is considered bad practice to reject changes for "unknown" parameters as this prevents
-   * other parts of the node (that may be aware of these parameters) from handling them.
-   * For example, **do not write**:
-   *
-   * ```cpp
-   * rcl_interfaces::msg::SetParametersResult
-   * my_callback(const std::vector<rclcpp::Parameter> & parameters)
-   * {
-   *   rcl_interfaces::msg::SetParametersResult result;
-   *   result.successful = true;
-   *   for (const auto & parameter : parameters) {
-   *     if (parameter.get_name().compare("some_expected_parameter") == 0) {
-   *       // Handle change to parameter 'some_expected_parameter'
-   *     } else {
-   *       // Do not do this
-   *       result.successful = false;
-   *       result.reason = "unknown parameter " + parameter.get_name();
-   *     }
-   *   }
-   *   return result;
-   * }
-   * ```
    *
    * \param callback The callback to register.
    * \returns A shared pointer. The callback is valid as long as the smart pointer is alive.
