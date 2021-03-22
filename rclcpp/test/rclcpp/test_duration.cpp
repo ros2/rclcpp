@@ -289,7 +289,7 @@ TEST_F(TestDuration, conversions) {
 
     const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, std::numeric_limits<int32_t>::min());
-    EXPECT_EQ(duration_msg.nanosec, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(duration_msg.nanosec, 0u);
 
     EXPECT_THROW(duration.to_rmw_time(), std::runtime_error);
 

@@ -81,9 +81,9 @@ Duration::operator builtin_interfaces::msg::Duration() const
       msg_duration.nanosec = static_cast<uint32_t>(result.rem);
     }
   } else {
-    if (result.quot < min_s) {
+    if (result.quot <= min_s) {
       msg_duration.sec = min_s;
-      msg_duration.nanosec = max_ns;
+      msg_duration.nanosec = 0u;
     } else {
       msg_duration.sec = static_cast<int32_t>(result.quot - 1);
       msg_duration.nanosec = static_cast<uint32_t>(kDivisor + result.rem);
