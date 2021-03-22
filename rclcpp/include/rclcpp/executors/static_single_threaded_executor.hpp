@@ -192,77 +192,6 @@ public:
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_automatically_added_callback_groups_from_nodes() override;
 
-  /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
-  /**
-   * \param[in] future The future to wait on. If this function returns SUCCESS, the future can be
-   *   accessed without blocking (though it may still throw an exception).
-   * \param[in] timeout Optional timeout parameter, which gets passed to
-   *    Executor::execute_ready_executables.
-   *   `-1` is block forever, `0` is non-blocking.
-   *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
-   *   code.
-   * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
-   *
-   *  Example usage:
-   *  rclcpp::executors::StaticSingleThreadedExecutor exec;
-   *  // ... other part of code like creating node
-   *  // define future
-   *  exec.add_node(node);
-   *  exec.spin_until_future_complete(future);
-   */
-  template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
-  rclcpp::FutureReturnCode
-  spin_until_future_complete(
-    FutureT & future,
-    std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
-  {
-    std::future_status status = future.wait_for(std::chrono::seconds(0));
-    if (status == std::future_status::ready) {
-      return rclcpp::FutureReturnCode::SUCCESS;
-    }
-
-    auto end_time = std::chrono::steady_clock::now();
-    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
-    if (timeout_ns > std::chrono::nanoseconds::zero()) {
-      end_time += timeout_ns;
-    }
-    std::chrono::nanoseconds timeout_left = timeout_ns;
-
-    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
-    RCLCPP_SCOPE_EXIT(entities_collector_->fini());
-
-    while (rclcpp::ok(this->context_)) {
-      // Do one set of work.
-      entities_collector_->refresh_wait_set(timeout_left);
-      execute_ready_executables();
-      // Check if the future is set, return SUCCESS if it is.
-      status = future.wait_for(std::chrono::seconds(0));
-      if (status == std::future_status::ready) {
-        return rclcpp::FutureReturnCode::SUCCESS;
-      }
-      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout_ns < std::chrono::nanoseconds::zero()) {
-        continue;
-      }
-      // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto now = std::chrono::steady_clock::now();
-      if (now >= end_time) {
-        return rclcpp::FutureReturnCode::TIMEOUT;
-      }
-      // Subtract the elapsed time from the original timeout.
-      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
-    }
-
-    // The future did not complete before ok() returned false, return INTERRUPTED.
-    return rclcpp::FutureReturnCode::INTERRUPTED;
-  }
-
-  /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
-  RCLCPP_PUBLIC
-  void
-  spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1)) override;
-
 protected:
   /**
    * @brief Executes ready executables from wait set.
@@ -276,6 +205,10 @@ protected:
   RCLCPP_PUBLIC
   void
   spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
+
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout) override;
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)

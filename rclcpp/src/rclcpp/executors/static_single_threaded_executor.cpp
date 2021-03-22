@@ -30,7 +30,8 @@ StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(
   entities_collector_ = std::make_shared<StaticExecutorEntitiesCollector>();
 }
 
-StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor() {
+StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor()
+{
   if (entities_collector_->is_init()) {
     entities_collector_->fini();
   }
@@ -113,13 +114,8 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 }
 
 void
-StaticSingleThreadedExecutor::spin_once(std::chrono::nanoseconds timeout)
+StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
-  if (spinning.exchange(true)) {
-    throw std::runtime_error("spin_some() called while already spinning");
-  }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-
   // Make sure the entities collector has been initialized
   if (!entities_collector_->is_init()) {
     entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
