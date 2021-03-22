@@ -19,6 +19,7 @@
   <build_depend>rosidl_runtime_cpp</build_depend>
   <build_depend>rosidl_typesupport_c</build_depend>
   <build_depend>rosidl_typesupport_cpp</build_depend>
+  <build_export_depend>ament_index_cpp</build_export_depend>
   <build_export_depend>builtin_interfaces</build_export_depend>
   <build_export_depend>rcl_interfaces</build_export_depend>
   <build_export_depend>rosgraph_msgs</build_export_depend>
