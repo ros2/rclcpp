@@ -219,10 +219,57 @@ TEST_F(TestParameterClient, async_parameter_get_parameter_types) {
 }
 
 /*
+  Coverage for async get_parameter_types with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, async_parameter_get_parameter_types_allow_undeclared) {
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
+  bool callback_called = false;
+  auto callback = [&callback_called](std::shared_future<std::vector<rclcpp::ParameterType>> result)
+    {
+      if (result.valid() && result.get().size() == 1 &&
+        result.get()[0] == rclcpp::PARAMETER_NOT_SET)
+      {
+        callback_called = true;
+      }
+    };
+  std::vector<std::string> names{"foo"};
+  std::shared_future<std::vector<rclcpp::ParameterType>> future =
+    asynchronous_client->get_parameter_types(names, callback);
+  auto return_code = rclcpp::spin_until_future_complete(
+    node_with_option, future, std::chrono::milliseconds(100));
+  ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+  ASSERT_TRUE(callback_called);
+}
+
+/*
   Coverage for async get_parameters
  */
 TEST_F(TestParameterClient, async_parameter_get_parameters) {
   auto asynchronous_client = std::make_shared<rclcpp::AsyncParametersClient>(node);
+  bool callback_called = false;
+  auto callback = [&callback_called](std::shared_future<std::vector<rclcpp::Parameter>> result)
+    {
+      // We expect the result to be empty since we tried to get a parameter that didn't exist.
+      if (result.valid() && result.get().size() == 0) {
+        callback_called = true;
+      }
+    };
+  std::vector<std::string> names{"foo"};
+  std::shared_future<std::vector<rclcpp::Parameter>> future = asynchronous_client->get_parameters(
+    names, callback);
+  auto return_code = rclcpp::spin_until_future_complete(
+    node, future, std::chrono::milliseconds(100));
+  ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+  ASSERT_TRUE(callback_called);
+}
+
+/*
+  Coverage for async get_parameters with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, async_parameter_get_parameters_allow_undeclared) {
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
   bool callback_called = false;
   auto callback = [&callback_called](std::shared_future<std::vector<rclcpp::Parameter>> result)
     {
@@ -234,7 +281,7 @@ TEST_F(TestParameterClient, async_parameter_get_parameters) {
   std::shared_future<std::vector<rclcpp::Parameter>> future = asynchronous_client->get_parameters(
     names, callback);
   auto return_code = rclcpp::spin_until_future_complete(
-    node, future, std::chrono::milliseconds(100));
+    node_with_option, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
 }
@@ -292,12 +339,197 @@ TEST_F(TestParameterClient, async_parameter_list_parameters) {
  */
 TEST_F(TestParameterClient, sync_parameter_get_parameter_types) {
   node->declare_parameter("foo", 4);
+  node->declare_parameter("bar", "this is bar");
   auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  std::vector<std::string> names{"foo"};
-  std::vector<rclcpp::ParameterType> parameter_types =
-    synchronous_client->get_parameter_types(names, 10s);
-  ASSERT_EQ(1u, parameter_types.size());
-  ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(0u, parameter_types.size());
+  }
+
+  {
+    std::vector<std::string> names{"none", "foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(0u, parameter_types.size());
+  }
+
+  {
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(2u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[1]);
+  }
+}
+
+/*
+  Coverage for sync get_parameter_types with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, sync_parameter_get_parameter_types_allow_undeclared) {
+  node_with_option->declare_parameter("foo", 4);
+  node_with_option->declare_parameter("bar", "this is bar");
+  auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node_with_option);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"none", "foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(3u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET, parameter_types[0]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[1]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[2]);
+  }
+
+  {
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(1u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[0]);
+  }
+
+  {
+    std::vector<std::string> names{"foo", "bar"};
+    std::vector<rclcpp::ParameterType> parameter_types =
+      synchronous_client->get_parameter_types(names, 10s);
+    ASSERT_EQ(2u, parameter_types.size());
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, parameter_types[0]);
+    ASSERT_EQ(rclcpp::ParameterType::PARAMETER_STRING, parameter_types[1]);
+  }
+}
+
+/*
+  Coverage for sync get_parameters
+ */
+TEST_F(TestParameterClient, sync_parameter_get_parameters) {
+  node->declare_parameter("foo", 4);
+  node->declare_parameter("bar", "this is bar");
+  auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(0u, parameters.size());
+  }
+
+  {
+    std::vector<std::string> names{"none", "foo", "bar"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(0u, parameters.size());
+  }
+
+  {
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(1u, parameters.size());
+    ASSERT_EQ("foo", parameters[0].get_name());
+    ASSERT_EQ(4u, parameters[0].as_int());
+  }
+
+  {
+    std::vector<std::string> names{"bar"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(1u, parameters.size());
+    ASSERT_EQ("bar", parameters[0].get_name());
+    ASSERT_EQ("this is bar", parameters[0].as_string());
+  }
+
+  {
+    std::vector<std::string> names{"foo", "bar"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(2u, parameters.size());
+    ASSERT_EQ("foo", parameters[0].get_name());
+    ASSERT_EQ(4u, parameters[0].as_int());
+    ASSERT_EQ("bar", parameters[1].get_name());
+    ASSERT_EQ("this is bar", parameters[1].as_string());
+  }
+}
+
+/*
+  Coverage for sync get_parameters with allow_undeclared_ enabled
+ */
+TEST_F(TestParameterClient, sync_parameter_get_parameters_allow_undeclared) {
+  node_with_option->declare_parameter("foo", 4);
+  node_with_option->declare_parameter("bar", "this is bar");
+  auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node_with_option);
+
+  {
+    std::vector<std::string> names{"none"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(1u, parameters.size());
+  }
+
+  {
+    std::vector<std::string> names{"none", "foo", "bar"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(3u, parameters.size());
+    ASSERT_EQ("foo", parameters[1].get_name());
+    ASSERT_EQ(4u, parameters[1].as_int());
+    ASSERT_EQ("bar", parameters[2].get_name());
+    ASSERT_EQ("this is bar", parameters[2].as_string());
+  }
+
+  {
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(1u, parameters.size());
+    ASSERT_EQ("foo", parameters[0].get_name());
+    ASSERT_EQ(4u, parameters[0].as_int());
+  }
+
+  {
+    std::vector<std::string> names{"bar"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(1u, parameters.size());
+    ASSERT_EQ("bar", parameters[0].get_name());
+    ASSERT_EQ("this is bar", parameters[0].as_string());
+  }
+
+  {
+    std::vector<std::string> names{"foo", "bar"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(2u, parameters.size());
+    ASSERT_EQ("foo", parameters[0].get_name());
+    ASSERT_EQ(4u, parameters[0].as_int());
+    ASSERT_EQ("bar", parameters[1].get_name());
+    ASSERT_EQ("this is bar", parameters[1].as_string());
+  }
 }
 
 /*
