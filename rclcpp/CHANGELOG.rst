@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.0.1 (2021-03-22)
+------------------
 * get_parameters service should return empty if undeclared parameters are allowed (`#1514 <https://github.com/ros2/rclcpp/issues/1514>`_)
 * Made 'Context::shutdown_reason' function a const function (`#1578 <https://github.com/ros2/rclcpp/issues/1578>`_)
 * Contributors: Tomoya Fujita, suab321321
