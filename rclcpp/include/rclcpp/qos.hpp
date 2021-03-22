@@ -285,7 +285,7 @@ bool operator!=(const QoS & left, const QoS & right);
 /**
  * \see rclcpp::qos_check_compatible()
  */
-struct RCLCPP_PUBLIC QoSCheckCompatibleResult
+struct QoSCheckCompatibleResult
 {
   /// Compatibility result.
   QoSCompatibility compatibility;
