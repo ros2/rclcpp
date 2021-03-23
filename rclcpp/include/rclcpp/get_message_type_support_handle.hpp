@@ -53,7 +53,7 @@ get_message_type_support_handle()
 {
   // TODO(wjwwood): check for nullptr
   return *rosidl_typesupport_cpp::get_message_type_support_handle<
-    typename TypeAdapter<AdaptedType>::ROSMessageType
+    typename TypeAdapter<AdaptedType>::ros_message_type
   >();
 }
 

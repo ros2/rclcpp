@@ -436,7 +436,7 @@ public:
 
 protected:
   void
-  do_inter_process_publish(const MessageT & msg)
+  do_inter_process_publish(const ROSMessageType & msg)
   {
     TRACEPOINT(
       rclcpp_publish,
@@ -473,7 +473,8 @@ protected:
   }
 
   void
-  do_loaned_message_publish(std::unique_ptr<MessageT, std::function<void(MessageT *)>> msg)
+  do_loaned_message_publish(
+    std::unique_ptr<ROSMessageType, std::function<void(ROSMessageType *)>> msg)
   {
     auto status = rcl_publish_loaned_message(publisher_handle_.get(), msg.get(), nullptr);
 
