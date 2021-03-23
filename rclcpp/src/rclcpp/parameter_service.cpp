@@ -43,7 +43,7 @@ ParameterService::ParameterService(
     {
       try {
         auto parameters = node_params->get_parameters(request->names);
-        for (const auto param : parameters) {
+        for (const auto & param : parameters) {
           response->values.push_back(param.get_value_message());
         }
       } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
