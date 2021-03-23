@@ -152,7 +152,7 @@ TEST_F(TestDefaultStateMachine, empty_initializer) {
 
 TEST_F(TestDefaultStateMachine, empty_initializer_rcl_errors) {
   {
-    auto patch = mocking_utils::patch_and_return(
+    auto patch = mocking_utils::inject_on_return(
       "lib:rclcpp_lifecycle", rcl_lifecycle_state_machine_init, RCL_RET_ERROR);
     EXPECT_THROW(
       std::make_shared<EmptyLifecycleNode>("testnode").reset(),
