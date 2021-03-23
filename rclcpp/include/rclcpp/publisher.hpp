@@ -324,7 +324,7 @@ public:
     // For now, convert it unconditionally and pass it the ROSMessageType
     // publish function specialization.
     auto unique_ros_msg = this->create_ros_message_unique_ptr();
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros(*msg, *unique_ros_msg);
+    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
     this->publish(std::move(unique_ros_msg));
   }
 
@@ -355,7 +355,7 @@ public:
     if (!intra_process_is_enabled_) {
       // Convert to the ROS message equivalent and publish it.
       ROSMessageType ros_msg;
-      rclcpp::TypeAdapter<MessageT>::convert_to_ros(msg, ros_msg);
+      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, ros_msg);
       // In this case we're not using intra process.
       return this->do_inter_process_publish(ros_msg);
     }
@@ -364,7 +364,7 @@ public:
     // As the message is not const, a copy should be made.
     // A shared_ptr<const MessageT> could also be constructed here.
     auto unique_ros_msg = this->create_ros_message_unique_ptr();
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros(msg, *unique_ros_msg);
+    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, *unique_ros_msg);
     this->publish(std::move(unique_ros_msg));
   }
 
@@ -536,7 +536,7 @@ protected:
   {
     auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator_, 1);
     ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator_, ptr);
-    return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, published_type_deleter_);
+    return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, ros_message_type_deleter_);
   }
 
   /// Duplicate a given ros message as a unique_ptr.
@@ -545,7 +545,7 @@ protected:
   {
     auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator_, 1);
     ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator_, ptr, msg);
-    return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, published_type_deleter_);
+    return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, ros_message_type_deleter_);
   }
 
   /// Copy of original options passed during construction.
