@@ -263,6 +263,41 @@ public:
   bool
   exchange_in_use_by_wait_set_state(void * pointer_to_subscription_part, bool in_use_state);
 
+  /// Check if subscription instance can support content filter topic feature.
+  /**
+   * Depending on the middleware, this will return true if the middleware
+   * can support content filter topic feature for the subscription.
+   *
+   * \return boolean flag indicating if the subscription can support content filter topic feature.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_cft_supported() const;
+
+  /// Set the filter expression and expression parameters for the subscription.
+  /**
+   * \param[in] filter_expression An filter expression to set.
+   * \param[in] expression_parameters Array of expression parameters to set.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  set_cft_expression_parameters(
+    const std::string & filter_expression,
+    const std::vector<std::string> & expression_parameters = {});
+
+  /// Get the filter expression and expression parameters for the subscription.
+  /**
+   * \param[out] filter_expression An filter expression to get.
+   * \param[out] expression_parameters Array of expression parameters to get.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  get_cft_expression_parameters(
+    std::string & filter_expression,
+    std::vector<std::string> & expression_parameters) const;
+
 protected:
   template<typename EventCallbackT>
   void

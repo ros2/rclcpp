@@ -161,6 +161,18 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
+  bool
+  add_goal_uuid(const GoalUUID & goal_uuid);
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  virtual
+  bool
+  remove_goal_uuid(const GoalUUID & goal_uuid);
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  virtual
   void
   send_goal_request(
     std::shared_ptr<void> request,
@@ -715,6 +727,15 @@ private:
         continue;
       }
       goal_handle->set_status(status.status);
+      switch (status.status) {
+        case GoalStatus::STATUS_SUCCEEDED:
+        case GoalStatus::STATUS_ABORTED:
+        case GoalStatus::STATUS_CANCELED:
+          static_cast<void>(remove_goal_uuid(goal_id));
+          break;
+        default:
+          break;
+      }
     }
   }
 
