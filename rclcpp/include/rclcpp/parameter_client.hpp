@@ -157,10 +157,7 @@ public:
   RCLCPP_PUBLIC
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
   delete_parameters(
-    const std::vector<std::string> & parameters_names,
-    std::function<
-      void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
-    > callback = nullptr);
+    const std::vector<std::string> & parameters_names);
 
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult>

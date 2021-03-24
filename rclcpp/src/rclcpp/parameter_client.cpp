@@ -275,37 +275,13 @@ AsyncParametersClient::set_parameters_atomically(
 
 std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::delete_parameters(
-  const std::vector<std::string> & parameters,
-  std::function<
-    void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
-  > callback)
+  const std::vector<std::string> & parameters_names)
 {
-  auto promise_result =
-    std::make_shared<std::promise<std::vector<rcl_interfaces::msg::SetParametersResult>>>();
-  auto future_result = promise_result->get_future().share();
-
-  auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
-
-  std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
-    [](std::string p) {
-      rcl_interfaces::msg::Parameter p_msg;
-      p_msg.name = p;
-      return p_msg;
-    }
-  );
-
-  set_parameters_client_->async_send_request(
-    request,
-    [promise_result, future_result, callback](
-      rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedFuture cb_f)
-    {
-      promise_result->set_value(cb_f.get()->results);
-      if (callback != nullptr) {
-        callback(future_result);
-      }
-    }
-  );
+  std::vector<rclcpp::Parameter> parameters;
+  for(const std::string &name : parameters_names) {
+    parameters.push_back(rclcpp::Parameter(name));
+  }
+  auto future_result = set_parameters(parameters);
 
   return future_result;
 }
