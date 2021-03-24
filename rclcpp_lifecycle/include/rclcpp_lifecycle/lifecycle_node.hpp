@@ -185,7 +185,7 @@ public:
   rclcpp::CallbackGroup::SharedPtr
   create_callback_group(
     rclcpp::CallbackGroupType group_type,
-    bool automatically_add_executor_with_node = true);
+    bool automatically_add_to_executor_with_node = true);
 
   /// Return the list of callback groups in the node.
   /**
