@@ -882,7 +882,9 @@ TEST_F(TestParameterClient, async_parameter_delete_parameters) {
   auto get_future2 = asynchronous_client->get_parameters({"foo"});
   rclcpp::spin_until_future_complete(
     node_with_option, get_future2, std::chrono::milliseconds(100));
-  ASSERT_EQ(get_future2.get()[0].get_type(), rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+  ASSERT_EQ(
+    get_future2.get()[0].get_type(),
+    rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
 }
 /*
   Coverage for sync delete_parameters
@@ -896,5 +898,7 @@ TEST_F(TestParameterClient, sync_parameter_delete_parameters) {
   auto delete_result = synchronous_client->delete_parameters({"foo"});
   // check that deleted parameter isn't set
   auto get_result = synchronous_client->get_parameters({"foo"});
-  ASSERT_EQ(get_result[0].get_type(), rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+  ASSERT_EQ(
+    get_result[0].get_type(),
+    rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
 }

@@ -278,7 +278,7 @@ AsyncParametersClient::delete_parameters(
   const std::vector<std::string> & parameters_names)
 {
   std::vector<rclcpp::Parameter> parameters;
-  for(const std::string &name : parameters_names) {
+  for (const std::string & name : parameters_names) {
     parameters.push_back(rclcpp::Parameter(name));
   }
   auto future_result = set_parameters(parameters);
