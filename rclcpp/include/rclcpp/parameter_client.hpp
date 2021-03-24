@@ -155,6 +155,14 @@ public:
     > callback = nullptr);
 
   RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  delete_parameters(
+    const std::vector<std::string> & parameters_names,
+    std::function<
+      void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
+    > callback = nullptr);
+
+  RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
   list_parameters(
     const std::vector<std::string> & prefixes,
@@ -445,6 +453,18 @@ public:
   }
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  delete_parameters(
+    const std::vector<std::string> & parameters_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return delete_parameters(
+      parameters_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   rcl_interfaces::msg::ListParametersResult
   list_parameters(
     const std::vector<std::string> & parameter_prefixes,
@@ -522,6 +542,12 @@ protected:
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(
     const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  delete_parameters(
+    const std::vector<std::string> & parameters_names,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
