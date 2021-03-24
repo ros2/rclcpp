@@ -902,3 +902,50 @@ TEST_F(TestParameterClient, sync_parameter_delete_parameters) {
     get_result[0].get_type(),
     rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
 }
+
+/*
+  Coverage for async load_parameters
+ */
+TEST_F(TestParameterClient, async_parameter_load_parameters) {
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(load_node);
+  // load parameters
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  const std::string parameters_filepath = (
+    test_resources_path / "test_node" / "load_parameters.yaml").string();
+  auto load_future = asynchronous_client->load_parameters(parameters_filepath);
+  rclcpp::spin_until_future_complete(
+    load_node, load_future, std::chrono::milliseconds(100));
+  ASSERT_EQ(load_future.get()[0].successful, true);
+  // list parameters
+  auto list_parameters = asynchronous_client->list_parameters({}, 3);
+  rclcpp::spin_until_future_complete(
+    load_node, list_parameters, std::chrono::milliseconds(100));
+  ASSERT_EQ(
+    list_parameters.get().names.size(),
+    5);
+}
+/*
+  Coverage for sync load_parameters
+ */
+TEST_F(TestParameterClient, sync_parameter_load_parameters) {
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  auto synchronous_client =
+    std::make_shared<rclcpp::SyncParametersClient>(load_node);
+  // load parameters
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  const std::string parameters_filepath = (
+    test_resources_path / "test_node" / "load_parameters.yaml").string();
+  auto load_future = synchronous_client->load_parameters(parameters_filepath);
+  ASSERT_EQ(load_future[0].successful, true);
+  // list parameters
+  auto list_parameters = synchronous_client->list_parameters({}, 3);
+  ASSERT_EQ(list_parameters.names.size(), 5);
+}
