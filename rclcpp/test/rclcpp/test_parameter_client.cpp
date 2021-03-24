@@ -861,3 +861,40 @@ TEST_F(TestParameterClient, sync_parameter_describe_parameters_allow_undeclared)
     ASSERT_FALSE(parameter_descs[1].read_only);
   }
 }
+
+/*
+  Coverage for async delete_parameters
+ */
+TEST_F(TestParameterClient, async_parameter_delete_parameters) {
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
+  // set parameter
+  auto set_future = asynchronous_client->set_parameters({rclcpp::Parameter("foo", 4)});
+  rclcpp::spin_until_future_complete(
+    node_with_option, set_future, std::chrono::milliseconds(100));
+  ASSERT_EQ(set_future.get()[0].successful, true);
+  // delete one parameter
+  auto delete_future = asynchronous_client->delete_parameters({"foo"});
+  rclcpp::spin_until_future_complete(
+    node_with_option, delete_future, std::chrono::milliseconds(100));
+  ASSERT_EQ(delete_future.get()[0].successful, true);
+  // check that deleted parameter isn't set
+  auto get_future2 = asynchronous_client->get_parameters({"foo"});
+  rclcpp::spin_until_future_complete(
+    node_with_option, get_future2, std::chrono::milliseconds(100));
+  ASSERT_EQ(get_future2.get()[0].get_type(), rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+}
+/*
+  Coverage for sync delete_parameters
+ */
+TEST_F(TestParameterClient, sync_parameter_delete_parameters) {
+  auto synchronous_client =
+    std::make_shared<rclcpp::SyncParametersClient>(node_with_option);
+  // set parameter
+  auto set_result = synchronous_client->set_parameters({rclcpp::Parameter("foo", 4)});
+  // delete one parameter
+  auto delete_result = synchronous_client->delete_parameters({"foo"});
+  // check that deleted parameter isn't set
+  auto get_result = synchronous_client->get_parameters({"foo"});
+  ASSERT_EQ(get_result[0].get_type(), rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+}
