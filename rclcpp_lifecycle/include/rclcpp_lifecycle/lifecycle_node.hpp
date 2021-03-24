@@ -183,7 +183,9 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::CallbackGroupType group_type);
+  create_callback_group(
+    rclcpp::CallbackGroupType group_type,
+    bool automatically_add_executor_with_node = true);
 
   /// Return the list of callback groups in the node.
   /**
