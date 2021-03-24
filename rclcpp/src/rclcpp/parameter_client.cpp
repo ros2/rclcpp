@@ -286,6 +286,45 @@ AsyncParametersClient::delete_parameters(
   return future_result;
 }
 
+std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+AsyncParametersClient::load_parameters(
+  const std::string & yaml_filename)
+{
+  // parse yaml file
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcl_params_t * rcl_parameters = rcl_yaml_node_struct_init(allocator);
+  const char * path = yaml_filename.c_str();
+  if (!rcl_parse_yaml_file(path, rcl_parameters)) {
+    throw std::runtime_error("Unable to get get parameters from yaml file");
+  }
+
+  // create list of parameters to set
+  rclcpp::ParameterMap parameter_map = rclcpp::parameter_map_from(rcl_parameters);
+  std::vector<rclcpp::Parameter> parameters;
+  std::string fully_qualified_name =
+    node_topics_interface_->get_node_base_interface()->get_fully_qualified_name();
+
+  // only add remote_node parameters
+  for (auto & params : parameter_map) {
+    std::string node_name = params.first;
+    if (node_name == fully_qualified_name ||
+      node_name == "/**" ||
+      (node_name.substr(node_name.find("/*/") + 3) == remote_node_name_))
+    {
+      for (auto & param : params.second) {
+        parameters.push_back(param);
+      }
+    }
+  }
+
+  if (parameters.size() == 0) {
+    throw std::runtime_error("No valid parameters from yaml file");
+  }
+  auto future_result = set_parameters(parameters);
+
+  return future_result;
+}
+
 std::shared_future<rcl_interfaces::msg::ListParametersResult>
 AsyncParametersClient::list_parameters(
   const std::vector<std::string> & prefixes,
@@ -439,6 +478,24 @@ SyncParametersClient::delete_parameters(
   std::chrono::nanoseconds timeout)
 {
   auto f = async_parameters_client_->delete_parameters(parameters_names);
+
+  using rclcpp::executors::spin_node_until_future_complete;
+  if (
+    spin_node_until_future_complete(
+      *executor_, node_base_interface_, f,
+      timeout) == rclcpp::FutureReturnCode::SUCCESS)
+  {
+    return f.get();
+  }
+  return std::vector<rcl_interfaces::msg::SetParametersResult>();
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+SyncParametersClient::load_parameters(
+  const std::string & yaml_filename,
+  std::chrono::nanoseconds timeout)
+{
+  auto f = async_parameters_client_->load_parameters(yaml_filename);
 
   using rclcpp::executors::spin_node_until_future_complete;
   if (

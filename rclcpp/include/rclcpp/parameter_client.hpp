@@ -39,6 +39,8 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/rmw.h"
+#include "rcl_yaml_param_parser/parser.h"
+#include "rclcpp/parameter_map.hpp"
 
 namespace rclcpp
 {
@@ -158,6 +160,11 @@ public:
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
   delete_parameters(
     const std::vector<std::string> & parameters_names);
+
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  load_parameters(
+    const std::string & yaml_filename);
 
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
@@ -462,6 +469,18 @@ public:
   }
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(
+    const std::string & yaml_filename,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return load_parameters(
+      yaml_filename,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   rcl_interfaces::msg::ListParametersResult
   list_parameters(
     const std::vector<std::string> & parameter_prefixes,
@@ -545,6 +564,12 @@ protected:
   std::vector<rcl_interfaces::msg::SetParametersResult>
   delete_parameters(
     const std::vector<std::string> & parameters_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(
+    const std::string & yaml_filename,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
