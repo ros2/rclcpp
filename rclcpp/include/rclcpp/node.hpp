@@ -840,6 +840,9 @@ public:
    *
    * This allows the node developer to control which parameters may be changed.
    *
+   * It is considered bad practice to reject changes for "unknown" parameters as this prevents
+   * other parts of the node (that may be aware of these parameters) from handling them.
+   *
    * Note that the callback is called when declare_parameter() and its variants
    * are called, and so you cannot assume the parameter has been set before
    * this callback, so when checking a new value against the existing one, you
