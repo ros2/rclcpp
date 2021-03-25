@@ -666,7 +666,7 @@ TEST_F(TestDefaultStateMachine, test_callback_groups) {
   EXPECT_EQ(groups.size(), 1u);
 
   auto group = test_node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive, true);
   EXPECT_NE(nullptr, group);
 
   groups = test_node->get_callback_groups();
