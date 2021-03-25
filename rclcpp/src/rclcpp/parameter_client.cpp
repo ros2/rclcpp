@@ -305,13 +305,13 @@ AsyncParametersClient::load_parameters(
     node_topics_interface_->get_node_base_interface()->get_fully_qualified_name();
 
   // only add remote_node parameters
-  for (auto & params : parameter_map) {
+  for (const auto & params : parameter_map) {
     std::string node_name = params.first;
     if (node_name == fully_qualified_name ||
       node_name == "/**" ||
       (node_name.substr(node_name.find("/*/") + 3) == remote_node_name_))
     {
-      for (auto & param : params.second) {
+      for (const auto & param : params.second) {
         parameters.push_back(param);
       }
     }
