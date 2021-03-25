@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+8.1.0 (2021-03-25)
+------------------
 * Remove rmw_connext_cpp references. (`#1595 <https://github.com/ros2/rclcpp/issues/1595>`_)
 * Add API for checking QoS profile compatibility (`#1554 <https://github.com/ros2/rclcpp/issues/1554>`_)
 * Document misuse of parameters callback (`#1590 <https://github.com/ros2/rclcpp/issues/1590>`_)
