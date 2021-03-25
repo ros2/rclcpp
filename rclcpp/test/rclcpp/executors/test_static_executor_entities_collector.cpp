@@ -267,7 +267,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   auto client = node->create_client<test_msgs::srv::Empty>("service");
   auto waitable = std::make_shared<TestWaitable>();
 
-  // Adding a subscription with rmw_connext_cpp adds another waitable, so we need to get the
+  // Adding a subscription could add another waitable, so we need to get the
   // current number of waitables just before adding the new waitable.
   expected_number_of_entities->waitables = get_number_of_default_entities(node)->waitables;
   node->get_node_waitables_interface()->add_waitable(waitable, nullptr);
