@@ -303,6 +303,13 @@ class InvalidQosOverridesException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
+/// Thrown if a QoS compatibility check fails.
+class QoSCheckCompatibleException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
 }  // namespace exceptions
 }  // namespace rclcpp
 

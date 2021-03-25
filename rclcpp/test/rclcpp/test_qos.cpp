@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include "rclcpp/qos.hpp"
 
 #include "rmw/types.h"
@@ -207,4 +209,44 @@ TEST(TestQoS, policy_name_from_kind) {
   EXPECT_EQ(
     "LIFESPAN_QOS_POLICY",
     rclcpp::qos_policy_name_from_kind(RMW_QOS_POLICY_LIFESPAN));
+}
+
+TEST(TestQoS, qos_check_compatible)
+{
+  // Compatible
+  {
+    rclcpp::QoS qos = rclcpp::QoS(1)
+      .reliable()
+      .durability_volatile()
+      .deadline(rclcpp::Duration(1, 0u))
+      .lifespan(rclcpp::Duration(1, 0u))
+      .liveliness(rclcpp::LivelinessPolicy::Automatic)
+      .liveliness_lease_duration(rclcpp::Duration(1, 0u));
+    rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(qos, qos);
+    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Ok);
+    EXPECT_EQ(ret.reason, std::string(""));
+  }
+
+  // Note, the following incompatible tests assume we are using a DDS middleware,
+  // and may not be valid for other RMWs.
+  // TODO(jacobperron): programmatically check if current RMW is one of the officially
+  //                    supported DDS middlewares before running the following tests
+
+  // Incompatible
+  {
+    rclcpp::QoS pub_qos = rclcpp::QoS(1).best_effort();
+    rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
+    rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(pub_qos, sub_qos);
+    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Error);
+    EXPECT_FALSE(ret.reason.empty());
+  }
+
+  // Warn of possible incompatibility
+  {
+    rclcpp::SystemDefaultsQoS pub_qos;
+    rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
+    rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(pub_qos, sub_qos);
+    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Warning);
+    EXPECT_FALSE(ret.reason.empty());
+  }
 }
