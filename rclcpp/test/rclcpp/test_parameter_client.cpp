@@ -912,14 +912,15 @@ TEST_F(TestParameterClient, async_parameter_load_parameters) {
     "namespace",
     rclcpp::NodeOptions().allow_undeclared_parameters(true));
   auto asynchronous_client =
-    std::make_shared<rclcpp::AsyncParametersClient>(load_node);
+    std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
   // load parameters
   rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_parameters.yaml").string();
   auto load_future = asynchronous_client->load_parameters(parameters_filepath);
-  rclcpp::spin_until_future_complete(
+  auto result_code = rclcpp::spin_until_future_complete(
     load_node, load_future, std::chrono::milliseconds(100));
+  ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
   ASSERT_EQ(load_future.get()[0].successful, true);
   // list parameters
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
