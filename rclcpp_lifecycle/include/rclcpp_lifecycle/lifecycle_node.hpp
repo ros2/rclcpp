@@ -179,6 +179,9 @@ public:
   /// Create and return a callback group.
   /**
    * \param[in] group_type callback group type to create by this method.
+   * \param[in] automatically_add_to_executor_with_node A boolean that
+   *   determines whether a callback group is automatically added to an executor
+   *   with the node with which it is associated.
    * \return a callback group
    */
   RCLCPP_LIFECYCLE_PUBLIC
