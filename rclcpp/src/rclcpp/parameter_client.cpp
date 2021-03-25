@@ -295,7 +295,7 @@ AsyncParametersClient::load_parameters(
   rcl_params_t * rcl_parameters = rcl_yaml_node_struct_init(allocator);
   const char * path = yaml_filename.c_str();
   if (!rcl_parse_yaml_file(path, rcl_parameters)) {
-    throw std::runtime_error("Unable to get get parameters from yaml file");
+    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_ERROR);
   }
 
   // create list of parameters to set
@@ -318,7 +318,7 @@ AsyncParametersClient::load_parameters(
   }
 
   if (parameters.size() == 0) {
-    throw std::runtime_error("No valid parameters from yaml file");
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameters from yaml file");
   }
   auto future_result = set_parameters(parameters);
 
