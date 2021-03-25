@@ -33,7 +33,6 @@ namespace rclcpp
  * The returned pointer will never be empty, but this function can throw various exceptions, for
  * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
  *
- * \tparam AllocatorT
  * \param topics_interface NodeTopicsInterface pointer used in parts of the setup
  * \param topic_name Topic name
  * \param topic_type Topic type

@@ -50,8 +50,14 @@ std::string get_typesupport_library_path(
     throw std::runtime_error(e.what());
   }
 
-  auto library_path = package_prefix + dynamic_library_folder + rcpputils::kSolibPrefix +
-    package_name + "__" + typesupport_identifier + rcpputils::kSolibExtension;
+  const std::string library_path = rcpputils::path_for_library(
+    package_prefix + dynamic_library_folder,
+    package_name + "__" + typesupport_identifier);
+  if (library_path.empty()) {
+    throw std::runtime_error(
+            "Typesupport library for " + package_name + " does not exist in '" + package_prefix +
+            "'.");
+  }
   return library_path;
 }
 
