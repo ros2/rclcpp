@@ -42,7 +42,7 @@ AsyncParametersClient::AsyncParametersClient(
   if (remote_node_name != "") {
     remote_node_name_ = remote_node_name;
   } else {
-    remote_node_name_ = node_base_interface->get_name();
+    remote_node_name_ = node_base_interface->get_fully_qualified_name();
   }
 
   rcl_client_options_t options = rcl_client_get_default_options();
@@ -301,15 +301,15 @@ AsyncParametersClient::load_parameters(
   // create list of parameters to set
   rclcpp::ParameterMap parameter_map = rclcpp::parameter_map_from(rcl_parameters);
   std::vector<rclcpp::Parameter> parameters;
-  std::string fully_qualified_name =
-    node_topics_interface_->get_node_base_interface()->get_fully_qualified_name();
 
   // only add remote_node parameters
+  std::string remote_name = remote_node_name_.substr(remote_node_name_.substr(1).find("/") + 2);
   for (const auto & params : parameter_map) {
-    std::string node_name = params.first;
-    if (node_name == fully_qualified_name ||
-      node_name == "/**" ||
-      (node_name.substr(node_name.find("/*/") + 3) == remote_node_name_))
+    std::string node_full_name = params.first;
+    std::string node_name = node_full_name.substr(node_full_name.find("/*/") + 3);
+    if (node_full_name == remote_node_name_ ||
+      node_full_name == "/**" ||
+      (node_name == remote_name))
     {
       for (const auto & param : params.second) {
         parameters.push_back(param);
