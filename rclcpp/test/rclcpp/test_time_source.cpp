@@ -518,7 +518,7 @@ TEST_F(TestTimeSource, no_pre_jump_callback) {
 }
 
 // A TimeSource-inheriting class
-// that allows to access to TimeSource protected attributes
+// that allows access to TimeSource protected attributes
 // use_clock_thread_ and clock_executor_thread_
 class ClockThreadTestingTimeSource : public rclcpp::TimeSource
 {
