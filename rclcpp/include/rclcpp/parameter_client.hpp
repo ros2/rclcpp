@@ -181,6 +181,18 @@ public:
   load_parameters(
     const std::string & yaml_filename);
 
+  /// Load parameters from parameter map.
+  /**
+   * This functions filter the parameters to be set.
+   *
+   * \param yaml_filename the full name of the yaml file
+   * \return the future of the set_parameter service used to load the parameters
+   * \throw InvalidParametersException if there is no parameter to set
+   */
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  load_parameters(const rclcpp::ParameterMap & parameter_map);
+
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
   list_parameters(

@@ -290,19 +290,15 @@ std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::load_parameters(
   const std::string & yaml_filename)
 {
-  // parse yaml file
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  rcl_params_t * rcl_parameters = rcl_yaml_node_struct_init(allocator);
-  const char * path = yaml_filename.c_str();
-  if (!rcl_parse_yaml_file(path, rcl_parameters)) {
-    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_ERROR);
-  }
+  rclcpp::ParameterMap parameter_map = rclcpp::parameter_map_from_yaml_file(yaml_filename);
+  return this->load_parameters(parameter_map);
+}
 
-  // create list of parameters to set
-  rclcpp::ParameterMap parameter_map = rclcpp::parameter_map_from(rcl_parameters);
+std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+AsyncParametersClient::load_parameters(
+  const rclcpp::ParameterMap & parameter_map)
+{
   std::vector<rclcpp::Parameter> parameters;
-
-  // only add remote_node parameters
   std::string remote_name = remote_node_name_.substr(remote_node_name_.substr(1).find("/") + 2);
   for (const auto & params : parameter_map) {
     std::string node_full_name = params.first;
@@ -318,12 +314,13 @@ AsyncParametersClient::load_parameters(
   }
 
   if (parameters.size() == 0) {
-    throw rclcpp::exceptions::InvalidParametersException("No valid parameters from yaml file");
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
   }
   auto future_result = set_parameters(parameters);
 
   return future_result;
 }
+
 
 std::shared_future<rcl_interfaces::msg::ListParametersResult>
 AsyncParametersClient::list_parameters(
