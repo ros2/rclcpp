@@ -157,22 +157,24 @@ public:
       void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
     > callback = nullptr);
 
+  /// Delete several parameters at once.
   /**
-   * @brief delete_parameters allows to delete several parameters
-   * like "ros2 param delete" would do
-   * @param parameters_names vector of parameters names
-   * @return the future of the set_parameter service used to delete the parameters
+   * This functions behave like command-line tool `ros2 param delete` would.
+   *
+   * \param parameters_names vector of parameters names
+   * \return the future of the set_parameter service used to delete the parameters
    */
   RCLCPP_PUBLIC
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
   delete_parameters(
     const std::vector<std::string> & parameters_names);
 
+  /// Load parameters from yaml file.
   /**
-   * @brief load_parameters allows to load parameters in a node
-   * like "ros2 param load" would do
-   * @param yaml_filename the full name of the yaml file
-   * @return the future of the set_parameter service used to load the parameters
+   * This functions behave like command-line tool `ros2 param load` would.
+   *
+   * \param yaml_filename the full name of the yaml file
+   * \return the future of the set_parameter service used to load the parameters
    */
   RCLCPP_PUBLIC
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
@@ -469,12 +471,13 @@ public:
     );
   }
 
+  /// Delete several parameters at once.
   /**
-   * @brief delete_parameters allows to delete several parameters
-   * like "ros2 param delete" would do
-   * @param parameters_names vector of parameters names
-   * @param timeout for the spin used to make it synchronous
-   * @return the result of the set_parameter service used to delete the parameters
+   * This functions behave like command-line tool `ros2 param delete` would.
+   *
+   * \param parameters_names vector of parameters names
+   * \param timeout for the spin used to make it synchronous
+   * \return the future of the set_parameter service used to delete the parameters
    */
   template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rcl_interfaces::msg::SetParametersResult>
@@ -488,12 +491,13 @@ public:
     );
   }
 
+  /// Load parameters from yaml file.
   /**
-   * @brief load_parameters allows to load parameters in a node
-   * like "ros2 param load" would do
-   * @param yaml_filename the full name of the yaml file
-   * @param timeout for the spin used to make it synchronous
-   * @return the result of the set_parameter service used to load the parameters
+   * This functions behave like command-line tool `ros2 param load` would.
+   *
+   * \param yaml_filename the full name of the yaml file
+   * \param timeout for the spin used to make it synchronous
+   * \return the future of the set_parameter service used to load the parameters
    */
   template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rcl_interfaces::msg::SetParametersResult>
