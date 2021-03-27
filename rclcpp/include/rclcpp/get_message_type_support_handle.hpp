@@ -37,8 +37,11 @@ typename std::enable_if_t<
 >
 get_message_type_support_handle()
 {
-  // TODO(wjwwood): check for nullptr
-  return *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
+  auto handle = rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
+  if (!handle) {
+    throw std::runtime_error("Type support handle unexpectedly nullptr");
+  }
+  return *handle;
 }
 
 /// Specialization for when MessageT is an adapted type using rclcpp::TypeAdapter.
@@ -51,10 +54,13 @@ typename std::enable_if_t<
 >
 get_message_type_support_handle()
 {
-  // TODO(wjwwood): check for nullptr
-  return *rosidl_typesupport_cpp::get_message_type_support_handle<
+  auto handle = rosidl_typesupport_cpp::get_message_type_support_handle<
     typename TypeAdapter<AdaptedType>::ros_message_type
   >();
+  if (!handle) {
+    throw std::runtime_error("Type support handle unexpectedly nullptr");
+  }
+  return *handle;
 }
 
 /// Specialization for when MessageT is not a ROS message nor an adapted type.
