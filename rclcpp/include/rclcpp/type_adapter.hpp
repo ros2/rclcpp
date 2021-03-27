@@ -121,7 +121,7 @@ template<typename CustomType>
 struct adapt_type
 {
   template<typename ROSMessageType>
-  struct as : public TypeAdapter<CustomType, ROSMessageType>
+  struct as : TypeAdapter<CustomType, ROSMessageType>
   {
     static_assert(
       TypeAdapter<CustomType, ROSMessageType>::is_specialized::value,
