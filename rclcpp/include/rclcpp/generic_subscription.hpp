@@ -67,10 +67,10 @@ public:
    * \param topic_type Topic type
    * \param qos QoS settings
    * \param callback Callback for new messages of serialized form
-   * \param options Subscription options
+   * \param options Subscription options.
    * Not all subscription options are currently respected, the only relevant options for this
    * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
-   * `callback_group`.
+   * %`callback_group`.
    */
   template<typename AllocatorT = std::allocator<void>>
   GenericSubscription(
