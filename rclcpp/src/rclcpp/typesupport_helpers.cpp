@@ -127,15 +127,9 @@ get_typesupport_handle(
     std::string symbol_name = typesupport_identifier + "__get_message_type_support_handle__" +
       package_name + "__" + (middle_module.empty() ? "msg" : middle_module) + "__" + type_name;
 
-    if (!library.get_symbol(symbol_name)) {
-      throw std::runtime_error{mk_error("Symbol not found.")};
-    }
-
     const rosidl_message_type_support_t * (* get_ts)() = nullptr;
+    // This will throw runtime_errror if the symbol was not found.
     get_ts = reinterpret_cast<decltype(get_ts)>(library.get_symbol(symbol_name));
-    if (!get_ts) {
-      throw std::runtime_error{mk_error("Symbol of wrong type.")};
-    }
     return get_ts();
   } catch (std::runtime_error &) {
     throw std::runtime_error{mk_error("Library could not be found.")};
