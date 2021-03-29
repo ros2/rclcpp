@@ -27,7 +27,6 @@
 
 namespace rclcpp
 {
-
 /// Load the type support library for the given type.
 /**
  * \param[in] type The topic type, e.g. "std_msgs/msg/String"
@@ -52,7 +51,6 @@ get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
   rcpputils::SharedLibrary & library);
-
 
 /// Parse the components of a type identifier.
 /**
