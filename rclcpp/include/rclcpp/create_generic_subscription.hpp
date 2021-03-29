@@ -64,7 +64,8 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
     topic_name,
     topic_type,
     qos,
-    callback);
+    callback,
+    options);
 
   topics_interface->add_subscription(subscription, options.callback_group);
 

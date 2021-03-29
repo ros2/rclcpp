@@ -21,36 +21,9 @@
 #include "rcl/subscription.h"
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
 {
-
-namespace
-{
-rcl_subscription_options_t get_subscription_options(const rclcpp::QoS & qos)
-{
-  auto options = rcl_subscription_get_default_options();
-  options.qos = qos.get_rmw_qos_profile();
-  return options;
-}
-}  // unnamed namespace
-
-GenericSubscription::GenericSubscription(
-  rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  const std::shared_ptr<rcpputils::SharedLibrary> ts_lib,
-  const std::string & topic_name,
-  const std::string & topic_type,
-  const rclcpp::QoS & qos,
-  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback)
-: SubscriptionBase(
-    node_base,
-    *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
-    topic_name,
-    get_subscription_options(qos),
-    true),
-  callback_(callback)
-{}
 
 std::shared_ptr<void> GenericSubscription::create_message()
 {
