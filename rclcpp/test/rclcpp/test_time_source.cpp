@@ -631,8 +631,8 @@ public:
     );
 
     // Init clock msg to zero
-    clock_msg_.clock.sec = 0.0;
-    clock_msg_.clock.nanosec = 0.0;
+    clock_msg_.clock.sec = 0;
+    clock_msg_.clock.nanosec = 0;
   }
 
   ~SimClockPublisherNode()
