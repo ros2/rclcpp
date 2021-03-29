@@ -63,11 +63,8 @@ public:
 
   ~LifecycleNodeInterfaceImpl()
   {
-    fprintf(stderr, "oh yeah destructuro\n");
     rcl_node_t * node_handle = node_base_interface_->get_rcl_node_handle();
-    fprintf(stderr, "oh yeah end destructuro\n");
     auto ret = rcl_lifecycle_state_machine_fini(&state_machine_, node_handle);
-    fprintf(stderr, "oh yeah end destructuro222\n");
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_FATAL_NAMED(
         "rclcpp_lifecycle",
@@ -103,7 +100,6 @@ public:
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
       &state_machine_options);
     if (ret != RCL_RET_OK) {
-      fprintf(stderr, "oh yeah %s\n", node_base_interface_->get_name());
       throw std::runtime_error(
               std::string("Couldn't initialize state machine for node ") +
               node_base_interface_->get_name());
