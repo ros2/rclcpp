@@ -79,6 +79,7 @@ public:
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos,
+    // TODO(nnmm): Add variant for callback with message info.
     std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   : SubscriptionBase(
