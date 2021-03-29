@@ -159,7 +159,7 @@ public:
 
   /// Delete several parameters at once.
   /**
-   * This functions behave like command-line tool `ros2 param delete` would.
+   * This function behaves like command-line tool `ros2 param delete` would.
    *
    * \param parameters_names vector of parameters names
    * \return the future of the set_parameter service used to delete the parameters
@@ -171,7 +171,7 @@ public:
 
   /// Load parameters from yaml file.
   /**
-   * This functions behave like command-line tool `ros2 param load` would.
+   * This function behaves like command-line tool `ros2 param load` would.
    *
    * \param yaml_filename the full name of the yaml file
    * \return the future of the set_parameter service used to load the parameters
@@ -183,7 +183,7 @@ public:
 
   /// Load parameters from parameter map.
   /**
-   * This functions filter the parameters to be set.
+   * This function filters the parameters to be set based on the node name.
    *
    * \param yaml_filename the full name of the yaml file
    * \return the future of the set_parameter service used to load the parameters
@@ -485,7 +485,7 @@ public:
 
   /// Delete several parameters at once.
   /**
-   * This functions behave like command-line tool `ros2 param delete` would.
+   * This function behaves like command-line tool `ros2 param delete` would.
    *
    * \param parameters_names vector of parameters names
    * \param timeout for the spin used to make it synchronous
@@ -505,7 +505,7 @@ public:
 
   /// Load parameters from yaml file.
   /**
-   * This functions behave like command-line tool `ros2 param load` would.
+   * This function behaves like command-line tool `ros2 param load` would.
    *
    * \param yaml_filename the full name of the yaml file
    * \param timeout for the spin used to make it synchronous
