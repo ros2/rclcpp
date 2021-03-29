@@ -243,22 +243,22 @@ public:
       TRACEPOINT(
         rclcpp_callback_register,
         static_cast<const void *>(this),
-        get_symbol(shared_ptr_callback_));
+        tracetools::get_symbol(shared_ptr_callback_));
     } else if (shared_ptr_with_info_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
         static_cast<const void *>(this),
-        get_symbol(shared_ptr_with_info_callback_));
+        tracetools::get_symbol(shared_ptr_with_info_callback_));
     } else if (unique_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
         static_cast<const void *>(this),
-        get_symbol(unique_ptr_callback_));
+        tracetools::get_symbol(unique_ptr_callback_));
     } else if (unique_ptr_with_info_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
         static_cast<const void *>(this),
-        get_symbol(unique_ptr_with_info_callback_));
+        tracetools::get_symbol(unique_ptr_with_info_callback_));
     }
 #endif  // TRACETOOLS_DISABLED
   }
