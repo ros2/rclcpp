@@ -36,10 +36,10 @@ namespace rclcpp
  * \param topics_interface NodeTopicsInterface pointer used in parts of the setup
  * \param topic_name Topic name
  * \param topic_type Topic type
- * \param qos QoS settings
- * \param options Publisher options
+ * \param qos %QoS settings
+ * \param options %Publisher options.
  * Not all publisher options are currently respected, the only relevant options for this
- * publisher are `event_callbacks`, `use_default_callbacks`, and `callback_group`.
+ * publisher are `event_callbacks`, `use_default_callbacks`, and `%callback_group`.
  */
 template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericPublisher> create_generic_publisher(

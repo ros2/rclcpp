@@ -276,8 +276,10 @@ public:
    *
    * \param[in] topic_name Topic name
    * \param[in] topic_type Topic type
-   * \param[in] qos QoS settings
-   * \param[in] options Publisher options
+   * \param[in] qos %QoS settings
+   * \param options %Publisher options.
+   * Not all publisher options are currently respected, the only relevant options for this
+   * publisher are `event_callbacks`, `use_default_callbacks`, and `%callback_group`.
    * \return Shared pointer to the created generic publisher.
    */
   template<typename AllocatorT = std::allocator<void>>
@@ -297,9 +299,12 @@ public:
    *
    * \param[in] topic_name Topic name
    * \param[in] topic_type Topic type
-   * \param[in] qos QoS settings
+   * \param[in] qos %QoS settings
    * \param[in] callback Callback for new messages of serialized form
-   * \param[in] options Subscription options
+   * \param[in] options %Subscription options.
+   * Not all subscription options are currently respected, the only relevant options for this
+ * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
+ * `%callback_group`.
    * \return Shared pointer to the created generic subscription.
    */
   template<typename AllocatorT = std::allocator<void>>

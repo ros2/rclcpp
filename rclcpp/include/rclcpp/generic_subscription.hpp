@@ -34,7 +34,7 @@
 namespace rclcpp
 {
 
-/// Subscription for serialized messages whose type is not known at compile time.
+/// %Subscription for serialized messages whose type is not known at compile time.
 /**
  * Since the type is not known at compile time, this is not a template, and the dynamic library
  * containing type support information has to be identified and loaded based on the type name.
@@ -65,12 +65,12 @@ public:
    * \param ts_lib Type support library, needs to correspond to topic_type
    * \param topic_name Topic name
    * \param topic_type Topic type
-   * \param qos QoS settings
+   * \param qos %QoS settings
    * \param callback Callback for new messages of serialized form
-   * \param options Subscription options.
+   * \param options %Subscription options.
    * Not all subscription options are currently respected, the only relevant options for this
    * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
-   * %`callback_group`.
+   * `%callback_group`.
    */
   template<typename AllocatorT = std::allocator<void>>
   GenericSubscription(
