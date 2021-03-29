@@ -47,6 +47,7 @@ public:
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
    *   - clock_qos = rclcpp::ClockQoS()
+   *   - use_clock_thread = true
    *   - rosout_qos = rclcpp::RosoutQoS()
    *   - parameter_event_qos = rclcpp::ParameterEventQoS
    *     - with history setting and depth from rmw_qos_profile_parameter_events
@@ -258,6 +259,20 @@ public:
   NodeOptions &
   clock_qos(const rclcpp::QoS & clock_qos);
 
+
+  /// Return the use_clock_thread flag.
+  RCLCPP_PUBLIC
+  bool
+  use_clock_thread() const;
+
+  /// Set the use_clock_thread flag, return this for parameter idiom.
+  /**
+   * If true, a dedicated thread will be used to subscribe to "/clock" topic.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  use_clock_thread(bool use_clock_thread);
+
   /// Return a reference to the parameter_event_qos QoS.
   RCLCPP_PUBLIC
   const rclcpp::QoS &
@@ -383,6 +398,8 @@ private:
   bool start_parameter_event_publisher_ {true};
 
   rclcpp::QoS clock_qos_ = rclcpp::ClockQoS();
+
+  bool use_clock_thread_ {true};
 
   rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)

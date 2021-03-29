@@ -25,6 +25,7 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 
 
@@ -57,7 +58,10 @@ public:
    * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
-  explicit TimeSource(rclcpp::Node::SharedPtr node, const rclcpp::QoS & qos = rclcpp::ClockQoS());
+  explicit TimeSource(
+    rclcpp::Node::SharedPtr node,
+    const rclcpp::QoS & qos = rclcpp::ClockQoS(),
+    bool use_clock_thread = true);
 
   /// Empty constructor
   /**
@@ -66,7 +70,9 @@ public:
    * \param qos QoS that will be used when creating a `/clock` subscription.
    */
   RCLCPP_PUBLIC
-  explicit TimeSource(const rclcpp::QoS & qos = rclcpp::ClockQoS());
+  explicit TimeSource(
+    const rclcpp::QoS & qos = rclcpp::ClockQoS(),
+    bool use_clock_thread = true);
 
   /// Attack node to the time source.
   /**
@@ -118,6 +124,11 @@ public:
   RCLCPP_PUBLIC
   ~TimeSource();
 
+protected:
+  // Dedicated thread for clock subscription.
+  bool use_clock_thread_;
+  std::thread clock_executor_thread_;
+
 private:
   // Preserve the node reference
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
@@ -140,6 +151,9 @@ private:
   using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
+  rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
+  rclcpp::executors::SingleThreadedExecutor clock_executor_;
+  std::promise<void> cancel_clock_executor_promise_;
 
   // The clock callback itself
   void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);

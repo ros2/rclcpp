@@ -187,7 +187,8 @@ Node::Node(
       node_logging_,
       node_clock_,
       node_parameters_,
-      options.clock_qos()
+      options.clock_qos(),
+      options.use_clock_thread()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),

@@ -33,21 +33,29 @@
 namespace rclcpp
 {
 
-TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node, const rclcpp::QoS & qos)
-: logger_(rclcpp::get_logger("rclcpp")),
+TimeSource::TimeSource(
+  std::shared_ptr<rclcpp::Node> node,
+  const rclcpp::QoS & qos,
+  bool use_clock_thread)
+: use_clock_thread_(use_clock_thread),
+  logger_(rclcpp::get_logger("rclcpp")),
   qos_(qos)
 {
   this->attachNode(node);
 }
 
-TimeSource::TimeSource(const rclcpp::QoS & qos)
-: logger_(rclcpp::get_logger("rclcpp")),
+TimeSource::TimeSource(
+  const rclcpp::QoS & qos,
+  bool use_clock_thread)
+: use_clock_thread_(use_clock_thread),
+  logger_(rclcpp::get_logger("rclcpp")),
   qos_(qos)
 {
 }
 
 void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
 {
+  use_clock_thread_ = node->get_node_options().use_clock_thread();
   attachNode(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
@@ -127,7 +135,7 @@ void TimeSource::attachNode(
 void TimeSource::detachNode()
 {
   this->ros_time_active_ = false;
-  clock_subscription_.reset();
+  destroy_clock_sub();
   parameter_subscription_.reset();
   node_base_.reset();
   node_topics_.reset();
@@ -242,6 +250,24 @@ void TimeSource::create_clock_sub()
       rclcpp::QosPolicyKind::Reliability,
     });
 
+  if (use_clock_thread_) {
+    clock_callback_group_ = node_base_->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive,
+      false
+    );
+    options.callback_group = clock_callback_group_;
+    if (!clock_executor_thread_.joinable()) {
+      clock_executor_thread_ = std::thread(
+        [this]() {
+          cancel_clock_executor_promise_ = std::promise<void>{};
+          auto future = cancel_clock_executor_promise_.get_future();
+          clock_executor_.add_callback_group(clock_callback_group_, node_base_);
+          clock_executor_.spin_until_future_complete(future);
+        }
+      );
+    }
+  }
+
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
     node_parameters_,
     node_topics_,
@@ -255,6 +281,12 @@ void TimeSource::create_clock_sub()
 void TimeSource::destroy_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
+  if (clock_executor_thread_.joinable()) {
+    cancel_clock_executor_promise_.set_value();
+    clock_executor_.cancel();
+    clock_executor_thread_.join();
+    clock_executor_.remove_callback_group(clock_callback_group_);
+  }
   clock_subscription_.reset();
 }
 
