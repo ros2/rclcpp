@@ -42,6 +42,9 @@ namespace rclcpp
  * \param qos QoS settings
  * \param callback Callback for new messages of serialized form
  * \param options Subscription options
+ * Not all subscription options are currently respected, the only relevant options for this
+ * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
+ * `callback_group`.
  */
 template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericSubscription> create_generic_subscription(

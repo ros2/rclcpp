@@ -26,8 +26,9 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
-#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/typesupport_helpers.hpp"
 
 namespace rclcpp
 {
@@ -65,13 +66,54 @@ public:
    * \param topic_type Topic type
    * \param qos QoS settings
    * \param callback Callback for new messages of serialized form
+   * \param options Publisher options
+   * Not all publisher options are currently respected, the only relevant options for this
+   * publisher are `event_callbacks`, `use_default_callbacks`, and `callback_group`.
    */
+  template<typename AllocatorT = std::allocator<void>>
   GenericPublisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     std::shared_ptr<rcpputils::SharedLibrary> ts_lib,
     const std::string & topic_name,
     const std::string & topic_type,
-    const rclcpp::QoS & qos);
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  : rclcpp::PublisherBase(
+      node_base,
+      topic_name,
+      *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
+      options.template to_rcl_publisher_options<rclcpp::SerializedMessage>(qos)),
+    ts_lib_(ts_lib)
+  {
+    // This is unfortunately duplicated with the code in publisher.hpp.
+    // TODO(nnmm): Deduplicate by moving this into PublisherBase.
+    if (options.event_callbacks.deadline_callback) {
+      this->add_event_handler(
+        options.event_callbacks.deadline_callback,
+        RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
+    }
+    if (options.event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        options.event_callbacks.liveliness_callback,
+        RCL_PUBLISHER_LIVELINESS_LOST);
+    }
+    if (options.event_callbacks.incompatible_qos_callback) {
+      this->add_event_handler(
+        options.event_callbacks.incompatible_qos_callback,
+        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    } else if (options.use_default_callbacks) {
+      // Register default callback when not specified
+      try {
+        this->add_event_handler(
+          [this](QOSOfferedIncompatibleQoSInfo & info) {
+            this->default_incompatible_qos_callback(info);
+          },
+          RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+      } catch (UnsupportedEventTypeException & /*exc*/) {
+        // pass
+      }
+    }
+  }
 
   virtual ~GenericPublisher() = default;
 

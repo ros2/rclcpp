@@ -68,6 +68,9 @@ public:
    * \param qos QoS settings
    * \param callback Callback for new messages of serialized form
    * \param options Subscription options
+   * Not all subscription options are currently respected, the only relevant options for this
+   * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
+   * `callback_group`.
    */
   template<typename AllocatorT = std::allocator<void>>
   GenericSubscription(
@@ -79,14 +82,16 @@ public:
     std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   : SubscriptionBase(
-    node_base,
-    *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
-    topic_name,
-    options.template to_rcl_subscription_options<rclcpp::SerializedMessage>(qos),
-    true),
+      node_base,
+      *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
+      topic_name,
+      options.template to_rcl_subscription_options<rclcpp::SerializedMessage>(qos),
+      true),
     callback_(callback),
     ts_lib_(ts_lib)
   {
+    // This is unfortunately duplicated with the code in subscription.hpp.
+    // TODO(nnmm): Deduplicate by moving this into SubscriptionBase.
     if (options.event_callbacks.deadline_callback) {
       this->add_event_handler(
         options.event_callbacks.deadline_callback,

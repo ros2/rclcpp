@@ -18,35 +18,8 @@
 #include <memory>
 #include <string>
 
-#include "rclcpp/typesupport_helpers.hpp"
-
 namespace rclcpp
 {
-
-namespace
-{
-rcl_publisher_options_t get_publisher_options(const rclcpp::QoS & qos)
-{
-  auto options = rcl_publisher_get_default_options();
-  options.qos = qos.get_rmw_qos_profile();
-  return options;
-}
-}  // unnamed namespace
-
-GenericPublisher::GenericPublisher(
-  rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  std::shared_ptr<rcpputils::SharedLibrary> ts_lib,
-  const std::string & topic_name,
-  const std::string & topic_type,
-  const rclcpp::QoS & qos)
-: rclcpp::PublisherBase(
-    node_base,
-    topic_name,
-    *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
-    get_publisher_options(qos)),
-  ts_lib_(ts_lib)
-{}
-
 
 void GenericPublisher::publish(const rclcpp::SerializedMessage & message)
 {

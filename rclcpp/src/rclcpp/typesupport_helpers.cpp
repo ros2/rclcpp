@@ -31,6 +31,9 @@
 namespace rclcpp
 {
 
+namespace 
+{
+
 std::string get_typesupport_library_path(
   const std::string & package_name, const std::string & typesupport_identifier)
 {
@@ -60,6 +63,8 @@ std::string get_typesupport_library_path(
   }
   return library_path;
 }
+
+}  // anonymous namespace
 
 const std::pair<std::string, std::string> extract_type_and_package(const std::string & full_type)
 {

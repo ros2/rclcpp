@@ -38,6 +38,8 @@ namespace rclcpp
  * \param topic_type Topic type
  * \param qos QoS settings
  * \param options Publisher options
+ * Not all publisher options are currently respected, the only relevant options for this
+ * publisher are `event_callbacks`, `use_default_callbacks`, and `callback_group`.
  */
 template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericPublisher> create_generic_publisher(
@@ -52,7 +54,8 @@ std::shared_ptr<GenericPublisher> create_generic_publisher(
 {
   auto ts_lib = rclcpp::get_typesupport_library(topic_type, "rosidl_typesupport_cpp");
   auto pub = std::make_shared<GenericPublisher>(
-    topics_interface->get_node_base_interface(), std::move(ts_lib), topic_name, topic_type, qos);
+    topics_interface->get_node_base_interface(), std::move(
+      ts_lib), topic_name, topic_type, qos, options);
   topics_interface->add_publisher(pub, options.callback_group);
   return pub;
 }
