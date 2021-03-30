@@ -34,6 +34,9 @@
 using lifecycle_msgs::msg::State;
 using lifecycle_msgs::msg::Transition;
 
+static const std::chrono::nanoseconds DEFAULT_EVENT_TIMEOUT = std::chrono::seconds(3);
+static const std::chrono::nanoseconds DEFAULT_EVENT_SLEEP_PERIOD = std::chrono::milliseconds(100);
+
 static
 bool wait_for_event(
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
@@ -60,8 +63,8 @@ static
 bool wait_for_topic(
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
   const std::string & topic,
-  std::chrono::nanoseconds timeout = std::chrono::seconds(3),
-  std::chrono::nanoseconds sleep_period = std::chrono::milliseconds(100))
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
 {
   return wait_for_event(
     node,
@@ -78,8 +81,8 @@ static
 bool wait_for_service(
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
   const std::string & service,
-  std::chrono::nanoseconds timeout = std::chrono::seconds(3),
-  std::chrono::nanoseconds sleep_period = std::chrono::milliseconds(100))
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
 {
   return wait_for_event(
     node,
