@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include <variant>
+#include <variant>  // NOLINT[build/include_order]
 
 #include "tracetools/tracetools.h"
 #include "tracetools/utils.hpp"
@@ -141,7 +141,7 @@ private:
 
 public:
   explicit
-  AnySubscriptionCallback(const AllocatorT & allocator = AllocatorT())
+  AnySubscriptionCallback(const AllocatorT & allocator = AllocatorT())  // NOLINT[runtime/explicit]
   {
     message_allocator_ = allocator;
     allocator::set_allocator_for_deleter(&message_deleter_, &message_allocator_);
@@ -149,7 +149,7 @@ public:
 
   [[deprecated("use AnySubscriptionCallback(const AllocatorT & allocator) instead")]]
   explicit
-  AnySubscriptionCallback(std::shared_ptr<AllocatorT> allocator)
+  AnySubscriptionCallback(std::shared_ptr<AllocatorT> allocator)  // NOLINT[runtime/explicit]
   {
     if (allocator == nullptr) {
       throw std::runtime_error("invalid allocator");
@@ -246,15 +246,17 @@ public:
           callback(create_unique_ptr_from_shared_ptr_message(message));
         } else if constexpr (std::is_same_v<T, UniquePtrWithInfoCallback>) {
           callback(create_unique_ptr_from_shared_ptr_message(message), message_info);
-        } else if constexpr (
+        } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrCallback>||
-          std::is_same_v<T, SharedPtrCallback>) {
+          std::is_same_v<T, SharedPtrCallback>)
+        {
           callback(message);
-        } else if constexpr (
+        } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrWithInfoCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>||
-          std::is_same_v<T, SharedPtrWithInfoCallback>) {
+          std::is_same_v<T, SharedPtrWithInfoCallback>)
+        {
           callback(message, message_info);
         }
       }, callback_variant_);
@@ -275,7 +277,7 @@ public:
           std::is_same_v<T, SharedConstPtrCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrCallback>) {
           callback(message);
-        } else if constexpr (
+        } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrWithInfoCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>) {
           callback(message, message_info);
@@ -302,7 +304,7 @@ public:
           std::is_same_v<T, SharedConstPtrCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrCallback>) {
           callback(std::move(message));
-        } else if constexpr (
+        } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrWithInfoCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>) {
           callback(std::move(message), message_info);

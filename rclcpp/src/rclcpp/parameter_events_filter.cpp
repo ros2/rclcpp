@@ -14,6 +14,7 @@
 
 #include "rclcpp/parameter_events_filter.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 

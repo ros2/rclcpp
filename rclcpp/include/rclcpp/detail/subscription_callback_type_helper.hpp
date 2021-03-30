@@ -15,6 +15,7 @@
 #ifndef RCLCPP__DETAIL__SUBSCRIPTION_CALLBACK_TYPE_HELPER_HPP_
 #define RCLCPP__DETAIL__SUBSCRIPTION_CALLBACK_TYPE_HELPER_HPP_
 
+#include <memory>
 #include <type_traits>
 
 #include "rclcpp/function_traits.hpp"
