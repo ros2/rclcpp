@@ -149,8 +149,8 @@ TEST_F(TestNode, RegisterParameterCallback)
 
 TEST_F(TestNode, SameParameterDifferentNode)
 {
-  int64_t int_param_node1;
-  int64_t int_param_node2;
+  int64_t int_param_node1{0};
+  int64_t int_param_node2{0};
 
   auto cb1 = [&int_param_node1](const rclcpp::Parameter & p) {
       int_param_node1 = p.get_value<int64_t>();
