@@ -44,7 +44,8 @@ bool wait_for_event(
   auto start = std::chrono::steady_clock::now();
   std::chrono::microseconds time_slept(0);
 
-  while (!predicate() &&
+  bool predicate_result;
+  while (!(predicate_result = predicate()) &&
     time_slept < std::chrono::duration_cast<std::chrono::microseconds>(timeout))
   {
     rclcpp::Event::SharedPtr graph_event = node->get_graph_event();
@@ -52,7 +53,7 @@ bool wait_for_event(
     time_slept = std::chrono::duration_cast<std::chrono::microseconds>(
       std::chrono::steady_clock::now() - start);
   }
-  return predicate();
+  return predicate_result;
 }
 
 static
