@@ -171,7 +171,7 @@ struct as_std_function_helper;
 template<typename ReturnTypeT, typename ... Args>
 struct as_std_function_helper<ReturnTypeT, std::tuple<Args ...>>
 {
-  using type = std::function<ReturnTypeT (Args ...)>;
+  using type = std::function<ReturnTypeT(Args ...)>;
 };
 
 }  // namespace detail
@@ -185,7 +185,7 @@ struct as_std_function
   using type = typename detail::as_std_function_helper<
     typename FunctionTraits::return_type,
     typename FunctionTraits::arguments
-  >::type;
+    >::type;
 };
 
 }  // namespace function_traits

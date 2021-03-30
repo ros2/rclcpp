@@ -71,7 +71,7 @@ struct SubscriptionCallbackTypeHelper<
   typename std::enable_if_t<
     rclcpp::function_traits::same_arguments<
       CallbackT,
-      std::function<void (std::shared_ptr<const MessageT>)>
+      std::function<void(std::shared_ptr<const MessageT>)>
     >::value
   >
 >
@@ -86,7 +86,7 @@ struct SubscriptionCallbackTypeHelper<
   typename std::enable_if_t<
     rclcpp::function_traits::same_arguments<
       CallbackT,
-      std::function<void (std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)>
+      std::function<void(std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)>
     >::value
   >
 >
@@ -102,7 +102,7 @@ struct SubscriptionCallbackTypeHelper<
   typename std::enable_if_t<
     rclcpp::function_traits::same_arguments<
       CallbackT,
-      std::function<void (const std::shared_ptr<const MessageT> &)>
+      std::function<void(const std::shared_ptr<const MessageT> &)>
     >::value
   >
 >
@@ -117,7 +117,7 @@ struct SubscriptionCallbackTypeHelper<
   typename std::enable_if_t<
     rclcpp::function_traits::same_arguments<
       CallbackT,
-      std::function<void (const std::shared_ptr<const MessageT> &, const rclcpp::MessageInfo &)>
+      std::function<void(const std::shared_ptr<const MessageT> &, const rclcpp::MessageInfo &)>
     >::value
   >
 >
@@ -133,7 +133,7 @@ struct SubscriptionCallbackTypeHelper<
   typename std::enable_if_t<
     rclcpp::function_traits::same_arguments<
       CallbackT,
-      std::function<void (std::shared_ptr<MessageT>)>
+      std::function<void(std::shared_ptr<MessageT>)>
     >::value
   >
 >
@@ -148,7 +148,7 @@ struct SubscriptionCallbackTypeHelper<
   typename std::enable_if_t<
     rclcpp::function_traits::same_arguments<
       CallbackT,
-      std::function<void (std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>
+      std::function<void(std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>
     >::value
   >
 >

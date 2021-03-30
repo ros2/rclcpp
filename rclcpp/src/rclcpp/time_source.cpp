@@ -290,7 +290,8 @@ void TimeSource::destroy_clock_sub()
   clock_subscription_.reset();
 }
 
-void TimeSource::on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
+void TimeSource::on_parameter_event(
+  std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
 {
   // Filter out events on 'use_sim_time' parameter instances in other nodes.
   if (event->node != node_base_->get_fully_qualified_name()) {
