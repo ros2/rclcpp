@@ -27,7 +27,7 @@ class TestAnySubscriptionCallback : public ::testing::Test
 public:
   TestAnySubscriptionCallback()
   : allocator_(std::make_shared<std::allocator<void>>()),
-    any_subscription_callback_(allocator_) {}
+    any_subscription_callback_(*allocator_) {}
   void SetUp()
   {
     msg_shared_ptr_ = std::make_shared<test_msgs::msg::Empty>();
@@ -48,10 +48,26 @@ protected:
 
 void construct_with_null_allocator()
 {
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
   // We need to wrap this in a function because `EXPECT_THROW` is a macro, and thinks
   // that the comma in here splits macro arguments, not the template arguments.
   rclcpp::AnySubscriptionCallback<
     test_msgs::msg::Empty, std::allocator<void>> any_subscription_callback_(nullptr);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 }
 
 TEST(AnySubscription, null_allocator) {
@@ -82,7 +98,25 @@ TEST_F(TestAnySubscriptionCallback, set_dispatch_shared_ptr) {
       callback_count++;
     };
 
-  any_subscription_callback_.set(shared_ptr_callback);
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  // any_subscription_callback_.set(shared_ptr_callback);
+  any_subscription_callback_.set_deprecated(shared_ptr_callback);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
   EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
@@ -105,7 +139,24 @@ TEST_F(TestAnySubscriptionCallback, set_dispatch_shared_ptr_w_info) {
       callback_count++;
     };
 
-  any_subscription_callback_.set(shared_ptr_w_info_callback);
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  // any_subscription_callback_.set(shared_ptr_w_info_callback);
+  any_subscription_callback_.set_deprecated(shared_ptr_w_info_callback);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 
   EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);

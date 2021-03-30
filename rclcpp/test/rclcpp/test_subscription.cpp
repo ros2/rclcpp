@@ -34,7 +34,7 @@ using namespace std::chrono_literals;
 class TestSubscription : public ::testing::Test
 {
 public:
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -80,7 +80,7 @@ class TestSubscriptionInvalidIntraprocessQos
 class TestSubscriptionSub : public ::testing::Test
 {
 public:
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -113,7 +113,7 @@ public:
   {
   }
 
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -130,7 +130,7 @@ public:
 class SubscriptionClass
 {
 public:
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -150,7 +150,7 @@ public:
 TEST_F(TestSubscription, construction_and_destruction) {
   initialize();
   using test_msgs::msg::Empty;
-  auto callback = [](const Empty::SharedPtr msg) {
+  auto callback = [](Empty::ConstSharedPtr msg) {
       (void)msg;
     };
   {
@@ -182,7 +182,7 @@ TEST_F(TestSubscription, construction_and_destruction) {
  */
 TEST_F(TestSubscriptionSub, construction_and_destruction) {
   using test_msgs::msg::Empty;
-  auto callback = [](const Empty::SharedPtr msg) {
+  auto callback = [](Empty::ConstSharedPtr msg) {
       (void)msg;
     };
   {
@@ -216,7 +216,7 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
 TEST_F(TestSubscription, various_creation_signatures) {
   initialize();
   using test_msgs::msg::Empty;
-  auto cb = [](test_msgs::msg::Empty::SharedPtr) {};
+  auto cb = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   {
     auto sub = node->create_subscription<Empty>("topic", 1, cb);
     (void)sub;

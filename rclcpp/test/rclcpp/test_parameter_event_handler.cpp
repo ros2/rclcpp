@@ -27,9 +27,9 @@ public:
   : ParameterEventHandler(node)
   {}
 
-  void test_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+  void test_event(rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
   {
-    event_callback(event);
+    event_callback(*event);
   }
 
   size_t num_event_callbacks()
@@ -264,20 +264,20 @@ TEST_F(TestNode, EventCallback)
   double product;
   auto cb =
     [&int_param, &double_param, &product, &received,
-      this](const rcl_interfaces::msg::ParameterEvent::SharedPtr & event)
+      this](const rcl_interfaces::msg::ParameterEvent & event)
     {
       auto node_name = node->get_fully_qualified_name();
 
-      if (event->node == node_name) {
+      if (event.node == node_name) {
         received = true;
       }
 
       rclcpp::Parameter p;
-      if (ParameterEventHandler::get_parameter_from_event(*event, p, "my_int", node_name)) {
+      if (ParameterEventHandler::get_parameter_from_event(event, p, "my_int", node_name)) {
         int_param = p.get_value<int64_t>();
       }
       try {
-        p = ParameterEventHandler::get_parameter_from_event(*event, "my_double", node_name);
+        p = ParameterEventHandler::get_parameter_from_event(event, "my_double", node_name);
         double_param = p.get_value<double>();
       } catch (...) {
       }
@@ -286,12 +286,12 @@ TEST_F(TestNode, EventCallback)
     };
 
   auto cb2 =
-    [&bool_param, this](const rcl_interfaces::msg::ParameterEvent::SharedPtr & event)
+    [&bool_param, this](const rcl_interfaces::msg::ParameterEvent & event)
     {
       rclcpp::Parameter p;
-      if (event->node == diff_ns_name) {
+      if (event.node == diff_ns_name) {
         if (ParameterEventHandler::get_parameter_from_event(
-            *event, p, "my_bool", diff_ns_name))
+            event, p, "my_bool", diff_ns_name))
         {
           bool_param = p.get_value<bool>();
         }
@@ -405,13 +405,13 @@ TEST_F(TestNode, LastInFirstCallForParameterEventCallbacks)
   // The callbacks will log the current time for comparison purposes. Add a bit of a stall
   // to ensure that the time noted in the back-to-back calls isn't the same
   auto cb1 =
-    [this, &time_1](const rcl_interfaces::msg::ParameterEvent::SharedPtr &)
+    [this, &time_1](const rcl_interfaces::msg::ParameterEvent &)
     {
       time_1 = node->now();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     };
   auto cb2 =
-    [this, &time_2](const rcl_interfaces::msg::ParameterEvent::SharedPtr &)
+    [this, &time_2](const rcl_interfaces::msg::ParameterEvent &)
     {
       time_2 = node->now();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));

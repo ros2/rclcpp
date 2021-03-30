@@ -255,7 +255,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   // Create 1 of each entity type
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>(
-    "topic", rclcpp::QoS(10), [](test_msgs::msg::Empty::SharedPtr) {});
+    "topic", rclcpp::QoS(10), [](test_msgs::msg::Empty::ConstSharedPtr) {});
   auto timer =
     node->create_wall_timer(std::chrono::seconds(60), []() {});
   auto service =
@@ -455,7 +455,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
   // Create 1 of each entity type
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>(
-    "topic", rclcpp::QoS(10), [](test_msgs::msg::Empty::SharedPtr) {});
+    "topic", rclcpp::QoS(10), [](test_msgs::msg::Empty::ConstSharedPtr) {});
   auto timer =
     node->create_wall_timer(std::chrono::seconds(60), []() {});
   auto service =

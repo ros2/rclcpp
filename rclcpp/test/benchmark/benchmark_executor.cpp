@@ -42,7 +42,7 @@ public:
         nodes[i]->create_publisher<test_msgs::msg::Empty>(
           "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10)));
 
-      auto callback = [this](test_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
+      auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
       subscriptions.push_back(
         nodes[i]->create_subscription<test_msgs::msg::Empty>(
           "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10), std::move(callback)));

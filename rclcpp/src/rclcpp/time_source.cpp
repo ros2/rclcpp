@@ -216,7 +216,7 @@ void TimeSource::set_clock(
   }
 }
 
-void TimeSource::clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg)
+void TimeSource::clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
 {
   if (!this->ros_time_active_ && SET_TRUE == this->parameter_state_) {
     enable_ros_time();
@@ -290,7 +290,7 @@ void TimeSource::destroy_clock_sub()
   clock_subscription_.reset();
 }
 
-void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+void TimeSource::on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
 {
   // Filter out events on 'use_sim_time' parameter instances in other nodes.
   if (event->node != node_base_->get_fully_qualified_name()) {

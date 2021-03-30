@@ -52,7 +52,7 @@ struct ParameterEventCallbackHandle
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventCallbackHandle)
 
   using ParameterEventCallbackType =
-    std::function<void (const rcl_interfaces::msg::ParameterEvent::SharedPtr &)>;
+    std::function<void (const rcl_interfaces::msg::ParameterEvent &)>;
 
   ParameterEventCallbackType callback;
 };
@@ -115,16 +115,16 @@ struct ParameterEventCallbackHandle
  * For example:
  *
  *   auto cb3 =
- *     [fqn, remote_param_name, &node](const rcl_interfaces::msg::ParameterEvent::SharedPtr & event) {
+ *     [fqn, remote_param_name, &node](const rcl_interfaces::msg::ParameterEvent & event) {
  *       // Look for any updates to parameters in "/a_namespace" as well as any parameter changes
  *       // to our own node ("this_node")
  *       std::regex re("(/a_namespace/.*)|(/this_node)");
- *       if (regex_match(event->node, re)) {
+ *       if (regex_match(event.node, re)) {
  *         // Now that we know the event matches the regular expression we scanned for, we can
  *         // use 'get_parameter_from_event' to get a specific parameter name that we're looking for
  *         rclcpp::Parameter p;
  *         if (rclcpp::ParameterEventsSubscriber::get_parameter_from_event(
- *             *event, p, remote_param_name, fqn))
+ *             event, p, remote_param_name, fqn))
  *         {
  *           RCLCPP_INFO(
  *             node->get_logger(),
@@ -136,7 +136,7 @@ struct ParameterEventCallbackHandle
  *
  *         // You can also use 'get_parameter*s*_from_event' to enumerate all changes that came
  *         // in on this event
- *         auto params = rclcpp::ParameterEventsSubscriber::get_parameters_from_event(*event);
+ *         auto params = rclcpp::ParameterEventsSubscriber::get_parameters_from_event(event);
  *         for (auto & p : params) {
  *           RCLCPP_INFO(
  *             node->get_logger(),
@@ -288,7 +288,7 @@ protected:
   /// Callback for parameter events subscriptions.
   RCLCPP_PUBLIC
   void
-  event_callback(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
+  event_callback(const rcl_interfaces::msg::ParameterEvent & event);
 
   // Utility function for resolving node path.
   std::string resolve_path(const std::string & path);

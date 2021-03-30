@@ -33,7 +33,7 @@ using namespace std::chrono_literals;
 class TestParameterClient : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+  void OnMessage(rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
   {
     (void)event;
   }

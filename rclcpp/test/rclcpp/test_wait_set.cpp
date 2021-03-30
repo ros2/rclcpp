@@ -221,7 +221,7 @@ TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
       wait_set2.add_guard_condition(guard_condition);
     }, std::runtime_error);
 
-    auto do_nothing = [](const std::shared_ptr<test_msgs::msg::BasicTypes>) {};
+    auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
     auto sub = node->create_subscription<test_msgs::msg::BasicTypes>("~/test", 1, do_nothing);
     wait_set1.add_subscription(sub);
     ASSERT_THROW(
@@ -281,7 +281,7 @@ TEST_F(TestWaitSet, add_remove_wait) {
   rclcpp::SubscriptionOptions subscription_options;
   subscription_options.event_callbacks.deadline_callback = [](auto) {};
   subscription_options.event_callbacks.liveliness_callback = [](auto) {};
-  auto do_nothing = [](const std::shared_ptr<test_msgs::msg::BasicTypes>) {};
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
   auto sub =
     node->create_subscription<test_msgs::msg::BasicTypes>(
     "~/test", 1, do_nothing, subscription_options);

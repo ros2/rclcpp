@@ -42,7 +42,7 @@ protected:
 
     node = std::make_shared<rclcpp::Node>("test_qos_event", "/ns");
 
-    message_callback = [node = node.get()](const test_msgs::msg::Empty::SharedPtr /*msg*/) {
+    message_callback = [node = node.get()](test_msgs::msg::Empty::ConstSharedPtr /*msg*/) {
         RCLCPP_INFO(node->get_logger(), "Message received");
       };
   }
@@ -55,7 +55,7 @@ protected:
   static constexpr char topic_name[] = "test_topic";
   rclcpp::Node::SharedPtr node;
   bool is_fastrtps;
-  std::function<void(const test_msgs::msg::Empty::SharedPtr)> message_callback;
+  std::function<void(test_msgs::msg::Empty::ConstSharedPtr)> message_callback;
 };
 
 constexpr char TestQosEvent::topic_name[];
