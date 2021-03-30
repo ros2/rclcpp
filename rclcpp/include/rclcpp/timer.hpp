@@ -181,7 +181,7 @@ public:
     TRACEPOINT(
       rclcpp_callback_register,
       static_cast<const void *>(&callback_),
-      get_symbol(callback_));
+      tracetools::get_symbol(callback_));
   }
 
   /// Default destructor.
