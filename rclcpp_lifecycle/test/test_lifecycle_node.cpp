@@ -64,14 +64,14 @@ bool wait_for_topic(
   std::chrono::nanoseconds sleep_period = std::chrono::milliseconds(100))
 {
   return wait_for_event(
-      node,
-      [node, topic]()
-      {
-        auto topic_names_and_types = node->get_topic_names_and_types();
-        return topic_names_and_types.end() != topic_names_and_types.find(topic);
-      },
-      timeout,
-      sleep_period);
+    node,
+    [node, topic]()
+    {
+      auto topic_names_and_types = node->get_topic_names_and_types();
+      return topic_names_and_types.end() != topic_names_and_types.find(topic);
+    },
+    timeout,
+    sleep_period);
 }
 
 static
@@ -82,14 +82,14 @@ bool wait_for_service(
   std::chrono::nanoseconds sleep_period = std::chrono::milliseconds(100))
 {
   return wait_for_event(
-      node,
-      [node, service]()
-      {
-        auto service_names_and_types = node->get_service_names_and_types();
-        return service_names_and_types.end() != service_names_and_types.find(service);
-      },
-      timeout,
-      sleep_period);
+    node,
+    [node, service]()
+    {
+      auto service_names_and_types = node->get_service_names_and_types();
+      return service_names_and_types.end() != service_names_and_types.find(service);
+    },
+    timeout,
+    sleep_period);
 }
 
 static
@@ -101,16 +101,16 @@ bool wait_for_service_by_node(
   std::chrono::nanoseconds sleep_period = std::chrono::milliseconds(100))
 {
   return wait_for_event(
-      node,
-      [node, node_name, service]()
-      {
-        auto service_names_and_types_by_node =
-          node->get_service_names_and_types_by_node(node_name, "");
-        return service_names_and_types_by_node.end() !=
-            service_names_and_types_by_node.find(service);
-      },
-      timeout,
-      sleep_period);
+    node,
+    [node, node_name, service]()
+    {
+      auto service_names_and_types_by_node = node->get_service_names_and_types_by_node(
+        node_name, "");
+      return service_names_and_types_by_node.end() != service_names_and_types_by_node.find(
+        service);
+    },
+    timeout,
+    sleep_period);
 }
 
 class TestDefaultStateMachine : public ::testing::Test
