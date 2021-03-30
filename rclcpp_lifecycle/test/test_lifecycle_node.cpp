@@ -100,8 +100,8 @@ bool wait_for_service_by_node(
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
   const std::string & node_name,
   const std::string & service,
-  std::chrono::nanoseconds timeout = std::chrono::seconds(3),
-  std::chrono::nanoseconds sleep_period = std::chrono::milliseconds(100))
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
 {
   return wait_for_event(
     node,
