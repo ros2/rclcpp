@@ -61,7 +61,7 @@ namespace detail
 template<typename MessageT, typename CallbackT, typename Enable = void>
 struct SubscriptionCallbackTypeHelper
 {
-  using callback_type = CallbackT;
+  using callback_type = typename rclcpp::function_traits::as_std_function<CallbackT>::type;
 };
 
 template<typename MessageT, typename CallbackT>
