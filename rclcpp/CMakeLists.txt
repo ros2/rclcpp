@@ -20,10 +20,6 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # About -Wno-sign-conversion: With Clang, -Wconversion implies -Wsign-conversion. There are a number of
   # implicit sign conversions in rclcpp and gtest.cc, see https://ci.ros2.org/job/ci_osx/9265/.
@@ -170,8 +166,8 @@ foreach(interface_file ${interface_files})
     include/rclcpp/node_interfaces/get_${interface_name}.hpp)
 endforeach()
 
-add_library(${PROJECT_NAME}
-  ${${PROJECT_NAME}_SRCS})
+add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
