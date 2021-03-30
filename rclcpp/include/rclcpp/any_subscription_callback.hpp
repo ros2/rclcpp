@@ -108,31 +108,31 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false>
   using MessageDeleter = typename MessageDeleterHelper<MessageT, AllocatorT>::MessageDeleter;
 
   using ConstRefCallback =
-    std::function<void (const MessageT &)>;
+    std::function<void (const typename TypeAdapter<MessageT>::custom_type &)>;
   using ConstRefROSMessageCallback =
     std::function<void (const typename TypeAdapter<MessageT>::ros_message_type &)>;
   using ConstRefWithInfoCallback =
-    std::function<void (const MessageT &, const rclcpp::MessageInfo &)>;
+    std::function<void (const typename TypeAdapter<MessageT>::custom_type &, const rclcpp::MessageInfo &)>;
   using ConstRefWithInfoROSMessageCallback =
     std::function<void (const typename TypeAdapter<MessageT>::ros_message_type &, const rclcpp::MessageInfo &)>;
 
   using UniquePtrCallback =
-    std::function<void (std::unique_ptr<MessageT, MessageDeleter>)>;
+    std::function<void (std::unique_ptr<typename TypeAdapter<MessageT>::custom_type, MessageDeleter>)>;
   using UniquePtrROSMessageCallback =
     std::function<void (std::unique_ptr<typename TypeAdapter<MessageT>::ros_message_type, MessageDeleter>)>;
   using UniquePtrWithInfoCallback =
-    std::function<void (std::unique_ptr<MessageT, MessageDeleter>, const rclcpp::MessageInfo &)>;
+    std::function<void (std::unique_ptr<typename TypeAdapter<MessageT>::custom_type, MessageDeleter>, const rclcpp::MessageInfo &)>;
   using UniquePtrWithInfoROSMessageCallback =
     std::function<void (std::unique_ptr<typename TypeAdapter<MessageT>::ros_message_type, MessageDeleter>, const rclcpp::MessageInfo &)>;
 
   // TODO(wjwwood): should we drop this one, because you can achieve it easily
   //   with the const shared_ptr & version?
   using SharedConstPtrCallback =
-    std::function<void (std::shared_ptr<const MessageT>)>;
+    std::function<void (std::shared_ptr<const typename TypeAdapter<MessageT>::custom_type>)>;
   using SharedConstPtrROSMessageCallback =
     std::function<void (std::shared_ptr<const typename TypeAdapter<MessageT>::ros_message_type>)>;
   using SharedConstPtrWithInfoCallback =
-    std::function<void (std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)>;
+    std::function<void (std::shared_ptr<const typename TypeAdapter<MessageT>::custom_type>, const rclcpp::MessageInfo &)>;
   using SharedConstPtrWithInfoROSMessageCallback =
     std::function<void (std::shared_ptr<const typename TypeAdapter<MessageT>::ros_message_type>, const rclcpp::MessageInfo &)>;
 
@@ -140,21 +140,21 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false>
   //   shared_ptr one (if you intend to actuall share ownership) or the
   //   const MessageT & one if you just want to read the message?
   using ConstRefSharedConstPtrCallback =
-    std::function<void (const std::shared_ptr<const MessageT> &)>;
+    std::function<void (const std::shared_ptr<const typename TypeAdapter<MessageT>::custom_type> &)>;
   using ConstRefSharedConstPtrROSMessageCallback =
     std::function<void (const std::shared_ptr<const typename TypeAdapter<MessageT>::ros_message_type> &)>;
   using ConstRefSharedConstPtrWithInfoCallback =
-    std::function<void (const std::shared_ptr<const MessageT> &, const rclcpp::MessageInfo &)>;
+    std::function<void (const std::shared_ptr<const typename TypeAdapter<MessageT>::custom_type> &, const rclcpp::MessageInfo &)>;
   using ConstRefSharedConstPtrWithInfoROSMessageCallback =
     std::function<void (const std::shared_ptr<const typename TypeAdapter<MessageT>::ros_message_type> &, const rclcpp::MessageInfo &)>;
 
   // Deprecated signatures:
   using SharedPtrCallback =
-    std::function<void (std::shared_ptr<MessageT>)>;
+    std::function<void (std::shared_ptr<typename TypeAdapter<MessageT>::custom_type>)>;
   using SharedPtrROSMessageCallback =
     std::function<void (std::shared_ptr<typename TypeAdapter<MessageT>::ros_message_type>)>;
   using SharedPtrWithInfoCallback =
-    std::function<void (std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>;
+    std::function<void (std::shared_ptr<typename TypeAdapter<MessageT>::custom_type>, const rclcpp::MessageInfo &)>;
   using SharedPtrWithInfoROSMessageCallback =
     std::function<void (std::shared_ptr<typename TypeAdapter<MessageT>::ros_message_type>, const rclcpp::MessageInfo &)>;
 
