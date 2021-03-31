@@ -15,6 +15,7 @@
 
 #include "rclcpp/typesupport_helpers.hpp"
 
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
