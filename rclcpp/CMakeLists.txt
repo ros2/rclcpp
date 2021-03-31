@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 
 project(rclcpp)
 
@@ -20,10 +20,6 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # About -Wno-sign-conversion: With Clang, -Wconversion implies -Wsign-conversion. There are a number of
   # implicit sign conversions in rclcpp and gtest.cc, see https://ci.ros2.org/job/ci_osx/9265/.
@@ -196,6 +192,8 @@ ament_target_dependencies(${PROJECT_NAME}
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "RCLCPP_BUILDING_LIBRARY")
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)  # Require C++17
 
 install(
   TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
