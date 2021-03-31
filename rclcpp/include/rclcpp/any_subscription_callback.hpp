@@ -327,7 +327,9 @@ public:
     return std::unique_ptr<MessageT, MessageDeleter>(ptr, message_deleter_);
   }
 
-  void
+  // TODO(audrow) Try to collapse these two dispatch fns into one
+  template <typename TypeAdapterT = MessageT>
+  std::enable_if_t<!rclcpp::TypeAdapter<TypeAdapterT>::is_specialized::value, void>
   dispatch(
     std::shared_ptr<MessageT> message,
     const rclcpp::MessageInfo & message_info)
@@ -367,6 +369,63 @@ public:
           callback(message, message_info);
         } else {
           static_assert(always_false_v<T>, "unhandled callback type");
+        }
+      }, callback_variant_);
+    TRACEPOINT(callback_end, static_cast<const void *>(this));
+  }
+
+  template <typename TypeAdapterT = MessageT>
+  std::enable_if_t<rclcpp::TypeAdapter<TypeAdapterT>::is_specialized::value, void>
+  dispatch(
+    std::shared_ptr<MessageT> message,
+    const rclcpp::MessageInfo & message_info)
+  {
+    TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    std::visit(
+      [&message, &message_info, this](auto && callback) {
+        using T = std::decay_t<decltype(callback)>;
+
+        auto create_unique_ptr_from_shared_ptr_message =
+        [this](const std::shared_ptr<MessageT> & message) {
+          auto ptr = MessageAllocTraits::allocate(message_allocator_, 1);
+          MessageAllocTraits::construct(message_allocator_, ptr, *message);
+          return std::unique_ptr<MessageT, MessageDeleter>(ptr, message_deleter_);
+        };
+
+        if constexpr (
+          std::is_same_v<T, ConstRefCallback>||
+          std::is_same_v<T, typename HelperT::ConstRefROSMessageCallback>) {
+          callback(*message);
+        } else if constexpr (
+          std::is_same_v<T, ConstRefWithInfoCallback>||
+          std::is_same_v<T, typename HelperT::ConstRefWithInfoROSMessageCallback>) {
+          callback(*message, message_info);
+        } else if constexpr (
+          std::is_same_v<T, UniquePtrCallback>||
+          std::is_same_v<T, typename HelperT::UniquePtrROSMessageCallback>) {
+          callback(create_unique_ptr_from_shared_ptr_message(message));
+        } else if constexpr (
+          std::is_same_v<T, UniquePtrWithInfoCallback>||
+          std::is_same_v<T, typename HelperT::UniquePtrWithInfoROSMessageCallback>) {
+          callback(create_unique_ptr_from_shared_ptr_message(message), message_info);
+        } else if constexpr (  // NOLINT[readability/braces]
+          std::is_same_v<T, SharedConstPtrCallback>||
+          std::is_same_v<T, typename HelperT::SharedConstPtrROSMessageCallback>||
+          std::is_same_v<T, ConstRefSharedConstPtrCallback>||
+          std::is_same_v<T, typename HelperT::ConstRefSharedConstPtrROSMessageCallback>||
+          std::is_same_v<T, SharedPtrCallback>||
+          std::is_same_v<T, typename HelperT::SharedPtrROSMessageCallback>)
+        {
+          callback(message);
+        } else if constexpr (  // NOLINT[readability/braces]
+          std::is_same_v<T, SharedConstPtrWithInfoCallback>||
+          std::is_same_v<T, typename HelperT::SharedConstPtrWithInfoROSMessageCallback>||
+          std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>||
+          std::is_same_v<T, typename HelperT::ConstRefSharedConstPtrWithInfoROSMessageCallback>||
+          std::is_same_v<T, SharedPtrWithInfoCallback>||
+          std::is_same_v<T, typename HelperT::SharedPtrWithInfoROSMessageCallback>)
+        {
+          callback(message, message_info);
         }
       }, callback_variant_);
     TRACEPOINT(callback_end, static_cast<const void *>(this));
