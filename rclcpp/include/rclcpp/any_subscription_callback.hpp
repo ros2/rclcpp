@@ -53,12 +53,12 @@ struct MessageDeleterHelper
 template<
   typename MessageT,
   typename AllocatorT,
-  bool is_adapted_type = !rosidl_generator_traits::is_message<MessageT>::value
+  bool is_adapted_type = rclcpp::is_type_adapter<MessageT>::value
 >
 struct AnySubscriptionCallbackHelper;
 
 template<typename MessageT, typename AllocatorT>
-struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true>
+struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false>
 {
   using MessageDeleter = typename MessageDeleterHelper<MessageT, AllocatorT>::MessageDeleter;
 
@@ -103,8 +103,14 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true>
 };
 
 template<typename MessageT, typename AllocatorT>
-struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false>
+struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true>
 {
+  static_assert(
+    !std::is_same_v<
+      typename TypeAdapter<MessageT>::custom_type,
+      typename TypeAdapter<MessageT>::ros_message_type>,
+    "TypeAdapter specialization of AnySubscriptionCallbackHelper unexpectedly instantiated");
+
   using MessageDeleter = typename MessageDeleterHelper<MessageT, AllocatorT>::MessageDeleter;
 
   using ConstRefCallback =
