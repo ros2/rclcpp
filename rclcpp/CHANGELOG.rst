@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+8.2.0 (2021-03-31)
+------------------
 * Initialize integers in test_parameter_event_handler.cpp to avoid undefined behavior (`#1609 <https://github.com/ros2/rclcpp/issues/1609>`_)
 * Namespace tracetools C++ functions (`#1608 <https://github.com/ros2/rclcpp/issues/1608>`_)
 * Revert "Namespace tracetools C++ functions (`#1603 <https://github.com/ros2/rclcpp/issues/1603>`_)" (`#1607 <https://github.com/ros2/rclcpp/issues/1607>`_)
