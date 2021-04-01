@@ -29,10 +29,6 @@
 
 #include "test_msgs/msg/empty.hpp"
 
-// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
-// that this test can complete fully, or adjust the timeout as necessary.
-// See https://github.com/ros2/rmw_connext/issues/325 for resolution
-
 class TestPublisher : public ::testing::Test
 {
 public:
@@ -462,9 +458,9 @@ class TestPublisherProtectedMethods : public rclcpp::Publisher<MessageT, Allocat
 public:
   using rclcpp::Publisher<MessageT, AllocatorT>::Publisher;
 
-  void publish_loaned_message(MessageT * msg)
+  void publish_loaned_message(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg)
   {
-    this->do_loaned_message_publish(msg);
+    this->do_loaned_message_publish(std::move(loaned_msg.release()));
   }
 
   void call_default_incompatible_qos_callback(rclcpp::QOSOfferedIncompatibleQoSInfo & event) const
@@ -479,13 +475,14 @@ TEST_F(TestPublisher, do_loaned_message_publish_error) {
   auto publisher =
     node->create_publisher<test_msgs::msg::Empty, std::allocator<void>, PublisherT>("topic", 10);
 
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
+  auto msg = publisher->borrow_loaned_message();
+
   {
     // Using 'self' instead of 'lib:rclcpp' because `rcl_publish_loaned_message` is entirely
     // defined in a header
     auto mock = mocking_utils::patch_and_return(
       "self", rcl_publish_loaned_message, RCL_RET_PUBLISHER_INVALID);
-    EXPECT_THROW(publisher->publish_loaned_message(msg.get()), rclcpp::exceptions::RCLError);
+    EXPECT_THROW(publisher->publish_loaned_message(std::move(msg)), rclcpp::exceptions::RCLError);
   }
 }
 

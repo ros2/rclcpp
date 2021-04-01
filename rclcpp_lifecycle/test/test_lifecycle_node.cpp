@@ -31,12 +31,90 @@
 
 #include "./mocking_utils/patch.hpp"
 
-// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
-// that this test can complete fully, or adjust the timeout as necessary.
-// See https://github.com/ros2/rmw_connext/issues/325 for resolution
-
 using lifecycle_msgs::msg::State;
 using lifecycle_msgs::msg::Transition;
+
+static const std::chrono::nanoseconds DEFAULT_EVENT_TIMEOUT = std::chrono::seconds(3);
+static const std::chrono::nanoseconds DEFAULT_EVENT_SLEEP_PERIOD = std::chrono::milliseconds(100);
+
+static
+bool wait_for_event(
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
+  std::function<bool()> predicate,
+  std::chrono::nanoseconds timeout,
+  std::chrono::nanoseconds sleep_period)
+{
+  auto start = std::chrono::steady_clock::now();
+  std::chrono::microseconds time_slept(0);
+
+  bool predicate_result;
+  while (!(predicate_result = predicate()) &&
+    time_slept < std::chrono::duration_cast<std::chrono::microseconds>(timeout))
+  {
+    rclcpp::Event::SharedPtr graph_event = node->get_graph_event();
+    node->wait_for_graph_change(graph_event, sleep_period);
+    time_slept = std::chrono::duration_cast<std::chrono::microseconds>(
+      std::chrono::steady_clock::now() - start);
+  }
+  return predicate_result;
+}
+
+static
+bool wait_for_topic(
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
+  const std::string & topic,
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
+{
+  return wait_for_event(
+    node,
+    [node, topic]()
+    {
+      auto topic_names_and_types = node->get_topic_names_and_types();
+      return topic_names_and_types.end() != topic_names_and_types.find(topic);
+    },
+    timeout,
+    sleep_period);
+}
+
+static
+bool wait_for_service(
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
+  const std::string & service,
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
+{
+  return wait_for_event(
+    node,
+    [node, service]()
+    {
+      auto service_names_and_types = node->get_service_names_and_types();
+      return service_names_and_types.end() != service_names_and_types.find(service);
+    },
+    timeout,
+    sleep_period);
+}
+
+static
+bool wait_for_service_by_node(
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node,
+  const std::string & node_name,
+  const std::string & service,
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
+{
+  return wait_for_event(
+    node,
+    [node, node_name, service]()
+    {
+      auto service_names_and_types_by_node = node->get_service_names_and_types_by_node(
+        node_name, "");
+      return service_names_and_types_by_node.end() != service_names_and_types_by_node.find(
+        service);
+    },
+    timeout,
+    sleep_period);
+}
 
 class TestDefaultStateMachine : public ::testing::Test
 {
@@ -156,7 +234,7 @@ TEST_F(TestDefaultStateMachine, empty_initializer) {
 
 TEST_F(TestDefaultStateMachine, empty_initializer_rcl_errors) {
   {
-    auto patch = mocking_utils::patch_and_return(
+    auto patch = mocking_utils::inject_on_return(
       "lib:rclcpp_lifecycle", rcl_lifecycle_state_machine_init, RCL_RET_ERROR);
     EXPECT_THROW(
       std::make_shared<EmptyLifecycleNode>("testnode").reset(),
@@ -425,7 +503,9 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
     rclcpp::exceptions::ParameterNotDeclaredException);
 
   // Default descriptor overload
-  test_node->declare_parameter(bool_name, rclcpp::ParameterValue(true));
+  rcl_interfaces::msg::ParameterDescriptor bool_descriptor;
+  bool_descriptor.dynamic_typing = true;
+  test_node->declare_parameter(bool_name, rclcpp::ParameterValue(true), bool_descriptor);
 
   // Explicit descriptor overload
   rcl_interfaces::msg::ParameterDescriptor int_descriptor;
@@ -561,10 +641,8 @@ TEST_F(TestDefaultStateMachine, test_graph_topics) {
   ASSERT_NE(names.end(), std::find(names.begin(), names.end(), std::string("/testnode")));
 
   // Other topics may exist for an rclcpp::Node, but just checking the lifecycle one exists
+  ASSERT_TRUE(wait_for_topic(test_node, "/testnode/transition_event"));
   auto topic_names_and_types = test_node->get_topic_names_and_types();
-  ASSERT_NE(
-    topic_names_and_types.end(),
-    topic_names_and_types.find(std::string("/testnode/transition_event")));
   EXPECT_STREQ(
     topic_names_and_types["/testnode/transition_event"][0].c_str(),
     "lifecycle_msgs/msg/TransitionEvent");
@@ -582,39 +660,26 @@ TEST_F(TestDefaultStateMachine, test_graph_topics) {
 TEST_F(TestDefaultStateMachine, test_graph_services) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
 
-  auto service_names_and_types = test_node->get_service_names_and_types();
   // These are specific to lifecycle nodes, other services are provided by rclcpp::Node
-  ASSERT_NE(
-    service_names_and_types.end(),
-    service_names_and_types.find(std::string("/testnode/change_state")));
+  ASSERT_TRUE(wait_for_service(test_node, "/testnode/change_state"));
+  ASSERT_TRUE(wait_for_service(test_node, "/testnode/get_available_states"));
+  ASSERT_TRUE(wait_for_service(test_node, "/testnode/get_available_transitions"));
+  ASSERT_TRUE(wait_for_service(test_node, "/testnode/get_state"));
+  ASSERT_TRUE(wait_for_service(test_node, "/testnode/get_transition_graph"));
+
+  auto service_names_and_types = test_node->get_service_names_and_types();
   EXPECT_STREQ(
     service_names_and_types["/testnode/change_state"][0].c_str(),
     "lifecycle_msgs/srv/ChangeState");
-
-  ASSERT_NE(
-    service_names_and_types.end(),
-    service_names_and_types.find(std::string("/testnode/get_available_states")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_available_states"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableStates");
-
-  ASSERT_NE(
-    service_names_and_types.end(),
-    service_names_and_types.find(std::string("/testnode/get_available_transitions")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_available_transitions"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
-
-  ASSERT_NE(
-    service_names_and_types.end(),
-    service_names_and_types.find(std::string("/testnode/get_state")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_state"][0].c_str(),
     "lifecycle_msgs/srv/GetState");
-
-  ASSERT_NE(
-    service_names_and_types.end(),
-    service_names_and_types.find(std::string("/testnode/get_transition_graph")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_transition_graph"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
@@ -623,40 +688,28 @@ TEST_F(TestDefaultStateMachine, test_graph_services) {
 TEST_F(TestDefaultStateMachine, test_graph_services_by_node) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
 
+  // These are specific to lifecycle nodes, other services are provided by rclcpp::Node
+  ASSERT_TRUE(wait_for_service_by_node(test_node, "testnode", "/testnode/change_state"));
+  ASSERT_TRUE(wait_for_service_by_node(test_node, "testnode", "/testnode/get_available_states"));
+  ASSERT_TRUE(
+    wait_for_service_by_node(test_node, "testnode", "/testnode/get_available_transitions"));
+  ASSERT_TRUE(wait_for_service_by_node(test_node, "testnode", "/testnode/get_state"));
+  ASSERT_TRUE(wait_for_service_by_node(test_node, "testnode", "/testnode/get_transition_graph"));
+
   auto service_names_and_types_by_node =
     test_node->get_service_names_and_types_by_node("testnode", "");
-  // These are specific to lifecycle nodes, other services are provided by rclcpp::Node
-  ASSERT_NE(
-    service_names_and_types_by_node.end(),
-    service_names_and_types_by_node.find(std::string("/testnode/change_state")));
   EXPECT_STREQ(
     service_names_and_types_by_node["/testnode/change_state"][0].c_str(),
     "lifecycle_msgs/srv/ChangeState");
-
-  ASSERT_NE(
-    service_names_and_types_by_node.end(),
-    service_names_and_types_by_node.find(std::string("/testnode/get_available_states")));
   EXPECT_STREQ(
     service_names_and_types_by_node["/testnode/get_available_states"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableStates");
-
-  ASSERT_NE(
-    service_names_and_types_by_node.end(),
-    service_names_and_types_by_node.find(std::string("/testnode/get_available_transitions")));
   EXPECT_STREQ(
     service_names_and_types_by_node["/testnode/get_available_transitions"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
-
-  ASSERT_NE(
-    service_names_and_types_by_node.end(),
-    service_names_and_types_by_node.find(std::string("/testnode/get_state")));
   EXPECT_STREQ(
     service_names_and_types_by_node["/testnode/get_state"][0].c_str(),
     "lifecycle_msgs/srv/GetState");
-
-  ASSERT_NE(
-    service_names_and_types_by_node.end(),
-    service_names_and_types_by_node.find(std::string("/testnode/get_transition_graph")));
   EXPECT_STREQ(
     service_names_and_types_by_node["/testnode/get_transition_graph"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
@@ -668,7 +721,7 @@ TEST_F(TestDefaultStateMachine, test_callback_groups) {
   EXPECT_EQ(groups.size(), 1u);
 
   auto group = test_node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive, true);
   EXPECT_NE(nullptr, group);
 
   groups = test_node->get_callback_groups();

@@ -135,12 +135,32 @@ auto
 LifecycleNode::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
   return this->declare_parameter(
     name,
     rclcpp::ParameterValue(default_value),
-    parameter_descriptor
+    parameter_descriptor,
+    ignore_override
+  ).get<ParameterT>();
+}
+
+template<typename ParameterT>
+auto
+LifecycleNode::declare_parameter(
+  const std::string & name,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
+{
+  // get advantage of parameter value template magic to get
+  // the correct rclcpp::ParameterType from ParameterT
+  rclcpp::ParameterValue value{ParameterT{}};
+  return this->declare_parameter(
+    name,
+    value.get_type(),
+    parameter_descriptor,
+    ignore_override
   ).get<ParameterT>();
 }
 

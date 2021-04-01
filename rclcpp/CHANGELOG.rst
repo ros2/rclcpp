@@ -2,6 +2,82 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+8.2.0 (2021-03-31)
+------------------
+* Initialize integers in test_parameter_event_handler.cpp to avoid undefined behavior (`#1609 <https://github.com/ros2/rclcpp/issues/1609>`_)
+* Namespace tracetools C++ functions (`#1608 <https://github.com/ros2/rclcpp/issues/1608>`_)
+* Revert "Namespace tracetools C++ functions (`#1603 <https://github.com/ros2/rclcpp/issues/1603>`_)" (`#1607 <https://github.com/ros2/rclcpp/issues/1607>`_)
+* Namespace tracetools C++ functions (`#1603 <https://github.com/ros2/rclcpp/issues/1603>`_)
+* Clock subscription callback group spins in its own thread (`#1556 <https://github.com/ros2/rclcpp/issues/1556>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Ivan Santiago Paunovic, anaelle-sw
+
+8.1.0 (2021-03-25)
+------------------
+* Remove rmw_connext_cpp references. (`#1595 <https://github.com/ros2/rclcpp/issues/1595>`_)
+* Add API for checking QoS profile compatibility (`#1554 <https://github.com/ros2/rclcpp/issues/1554>`_)
+* Document misuse of parameters callback (`#1590 <https://github.com/ros2/rclcpp/issues/1590>`_)
+* use const auto & to iterate over parameters (`#1593 <https://github.com/ros2/rclcpp/issues/1593>`_)
+* Contributors: Chris Lalancette, Jacob Perron, Karsten Knese
+
+8.0.0 (2021-03-23)
+------------------
+* Guard against integer overflow in duration conversion (`#1584 <https://github.com/ros2/rclcpp/issues/1584>`_)
+* Contributors: Jacob Perron
+
+7.0.1 (2021-03-22)
+------------------
+* get_parameters service should return empty if undeclared parameters are allowed (`#1514 <https://github.com/ros2/rclcpp/issues/1514>`_)
+* Made 'Context::shutdown_reason' function a const function (`#1578 <https://github.com/ros2/rclcpp/issues/1578>`_)
+* Contributors: Tomoya Fujita, suab321321
+
+7.0.0 (2021-03-18)
+------------------
+* Document design decisions that were made for statically typed parameters (`#1568 <https://github.com/ros2/rclcpp/issues/1568>`_)
+* Fix doc typo in CallbackGroup constructor (`#1582 <https://github.com/ros2/rclcpp/issues/1582>`_)
+* Enable qos parameter overrides for the /parameter_events topic  (`#1532 <https://github.com/ros2/rclcpp/issues/1532>`_)
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* Remove 'struct' from the rcl_time_jump_t. (`#1577 <https://github.com/ros2/rclcpp/issues/1577>`_)
+* Add tests for declaring statically typed parameters when undeclared parameters are allowed (`#1575 <https://github.com/ros2/rclcpp/issues/1575>`_)
+* Quiet clang memory leak warning on "DoNotOptimize". (`#1571 <https://github.com/ros2/rclcpp/issues/1571>`_)
+* Add ParameterEventsSubscriber class (`#829 <https://github.com/ros2/rclcpp/issues/829>`_)
+* When a parameter change is rejected, the parameters map shouldn't be updated. (`#1567 <https://github.com/ros2/rclcpp/pull/1567>`_)
+* Fix when to throw the NoParameterOverrideProvided exception. (`#1567 <https://github.com/ros2/rclcpp/pull/1567>`_)
+* Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_)
+* Fix benchmark test failure introduced in `#1522 <https://github.com/ros2/rclcpp/issues/1522>`_ (`#1564 <https://github.com/ros2/rclcpp/issues/1564>`_)
+* Fix documented example in create_publisher (`#1558 <https://github.com/ros2/rclcpp/issues/1558>`_)
+* Enforce static parameter types (`#1522 <https://github.com/ros2/rclcpp/issues/1522>`_)
+* Allow timers to keep up the intended rate in MultiThreadedExecutor (`#1516 <https://github.com/ros2/rclcpp/issues/1516>`_)
+* Fix UBSAN warnings in any_subscription_callback. (`#1551 <https://github.com/ros2/rclcpp/issues/1551>`_)
+* Fix runtime error: reference binding to null pointer of type (`#1547 <https://github.com/ros2/rclcpp/issues/1547>`_)
+* Contributors: Andrea Sorbini, Chris Lalancette, Colin MacKenzie, Ivan Santiago Paunovic, Jacob Perron, Steven! Ragnarök, bpwilcox, tomoya
+
+6.3.1 (2021-02-08)
+------------------
+* Reference test resources directly from source tree (`#1543 <https://github.com/ros2/rclcpp/issues/1543>`_)
+* clear statistics after window reset (`#1531 <https://github.com/ros2/rclcpp/issues/1531>`_) (`#1535 <https://github.com/ros2/rclcpp/issues/1535>`_)
+* Fix a minor string error in the topic_statistics test. (`#1541 <https://github.com/ros2/rclcpp/issues/1541>`_)
+* Avoid `Resource deadlock avoided` if use intra_process_comms (`#1530 <https://github.com/ros2/rclcpp/issues/1530>`_)
+* Avoid an object copy in parameter_value.cpp. (`#1538 <https://github.com/ros2/rclcpp/issues/1538>`_)
+* Assert that the publisher_list size is 1. (`#1537 <https://github.com/ros2/rclcpp/issues/1537>`_)
+* Don't access objects after they have been std::move (`#1536 <https://github.com/ros2/rclcpp/issues/1536>`_)
+* Update for checking correct variable (`#1534 <https://github.com/ros2/rclcpp/issues/1534>`_)
+* Destroy msg extracted from LoanedMessage. (`#1305 <https://github.com/ros2/rclcpp/issues/1305>`_)
+* Contributors: Chen Lihui, Chris Lalancette, Ivan Santiago Paunovic, Miaofei Mei, Scott K Logan, William Woodall, hsgwa
+
+6.3.0 (2021-01-25)
+------------------
+* Add instrumentation for linking a timer to a node (`#1500 <https://github.com/ros2/rclcpp/issues/1500>`_)
+* Fix error when using IPC with StaticSingleThreadExecutor (`#1520 <https://github.com/ros2/rclcpp/issues/1520>`_)
+* Change to using unique_ptrs for DummyExecutor. (`#1517 <https://github.com/ros2/rclcpp/issues/1517>`_)
+* Allow reconfiguring 'clock' topic qos (`#1512 <https://github.com/ros2/rclcpp/issues/1512>`_)
+* Allow to add/remove nodes thread safely in rclcpp::Executor  (`#1505 <https://github.com/ros2/rclcpp/issues/1505>`_)
+* Call rclcpp::shutdown in test_node for clean shutdown on Windows (`#1515 <https://github.com/ros2/rclcpp/issues/1515>`_)
+* Reapply "Add get_logging_directory method to rclcpp::Logger (`#1509 <https://github.com/ros2/rclcpp/issues/1509>`_)" (`#1513 <https://github.com/ros2/rclcpp/issues/1513>`_)
+* use describe_parameters of parameter client for test (`#1499 <https://github.com/ros2/rclcpp/issues/1499>`_)
+* Revert "Add get_logging_directory method to rclcpp::Logger (`#1509 <https://github.com/ros2/rclcpp/issues/1509>`_)" (`#1511 <https://github.com/ros2/rclcpp/issues/1511>`_)
+* Add get_logging_directory method to rclcpp::Logger (`#1509 <https://github.com/ros2/rclcpp/issues/1509>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Ivan Santiago Paunovic, eboasson, mauropasse, tomoya
+
 6.2.0 (2021-01-08)
 ------------------
 * Better documentation for the QoS class (`#1508 <https://github.com/ros2/rclcpp/issues/1508>`_)

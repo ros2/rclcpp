@@ -2,7 +2,7 @@ find_package(ament_cmake_gtest REQUIRED)
 
 find_package(rmw_implementation_cmake REQUIRED)
 
-add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/../resources")
+add_definitions(-DTEST_RESOURCES_DIRECTORY="${TEST_RESOURCES_DIRECTORY}")
 
 rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/Header.msg
@@ -322,6 +322,16 @@ if(TARGET test_parameter)
     "rosidl_typesupport_cpp"
   )
   target_link_libraries(test_parameter ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_parameter_event_handler test_parameter_event_handler.cpp)
+if(TARGET test_parameter_event_handler)
+  ament_target_dependencies(test_parameter_event_handler
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_generator_cpp"
+    "rosidl_typesupport_cpp"
+  )
+  target_link_libraries(test_parameter_event_handler ${PROJECT_NAME})
 endif()
 ament_add_gtest(test_parameter_map test_parameter_map.cpp)
 if(TARGET test_parameter_map)

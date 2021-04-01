@@ -3,6 +3,38 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+8.2.0 (2021-03-31)
+------------------
+* Fix flaky lifecycle node tests (`#1606 <https://github.com/ros2/rclcpp/issues/1606>`_)
+* Clock subscription callback group spins in its own thread (`#1556 <https://github.com/ros2/rclcpp/issues/1556>`_)
+* Delete debug messages (`#1602 <https://github.com/ros2/rclcpp/issues/1602>`_)
+* add automatically_add_executor_with_node option (`#1594 <https://github.com/ros2/rclcpp/issues/1594>`_)
+* Contributors: BriceRenaudeau, Ivan Santiago Paunovic, Jacob Perron, anaelle-sw
+
+8.1.0 (2021-03-25)
+------------------
+
+8.0.0 (2021-03-23)
+------------------
+* make rcl_lifecyle_com_interface optional in lifecycle nodes (`#1507 <https://github.com/ros2/rclcpp/issues/1507>`_)
+* Contributors: Karsten Knese
+
+7.0.1 (2021-03-22)
+------------------
+
+7.0.0 (2021-03-18)
+------------------
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_)
+* Enforce static parameter types (`#1522 <https://github.com/ros2/rclcpp/issues/1522>`_)
+* Contributors: Andrea Sorbini, Colin MacKenzie, Ivan Santiago Paunovic
+
+6.3.1 (2021-02-08)
+------------------
+
+6.3.0 (2021-01-25)
+------------------
+
 6.2.0 (2021-01-08)
 ------------------
 

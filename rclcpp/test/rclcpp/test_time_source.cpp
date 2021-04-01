@@ -516,3 +516,229 @@ TEST_F(TestTimeSource, no_pre_jump_callback) {
   EXPECT_EQ(1, cbo.last_postcallback_id_);
   EXPECT_EQ(1, cbo.post_callback_calls_);
 }
+
+// A TimeSource-inheriting class
+// that allows access to TimeSource protected attributes
+// use_clock_thread_ and clock_executor_thread_
+class ClockThreadTestingTimeSource : public rclcpp::TimeSource
+{
+public:
+  ClockThreadTestingTimeSource()
+  : rclcpp::TimeSource()
+  {
+  }
+
+  bool GetUseClockThreadOption()
+  {
+    return this->use_clock_thread_;
+  }
+
+  bool IsClockThreadJoinable()
+  {
+    return this->clock_executor_thread_.joinable();
+  }
+};
+
+TEST_F(TestTimeSource, check_use_clock_thread_value) {
+  // Create three nodes, with use_clock_thread option
+  // respectively set to default, true, and false
+
+  auto default_node_ = std::make_shared<rclcpp::Node>(
+    "default_option_node");
+
+  auto clock_thread_node_ = std::make_shared<rclcpp::Node>(
+    "clock_thread_node",
+    rclcpp::NodeOptions().use_clock_thread(true));
+
+  auto no_clock_thread_node_ = std::make_shared<rclcpp::Node>(
+    "no_clock_thread_node",
+    rclcpp::NodeOptions().use_clock_thread(false));
+
+  // Test value of use_clock_thread_ TimeSource attribute
+  // when the different nodes are attached
+
+  ClockThreadTestingTimeSource ts;
+
+  ts.attachNode(default_node_);
+  ASSERT_TRUE(ts.GetUseClockThreadOption());
+  ts.detachNode();
+
+  ts.attachNode(clock_thread_node_);
+  ASSERT_TRUE(ts.GetUseClockThreadOption());
+  ts.detachNode();
+
+  ts.attachNode(no_clock_thread_node_);
+  ASSERT_FALSE(ts.GetUseClockThreadOption());
+  ts.detachNode();
+}
+
+TEST_F(TestTimeSource, check_clock_thread_status) {
+  // Test if TimeSource clock-dedicated thread is running
+  // according to the use_sim_time parameter
+  // and to the options of the attached node
+  ClockThreadTestingTimeSource ts;
+
+  // Tests for default options node
+  auto default_node_ = std::make_shared<rclcpp::Node>(
+    "default_option_node");
+
+  default_node_->set_parameter(rclcpp::Parameter("use_sim_time", true));
+  ts.attachNode(default_node_);
+  ASSERT_TRUE(ts.IsClockThreadJoinable());
+  ts.detachNode();
+
+  default_node_->set_parameter(rclcpp::Parameter("use_sim_time", false));
+  ts.attachNode(default_node_);
+  ASSERT_FALSE(ts.IsClockThreadJoinable());
+  ts.detachNode();
+
+  // Tests for node with use_clock_thread option forced to false
+  auto no_clock_thread_node_ = std::make_shared<rclcpp::Node>(
+    "no_clock_thread_node",
+    rclcpp::NodeOptions().use_clock_thread(false));
+
+  no_clock_thread_node_->set_parameter(rclcpp::Parameter("use_sim_time", true));
+  ts.attachNode(no_clock_thread_node_);
+  ASSERT_FALSE(ts.IsClockThreadJoinable());
+  ts.detachNode();
+
+  no_clock_thread_node_->set_parameter(rclcpp::Parameter("use_sim_time", false));
+  ts.attachNode(no_clock_thread_node_);
+  ASSERT_FALSE(ts.IsClockThreadJoinable());
+  ts.detachNode();
+}
+
+// A Node-inheriting class
+// that regularly publishes a incremented Clock msg on topic `/clock'
+class SimClockPublisherNode : public rclcpp::Node
+{
+public:
+  SimClockPublisherNode()
+  : rclcpp::Node("sim_clock_publisher_node")
+  {
+    // Create a clock publisher
+    clock_pub_ = this->create_publisher<rosgraph_msgs::msg::Clock>(
+      "/clock",
+      rclcpp::QoS(1)
+    );
+
+    // Create a 1ms timer
+    pub_timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(1),
+      std::bind(
+        &SimClockPublisherNode::timer_callback,
+        this)
+    );
+
+    // Init clock msg to zero
+    clock_msg_.clock.sec = 0;
+    clock_msg_.clock.nanosec = 0;
+  }
+
+  ~SimClockPublisherNode()
+  {
+    // Cleanly stop executor and thread
+    node_executor.cancel();
+    node_thread_.join();
+  }
+
+  void SpinNode()
+  {
+    // Spin node in its own dedicated thread
+    node_thread_ = std::thread(
+      [this]() {
+        node_executor.add_node(this->get_node_base_interface());
+        node_executor.spin();
+      });
+  }
+
+private:
+  void timer_callback()
+  {
+    // Increment clock msg and publish it
+    clock_msg_.clock.nanosec += 1000000;
+    clock_pub_->publish(clock_msg_);
+  }
+
+  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
+  rclcpp::TimerBase::SharedPtr pub_timer_;
+  rosgraph_msgs::msg::Clock clock_msg_;
+  std::thread node_thread_;
+  rclcpp::executors::SingleThreadedExecutor node_executor;
+};
+
+// A Node-inheriting class
+// that check its clock time within a timer callback
+class ClockThreadTestingNode : public rclcpp::Node
+{
+public:
+  ClockThreadTestingNode()
+  : rclcpp::Node("clock_thread_testing_node")
+  {
+    // Set use_sim_time parameter to true to subscribe to `/clock` topic
+    this->set_parameter(rclcpp::Parameter("use_sim_time", true));
+
+    // Create a 100ms timer
+    timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(100),
+      std::bind(
+        &ClockThreadTestingNode::timer_callback,
+        this)
+    );
+  }
+
+  bool GetIsCallbackFrozen()
+  {
+    return is_callback_frozen_;
+  }
+
+private:
+  void timer_callback()
+  {
+    rclcpp::Time start_time = this->now();
+    bool is_time_out = false;
+
+    // While loop condition tests
+    // if the node's clock time is incremented
+    while (rclcpp::ok() &&
+      !is_time_out)
+    {
+      rclcpp::sleep_for(std::chrono::milliseconds(100));
+      rclcpp::Time time_now = this->now();
+      rclcpp::Duration time_spent = time_now - start_time;
+      is_time_out = time_spent.seconds() > 1.0;
+    }
+
+    // If out of while loop, set variable to false
+    // and cancel timer to avoid to enter the callback again
+    is_callback_frozen_ = false;
+    timer_->cancel();
+  }
+
+  rclcpp::TimerBase::SharedPtr timer_;
+  bool is_callback_frozen_ = true;
+};
+
+TEST_F(TestTimeSource, check_sim_time_updated_in_callback_if_use_clock_thread) {
+  // Test if clock time of a node with
+  // parameter use_sim_time = true and option use_clock_thread = true
+  // is updated while node is not spinning
+  // (in a timer callback)
+
+  // Create a "sim time" publisher and spin it
+  SimClockPublisherNode pub_node;
+  pub_node.SpinNode();
+
+  // Spin node for 2 seconds
+  ClockThreadTestingNode clock_thread_testing_node;
+  auto steady_clock = rclcpp::Clock(RCL_STEADY_TIME);
+  auto start_time = steady_clock.now();
+  while (rclcpp::ok() &&
+    (steady_clock.now() - start_time).seconds() < 2.0)
+  {
+    rclcpp::spin_some(clock_thread_testing_node.get_node_base_interface());
+  }
+
+  // Node should have get out of timer callback
+  ASSERT_FALSE(clock_thread_testing_node.GetIsCallbackFrozen());
+}

@@ -125,7 +125,7 @@ TEST_F(TestNodeParameters, parameter_overrides)
   auto * node_parameters_interface =
     dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
     node2->get_node_parameters_interface().get());
-  ASSERT_NE(nullptr, node_parameters);
+  ASSERT_NE(nullptr, node_parameters_interface);
 
   const auto & parameter_overrides = node_parameters_interface->get_parameter_overrides();
   EXPECT_EQ(2u, parameter_overrides.size());

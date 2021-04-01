@@ -107,12 +107,12 @@ public:
       TRACEPOINT(
         rclcpp_callback_register,
         static_cast<const void *>(this),
-        get_symbol(shared_ptr_callback_));
+        tracetools::get_symbol(shared_ptr_callback_));
     } else if (shared_ptr_with_request_header_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
         static_cast<const void *>(this),
-        get_symbol(shared_ptr_with_request_header_callback_));
+        tracetools::get_symbol(shared_ptr_with_request_header_callback_));
     }
 #endif  // TRACETOOLS_DISABLED
   }

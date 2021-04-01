@@ -212,8 +212,6 @@ TEST(TestSerializedMessage, assignment_operators) {
   serialized_msg_move = std::move(serialized_message_to_assign);
   EXPECT_EQ(13u, serialized_msg_move.capacity());
   EXPECT_EQ(content_size, serialized_msg_move.size());
-  EXPECT_EQ(0u, serialized_message_to_assign.capacity());
-  EXPECT_EQ(0u, serialized_message_to_assign.size());
 
   // Test move assignment with = operator, with a rcl_serialized_message_t
   rclcpp::SerializedMessage serialized_msg_move_rcl(2);
@@ -222,7 +220,6 @@ TEST(TestSerializedMessage, assignment_operators) {
   serialized_msg_move_rcl = std::move(rcl_serialized_msg);
   EXPECT_EQ(13u, serialized_msg_move_rcl.capacity());
   EXPECT_EQ(content_size, serialized_msg_move_rcl.size());
-  EXPECT_EQ(0u, rcl_serialized_msg.buffer_capacity);
 
   // Error because it was moved
   EXPECT_EQ(RCUTILS_RET_INVALID_ARGUMENT, rmw_serialized_message_fini(&rcl_serialized_msg));

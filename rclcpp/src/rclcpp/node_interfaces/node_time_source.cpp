@@ -27,7 +27,8 @@ NodeTimeSource::NodeTimeSource(
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
-  const rclcpp::QoS & qos)
+  const rclcpp::QoS & qos,
+  bool use_clock_thread)
 : node_base_(node_base),
   node_topics_(node_topics),
   node_graph_(node_graph),
@@ -35,7 +36,7 @@ NodeTimeSource::NodeTimeSource(
   node_logging_(node_logging),
   node_clock_(node_clock),
   node_parameters_(node_parameters),
-  time_source_(qos)
+  time_source_(qos, use_clock_thread)
 {
   time_source_.attachNode(
     node_base_,

@@ -67,7 +67,7 @@ TEST_F(TestLoanedMessage, release) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
-  MessageT * msg = nullptr;
+  std::unique_ptr<MessageT, std::function<void(MessageT *)>> msg;
   {
     auto loaned_msg = pub->borrow_loaned_message();
     ASSERT_TRUE(loaned_msg.is_valid());
@@ -80,6 +80,15 @@ TEST_F(TestLoanedMessage, release) {
   }
 
   ASSERT_EQ(42.0f, msg->float64_value);
+
+  // Generally, the memory released from `LoanedMessage::release()` will be freed
+  // in deleter of unique_ptr or is managed in the middleware after calling
+  // `Publisher::do_loaned_message_publish` inside Publisher::publish().
+  if (pub->can_loan_messages()) {
+    ASSERT_EQ(
+      RCL_RET_OK,
+      rcl_return_loaned_message_from_publisher(pub->get_publisher_handle().get(), msg.get()));
+  }
 
   SUCCEED();
 }

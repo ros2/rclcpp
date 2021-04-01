@@ -26,7 +26,8 @@ class TestAnySubscriptionCallback : public ::testing::Test
 {
 public:
   TestAnySubscriptionCallback()
-  : any_subscription_callback_(allocator_) {}
+  : allocator_(std::make_shared<std::allocator<void>>()),
+    any_subscription_callback_(allocator_) {}
   void SetUp()
   {
     msg_shared_ptr_ = std::make_shared<test_msgs::msg::Empty>();
@@ -44,6 +45,20 @@ protected:
   std::unique_ptr<test_msgs::msg::Empty> msg_unique_ptr_;
   rclcpp::MessageInfo message_info_;
 };
+
+void construct_with_null_allocator()
+{
+  // We need to wrap this in a function because `EXPECT_THROW` is a macro, and thinks
+  // that the comma in here splits macro arguments, not the template arguments.
+  rclcpp::AnySubscriptionCallback<
+    test_msgs::msg::Empty, std::allocator<void>> any_subscription_callback_(nullptr);
+}
+
+TEST(AnySubscription, null_allocator) {
+  EXPECT_THROW(
+    construct_with_null_allocator(),
+    std::runtime_error);
+}
 
 TEST_F(TestAnySubscriptionCallback, construct_destruct) {
 }

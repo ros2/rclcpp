@@ -3,6 +3,35 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+8.2.0 (2021-03-31)
+------------------
+
+8.1.0 (2021-03-25)
+------------------
+
+8.0.0 (2021-03-23)
+------------------
+
+7.0.1 (2021-03-22)
+------------------
+
+7.0.0 (2021-03-18)
+------------------
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* node_handle must be destroyed after client_handle to prevent memory leak (`#1562 <https://github.com/ros2/rclcpp/issues/1562>`_)
+* Contributors: Andrea Sorbini, Tomoya Fujita
+
+6.3.1 (2021-02-08)
+------------------
+* Finalize rcl_handle to prevent leak (`#1528 <https://github.com/ros2/rclcpp/issues/1528>`_) (`#1529 <https://github.com/ros2/rclcpp/issues/1529>`_)
+* Fix `#1526 <https://github.com/ros2/rclcpp/issues/1526>`_. (`#1527 <https://github.com/ros2/rclcpp/issues/1527>`_)
+* Contributors: y-okumura-isp
+
+6.3.0 (2021-01-25)
+------------------
+* Fix action server deadlock (`#1285 <https://github.com/ros2/rclcpp/issues/1285>`_) (`#1313 <https://github.com/ros2/rclcpp/issues/1313>`_)
+* Contributors: Daisuke Sato
+
 6.2.0 (2021-01-08)
 ------------------
 * Goal response callback compatibility shim with deprecation of old signature (`#1495 <https://github.com/ros2/rclcpp/issues/1495>`_)

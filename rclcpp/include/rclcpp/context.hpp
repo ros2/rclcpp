@@ -150,7 +150,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::string
-  shutdown_reason();
+  shutdown_reason() const;
 
   /// Shutdown the context, making it uninitialized and therefore invalid for derived entities.
   /**
@@ -286,7 +286,7 @@ private:
 
   // This mutex is recursive so that the destructor can ensure atomicity
   // between is_initialized and shutdown.
-  std::recursive_mutex init_mutex_;
+  mutable std::recursive_mutex init_mutex_;
   std::shared_ptr<rcl_context_t> rcl_context_;
   rclcpp::InitOptions init_options_;
   std::string shutdown_reason_;
