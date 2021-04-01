@@ -162,7 +162,7 @@ TEST_F(TestSubscription, construction_and_destruction) {
     // get_subscription_handle()
     const rclcpp::SubscriptionBase * const_sub = sub.get();
     EXPECT_NE(nullptr, const_sub->get_subscription_handle());
-    EXPECT_FALSE(sub->use_take_shared_method());
+    EXPECT_TRUE(sub->use_take_shared_method());
 
     EXPECT_NE(nullptr, sub->get_message_type_support_handle().typesupport_identifier);
     EXPECT_NE(nullptr, sub->get_message_type_support_handle().data);
