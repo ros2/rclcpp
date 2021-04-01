@@ -219,6 +219,14 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    // Check if the variant is "unset", throw if it is.
+    if (callback_variant_.index() == 0) {
+      if (std::get<0>(callback_variant_) == nullptr) {
+        // This can happen if it is default initialized, or if it is assigned nullptr.
+        throw std::runtime_error("dispatch called on an unset AnySubscriptionCallback");
+      }
+    }
+    // Dispatch.
     std::visit(
       [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
@@ -263,6 +271,14 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+    // Check if the variant is "unset", throw if it is.
+    if (callback_variant_.index() == 0) {
+      if (std::get<0>(callback_variant_) == nullptr) {
+        // This can happen if it is default initialized, or if it is assigned nullptr.
+        throw std::runtime_error("dispatch called on an unset AnySubscriptionCallback");
+      }
+    }
+    // Dispatch.
     std::visit(
       [&message, &message_info](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
@@ -290,6 +306,14 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+    // Check if the variant is "unset", throw if it is.
+    if (callback_variant_.index() == 0) {
+      if (std::get<0>(callback_variant_) == nullptr) {
+        // This can happen if it is default initialized, or if it is assigned nullptr.
+        throw std::runtime_error("dispatch called on an unset AnySubscriptionCallback");
+      }
+    }
+    // Dispatch.
     std::visit(
       [&message, &message_info](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
