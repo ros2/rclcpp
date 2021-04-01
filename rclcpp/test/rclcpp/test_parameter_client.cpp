@@ -926,7 +926,7 @@ TEST_F(TestParameterClient, async_parameter_load_parameters) {
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
   rclcpp::spin_until_future_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
-  ASSERT_EQ(list_parameters.get().names.size(), static_cast<long unsigned int>(5));
+  ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(5));
 }
 /*
   Coverage for sync load_parameters
@@ -946,5 +946,5 @@ TEST_F(TestParameterClient, sync_parameter_load_parameters) {
   ASSERT_EQ(load_future[0].successful, true);
   // list parameters
   auto list_parameters = synchronous_client->list_parameters({}, 3);
-  ASSERT_EQ(list_parameters.names.size(), static_cast<long unsigned int>(5));
+  ASSERT_EQ(list_parameters.names.size(), static_cast<uint64_t>(5));
 }
