@@ -213,6 +213,14 @@ public:
     callback_variant_ = callback;
   }
 
+  std::unique_ptr<MessageT, MessageDeleter>
+  create_unique_ptr_from_shared_ptr_message(const std::shared_ptr<const MessageT> & message)
+  {
+    auto ptr = MessageAllocTraits::allocate(message_allocator_, 1);
+    MessageAllocTraits::construct(message_allocator_, ptr, *message);
+    return std::unique_ptr<MessageT, MessageDeleter>(ptr, message_deleter_);
+  }
+
   void
   dispatch(
     std::shared_ptr<MessageT> message,
@@ -230,15 +238,6 @@ public:
     std::visit(
       [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
-
-        auto create_unique_ptr_from_shared_ptr_message =
-        [this](const std::shared_ptr<MessageT> & message) {
-          auto ptr = MessageAllocTraits::allocate(message_allocator_, 1);
-          MessageAllocTraits::construct(message_allocator_, ptr, *message);
-          return std::unique_ptr<MessageT, MessageDeleter>(ptr, message_deleter_);
-        };
-        // Avoid an unused variable warning in constexpr-if cases below where it is not used.
-        (void)create_unique_ptr_from_shared_ptr_message;
 
         if constexpr (std::is_same_v<T, ConstRefCallback>) {
           callback(*message);
@@ -260,6 +259,8 @@ public:
           std::is_same_v<T, SharedPtrWithInfoCallback>)
         {
           callback(message, message_info);
+        } else {
+          static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACEPOINT(callback_end, static_cast<const void *>(this));
@@ -280,21 +281,35 @@ public:
     }
     // Dispatch.
     std::visit(
-      [&message, &message_info](auto && callback) {
+      [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
 
-        if constexpr (
+        if constexpr (std::is_same_v<T, ConstRefCallback>) {
+          callback(*message);
+        } else if constexpr (std::is_same_v<T, ConstRefWithInfoCallback>) {
+          callback(*message, message_info);
+        } else if constexpr (  // NOLINT[readability/braces]
+          std::is_same_v<T, UniquePtrCallback>||
+          std::is_same_v<T, SharedPtrCallback>)
+        {
+          callback(create_unique_ptr_from_shared_ptr_message(message));
+        } else if constexpr (  // NOLINT[readability/braces]
+          std::is_same_v<T, UniquePtrWithInfoCallback>||
+          std::is_same_v<T, SharedPtrWithInfoCallback>)
+        {
+          callback(create_unique_ptr_from_shared_ptr_message(message), message_info);
+        } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrCallback>) {
+          std::is_same_v<T, ConstRefSharedConstPtrCallback>)
+        {
           callback(message);
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrWithInfoCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>) {
+          std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>)
+        {
           callback(message, message_info);
         } else {
-          throw std::runtime_error(
-            "unexpected dispatch_intra_process const shared "
-            "message call with no const shared_ptr callback");
+          static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACEPOINT(callback_end, static_cast<const void *>(this));
@@ -318,22 +333,26 @@ public:
       [&message, &message_info](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
 
-        if constexpr (
+        if constexpr (std::is_same_v<T, ConstRefCallback>) {
+          callback(*message);
+        } else if constexpr (std::is_same_v<T, ConstRefWithInfoCallback>) {
+          callback(*message, message_info);
+        } else if constexpr (  // NOLINT[readability/braces]
+          std::is_same_v<T, UniquePtrCallback>||
           std::is_same_v<T, SharedConstPtrCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrCallback>) {
+          std::is_same_v<T, ConstRefSharedConstPtrCallback>||
+          std::is_same_v<T, SharedPtrCallback>)
+        {
           callback(std::move(message));
         } else if constexpr (  // NOLINT[readability/braces]
+          std::is_same_v<T, UniquePtrWithInfoCallback>||
           std::is_same_v<T, SharedConstPtrWithInfoCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>) {
-          callback(std::move(message), message_info);
-        } else if constexpr (std::is_same_v<T, UniquePtrCallback>) {
-          callback(std::move(message));
-        } else if constexpr (std::is_same_v<T, UniquePtrWithInfoCallback>) {
+          std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>||
+          std::is_same_v<T, SharedPtrWithInfoCallback>)
+        {
           callback(std::move(message), message_info);
         } else {
-          throw std::runtime_error(
-            "unexpected dispatch_intra_process unique message call"
-            " with const shared_ptr callback");
+          static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACEPOINT(callback_end, static_cast<const void *>(this));
