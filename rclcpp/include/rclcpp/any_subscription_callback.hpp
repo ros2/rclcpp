@@ -195,9 +195,10 @@ public:
   }
 
   /// Function for shared_ptr to non-const MessageT, which is deprecated.
-  [[deprecated(
-    "use 'void (std::shared_ptr<const MessageT>)' instead"
-  )]]
+  // TODO(wjwwood): enable this deprecation after Galactic
+  // [[deprecated(
+  //   "use 'void (std::shared_ptr<const MessageT>)' instead"
+  // )]]
   void
   set_deprecated(std::function<void(std::shared_ptr<MessageT>)> callback)
   // set(CallbackT callback)
@@ -206,9 +207,10 @@ public:
   }
 
   /// Function for shared_ptr to non-const MessageT with MessageInfo, which is deprecated.
-  [[deprecated(
-    "use 'void (std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
-  )]]
+  // TODO(wjwwood): enable this deprecation after Galactic
+  // [[deprecated(
+  //   "use 'void (std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
+  // )]]
   void
   set_deprecated(
     std::function<void(std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)> callback)
