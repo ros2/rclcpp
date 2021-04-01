@@ -32,7 +32,7 @@
 namespace rclcpp
 {
 
-namespace 
+namespace
 {
 
 // Look for the library in the ament prefix paths.
