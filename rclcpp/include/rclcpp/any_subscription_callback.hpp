@@ -62,16 +62,11 @@ struct AnySubscriptionCallbackHelper
   using UniquePtrWithInfoCallback =
     std::function<void (std::unique_ptr<MessageT, MessageDeleter>, const rclcpp::MessageInfo &)>;
 
-  // TODO(wjwwood): should we drop this one, because you can achieve it easily
-  //   with the const shared_ptr & version?
   using SharedConstPtrCallback =
     std::function<void (std::shared_ptr<const MessageT>)>;
   using SharedConstPtrWithInfoCallback =
     std::function<void (std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)>;
 
-  // TODO(wjwwood): should we drop this one, because you should prefer the
-  //   shared_ptr one (if you intend to actuall share ownership) or the
-  //   const MessageT & one if you just want to read the message?
   using ConstRefSharedConstPtrCallback =
     std::function<void (const std::shared_ptr<const MessageT> &)>;
   using ConstRefSharedConstPtrWithInfoCallback =
