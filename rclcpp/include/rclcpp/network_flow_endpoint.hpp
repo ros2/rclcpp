@@ -78,7 +78,9 @@ public:
   friend bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
 
   /// Streaming helper
-  friend std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network_flow_endpoint);
+  friend std::ostream & operator<<(
+    std::ostream & os,
+    const NetworkFlowEndpoint & network_flow_endpoint);
 
 private:
   std::string transport_protocol_;
