@@ -234,6 +234,8 @@ public:
           MessageAllocTraits::construct(message_allocator_, ptr, *message);
           return std::unique_ptr<MessageT, MessageDeleter>(ptr, message_deleter_);
         };
+        // Avoid an unused variable warning in constexpr-if cases below where it is not used.
+        (void)create_unique_ptr_from_shared_ptr_message;
 
         if constexpr (std::is_same_v<T, ConstRefCallback>) {
           callback(*message);
