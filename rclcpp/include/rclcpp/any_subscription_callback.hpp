@@ -96,21 +96,13 @@ struct AnySubscriptionCallbackHelper
 
 template<
   typename MessageT,
-  typename AllocatorT
+  typename AllocatorT = std::allocator<void>
 >
 class AnySubscriptionCallback
 {
 private:
   using HelperT = typename rclcpp::detail::AnySubscriptionCallbackHelper<MessageT, AllocatorT>;
   using MessageDeleterHelper = rclcpp::detail::MessageDeleterHelper<MessageT, AllocatorT>;
-
-  // using variant_type = HelperT::variant_type;
-
-  // TODO(wjwwood): switch to inheriting from std::variant (i.e. HelperT::variant_type) once
-  // inheriting from std::variant is realistic (maybe C++23?), see:
-  //   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2162r0.html
-  // For now, compose the variant into this class as a private attribute.
-  typename HelperT::variant_type callback_variant_;
 
   using MessageAllocTraits = typename MessageDeleterHelper::MessageAllocTraits;
   using MessageAlloc = typename MessageDeleterHelper::MessageAlloc;
@@ -162,7 +154,7 @@ public:
    * unique_ptr callback signatures when using them with lambda functions.
    */
   template<typename CallbackT>
-  void
+  AnySubscriptionCallback<MessageT, AllocatorT>
   set(CallbackT callback)
   {
     // Use the SubscriptionCallbackTypeHelper to determine the actual type of
@@ -192,6 +184,9 @@ public:
       // Otherwise just assign it.
       callback_variant_ = static_cast<typename scbth::callback_type>(callback);
     }
+
+    // Return copy of self for easier testing, normally will be compiled out.
+    return *this;
   }
 
   /// Function for shared_ptr to non-const MessageT, which is deprecated.
@@ -345,7 +340,25 @@ public:
 #endif  // TRACETOOLS_DISABLED
   }
 
+  typename HelperT::variant_type &
+  get_variant()
+  {
+    return callback_variant_;
+  }
+
+  const typename HelperT::variant_type &
+  get_variant() const
+  {
+    return callback_variant_;
+  }
+
 private:
+  // TODO(wjwwood): switch to inheriting from std::variant (i.e. HelperT::variant_type) once
+  // inheriting from std::variant is realistic (maybe C++23?), see:
+  //   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2162r0.html
+  // For now, compose the variant into this class as a private attribute.
+  typename HelperT::variant_type callback_variant_;
+
   MessageAlloc message_allocator_;
   MessageDeleter message_deleter_;
 };
