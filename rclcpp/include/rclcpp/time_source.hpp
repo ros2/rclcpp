@@ -152,7 +152,7 @@ private:
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
-  rclcpp::executors::SingleThreadedExecutor clock_executor_;
+  rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
   std::promise<void> cancel_clock_executor_promise_;
 
   // The clock callback itself
