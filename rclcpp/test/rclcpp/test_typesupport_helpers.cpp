@@ -26,45 +26,18 @@
 using namespace ::testing;  // NOLINT
 
 TEST(TypesupportHelpersTest, throws_exception_if_filetype_has_no_type) {
-  EXPECT_ANY_THROW(rclcpp::extract_type_identifier("just_a_package_name"));
+  EXPECT_ANY_THROW(
+    rclcpp::get_typesupport_library("just_a_package_name", "rosidl_typesupport_cpp"));
 }
 
 TEST(TypesupportHelpersTest, throws_exception_if_filetype_has_slash_at_the_start_only) {
-  EXPECT_ANY_THROW(rclcpp::extract_type_identifier("/name_with_slash_at_start"));
+  EXPECT_ANY_THROW(
+    rclcpp::get_typesupport_library("/name_with_slash_at_start", "rosidl_typesupport_cpp"));
 }
 
 TEST(TypesupportHelpersTest, throws_exception_if_filetype_has_slash_at_the_end_only) {
-  EXPECT_ANY_THROW(rclcpp::extract_type_identifier("name_with_slash_at_end/"));
-}
-
-TEST(TypesupportHelpersTest, separates_into_package_and_name_for_correct_package) {
-  std::string package;
-  std::string middle_module;
-  std::string name;
-  std::tie(package, middle_module, name) = rclcpp::extract_type_identifier("package/name");
-
-  EXPECT_THAT(package, StrEq("package"));
-  EXPECT_THAT(middle_module, StrEq(""));
-  EXPECT_THAT(name, StrEq("name"));
-}
-
-TEST(TypesupportHelpersTest, separates_into_package_and_name_for_multiple_slashes) {
-  std::string package;
-  std::string middle_module;
-  std::string name;
-  std::tie(package, middle_module, name) =
-    rclcpp::extract_type_identifier("package/middle_module/name");
-
-  EXPECT_THAT(package, StrEq("package"));
-  EXPECT_THAT(middle_module, StrEq("middle_module"));
-  EXPECT_THAT(name, StrEq("name"));
-}
-
-TEST(TypesupportHelpersTest, throws_exception_if_library_is_not_initialized) {
-  std::shared_ptr<rcpputils::SharedLibrary> library;
-  EXPECT_THROW(
-    rclcpp::get_typesupport_library("invalid/message", "rosidl_typesupport_cpp"),
-    std::runtime_error);
+  EXPECT_ANY_THROW(
+    rclcpp::get_typesupport_library("name_with_slash_at_end/", "rosidl_typesupport_cpp"));
 }
 
 TEST(TypesupportHelpersTest, throws_exception_if_library_cannot_be_found) {

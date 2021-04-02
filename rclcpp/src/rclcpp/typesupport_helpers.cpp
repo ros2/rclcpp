@@ -66,17 +66,32 @@ std::string get_typesupport_library_path(
   return library_path;
 }
 
-}  // anonymous namespace
-
-const std::pair<std::string, std::string> extract_type_and_package(const std::string & full_type)
+std::tuple<std::string, std::string, std::string>
+extract_type_identifier(const std::string & full_type)
 {
-  std::string package_name;
-  std::string type_name;
+  char type_separator = '/';
+  auto sep_position_back = full_type.find_last_of(type_separator);
+  auto sep_position_front = full_type.find_first_of(type_separator);
+  if (sep_position_back == std::string::npos ||
+    sep_position_back == 0 ||
+    sep_position_back == full_type.length() - 1)
+  {
+    throw std::runtime_error(
+            "Message type is not of the form package/type and cannot be processed");
+  }
 
-  std::tie(package_name, std::ignore, type_name) = extract_type_identifier(full_type);
+  std::string package_name = full_type.substr(0, sep_position_front);
+  std::string middle_module = "";
+  if (sep_position_back - sep_position_front > 0) {
+    middle_module =
+      full_type.substr(sep_position_front + 1, sep_position_back - sep_position_front - 1);
+  }
+  std::string type_name = full_type.substr(sep_position_back + 1);
 
-  return {package_name, type_name};
+  return std::make_tuple(package_name, middle_module, type_name);
 }
+
+}  // anonymous namespace
 
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier)
@@ -116,31 +131,6 @@ get_typesupport_handle(
   } catch (std::runtime_error &) {
     throw std::runtime_error{mk_error("Library could not be found.")};
   }
-}
-
-std::tuple<std::string, std::string, std::string>
-extract_type_identifier(const std::string & full_type)
-{
-  char type_separator = '/';
-  auto sep_position_back = full_type.find_last_of(type_separator);
-  auto sep_position_front = full_type.find_first_of(type_separator);
-  if (sep_position_back == std::string::npos ||
-    sep_position_back == 0 ||
-    sep_position_back == full_type.length() - 1)
-  {
-    throw std::runtime_error(
-            "Message type is not of the form package/type and cannot be processed");
-  }
-
-  std::string package_name = full_type.substr(0, sep_position_front);
-  std::string middle_module = "";
-  if (sep_position_back - sep_position_front > 0) {
-    middle_module =
-      full_type.substr(sep_position_front + 1, sep_position_back - sep_position_front - 1);
-  }
-  std::string type_name = full_type.substr(sep_position_back + 1);
-
-  return std::make_tuple(package_name, middle_module, type_name);
 }
 
 }  // namespace rclcpp

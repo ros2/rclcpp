@@ -52,16 +52,6 @@ get_typesupport_handle(
   const std::string & typesupport_identifier,
   rcpputils::SharedLibrary & library);
 
-/// Parse the components of a type identifier.
-/**
- * E.g. "foo/msg/FooBar" becomes ("foo", "msg", "FooBar").
- * \param[in] full_type The type identifier
- * \return A tuple of package, middle part, and type name
- */
-RCLCPP_PUBLIC
-std::tuple<std::string, std::string, std::string>
-extract_type_identifier(const std::string & full_type);
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__TYPESUPPORT_HELPERS_HPP_
