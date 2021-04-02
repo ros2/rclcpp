@@ -141,7 +141,7 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
     &allocator,
     topic_name.c_str(),
     1u,
-    1e9,
+    static_cast<rcutils_duration_value_t>(1e9),
     &success);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   ASSERT_TRUE(success);
