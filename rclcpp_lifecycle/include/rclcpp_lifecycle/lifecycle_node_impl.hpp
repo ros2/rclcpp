@@ -22,12 +22,14 @@
 #include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
-#include "rclcpp/event.hpp"
-#include "rclcpp/experimental/intra_process_manager.hpp"
-#include "rclcpp/parameter.hpp"
+#include "rclcpp/create_generic_publisher.hpp"
+#include "rclcpp/create_generic_subscription.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
+#include "rclcpp/event.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/parameter.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 
@@ -128,6 +130,46 @@ LifecycleNode::create_service(
   return rclcpp::create_service<ServiceT, CallbackT>(
     node_base_, node_services_,
     service_name, std::forward<CallbackT>(callback), qos_profile, group);
+}
+
+template<typename AllocatorT>
+std::shared_ptr<rclcpp::GenericPublisher>
+LifecycleNode::create_generic_publisher(
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::create_generic_publisher(
+    node_topics_,
+    // TODO(karsten1987): LifecycleNode is currently not supporting subnamespaces
+    // see https://github.com/ros2/rclcpp/issues/1614
+    topic_name,
+    topic_type,
+    qos,
+    options
+  );
+}
+
+template<typename AllocatorT>
+std::shared_ptr<rclcpp::GenericSubscription>
+LifecycleNode::create_generic_subscription(
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::create_generic_subscription(
+    node_topics_,
+    // TODO(karsten1987): LifecycleNode is currently not supporting subnamespaces
+    // see https://github.com/ros2/rclcpp/issues/1614
+    topic_name,
+    topic_type,
+    qos,
+    std::move(callback),
+    options
+  );
 }
 
 template<typename ParameterT>

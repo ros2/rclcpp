@@ -23,6 +23,8 @@
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
+#include "rcl/graph.h"
+
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -120,8 +122,8 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
 {
   // We currently publish more messages because they can get lost
   std::vector<std::string> test_messages = {"Hello World", "Hello World"};
-  std::string topic_name = "string_topic";
-  std::string type = "test_msgs/Strings";
+  std::string topic_name = "/string_topic";
+  std::string type = "test_msgs/msg/Strings";
 
   auto publisher = node_->create_generic_publisher(
     topic_name, type, rclcpp::QoS(1));
@@ -130,13 +132,22 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
     std::launch::async, [this, topic_name, type] {
       return subscribe_raw_messages(1, topic_name, type);
     });
-  // Give time to the subscriber to start.
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  // TODO(karsten1987): Port 'wait_for_sub' to rclcpp
+  auto allocator = node_->get_node_options().allocator();
+  auto success = false;
+  auto ret = rcl_wait_for_subscribers(
+    node_->get_node_base_interface()->get_rcl_node_handle(),
+    &allocator,
+    topic_name.c_str(),
+    1u,
+    1e9,
+    &success);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ASSERT_TRUE(success);
 
   for (const auto & message : test_messages) {
     publisher->publish(serialize_string_message(message));
-    // This is necessary because sometimes, the subscriber is initialized very late
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
   auto subscribed_messages = subscriber_future_.get();
@@ -150,7 +161,7 @@ TEST_F(RclcppGenericNodeFixture, generic_subscription_uses_qos)
   // its request will be incompatible with the Publisher's offer and no messages will be passed.
   using namespace std::chrono_literals;
   std::string topic_name = "string_topic";
-  std::string topic_type = "test_msgs/Strings";
+  std::string topic_type = "test_msgs/msg/Strings";
   rclcpp::QoS qos = rclcpp::SensorDataQoS();
 
   auto publisher = node_->create_publisher<test_msgs::msg::Strings>(topic_name, qos);
@@ -170,7 +181,7 @@ TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
   // its offer will be incompatible with the Subscription's request and no messages will be passed.
   using namespace std::chrono_literals;
   std::string topic_name = "string_topic";
-  std::string topic_type = "test_msgs/Strings";
+  std::string topic_type = "test_msgs/msg/Strings";
   rclcpp::QoS qos = rclcpp::QoS(1).transient_local();
 
   auto publisher = node_->create_generic_publisher(topic_name, topic_type, qos);

@@ -117,7 +117,7 @@
  * - Allocator related items:
  *   - rclcpp/allocator/allocator_common.hpp
  *   - rclcpp/allocator/allocator_deleter.hpp
- * - Generic sublisher
+ * - Generic publisher
  *   - rclcpp::Node::create_generic_publisher()
  *   - rclcpp::GenericPublisher
  *   - rclcpp::GenericPublisher::publish()

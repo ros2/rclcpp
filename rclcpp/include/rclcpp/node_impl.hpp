@@ -154,7 +154,7 @@ Node::create_service(
     group);
 }
 
-template<typename AllocatorT = std::allocator<void>>
+template<typename AllocatorT>
 std::shared_ptr<rclcpp::GenericPublisher>
 Node::create_generic_publisher(
   const std::string & topic_name,
@@ -171,7 +171,7 @@ Node::create_generic_publisher(
   );
 }
 
-template<typename AllocatorT = std::allocator<void>>
+template<typename AllocatorT>
 std::shared_ptr<rclcpp::GenericSubscription>
 Node::create_generic_subscription(
   const std::string & topic_name,

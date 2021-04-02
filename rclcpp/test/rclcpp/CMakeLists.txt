@@ -370,12 +370,12 @@ if(TARGET test_qos)
 endif()
 function(test_generic_pubsub_for_rmw_implementation)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_pubsub${target_suffix} test_generic_pubsub.cpp
+  ament_add_gmock(test_generic_pubsub${target_suffix} test_generic_pubsub.cpp
     ENV ${rmw_implementation_env_var}
   )
-  if(TARGET test_pubsub${target_suffix})
-    target_link_libraries(test_pubsub${target_suffix} ${PROJECT_NAME})
-    ament_target_dependencies(test_pubsub${target_suffix}
+  if(TARGET test_generic_pubsub${target_suffix})
+    target_link_libraries(test_generic_pubsub${target_suffix} ${PROJECT_NAME})
+    ament_target_dependencies(test_generic_pubsub${target_suffix}
       "rcpputils"
       "rosidl_typesupport_cpp"
       "test_msgs"
