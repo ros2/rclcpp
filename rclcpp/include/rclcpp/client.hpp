@@ -31,18 +31,19 @@
 #include "rcl/error_handling.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
-#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rcutils/logging_macros.h"
-
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/rmw.h"
 
 namespace rclcpp
@@ -215,11 +216,68 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
-  RCLCPP_PUBLIC
+  /// Set a callback to be called when each new response is received.
+  /**
+   * The callback receives a size_t which is the number of responses received
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if responses were received before any
+   * callback was set.
+   *
+   * Since this callback is called from the middleware, you should aim to make
+   * it fast and not blocking.
+   * If you need to do a lot of work or wait for some other event, you should
+   * spin it off to another thread, otherwise you risk blocking the middleware.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the client
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \sa rmw_client_set_on_new_response_callback
+   * \sa rcl_client_set_on_new_response_callback
+   *
+   * \param[in] callback functor to be called when a new response is received
+   */
   void
-  set_listener_callback(
-    rmw_listener_callback_t callback,
-    const void * user_data) const;
+  set_on_new_response_callback(std::function<void(size_t)> callback)
+  {
+    auto new_callback =
+      [callback, this](size_t number_of_responses) {
+        try {
+          callback(number_of_responses);
+        } catch (const std::exception & exception) {
+          RCLCPP_ERROR_STREAM(
+            node_logger_,
+            "rclcpp::ClientBase@" << this <<
+              " caught " << rmw::impl::cpp::demangle(exception) <<
+              " exception in user-provided callback for the 'on new response' callback: " <<
+              exception.what());
+        } catch (...) {
+          RCLCPP_ERROR_STREAM(
+            node_logger_,
+            "rclcpp::ClientBase@" << this <<
+              " caught unhandled exception in user-provided callback " <<
+              "for the 'on new response' callback");
+        }
+      };
+
+    // Set it temporarily to the new callback, while we replace the old one.
+    // This two-step setting, prevents a gap where the old std::function has
+    // been replaced but the middleware hasn't been told about the new one yet.
+    set_on_new_response_callback(
+      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      static_cast<const void *>(&new_callback));
+
+    // Store the std::function to keep it in scope, also overwrites the existing one.
+    on_new_response_callback_ = new_callback;
+
+    // Set it again, now using the permanent storage.
+    set_on_new_response_callback(
+      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      static_cast<const void *>(&on_new_response_callback_));
+  }
 
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
@@ -236,13 +294,20 @@ protected:
   const rcl_node_t *
   get_rcl_node_handle() const;
 
+  RCLCPP_PUBLIC
+  void
+  set_on_new_response_callback(rcl_event_callback_t callback, const void * user_data);
+
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rclcpp::Context> context_;
+  rclcpp::Logger node_logger_;
 
   std::shared_ptr<rcl_client_t> client_handle_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
+
+  std::function<void(size_t)> on_new_response_callback_;
 };
 
 template<typename ServiceT>

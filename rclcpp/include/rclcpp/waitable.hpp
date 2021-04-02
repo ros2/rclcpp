@@ -200,13 +200,6 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
-  RCLCPP_PUBLIC
-  virtual
-  void
-  set_listener_callback(
-    rmw_listener_callback_t callback,
-    const void * user_data) const;
-
 private:
   std::atomic<bool> in_use_by_wait_set_{false};
 };  // class Waitable

@@ -39,6 +39,7 @@ SubscriptionBase::SubscriptionBase(
   bool is_serialized)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
+  node_logger_(rclcpp::get_node_logger(node_handle_.get())),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
   type_support_(type_support_handle),
@@ -329,16 +330,17 @@ SubscriptionBase::get_network_flow_endpoints() const
 }
 
 void
-SubscriptionBase::set_listener_callback(
-  rmw_listener_callback_t callback,
-  const void * user_data) const
+SubscriptionBase::set_on_new_message_callback(
+  rcl_event_callback_t callback,
+  const void * user_data)
 {
-  rcl_ret_t ret = rcl_subscription_set_listener_callback(
+  rcl_ret_t ret = rcl_subscription_set_on_new_message_callback(
     subscription_handle_.get(),
     callback,
     user_data);
 
   if (RCL_RET_OK != ret) {
-    throw std::runtime_error("Couldn't set listener callback to subscription");
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on new message callback for subscription");
   }
 }

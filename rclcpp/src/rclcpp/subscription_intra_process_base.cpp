@@ -34,12 +34,3 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 {
   return qos_profile_;
 }
-
-void
-SubscriptionIntraProcessBase::set_listener_callback(
-  rmw_listener_callback_t callback,
-  const void * user_data) const
-{
-  (void)callback;
-  (void)user_data;
-}

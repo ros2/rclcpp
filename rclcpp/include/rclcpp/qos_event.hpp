@@ -21,12 +21,15 @@
 #include <string>
 
 #include "rcl/error_handling.h"
+#include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/incompatible_qos_events_statuses.h"
 
 #include "rcutils/logging_macros.h"
 
+#include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
@@ -102,15 +105,78 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set) override;
 
-  RCLCPP_PUBLIC
+  /// Set a callback to be called when each new event instance occurs.
+  /**
+   * The callback receives a size_t which is the number of events that occurred
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if events occurred before any
+   * callback was set.
+   *
+   * Since this callback is called from the middleware, you should aim to make
+   * it fast and not blocking.
+   * If you need to do a lot of work or wait for some other event, you should
+   * spin it off to another thread, otherwise you risk blocking the middleware.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the qos event
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \sa rmw_event_set_callback
+   * \sa rcl_event_set_callback
+   *
+   * \param[in] callback functor to be called when a new event occurs
+   */
   void
-  set_listener_callback(
-    rmw_listener_callback_t callback,
-    const void * user_data) const override;
+  set_on_new_event_callback(std::function<void(size_t)> callback)
+  {
+    auto new_callback =
+      [callback, this](size_t number_of_events) {
+        try {
+          callback(number_of_events);
+        } catch (const std::exception & exception) {
+          RCLCPP_ERROR_STREAM(
+            // TODO(wjwwood): get this class access to the node logger it is associated with
+            rclcpp::get_logger("rclcpp"),
+            "rclcpp::QOSEventHandlerBase@" << this <<
+              " caught " << rmw::impl::cpp::demangle(exception) <<
+              " exception in user-provided callback for the 'on new event' callback: " <<
+              exception.what());
+        } catch (...) {
+          RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger("rclcpp"),
+            "rclcpp::QOSEventHandlerBase@" << this <<
+              " caught unhandled exception in user-provided callback " <<
+              "for the 'on new event' callback");
+        }
+      };
+
+    // Set it temporarily to the new callback, while we replace the old one.
+    // This two-step setting, prevents a gap where the old std::function has
+    // been replaced but the middleware hasn't been told about the new one yet.
+    set_on_new_event_callback(
+      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      static_cast<const void *>(&new_callback));
+
+    // Store the std::function to keep it in scope, also overwrites the existing one.
+    on_new_event_callback_ = new_callback;
+
+    // Set it again, now using the permanent storage.
+    set_on_new_event_callback(
+      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      static_cast<const void *>(&on_new_event_callback_));
+  }
 
 protected:
+  RCLCPP_PUBLIC
+  void
+  set_on_new_event_callback(rcl_event_callback_t callback, const void * user_data);
+
   rcl_event_t event_handle_;
   size_t wait_set_event_index_;
+  std::function<void(size_t)> on_new_event_callback_;
 };
 
 template<typename EventCallbackT, typename ParentHandleT>
@@ -123,9 +189,8 @@ public:
     InitFuncT init_func,
     ParentHandleT parent_handle,
     EventTypeEnum event_type)
-  : event_callback_(callback)
+  : parent_handle_(parent_handle), event_callback_(callback)
   {
-    parent_handle_ = parent_handle;
     event_handle_ = rcl_get_zero_initialized_event();
     rcl_ret_t ret = init_func(&event_handle_, parent_handle.get(), event_type);
     if (ret != RCL_RET_OK) {
