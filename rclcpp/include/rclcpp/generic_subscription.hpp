@@ -39,12 +39,6 @@ namespace rclcpp
  * Since the type is not known at compile time, this is not a template, and the dynamic library
  * containing type support information has to be identified and loaded based on the type name.
  *
- * This works for packages installed from the ROS repositories as well as locally built packages,
- * as long as you ensure that the `AMENT_PREFIX_PATH` environment variable has been populated with
- * the package's install location, usually by sourcing the appropriate install script.
- * That is required because it will look up the package install location for the given type, and
- * load the type support library from there.
- *
  * It does not support intra-process handling.
  */
 class GenericSubscription : public rclcpp::SubscriptionBase
