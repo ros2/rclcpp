@@ -37,23 +37,6 @@ ParameterEventHandler::add_parameter_event_callback(
   return handle;
 }
 
-template<typename CallbackHandleT>
-struct HandleCompare
-  : public std::unary_function<typename CallbackHandleT::WeakPtr, bool>
-{
-  explicit HandleCompare(const CallbackHandleT * const base)
-  : base_(base) {}
-  bool operator()(const typename CallbackHandleT::WeakPtr & handle)
-  {
-    auto shared_handle = handle.lock();
-    if (base_ == shared_handle.get()) {
-      return true;
-    }
-    return false;
-  }
-  const CallbackHandleT * const base_;
-};
-
 void
 ParameterEventHandler::remove_parameter_event_callback(
   ParameterEventCallbackHandle::SharedPtr callback_handle)
@@ -62,7 +45,9 @@ ParameterEventHandler::remove_parameter_event_callback(
   auto it = std::find_if(
     event_callbacks_.begin(),
     event_callbacks_.end(),
-    HandleCompare<ParameterEventCallbackHandle>(callback_handle.get()));
+    [callback_handle](const auto & weak_handle) {
+      return callback_handle.get() == weak_handle.lock().get();
+    });
   if (it != event_callbacks_.end()) {
     event_callbacks_.erase(it);
   } else {
@@ -99,7 +84,9 @@ ParameterEventHandler::remove_parameter_callback(
   auto it = std::find_if(
     container.begin(),
     container.end(),
-    HandleCompare<ParameterCallbackHandle>(handle));
+    [handle](const auto & weak_handle) {
+      return handle == weak_handle.lock().get();
+    });
   if (it != container.end()) {
     container.erase(it);
     if (container.empty()) {
