@@ -29,6 +29,7 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/typesupport_helpers.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -109,9 +110,11 @@ public:
     }
   }
 
+  RCLCPP_PUBLIC
   virtual ~GenericPublisher() = default;
 
   /// Publish a rclcpp::SerializedMessage.
+  RCLCPP_PUBLIC
   void publish(const rclcpp::SerializedMessage & message);
 
 private:

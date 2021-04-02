@@ -30,6 +30,7 @@
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/typesupport_helpers.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -120,24 +121,31 @@ public:
     }
   }
 
+  RCLCPP_PUBLIC
   virtual ~GenericSubscription() = default;
 
   // Same as create_serialized_message() as the subscription is to serialized_messages only
+  RCLCPP_PUBLIC
   std::shared_ptr<void> create_message() override;
 
+  RCLCPP_PUBLIC
   std::shared_ptr<rclcpp::SerializedMessage> create_serialized_message() override;
 
   /// Cast the message to a rclcpp::SerializedMessage and call the callback.
+  RCLCPP_PUBLIC
   void handle_message(
     std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) override;
 
   /// This function is currently not implemented.
+  RCLCPP_PUBLIC
   void handle_loaned_message(
     void * loaned_message, const rclcpp::MessageInfo & message_info) override;
 
   // Same as return_serialized_message() as the subscription is to serialized_messages only
+  RCLCPP_PUBLIC
   void return_message(std::shared_ptr<void> & message) override;
 
+  RCLCPP_PUBLIC
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override;
 
 private:
