@@ -4,13 +4,13 @@ This document is a declaration of software quality for the `rclcpp_lifecycle` pa
 
 The package `rclcpp_lifecycle` claims to be in the **Quality Level 1** category when used with a **Quality Level 1** middleware.
 
-Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories) of the ROS2 developer guide.
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://www.ros.org/reps/rep-2004.html) of the ROS2 developer guide.
 
 ## Version Policy [1]
 
 ### Version Scheme [1.i]
 
-`rclcpp_lifecycle` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#versioning).
+`rclcpp_lifecycle` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#versioning).
 
 ### Version Stability [1.ii]
 
@@ -37,11 +37,11 @@ All installed headers are in the `include` directory of the package, headers in 
 
 ## Change Control Process [2]
 
-`rclcpp_lifecycle` follows the recommended guidelines for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#change-control-process).
+`rclcpp_lifecycle` follows the recommended guidelines for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#change-control-process).
 
 ### Change Requests [2.i]
 
-All changes will occur through a pull request, check [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#change-control-process) for additional information.
+All changes will occur through a pull request, check [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#change-control-process) for additional information.
 
 ### Contributor Origin [2.ii]
 
@@ -49,7 +49,7 @@ This package uses DCO as its confirmation of contributor origin policy. More inf
 
 ### Peer Review Policy [2.iii]
 
-All pull requests will be peer-reviewed, check [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#change-control-process) for additional information.
+All pull requests will be peer-reviewed, check [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#change-control-process) for additional information.
 
 ### Continuous Integration [2.iv]
 
@@ -109,7 +109,7 @@ The tests aim to cover both typical usage and corner cases, but are quantified b
 
 ### Coverage [4.iii]
 
-`rclcpp_lifecycle` follows the recommendations for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#code-coverage), and opts to use line coverage instead of branch coverage.
+`rclcpp_lifecycle` follows the recommendations for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#code-coverage), and opts to use line coverage instead of branch coverage.
 
 This includes:
 
@@ -119,11 +119,11 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_coverage/lastCompletedBuild/cobertura/src_ros2_rclcpp_rclcpp_lifecycle_src/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
+Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_coverage/lastCompletedBuild/cobertura/src_ros2_rclcpp_rclcpp_lifecycle_src/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#note-on-coverage-runs).
 
 ### Performance [4.iv]
 
-`rclcpp_lifecycle` follows the recommendations for performance testing of C/C++ code in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#performance), and opts to do performance analysis on each release rather than each change.
+`rclcpp_lifecycle` follows the recommendations for performance testing of C/C++ code in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#performance), and opts to do performance analysis on each release rather than each change.
 
 The performance tests of `rclcpp_lifecycle` are located in the [test/benchmark directory](https://github.com/ros2/rclcpp/tree/master/rclcpp_lifecycle/test/benchmark).
 
@@ -135,7 +135,7 @@ Changes that introduce regressions in performance must be adequately justified i
 
 ### Linters and Static Analysis [4.v]
 
-`rclcpp_lifecycle` uses and passes all the ROS2 standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
+`rclcpp_lifecycle` uses and passes all the ROS2 standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
 
 Currently nightly test results can be seen here:
 * [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rclcpp_lifecycle/)
