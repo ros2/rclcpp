@@ -173,6 +173,10 @@ endforeach()
 
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+# TODO(wjwwood): address all deprecation warnings and then remove this
+if(WIN32)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC "_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS")
+endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
