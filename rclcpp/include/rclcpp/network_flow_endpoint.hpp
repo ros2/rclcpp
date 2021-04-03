@@ -30,11 +30,10 @@ namespace rclcpp
  * Class describes a network flow endpoint based on the counterpart definition
  * in the RMW layer.
  */
-class NetworkFlowEndpoint
+class RCLCPP_PUBLIC NetworkFlowEndpoint
 {
 public:
   /// Construct from rcl_network_flow_endpoint_t
-  RCLCPP_PUBLIC
   explicit NetworkFlowEndpoint(const rcl_network_flow_endpoint_t & network_flow_endpoint)
   : transport_protocol_(
       rcl_network_flow_endpoint_get_transport_protocol_string(network_flow_endpoint.
@@ -50,27 +49,21 @@ public:
   }
 
   /// Get transport protocol
-  RCLCPP_PUBLIC
   const std::string & transport_protocol() const;
 
   /// Get internet protocol
-  RCLCPP_PUBLIC
   const std::string & internet_protocol() const;
 
   /// Get transport port
-  RCLCPP_PUBLIC
   uint16_t transport_port() const;
 
   /// Get flow label
-  RCLCPP_PUBLIC
   uint32_t flow_label() const;
 
   /// Get DSCP
-  RCLCPP_PUBLIC
   uint8_t dscp() const;
 
   /// Get internet address
-  RCLCPP_PUBLIC
   const std::string & internet_address() const;
 
   /// Compare two NetworkFlowEndpoint instances
