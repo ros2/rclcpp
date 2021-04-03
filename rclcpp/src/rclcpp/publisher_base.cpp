@@ -282,7 +282,7 @@ std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoin
       rcl_get_error_string().str;
     rcl_reset_error();
     if (RCL_RET_OK !=
-      rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array, &allocator))
+      rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array))
     {
       error_msg += std::string(", also error cleaning up network flow array: ") +
         rcl_get_error_string().str;
@@ -299,7 +299,7 @@ std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoin
         network_flow_endpoint[i]));
   }
 
-  ret = rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array, &allocator);
+  ret = rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "error cleaning up network flow array");
   }
