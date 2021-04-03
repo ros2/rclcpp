@@ -295,8 +295,7 @@ std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoin
   for (size_t i = 0; i < network_flow_endpoint_array.size; ++i) {
     network_flow_endpoint_vector.push_back(
       rclcpp::NetworkFlowEndpoint(
-        network_flow_endpoint_array.
-        network_flow_endpoint[i]));
+        network_flow_endpoint_array.network_flow_endpoint[i]));
   }
 
   ret = rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array);
