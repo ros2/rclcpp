@@ -36,10 +36,12 @@
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/create_client.hpp"
+#include "rclcpp/create_generic_publisher.hpp"
+#include "rclcpp/create_generic_subscription.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
-#include "rclcpp/create_timer.hpp"
 #include "rclcpp/create_subscription.hpp"
+#include "rclcpp/create_timer.hpp"
 #include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
@@ -151,6 +153,43 @@ Node::create_service(
     qos_profile,
     group);
 }
+
+template<typename AllocatorT>
+std::shared_ptr<rclcpp::GenericPublisher>
+Node::create_generic_publisher(
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::create_generic_publisher(
+    node_topics_,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    topic_type,
+    qos,
+    options
+  );
+}
+
+template<typename AllocatorT>
+std::shared_ptr<rclcpp::GenericSubscription>
+Node::create_generic_subscription(
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::create_generic_subscription(
+    node_topics_,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    topic_type,
+    qos,
+    std::move(callback),
+    options
+  );
+}
+
 
 template<typename ParameterT>
 auto

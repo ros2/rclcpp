@@ -117,6 +117,15 @@
  * - Allocator related items:
  *   - rclcpp/allocator/allocator_common.hpp
  *   - rclcpp/allocator/allocator_deleter.hpp
+ * - Generic publisher
+ *   - rclcpp::Node::create_generic_publisher()
+ *   - rclcpp::GenericPublisher
+ *   - rclcpp::GenericPublisher::publish()
+ *   - rclcpp/generic_publisher.hpp
+ * - Generic subscription
+ *   - rclcpp::Node::create_generic_subscription()
+ *   - rclcpp::GenericSubscription
+ *   - rclcpp/generic_subscription.hpp
  * - Memory management tools:
  *   - rclcpp/memory_strategies.hpp
  *   - rclcpp/memory_strategy.hpp
@@ -134,6 +143,7 @@
  *   - rclcpp/scope_exit.hpp
  *   - rclcpp/time.hpp
  *   - rclcpp/utilities.hpp
+ *   - rclcpp/typesupport_helpers.hpp
  *   - rclcpp/visibility_control.hpp
  */
 
