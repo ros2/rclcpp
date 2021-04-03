@@ -125,7 +125,7 @@ protected:
 
   std::shared_ptr<rclcpp::Node> create_node_with_subscription(const std::string & name)
   {
-    auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+    auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
     const rclcpp::QoS qos(10);
     auto node_with_subscription = create_node_with_disabled_callback_groups(name);
 
@@ -778,7 +778,7 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_subscription_out_of_scope) {
 
     subscription_options.callback_group = callback_group;
 
-    auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+    auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
     const rclcpp::QoS qos(10);
 
     auto subscription = node->create_subscription<

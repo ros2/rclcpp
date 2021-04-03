@@ -93,7 +93,7 @@ create_subscription_factory(
   auto allocator = options.get_allocator();
 
   using rclcpp::AnySubscriptionCallback;
-  AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_subscription_callback(allocator);
+  AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_subscription_callback(*allocator);
   any_subscription_callback.set(std::forward<CallbackT>(callback));
 
   SubscriptionFactory factory {

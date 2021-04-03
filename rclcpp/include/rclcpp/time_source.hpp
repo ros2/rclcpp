@@ -156,7 +156,7 @@ private:
   std::promise<void> cancel_clock_executor_promise_;
 
   // The clock callback itself
-  void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);
+  void clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg);
 
   // Create the subscription for the clock topic
   void create_clock_sub();
@@ -170,7 +170,7 @@ private:
   std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
 
   // Callback for parameter updates
-  void on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
+  void on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event);
 
   // An enum to hold the parameter state
   enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
@@ -191,7 +191,7 @@ private:
   // This is needed when new clocks are added.
   bool ros_time_active_{false};
   // Last set message to be passed to newly registered clocks
-  rosgraph_msgs::msg::Clock::SharedPtr last_msg_set_;
+  std::shared_ptr<const rosgraph_msgs::msg::Clock> last_msg_set_;
 
   // A lock to protect iterating the associated_clocks_ field.
   std::mutex clock_list_lock_;

@@ -21,9 +21,10 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
-# Default to C++14
+# TODO(wjwwood): remove this when gtest can build on its own, when using target_compile_features()
+# Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # About -Wno-sign-conversion: With Clang, -Wconversion implies -Wsign-conversion. There are a number of
@@ -174,8 +175,12 @@ foreach(interface_file ${interface_files})
     include/rclcpp/node_interfaces/get_${interface_name}.hpp)
 endforeach()
 
-add_library(${PROJECT_NAME}
-  ${${PROJECT_NAME}_SRCS})
+add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+# TODO(wjwwood): address all deprecation warnings and then remove this
+if(WIN32)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC "_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS")
+endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"

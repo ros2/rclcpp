@@ -58,7 +58,7 @@ TEST(TestSerializedMessageAllocator, borrow_from_subscription) {
   std::shared_ptr<rclcpp::SubscriptionBase> sub =
     node->create_subscription<test_msgs::msg::Empty>(
     "~/dummy_topic", 10,
-    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;});
+    [](std::shared_ptr<const test_msgs::msg::Empty> test_msg) {(void) test_msg;});
 
   auto msg0 = sub->create_serialized_message();
   EXPECT_EQ(0u, msg0->capacity());

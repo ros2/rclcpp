@@ -37,23 +37,6 @@ ParameterEventHandler::add_parameter_event_callback(
   return handle;
 }
 
-template<typename CallbackHandleT>
-struct HandleCompare
-  : public std::unary_function<typename CallbackHandleT::WeakPtr, bool>
-{
-  explicit HandleCompare(const CallbackHandleT * const base)
-  : base_(base) {}
-  bool operator()(const typename CallbackHandleT::WeakPtr & handle)
-  {
-    auto shared_handle = handle.lock();
-    if (base_ == shared_handle.get()) {
-      return true;
-    }
-    return false;
-  }
-  const CallbackHandleT * const base_;
-};
-
 void
 ParameterEventHandler::remove_parameter_event_callback(
   ParameterEventCallbackHandle::SharedPtr callback_handle)
@@ -62,7 +45,9 @@ ParameterEventHandler::remove_parameter_event_callback(
   auto it = std::find_if(
     event_callbacks_.begin(),
     event_callbacks_.end(),
-    HandleCompare<ParameterEventCallbackHandle>(callback_handle.get()));
+    [callback_handle](const auto & weak_handle) {
+      return callback_handle.get() == weak_handle.lock().get();
+    });
   if (it != event_callbacks_.end()) {
     event_callbacks_.erase(it);
   } else {
@@ -99,7 +84,9 @@ ParameterEventHandler::remove_parameter_callback(
   auto it = std::find_if(
     container.begin(),
     container.end(),
-    HandleCompare<ParameterCallbackHandle>(handle));
+    [handle](const auto & weak_handle) {
+      return handle == weak_handle.lock().get();
+    });
   if (it != container.end()) {
     container.erase(it);
     if (container.empty()) {
@@ -171,14 +158,13 @@ ParameterEventHandler::get_parameters_from_event(
 }
 
 void
-ParameterEventHandler::event_callback(
-  const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+ParameterEventHandler::event_callback(const rcl_interfaces::msg::ParameterEvent & event)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   for (auto it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
-    if (get_parameter_from_event(*event, p, it->first.first, it->first.second)) {
+    if (get_parameter_from_event(event, p, it->first.first, it->first.second)) {
       for (auto cb = it->second.begin(); cb != it->second.end(); ++cb) {
         auto shared_handle = cb->lock();
         if (nullptr != shared_handle) {

@@ -98,7 +98,7 @@ TEST_F(TestMemoryStrategy, get_subscription_by_handle) {
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-      auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+      auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
       const rclcpp::QoS qos(10);
 
       {
@@ -344,7 +344,7 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
 
       callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-      auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+      auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
       const rclcpp::QoS qos(10);
 
       rclcpp::SubscriptionOptions subscription_options;

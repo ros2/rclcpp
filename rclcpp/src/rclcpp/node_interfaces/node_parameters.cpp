@@ -954,22 +954,6 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   return result;
 }
 
-struct HandleCompare
-  : public std::unary_function<OnSetParametersCallbackHandle::WeakPtr, bool>
-{
-  explicit HandleCompare(const OnSetParametersCallbackHandle * const base)
-  : base_(base) {}
-  bool operator()(const OnSetParametersCallbackHandle::WeakPtr & handle)
-  {
-    auto shared_handle = handle.lock();
-    if (base_ == shared_handle.get()) {
-      return true;
-    }
-    return false;
-  }
-  const OnSetParametersCallbackHandle * const base_;
-};
-
 void
 NodeParameters::remove_on_set_parameters_callback(
   const OnSetParametersCallbackHandle * const handle)
@@ -980,7 +964,9 @@ NodeParameters::remove_on_set_parameters_callback(
   auto it = std::find_if(
     on_parameters_set_callback_container_.begin(),
     on_parameters_set_callback_container_.end(),
-    HandleCompare(handle));
+    [handle](const auto & weak_handle) {
+      return handle == weak_handle.lock().get();
+    });
   if (it != on_parameters_set_callback_container_.end()) {
     on_parameters_set_callback_container_.erase(it);
   } else {

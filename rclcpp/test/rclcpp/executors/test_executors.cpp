@@ -62,7 +62,7 @@ public:
 
     const std::string topic_name = std::string("topic_") + test_name.str();
     publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, rclcpp::QoS(10));
-    auto callback = [this](test_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
+    auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
     subscription =
       node->create_subscription<test_msgs::msg::Empty>(
       topic_name, rclcpp::QoS(10), std::move(callback));

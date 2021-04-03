@@ -162,6 +162,32 @@ struct same_arguments : std::is_same<
 >
 {};
 
+namespace detail
+{
+
+template<typename ReturnTypeT, typename ... Args>
+struct as_std_function_helper;
+
+template<typename ReturnTypeT, typename ... Args>
+struct as_std_function_helper<ReturnTypeT, std::tuple<Args ...>>
+{
+  using type = std::function<ReturnTypeT(Args ...)>;
+};
+
+}  // namespace detail
+
+template<
+  typename FunctorT,
+  typename FunctionTraits = function_traits<FunctorT>
+>
+struct as_std_function
+{
+  using type = typename detail::as_std_function_helper<
+    typename FunctionTraits::return_type,
+    typename FunctionTraits::arguments
+    >::type;
+};
+
 }  // namespace function_traits
 
 }  // namespace rclcpp
