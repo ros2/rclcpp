@@ -40,6 +40,8 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "tracetools/tracetools.h"
+
 namespace rclcpp
 {
 
@@ -279,6 +281,10 @@ protected:
   void
   do_inter_process_publish(const MessageT & msg)
   {
+    TRACEPOINT(
+      rclcpp_publish,
+      static_cast<const void *>(publisher_handle_.get()),
+      static_cast<const void *>(&msg));
     auto status = rcl_publish(publisher_handle_.get(), &msg, nullptr);
 
     if (RCL_RET_PUBLISHER_INVALID == status) {
