@@ -26,14 +26,30 @@
 namespace rclcpp
 {
 
+/// Forward declaration
+class NetworkFlowEndpoint;
+
+/// Check if two NetworkFlowEndpoint instances are equal
+RCLCPP_PUBLIC
+bool operator==(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
+
+/// Check if two NetworkFlowEndpoint instances are not equal
+RCLCPP_PUBLIC
+bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
+
+/// Streaming helper for NetworkFlowEndpoint
+RCLCPP_PUBLIC
+std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network_flow_endpoint);
+
 /**
  * Class describes a network flow endpoint based on the counterpart definition
  * in the RMW layer.
  */
-class RCLCPP_PUBLIC NetworkFlowEndpoint
+class NetworkFlowEndpoint
 {
 public:
   /// Construct from rcl_network_flow_endpoint_t
+  RCLCPP_PUBLIC
   explicit NetworkFlowEndpoint(const rcl_network_flow_endpoint_t & network_flow_endpoint)
   : transport_protocol_(
       rcl_network_flow_endpoint_get_transport_protocol_string(network_flow_endpoint.
@@ -49,29 +65,39 @@ public:
   }
 
   /// Get transport protocol
+  RCLCPP_PUBLIC
   const std::string & transport_protocol() const;
 
   /// Get internet protocol
+  RCLCPP_PUBLIC
   const std::string & internet_protocol() const;
 
   /// Get transport port
+  RCLCPP_PUBLIC
   uint16_t transport_port() const;
 
   /// Get flow label
+  RCLCPP_PUBLIC
   uint32_t flow_label() const;
 
   /// Get DSCP
+  RCLCPP_PUBLIC
   uint8_t dscp() const;
 
   /// Get internet address
+  RCLCPP_PUBLIC
   const std::string & internet_address() const;
 
   /// Compare two NetworkFlowEndpoint instances
-  friend bool operator==(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
-  friend bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
+  friend bool rclcpp::operator==(
+    const NetworkFlowEndpoint & left,
+    const NetworkFlowEndpoint & right);
+  friend bool rclcpp::operator!=(
+    const NetworkFlowEndpoint & left,
+    const NetworkFlowEndpoint & right);
 
   /// Streaming helper
-  friend std::ostream & operator<<(
+  friend std::ostream & rclcpp::operator<<(
     std::ostream & os,
     const NetworkFlowEndpoint & network_flow_endpoint);
 
@@ -83,18 +109,6 @@ private:
   uint8_t dscp_;
   std::string internet_address_;
 };
-
-/// Check if two NetworkFlowEndpoint instances are equal
-RCLCPP_PUBLIC
-bool operator==(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
-
-/// Check if two NetworkFlowEndpoint instances are not equal
-RCLCPP_PUBLIC
-bool operator!=(const NetworkFlowEndpoint & left, const NetworkFlowEndpoint & right);
-
-/// Streaming helper
-RCLCPP_PUBLIC
-std::ostream & operator<<(std::ostream & os, const NetworkFlowEndpoint & network_flow);
 
 }  // namespace rclcpp
 
