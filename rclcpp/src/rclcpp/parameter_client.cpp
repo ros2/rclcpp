@@ -42,7 +42,7 @@ AsyncParametersClient::AsyncParametersClient(
   if (remote_node_name != "") {
     remote_node_name_ = remote_node_name;
   } else {
-    remote_node_name_ = node_base_interface->get_name();
+    remote_node_name_ = node_base_interface->get_fully_qualified_name();
   }
 
   rcl_client_options_t options = rcl_client_get_default_options();
@@ -273,6 +273,55 @@ AsyncParametersClient::set_parameters_atomically(
   return future_result;
 }
 
+std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+AsyncParametersClient::delete_parameters(
+  const std::vector<std::string> & parameters_names)
+{
+  std::vector<rclcpp::Parameter> parameters;
+  for (const std::string & name : parameters_names) {
+    parameters.push_back(rclcpp::Parameter(name));
+  }
+  auto future_result = set_parameters(parameters);
+
+  return future_result;
+}
+
+std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+AsyncParametersClient::load_parameters(
+  const std::string & yaml_filename)
+{
+  rclcpp::ParameterMap parameter_map = rclcpp::parameter_map_from_yaml_file(yaml_filename);
+  return this->load_parameters(parameter_map);
+}
+
+std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+AsyncParametersClient::load_parameters(
+  const rclcpp::ParameterMap & parameter_map)
+{
+  std::vector<rclcpp::Parameter> parameters;
+  std::string remote_name = remote_node_name_.substr(remote_node_name_.substr(1).find("/") + 2);
+  for (const auto & params : parameter_map) {
+    std::string node_full_name = params.first;
+    std::string node_name = node_full_name.substr(node_full_name.find("/*/") + 3);
+    if (node_full_name == remote_node_name_ ||
+      node_full_name == "/**" ||
+      (node_name == remote_name))
+    {
+      for (const auto & param : params.second) {
+        parameters.push_back(param);
+      }
+    }
+  }
+
+  if (parameters.size() == 0) {
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
+  }
+  auto future_result = set_parameters(parameters);
+
+  return future_result;
+}
+
+
 std::shared_future<rcl_interfaces::msg::ListParametersResult>
 AsyncParametersClient::list_parameters(
   const std::vector<std::string> & prefixes,
@@ -408,6 +457,42 @@ SyncParametersClient::set_parameters(
   std::chrono::nanoseconds timeout)
 {
   auto f = async_parameters_client_->set_parameters(parameters);
+
+  using rclcpp::executors::spin_node_until_future_complete;
+  if (
+    spin_node_until_future_complete(
+      *executor_, node_base_interface_, f,
+      timeout) == rclcpp::FutureReturnCode::SUCCESS)
+  {
+    return f.get();
+  }
+  return std::vector<rcl_interfaces::msg::SetParametersResult>();
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+SyncParametersClient::delete_parameters(
+  const std::vector<std::string> & parameters_names,
+  std::chrono::nanoseconds timeout)
+{
+  auto f = async_parameters_client_->delete_parameters(parameters_names);
+
+  using rclcpp::executors::spin_node_until_future_complete;
+  if (
+    spin_node_until_future_complete(
+      *executor_, node_base_interface_, f,
+      timeout) == rclcpp::FutureReturnCode::SUCCESS)
+  {
+    return f.get();
+  }
+  return std::vector<rcl_interfaces::msg::SetParametersResult>();
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+SyncParametersClient::load_parameters(
+  const std::string & yaml_filename,
+  std::chrono::nanoseconds timeout)
+{
+  auto f = async_parameters_client_->load_parameters(yaml_filename);
 
   using rclcpp::executors::spin_node_until_future_complete;
   if (
