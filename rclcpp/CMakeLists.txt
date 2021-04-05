@@ -70,6 +70,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
   src/rclcpp/message_info.cpp
+  src/rclcpp/network_flow_endpoint.cpp
   src/rclcpp/node.cpp
   src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/node_interfaces/node_clock.cpp

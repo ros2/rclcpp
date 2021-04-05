@@ -506,3 +506,33 @@ TEST_F(TestPublisher, run_event_handlers) {
     handler->execute(data);
   }
 }
+
+TEST_F(TestPublisher, get_network_flow_endpoints_errors) {
+  initialize();
+  const rclcpp::QoS publisher_qos(1);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", publisher_qos);
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_publisher_get_network_flow_endpoints, RCL_RET_ERROR);
+    auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      publisher->get_network_flow_endpoints(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      publisher->get_network_flow_endpoints(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_publisher_get_network_flow_endpoints, RCL_RET_OK);
+    auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_OK);
+    EXPECT_NO_THROW(publisher->get_network_flow_endpoints());
+  }
+}

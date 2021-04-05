@@ -31,6 +31,7 @@
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_info.hpp"
+#include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/serialized_message.hpp"
@@ -265,6 +266,15 @@ public:
   RCLCPP_PUBLIC
   bool
   exchange_in_use_by_wait_set_state(void * pointer_to_subscription_part, bool in_use_state);
+
+  /// Get network flow endpoints
+  /**
+   * Describes network flow endpoints that this subscription is receiving messages on
+   * \return vector of NetworkFlowEndpoint
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::NetworkFlowEndpoint>
+  get_network_flow_endpoints() const;
 
 protected:
   template<typename EventCallbackT>
