@@ -103,8 +103,8 @@ struct RCLCPP_PUBLIC KeepLast : public rclcpp::QoSInitialization
  * and other entities, and includes things like how data is sent or resent,
  * how data is buffered on the publishing and subscribing side, and other things.
  * See:
- *   <a href="https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings">
- *     https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings
+ *   <a href="https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html">
+ *     https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html
  *   </a>
  */
 class RCLCPP_PUBLIC QoS
