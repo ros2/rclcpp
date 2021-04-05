@@ -533,6 +533,31 @@ NodeGraph::get_subscriptions_info_by_topic(
     rcl_get_subscriptions_info_by_topic);
 }
 
+bool
+NodeGraph::wait_for_publishers(
+  const std::string & topic_name,
+  size_t count,
+  const std::chrono::nanoseconds & timeout) const
+{
+  // TODO(jacobperron): Guard against concurrent use of graph guard condition
+  // (e.g. with GraphListener)
+  // rcl_wait_for_publishers() also uses the graph guard condition
+  auto rcl_node_handle = node_base_->get_rcl_node_handle();
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  bool success = false;
+  rcl_ret_t ret = rcl_wait_for_publishers(
+    rcl_node_handle,
+    &allocator,
+    topic_name.c_str(),
+    count,
+    timeout.count(),
+    &success);
+  if (ret != RCL_RET_OK && ret != RCL_RET_TIMEOUT) {
+    throw_from_rcl_error(ret, "error while waiting for publishers");
+  }
+  return success;
+}
+
 std::string &
 rclcpp::TopicEndpointInfo::node_name()
 {
