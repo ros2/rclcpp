@@ -120,6 +120,8 @@ public:
 
   std::independent_bits_engine<
     std::default_random_engine, 8, unsigned int> random_bytes_generator;
+
+  std::mutex goal_uuids_mutex;
 };
 
 ClientBase::ClientBase(
@@ -302,9 +304,26 @@ ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback ca
 {
   std::unique_lock<std::mutex> guard(pimpl_->goal_requests_mutex);
   int64_t sequence_number;
+  // goal_id, which type is unique_identifier_msgs::msg::UUID,
+  // is the first member in ActionT::Impl::SendGoalService::Request
+  auto goal_id = std::static_pointer_cast<unique_identifier_msgs::msg::UUID>(request);
+  if (!add_goal_uuid(goal_id->uuid)) {
+    RCLCPP_DEBUG(
+      get_logger(),
+      "failed to add goal uuid for setting content filtered topic for action subscriptions: %s",
+      rcl_get_error_string().str);
+    rcl_reset_error();
+  }
   rcl_ret_t ret = rcl_action_send_goal_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
   if (RCL_RET_OK != ret) {
+    if (!remove_goal_uuid(goal_id->uuid)) {
+      RCLCPP_DEBUG(
+        get_logger(),
+        "failed to remove goal uuid: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send goal request");
   }
   assert(pimpl_->pending_goal_responses.count(sequence_number) == 0);
@@ -381,6 +400,33 @@ ClientBase::generate_goal_id()
     goal_id.begin(), goal_id.end(),
     std::ref(pimpl_->random_bytes_generator));
   return goal_id;
+}
+
+bool
+ClientBase::add_goal_uuid(const GoalUUID & goal_uuid)
+{
+  std::lock_guard<std::mutex> guard(pimpl_->goal_uuids_mutex);
+
+  rcl_ret_t ret = rcl_action_add_goal_uuid(
+    pimpl_->client_handle.get(),
+    static_cast<const uint8_t *>(goal_uuid.data()));
+  if (RCL_RET_OK != ret) {
+    return false;
+  }
+  return true;
+}
+
+bool
+ClientBase::remove_goal_uuid(const GoalUUID & goal_uuid)
+{
+  std::lock_guard<std::mutex> guard(pimpl_->goal_uuids_mutex);
+  rcl_ret_t ret = rcl_action_remove_goal_uuid(
+    pimpl_->client_handle.get(),
+    static_cast<const uint8_t *>(goal_uuid.data()));
+  if (RCL_RET_OK != ret) {
+    return false;
+  }
+  return true;
 }
 
 std::shared_ptr<void>
