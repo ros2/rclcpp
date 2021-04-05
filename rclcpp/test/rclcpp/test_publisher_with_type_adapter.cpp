@@ -34,7 +34,19 @@
 #include "rclcpp/msg/string.hpp"
 
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+
 using namespace std::chrono_literals;
+
+static const int max_loops = 200;
+static const std::chrono::milliseconds sleep_per_loop(10);
+
 
 class TestPublisher : public ::testing::Test
 {
@@ -58,6 +70,20 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node;
+};
+
+class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
+{
+public:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };
 
 namespace rclcpp
@@ -87,6 +113,7 @@ struct TypeAdapter<std::string, rclcpp::msg::String>
   }
 };
 
+// Throws in conversion
 template<>
 struct TypeAdapter<int, rclcpp::msg::String>
 {
@@ -120,23 +147,140 @@ struct TypeAdapter<int, rclcpp::msg::String>
  * Testing publisher creation signatures with a type adapter.
  */
 TEST_F(TestPublisher, various_creation_signatures) {
-  initialize();
-  {
-    using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
-    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
-    (void)publisher;
+  for(auto is_intra_process : {true, false}) {
+    rclcpp::NodeOptions options;
+    options.use_intra_process_comms(is_intra_process);
+    initialize(options);
+    {
+      using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+      auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
+      (void)publisher;
+    }
+    /* TODO(audrow) Enable this test once the adapt_type<>::as<> syntax is supported
+    {
+      using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
+      auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
+      (void)publisher;
+    }
+    */
   }
-  /* TODO(audrow) Enable this test once the adapt_type<>::as<> syntax is supported
-  {
-    using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
-    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
-    (void)publisher;
-  }
-  */
 }
 
 /*
- * Testing that publisher sends type adapted types and ROS message types.
+ * Testing that conversion errors are passed up.
+ */
+TEST_F(TestPublisher, conversion_exception_is_passed_up) {
+  using BadStringTypeAdapter = rclcpp::TypeAdapter<int, rclcpp::msg::String>;
+  for(auto is_intra_process : {true, false}) {
+    rclcpp::NodeOptions options;
+    options.use_intra_process_comms(is_intra_process);
+    initialize(options);
+    auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
+    EXPECT_THROW(pub->publish(1), std::runtime_error);
+  }
+}
+
+/*
+ * Testing that publisher sends type adapted types and ROS message types with intra proccess communications.
+ */
+TEST_F(CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  check_type_adapted_message_is_sent_and_received_intra_process) {
+
+  using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+  const std::string message_data = "Message Data";
+  const std::string topic_name = "topic_name";
+  bool is_received;
+
+  auto callback =
+    [message_data, &is_received](
+    const rclcpp::msg::String::SharedPtr msg,
+    const rclcpp::MessageInfo & message_info
+    ) -> void
+    {
+      is_received = true;
+      ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+      ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+    };
+
+  auto node = rclcpp::Node::make_shared(
+    "test_intra_process",
+    rclcpp::NodeOptions().use_intra_process_comms(true));
+  auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 10);
+  auto sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, callback);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  auto wait_for_message_to_be_received = [&is_received, &node, &executor]() {
+    int i = 0;
+    executor.spin_node_once(node, std::chrono::milliseconds(0));
+    while (!is_received && i < max_loops) {
+      printf("spin_node_once() - callback (1) expected - try %d/%d\n", ++i, max_loops);
+      std::this_thread::sleep_for(sleep_per_loop);
+      executor.spin_node_once(node, std::chrono::milliseconds(0));
+    }
+  };
+  {
+    // nothing should be pending here
+    printf("spin_node_once(nonblocking) - no callback expected\n");
+    executor.spin_node_once(node, std::chrono::milliseconds(0));
+    ASSERT_FALSE(is_received);
+    printf("spin_node_some() - no callback expected\n");
+    executor.spin_node_some(node);
+    ASSERT_FALSE(is_received);
+
+    // wait a moment for everything to initialize
+    // TODO(gerkey): fix nondeterministic startup behavior
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    { // std::string passed by reference
+      is_received = false;
+      pub->publish(message_data);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // unique pointer to std::string
+      is_received = false;
+      auto pu_message = std::make_unique<std::string>(message_data);
+      pub->publish(std::move(pu_message));
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // ROS message passed by reference
+      is_received = false;
+      rclcpp::msg::String msg;
+      msg.data = message_data;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // unique ptr to ROS message
+      is_received = false;
+      auto pu_msg = std::make_unique<rclcpp::msg::String>();
+      pu_msg->data = message_data;
+      pub->publish(std::move(pu_msg));
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    /* TODO(audrow) Enable once loaned messages are supported for intra process communication
+    { // loaned ROS message
+      // is_received = false;
+      // std::allocator<void> allocator;
+      // rclcpp::LoanedMessage<rclcpp::msg::String> loaned_msg(*pub, allocator);
+      // loaned_msg.get().data = message_data;
+      // pub->publish(std::move(loaned_msg));
+      // ASSERT_FALSE(is_received);
+      // wait_for_message_to_be_received();
+      // ASSERT_TRUE(is_received);
+    }
+    */
+  }
+}
+
+/*
+ * Testing that publisher sends type adapted types and ROS message types with inter proccess communications.
  */
 TEST_F(TestPublisher, check_type_adapted_message_is_sent_and_received) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
