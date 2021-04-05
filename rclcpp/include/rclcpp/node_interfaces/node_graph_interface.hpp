@@ -304,7 +304,9 @@ public:
   /**
    * This function will block until the provided number of publishers are available or a timeout occurs.
    *
-   * This function should not be called concurrently with an executor spinning on the node.
+   * TODO(jacobperron): Detect this scenario and throw an exception
+   * This function should not be called concurrently with a running GraphListener.
+   * E.g. Do not call this after calling `rclcpp::GraphListener::get_graph_event()`.
    * If this happens an exception is thrown.
    *
    * \param[in] topic_name the topic to check for publishers. It will not be automatically remapped.
