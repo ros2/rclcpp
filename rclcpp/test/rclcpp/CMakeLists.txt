@@ -362,8 +362,7 @@ if(WIN32)
   set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
 endif()
 
-# Creating and destroying nodes is slow with Connext, so this needs larger timeout.
-ament_add_gtest(test_publisher_with_type_adapter test_publisher_with_type_adapter.cpp 
+ament_add_gtest(test_publisher_with_type_adapter test_publisher_with_type_adapter.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
 )
 if(TARGET test_publisher_with_type_adapter)
@@ -378,6 +377,23 @@ if(TARGET test_publisher_with_type_adapter)
   rosidl_target_interfaces(test_publisher_with_type_adapter ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
   target_link_libraries(test_publisher_with_type_adapter ${PROJECT_NAME} mimick)
 endif()
+
+ament_add_gtest(test_subscription_with_type_adapter test_subscription_with_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_subscription_with_type_adapter)
+  ament_target_dependencies(test_subscription_with_type_adapter
+    "rcutils"
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  rosidl_target_interfaces(test_subscription_with_type_adapter ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
+  target_link_libraries(test_subscription_with_type_adapter ${PROJECT_NAME} mimick)
+endif()
+
 ament_add_gtest(test_publisher_subscription_count_api test_publisher_subscription_count_api.cpp)
 if(TARGET test_publisher_subscription_count_api)
   ament_target_dependencies(test_publisher_subscription_count_api

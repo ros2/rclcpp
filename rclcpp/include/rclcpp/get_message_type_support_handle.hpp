@@ -56,7 +56,7 @@ get_message_type_support_handle()
 {
   auto handle = rosidl_typesupport_cpp::get_message_type_support_handle<
     typename TypeAdapter<AdaptedType>::ros_message_type
-  >();
+    >();
   if (!handle) {
     throw std::runtime_error("Type support handle unexpectedly nullptr");
   }
@@ -81,7 +81,8 @@ typename std::enable_if_t<
 get_message_type_support_handle()
 {
   throw std::runtime_error(
-        "this specialization of rclcpp::get_message_type_support_handle() should never be called");
+          "this specialization of rclcpp::get_message_type_support_handle() "
+          "should never be called");
 }
 
 }  // namespace rclcpp

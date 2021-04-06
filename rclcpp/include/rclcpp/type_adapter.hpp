@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__TYPE_ADAPTOR_HPP_
-#define RCLCPP__TYPE_ADAPTOR_HPP_
+#ifndef RCLCPP__TYPE_ADAPTER_HPP_
+#define RCLCPP__TYPE_ADAPTER_HPP_
 
 #include <type_traits>
 
@@ -109,12 +109,12 @@ template<typename T>
 struct is_type_adapter : std::false_type {};
 
 /// Helper template to determine if a type is a TypeAdapter, true specialization.
-template<typename... Ts>
-struct is_type_adapter<TypeAdapter<Ts...>> : std::true_type {};
+template<typename ... Ts>
+struct is_type_adapter<TypeAdapter<Ts...>>: std::true_type {};
 
 /// Identity specialization for TypeAdapter.
 template<typename T>
-struct TypeAdapter<T, void, std::enable_if_t<is_type_adapter<T>::value>> : T {};
+struct TypeAdapter<T, void, std::enable_if_t<is_type_adapter<T>::value>>: T {};
 
 /// Template metafunction that can make the type being adapted explicit.
 template<typename CustomType>
@@ -162,7 +162,7 @@ struct ImplicitTypeAdapter
  */
 template<typename T>
 struct TypeAdapter<T, void, std::enable_if_t<ImplicitTypeAdapter<T>::is_specialized::value>>
-: ImplicitTypeAdapter<T>
+  : ImplicitTypeAdapter<T>
 {};
 
 /// Assigns the custom type implicitly to the given custom type/ros message type pair.
@@ -172,7 +172,7 @@ struct TypeAdapter<T, void, std::enable_if_t<ImplicitTypeAdapter<T>::is_speciali
  */
 #define RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(CustomType, ROSMessageType) \
   template<> \
-  struct ImplicitTypeAdapter<CustomType> : public TypeAdapter<CustomType, ROSMessageType> \
+  struct ImplicitTypeAdapter<CustomType>: public TypeAdapter<CustomType, ROSMessageType> \
   { \
     static_assert( \
       is_specialized::value, \
@@ -181,4 +181,4 @@ struct TypeAdapter<T, void, std::enable_if_t<ImplicitTypeAdapter<T>::is_speciali
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__TYPE_ADAPTOR_HPP_
+#endif  // RCLCPP__TYPE_ADAPTER_HPP_

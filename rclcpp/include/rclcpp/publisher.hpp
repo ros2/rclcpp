@@ -93,20 +93,20 @@ public:
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
   using MessageAllocatorTraits
-    [[deprecated("use PublishedTypeAllocatorTraits")]] =
-      PublishedTypeAllocatorTraits;
+  [[deprecated("use PublishedTypeAllocatorTraits")]] =
+    PublishedTypeAllocatorTraits;
   using MessageAllocator
-    [[deprecated("use PublishedTypeAllocator")]] =
-      PublishedTypeAllocator;
+  [[deprecated("use PublishedTypeAllocator")]] =
+    PublishedTypeAllocator;
   using MessageDeleter
-    [[deprecated("use PublishedTypeDeleter")]] =
-      PublishedTypeDeleter;
+  [[deprecated("use PublishedTypeDeleter")]] =
+    PublishedTypeDeleter;
   using MessageUniquePtr
-    [[deprecated("use std::unique_ptr<PublishedType, PublishedTypeDeleter>")]] =
-      std::unique_ptr<PublishedType, PublishedTypeDeleter>;
+  [[deprecated("use std::unique_ptr<PublishedType, PublishedTypeDeleter>")]] =
+    std::unique_ptr<PublishedType, PublishedTypeDeleter>;
   using MessageSharedPtr
-    [[deprecated("use std::shared_ptr<const PublishedType>")]] =
-      std::shared_ptr<const PublishedType>;
+  [[deprecated("use std::shared_ptr<const PublishedType>")]] =
+    std::shared_ptr<const PublishedType>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -389,7 +389,7 @@ public:
    * \param loaned_msg The LoanedMessage instance to be published.
    */
   void
-  publish(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg)
+  publish(rclcpp::LoanedMessage<ROSMessageType, AllocatorT> && loaned_msg)
   {
     if (!loaned_msg.is_valid()) {
       throw std::runtime_error("loaned message is not valid");
@@ -524,7 +524,8 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    return ipm->template do_intra_process_publish_and_return_shared<ROSMessageType, ROSMessageTypeAllocator>(
+    return ipm->template do_intra_process_publish_and_return_shared<ROSMessageType,
+             ROSMessageTypeAllocator>(
       intra_process_publisher_id_,
       std::move(msg),
       ros_message_type_allocator_);

@@ -43,6 +43,15 @@ void GenericSubscription::handle_message(
   callback_(typed_message);
 }
 
+void
+GenericSubscription::handle_serialized_message(
+  const std::shared_ptr<rclcpp::SerializedMessage> &,
+  const rclcpp::MessageInfo &)
+{
+  throw rclcpp::exceptions::UnimplementedError(
+          "handle_serialized_message is not implemented for GenericSubscription");
+}
+
 void GenericSubscription::handle_loaned_message(
   void * message, const rclcpp::MessageInfo & message_info)
 {

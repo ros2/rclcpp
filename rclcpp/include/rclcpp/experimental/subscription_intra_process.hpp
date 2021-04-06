@@ -70,10 +70,6 @@ public:
   : SubscriptionIntraProcessBase(topic_name, qos_profile),
     any_callback_(callback)
   {
-    if (!std::is_same<MessageT, CallbackMessageT>::value) {
-      throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
-    }
-
     // Create the intra-process buffer.
     buffer_ = rclcpp::experimental::create_intra_process_buffer<MessageT, Alloc, Deleter>(
       buffer_type,
@@ -141,7 +137,7 @@ public:
 
   void execute(std::shared_ptr<void> & data)
   {
-    execute_impl<CallbackMessageT>(data);
+    execute_impl<MessageT>(data);
   }
 
   void

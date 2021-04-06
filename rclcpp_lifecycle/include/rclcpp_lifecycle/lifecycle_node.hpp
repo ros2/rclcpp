@@ -230,13 +230,8 @@ public:
     typename MessageT,
     typename CallbackT,
     typename AllocatorT = std::allocator<void>,
-    typename CallbackMessageT =
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
     typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
-    typename MessageMemoryStrategyT = rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      CallbackMessageT,
-      AllocatorT
-    >>
+    typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,

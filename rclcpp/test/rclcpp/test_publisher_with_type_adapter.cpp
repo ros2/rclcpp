@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
@@ -59,9 +60,10 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-namespace rclcpp {
+namespace rclcpp
+{
 
-template <>
+template<>
 struct TypeAdapter<std::string, rclcpp::msg::String>
 {
   using is_specialized = std::true_type;
@@ -70,22 +72,22 @@ struct TypeAdapter<std::string, rclcpp::msg::String>
 
   static void
   convert_to_ros_message(
-      const custom_type &source,
-      ros_message_type &destination)
+    const custom_type & source,
+    ros_message_type & destination)
   {
     destination.data = source;
   }
 
   static void
   convert_to_custom(
-      const ros_message_type &source,
-      custom_type &destination)
+    const ros_message_type & source,
+    custom_type & destination)
   {
     destination = source.data;
   }
 };
 
-template <>
+template<>
 struct TypeAdapter<int, rclcpp::msg::String>
 {
   using is_specialized = std::true_type;
@@ -94,8 +96,8 @@ struct TypeAdapter<int, rclcpp::msg::String>
 
   static void
   convert_to_ros_message(
-      const custom_type &source,
-      ros_message_type &destination)
+    const custom_type & source,
+    ros_message_type & destination)
   {
     (void) source;
     (void) destination;
@@ -104,15 +106,15 @@ struct TypeAdapter<int, rclcpp::msg::String>
 
   static void
   convert_to_custom(
-      const ros_message_type &source,
-      custom_type &destination)
+    const ros_message_type & source,
+    custom_type & destination)
   {
     (void) source;
     (void) destination;
   }
 };
 
-}
+}  // namespace rclcpp
 
 /*
  * Testing publisher creation signatures with a type adapter.
@@ -148,23 +150,23 @@ TEST_F(TestPublisher, check_type_adapted_message_is_sent_and_received) {
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 1);
   auto sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, do_nothing);
 
-  auto assert_no_message_was_received_yet = [sub](){
-    rclcpp::msg::String msg;
-    rclcpp::MessageInfo msg_info;
-    EXPECT_FALSE(sub->take(msg, msg_info));
-  };
-  auto assert_message_was_received = [sub, message_data](){
-    rclcpp::msg::String msg;
-    rclcpp::MessageInfo msg_info;
-    bool message_recieved = false;
-    auto start = std::chrono::steady_clock::now();
-    do {
-      message_recieved = sub->take(msg, msg_info);
-      std::this_thread::sleep_for(100ms);
-    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-    EXPECT_TRUE(message_recieved);
-    ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
-  };
+  auto assert_no_message_was_received_yet = [sub]() {
+      rclcpp::msg::String msg;
+      rclcpp::MessageInfo msg_info;
+      EXPECT_FALSE(sub->take(msg, msg_info));
+    };
+  auto assert_message_was_received = [sub, message_data]() {
+      rclcpp::msg::String msg;
+      rclcpp::MessageInfo msg_info;
+      bool message_recieved = false;
+      auto start = std::chrono::steady_clock::now();
+      do {
+        message_recieved = sub->take(msg, msg_info);
+        std::this_thread::sleep_for(100ms);
+      } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
+      EXPECT_TRUE(message_recieved);
+      ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
+    };
 
   { // std::string passed by reference
     assert_no_message_was_received_yet();

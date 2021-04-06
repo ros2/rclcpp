@@ -510,7 +510,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_F(TestSubscription, get_network_flow_endpoints_errors) {
   initialize();
   const rclcpp::QoS subscription_qos(1);
-  auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr msg) {
+  auto subscription_callback = [](test_msgs::msg::Empty::SharedPtr msg) {
       (void)msg;
     };
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
