@@ -573,12 +573,6 @@ protected:
   weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
-namespace executor
-{
-
-using Executor [[deprecated("use rclcpp::Executor instead")]] = rclcpp::Executor;
-
-}  // namespace executor
 }  // namespace rclcpp
 
 #endif  // RCLCPP__EXECUTOR_HPP_

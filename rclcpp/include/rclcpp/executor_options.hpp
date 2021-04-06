@@ -38,20 +38,6 @@ struct ExecutorOptions
   size_t max_conditions;
 };
 
-namespace executor
-{
-
-using ExecutorArgs [[deprecated("use rclcpp::ExecutorOptions instead")]] = ExecutorOptions;
-
-[[deprecated("use rclcpp::ExecutorOptions() instead")]]
-inline
-rclcpp::ExecutorOptions
-create_default_executor_arguments()
-{
-  return rclcpp::ExecutorOptions();
-}
-
-}  // namespace executor
 }  // namespace rclcpp
 
 #endif  // RCLCPP__EXECUTOR_OPTIONS_HPP_
