@@ -593,6 +593,7 @@ ament_add_gtest(test_multi_threaded_executor executors/test_multi_threaded_execu
 if(TARGET test_multi_threaded_executor)
   ament_target_dependencies(test_multi_threaded_executor
     "rcl")
+  ament_add_test_label(test_multi_threaded_executor xfail)
   target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
 endif()
 
