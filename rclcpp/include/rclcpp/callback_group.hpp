@@ -222,13 +222,6 @@ private:
   }
 };
 
-namespace callback_group
-{
-
-using CallbackGroupType [[deprecated("use rclcpp::CallbackGroupType instead")]] = CallbackGroupType;
-using CallbackGroup [[deprecated("use rclcpp::CallbackGroup instead")]] = CallbackGroup;
-
-}  // namespace callback_group
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CALLBACK_GROUP_HPP_

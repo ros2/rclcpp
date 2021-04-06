@@ -558,14 +558,6 @@ if(TARGET test_utilities)
   target_link_libraries(test_utilities ${PROJECT_NAME} mimick)
 endif()
 
-ament_add_gtest(test_init test_init.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
-if(TARGET test_init)
-  ament_target_dependencies(test_init
-    "rcl")
-  target_link_libraries(test_init ${PROJECT_NAME})
-endif()
-
 ament_add_gtest(test_interface_traits test_interface_traits.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_interface_traits)

@@ -349,15 +349,6 @@ public:
     send_response(*request_header, *response);
   }
 
-  [[deprecated("use the send_response() which takes references instead of shared pointers")]]
-  void
-  send_response(
-    std::shared_ptr<rmw_request_id_t> req_id,
-    std::shared_ptr<typename ServiceT::Response> response)
-  {
-    send_response(*req_id, *response);
-  }
-
   void
   send_response(rmw_request_id_t & req_id, typename ServiceT::Response & response)
   {

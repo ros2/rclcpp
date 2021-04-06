@@ -50,12 +50,6 @@ struct AnyExecutable
   std::shared_ptr<void> data;
 };
 
-namespace executor
-{
-
-using AnyExecutable [[deprecated("use rclcpp::AnyExecutable instead")]] = AnyExecutable;
-
-}  // namespace executor
 }  // namespace rclcpp
 
 #endif  // RCLCPP__ANY_EXECUTABLE_HPP_
