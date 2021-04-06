@@ -34,7 +34,19 @@
 #include "rclcpp/msg/string.hpp"
 
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+
 using namespace std::chrono_literals;
+
+static const int max_loops = 200;
+static const std::chrono::milliseconds sleep_per_loop(10);
+
 
 class TestSubscription : public ::testing::Test
 {
@@ -58,6 +70,20 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node;
+};
+
+class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
+{
+public:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };
 
 namespace rclcpp
@@ -87,33 +113,6 @@ struct TypeAdapter<std::string, rclcpp::msg::String>
   }
 };
 
-template<>
-struct TypeAdapter<int, rclcpp::msg::String>
-{
-  using is_specialized = std::true_type;
-  using custom_type = int;
-  using ros_message_type = rclcpp::msg::String;
-
-  static void
-  convert_to_ros_message(
-    const custom_type & source,
-    ros_message_type & destination)
-  {
-    (void) source;
-    (void) destination;
-    throw std::runtime_error("This should happen");
-  }
-
-  static void
-  convert_to_custom(
-    const ros_message_type & source,
-    custom_type & destination)
-  {
-    (void) source;
-    (void) destination;
-  }
-};
-
 }  // namespace rclcpp
 
 /*
@@ -130,87 +129,468 @@ TEST_F(TestSubscription, various_creation_signatures) {
   /* TODO(audrow) Enable this test once the adapt_type<>::as<> syntax is supported
   {
     using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
-    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
-    (void)publisher;
+    auto sub = node->create_subscription<StringTypeAdapter>("topic", 42, [](const std::string &) {});
+    (void)sub;
   }
   */
 }
 
 /*
- * Testing that publisher sends type adapted types and ROS message types.
+ * Testing that subscriber receives type adapted types and ROS message types with intra proccess communications.
  */
-// TEST_F(TestSubscription, check_type_adapted_message_is_sent_and_received) {
-//   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+TEST_F(
+  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  check_type_adapted_messages_are_received_by_intra_process_subscription) {
+  using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+  const std::string message_data = "Message Data";
+  const std::string topic_name = "topic_name";
+  bool is_received;
 
-//   initialize();
+  auto node = rclcpp::Node::make_shared(
+    "test_intra_process",
+    rclcpp::NodeOptions().use_intra_process_comms(true));
+  auto pub = node->create_publisher<rclcpp::msg::String>(topic_name, 1);
 
-//   const std::string message_data = "Message Data";
-//   const std::string topic_name = "topic_name";
+  rclcpp::msg::String msg;
+  msg.data = message_data;
 
-//   auto do_nothing = [](std::shared_ptr<const rclcpp::msg::String>) {FAIL();};
-//   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 1);
-//   auto sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, do_nothing);
+  rclcpp::executors::SingleThreadedExecutor executor;
+  auto wait_for_message_to_be_received = [&is_received, &node, &executor]() {
+      int i = 0;
+      executor.spin_node_once(node, std::chrono::milliseconds(0));
+      while (!is_received && i < max_loops) {
+        printf("spin_node_once() - callback (1) expected - try %d/%d\n", ++i, max_loops);
+        std::this_thread::sleep_for(sleep_per_loop);
+        executor.spin_node_once(node, std::chrono::milliseconds(0));
+      }
+    };
+  {
+    // nothing should be pending here
+    printf("spin_node_once(nonblocking) - no callback expected\n");
+    executor.spin_node_once(node, std::chrono::milliseconds(0));
+    ASSERT_FALSE(is_received);
+    printf("spin_node_some() - no callback expected\n");
+    executor.spin_node_some(node);
+    ASSERT_FALSE(is_received);
 
-//   auto assert_no_message_was_received_yet = [sub]() {
-//       rclcpp::msg::String msg;
-//       rclcpp::MessageInfo msg_info;
-//       EXPECT_FALSE(sub->take(msg, msg_info));
-//     };
-//   auto assert_message_was_received = [sub, message_data]() {
-//       rclcpp::msg::String msg;
-//       rclcpp::MessageInfo msg_info;
-//       bool message_recieved = false;
-//       auto start = std::chrono::steady_clock::now();
-//       do {
-//         message_recieved = sub->take(msg, msg_info);
-//         std::this_thread::sleep_for(100ms);
-//       } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-//       EXPECT_TRUE(message_recieved);
-//       ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
-//     };
+    // wait a moment for everything to initialize
+    // TODO(gerkey): fix nondeterministic startup behavior
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-//   { // std::string passed by reference
-//     assert_no_message_was_received_yet();
-//     pub->publish(message_data);
-//     assert_message_was_received();
-//   }
-//   { // unique pointer to std::string
-//     assert_no_message_was_received_yet();
-//     auto pu_message = std::make_unique<std::string>(message_data);
-//     pub->publish(std::move(pu_message));
-//     assert_message_was_received();
-//   }
-//   { // ROS message passed by reference
-//     assert_no_message_was_received_yet();
-//     rclcpp::msg::String msg;
-//     msg.data = message_data;
-//     pub->publish(msg);
-//     assert_message_was_received();
-//   }
-//   { // unique ptr to ROS message
-//     assert_no_message_was_received_yet();
-//     auto pu_msg = std::make_unique<rclcpp::msg::String>();
-//     pu_msg->data = message_data;
-//     pub->publish(std::move(pu_msg));
-//     assert_message_was_received();
-//   }
-//   { // loaned ROS message
-//     assert_no_message_was_received_yet();
-//     std::allocator<void> allocator;
-//     rclcpp::LoanedMessage<rclcpp::msg::String> loaned_msg(*pub, allocator);
-//     loaned_msg.get().data = message_data;
-//     pub->publish(std::move(loaned_msg));
-//     rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
-//     assert_message_was_received();
-//   }
-// }
+    { // const std::string &
+      auto callback =
+        [message_data, &is_received](
+        const std::string & msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // const std::string & with message info
+      auto callback =
+        [message_data, &is_received](
+        const std::string & msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.c_str());
+          ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::shared_ptr<std::string>
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const std::string> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::shared_ptr<const std::string> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const std::string> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+          ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::unique_ptr<std::string>
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<std::string> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::unique_ptr<std::string> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<std::string> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+          ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // const rclcpp::msg::String &
+      auto callback =
+        [message_data, &is_received](
+        const rclcpp::msg::String & msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // const rclcpp::msg::String & with message info
+      auto callback =
+        [message_data, &is_received](
+        const rclcpp::msg::String & msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
+          ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::shared_ptr<rclcpp::msg::String>
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const rclcpp::msg::String> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::shared_ptr<rclcpp::msg::String> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const rclcpp::msg::String> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+          ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::unique_ptr<rclcpp::msg::String>
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<rclcpp::msg::String> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::unique_ptr<rclcpp::msg::String> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<rclcpp::msg::String> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+          ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+  }
+}
 
 /*
- * Testing that conversion errors are passed up.
+ * Testing that subscriber receives type adapted types and ROS message types with inter proccess communications.
  */
-// TEST_F(TestSubscription, conversion_exception_is_passed_up) {
-//   using BadStringTypeAdapter = rclcpp::TypeAdapter<int, rclcpp::msg::String>;
-//   initialize();
-//   auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
-//   EXPECT_THROW(pub->publish(1), std::runtime_error);
-// }
+TEST_F(
+  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  check_type_adapted_messages_are_received_by_inter_process_subscription) {
+  using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+  const std::string message_data = "Message Data";
+  const std::string topic_name = "topic_name";
+  bool is_received;
+
+  auto node = rclcpp::Node::make_shared(
+    "test_intra_process",
+    rclcpp::NodeOptions().use_intra_process_comms(false));
+  auto pub = node->create_publisher<rclcpp::msg::String>(topic_name, 1);
+
+  rclcpp::msg::String msg;
+  msg.data = message_data;
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  auto wait_for_message_to_be_received = [&is_received, &node, &executor]() {
+      int i = 0;
+      executor.spin_node_once(node, std::chrono::milliseconds(0));
+      while (!is_received && i < max_loops) {
+        printf("spin_node_once() - callback (1) expected - try %d/%d\n", ++i, max_loops);
+        std::this_thread::sleep_for(sleep_per_loop);
+        executor.spin_node_once(node, std::chrono::milliseconds(0));
+      }
+    };
+  {
+    // nothing should be pending here
+    printf("spin_node_once(nonblocking) - no callback expected\n");
+    executor.spin_node_once(node, std::chrono::milliseconds(0));
+    ASSERT_FALSE(is_received);
+    printf("spin_node_some() - no callback expected\n");
+    executor.spin_node_some(node);
+    ASSERT_FALSE(is_received);
+
+    // wait a moment for everything to initialize
+    // TODO(gerkey): fix nondeterministic startup behavior
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    { // const std::string &
+      auto callback =
+        [message_data, &is_received](
+        const std::string & msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // const std::string & with message info
+      auto callback =
+        [message_data, &is_received](
+        const std::string & msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.c_str());
+          ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::shared_ptr<std::string>
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const std::string> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::shared_ptr<const std::string> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const std::string> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+          ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::unique_ptr<std::string>
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<std::string> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::unique_ptr<std::string> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<std::string> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+          ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // const rclcpp::msg::String &
+      auto callback =
+        [message_data, &is_received](
+        const rclcpp::msg::String & msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // const rclcpp::msg::String & with message info
+      auto callback =
+        [message_data, &is_received](
+        const rclcpp::msg::String & msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
+          ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::shared_ptr<rclcpp::msg::String>
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const rclcpp::msg::String> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::shared_ptr<rclcpp::msg::String> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::shared_ptr<const rclcpp::msg::String> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+          ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+
+    { // std::unique_ptr<rclcpp::msg::String>
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<rclcpp::msg::String> msg) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+    { // std::unique_ptr<rclcpp::msg::String> with message info
+      auto callback =
+        [message_data, &is_received](
+        std::unique_ptr<rclcpp::msg::String> msg,
+        const rclcpp::MessageInfo & message_info) -> void {
+          is_received = true;
+          ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+          ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
+        };
+      auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      is_received = false;
+      pub->publish(msg);
+      ASSERT_FALSE(is_received);
+      wait_for_message_to_be_received();
+      ASSERT_TRUE(is_received);
+    }
+  }
+}
