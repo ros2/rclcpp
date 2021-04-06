@@ -2,6 +2,20 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove deprecated code which was deprecated in foxy and should be removed in galactic (`#1622 <https://github.com/ros2/rclcpp/issues/1622>`_)
+* Change index.ros.org -> docs.ros.org. (`#1620 <https://github.com/ros2/rclcpp/issues/1620>`_)
+* Unique network flows (`#1496 <https://github.com/ros2/rclcpp/issues/1496>`_)
+* Add spin_some support to the StaticSingleThreadedExecutor (`#1338 <https://github.com/ros2/rclcpp/issues/1338>`_)
+* Add publishing instrumentation (`#1600 <https://github.com/ros2/rclcpp/issues/1600>`_)
+* Create load_parameters and delete_parameters methods (`#1596 <https://github.com/ros2/rclcpp/issues/1596>`_)
+* refactor AnySubscriptionCallback and add/deprecate callback signatures (`#1598 <https://github.com/ros2/rclcpp/issues/1598>`_)
+* Add generic publisher and generic subscription for serialized messages (`#1452 <https://github.com/ros2/rclcpp/issues/1452>`_)
+* use context from `node_base\_` for clock executor. (`#1617 <https://github.com/ros2/rclcpp/issues/1617>`_)
+* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1615 <https://github.com/ros2/rclcpp/issues/1615>`_)
+* Contributors: Ananya Muddukrishna, BriceRenaudeau, Chris Lalancette, Christophe Bedard, Nikolai Morin, Tomoya Fujita, William Woodall, mauropasse, shonigmann
+
 8.2.0 (2021-03-31)
 ------------------
 * Initialize integers in test_parameter_event_handler.cpp to avoid undefined behavior (`#1609 <https://github.com/ros2/rclcpp/issues/1609>`_)
