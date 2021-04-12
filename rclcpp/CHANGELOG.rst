@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.0.1 (2021-04-12)
+------------------
 * Restore test exception for Connext (`#1625 <https://github.com/ros2/rclcpp/issues/1625>`_)
 * Fix race condition in TimeSource clock thread setup (`#1623 <https://github.com/ros2/rclcpp/issues/1623>`_)
 * Contributors: Andrea Sorbini, Michel Hidalgo
