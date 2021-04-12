@@ -31,13 +31,34 @@ HighPriorityLockable::HighPriorityLockable(MutexTwoPriorities & parent)
 void
 HighPriorityLockable::lock()
 {
-  parent_.data_.lock();
+  bool did_aument_count{false};
+  std::unique_lock<std::mutex> guard{parent_.cv_mutex_};
+  if (parent_.data_taken_) {
+    ++parent_.hp_waiting_count_;
+    did_aument_count = true;
+  }
+  while (parent_.data_taken_) {
+    parent_.cv_.wait(guard);
+  }
+  if (did_aument_count) {
+    --parent_.hp_waiting_count_;
+  }
+  parent_.data_taken_ = true;
 }
 
 void
 HighPriorityLockable::unlock()
 {
-  parent_.data_.unlock();
+  {
+    std::lock_guard<std::mutex> guard{parent_.cv_mutex_};
+    parent_.data_taken_ = false;
+  }
+  // We need to notify_all(), and not only one,
+  // because the notified thread might be low priority
+  // when a high priority thread is still waiting.
+  // In that case, the low priority thread will go to sleep again,
+  // release the mutex, and the high priority thread can continue.
+  parent_.cv_.notify_all();
 }
 
 LowPriorityLockable::LowPriorityLockable(MutexTwoPriorities & parent)
@@ -47,16 +68,23 @@ LowPriorityLockable::LowPriorityLockable(MutexTwoPriorities & parent)
 void
 LowPriorityLockable::lock()
 {
-  std::unique_lock<std::mutex> barrier_guard{parent_.barrier_};
-  parent_.data_.lock();
-  barrier_guard.release();
+  std::unique_lock<std::mutex> guard{parent_.cv_mutex_};
+  while (parent_.data_taken_ || parent_.hp_waiting_count_) {
+    parent_.cv_.wait(guard);
+  }
+  parent_.data_taken_ = true;
 }
 
 void
 LowPriorityLockable::unlock()
 {
-  std::lock_guard<std::mutex> barrier_guard{parent_.barrier_, std::adopt_lock};
-  parent_.data_.unlock();
+  {
+    std::lock_guard<std::mutex> guard{parent_.cv_mutex_};
+    parent_.data_taken_ = false;
+  }
+  // See comment in HighPriorityLockable::unlock() to understand
+  // why not using notify_one().
+  parent_.cv_.notify_all();
 }
 
 HighPriorityLockable
