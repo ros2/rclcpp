@@ -31,16 +31,12 @@ HighPriorityLockable::HighPriorityLockable(MutexTwoPriorities & parent)
 void
 HighPriorityLockable::lock()
 {
-  bool did_aument_count{false};
   std::unique_lock<std::mutex> guard{parent_.cv_mutex_};
   if (parent_.data_taken_) {
     ++parent_.hp_waiting_count_;
-    did_aument_count = true;
-  }
-  while (parent_.data_taken_) {
-    parent_.cv_.wait(guard);
-  }
-  if (did_aument_count) {
+    while (parent_.data_taken_) {
+      parent_.cv_.wait(guard);
+    }
     --parent_.hp_waiting_count_;
   }
   parent_.data_taken_ = true;
