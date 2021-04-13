@@ -364,28 +364,10 @@ TEST_F(TestNodeGraph, get_info_by_topic)
   EXPECT_EQ(rclcpp::EndpointType::Publisher, const_publisher_endpoint_info.endpoint_type());
 
   rclcpp::QoS actual_qos = publisher_endpoint_info.qos_profile();
-  switch (actual_qos.get_rmw_qos_profile().history) {
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      EXPECT_EQ(1u, actual_qos.get_rmw_qos_profile().depth);
-      break;
-    case RMW_QOS_POLICY_HISTORY_UNKNOWN:
-      EXPECT_EQ(0u, actual_qos.get_rmw_qos_profile().depth);
-      break;
-    default:
-      ADD_FAILURE() << "unexpected history";
-  }
+  EXPECT_EQ(actual_qos.reliability(), rclcpp::ReliabilityPolicy::Reliable);
 
   rclcpp::QoS const_actual_qos = const_publisher_endpoint_info.qos_profile();
-  switch (const_actual_qos.get_rmw_qos_profile().history) {
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      EXPECT_EQ(1u, const_actual_qos.get_rmw_qos_profile().depth);
-      break;
-    case RMW_QOS_POLICY_HISTORY_UNKNOWN:
-      EXPECT_EQ(0u, const_actual_qos.get_rmw_qos_profile().depth);
-      break;
-    default:
-      ADD_FAILURE() << "unexpected history";
-  }
+  EXPECT_EQ(const_actual_qos.reliability(), rclcpp::ReliabilityPolicy::Reliable);
 
   auto endpoint_gid = publisher_endpoint_info.endpoint_gid();
   auto const_endpoint_gid = const_publisher_endpoint_info.endpoint_gid();
