@@ -63,7 +63,8 @@ private:
   get_low_priority_lockable();
 
 private:
-  std::condition_variable cv_;
+  std::condition_variable hp_cv_;
+  std::condition_variable lp_cv_;
   std::mutex cv_mutex_;
   size_t hp_waiting_count_{0u};
   bool data_taken_{false};
