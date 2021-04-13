@@ -299,14 +299,15 @@ __set_parameters_atomically_common(
   const OnParametersSetCallbackType & callback,
   bool allow_undeclared = false)
 {
-  // Call the user callback to see if the new value(s) are allowed.
-  rcl_interfaces::msg::SetParametersResult result =
-    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
+  // Check if the value being set complies with the descriptor.
+  rcl_interfaces::msg::SetParametersResult result = __check_parameters(
+    parameter_infos, parameters, allow_undeclared);
   if (!result.successful) {
     return result;
   }
-  // Check if the value being set complies with the descriptor.
-  result = __check_parameters(parameter_infos, parameters, allow_undeclared);
+  // Call the user callback to see if the new value(s) are allowed.
+  result =
+    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
   if (!result.successful) {
     return result;
   }
