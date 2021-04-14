@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.0.2 (2021-04-14)
+------------------
 * Avoid returning loan when none was obtained. (`#1629 <https://github.com/ros2/rclcpp/issues/1629>`_)
 * Use a different implementation of mutex two priorities (`#1628 <https://github.com/ros2/rclcpp/issues/1628>`_)
 * Do not test the value of the history policy when testing the get_publishers/subscriptions_info_by_topic() methods (`#1626 <https://github.com/ros2/rclcpp/issues/1626>`_)
