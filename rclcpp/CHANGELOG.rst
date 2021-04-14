@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Avoid returning loan when none was obtained. (`#1629 <https://github.com/ros2/rclcpp/issues/1629>`_)
+* Use a different implementation of mutex two priorities (`#1628 <https://github.com/ros2/rclcpp/issues/1628>`_)
+* Do not test the value of the history policy when testing the get_publishers/subscriptions_info_by_topic() methods (`#1626 <https://github.com/ros2/rclcpp/issues/1626>`_)
+* Check first parameter type and range before calling the user validation callbacks (`#1627 <https://github.com/ros2/rclcpp/issues/1627>`_)
+* Contributors: Ivan Santiago Paunovic, Miguel Company
+
 9.0.1 (2021-04-12)
 ------------------
 * Restore test exception for Connext (`#1625 <https://github.com/ros2/rclcpp/issues/1625>`_)
