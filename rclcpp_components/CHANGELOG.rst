@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.1 (2021-04-14)
+------------------
+* Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1616 <https://github.com/ros2/rclcpp/issues/1616>`_)
+* Contributors: Simon Honigmann
+
 2.3.0 (2020-12-09)
 ------------------
 * Update QD to QL 1 (`#1480 <https://github.com/ros2/rclcpp/issues/1480>`_)

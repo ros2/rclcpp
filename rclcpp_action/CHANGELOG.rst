@@ -3,6 +3,13 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.3.1 (2021-04-14)
+------------------
+* Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1616 <https://github.com/ros2/rclcpp/issues/1616>`_)
+* node_handle must be destroyed after client_handle to prevent memory leak (`#1562 <https://github.com/ros2/rclcpp/issues/1562>`_) (`#1565 <https://github.com/ros2/rclcpp/issues/1565>`_)
+* Fix action server deadlock (`#1285 <https://github.com/ros2/rclcpp/issues/1285>`_) (`#1313 <https://github.com/ros2/rclcpp/issues/1313>`_)  (`#1518 <https://github.com/ros2/rclcpp/issues/1518>`_)
+* Contributors: Chris Lalancette, Daisuke Sato, Simon Honigmann, Tomoya Fujita
+
 2.3.0 (2020-12-09)
 ------------------
 * Update QD to QL 1 (`#1480 <https://github.com/ros2/rclcpp/issues/1480>`_)

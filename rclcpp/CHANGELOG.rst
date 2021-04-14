@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.1 (2021-04-14)
+------------------
+* Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1616 <https://github.com/ros2/rclcpp/issues/1616>`_)
+* Fix documented example in create_publisher (`#1558 <https://github.com/ros2/rclcpp/issues/1558>`_) (`#1559 <https://github.com/ros2/rclcpp/issues/1559>`_)
+* Fix runtime error: reference binding to null pointer of type (`#1547 <https://github.com/ros2/rclcpp/issues/1547>`_) (`#1548 <https://github.com/ros2/rclcpp/issues/1548>`_)
+* Contributors: Jacob Perron, Simon Honigmann, Tomoya Fujita
+
 2.3.0 (2020-12-09)
 ------------------
 * Update QD to QL 1 (`#1480 <https://github.com/ros2/rclcpp/issues/1480>`_)
