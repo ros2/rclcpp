@@ -67,7 +67,7 @@ void construct_with_null_allocator()
 TEST(AnySubscriptionCallback, null_allocator) {
   EXPECT_THROW(
     construct_with_null_allocator(),
-    std::runtime_error);
+    std::invalid_argument);
 }
 
 TEST_F(TestAnySubscriptionCallback, construct_destruct) {
