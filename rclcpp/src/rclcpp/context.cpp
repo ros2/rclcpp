@@ -344,6 +344,7 @@ Context::shutdown(const std::string & reason)
 rclcpp::Context::OnShutdownCallback
 Context::on_shutdown(OnShutdownCallback callback)
 {
+  std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
   on_shutdown_callbacks_.push_back(callback);
   return callback;
 }
