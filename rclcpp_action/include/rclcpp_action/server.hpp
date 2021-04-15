@@ -356,16 +356,20 @@ protected:
   CancelResponse
   call_handle_cancel_callback(const GoalUUID & uuid) override
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
+    {
+      std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+      auto element = goal_handles_.find(uuid);
+      if (element != goal_handles_.end()) {
+        goal_handle = element->second.lock();
+      }
+    }
+
     CancelResponse resp = CancelResponse::REJECT;
-    auto element = goal_handles_.find(uuid);
-    if (element != goal_handles_.end()) {
-      std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle = element->second.lock();
-      if (goal_handle) {
-        resp = handle_cancel_(goal_handle);
-        if (CancelResponse::ACCEPT == resp) {
-          goal_handle->_cancel_goal();
-        }
+    if (goal_handle) {
+      resp = handle_cancel_(goal_handle);
+      if (CancelResponse::ACCEPT == resp) {
+        goal_handle->_cancel_goal();
       }
     }
     return resp;
