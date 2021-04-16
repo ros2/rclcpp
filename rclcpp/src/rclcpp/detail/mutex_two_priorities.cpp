@@ -31,13 +31,31 @@ HighPriorityLockable::HighPriorityLockable(MutexTwoPriorities & parent)
 void
 HighPriorityLockable::lock()
 {
-  parent_.data_.lock();
+  std::unique_lock<std::mutex> guard{parent_.cv_mutex_};
+  if (parent_.data_taken_) {
+    ++parent_.hp_waiting_count_;
+    while (parent_.data_taken_) {
+      parent_.hp_cv_.wait(guard);
+    }
+    --parent_.hp_waiting_count_;
+  }
+  parent_.data_taken_ = true;
 }
 
 void
 HighPriorityLockable::unlock()
 {
-  parent_.data_.unlock();
+  bool notify_lp{false};
+  {
+    std::lock_guard<std::mutex> guard{parent_.cv_mutex_};
+    parent_.data_taken_ = false;
+    notify_lp = 0u == parent_.hp_waiting_count_;
+  }
+  if (notify_lp) {
+    parent_.lp_cv_.notify_one();
+  } else {
+    parent_.hp_cv_.notify_one();
+  }
 }
 
 LowPriorityLockable::LowPriorityLockable(MutexTwoPriorities & parent)
@@ -47,16 +65,27 @@ LowPriorityLockable::LowPriorityLockable(MutexTwoPriorities & parent)
 void
 LowPriorityLockable::lock()
 {
-  std::unique_lock<std::mutex> barrier_guard{parent_.barrier_};
-  parent_.data_.lock();
-  barrier_guard.release();
+  std::unique_lock<std::mutex> guard{parent_.cv_mutex_};
+  while (parent_.data_taken_ || parent_.hp_waiting_count_) {
+    parent_.lp_cv_.wait(guard);
+  }
+  parent_.data_taken_ = true;
 }
 
 void
 LowPriorityLockable::unlock()
 {
-  std::lock_guard<std::mutex> barrier_guard{parent_.barrier_, std::adopt_lock};
-  parent_.data_.unlock();
+  bool notify_lp{false};
+  {
+    std::lock_guard<std::mutex> guard{parent_.cv_mutex_};
+    parent_.data_taken_ = false;
+    notify_lp = 0u == parent_.hp_waiting_count_;
+  }
+  if (notify_lp) {
+    parent_.lp_cv_.notify_one();
+  } else {
+    parent_.hp_cv_.notify_one();
+  }
 }
 
 HighPriorityLockable
