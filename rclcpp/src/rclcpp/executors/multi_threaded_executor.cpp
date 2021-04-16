@@ -28,6 +28,7 @@ using rclcpp::executors::MultiThreadedExecutor;
 
 std::unordered_map<MultiThreadedExecutor *, std::shared_ptr<MutexTwoPriorities>>
 MultiThreadedExecutor::wait_mutex_set_;
+std::mutex MultiThreadedExecutor::shared_wait_mutex_;
 
 MultiThreadedExecutor::MultiThreadedExecutor(
   const rclcpp::ExecutorOptions & options,
@@ -38,7 +39,11 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   yield_before_execute_(yield_before_execute),
   next_exec_timeout_(next_exec_timeout)
 {
-  wait_mutex_set_[this] = std::make_shared<rclcpp::detail::MutexTwoPriorities>();
+  {
+    std::lock_guard<std::mutex> wait_lock(
+      MultiThreadedExecutor::shared_wait_mutex_);
+    wait_mutex_set_[this] = std::make_shared<MutexTwoPriorities>();
+  }
   number_of_threads_ = number_of_threads ? number_of_threads : std::thread::hardware_concurrency();
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
