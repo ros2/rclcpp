@@ -17,12 +17,17 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/scope_exit.hpp"
 
+using rclcpp::detail::MutexTwoPriorities;
 using rclcpp::executors::MultiThreadedExecutor;
+
+std::unordered_map<MultiThreadedExecutor *, std::shared_ptr<MutexTwoPriorities>>
+MultiThreadedExecutor::wait_mutex_set_;
 
 MultiThreadedExecutor::MultiThreadedExecutor(
   const rclcpp::ExecutorOptions & options,
@@ -33,6 +38,7 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   yield_before_execute_(yield_before_execute),
   next_exec_timeout_(next_exec_timeout)
 {
+  wait_mutex_set_[this] = std::make_shared<rclcpp::detail::MutexTwoPriorities>();
   number_of_threads_ = number_of_threads ? number_of_threads : std::thread::hardware_concurrency();
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
@@ -51,7 +57,9 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
-    std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+    auto wait_mutex = MultiThreadedExecutor::wait_mutex_set_[this];
+    auto low_priority_wait_mutex = wait_mutex->get_low_priority_lockable();
+    std::lock_guard<MutexTwoPriorities::LowPriorityLockable> wait_lock(low_priority_wait_mutex);
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
       auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
       threads.emplace_back(func);
@@ -76,7 +84,9 @@ MultiThreadedExecutor::run(size_t)
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {
-      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      auto wait_mutex = MultiThreadedExecutor::wait_mutex_set_[this];
+      auto low_priority_wait_mutex = wait_mutex->get_low_priority_lockable();
+      std::lock_guard<MutexTwoPriorities::LowPriorityLockable> wait_lock(low_priority_wait_mutex);
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
@@ -103,7 +113,9 @@ MultiThreadedExecutor::run(size_t)
     execute_any_executable(any_exec);
 
     if (any_exec.timer) {
-      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      auto wait_mutex = MultiThreadedExecutor::wait_mutex_set_[this];
+      auto high_priority_wait_mutex = wait_mutex->get_high_priority_lockable();
+      std::lock_guard<MutexTwoPriorities::HighPriorityLockable> wait_lock(high_priority_wait_mutex);
       auto it = scheduled_timers_.find(any_exec.timer);
       if (it != scheduled_timers_.end()) {
         scheduled_timers_.erase(it);

@@ -22,6 +22,7 @@
 #include <thread>
 #include <unordered_map>
 
+#include "rclcpp/detail/mutex_two_priorities.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -87,6 +88,8 @@ private:
   std::chrono::nanoseconds next_exec_timeout_;
 
   std::set<TimerBase::SharedPtr> scheduled_timers_;
+  static std::unordered_map<MultiThreadedExecutor *,
+    std::shared_ptr<detail::MutexTwoPriorities>> wait_mutex_set_;
 };
 
 }  // namespace executors
