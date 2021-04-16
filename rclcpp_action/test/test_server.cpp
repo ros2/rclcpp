@@ -1234,10 +1234,13 @@ public:
         this->TryLockFor(lock, std::chrono::milliseconds(1000));
         return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
       },
-      [this](std::shared_ptr<GoalHandle>) {
+      [this](std::shared_ptr<GoalHandle> handle) {
         // instead of making a deadlock, check if it can acquire the lock in a second
         std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
         this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        if (!handle->is_active()) {
+          return rclcpp_action::CancelResponse::REJECT;
+        }
         return rclcpp_action::CancelResponse::ACCEPT;
       },
       [this](std::shared_ptr<GoalHandle> handle) {
@@ -1304,5 +1307,14 @@ TEST_F(TestDeadlockServer, deadlock_while_canceled)
   std::thread t(&TestDeadlockServer::GoalCanceled, this);
   rclcpp::sleep_for(std::chrono::milliseconds(50));
   send_goal_request(node_, uuid2_);  // deadlock here
+  t.join();
+}
+
+TEST_F(TestDeadlockServer, deadlock_while_succeed_and_canceled)
+{
+  send_goal_request(node_, uuid1_);
+  std::thread t(&TestDeadlockServer::GoalSucceeded, this);
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  send_cancel_request(node_, uuid1_);
   t.join();
 }
