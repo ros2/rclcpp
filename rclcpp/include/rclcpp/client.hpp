@@ -230,19 +230,29 @@ public:
    *
    * Calling it again will clear any previously set callback.
    *
+   * An exception will be thrown if the callback is not callable.
+   *
    * This function is thread-safe.
    *
    * If you want more information available in the callback, like the client
    * or other information, you may use a lambda with captures or std::bind.
    *
+   * \sa rclcpp::ClientBase::clear_on_new_response_callback
    * \sa rmw_client_set_on_new_response_callback
    * \sa rcl_client_set_on_new_response_callback
    *
    * \param[in] callback functor to be called when a new response is received
    */
+  RCLCPP_PUBLIC
   void
   set_on_new_response_callback(std::function<void(size_t)> callback)
   {
+    if (!callback) {
+      throw std::invalid_argument(
+              "The callback passed to set_on_new_response_callback "
+              "is not callable.");
+    }
+
     auto new_callback =
       [callback, this](size_t number_of_responses) {
         try {
@@ -279,6 +289,15 @@ public:
       static_cast<const void *>(&on_new_response_callback_));
   }
 
+  /// Unset the callback registered for new responses, if any.
+  RCLCPP_PUBLIC
+  void
+  clear_on_new_response_callback()
+  {
+    set_on_new_response_callback(nullptr, nullptr);
+    on_new_response_callback_ = nullptr;
+  }
+
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
 
@@ -307,7 +326,7 @@ protected:
 
   std::atomic<bool> in_use_by_wait_set_{false};
 
-  std::function<void(size_t)> on_new_response_callback_;
+  std::function<void(size_t)> on_new_response_callback_{nullptr};
 };
 
 template<typename ServiceT>

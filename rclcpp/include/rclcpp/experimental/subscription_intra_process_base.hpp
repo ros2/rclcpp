@@ -15,17 +15,17 @@
 #ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 
-#include <rmw/rmw.h>
-
-#include <functional>
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
 
 #include "rcl/error_handling.h"
+#include "rmw/impl/cpp/demangle.hpp"
 
 #include "rclcpp/guard_condition.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
@@ -39,6 +39,11 @@ class SubscriptionIntraProcessBase : public rclcpp::Waitable
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
+
+  enum class EntityType
+  {
+    Subscription,
+  };
 
   RCLCPP_PUBLIC
   SubscriptionIntraProcessBase(
@@ -79,8 +84,94 @@ public:
   QoS
   get_actual_qos() const;
 
+  /// Set a callback to be called when each new event instance occurs.
+  /**
+   * The callback receives a size_t which is the number of responses received
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if responses were received before any
+   * callback was set.
+   *
+   * The callback also receives an int identifier argument.
+   * This is needed because a Waitable may be composed of several distinct entities,
+   * such as subscriptions, services, etc.
+   * The application should provide a generic callback function that will be then
+   * forwarded by the waitable to all of its entities.
+   * Before forwarding, a different value for the identifier argument will be
+   * bounded to the function.
+   * This implies that the provided callback can use the identifier to behave
+   * differently depending on which entity triggered the waitable to become ready.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * An exception will be thrown if the callback is not callable.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the client
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * Note: this function must be overridden with a proper implementation
+   * by the custom classes who inherit from rclcpp::Waitable if they want to use it.
+   *
+   * \sa rclcpp::SubscriptionIntraProcessBase::clear_on_ready_callback
+   *
+   * \param[in] callback functor to be called when a new message is received.
+   */
+  RCLCPP_PUBLIC
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override
+  {
+    if (!callback) {
+      throw std::invalid_argument(
+              "The callback passed to set_on_ready_callback "
+              "is not callable.");
+    }
+
+    // Note: we bind the int identifier argument to this waitable's entity types
+    auto new_callback =
+      [callback, this](size_t number_of_events) {
+        try {
+          callback(number_of_events, static_cast<int>(EntityType::Subscription));
+        } catch (const std::exception & exception) {
+          RCLCPP_ERROR_STREAM(
+            // TODO(wjwwood): get this class access to the node logger it is associated with
+            rclcpp::get_logger("rclcpp"),
+            "rclcpp::SubscriptionIntraProcessBase@" << this <<
+              " caught " << rmw::impl::cpp::demangle(exception) <<
+              " exception in user-provided callback for the 'on ready' callback: " <<
+              exception.what());
+        } catch (...) {
+          RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger("rclcpp"),
+            "rclcpp::SubscriptionIntraProcessBase@" << this <<
+              " caught unhandled exception in user-provided callback " <<
+              "for the 'on ready' callback");
+        }
+      };
+
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    on_new_message_callback_ = new_callback;
+
+    if (unread_count_ > 0) {
+      // Use qos profile depth as upper bound for unread_count_
+      on_new_message_callback_(std::min(unread_count_, qos_profile_.depth));
+      unread_count_ = 0;
+    }
+  }
+
+  /// Unset the callback registered for new messages, if any.
+  RCLCPP_PUBLIC
+  void
+  clear_on_ready_callback() override
+  {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    on_new_message_callback_ = nullptr;
+  }
+
 protected:
   std::recursive_mutex reentrant_mutex_;
+  std::function<void(size_t)> on_new_message_callback_ {nullptr};
+  size_t unread_count_{0};
   rclcpp::GuardCondition gc_;
 
   virtual void

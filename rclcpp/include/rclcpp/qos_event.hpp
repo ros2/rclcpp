@@ -87,6 +87,11 @@ public:
 class QOSEventHandlerBase : public Waitable
 {
 public:
+  enum class EntityType
+  {
+    Event,
+  };
+
   RCLCPP_PUBLIC
   virtual ~QOSEventHandlerBase();
 
@@ -107,10 +112,20 @@ public:
 
   /// Set a callback to be called when each new event instance occurs.
   /**
-   * The callback receives a size_t which is the number of events that occurred
+   * The callback receives a size_t which is the number of responses received
    * since the last time this callback was called.
-   * Normally this is 1, but can be > 1 if events occurred before any
+   * Normally this is 1, but can be > 1 if responses were received before any
    * callback was set.
+   *
+   * The callback also receives an int identifier argument.
+   * This is needed because a Waitable may be composed of several distinct entities,
+   * such as subscriptions, services, etc.
+   * The application should provide a generic callback function that will be then
+   * forwarded by the waitable to all of its entities.
+   * Before forwarding, a different value for the identifier argument will be
+   * bounded to the function.
+   * This implies that the provided callback can use the identifier to behave
+   * differently depending on which entity triggered the waitable to become ready.
    *
    * Since this callback is called from the middleware, you should aim to make
    * it fast and not blocking.
@@ -119,37 +134,51 @@ public:
    *
    * Calling it again will clear any previously set callback.
    *
+   * An exception will be thrown if the callback is not callable.
+   *
    * This function is thread-safe.
    *
-   * If you want more information available in the callback, like the qos event
+   * If you want more information available in the callback, like the client
    * or other information, you may use a lambda with captures or std::bind.
    *
+   * Note: this function must be overridden with a proper implementation
+   * by the custom classes who inherit from rclcpp::Waitable if they want to use it.
+   *
+   * \sa rclcpp::QOSEventHandlerBase::clear_on_ready_callback
    * \sa rmw_event_set_callback
    * \sa rcl_event_set_callback
    *
    * \param[in] callback functor to be called when a new event occurs
    */
+  RCLCPP_PUBLIC
   void
-  set_on_new_event_callback(std::function<void(size_t)> callback)
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override
   {
+    if (!callback) {
+      throw std::invalid_argument(
+              "The callback passed to set_on_ready_callback "
+              "is not callable.");
+    }
+
+    // Note: we bind the int identifier argument to this waitable's entity types
     auto new_callback =
       [callback, this](size_t number_of_events) {
         try {
-          callback(number_of_events);
+          callback(number_of_events, static_cast<int>(EntityType::Event));
         } catch (const std::exception & exception) {
           RCLCPP_ERROR_STREAM(
             // TODO(wjwwood): get this class access to the node logger it is associated with
             rclcpp::get_logger("rclcpp"),
             "rclcpp::QOSEventHandlerBase@" << this <<
               " caught " << rmw::impl::cpp::demangle(exception) <<
-              " exception in user-provided callback for the 'on new event' callback: " <<
+              " exception in user-provided callback for the 'on ready' callback: " <<
               exception.what());
         } catch (...) {
           RCLCPP_ERROR_STREAM(
             rclcpp::get_logger("rclcpp"),
             "rclcpp::QOSEventHandlerBase@" << this <<
               " caught unhandled exception in user-provided callback " <<
-              "for the 'on new event' callback");
+              "for the 'on ready' callback");
         }
       };
 
@@ -169,6 +198,15 @@ public:
       static_cast<const void *>(&on_new_event_callback_));
   }
 
+  /// Unset the callback registered for new events, if any.
+  RCLCPP_PUBLIC
+  void
+  clear_on_ready_callback() override
+  {
+    set_on_new_event_callback(nullptr, nullptr);
+    on_new_event_callback_ = nullptr;
+  }
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -176,7 +214,7 @@ protected:
 
   rcl_event_t event_handle_;
   size_t wait_set_event_index_;
-  std::function<void(size_t)> on_new_event_callback_;
+  std::function<void(size_t)> on_new_event_callback_{nullptr};
 };
 
 template<typename EventCallbackT, typename ParentHandleT>
