@@ -589,8 +589,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
       [&]()
       {
-        auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
-        subscription->handle_message(void_serialized_msg, message_info);
+        subscription->handle_serialized_message(serialized_msg, message_info);
       });
     subscription->return_serialized_message(serialized_msg);
   } else if (subscription->can_loan_messages()) {
