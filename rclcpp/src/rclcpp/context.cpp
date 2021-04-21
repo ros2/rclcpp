@@ -315,9 +315,16 @@ Context::shutdown(const std::string & reason)
   // set shutdown reason
   shutdown_reason_ = reason;
   // call each shutdown callback
-  for (const auto & callback : on_shutdown_callbacks_) {
-    callback();
+  {
+    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+    for (const auto & callback_handle_weak_ptr : on_shutdown_callbacks_) {
+      auto callback_handle = callback_handle_weak_ptr.lock();
+      if (callback_handle) {
+        callback_handle->callback();
+      }
+    }
   }
+
   // interrupt all blocking sleep_for() and all blocking executors or wait sets
   this->interrupt_all_sleep_for();
   // remove self from the global contexts
@@ -341,20 +348,38 @@ Context::shutdown(const std::string & reason)
   return true;
 }
 
-rclcpp::Context::OnShutdownCallback
-Context::on_shutdown(OnShutdownCallback callback)
+rclcpp::OnShutdownCallbackHandle::SharedPtr
+Context::on_shutdown(OnShutdownCallbackHandle::OnShutdownCallbackType callback)
 {
-  on_shutdown_callbacks_.push_back(callback);
-  return callback;
+  std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+  auto handle = std::make_shared<OnShutdownCallbackHandle>();
+  handle->callback = callback;
+  on_shutdown_callbacks_.push_back(handle);
+  return handle;
 }
 
-const std::vector<rclcpp::Context::OnShutdownCallback> &
+void
+Context::remove_on_shutdown_callback(OnShutdownCallbackHandle::SharedPtr callback_handle)
+{
+  std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+  auto it = std::find_if(
+    on_shutdown_callbacks_.begin(),
+    on_shutdown_callbacks_.end(),
+    [callback_handle](const auto & weak_handle) {
+      return callback_handle.get() == weak_handle.lock().get();
+    });
+  if (it != on_shutdown_callbacks_.end()) {
+    on_shutdown_callbacks_.erase(it);
+  }
+}
+
+const std::vector<rclcpp::OnShutdownCallbackHandle::WeakPtr> &
 Context::get_on_shutdown_callbacks() const
 {
   return on_shutdown_callbacks_;
 }
 
-std::vector<rclcpp::Context::OnShutdownCallback> &
+std::vector<rclcpp::OnShutdownCallbackHandle::WeakPtr> &
 Context::get_on_shutdown_callbacks()
 {
   return on_shutdown_callbacks_;

@@ -47,6 +47,15 @@ public:
 /// Forward declare WeakContextsWrapper
 class WeakContextsWrapper;
 
+struct OnShutdownCallbackHandle
+{
+  RCLCPP_SMART_PTR_DEFINITIONS(OnShutdownCallbackHandle)
+
+  using OnShutdownCallbackType = std::function<void ()>;
+
+  OnShutdownCallbackType callback;
+};
+
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
  * A context also represents the lifecycle between init and shutdown of rclcpp.
@@ -177,8 +186,6 @@ public:
   bool
   shutdown(const std::string & reason);
 
-  using OnShutdownCallback = std::function<void ()>;
-
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
    * These callbacks will be called in the order they are added as the second
@@ -196,29 +203,38 @@ public:
    * and persist on repeated init's.
    *
    * \param[in] callback the on shutdown callback to be registered
-   * \return the callback passed, for convenience when storing a passed lambda
+   * \return the created shared pointer of callback handler
    */
   RCLCPP_PUBLIC
   virtual
-  OnShutdownCallback
-  on_shutdown(OnShutdownCallback callback);
+  OnShutdownCallbackHandle::SharedPtr
+  on_shutdown(OnShutdownCallbackHandle::OnShutdownCallbackType callback);
 
-  /// Return the shutdown callbacks as const.
+  /// Remove a on_shutdown callback handle registered with on_shutdown.
   /**
-   * Using the returned reference is not thread-safe with calls that modify
-   * the list of "on shutdown" callbacks, i.e. on_shutdown().
+   * \param[in] callback_handle the on shutdown callback handle to be removed.
    */
   RCLCPP_PUBLIC
-  const std::vector<OnShutdownCallback> &
+  virtual
+  void
+  remove_on_shutdown_callback(OnShutdownCallbackHandle::SharedPtr callback_handle);
+
+  /// Return the shutdown callback handles as const.
+  /**
+   * Using the returned reference is not thread-safe with calls that modify
+   * the list of "on shutdown" callback handles, i.e. on_shutdown().
+   */
+  RCLCPP_PUBLIC
+  const std::vector<OnShutdownCallbackHandle::WeakPtr> &
   get_on_shutdown_callbacks() const;
 
-  /// Return the shutdown callbacks.
+  /// Return the shutdown callback handles
   /**
    * Using the returned reference is not thread-safe with calls that modify
-   * the list of "on shutdown" callbacks, i.e. on_shutdown().
+   * the list of "on shutdown" callback handles, i.e. on_shutdown().
    */
   RCLCPP_PUBLIC
-  std::vector<OnShutdownCallback> &
+  std::vector<OnShutdownCallbackHandle::WeakPtr> &
   get_on_shutdown_callbacks();
 
   /// Return the internal rcl context.
@@ -299,7 +315,7 @@ private:
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
 
-  std::vector<OnShutdownCallback> on_shutdown_callbacks_;
+  std::vector<OnShutdownCallbackHandle::WeakPtr> on_shutdown_callbacks_;
   std::mutex on_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
