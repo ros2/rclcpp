@@ -36,7 +36,7 @@ std::shared_ptr<rclcpp::SerializedMessage> GenericSubscription::create_serialize
 }
 
 void GenericSubscription::handle_message(
-  std::shared_ptr<void> &, 
+  std::shared_ptr<void> &,
   const rclcpp::MessageInfo &)
 {
   throw rclcpp::exceptions::UnimplementedError(
