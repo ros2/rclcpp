@@ -1238,6 +1238,7 @@ public:
         // instead of making a deadlock, check if it can acquire the lock in a second
         std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
         this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        // TODO(KavenYau): this check may become obsolete with https://github.com/ros2/rclcpp/issues/1599
         if (!handle->is_active()) {
           return rclcpp_action::CancelResponse::REJECT;
         }
