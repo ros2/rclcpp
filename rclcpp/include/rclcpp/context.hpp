@@ -23,6 +23,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -207,17 +208,17 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  OnShutdownCallbackHandle::SharedPtr
+  OnShutdownCallbackHandle::WeakPtr
   on_shutdown(OnShutdownCallbackHandle::OnShutdownCallbackType callback);
 
   /// Remove a on_shutdown callback handle registered with on_shutdown.
   /**
-   * \param[in] callback_handle the on shutdown callback handle to be removed.
+   * \param[in] callback_handle the handle to be removed.
    */
   RCLCPP_PUBLIC
   virtual
   void
-  remove_on_shutdown_callback(OnShutdownCallbackHandle::SharedPtr callback_handle);
+  remove_on_shutdown_callback(const OnShutdownCallbackHandle::WeakPtr callback_handle);
 
   /// Return the shutdown callback handles as const.
   /**
@@ -225,7 +226,7 @@ public:
    * the list of "on shutdown" callback handles, i.e. on_shutdown().
    */
   RCLCPP_PUBLIC
-  const std::vector<OnShutdownCallbackHandle::WeakPtr> &
+  const std::unordered_set<OnShutdownCallbackHandle::SharedPtr> &
   get_on_shutdown_callbacks() const;
 
   /// Return the shutdown callback handles
@@ -234,7 +235,7 @@ public:
    * the list of "on shutdown" callback handles, i.e. on_shutdown().
    */
   RCLCPP_PUBLIC
-  std::vector<OnShutdownCallbackHandle::WeakPtr> &
+  std::unordered_set<OnShutdownCallbackHandle::SharedPtr> &
   get_on_shutdown_callbacks();
 
   /// Return the internal rcl context.
@@ -315,7 +316,7 @@ private:
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
 
-  std::vector<OnShutdownCallbackHandle::WeakPtr> on_shutdown_callbacks_;
+  std::unordered_set<OnShutdownCallbackHandle::SharedPtr> on_shutdown_callbacks_;
   std::mutex on_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
