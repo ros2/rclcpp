@@ -238,7 +238,6 @@ public:
    * If you want more information available in the callback, like the client
    * or other information, you may use a lambda with captures or std::bind.
    *
-   * \sa rclcpp::ClientBase::clear_on_new_response_callback
    * \sa rmw_client_set_on_new_response_callback
    * \sa rcl_client_set_on_new_response_callback
    *

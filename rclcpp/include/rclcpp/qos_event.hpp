@@ -113,9 +113,9 @@ public:
 
   /// Set a callback to be called when each new event instance occurs.
   /**
-   * The callback receives a size_t which is the number of responses received
+   * The callback receives a size_t which is the number of events that occurred
    * since the last time this callback was called.
-   * Normally this is 1, but can be > 1 if responses were received before any
+   * Normally this is 1, but can be > 1 if events occurred before any
    * callback was set.
    *
    * The callback also receives an int identifier argument.
@@ -124,7 +124,7 @@ public:
    * The application should provide a generic callback function that will be then
    * forwarded by the waitable to all of its entities.
    * Before forwarding, a different value for the identifier argument will be
-   * bounded to the function.
+   * bond to the function.
    * This implies that the provided callback can use the identifier to behave
    * differently depending on which entity triggered the waitable to become ready.
    *
@@ -139,13 +139,9 @@ public:
    *
    * This function is thread-safe.
    *
-   * If you want more information available in the callback, like the client
+   * If you want more information available in the callback, like the qos event
    * or other information, you may use a lambda with captures or std::bind.
    *
-   * Note: this function must be overridden with a proper implementation
-   * by the custom classes who inherit from rclcpp::Waitable if they want to use it.
-   *
-   * \sa rclcpp::QOSEventHandlerBase::clear_on_ready_callback
    * \sa rmw_event_set_callback
    * \sa rcl_event_set_callback
    *
