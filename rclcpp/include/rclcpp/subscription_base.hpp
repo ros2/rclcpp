@@ -394,7 +394,13 @@ public:
       return;
     }
 
-    // The on_ready_callback signature has an extra `int` argument used to disambiguate between 
+    if (!callback) {
+      throw std::invalid_argument(
+              "The callback passed to set_on_new_intra_process_message_callback "
+              "is not callable.");
+    }
+
+    // The on_ready_callback signature has an extra `int` argument used to disambiguate between
     // possible different entities within a generic waitable.
     // We hide that detail to users of this method.
     std::function<void(size_t, int)> new_callback = std::bind(callback, std::placeholders::_1);
@@ -455,7 +461,7 @@ protected:
   bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_subscription_id_;
-  std::shared_ptr<SubscriptionIntraProcessBase> subscription_intra_process_;
+  std::shared_ptr<rclcpp::experimental::SubscriptionIntraProcessBase> subscription_intra_process_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)

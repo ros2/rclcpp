@@ -448,7 +448,7 @@ TEST_F(TestSubscription, on_new_message_callback) {
   using test_msgs::msg::Empty;
 
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
@@ -518,7 +518,7 @@ TEST_F(TestSubscription, on_new_intra_process_message_callback) {
   using test_msgs::msg::Empty;
 
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
