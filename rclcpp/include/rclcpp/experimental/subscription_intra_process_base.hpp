@@ -154,7 +154,6 @@ public:
   }
 
   /// Unset the callback registered for new messages, if any.
-  RCLCPP_PUBLIC
   void
   clear_on_ready_callback() override
   {

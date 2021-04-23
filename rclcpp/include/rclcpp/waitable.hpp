@@ -203,9 +203,9 @@ public:
 
   /// Set a callback to be called whenever the waitable becomes ready.
   /**
-   * The callback receives a size_t which is the number of responses received
+   * The callback receives a size_t which is the number of times the waitable was ready
    * since the last time this callback was called.
-   * Normally this is 1, but can be > 1 if responses were received before any
+   * Normally this is 1, but can be > 1 if waitable was triggered before any
    * callback was set.
    *
    * The callback also receives an int identifier argument.

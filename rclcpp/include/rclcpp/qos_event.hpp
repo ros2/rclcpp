@@ -147,7 +147,6 @@ public:
    *
    * \param[in] callback functor to be called when a new event occurs
    */
-  RCLCPP_PUBLIC
   void
   set_on_ready_callback(std::function<void(size_t, int)> callback) override
   {
@@ -198,7 +197,6 @@ public:
   }
 
   /// Unset the callback registered for new events, if any.
-  RCLCPP_PUBLIC
   void
   clear_on_ready_callback() override
   {
