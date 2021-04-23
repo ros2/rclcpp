@@ -19,6 +19,7 @@
 #include <future>
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 #include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
 #include <sstream>
 #include <string>
@@ -243,7 +244,6 @@ public:
    *
    * \param[in] callback functor to be called when a new response is received
    */
-  RCLCPP_PUBLIC
   void
   set_on_new_response_callback(std::function<void(size_t)> callback)
   {
@@ -273,6 +273,8 @@ public:
         }
       };
 
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
     // been replaced but the middleware hasn't been told about the new one yet.
@@ -290,10 +292,10 @@ public:
   }
 
   /// Unset the callback registered for new responses, if any.
-  RCLCPP_PUBLIC
   void
   clear_on_new_response_callback()
   {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
     set_on_new_response_callback(nullptr, nullptr);
     on_new_response_callback_ = nullptr;
   }
@@ -326,6 +328,7 @@ protected:
 
   std::atomic<bool> in_use_by_wait_set_{false};
 
+  std::recursive_mutex reentrant_mutex_;
   std::function<void(size_t)> on_new_response_callback_{nullptr};
 };
 

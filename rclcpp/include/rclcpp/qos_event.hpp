@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 
@@ -182,6 +183,8 @@ public:
         }
       };
 
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
     // been replaced but the middleware hasn't been told about the new one yet.
@@ -203,6 +206,7 @@ public:
   void
   clear_on_ready_callback() override
   {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
     set_on_new_event_callback(nullptr, nullptr);
     on_new_event_callback_ = nullptr;
   }
@@ -214,6 +218,7 @@ protected:
 
   rcl_event_t event_handle_;
   size_t wait_set_event_index_;
+  std::recursive_mutex reentrant_mutex_;
   std::function<void(size_t)> on_new_event_callback_{nullptr};
 };
 

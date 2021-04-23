@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -309,7 +310,6 @@ public:
    *
    * \param[in] callback functor to be called when a new message is received
    */
-  RCLCPP_PUBLIC
   void
   set_on_new_message_callback(std::function<void(size_t)> callback)
   {
@@ -339,6 +339,8 @@ public:
         }
       };
 
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
     // been replaced but the middleware hasn't been told about the new one yet.
@@ -356,10 +358,10 @@ public:
   }
 
   /// Unset the callback registered for new messages, if any.
-  RCLCPP_PUBLIC
   void
   clear_on_new_message_callback()
   {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
     set_on_new_message_callback(nullptr, nullptr);
     on_new_message_callback_ = nullptr;
   }
@@ -416,6 +418,7 @@ private:
   std::unordered_map<rclcpp::QOSEventHandlerBase *,
     std::atomic<bool>> qos_events_in_use_by_wait_set_;
 
+  std::recursive_mutex reentrant_mutex_;
   std::function<void(size_t)> on_new_message_callback_{nullptr};
 };
 
