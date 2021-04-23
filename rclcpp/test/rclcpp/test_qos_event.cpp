@@ -27,6 +27,8 @@
 
 #include "../mocking_utils/patch.hpp"
 
+using namespace std::chrono_literals;
+
 class TestQosEvent : public ::testing::Test
 {
 protected:
@@ -324,4 +326,68 @@ TEST_F(TestQosEvent, add_to_wait_set) {
       "lib:rclcpp", rcl_wait_set_add_event, RCL_RET_ERROR);
     EXPECT_THROW(handler.add_to_wait_set(&wait_set), rclcpp::exceptions::RCLError);
   }
+}
+
+TEST_F(TestQosEvent, test_on_new_event_callback)
+{
+  rclcpp::QoS qos_profile_publisher(10);
+  qos_profile_publisher.durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(
+    topic_name, qos_profile_publisher);
+
+  std::atomic<size_t> c1 {0};
+  auto increase_c1_cb = [&c1](size_t count_events) {c1 += count_events;};
+  publisher->set_on_new_qos_event_callback(increase_c1_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+
+  rclcpp::QoS qos_profile_subscription(10);
+  qos_profile_subscription.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, qos_profile_subscription, message_callback);
+
+  auto start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c1 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1, 1u);
+
+  std::atomic<size_t> c2 {0};
+  auto increase_c2_cb = [&c2](size_t count_events) {c2 += count_events;};
+  subscription->set_on_new_qos_event_callback(
+    increase_c2_cb,
+    RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c2 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1, 1u);
+  EXPECT_EQ(c2, 1u);
+
+  auto publisher2 = node->create_publisher<test_msgs::msg::Empty>(
+    topic_name, qos_profile_publisher);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c2 == 1u && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1, 1u);
+  EXPECT_EQ(c2, 2u);
+
+  publisher->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+
+  auto subscription2 = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, qos_profile_subscription, message_callback);
+
+  publisher->set_on_new_qos_event_callback(increase_c1_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c1 == 1 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1, 2u);
+  EXPECT_EQ(c2, 2u);
 }

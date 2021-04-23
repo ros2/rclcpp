@@ -55,7 +55,8 @@ NodeTopics::add_publisher(
     callback_group = node_base_->get_default_callback_group();
   }
 
-  for (auto & publisher_event : publisher->get_event_handlers()) {
+  for (auto & key_event_pair : publisher->get_event_handlers()) {
+    auto publisher_event = key_event_pair.second;
     callback_group->add_waitable(publisher_event);
   }
 
@@ -96,7 +97,8 @@ NodeTopics::add_subscription(
 
   callback_group->add_subscription(subscription);
 
-  for (auto & subscription_event : subscription->get_event_handlers()) {
+  for (auto & key_event_pair : subscription->get_event_handlers()) {
+    auto subscription_event = key_event_pair.second;
     callback_group->add_waitable(subscription_event);
   }
 

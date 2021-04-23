@@ -22,6 +22,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -154,7 +155,8 @@ PublisherBase::get_publisher_handle() const
   return publisher_handle_;
 }
 
-const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+const
+std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 PublisherBase::get_event_handlers() const
 {
   return event_handlers_;

@@ -102,9 +102,10 @@ public:
   get_subscription_handle() const;
 
   /// Get all the QoS event handlers associated with this subscription.
-  /** \return The vector of QoS event handlers. */
+  /** \return The map of QoS event handlers. */
   RCLCPP_PUBLIC
-  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+  const
+  std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
   get_event_handlers() const;
 
   /// Get the actual QoS settings, after the defaults have been determined.
@@ -421,6 +422,71 @@ public:
     subscription_intra_process_->clear_on_ready_callback();
   }
 
+  /// Set a callback to be called when each new qos event instance occurs.
+  /**
+   * The callback receives a size_t which is the number of events that occurred
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if events occurred before any
+   * callback was set.
+   *
+   * Since this callback is called from the middleware, you should aim to make
+   * it fast and not blocking.
+   * If you need to do a lot of work or wait for some other event, you should
+   * spin it off to another thread, otherwise you risk blocking the middleware.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * An exception will be thrown if the callback is not callable.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the qos event
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \sa rclcpp::QOSEventHandlerBase::set_on_ready_callback
+   *
+   * \param[in] callback functor to be called when a new event occurs
+   * \param[in] event_type identifier for the qos event we want to attach the callback to
+   */
+  void
+  set_on_new_qos_event_callback(
+    std::function<void(size_t)> callback,
+    rcl_subscription_event_type_t event_type)
+  {
+    if (event_handlers_.count(event_type) == 0) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Calling set_on_new_qos_event_callback for non registered event_type");
+      return;
+    }
+
+    if (!callback) {
+      throw std::invalid_argument(
+              "The callback passed to set_on_new_qos_event_callback "
+              "is not callable.");
+    }
+
+    // The on_ready_callback signature has an extra `int` argument used to disambiguate between
+    // possible different entities within a generic waitable.
+    // We hide that detail to users of this method.
+    std::function<void(size_t, int)> new_callback = std::bind(callback, std::placeholders::_1);
+    event_handlers_[event_type]->set_on_ready_callback(new_callback);
+  }
+
+  /// Unset the callback registered for new qos events, if any.
+  void
+  clear_on_new_qos_event_callback(rcl_subscription_event_type_t event_type)
+  {
+    if (event_handlers_.count(event_type) == 0) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Calling clear_on_new_qos_event_callback for non registered event_type");
+      return;
+    }
+
+    event_handlers_[event_type]->clear_on_ready_callback();
+  }
+
 protected:
   template<typename EventCallbackT>
   void
@@ -435,7 +501,7 @@ protected:
       get_subscription_handle(),
       event_type);
     qos_events_in_use_by_wait_set_.insert(std::make_pair(handler.get(), false));
-    event_handlers_.emplace_back(handler);
+    event_handlers_.insert(std::make_pair(event_type, handler));
   }
 
   RCLCPP_PUBLIC
@@ -456,7 +522,8 @@ protected:
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
   rclcpp::Logger node_logger_;
 
-  std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
+  std::unordered_map<rcl_subscription_event_type_t,
+    std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 
   bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;

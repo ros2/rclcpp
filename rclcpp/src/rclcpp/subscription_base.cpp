@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
@@ -116,7 +117,8 @@ SubscriptionBase::get_subscription_handle() const
   return subscription_handle_;
 }
 
-const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+const
+std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 SubscriptionBase::get_event_handlers() const
 {
   return event_handlers_;
@@ -283,7 +285,8 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   if (get_intra_process_waitable().get() == pointer_to_subscription_part) {
     return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
   }
-  for (const auto & qos_event : event_handlers_) {
+  for (const auto & key_event_pair : event_handlers_) {
+    auto qos_event = key_event_pair.second;
     if (qos_event.get() == pointer_to_subscription_part) {
       return qos_events_in_use_by_wait_set_[qos_event.get()].exchange(in_use_state);
     }

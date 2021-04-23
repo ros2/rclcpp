@@ -503,7 +503,8 @@ TEST_F(TestPublisher, run_event_handlers) {
   initialize();
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
 
-  for (const auto & handler : publisher->get_event_handlers()) {
+  for (const auto & key_event_pair : publisher->get_event_handlers()) {
+    auto handler = key_event_pair.second;
     std::shared_ptr<void> data = handler->take_data();
     handler->execute(data);
   }
