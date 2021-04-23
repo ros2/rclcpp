@@ -391,3 +391,31 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
   EXPECT_EQ(c1, 2u);
   EXPECT_EQ(c2, 2u);
 }
+
+TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
+{
+  auto pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+  auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
+  auto dummy_cb = [](size_t count_events) {(void)count_events;};
+  std::function<void(size_t)> invalid_cb;
+
+  EXPECT_NO_THROW(
+    pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS));
+
+  EXPECT_NO_THROW(
+    pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS));
+
+  EXPECT_NO_THROW(
+    sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS));
+
+  EXPECT_NO_THROW(
+    sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS));
+
+  EXPECT_THROW(
+    pub->set_on_new_qos_event_callback(invalid_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS),
+    std::invalid_argument);
+
+  EXPECT_THROW(
+    sub->set_on_new_qos_event_callback(invalid_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS),
+    std::invalid_argument);
+}
