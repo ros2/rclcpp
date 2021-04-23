@@ -366,6 +366,55 @@ public:
     on_new_message_callback_ = nullptr;
   }
 
+  /// Set a callback to be called when each new intra-process message is received.
+  /**
+   * The callback receives a size_t which is the number of messages received
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if messages were received before any
+   * callback was set.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the subscription
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \sa rclcpp::SubscriptionIntraProcessBase::set_on_ready_callback
+   *
+   * \param[in] callback functor to be called when a new message is received
+   */
+  void
+  set_on_new_intra_process_message_callback(std::function<void(size_t)> callback)
+  {
+    if (!use_intra_process_) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Calling set_on_new_intra_process_message_callback for subscription with IPC disabled");
+      return;
+    }
+
+    // The on_ready_callback signature has an extra `int` argument used to disambiguate between 
+    // possible different entities within a generic waitable.
+    // We hide that detail to users of this method.
+    std::function<void(size_t, int)> new_callback = std::bind(callback, std::placeholders::_1);
+    subscription_intra_process_->set_on_ready_callback(new_callback);
+  }
+
+  /// Unset the callback registered for new intra-process messages, if any.
+  void
+  clear_on_new_intra_process_message_callback()
+  {
+    if (!use_intra_process_) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Calling clear_on_new_intra_process_message_callback for subscription with IPC disabled");
+      return;
+    }
+
+    subscription_intra_process_->clear_on_ready_callback();
+  }
+
 protected:
   template<typename EventCallbackT>
   void
@@ -406,6 +455,7 @@ protected:
   bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_subscription_id_;
+  std::shared_ptr<SubscriptionIntraProcessBase> subscription_intra_process_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
