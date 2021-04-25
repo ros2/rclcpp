@@ -277,6 +277,68 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_e
 }
 
 /*
+ * Test callback groups from one node to many executors.
+ * A subscriber on a new executor with a callback group not received a message
+ * because the executor can't be triggered while a subscriber created, see
+ * https://github.com/ros2/rclcpp/issues/1611
+*/
+TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_message)
+{
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+
+  // create a thread running an executor with a new callback group for a coming subscriber
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::executors::SingleThreadedExecutor cb_grp_executor;
+  std::thread cb_grp_thread = std::thread(
+    [&cb_grp, &node, &cb_grp_executor]() {
+      cb_grp_executor.add_callback_group(cb_grp, node->get_node_base_interface());
+      cb_grp_executor.spin();
+    });
+
+  // expect the subscriber to receive a message
+  bool received_message = false;
+  auto sub_callback = [&received_message](const test_msgs::msg::Empty::SharedPtr) {
+      received_message = true;
+    };
+
+  // a timer callback run on the default executor
+  rclcpp::TimerBase::SharedPtr timer = nullptr;
+  auto timer_callback = [&timer, &cb_grp, &node, &sub_callback]() {
+      if (timer) {
+        timer.reset();
+      }
+
+      // create a subscription using the `cb_grp` callback group
+      rclcpp::QoS qos = rclcpp::QoS(1).reliable();
+      auto options = rclcpp::SubscriptionOptions();
+      options.callback_group = cb_grp;
+      auto subscription =
+        node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
+
+      // create a publisher to send data
+      auto publisher =
+        node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
+      publisher->publish(test_msgs::msg::Empty());
+      // wait for message to be published
+      std::this_thread::sleep_for(100ms);
+    };
+
+  // timer on default callback group
+  timer = node->create_wall_timer(1s, timer_callback);
+  auto start = std::chrono::steady_clock::now();
+  while (!received_message &&
+    (std::chrono::steady_clock::now() - start) < 3s)
+  {
+    rclcpp::spin_some(node);
+  }
+
+  cb_grp_executor.cancel();
+  cb_grp_thread.join();
+  EXPECT_TRUE(received_message);
+}
+
+/*
  * Test removing callback group from executor that its not associated with.
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_group)
