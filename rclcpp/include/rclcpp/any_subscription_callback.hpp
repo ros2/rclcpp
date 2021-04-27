@@ -158,7 +158,7 @@ struct AnySubscriptionCallbackPossibleTypes
 template<
   typename MessageT,
   typename AllocatorT,
-  bool is_adapted_type = rclcpp::is_type_adapter<MessageT>::value
+  bool is_adapted_type = rclcpp::TypeAdapter<MessageT>::is_specialized::value
 >
 struct AnySubscriptionCallbackHelper;
 
@@ -462,7 +462,7 @@ public:
   std::unique_ptr<SubscribedType, SubscribedTypeDeleter>
   convert_ros_message_to_custom_type_unique_ptr(const ROSMessageType & msg)
   {
-    if constexpr (is_type_adapter<MessageT>::value) {
+    if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
       auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
       SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
       rclcpp::TypeAdapter<MessageT>::convert_to_custom(msg, *ptr);
@@ -492,7 +492,7 @@ public:
     std::visit(
       [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
-        static constexpr bool is_ta = rclcpp::is_type_adapter<MessageT>::value;
+        static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
 
         // conditions for output is custom message
         if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
@@ -671,7 +671,7 @@ public:
     std::visit(
       [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
-        static constexpr bool is_ta = rclcpp::is_type_adapter<MessageT>::value;
+        static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
 
         // conditions for custom type
         if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
@@ -777,7 +777,7 @@ public:
     std::visit(
       [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
-        static constexpr bool is_ta = rclcpp::is_type_adapter<MessageT>::value;
+        static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
 
         // conditions for custom type
         if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
