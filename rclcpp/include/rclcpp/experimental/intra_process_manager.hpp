@@ -368,7 +368,9 @@ private:
           >(subscription_base);
         if (nullptr == subscription) {
           throw std::runtime_error(
-            "failed to dynamic cast SubscriptionIntraProcessBase to SubscriptionIntraProcess<MessageT>");
+            "failed to dynamic cast SubscriptionIntraProcessBase to "
+            "SubscriptionIntraProcess<MessageT>, which can happen when the publisher "
+            "and subscription use different allocator types, which is not supported");
         }
 
         subscription->provide_intra_process_message(message);
@@ -403,7 +405,9 @@ private:
           >(subscription_base);
         if (nullptr == subscription) {
           throw std::runtime_error(
-            "failed to dynamic cast SubscriptionIntraProcessBase to SubscriptionIntraProcess<MessageT>");
+            "failed to dynamic cast SubscriptionIntraProcessBase to "
+            "SubscriptionIntraProcess<MessageT>, which can happen when the publisher "
+            "and subscription use different allocator types, which is not supported");
         }
 
         if (std::next(it) == subscription_ids.end()) {
