@@ -369,7 +369,11 @@ protected:
     if (goal_handle) {
       resp = handle_cancel_(goal_handle);
       if (CancelResponse::ACCEPT == resp) {
-        goal_handle->_cancel_goal();
+        try {
+          goal_handle->_cancel_goal();
+        } catch (const rclcpp::exceptions::RCLError & ex) {
+          return CancelResponse::REJECT;
+        }
       }
     }
     return resp;
