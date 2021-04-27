@@ -197,13 +197,13 @@ format_parameter_with_ta(const ::testing::TestParamInfo<DispatchTestsWithTA::Par
     auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
     any_subscription_callback_to_test.dispatch(msg_shared_ptr_, message_info_); \
   } \
-\
+ \
   /* Testing dispatch with shared_ptr<const MessageT> as input */ \
   TEST_P(DispatchTests_name, test_intra_shared_dispatch) { \
     auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
     any_subscription_callback_to_test.dispatch_intra_process(msg_shared_ptr_, message_info_); \
   } \
-\
+ \
   /* Testing dispatch with unique_ptr<MessageT> as input */ \
   TEST_P(DispatchTests_name, test_intra_unique_dispatch) { \
     auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
@@ -347,7 +347,8 @@ INSTANTIATE_TEST_SUITE_P(
         unique_ptr_w_info_free_func)},
     // bind function
     BindContext<test_msgs::msg::Empty, std::unique_ptr<test_msgs::msg::Empty>>("bind_method"),
-    BindContext<test_msgs::msg::Empty, std::unique_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &>(
+    BindContext<test_msgs::msg::Empty, std::unique_ptr<test_msgs::msg::Empty>,
+    const rclcpp::MessageInfo &>(
       "bind_method_with_info")
   ),
   format_parameter
@@ -379,7 +380,8 @@ INSTANTIATE_TEST_SUITE_P(
         shared_const_ptr_w_info_free_func)},
     // bind function
     BindContext<test_msgs::msg::Empty, std::shared_ptr<const test_msgs::msg::Empty>>("bind_method"),
-    BindContext<test_msgs::msg::Empty, std::shared_ptr<const test_msgs::msg::Empty>, const rclcpp::MessageInfo &>(
+    BindContext<test_msgs::msg::Empty, std::shared_ptr<const test_msgs::msg::Empty>,
+    const rclcpp::MessageInfo &>(
       "bind_method_with_info")
   ),
   format_parameter
@@ -410,8 +412,10 @@ INSTANTIATE_TEST_SUITE_P(
       rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty>().set(
         const_ref_shared_const_ptr_w_info_free_func)},
     // bind function
-    BindContext<test_msgs::msg::Empty, const std::shared_ptr<const test_msgs::msg::Empty> &>("bind_method"),
-    BindContext<test_msgs::msg::Empty, const std::shared_ptr<const test_msgs::msg::Empty> &, const rclcpp::MessageInfo &>(
+    BindContext<test_msgs::msg::Empty,
+    const std::shared_ptr<const test_msgs::msg::Empty> &>("bind_method"),
+    BindContext<test_msgs::msg::Empty, const std::shared_ptr<const test_msgs::msg::Empty> &,
+    const rclcpp::MessageInfo &>(
       "bind_method_with_info")
   ),
   format_parameter
@@ -443,7 +447,8 @@ INSTANTIATE_TEST_SUITE_P(
         shared_ptr_w_info_free_func)},
     // bind function
     BindContext<test_msgs::msg::Empty, std::shared_ptr<test_msgs::msg::Empty>>("bind_method"),
-    BindContext<test_msgs::msg::Empty, std::shared_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &>(
+    BindContext<test_msgs::msg::Empty, std::shared_ptr<test_msgs::msg::Empty>,
+    const rclcpp::MessageInfo &>(
       "bind_method_with_info")
   ),
   format_parameter
