@@ -44,8 +44,8 @@
 
 using namespace std::chrono_literals;
 
-static const int max_loops = 200;
-static const std::chrono::milliseconds sleep_per_loop(10);
+static const int g_max_loops = 200;
+static const std::chrono::milliseconds g_sleep_per_loop(10);
 
 
 class TestPublisher : public ::testing::Test
@@ -208,29 +208,17 @@ TEST_F(
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 10);
   auto sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, callback);
 
-  rclcpp::executors::SingleThreadedExecutor executor;
-  auto wait_for_message_to_be_received = [&is_received, &node, &executor]() {
+  auto wait_for_message_to_be_received = [&is_received, &node]() {
+      rclcpp::executors::SingleThreadedExecutor executor;
       int i = 0;
-      executor.spin_node_once(node, std::chrono::milliseconds(0));
-      while (!is_received && i < max_loops) {
-        printf("spin_node_once() - callback (1) expected - try %d/%d\n", ++i, max_loops);
-        std::this_thread::sleep_for(sleep_per_loop);
-        executor.spin_node_once(node, std::chrono::milliseconds(0));
+      executor.add_node(node);
+      executor.spin_once(std::chrono::milliseconds(0));
+      while (!is_received && i < g_max_loops) {
+        printf("spin_node_once() - callback (1) expected - try %d/%d\n", ++i, g_max_loops);
+        executor.spin_once(g_sleep_per_loop);
       }
     };
   {
-    // nothing should be pending here
-    printf("spin_node_once(nonblocking) - no callback expected\n");
-    executor.spin_node_once(node, std::chrono::milliseconds(0));
-    ASSERT_FALSE(is_received);
-    printf("spin_node_some() - no callback expected\n");
-    executor.spin_node_some(node);
-    ASSERT_FALSE(is_received);
-
-    // wait a moment for everything to initialize
-    // TODO(gerkey): fix nondeterministic startup behavior
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
     { // std::string passed by reference
       is_received = false;
       pub->publish(message_data);
@@ -302,13 +290,13 @@ TEST_F(TestPublisher, check_type_adapted_message_is_sent_and_received) {
   auto assert_message_was_received = [sub, message_data]() {
       rclcpp::msg::String msg;
       rclcpp::MessageInfo msg_info;
-      bool message_recieved = false;
+      bool message_received = false;
       auto start = std::chrono::steady_clock::now();
       do {
-        message_recieved = sub->take(msg, msg_info);
+        message_received = sub->take(msg, msg_info);
         std::this_thread::sleep_for(100ms);
-      } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-      EXPECT_TRUE(message_recieved);
+      } while (!message_received && std::chrono::steady_clock::now() - start < 10s);
+      EXPECT_TRUE(message_received);
       ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
     };
 
