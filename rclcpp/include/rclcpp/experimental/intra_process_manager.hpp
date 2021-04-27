@@ -363,9 +363,13 @@ private:
       }
       auto subscription_base = subscription_it->second.subscription.lock();
       if (subscription_base) {
-        auto subscription = std::static_pointer_cast<
+        auto subscription = std::dynamic_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcess<MessageT>
           >(subscription_base);
+        if (nullptr == subscription) {
+          throw std::runtime_error(
+            "failed to dynamic cast SubscriptionIntraProcessBase to SubscriptionIntraProcess<MessageT>");
+        }
 
         subscription->provide_intra_process_message(message);
       } else {
@@ -394,9 +398,13 @@ private:
       }
       auto subscription_base = subscription_it->second.subscription.lock();
       if (subscription_base) {
-        auto subscription = std::static_pointer_cast<
+        auto subscription = std::dynamic_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcess<MessageT>
           >(subscription_base);
+        if (nullptr == subscription) {
+          throw std::runtime_error(
+            "failed to dynamic cast SubscriptionIntraProcessBase to SubscriptionIntraProcess<MessageT>");
+        }
 
         if (std::next(it) == subscription_ids.end()) {
           // If this is the last subscription, give up ownership
