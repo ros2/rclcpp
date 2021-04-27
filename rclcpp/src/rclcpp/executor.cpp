@@ -56,7 +56,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
     throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
   }
 
-  shutdown_callback_handle_ = context_->on_shutdown(
+  shutdown_callback_handle_ = context_->add_on_shutdown_callback(
     [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{shutdown_guard_condition_}]() {
       auto strong_gc = weak_gc.lock();
       if (strong_gc) {

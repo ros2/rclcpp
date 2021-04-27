@@ -346,8 +346,16 @@ Context::shutdown(const std::string & reason)
   return true;
 }
 
+rclcpp::Context::OnShutdownCallback
+Context::on_shutdown(OnShutdownCallback callback)
+{
+  std::weak_ptr<OnShutdownCallbackHandle> callback_handle =
+    add_on_shutdown_callback(callback);
+  return callback_handle.lock()->callback;
+}
+
 rclcpp::OnShutdownCallbackHandle::WeakPtr
-Context::on_shutdown(OnShutdownCallbackHandle::OnShutdownCallbackType callback)
+Context::add_on_shutdown_callback(OnShutdownCallback callback)
 {
   auto handle = std::make_shared<OnShutdownCallbackHandle>();
   handle->callback = callback;
@@ -359,25 +367,29 @@ Context::on_shutdown(OnShutdownCallbackHandle::OnShutdownCallbackType callback)
 }
 
 void
-Context::remove_on_shutdown_callback(const OnShutdownCallbackHandle::WeakPtr callback_handle)
+Context::remove_on_shutdown_callback(const OnShutdownCallbackHandle::WeakPtr & callback_handle)
 {
+  std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
   auto callback_handle_shared_ptr = callback_handle.lock();
   if (callback_handle_shared_ptr) {
-    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
     on_shutdown_callbacks_.erase(callback_handle_shared_ptr);
   }
 }
 
-const std::unordered_set<rclcpp::OnShutdownCallbackHandle::SharedPtr> &
-Context::get_on_shutdown_callbacks() const
-{
-  return on_shutdown_callbacks_;
-}
-
-std::unordered_set<rclcpp::OnShutdownCallbackHandle::SharedPtr> &
+std::vector<rclcpp::Context::OnShutdownCallback>
 Context::get_on_shutdown_callbacks()
 {
-  return on_shutdown_callbacks_;
+  std::vector<OnShutdownCallback> callbacks;
+  std::unordered_set<OnShutdownCallbackHandle::SharedPtr>::iterator iter;
+
+  {
+    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+    for (iter = on_shutdown_callbacks_.begin(); iter != on_shutdown_callbacks_.end(); ++iter) {
+      callbacks.emplace_back((*iter)->callback);
+    }
+  }
+
+  return callbacks;
 }
 
 std::shared_ptr<rcl_context_t>
