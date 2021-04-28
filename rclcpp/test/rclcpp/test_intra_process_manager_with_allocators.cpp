@@ -93,43 +93,103 @@ constexpr bool operator!=(
   return false;
 }
 
-/*
-   This tests the case where a custom allocator is used correctly, i.e. the same
-   custom allocator on both sides.
- */
-TEST(TestIntraProcessManagerWithAllocators, custom_allocator) {
+template<
+  typename PublishedMessageAllocatorT,
+  typename PublisherAllocatorT,
+  typename SubscribedMessageAllocatorT,
+  typename SubscriptionAllocatorT,
+  typename MessageMemoryStrategyAllocatorT,
+  typename MemoryStrategyAllocatorT,
+  typename ExpectedExceptionT
+>
+void
+do_custom_allocator_test(
+  PublishedMessageAllocatorT published_message_allocator,
+  PublisherAllocatorT publisher_allocator,
+  SubscribedMessageAllocatorT /* subscribed_message_allocator */,  // intentinally unused
+  SubscriptionAllocatorT subscription_allocator,
+  MessageMemoryStrategyAllocatorT message_memory_strategy,
+  MemoryStrategyAllocatorT memory_strategy_allocator)
+{
+  using PublishedMessageAllocTraits =
+    rclcpp::allocator::AllocRebind<test_msgs::msg::Empty, PublishedMessageAllocatorT>;
+  using PublishedMessageAlloc = typename PublishedMessageAllocTraits::allocator_type;
+  using PublishedMessageDeleter =
+    rclcpp::allocator::Deleter<PublishedMessageAlloc, test_msgs::msg::Empty>;
+
+  using SubscribedMessageAllocTraits =
+    rclcpp::allocator::AllocRebind<test_msgs::msg::Empty, SubscribedMessageAllocatorT>;
+  using SubscribedMessageAlloc = typename SubscribedMessageAllocTraits::allocator_type;
+  using SubscribedMessageDeleter =
+    rclcpp::allocator::Deleter<SubscribedMessageAlloc, test_msgs::msg::Empty>;
+
+  // init and node
   auto context = std::make_shared<rclcpp::Context>();
   context->init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>(
     "custom_allocator_test",
     rclcpp::NodeOptions().context(context).use_intra_process_comms(true));
 
-  uint32_t counter = 0;
-  auto callback =
-    [&counter](std::shared_ptr<const test_msgs::msg::Empty>) {
-      ++counter;
-    };
-
-  using Alloc = MyAllocator<void>;
-  auto alloc = std::make_shared<Alloc>();
-  rclcpp::PublisherOptionsWithAllocator<Alloc> publisher_options;
-  publisher_options.allocator = alloc;
+  // publisher
+  auto shared_publisher_allocator = std::make_shared<PublisherAllocatorT>(publisher_allocator);
+  rclcpp::PublisherOptionsWithAllocator<PublisherAllocatorT> publisher_options;
+  publisher_options.allocator = shared_publisher_allocator;
   auto publisher =
     node->create_publisher<test_msgs::msg::Empty>("custom_allocator_test", 10, publisher_options);
 
-  rclcpp::SubscriptionOptionsWithAllocator<Alloc> subscription_options;
-  subscription_options.allocator = alloc;
-  auto msg_mem_strat =
-    std::make_shared<
-    rclcpp::message_memory_strategy::MessageMemoryStrategy<test_msgs::msg::Empty, Alloc>
-    >(alloc);
-  auto subscriber = node->create_subscription<test_msgs::msg::Empty>(
-    "custom_allocator_test", 10, callback, subscription_options, msg_mem_strat);
+  // callback for subscription
+  uint32_t counter = 0;
+  std::promise<std::unique_ptr<test_msgs::msg::Empty, SubscribedMessageDeleter>> received_message;
+  auto received_message_future = received_message.get_future();
+  auto callback =
+    [&counter, &received_message](
+    std::unique_ptr<test_msgs::msg::Empty, SubscribedMessageDeleter> msg)
+    {
+      ++counter;
+      received_message.set_value(std::move(msg));
+    };
 
+  // subscription
+  auto shared_subscription_allocator =
+    std::make_shared<SubscriptionAllocatorT>(subscription_allocator);
+  rclcpp::SubscriptionOptionsWithAllocator<SubscriptionAllocatorT> subscription_options;
+  subscription_options.allocator = shared_subscription_allocator;
+  auto shared_message_strategy_allocator =
+    std::make_shared<MessageMemoryStrategyAllocatorT>(message_memory_strategy);
+  auto msg_mem_strat = std::make_shared<
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      test_msgs::msg::Empty,
+      MessageMemoryStrategyAllocatorT
+    >
+    >(shared_message_strategy_allocator);
+  using CallbackMessageT =
+    typename rclcpp::subscription_traits::has_message_type<decltype(callback)>::type;
+  auto subscriber = node->create_subscription<
+    test_msgs::msg::Empty,
+    decltype(callback),
+    SubscriptionAllocatorT,
+    CallbackMessageT,
+    rclcpp::Subscription<CallbackMessageT, SubscriptionAllocatorT>,
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      CallbackMessageT,
+      MessageMemoryStrategyAllocatorT
+    >
+    >(
+    "custom_allocator_test",
+    10,
+    std::forward<decltype(callback)>(callback),
+    subscription_options,
+    msg_mem_strat);
+
+  // executor memory strategy
   using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
+  auto shared_memory_strategy_allocator = std::make_shared<MemoryStrategyAllocatorT>(
+    memory_strategy_allocator);
   std::shared_ptr<rclcpp::memory_strategy::MemoryStrategy> memory_strategy =
-    std::make_shared<AllocatorMemoryStrategy<Alloc>>(alloc);
+    std::make_shared<AllocatorMemoryStrategy<MemoryStrategyAllocatorT>>(
+    shared_memory_strategy_allocator);
 
+  // executor
   rclcpp::ExecutorOptions options;
   options.memory_strategy = memory_strategy;
   options.context = context;
@@ -137,22 +197,57 @@ TEST(TestIntraProcessManagerWithAllocators, custom_allocator) {
 
   executor.add_node(node);
 
-  using MessageAllocTraits =
-    rclcpp::allocator::AllocRebind<test_msgs::msg::Empty, Alloc>;
-  using MessageAlloc = MessageAllocTraits::allocator_type;
-  using MessageDeleter = rclcpp::allocator::Deleter<MessageAlloc, test_msgs::msg::Empty>;
-  MessageDeleter message_deleter;
-  MessageAlloc message_alloc = *alloc;
-  rclcpp::allocator::set_allocator_for_deleter(&message_deleter, &message_alloc);
+  // rebind message_allocator to ensure correct type
+  PublishedMessageDeleter message_deleter;
+  PublishedMessageAlloc rebound_message_allocator = published_message_allocator;
+  rclcpp::allocator::set_allocator_for_deleter(&message_deleter, &rebound_message_allocator);
 
-  auto ptr = MessageAllocTraits::allocate(message_alloc, 1);
-  MessageAllocTraits::construct(message_alloc, ptr);
-  std::unique_ptr<test_msgs::msg::Empty, MessageDeleter> msg(ptr, message_deleter);
-  EXPECT_NO_THROW(
-  {
-    publisher->publish(std::move(msg));
-    executor.spin_some();
-  });
+  // allocate a message
+  auto ptr = PublishedMessageAllocTraits::allocate(rebound_message_allocator, 1);
+  PublishedMessageAllocTraits::construct(rebound_message_allocator, ptr);
+  std::unique_ptr<test_msgs::msg::Empty, PublishedMessageDeleter> msg(ptr, message_deleter);
+
+  // publisher and receive
+  if constexpr (std::is_same_v<ExpectedExceptionT, void>) {
+    // no exception expected
+    EXPECT_NO_THROW(
+    {
+      publisher->publish(std::move(msg));
+      executor.spin_until_future_complete(received_message_future, std::chrono::seconds(10));
+    });
+    EXPECT_EQ(ptr, received_message_future.get().get());
+    EXPECT_EQ(1u, counter);
+  } else {
+    // exception expected
+    EXPECT_THROW(
+    {
+      publisher->publish(std::move(msg));
+      executor.spin_until_future_complete(received_message_future, std::chrono::seconds(10));
+    }, ExpectedExceptionT);
+  }
+}
+
+/*
+   This tests the case where a custom allocator is used correctly, i.e. the same
+   custom allocator on both sides.
+ */
+TEST(TestIntraProcessManagerWithAllocators, custom_allocator) {
+  using PublishedMessageAllocatorT = std::allocator<void>;
+  using PublisherAllocatorT = std::allocator<void>;
+  using SubscribedMessageAllocatorT = std::allocator<void>;
+  using SubscriptionAllocatorT = std::allocator<void>;
+  using MessageMemoryStrategyAllocatorT = std::allocator<void>;
+  using MemoryStrategyAllocatorT = std::allocator<void>;
+  auto allocator = std::allocator<void>();
+  do_custom_allocator_test<
+    PublishedMessageAllocatorT,
+    PublisherAllocatorT,
+    SubscribedMessageAllocatorT,
+    SubscriptionAllocatorT,
+    MessageMemoryStrategyAllocatorT,
+    MemoryStrategyAllocatorT,
+    void  // no exception expected
+  >(allocator, allocator, allocator, allocator, allocator, allocator);
 }
 
 /*
@@ -160,62 +255,22 @@ TEST(TestIntraProcessManagerWithAllocators, custom_allocator) {
    custom allocators on both sides.
  */
 TEST(TestIntraProcessManagerWithAllocators, custom_allocator_wrong) {
-  auto context = std::make_shared<rclcpp::Context>();
-  context->init(0, nullptr);
-  auto node = std::make_shared<rclcpp::Node>(
-    "custom_allocator_test",
-    rclcpp::NodeOptions().context(context).use_intra_process_comms(true));
-
-  uint32_t counter = 0;
-  auto callback =
-    [&counter](std::shared_ptr<const test_msgs::msg::Empty>) {
-      ++counter;
-    };
-
-  using Alloc = MyAllocator<void>;
-  auto alloc = std::make_shared<Alloc>();
-  rclcpp::PublisherOptionsWithAllocator<Alloc> publisher_options;
-  publisher_options.allocator = alloc;
-  auto publisher =
-    node->create_publisher<test_msgs::msg::Empty>("custom_allocator_test", 10, publisher_options);
-
-  // Explicitly use std::allocator<void>
-  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> subscription_options;
-  auto std_alloc = std::make_shared<std::allocator<void>>();
-  subscription_options.allocator = std_alloc;
-  auto msg_mem_strat =
-    std::make_shared<
-    rclcpp::message_memory_strategy::MessageMemoryStrategy<test_msgs::msg::Empty,
-    std::allocator<void>>
-    >(std_alloc);
-  auto subscriber = node->create_subscription<test_msgs::msg::Empty>(
-    "custom_allocator_test", 10, callback, subscription_options, msg_mem_strat);
-
-  using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
-  std::shared_ptr<rclcpp::memory_strategy::MemoryStrategy> memory_strategy =
-    std::make_shared<AllocatorMemoryStrategy<Alloc>>(alloc);
-
-  rclcpp::ExecutorOptions options;
-  options.memory_strategy = memory_strategy;
-  options.context = context;
-  rclcpp::executors::SingleThreadedExecutor executor(options);
-
-  executor.add_node(node);
-
-  using MessageAllocTraits =
-    rclcpp::allocator::AllocRebind<test_msgs::msg::Empty, Alloc>;
-  using MessageAlloc = MessageAllocTraits::allocator_type;
-  using MessageDeleter = rclcpp::allocator::Deleter<MessageAlloc, test_msgs::msg::Empty>;
-  MessageDeleter message_deleter;
-  MessageAlloc message_alloc = *alloc;
-  rclcpp::allocator::set_allocator_for_deleter(&message_deleter, &message_alloc);
-
-  auto ptr = MessageAllocTraits::allocate(message_alloc, 1);
-  MessageAllocTraits::construct(message_alloc, ptr);
-  std::unique_ptr<test_msgs::msg::Empty, MessageDeleter> msg(ptr, message_deleter);
-  EXPECT_THROW(
-  {
-    publisher->publish(std::move(msg));
-    executor.spin_some();
-  }, std::runtime_error);
+  // explicitly use a different allocator here to provoke a failure
+  using PublishedMessageAllocatorT = std::allocator<void>;
+  using PublisherAllocatorT = std::allocator<void>;
+  using SubscribedMessageAllocatorT = MyAllocator<void>;
+  using SubscriptionAllocatorT = MyAllocator<void>;
+  using MessageMemoryStrategyAllocatorT = MyAllocator<void>;
+  using MemoryStrategyAllocatorT = std::allocator<void>;
+  auto allocator = std::allocator<void>();
+  auto my_allocator = MyAllocator<void>();
+  do_custom_allocator_test<
+    PublishedMessageAllocatorT,
+    PublisherAllocatorT,
+    SubscribedMessageAllocatorT,
+    SubscriptionAllocatorT,
+    MessageMemoryStrategyAllocatorT,
+    MemoryStrategyAllocatorT,
+    std::runtime_error  // expected exception
+  >(allocator, allocator, my_allocator, my_allocator, my_allocator, allocator);
 }
