@@ -121,7 +121,7 @@ TEST(TestIntraProcessManagerWithAllocators, custom_allocator) {
   subscription_options.allocator = alloc;
   auto msg_mem_strat =
     std::make_shared<
-      rclcpp::message_memory_strategy::MessageMemoryStrategy<test_msgs::msg::Empty, Alloc>
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<test_msgs::msg::Empty, Alloc>
     >(alloc);
   auto subscriber = node->create_subscription<test_msgs::msg::Empty>(
     "custom_allocator_test", 10, callback, subscription_options, msg_mem_strat);
@@ -148,7 +148,8 @@ TEST(TestIntraProcessManagerWithAllocators, custom_allocator) {
   auto ptr = MessageAllocTraits::allocate(message_alloc, 1);
   MessageAllocTraits::construct(message_alloc, ptr);
   std::unique_ptr<test_msgs::msg::Empty, MessageDeleter> msg(ptr, message_deleter);
-  EXPECT_NO_THROW({
+  EXPECT_NO_THROW(
+  {
     publisher->publish(std::move(msg));
     executor.spin_some();
   });
@@ -184,7 +185,8 @@ TEST(TestIntraProcessManagerWithAllocators, custom_allocator_wrong) {
   subscription_options.allocator = std_alloc;
   auto msg_mem_strat =
     std::make_shared<
-      rclcpp::message_memory_strategy::MessageMemoryStrategy<test_msgs::msg::Empty, std::allocator<void>>
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<test_msgs::msg::Empty,
+    std::allocator<void>>
     >(std_alloc);
   auto subscriber = node->create_subscription<test_msgs::msg::Empty>(
     "custom_allocator_test", 10, callback, subscription_options, msg_mem_strat);
@@ -211,7 +213,8 @@ TEST(TestIntraProcessManagerWithAllocators, custom_allocator_wrong) {
   auto ptr = MessageAllocTraits::allocate(message_alloc, 1);
   MessageAllocTraits::construct(message_alloc, ptr);
   std::unique_ptr<test_msgs::msg::Empty, MessageDeleter> msg(ptr, message_deleter);
-  EXPECT_THROW({
+  EXPECT_THROW(
+  {
     publisher->publish(std::move(msg));
     executor.spin_some();
   }, std::runtime_error);
