@@ -287,6 +287,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
   // create a thread running an executor with a new callback group for a coming subscriber
+  // this is the pre-condition reported by user
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::executors::SingleThreadedExecutor cb_grp_executor;
@@ -304,7 +305,9 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
 
   // a timer callback run on the default executor
   rclcpp::TimerBase::SharedPtr timer = nullptr;
-  auto timer_callback = [&timer, &cb_grp, &node, &sub_callback]() {
+  std::promise<void> timer_promise;
+  auto timer_callback =
+    [&timer, &cb_grp, &node, &sub_callback, &received_message, &timer_promise]() {
       if (timer) {
         timer.reset();
       }
@@ -313,6 +316,9 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       rclcpp::QoS qos = rclcpp::QoS(1).reliable();
       auto options = rclcpp::SubscriptionOptions();
       options.callback_group = cb_grp;
+      // TBD. To add a limitation to throw an exception or implement this enhancement.
+      // If adding a limitation internal, catch this exception, otherwise, this subscriper
+      // could receive a message
       auto subscription =
         node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
 
@@ -320,19 +326,26 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       auto publisher =
         node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
       publisher->publish(test_msgs::msg::Empty());
-      // wait for message to be published
-      std::this_thread::sleep_for(100ms);
+      // wait for message to be published, and make sure the `cb_grp_thread` could call
+      // the `sub_callback` to set the `received_message`
+      auto start = std::chrono::steady_clock::now();
+      while (rclcpp::ok() &&
+        !received_message &&
+        (std::chrono::steady_clock::now() - start) < 5s)
+      {
+        std::this_thread::sleep_for(100ms);
+      }
+
+      timer_promise.set_value();
     };
 
-  // timer on default callback group
-  timer = node->create_wall_timer(1s, timer_callback);
-  auto start = std::chrono::steady_clock::now();
-  while (!received_message &&
-    (std::chrono::steady_clock::now() - start) < 3s)
-  {
-    rclcpp::spin_some(node);
-  }
-
+  // create a timer run on a new executor
+  rclcpp::executors::SingleThreadedExecutor timer_executor;
+  timer = node->create_wall_timer(100ms, timer_callback);
+  timer_executor.add_node(node);
+  auto future = timer_promise.get_future();
+  timer_executor.spin_until_future_complete(future);
+  timer_executor.cancel();
   cb_grp_executor.cancel();
   cb_grp_thread.join();
   EXPECT_TRUE(received_message);
