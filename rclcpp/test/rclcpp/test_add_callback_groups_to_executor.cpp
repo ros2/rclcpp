@@ -303,7 +303,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       received_message = true;
     };
 
-  // a timer callback run on the default executor
+  // a timer callback run on a new executor
   rclcpp::TimerBase::SharedPtr timer = nullptr;
   std::promise<void> timer_promise;
   auto timer_callback =
@@ -317,8 +317,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       auto options = rclcpp::SubscriptionOptions();
       options.callback_group = cb_grp;
       // TBD. To add a limitation to throw an exception or implement this enhancement.
-      // If adding a limitation internal, catch this exception, otherwise, this subscriper
-      // could receive a message
+      // If adding a limitation internal, catch this exception, otherwise, this subscriber
+      // should receive a message data
       auto subscription =
         node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
 
@@ -339,7 +339,6 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       timer_promise.set_value();
     };
 
-  // create a timer run on a new executor
   rclcpp::executors::SingleThreadedExecutor timer_executor;
   timer = node->create_wall_timer(100ms, timer_callback);
   timer_executor.add_node(node);
