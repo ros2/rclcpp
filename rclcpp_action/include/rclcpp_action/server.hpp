@@ -372,6 +372,9 @@ protected:
         try {
           goal_handle->_cancel_goal();
         } catch (const rclcpp::exceptions::RCLError & ex) {
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("rclcpp_action"),
+            "Failed to cancel goal in call_handle_cancel_callback: %s", ex.what());
           return CancelResponse::REJECT;
         }
       }
