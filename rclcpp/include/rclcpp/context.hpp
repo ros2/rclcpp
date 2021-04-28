@@ -213,7 +213,6 @@ public:
    * \param[in] callback the on shutdown callback to be registered
    * \return the callback passed, for convenience when storing a passed lambda
    */
-  [[deprecated("use add_on_shutdown_callback(OnShutdownCallback) instead")]]
   RCLCPP_PUBLIC
   virtual
   OnShutdownCallback
