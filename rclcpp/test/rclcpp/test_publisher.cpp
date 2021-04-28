@@ -14,8 +14,9 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
+#include <chrono>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -534,5 +535,47 @@ TEST_F(TestPublisher, get_network_flow_endpoints_errors) {
     auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_OK);
     EXPECT_NO_THROW(publisher->get_network_flow_endpoints());
+  }
+}
+
+TEST_F(TestPublisher, check_wait_for_all_acked_return) {
+  initialize();
+  const rclcpp::QoS publisher_qos(1);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", publisher_qos);
+
+  {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publisher_wait_for_all_acked` is entirely
+    // defined in a header
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publisher_wait_for_all_acked, RCL_RET_OK);
+    EXPECT_TRUE(publisher->wait_for_all_acked(std::chrono::milliseconds(-1)));
+  }
+
+  {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publisher_wait_for_all_acked` is entirely
+    // defined in a header
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publisher_wait_for_all_acked, RCL_RET_TIMEOUT);
+    EXPECT_FALSE(publisher->wait_for_all_acked(std::chrono::milliseconds(-1)));
+  }
+
+  {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publisher_wait_for_all_acked` is entirely
+    // defined in a header
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publisher_wait_for_all_acked, RCL_RET_UNSUPPORTED);
+    EXPECT_THROW(
+      publisher->wait_for_all_acked(std::chrono::milliseconds(-1)),
+      rclcpp::exceptions::RCLError);
+  }
+
+  {
+    // Using 'self' instead of 'lib:rclcpp' because `rcl_publisher_wait_for_all_acked` is entirely
+    // defined in a header
+    auto mock = mocking_utils::patch_and_return(
+      "self", rcl_publisher_wait_for_all_acked, RCL_RET_ERROR);
+    EXPECT_THROW(
+      publisher->wait_for_all_acked(std::chrono::milliseconds(-1)),
+      rclcpp::exceptions::RCLError);
   }
 }
