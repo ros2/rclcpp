@@ -2556,6 +2556,8 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   };
   rclcpp::QoS qos = rclcpp::QoS(qos_initialization, rmw_qos_profile_default);
   auto publisher = node->create_publisher<test_msgs::msg::BasicTypes>(topic_name, qos);
+  // Let the underlying RMW implementation catch up with graph changes
+  std::this_thread::yield();
   // List should have one item
   auto publisher_list = node->get_publishers_info_by_topic(fq_topic_name);
   ASSERT_EQ(publisher_list.size(), (size_t)1);
