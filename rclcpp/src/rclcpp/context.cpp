@@ -378,7 +378,7 @@ Context::remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_h
 }
 
 std::vector<rclcpp::Context::OnShutdownCallback>
-Context::get_on_shutdown_callbacks()
+Context::get_on_shutdown_callbacks() const
 {
   std::vector<OnShutdownCallback> callbacks;
 

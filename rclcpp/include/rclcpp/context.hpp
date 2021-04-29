@@ -255,7 +255,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<OnShutdownCallback>
-  get_on_shutdown_callbacks();
+  get_on_shutdown_callbacks() const;
 
   /// Return the internal rcl context.
   RCLCPP_PUBLIC
@@ -336,7 +336,7 @@ private:
   std::recursive_mutex sub_contexts_mutex_;
 
   std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
-  std::mutex on_shutdown_callbacks_mutex_;
+  mutable std::mutex on_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
   std::condition_variable interrupt_condition_variable_;
