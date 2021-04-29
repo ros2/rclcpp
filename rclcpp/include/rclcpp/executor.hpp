@@ -574,7 +574,7 @@ protected:
   weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// shutdown callback handle registered to Context
-  rclcpp::OnShutdownCallbackHandle::WeakPtr shutdown_callback_handle_;
+  rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
 };
 
 }  // namespace rclcpp

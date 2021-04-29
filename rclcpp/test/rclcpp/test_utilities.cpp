@@ -119,6 +119,12 @@ TEST(TestUtilities, test_context_basic_access) {
   EXPECT_EQ(std::string{""}, context1->shutdown_reason());
 }
 
+TEST(TestUtilities, test_context_basic_access_const_methods) {
+  auto context1 = std::make_shared<const rclcpp::contexts::DefaultContext>();
+
+  EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
+}
+
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, !=)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, >)

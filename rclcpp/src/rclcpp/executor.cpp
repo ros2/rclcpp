@@ -140,7 +140,12 @@ Executor::~Executor()
   memory_strategy_->remove_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
 
   // Remove shutdown callback handle registered to Context
-  context_->remove_on_shutdown_callback(shutdown_callback_handle_);
+  if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "failed to remove registered on_shutdown callback");
+    rcl_reset_error();
+  }
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>

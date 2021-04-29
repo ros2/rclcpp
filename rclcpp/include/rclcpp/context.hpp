@@ -48,18 +48,15 @@ public:
 /// Forward declare WeakContextsWrapper
 class WeakContextsWrapper;
 
-class Context;
 class OnShutdownCallbackHandle
 {
-  friend rclcpp::Context;
+  friend class Context;
 
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(OnShutdownCallbackHandle)
-
   using OnShutdownCallbackType = std::function<void ()>;
 
 private:
-  OnShutdownCallbackType callback;
+  std::weak_ptr<OnShutdownCallbackType> callback;
 };
 
 /// Context which encapsulates shared state between nodes and other similar entities.
@@ -234,22 +231,23 @@ public:
    * On shutdown callbacks may be registered before init and after shutdown,
    * and persist on repeated init's.
    *
-   * \param[in] callback the on shutdown callback to be registered
-   * \return the created shared pointer of callback handler
+   * \param[in] callback the on_shutdown callback to be registered
+   * \return the created callback handle
    */
   RCLCPP_PUBLIC
   virtual
-  OnShutdownCallbackHandle::WeakPtr
+  OnShutdownCallbackHandle
   add_on_shutdown_callback(OnShutdownCallback callback);
 
   /// Remove an registered on_shutdown callbacks.
   /**
-   * \param[in] callback_handle the handle to be removed.
+   * \param[in] callback_handle the on_shutdown callback handle to be removed.
+   * \return true if the callback is found and removed, otherwise false.
    */
   RCLCPP_PUBLIC
   virtual
-  void
-  remove_on_shutdown_callback(const OnShutdownCallbackHandle::WeakPtr & callback_handle);
+  bool
+  remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_handle);
 
   /// Return the shutdown callbacks.
   /**
@@ -337,7 +335,7 @@ private:
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
 
-  std::unordered_set<OnShutdownCallbackHandle::SharedPtr> on_shutdown_callbacks_;
+  std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
   std::mutex on_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
