@@ -156,13 +156,11 @@ TEST_F(TestPublisher, various_creation_signatures) {
       auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
       (void)publisher;
     }
-    /* TODO(audrow) Enable this test once the adapt_type<>::as<> syntax is supported
     {
       using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
       auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
       (void)publisher;
     }
-    */
   }
 }
 

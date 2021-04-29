@@ -139,13 +139,12 @@ TEST_F(TestSubscription, various_creation_signatures) {
       node->create_subscription<StringTypeAdapter>("topic", 42, [](const std::string &) {});
     (void)sub;
   }
-  /* TODO(audrow) Enable this test once the adapt_type<>::as<> syntax is supported
   {
     using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
-    auto sub = node->create_subscription<StringTypeAdapter>("topic", 42, [](const std::string &) {});
+    auto sub =
+      node->create_subscription<StringTypeAdapter>("topic", 42, [](const std::string &) {});
     (void)sub;
   }
-  */
 }
 
 /*

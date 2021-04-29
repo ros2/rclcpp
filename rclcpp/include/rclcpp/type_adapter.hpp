@@ -116,17 +116,29 @@ struct is_type_adapter<TypeAdapter<Ts...>>: std::true_type {};
 template<typename T>
 struct TypeAdapter<T, void, std::enable_if_t<is_type_adapter<T>::value>>: T {};
 
+namespace detail
+{
+
+template<typename CustomType, typename ROSMessageType>
+struct assert_type_pair_is_specialized_type_adapter
+{
+  using type_adapter = TypeAdapter<CustomType, ROSMessageType>;
+  static_assert(
+    type_adapter::is_specialized::value,
+    "No type adapter for this custom type/ros message type pair");
+};
+
+}  // detail
+
 /// Template metafunction that can make the type being adapted explicit.
 template<typename CustomType>
 struct adapt_type
 {
   template<typename ROSMessageType>
-  struct as : TypeAdapter<CustomType, ROSMessageType>
-  {
-    static_assert(
-      TypeAdapter<CustomType, ROSMessageType>::is_specialized::value,
-      "No type adapter for this custom type/ros message type pair");
-  };
+  using as = typename ::rclcpp::detail::assert_type_pair_is_specialized_type_adapter<
+    CustomType,
+    ROSMessageType
+    >::type_adapter;
 };
 
 /// Implicit type adapter used as a short hand way to create something with just the custom type.
