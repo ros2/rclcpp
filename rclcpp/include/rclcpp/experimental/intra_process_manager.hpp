@@ -202,7 +202,8 @@ public:
       // None of the buffers require ownership, so we promote the pointer
       std::shared_ptr<MessageT> msg = std::move(message);
 
-      this->template add_shared_msg_to_buffers<MessageT>(msg, sub_ids.take_shared_subscriptions);
+      this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
+        msg, sub_ids.take_shared_subscriptions);
     } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
       sub_ids.take_shared_subscriptions.size() <= 1)
     {
@@ -227,7 +228,7 @@ public:
       // for the buffers that do not require ownership
       auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
 
-      this->template add_shared_msg_to_buffers<MessageT>(
+      this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
         shared_msg, sub_ids.take_shared_subscriptions);
       this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
         std::move(message), sub_ids.take_ownership_subscriptions, allocator);
@@ -263,7 +264,7 @@ public:
       // If there are no owning, just convert to shared.
       std::shared_ptr<MessageT> shared_msg = std::move(message);
       if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT>(
+        this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
           shared_msg, sub_ids.take_shared_subscriptions);
       }
       return shared_msg;
@@ -273,7 +274,7 @@ public:
       auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
 
       if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT>(
+        this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
           shared_msg,
           sub_ids.take_shared_subscriptions);
       }
@@ -350,7 +351,10 @@ private:
   bool
   can_communicate(PublisherInfo pub_info, SubscriptionInfo sub_info) const;
 
-  template<typename MessageT>
+  template<
+    typename MessageT,
+    typename Alloc,
+    typename Deleter>
   void
   add_shared_msg_to_buffers(
     std::shared_ptr<const MessageT> message,
@@ -361,7 +365,22 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
+<<<<<<< HEAD
       auto subscription_base = subscription_it->second.subscription;
+=======
+      auto subscription_base = subscription_it->second.subscription.lock();
+      if (subscription_base) {
+        auto subscription = std::dynamic_pointer_cast<
+          rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
+          >(subscription_base);
+        if (nullptr == subscription) {
+          throw std::runtime_error(
+                  "failed to dynamic cast SubscriptionIntraProcessBase to "
+                  "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
+                  "can happen when the publisher and subscription use different "
+                  "allocator types, which is not supported");
+        }
+>>>>>>> 79c2dd8e... use dynamic_pointer_cast to detect allocator mismatch in intra process manager (#1643)
 
       auto subscription = std::static_pointer_cast<
         rclcpp::experimental::SubscriptionIntraProcess<MessageT>
@@ -389,6 +408,7 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
+<<<<<<< HEAD
       auto subscription_base = subscription_it->second.subscription;
 
       auto subscription = std::static_pointer_cast<
@@ -398,6 +418,34 @@ private:
       if (std::next(it) == subscription_ids.end()) {
         // If this is the last subscription, give up ownership
         subscription->provide_intra_process_message(std::move(message));
+=======
+      auto subscription_base = subscription_it->second.subscription.lock();
+      if (subscription_base) {
+        auto subscription = std::dynamic_pointer_cast<
+          rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
+          >(subscription_base);
+        if (nullptr == subscription) {
+          throw std::runtime_error(
+                  "failed to dynamic cast SubscriptionIntraProcessBase to "
+                  "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
+                  "can happen when the publisher and subscription use different "
+                  "allocator types, which is not supported");
+        }
+
+        if (std::next(it) == subscription_ids.end()) {
+          // If this is the last subscription, give up ownership
+          subscription->provide_intra_process_message(std::move(message));
+        } else {
+          // Copy the message since we have additional subscriptions to serve
+          MessageUniquePtr copy_message;
+          Deleter deleter = message.get_deleter();
+          auto ptr = MessageAllocTraits::allocate(*allocator.get(), 1);
+          MessageAllocTraits::construct(*allocator.get(), ptr, *message);
+          copy_message = MessageUniquePtr(ptr, deleter);
+
+          subscription->provide_intra_process_message(std::move(copy_message));
+        }
+>>>>>>> 79c2dd8e... use dynamic_pointer_cast to detect allocator mismatch in intra process manager (#1643)
       } else {
         // Copy the message since we have additional subscriptions to serve
         MessageUniquePtr copy_message;
