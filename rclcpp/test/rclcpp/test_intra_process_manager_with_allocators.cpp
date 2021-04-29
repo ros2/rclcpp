@@ -106,7 +106,7 @@ void
 do_custom_allocator_test(
   PublishedMessageAllocatorT published_message_allocator,
   PublisherAllocatorT publisher_allocator,
-  SubscribedMessageAllocatorT /* subscribed_message_allocator */,  // intentinally unused
+  SubscribedMessageAllocatorT /* subscribed_message_allocator */,  // intentionally unused
   SubscriptionAllocatorT subscription_allocator,
   MessageMemoryStrategyAllocatorT message_memory_strategy,
   MemoryStrategyAllocatorT memory_strategy_allocator)
