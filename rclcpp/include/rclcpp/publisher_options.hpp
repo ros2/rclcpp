@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "rcl/publisher.h"
@@ -65,11 +66,11 @@ template<typename Allocator>
 struct PublisherOptionsWithAllocator : public PublisherOptionsBase
 {
   static_assert(
-    std::is_void<typename std::allocator_traits<Allocator>::value_type>::value,
+    std::is_void_v<typename std::allocator_traits<Allocator>::value_type>,
     "Publisher allocator value type must be void");
 
   /// Optional custom allocator.
-  mutable std::shared_ptr<Allocator> allocator = nullptr;
+  std::shared_ptr<Allocator> allocator = nullptr;
 
   PublisherOptionsWithAllocator<Allocator>() {}
 
@@ -103,7 +104,12 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   get_allocator() const
   {
     if (!this->allocator) {
-      this->allocator = std::make_shared<Allocator>();
+      if constexpr (std::is_same_v<Allocator, std::allocator<void>>) {
+        auto g_instance = std::make_shared<std::allocator<void>>();
+        return g_instance;
+      } else {
+        throw std::runtime_error("allocator is nullptr");
+      }
     }
     return this->allocator;
   }
