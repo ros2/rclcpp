@@ -29,6 +29,7 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/executor_options.hpp"
 #include "rclcpp/future_return_code.hpp"
@@ -354,7 +355,17 @@ private:
 namespace executor
 {
 
+<<<<<<< HEAD
 using Executor [[deprecated("use rclcpp::Executor instead")]] = rclcpp::Executor;
+=======
+  /// nodes that are associated with the executor
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>
+  weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// shutdown callback handle registered to Context
+  rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
+};
+>>>>>>> 6806cdf8... Use OnShutdown callback handle instead of OnShutdown callback (#1639)
 
 }  // namespace executor
 }  // namespace rclcpp

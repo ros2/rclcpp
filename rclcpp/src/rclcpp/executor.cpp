@@ -46,6 +46,17 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
     throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
   }
 
+<<<<<<< HEAD
+=======
+  shutdown_callback_handle_ = context_->add_on_shutdown_callback(
+    [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{shutdown_guard_condition_}]() {
+      auto strong_gc = weak_gc.lock();
+      if (strong_gc) {
+        strong_gc->trigger();
+      }
+    });
+
+>>>>>>> 6806cdf8... Use OnShutdown callback handle instead of OnShutdown callback (#1639)
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
@@ -110,8 +121,134 @@ Executor::~Executor()
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
+<<<<<<< HEAD
   memory_strategy_->remove_guard_condition(context_->get_interrupt_guard_condition(&wait_set_));
   context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
+=======
+  memory_strategy_->remove_guard_condition(&shutdown_guard_condition_->get_rcl_guard_condition());
+
+  // Remove shutdown callback handle registered to Context
+  if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "failed to remove registered on_shutdown callback");
+    rcl_reset_error();
+  }
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+Executor::get_all_callback_groups()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  std::lock_guard<std::mutex> guard{mutex_};
+  for (const auto & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  return groups;
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+Executor::get_manually_added_callback_groups()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  std::lock_guard<std::mutex> guard{mutex_};
+  for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  return groups;
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+Executor::get_automatically_added_callback_groups_from_nodes()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  std::lock_guard<std::mutex> guard{mutex_};
+  for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  return groups;
+}
+
+void
+Executor::add_callback_groups_from_nodes_associated_to_executor()
+{
+  for (auto & weak_node : weak_nodes_) {
+    auto node = weak_node.lock();
+    if (node) {
+      auto group_ptrs = node->get_callback_groups();
+      std::for_each(
+        group_ptrs.begin(), group_ptrs.end(),
+        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+        {
+          auto shared_group_ptr = group_ptr.lock();
+          if (shared_group_ptr && shared_group_ptr->automatically_add_to_executor_with_node() &&
+          !shared_group_ptr->get_associated_with_executor_atomic().load())
+          {
+            this->add_callback_group_to_map(
+              shared_group_ptr,
+              node,
+              weak_groups_to_nodes_associated_with_executor_,
+              true);
+          }
+        });
+    }
+  }
+}
+
+void
+Executor::add_callback_group_to_map(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
+  bool notify)
+{
+  // If the callback_group already has an executor
+  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+  if (has_executor.exchange(true)) {
+    throw std::runtime_error("Callback group has already been added to an executor.");
+  }
+  bool is_new_node = !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
+    !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_);
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
+  auto insert_info =
+    weak_groups_to_nodes.insert(std::make_pair(weak_group_ptr, node_ptr));
+  bool was_inserted = insert_info.second;
+  if (!was_inserted) {
+    throw std::runtime_error("Callback group was already added to executor.");
+  }
+  // Also add to the map that contains all callback groups
+  weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
+  if (is_new_node) {
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
+    if (notify) {
+      // Interrupt waiting to handle new node
+      rcl_ret_t ret = rcl_trigger_guard_condition(&interrupt_guard_condition_);
+      if (ret != RCL_RET_OK) {
+        throw_from_rcl_error(ret, "Failed to trigger guard condition on callback group add");
+      }
+    }
+    // Add the node's notify condition to the guard condition handles
+    memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
+  }
+}
+
+void
+Executor::add_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  bool notify)
+{
+  std::lock_guard<std::mutex> guard{mutex_};
+  this->add_callback_group_to_map(
+    group_ptr,
+    node_ptr,
+    weak_groups_associated_with_executor_to_nodes_,
+    notify);
+>>>>>>> 6806cdf8... Use OnShutdown callback handle instead of OnShutdown callback (#1639)
 }
 
 void
