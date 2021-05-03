@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -2525,6 +2527,34 @@ void expect_qos_profile_eq(
   EXPECT_EQ(qos1.liveliness_lease_duration.nsec, qos2.liveliness_lease_duration.nsec);
 }
 
+namespace
+{
+
+constexpr std::chrono::nanoseconds DEFAULT_EVENT_TIMEOUT = std::chrono::seconds(3);
+
+constexpr std::chrono::nanoseconds DEFAULT_EVENT_SLEEP_PERIOD = std::chrono::milliseconds(100);
+
+bool wait_for_event(
+  std::shared_ptr<rclcpp::Node> node,
+  std::function<bool()> predicate,
+  std::chrono::nanoseconds timeout = DEFAULT_EVENT_TIMEOUT,
+  std::chrono::nanoseconds sleep_period = DEFAULT_EVENT_SLEEP_PERIOD)
+{
+  auto start = std::chrono::steady_clock::now();
+  std::chrono::nanoseconds time_slept(0);
+
+  bool predicate_result;
+  while (!(predicate_result = predicate()) && time_slept < timeout) {
+    rclcpp::Event::SharedPtr graph_event = node->get_graph_event();
+    node->wait_for_graph_change(graph_event, sleep_period);
+    time_slept = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::steady_clock::now() - start);
+  }
+  return predicate_result;
+}
+
+}  // namespace
+
 // test that calling get_publishers_info_by_topic and get_subscriptions_info_by_topic
 TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
@@ -2556,6 +2586,10 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   };
   rclcpp::QoS qos = rclcpp::QoS(qos_initialization, rmw_qos_profile_default);
   auto publisher = node->create_publisher<test_msgs::msg::BasicTypes>(topic_name, qos);
+  // Wait for the underlying RMW implementation to catch up with graph changes
+  auto topic_is_published =
+    [&]() {return node->get_publishers_info_by_topic(fq_topic_name).size() > 0u;};
+  ASSERT_TRUE(wait_for_event(node, topic_is_published));
   // List should have one item
   auto publisher_list = node->get_publishers_info_by_topic(fq_topic_name);
   ASSERT_EQ(publisher_list.size(), (size_t)1);
@@ -2596,7 +2630,10 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
     };
   auto subscriber =
     node->create_subscription<test_msgs::msg::BasicTypes>(topic_name, qos2, callback);
-
+  // Wait for the underlying RMW implementation to catch up with graph changes
+  auto topic_is_subscribed =
+    [&]() {return node->get_subscriptions_info_by_topic(fq_topic_name).size() > 0u;};
+  ASSERT_TRUE(wait_for_event(node, topic_is_subscribed));
   // Both lists should have one item
   publisher_list = node->get_publishers_info_by_topic(fq_topic_name);
   auto subscription_list = node->get_subscriptions_info_by_topic(fq_topic_name);
