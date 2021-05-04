@@ -128,7 +128,7 @@ struct assert_type_pair_is_specialized_type_adapter
     "No type adapter for this custom type/ros message type pair");
 };
 
-}  // detail
+}  // namespace detail
 
 /// Template metafunction that can make the type being adapted explicit.
 template<typename CustomType>
