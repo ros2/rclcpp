@@ -104,15 +104,18 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   get_allocator() const
   {
     if (!this->allocator) {
-      if constexpr (std::is_same_v<Allocator, std::allocator<void>>) {
-        auto g_instance = std::make_shared<std::allocator<void>>();
-        return g_instance;
-      } else {
-        throw std::runtime_error("allocator is nullptr");
+      if (!allocator_storage_) {
+        allocator_storage_ = std::make_shared<Allocator>();
       }
+      return allocator_storage_;
     }
     return this->allocator;
   }
+
+private:
+  // This is a temporal workaround, to make sure that get_allocator()
+  // always returns a copy of the same allocator.
+  mutable std::shared_ptr<Allocator> allocator_storage_;
 };
 
 using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;
