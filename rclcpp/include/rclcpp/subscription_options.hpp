@@ -18,6 +18,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "rclcpp/callback_group.hpp"
@@ -86,6 +87,10 @@ struct SubscriptionOptionsBase
 template<typename Allocator>
 struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 {
+  static_assert(
+    std::is_void_v<typename std::allocator_traits<Allocator>::value_type>,
+    "Subscription allocator value type must be void");
+
   /// Optional custom allocator.
   std::shared_ptr<Allocator> allocator = nullptr;
 
@@ -107,10 +112,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result = rcl_subscription_get_default_options();
-    using AllocatorTraits = std::allocator_traits<Allocator>;
-    using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-    auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
-    result.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc);
+    result.allocator = allocator::get_rcl_allocator<void>(*this->get_allocator());
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
     result.rmw_subscription_options.require_unique_network_flow_endpoints =
@@ -124,15 +126,22 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     return result;
   }
 
-  /// Get the allocator, creating one if needed.
   std::shared_ptr<Allocator>
   get_allocator() const
   {
     if (!this->allocator) {
-      return std::make_shared<Allocator>();
+      if (!allocator_storage_) {
+        allocator_storage_ = std::make_shared<Allocator>();
+      }
+      return allocator_storage_;
     }
     return this->allocator;
   }
+
+private:
+  // This is a temporal workaround, to make sure that get_allocator()
+  // always returns a copy of the same allocator.
+  mutable std::shared_ptr<Allocator> allocator_storage_;
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
