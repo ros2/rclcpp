@@ -31,7 +31,7 @@
 static uint32_t num_allocs = 0;
 static uint32_t num_deallocs = 0;
 // A very simple custom allocator. Counts calls to allocate and deallocate.
-template<typename T = void>
+template<typename T>
 struct MyAllocator
 {
 public:
@@ -58,10 +58,7 @@ public:
       return nullptr;
     }
     num_allocs++;
-    // Use sizeof(char) in place for sizeof(void)
-    constexpr size_t value_size = sizeof(
-      typename std::conditional<!std::is_void<T>::value, T, char>::type);
-    return static_cast<T *>(std::malloc(size * value_size));
+    return static_cast<T *>(std::malloc(size * sizeof(T)));
   }
 
   void deallocate(T * ptr, size_t size)
@@ -72,6 +69,33 @@ public:
     }
     num_deallocs++;
     std::free(ptr);
+  }
+
+  template<typename U>
+  struct rebind
+  {
+    typedef MyAllocator<U> other;
+  };
+};
+
+// Explicit specialization for void
+template<>
+struct MyAllocator<void>
+{
+public:
+  using value_type = void;
+  using pointer = void *;
+  using const_pointer = const void *;
+
+  MyAllocator() noexcept
+  {
+  }
+
+  ~MyAllocator() noexcept {}
+
+  template<typename U>
+  MyAllocator(const MyAllocator<U> &) noexcept
+  {
   }
 
   template<typename U>
