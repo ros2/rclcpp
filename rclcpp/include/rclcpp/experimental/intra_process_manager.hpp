@@ -33,6 +33,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/experimental/subscription_intra_process_buffer.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
@@ -368,12 +369,12 @@ private:
       auto subscription_base = subscription_it->second.subscription.lock();
       if (subscription_base) {
         auto subscription = std::dynamic_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
+          rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>
           >(subscription_base);
         if (nullptr == subscription) {
           throw std::runtime_error(
                   "failed to dynamic cast SubscriptionIntraProcessBase to "
-                  "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
+                  "SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>, which "
                   "can happen when the publisher and subscription use different "
                   "allocator types, which is not supported");
         }
@@ -406,12 +407,12 @@ private:
       auto subscription_base = subscription_it->second.subscription.lock();
       if (subscription_base) {
         auto subscription = std::dynamic_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
+          rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>
           >(subscription_base);
         if (nullptr == subscription) {
           throw std::runtime_error(
                   "failed to dynamic cast SubscriptionIntraProcessBase to "
-                  "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
+                  "SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>, which "
                   "can happen when the publisher and subscription use different "
                   "allocator types, which is not supported");
         }
