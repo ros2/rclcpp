@@ -365,7 +365,14 @@ protected:
     if (goal_handle) {
       resp = handle_cancel_(goal_handle);
       if (CancelResponse::ACCEPT == resp) {
-        goal_handle->_cancel_goal();
+        try {
+          goal_handle->_cancel_goal();
+        } catch (const rclcpp::exceptions::RCLError & ex) {
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("rclcpp_action"),
+            "Failed to cancel goal in call_handle_cancel_callback: %s", ex.what());
+          return CancelResponse::REJECT;
+        }
       }
     }
     return resp;
