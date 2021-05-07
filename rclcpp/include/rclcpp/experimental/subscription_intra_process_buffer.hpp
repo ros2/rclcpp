@@ -83,7 +83,8 @@ public:
       &gc_, context->get_rcl_context().get(), guard_condition_options);
 
     if (RCL_RET_OK != ret) {
-      throw std::runtime_error("SubscriptionIntraProcessBuffer init error initializing guard condition");
+      throw std::runtime_error(
+              "SubscriptionIntraProcessBuffer init error initializing guard condition");
     }
   }
 

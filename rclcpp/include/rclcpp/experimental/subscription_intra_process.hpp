@@ -45,8 +45,8 @@ template<
   typename Alloc = std::allocator<void>,
   typename Deleter = std::default_delete<MessageT>,
   typename CallbackMessageT = MessageT>
-class SubscriptionIntraProcess :
-  public SubscriptionIntraProcessBuffer<
+class SubscriptionIntraProcess
+  : public SubscriptionIntraProcessBuffer<
     MessageT,
     Alloc,
     Deleter
@@ -57,6 +57,7 @@ class SubscriptionIntraProcess :
     Alloc,
     Deleter
   >;
+
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcess)
 
@@ -119,7 +120,6 @@ public:
   }
 
 protected:
-
   template<typename T>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
   execute_impl(std::shared_ptr<void> & data)
