@@ -60,10 +60,16 @@ class NodeTopicsInterface;
 
 /// Subscription implementation, templated on the type of message this subscription receives.
 template<
-  typename CallbackMessageT,
+  typename MessageT,
   typename AllocatorT = std::allocator<void>,
+  /// MessageT::custom_type if MessageT is a TypeAdapter,
+  /// otherwise just MessageT.
+  typename SubscribedT = typename rclcpp::TypeAdapter<MessageT>::custom_type,
+  /// MessageT::ros_message_type if MessageT is a TypeAdapter,
+  /// otherwise just MessageT.
+  typename ROSMessageT = typename rclcpp::TypeAdapter<MessageT>::ros_message_type,
   typename MessageMemoryStrategyT = rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    CallbackMessageT,
+    ROSMessageT,
     AllocatorT
   >>
 class Subscription : public SubscriptionBase
@@ -71,14 +77,36 @@ class Subscription : public SubscriptionBase
   friend class rclcpp::node_interfaces::NodeTopicsInterface;
 
 public:
-  using MessageAllocatorTraits = allocator::AllocRebind<CallbackMessageT, AllocatorT>;
-  using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
-  using MessageDeleter = allocator::Deleter<MessageAllocator, CallbackMessageT>;
-  using ConstMessageSharedPtr = std::shared_ptr<const CallbackMessageT>;
-  using MessageUniquePtr = std::unique_ptr<CallbackMessageT, MessageDeleter>;
-  using SubscriptionTopicStatisticsSharedPtr =
-    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>;
+  // Redeclare these here to use outside of the class.
+  using SubscribedType = SubscribedT;
+  using ROSMessageType = ROSMessageT;
+  using MessageMemoryStrategyType = MessageMemoryStrategyT;
 
+  using SubscribedTypeAllocatorTraits = allocator::AllocRebind<SubscribedType, AllocatorT>;
+  using SubscribedTypeAllocator = typename SubscribedTypeAllocatorTraits::allocator_type;
+  using SubscribedTypeDeleter = allocator::Deleter<SubscribedTypeAllocator, SubscribedType>;
+
+  using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, AllocatorT>;
+  using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
+  using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
+
+  using MessageAllocatorTraits [[deprecated("use ROSMessageTypeAllocatorTraits")]] =
+    ROSMessageTypeAllocatorTraits;
+  using MessageAllocator [[deprecated("use ROSMessageTypeAllocator")]] =
+    ROSMessageTypeAllocator;
+  using MessageDeleter [[deprecated("use ROSMessageTypeDeleter")]] =
+    ROSMessageTypeDeleter;
+
+  using ConstMessageSharedPtr [[deprecated]] = std::shared_ptr<const ROSMessageType>;
+  using MessageUniquePtr
+  [[deprecated("use std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> instead")]] =
+    std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>;
+
+private:
+  using SubscriptionTopicStatisticsSharedPtr =
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>>;
+
+public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
   /// Default constructor.
@@ -104,7 +132,7 @@ public:
     const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    AnySubscriptionCallback<CallbackMessageT, AllocatorT> callback,
+    AnySubscriptionCallback<MessageT, AllocatorT> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
     typename MessageMemoryStrategyT::SharedPtr message_memory_strategy,
     SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics = nullptr)
@@ -112,8 +140,8 @@ public:
       node_base,
       type_support_handle,
       topic_name,
-      options.template to_rcl_subscription_options<CallbackMessageT>(qos),
-      rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),
+      options.template to_rcl_subscription_options<ROSMessageType>(qos),
+      callback.is_serialized_message_callback()),
     any_callback_(callback),
     options_(options),
     message_memory_strategy_(message_memory_strategy)
@@ -241,9 +269,32 @@ public:
    * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
    */
   bool
-  take(CallbackMessageT & message_out, rclcpp::MessageInfo & message_info_out)
+  take(ROSMessageType & message_out, rclcpp::MessageInfo & message_info_out)
   {
     return this->take_type_erased(static_cast<void *>(&message_out), message_info_out);
+  }
+
+  /// Take the next message from the inter-process subscription.
+  /**
+   * This verison takes a SubscribedType which is different frmo the
+   * ROSMessageType when a rclcpp::TypeAdapter is in used.
+   *
+   * \sa take(ROSMessageType &, rclcpp::MessageInfo &)
+   */
+  template<typename TakeT>
+  std::enable_if_t<
+    !rosidl_generator_traits::is_message<TakeT>::value &&
+    std::is_same_v<TakeT, SubscribedType>,
+    bool
+  >
+  take(TakeT & message_out, rclcpp::MessageInfo & message_info_out)
+  {
+    ROSMessageType local_message;
+    bool taken = this->take_type_erased(static_cast<void *>(&local_message), message_info_out);
+    if (taken) {
+      rclcpp::TypeAdapter<MessageT>::convert_to_custom(local_message, message_out);
+    }
+    return taken;
   }
 
   std::shared_ptr<void>
@@ -272,7 +323,7 @@ public:
       // we should ignore this copy of the message.
       return;
     }
-    auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
+    auto typed_message = std::static_pointer_cast<ROSMessageType>(message);
 
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
@@ -291,14 +342,23 @@ public:
   }
 
   void
+  handle_serialized_message(
+    const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
+    const rclcpp::MessageInfo & message_info) override
+  {
+    // TODO(wjwwood): enable topic statistics for serialized messages
+    any_callback_.dispatch(serialized_message, message_info);
+  }
+
+  void
   handle_loaned_message(
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
-    auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
+    auto typed_message = static_cast<ROSMessageType *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
-    auto sptr = std::shared_ptr<CallbackMessageT>(
-      typed_message, [](CallbackMessageT * msg) {(void) msg;});
+    auto sptr = std::shared_ptr<ROSMessageType>(
+      typed_message, [](ROSMessageType * msg) {(void) msg;});
     any_callback_.dispatch(sptr, message_info);
   }
 
@@ -309,7 +369,7 @@ public:
   void
   return_message(std::shared_ptr<void> & message) override
   {
-    auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
+    auto typed_message = std::static_pointer_cast<ROSMessageType>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 
@@ -332,21 +392,24 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Subscription)
 
-  AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_callback_;
+  AnySubscriptionCallback<MessageT, AllocatorT> any_callback_;
   /// Copy of original options passed during construction.
   /**
    * It is important to save a copy of this so that the rmw payload which it
    * may contain is kept alive for the duration of the subscription.
    */
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
-  typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::SharedPtr
+  typename message_memory_strategy::MessageMemoryStrategy<ROSMessageType, AllocatorT>::SharedPtr
     message_memory_strategy_;
+
   /// Component which computes and publishes topic statistics for this subscriber
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
+
   using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-    CallbackMessageT,
+    ROSMessageType,
     AllocatorT,
-    typename MessageUniquePtr::deleter_type>;
+    ROSMessageTypeDeleter,
+    MessageT>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 };
 

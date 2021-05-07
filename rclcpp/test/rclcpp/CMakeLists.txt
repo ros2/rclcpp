@@ -7,6 +7,7 @@ add_definitions(-DTEST_RESOURCES_DIRECTORY="${TEST_RESOURCES_DIRECTORY}")
 rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/Header.msg
   ../msg/MessageWithHeader.msg
+  ../msg/String.msg
   DEPENDENCIES builtin_interfaces
   LIBRARY_NAME ${PROJECT_NAME}
   SKIP_INSTALL
@@ -355,6 +356,44 @@ if(TARGET test_publisher)
   )
   target_link_libraries(test_publisher ${PROJECT_NAME} mimick)
 endif()
+
+set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
+if(WIN32)
+  set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
+endif()
+
+ament_add_gtest(test_publisher_with_type_adapter test_publisher_with_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_publisher_with_type_adapter)
+  ament_target_dependencies(test_publisher_with_type_adapter
+    "rcutils"
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  rosidl_target_interfaces(test_publisher_with_type_adapter ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
+  target_link_libraries(test_publisher_with_type_adapter ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_subscription_with_type_adapter test_subscription_with_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_subscription_with_type_adapter)
+  ament_target_dependencies(test_subscription_with_type_adapter
+    "rcutils"
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  rosidl_target_interfaces(test_subscription_with_type_adapter ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
+  target_link_libraries(test_subscription_with_type_adapter ${PROJECT_NAME} mimick)
+endif()
+
 ament_add_gtest(test_publisher_subscription_count_api test_publisher_subscription_count_api.cpp)
 if(TARGET test_publisher_subscription_count_api)
   ament_target_dependencies(test_publisher_subscription_count_api
@@ -505,11 +544,6 @@ if(TARGET test_find_weak_nodes)
     "rcl"
   )
   target_link_libraries(test_find_weak_nodes ${PROJECT_NAME})
-endif()
-
-set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
-if(WIN32)
-  set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
 endif()
 
 ament_add_gtest(test_externally_defined_services test_externally_defined_services.cpp)
