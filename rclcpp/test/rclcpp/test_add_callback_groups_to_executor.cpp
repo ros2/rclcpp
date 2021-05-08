@@ -287,27 +287,31 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
   // create a thread running an executor with a new callback group for a coming subscriber
-  // this is the pre-condition reported by user
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::executors::SingleThreadedExecutor cb_grp_executor;
+
+  std::promise<bool> received_message_promise;
+  auto received_message_future = received_message_promise.get_future();
+  rclcpp::FutureReturnCode return_code = rclcpp::FutureReturnCode::TIMEOUT;
   std::thread cb_grp_thread = std::thread(
-    [&cb_grp, &node, &cb_grp_executor]() {
+    [&cb_grp, &node, &cb_grp_executor, &received_message_future, &return_code]() {
       cb_grp_executor.add_callback_group(cb_grp, node->get_node_base_interface());
-      cb_grp_executor.spin();
+      return_code = cb_grp_executor.spin_until_future_complete(received_message_future, 10s);
     });
 
   // expect the subscriber to receive a message
-  bool received_message = false;
-  auto sub_callback = [&received_message](const test_msgs::msg::Empty::SharedPtr) {
-      received_message = true;
+  auto sub_callback = [&received_message_promise](const test_msgs::msg::Empty::SharedPtr) {
+      received_message_promise.set_value(true);
     };
 
-  // a timer callback run on a new executor
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
+  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
+  // to create a timer with a callback run on another executor
   rclcpp::TimerBase::SharedPtr timer = nullptr;
   std::promise<void> timer_promise;
   auto timer_callback =
-    [&timer, &cb_grp, &node, &sub_callback, &received_message, &timer_promise]() {
+    [&subscription, &publisher, &timer, &cb_grp, &node, &sub_callback, &timer_promise]() {
       if (timer) {
         timer.reset();
       }
@@ -316,26 +320,12 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       rclcpp::QoS qos = rclcpp::QoS(1).reliable();
       auto options = rclcpp::SubscriptionOptions();
       options.callback_group = cb_grp;
-      // TBD. To add a limitation to throw an exception or implement this enhancement.
-      // If adding a limitation internal, catch this exception, otherwise, this subscriber
-      // should receive a message data
-      auto subscription =
+      subscription =
         node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
-
       // create a publisher to send data
-      auto publisher =
+      publisher =
         node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
       publisher->publish(test_msgs::msg::Empty());
-      // wait for message to be published, and make sure the `cb_grp_thread` could call
-      // the `sub_callback` to set the `received_message`
-      auto start = std::chrono::steady_clock::now();
-      while (rclcpp::ok() &&
-        !received_message &&
-        (std::chrono::steady_clock::now() - start) < 5s)
-      {
-        std::this_thread::sleep_for(100ms);
-      }
-
       timer_promise.set_value();
     };
 
@@ -344,10 +334,10 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
   timer_executor.add_node(node);
   auto future = timer_promise.get_future();
   timer_executor.spin_until_future_complete(future);
-  timer_executor.cancel();
-  cb_grp_executor.cancel();
   cb_grp_thread.join();
-  EXPECT_TRUE(received_message);
+
+  ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+  EXPECT_TRUE(received_message_future.get());
 }
 
 /*
