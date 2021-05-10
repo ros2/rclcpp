@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use OnShutdown callback handle instead of OnShutdown callback (`#1639 <https://github.com/ros2/rclcpp/issues/1639>`_) (`#1650 <https://github.com/ros2/rclcpp/issues/1650>`_)
+* use dynamic_pointer_cast to detect allocator mismatch in intra process manager (`#1643 <https://github.com/ros2/rclcpp/issues/1643>`_) (`#1644 <https://github.com/ros2/rclcpp/issues/1644>`_)
+* Increase cppcheck timeout to 500s (`#1634 <https://github.com/ros2/rclcpp/issues/1634>`_)
+* Clarify node parameters docs (`#1631 <https://github.com/ros2/rclcpp/issues/1631>`_)
+* Contributors: Barry Xu, Jacob Perron, Michel Hidalgo, Shane Loretz, William Woodall
+
 9.0.2 (2021-04-14)
 ------------------
 * Avoid returning loan when none was obtained. (`#1629 <https://github.com/ros2/rclcpp/issues/1629>`_)
