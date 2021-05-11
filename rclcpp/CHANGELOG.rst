@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+10.0.0 (2021-05-11)
+-------------------
 * Fix doc typo (`#1663 <https://github.com/ros2/rclcpp/issues/1663>`_)
 * [rclcpp] Type Adaptation feature (`#1557 <https://github.com/ros2/rclcpp/issues/1557>`_)
 * Do not attempt to use void allocators for memory allocation. (`#1657 <https://github.com/ros2/rclcpp/issues/1657>`_)

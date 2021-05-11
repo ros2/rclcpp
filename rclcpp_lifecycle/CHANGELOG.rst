@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+10.0.0 (2021-05-11)
+-------------------
 * [rclcpp] Type Adaptation feature (`#1557 <https://github.com/ros2/rclcpp/issues/1557>`_)
 * Contributors: Audrow Nash, William Woodall
 
