@@ -349,6 +349,19 @@ __declare_parameter_common(
     initial_value = &overrides_it->second;
   }
 
+  // If there is no initial value, then skip initialization
+  if (initial_value->get_type() == rclcpp::PARAMETER_NOT_SET) {
+    // descriptor type should be set
+    assert(parameter_descriptor.type != rclcpp::PARAMETER_NOT_SET);
+    // Add declared parameters to storage (without a value)
+    parameter_infos[name].descriptor.name = name;
+    parameter_infos[name].descriptor.type = parameter_descriptor.type;
+    parameters_out[name] = parameter_infos.at(name);
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = true;
+    return result;
+  }
+
   // Check with the user's callback to see if the initial value can be set.
   std::vector<rclcpp::Parameter> parameter_wrappers {rclcpp::Parameter(name, *initial_value)};
   // This function also takes care of default vs initial value.
@@ -411,14 +424,6 @@ declare_parameter_helper(
       };
     }
     parameter_descriptor.type = static_cast<uint8_t>(type);
-  }
-
-  if (
-    rclcpp::PARAMETER_NOT_SET == default_value.get_type() &&
-    overrides.find(name) == overrides.end() &&
-    parameter_descriptor.dynamic_typing == false)
-  {
-    throw rclcpp::exceptions::NoParameterOverrideProvided(name);
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
