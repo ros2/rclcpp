@@ -209,7 +209,7 @@ public:
    * This function waits until all published message data were acknowledged by all subscribers or
    * timeout.
    *
-   * timeout must be less then std::chrono::nanoseconds::max().
+   * timeout must be less than std::chrono::nanoseconds::max().
    * If the timeout is negative then this function will block indefinitely until all published
    * message data were acknowledged.
    * If the timeout is 0 then this function will be non-blocking; checking all published message
@@ -222,6 +222,7 @@ public:
    * \return `true` if all published message data were acknowledged before timeout, otherwise
    *   `false`.
    * \throws rclcpp::exceptions::RCLError if middleware doesn't support or internal error occurs
+   * \throws std::invalid_argument if timeout is greater than nanoseconds::max()
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli>
   bool

@@ -29,6 +29,7 @@
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "test_msgs/msg/strings.hpp"
 
 class TestPublisher : public ::testing::Test
 {
@@ -579,3 +580,36 @@ TEST_F(TestPublisher, check_wait_for_all_acked_return) {
       rclcpp::exceptions::RCLError);
   }
 }
+
+class TestPublisherWaitForAllAcked
+  : public TestPublisher, public ::testing::WithParamInterface<std::pair<rclcpp::QoS, rclcpp::QoS>>
+{
+};
+
+TEST_P(TestPublisherWaitForAllAcked, check_wait_for_all_acked_with_QosPolicy) {
+  initialize();
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Strings>) {};
+  auto pub = node->create_publisher<test_msgs::msg::Strings>("topic", std::get<0>(GetParam()));
+  auto sub = node->create_subscription<test_msgs::msg::Strings>(
+    "topic",
+    std::get<1>(GetParam()),
+    do_nothing);
+
+  auto msg = std::make_shared<test_msgs::msg::Strings>();
+  for (int i = 0; i < 20; i++) {
+    ASSERT_NO_THROW(pub->publish(*msg));
+  }
+  EXPECT_TRUE(pub->wait_for_all_acked(std::chrono::milliseconds(500)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  TestWaitForAllAckedWithParm,
+  TestPublisherWaitForAllAcked,
+  ::testing::Values(
+    std::pair<rclcpp::QoS, rclcpp::QoS>(
+      rclcpp::QoS(1).reliable(), rclcpp::QoS(1).reliable()),
+    std::pair<rclcpp::QoS, rclcpp::QoS>(
+      rclcpp::QoS(1).best_effort(), rclcpp::QoS(1).best_effort()),
+    std::pair<rclcpp::QoS, rclcpp::QoS>(
+      rclcpp::QoS(1).reliable(), rclcpp::QoS(1).best_effort())));
