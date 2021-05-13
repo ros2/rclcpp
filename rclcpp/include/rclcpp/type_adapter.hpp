@@ -189,7 +189,7 @@ struct TypeAdapter<T, void, std::enable_if_t<ImplicitTypeAdapter<T>::is_speciali
 #define RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(CustomType, ROSMessageType) \
   template<> \
   struct rclcpp::ImplicitTypeAdapter<CustomType> \
-  : public rclcpp::TypeAdapter<CustomType, ROSMessageType> \
+    : public rclcpp::TypeAdapter<CustomType, ROSMessageType> \
   { \
     static_assert( \
       is_specialized::value, \
