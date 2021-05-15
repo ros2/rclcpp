@@ -179,18 +179,22 @@ struct TypeAdapter<T, void, std::enable_if_t<ImplicitTypeAdapter<T>::is_speciali
 
 /// Assigns the custom type implicitly to the given custom type/ros message type pair.
 /**
+ * Note: this macro needs to be used in the root namespace.
+ * We cannot use ::rclcpp to protect against this, due to how GCC interprets the
+ * syntax, see: https://stackoverflow.com/a/2781537
+ *
  * \sa TypeAdapter
  * \sa ImplicitTypeAdapter
  */
 #define RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(CustomType, ROSMessageType) \
   template<> \
-  struct ::rclcpp::ImplicitTypeAdapter<CustomType> \
-  : public ::rclcpp::TypeAdapter<CustomType, ROSMessageType> \
+  struct rclcpp::ImplicitTypeAdapter<CustomType> \
+    : public rclcpp::TypeAdapter<CustomType, ROSMessageType> \
   { \
     static_assert( \
       is_specialized::value, \
       "Cannot use custom type as ros type when there is no TypeAdapter for that pair"); \
-  };
+  }
 
 }  // namespace rclcpp
 
