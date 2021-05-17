@@ -351,8 +351,6 @@ __declare_parameter_common(
 
   // If there is no initial value, then skip initialization
   if (initial_value->get_type() == rclcpp::PARAMETER_NOT_SET) {
-    // descriptor type should be set
-    assert(parameter_descriptor.type != rclcpp::PARAMETER_NOT_SET);
     // Add declared parameters to storage (without a value)
     parameter_infos[name].descriptor.name = name;
     parameter_infos[name].descriptor.type = parameter_descriptor.type;
