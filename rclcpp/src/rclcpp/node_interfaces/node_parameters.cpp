@@ -353,7 +353,11 @@ __declare_parameter_common(
   if (initial_value->get_type() == rclcpp::PARAMETER_NOT_SET) {
     // Add declared parameters to storage (without a value)
     parameter_infos[name].descriptor.name = name;
-    parameter_infos[name].descriptor.type = parameter_descriptor.type;
+    if (parameter_descriptor.dynamic_typing) {
+      parameter_infos[name].descriptor.type = rclcpp::PARAMETER_NOT_SET;
+    } else {
+      parameter_infos[name].descriptor.type = parameter_descriptor.type;
+    }
     parameters_out[name] = parameter_infos.at(name);
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
@@ -814,7 +818,8 @@ NodeParameters::get_parameter(const std::string & name) const
   auto param_iter = parameters_.find(name);
   if (
     parameters_.end() != param_iter &&
-    param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET)
+    (param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
+      param_iter->second.descriptor.dynamic_typing))
   {
     return rclcpp::Parameter{name, param_iter->second.value};
   } else if (this->allow_undeclared_) {

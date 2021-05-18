@@ -339,10 +339,10 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
     rclcpp::ParameterValue value = node->declare_parameter(
       parameter_name, rclcpp::ParameterValue{}, descriptor);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
-    // Throws if not set before access
-    EXPECT_THROW(
-      node->get_parameter(parameter_name),
-      rclcpp::exceptions::NoParameterOverrideProvided);
+    // Does not throw if unset before access
+    EXPECT_EQ(
+      rclcpp::PARAMETER_NOT_SET,
+      node->get_parameter(parameter_name).get_parameter_value().get_type());
   }
   {
     // int default, no initial
