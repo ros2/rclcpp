@@ -334,16 +334,15 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.dynamic_typing = true;
-    // no default, no initial, dynamic typing
+    // no default, no initial
+    const std::string parameter_name = "parameter"_unq;
     rclcpp::ParameterValue value = node->declare_parameter(
-      "parameter"_unq, rclcpp::ParameterValue{}, descriptor);
+      parameter_name, rclcpp::ParameterValue{}, descriptor);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
-  }
-  {
-    // no default, no initial, static typing
-    rclcpp::ParameterValue value = node->declare_parameter(
-      "parameter"_unq, rclcpp::ParameterType::PARAMETER_INTEGER);
-    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
+    // Throws if not set before access
+    EXPECT_THROW(
+      node->get_parameter(parameter_name),
+      rclcpp::exceptions::NoParameterOverrideProvided);
   }
   {
     // int default, no initial
@@ -2806,6 +2805,10 @@ TEST_F(TestNode, static_and_dynamic_typing) {
   {
     auto param = node->declare_parameter("integer_override_not_given", rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, param.get_type());
+    // Throws if not set before access
+    EXPECT_THROW(
+      node->get_parameter("integer_override_not_given"),
+      rclcpp::exceptions::NoParameterOverrideProvided);
   }
   {
     EXPECT_THROW(

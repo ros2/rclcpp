@@ -809,14 +809,20 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 rclcpp::Parameter
 NodeParameters::get_parameter(const std::string & name) const
 {
-  rclcpp::Parameter parameter;
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (get_parameter(name, parameter)) {
-    return parameter;
+  auto param_iter = parameters_.find(name);
+  if (
+    parameters_.end() != param_iter &&
+    param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET)
+  {
+    return rclcpp::Parameter{name, param_iter->second.value};
   } else if (this->allow_undeclared_) {
-    return parameter;
-  } else {
+    return rclcpp::Parameter{};
+  } else if (parameters_.end() == param_iter) {
     throw rclcpp::exceptions::ParameterNotDeclaredException(name);
+  } else {
+    throw rclcpp::exceptions::NoParameterOverrideProvided(name);
   }
 }
 
