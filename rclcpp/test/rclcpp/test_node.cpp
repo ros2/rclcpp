@@ -2811,6 +2811,14 @@ TEST_F(TestNode, static_and_dynamic_typing) {
       rclcpp::exceptions::NoParameterOverrideProvided);
   }
   {
+    auto param = node->declare_parameter("integer_set_after_declare", rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, param.get_type());
+    auto result = node->set_parameter(rclcpp::Parameter{"integer_set_after_declare", 44});
+    ASSERT_TRUE(result.successful) << result.reason;
+    auto get_param = node->get_parameter("integer_set_after_declare");
+    EXPECT_EQ(44, get_param.as_int());
+  }
+  {
     EXPECT_THROW(
       node->declare_parameter("parameter_not_set_is_not_a_valid_type", rclcpp::PARAMETER_NOT_SET),
       std::invalid_argument);
