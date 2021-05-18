@@ -827,7 +827,7 @@ NodeParameters::get_parameter(const std::string & name) const
   } else if (parameters_.end() == param_iter) {
     throw rclcpp::exceptions::ParameterNotDeclaredException(name);
   } else {
-    throw rclcpp::exceptions::NoParameterOverrideProvided(name);
+    throw rclcpp::exceptions::ParameterUninitializedException(name);
   }
 }
 

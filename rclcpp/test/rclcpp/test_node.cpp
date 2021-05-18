@@ -2808,7 +2808,7 @@ TEST_F(TestNode, static_and_dynamic_typing) {
     // Throws if not set before access
     EXPECT_THROW(
       node->get_parameter("integer_override_not_given"),
-      rclcpp::exceptions::NoParameterOverrideProvided);
+      rclcpp::exceptions::ParameterUninitializedException);
   }
   {
     auto param = node->declare_parameter("integer_set_after_declare", rclcpp::PARAMETER_INTEGER);
