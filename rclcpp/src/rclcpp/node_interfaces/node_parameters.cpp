@@ -819,7 +819,7 @@ NodeParameters::get_parameter(const std::string & name) const
   if (
     parameters_.end() != param_iter &&
     (param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
-      param_iter->second.descriptor.dynamic_typing))
+    param_iter->second.descriptor.dynamic_typing))
   {
     return rclcpp::Parameter{name, param_iter->second.value};
   } else if (this->allow_undeclared_) {
