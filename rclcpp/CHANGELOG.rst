@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+11.0.0 (2021-05-18)
+-------------------
+* Allow declare uninitialized parameters (`#1673 <https://github.com/ros2/rclcpp/issues/1673>`_)
+* Fix syntax issue with gcc (`#1674 <https://github.com/ros2/rclcpp/issues/1674>`_)
+* [service] Don't use a weak_ptr to avoid leaking (`#1668 <https://github.com/ros2/rclcpp/issues/1668>`_)
+* Contributors: Ivan Santiago Paunovic, Jacob Perron, William Woodall
+
 10.0.0 (2021-05-11)
 -------------------
 * Fix doc typo (`#1663 <https://github.com/ros2/rclcpp/issues/1663>`_)
