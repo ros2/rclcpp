@@ -565,9 +565,18 @@ protected:
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
 
+  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+      const rcl_guard_condition_t *,
+      std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
+    WeakCallbackGroupsToGuardConditionsMap;
+
   /// maps nodes to guard conditions
   WeakNodesToGuardConditionsMap
   weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// maps callback groups to guard conditions
+  WeakCallbackGroupsToGuardConditionsMap
+  weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// maps callback groups associated to nodes
   WeakCallbackGroupsToNodesMap

@@ -111,6 +111,11 @@ Executor::~Executor()
     memory_strategy_->remove_guard_condition(guard_condition);
   }
   weak_nodes_to_guard_conditions_.clear();
+  for (const auto & pair : weak_groups_to_guard_conditions_) {
+    auto & guard_condition = pair.second;
+    memory_strategy_->remove_guard_condition(guard_condition);
+  }
+  weak_groups_to_guard_conditions_.clear();
 
   // Finalize the wait set.
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
@@ -204,8 +209,6 @@ Executor::add_callback_group_to_map(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Callback group has already been added to an executor.");
   }
-  bool is_new_node = !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
-    !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_);
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
   auto insert_info =
     weak_groups_to_nodes.insert(std::make_pair(weak_group_ptr, node_ptr));
@@ -215,21 +218,21 @@ Executor::add_callback_group_to_map(
   }
   // Also add to the map that contains all callback groups
   weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
-  if (is_new_node) {
-    const auto & gc = node_ptr->get_notify_guard_condition();
-    weak_nodes_to_guard_conditions_[node_ptr] = &gc;
-    if (notify) {
-      // Interrupt waiting to handle new node
-      try {
-        interrupt_guard_condition_.trigger();
-      } catch (const rclcpp::exceptions::RCLError & ex) {
-        throw std::runtime_error(
-                std::string(
-                  "Failed to trigger guard condition on callback group add: ") + ex.what());
-      }
+
+  weak_groups_to_guard_conditions_[weak_group_ptr] =
+    &group_ptr->get_notify_guard_condition()->get_rcl_guard_condition();
+  // Add the callback_group's notify condition to the guard condition handles
+  memory_strategy_->add_guard_condition(
+    &group_ptr->get_notify_guard_condition()->get_rcl_guard_condition());
+  if (notify) {
+    // Interrupt waiting to handle new node
+    try {
+      interrupt_guard_condition_.trigger();
+    } catch (const rclcpp::exceptions::RCLError & ex) {
+      throw std::runtime_error(
+              std::string(
+                "Failed to trigger guard condition on callback group add: ") + ex.what());
     }
-    // Add the node's notify condition to the guard condition handles
-    memory_strategy_->add_guard_condition(gc);
   }
 }
 
@@ -300,7 +303,7 @@ Executor::remove_callback_group_from_map(
   if (!has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
     !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_))
   {
-    weak_nodes_to_guard_conditions_.erase(node_ptr);
+    weak_groups_to_guard_conditions_.erase(weak_group_ptr);
     if (notify) {
       try {
         interrupt_guard_condition_.trigger();
@@ -310,7 +313,8 @@ Executor::remove_callback_group_from_map(
                   "Failed to trigger guard condition on callback group remove: ") + ex.what());
       }
     }
-    memory_strategy_->remove_guard_condition(&node_ptr->get_notify_guard_condition());
+    memory_strategy_->remove_guard_condition(
+      &group_ptr->get_notify_guard_condition()->get_rcl_guard_condition());
   }
 }
 
@@ -720,6 +724,12 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
           weak_groups_associated_with_executor_to_nodes_.end())
           {
             weak_groups_associated_with_executor_to_nodes_.erase(group_ptr);
+          }
+          auto callback_guard_pair = weak_groups_to_guard_conditions_.find(group_ptr);
+          if (callback_guard_pair != weak_groups_to_guard_conditions_.end()) {
+            auto guard_condition = callback_guard_pair->second;
+            weak_groups_to_guard_conditions_.erase(group_ptr);
+            memory_strategy_->remove_guard_condition(guard_condition);
           }
           weak_groups_to_nodes_.erase(group_ptr);
         });
