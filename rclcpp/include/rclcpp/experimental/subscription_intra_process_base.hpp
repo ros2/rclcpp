@@ -42,7 +42,8 @@ public:
   RCLCPP_PUBLIC
   SubscriptionIntraProcessBase(
     rclcpp::Context::SharedPtr context,
-    const std::string & topic_name, rmw_qos_profile_t qos_profile)
+    const std::string & topic_name,
+    rmw_qos_profile_t qos_profile)
   : gc_(context), topic_name_(topic_name), qos_profile_(qos_profile)
   {}
 

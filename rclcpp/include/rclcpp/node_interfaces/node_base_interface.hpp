@@ -146,7 +146,7 @@ public:
   const rcl_guard_condition_t *
   get_notify_guard_condition() = 0;
 
-  /// Return guard condition that should be notified when the internal node state changes.
+  /// Return a guard condition that should be notified when the internal node state changes.
   /**
    * For example, this should be notified when a publisher is added or removed.
    *
