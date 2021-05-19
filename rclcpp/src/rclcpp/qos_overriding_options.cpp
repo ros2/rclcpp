@@ -46,6 +46,18 @@ operator<<(std::ostream & oss, const QosPolicyKind & qpk)
 static std::initializer_list<QosPolicyKind> kDefaultPolicies =
 {QosPolicyKind::History, QosPolicyKind::Depth, QosPolicyKind::Reliability};
 
+static std::initializer_list<QosPolicyKind> kAllPolicies = {
+  QosPolicyKind::AvoidRosNamespaceConventions,
+  QosPolicyKind::Deadline,
+  QosPolicyKind::Depth,
+  QosPolicyKind::Durability,
+  QosPolicyKind::History,
+  QosPolicyKind::Lifespan,
+  QosPolicyKind::Liveliness,
+  QosPolicyKind::LivelinessLeaseDuration,
+  QosPolicyKind::Reliability
+};
+
 QosOverridingOptions::QosOverridingOptions(
   std::initializer_list<QosPolicyKind> policy_kinds,
   QosCallback validation_callback,
@@ -61,6 +73,14 @@ QosOverridingOptions::with_default_policies(
   std::string id)
 {
   return QosOverridingOptions{kDefaultPolicies, validation_callback, id};
+}
+
+QosOverridingOptions
+QosOverridingOptions::with_all_policies(
+  QosCallback validation_callback,
+  std::string id)
+{
+  return QosOverridingOptions{kAllPolicies, validation_callback, id};
 }
 
 const std::string &

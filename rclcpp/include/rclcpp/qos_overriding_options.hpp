@@ -140,6 +140,18 @@ public:
   QosOverridingOptions
   with_default_policies(QosCallback validation_callback = nullptr, std::string id = {});
 
+  /// Construct passing a list of QoS policies and a verification callback.
+  /**
+   * Same as `QosOverridingOptions` constructor, but declares all policies:
+   *
+   * AvoidRosNamespaceConventions, Deadline, Depth, Durability, History, Lifespan,
+   * Liveliness, LivelinessLeaseDuration, and Reliability.
+   */
+  RCLCPP_PUBLIC
+  static
+  QosOverridingOptions
+  with_all_policies(QosCallback validation_callback = nullptr, std::string id = {});
+
 private:
   /// \internal Id of the entity requesting to create parameters.
   std::string id_;
