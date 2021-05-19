@@ -633,8 +633,8 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
     // if there are clients who already asked for the result, send it to them
     auto iter = pimpl_->result_requests_.find(uuid);
     if (iter != pimpl_->result_requests_.end()) {
+      std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
       for (auto & request_header : iter->second) {
-        std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
         rcl_ret_t ret = rcl_action_send_result_response(
           pimpl_->action_server_.get(), &request_header, result_msg.get());
         if (RCL_RET_OK != ret) {
