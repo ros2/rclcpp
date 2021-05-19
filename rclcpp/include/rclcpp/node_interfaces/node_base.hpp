@@ -104,7 +104,7 @@ public:
   get_associated_with_executor_atomic() override;
 
   RCLCPP_PUBLIC
-  const rcl_guard_condition_t *
+  rcl_guard_condition_t *
   get_notify_guard_condition() override;
 
   RCLCPP_PUBLIC

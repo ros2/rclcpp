@@ -57,6 +57,12 @@ GuardCondition::get_context() const
   return context_;
 }
 
+rcl_guard_condition_t &
+GuardCondition::get_rcl_guard_condition()
+{
+  return rcl_guard_condition_;
+}
+
 const rcl_guard_condition_t &
 GuardCondition::get_rcl_guard_condition() const
 {
