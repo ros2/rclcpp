@@ -208,7 +208,7 @@ Executor::add_callback_group_to_map(
   // Also add to the map that contains all callback groups
   weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
   if (is_new_node) {
-    const auto & gc = node_ptr->get_notify_rclcpp_guard_condition();
+    const auto & gc = node_ptr->get_notify_guard_condition();
     weak_nodes_to_guard_conditions_[node_ptr] = &gc;
     if (notify) {
       // Interrupt waiting to handle new node
@@ -286,7 +286,7 @@ Executor::remove_callback_group_from_map(
     if (notify) {
       interrupt_guard_condition_.trigger();
     }
-    memory_strategy_->remove_guard_condition(node_ptr->get_notify_rclcpp_guard_condition());
+    memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
   }
 }
 

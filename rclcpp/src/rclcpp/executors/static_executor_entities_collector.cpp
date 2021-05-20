@@ -324,7 +324,7 @@ StaticExecutorEntitiesCollector::add_callback_group(
     throw std::runtime_error("Callback group was already added to executor.");
   }
   if (is_new_node) {
-    const auto & gc = node_ptr->get_notify_rclcpp_guard_condition();
+    const auto & gc = node_ptr->get_notify_guard_condition();
     weak_nodes_to_guard_conditions_[node_ptr] = &gc;
     return true;
   }

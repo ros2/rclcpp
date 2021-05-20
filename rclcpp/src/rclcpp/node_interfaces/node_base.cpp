@@ -239,18 +239,8 @@ NodeBase::get_associated_with_executor_atomic()
   return associated_with_executor_;
 }
 
-rcl_guard_condition_t *
-NodeBase::get_notify_guard_condition()
-{
-  std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
-  if (!notify_guard_condition_is_valid_) {
-    return nullptr;
-  }
-  return &notify_guard_condition_.get_rcl_guard_condition();
-}
-
 rclcpp::GuardCondition &
-NodeBase::get_notify_rclcpp_guard_condition()
+NodeBase::get_notify_guard_condition()
 {
   std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
   if (!notify_guard_condition_is_valid_) {

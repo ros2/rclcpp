@@ -104,12 +104,8 @@ public:
   get_associated_with_executor_atomic() override;
 
   RCLCPP_PUBLIC
-  rcl_guard_condition_t *
-  get_notify_guard_condition() override;
-
-  RCLCPP_PUBLIC
   rclcpp::GuardCondition &
-  get_notify_rclcpp_guard_condition() override;
+  get_notify_guard_condition() override;
 
   RCLCPP_PUBLIC
   std::unique_lock<std::recursive_mutex>

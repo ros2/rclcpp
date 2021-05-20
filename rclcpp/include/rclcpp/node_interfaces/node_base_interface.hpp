@@ -135,27 +135,16 @@ public:
   std::atomic_bool &
   get_associated_with_executor_atomic() = 0;
 
-  /// Return guard condition that should be notified when the internal node state changes.
-  /**
-   * For example, this should be notified when a publisher is added or removed.
-   *
-   * \return the rcl_guard_condition_t if it is valid, else nullptr
-   */
-  RCLCPP_PUBLIC
-  virtual
-  rcl_guard_condition_t *
-  get_notify_guard_condition() = 0;
-
   /// Return a guard condition that should be notified when the internal node state changes.
   /**
    * For example, this should be notified when a publisher is added or removed.
    *
-   * \return the GuardCondition if it is valid, else nullptr
+   * \return the GuardCondition if it is valid, else thow runtime error
    */
   RCLCPP_PUBLIC
   virtual
   rclcpp::GuardCondition &
-  get_notify_rclcpp_guard_condition() = 0;
+  get_notify_guard_condition() = 0;
 
   /// Acquire and return a scoped lock that protects the notify guard condition.
   /** This should be used when triggering the notify guard condition. */
