@@ -627,6 +627,17 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
   }
 
   {
+    /**
+    * NOTE: There is a potential deadlock issue if both unordered_map_mutex_ and
+    * action_server_reentrant_mutex_ locked in other block scopes. Unless using
+    * std::scoped_lock, locking order must be consistent with the current.
+    *
+    * Current locking order:
+    *
+    *   1. unordered_map_mutex_
+    *   2. action_server_reentrant_mutex_
+    *
+    */
     std::lock_guard<std::recursive_mutex> unordered_map_lock(pimpl_->unordered_map_mutex_);
     pimpl_->goal_results_[uuid] = result_msg;
 
