@@ -154,7 +154,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  rclcpp::GuardCondition *
+  rclcpp::GuardCondition &
   get_notify_rclcpp_guard_condition() = 0;
 
   /// Acquire and return a scoped lock that protects the notify guard condition.

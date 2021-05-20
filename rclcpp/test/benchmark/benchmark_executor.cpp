@@ -377,7 +377,7 @@ BENCHMARK_F(
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
 
-  entities_collector_->init(&wait_set, memory_strategy, &guard_condition);
+  entities_collector_->init(&wait_set, memory_strategy, guard_condition);
   RCLCPP_SCOPE_EXIT(entities_collector_->fini());
 
   reset_heap_counters();

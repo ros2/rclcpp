@@ -65,7 +65,7 @@ public:
   init(
     rcl_wait_set_t * p_wait_set,
     rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-    rclcpp::GuardCondition * executor_guard_condition);
+    rclcpp::GuardCondition & executor_guard_condition);
 
   /// Finalize StaticExecutorEntitiesCollector to clear resources
   RCLCPP_PUBLIC

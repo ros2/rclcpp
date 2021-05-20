@@ -47,7 +47,7 @@ StaticSingleThreadedExecutor::spin()
 
   // Set memory_strategy_ and exec_list_ based on weak_nodes_
   // Prepare wait_set_ based on memory_strategy_
-  entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+  entities_collector_->init(&wait_set_, memory_strategy_, interrupt_guard_condition_);
 
   while (rclcpp::ok(this->context_) && spinning.load()) {
     // Refresh wait set and wait for work
@@ -81,7 +81,7 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 {
   // Make sure the entities collector has been initialized
   if (!entities_collector_->is_init()) {
-    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+    entities_collector_->init(&wait_set_, memory_strategy_, interrupt_guard_condition_);
   }
 
   auto start = std::chrono::steady_clock::now();
@@ -118,7 +118,7 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
   // Make sure the entities collector has been initialized
   if (!entities_collector_->is_init()) {
-    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+    entities_collector_->init(&wait_set_, memory_strategy_, interrupt_guard_condition_);
   }
 
   if (rclcpp::ok(context_) && spinning.load()) {

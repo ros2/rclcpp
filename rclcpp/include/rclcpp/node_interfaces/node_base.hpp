@@ -108,7 +108,7 @@ public:
   get_notify_guard_condition() override;
 
   RCLCPP_PUBLIC
-  rclcpp::GuardCondition *
+  rclcpp::GuardCondition &
   get_notify_rclcpp_guard_condition() override;
 
   RCLCPP_PUBLIC

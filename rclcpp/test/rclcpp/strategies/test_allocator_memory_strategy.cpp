@@ -472,26 +472,26 @@ TEST_F(TestAllocatorMemoryStrategy, add_remove_guard_conditions) {
   rclcpp::GuardCondition guard_condition2;
   rclcpp::GuardCondition guard_condition3;
 
-  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(&guard_condition1));
-  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(&guard_condition2));
-  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(&guard_condition3));
+  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition1));
+  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition2));
+  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition3));
   EXPECT_EQ(3u, allocator_memory_strategy()->number_of_guard_conditions());
 
   // Adding a second time should not add to vector
-  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(&guard_condition1));
-  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(&guard_condition2));
-  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(&guard_condition3));
+  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition1));
+  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition2));
+  EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition3));
   EXPECT_EQ(3u, allocator_memory_strategy()->number_of_guard_conditions());
 
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition1));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition2));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition3));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition1));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition2));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition3));
   EXPECT_EQ(0u, allocator_memory_strategy()->number_of_guard_conditions());
 
   // Removing second time should have no effect
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition1));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition2));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition3));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition1));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition2));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition3));
   EXPECT_EQ(0u, allocator_memory_strategy()->number_of_guard_conditions());
 }
 
@@ -589,7 +589,7 @@ TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_guard_condition) {
 
   EXPECT_NO_THROW(rclcpp::GuardCondition guard_condition(context););
 
-  allocator_memory_strategy()->add_guard_condition(&guard_condition);
+  allocator_memory_strategy()->add_guard_condition(guard_condition);
 
   RclWaitSetSizes insufficient_capacities = SufficientWaitSetCapacities();
   insufficient_capacities.size_of_guard_conditions = 0;

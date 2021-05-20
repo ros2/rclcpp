@@ -62,7 +62,7 @@ void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-  GuardCondition * executor_guard_condition)
+  GuardCondition & executor_guard_condition)
 {
   // Empty initialize executable list
   exec_list_ = rclcpp::experimental::ExecutableList();
@@ -324,7 +324,8 @@ StaticExecutorEntitiesCollector::add_callback_group(
     throw std::runtime_error("Callback group was already added to executor.");
   }
   if (is_new_node) {
-    weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_rclcpp_guard_condition();
+    const auto & gc = node_ptr->get_notify_rclcpp_guard_condition();
+    weak_nodes_to_guard_conditions_[node_ptr] = &gc;
     return true;
   }
   return false;
