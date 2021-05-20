@@ -30,6 +30,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -358,7 +359,7 @@ public:
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
-    gc_.add_to_wait_set(wait_set);
+    rclcpp::detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
     return true;
   }
 

@@ -21,6 +21,7 @@
 #include "rcl/allocator.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -240,7 +241,7 @@ public:
     }
 
     for (auto guard_condition : guard_conditions_) {
-      guard_condition->add_to_wait_set(wait_set);
+      detail::add_guard_condition_to_rcl_wait_set(*wait_set, *guard_condition);
     }
 
     for (auto waitable : waitable_handles_) {

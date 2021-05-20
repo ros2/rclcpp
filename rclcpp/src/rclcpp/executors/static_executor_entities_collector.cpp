@@ -23,6 +23,7 @@
 
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 
 using rclcpp::executors::StaticExecutorEntitiesCollector;
 
@@ -267,7 +268,7 @@ StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
   // Add waitable guard conditions (one for each registered node) into the wait set.
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & gc = pair.second;
-    gc->add_to_wait_set(wait_set);
+    detail::add_guard_condition_to_rcl_wait_set(*wait_set, *gc);
   }
   return true;
 }

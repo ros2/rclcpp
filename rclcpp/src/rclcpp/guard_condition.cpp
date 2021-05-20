@@ -84,13 +84,4 @@ GuardCondition::exchange_in_use_by_wait_set_state(bool in_use_state)
   return in_use_by_wait_set_.exchange(in_use_state);
 }
 
-void
-GuardCondition::add_to_wait_set(rcl_wait_set_t * wait_set) const
-{
-  rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, &this->rcl_guard_condition_, NULL);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "failed to add guard condition to wait set");
-  }
-}
 }  // namespace rclcpp

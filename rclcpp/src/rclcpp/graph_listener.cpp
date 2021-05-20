@@ -22,6 +22,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
@@ -149,7 +150,7 @@ GraphListener::run_loop()
       throw_from_rcl_error(ret, "failed to clear wait set");
     }
     // Put the interrupt guard condition in the wait set.
-    interrupt_guard_condition_.add_to_wait_set(&wait_set_);
+    detail::add_guard_condition_to_rcl_wait_set(wait_set_, interrupt_guard_condition_);
 
     // Put graph guard conditions for each node into the wait set.
     std::vector<size_t> graph_gc_indexes(node_graph_interfaces_size, 0u);
