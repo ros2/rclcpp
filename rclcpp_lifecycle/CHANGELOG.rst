@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Fix destruction order in lifecycle benchmark (`#1676 <https://github.com/ros2/rclcpp/issues/1676>`_)
+* Contributors: Scott K Logan
+
 9.0.3 (2021-05-10)
 ------------------
 

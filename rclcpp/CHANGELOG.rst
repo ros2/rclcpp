@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Allow declaring uninitialized statically typed parameters. (`#1673 <https://github.com/ros2/rclcpp/issues/1673>`_) (`#1681 <https://github.com/ros2/rclcpp/issues/1681>`_)
+* [service] Don't use a weak_ptr to avoid leaking. (`#1668 <https://github.com/ros2/rclcpp/issues/1668>`_) (`#1670 <https://github.com/ros2/rclcpp/issues/1670>`_)
+* Contributors: Jacob Perron, Ivan Santiago Paunovic
+
 9.0.3 (2021-05-10)
 ------------------
 * Use OnShutdown callback handle instead of OnShutdown callback (`#1639 <https://github.com/ros2/rclcpp/issues/1639>`_) (`#1650 <https://github.com/ros2/rclcpp/issues/1650>`_)
