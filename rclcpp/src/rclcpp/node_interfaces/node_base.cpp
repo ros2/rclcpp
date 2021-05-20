@@ -249,12 +249,6 @@ NodeBase::get_notify_guard_condition()
   return notify_guard_condition_;
 }
 
-std::unique_lock<std::recursive_mutex>
-NodeBase::acquire_notify_guard_condition_lock() const
-{
-  return std::unique_lock<std::recursive_mutex>(notify_guard_condition_mutex_);
-}
-
 bool
 NodeBase::get_use_intra_process_default() const
 {
@@ -291,6 +285,5 @@ NodeBase::resolve_topic_or_service_name(
 void
 NodeBase::trigger_notify_guard_condition()
 {
-  std::unique_lock<std::recursive_mutex> lock(notify_guard_condition_mutex_);
   notify_guard_condition_.trigger();
 }

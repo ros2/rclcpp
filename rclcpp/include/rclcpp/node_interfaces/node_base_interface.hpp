@@ -146,13 +146,6 @@ public:
   rclcpp::GuardCondition &
   get_notify_guard_condition() = 0;
 
-  /// Acquire and return a scoped lock that protects the notify guard condition.
-  /** This should be used when triggering the notify guard condition. */
-  RCLCPP_PUBLIC
-  virtual
-  std::unique_lock<std::recursive_mutex>
-  acquire_notify_guard_condition_lock() const = 0;
-
   /// Return the default preference for using intra process communication.
   RCLCPP_PUBLIC
   virtual

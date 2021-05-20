@@ -108,10 +108,6 @@ public:
   get_notify_guard_condition() override;
 
   RCLCPP_PUBLIC
-  std::unique_lock<std::recursive_mutex>
-  acquire_notify_guard_condition_lock() const override;
-
-  RCLCPP_PUBLIC
   bool
   get_use_intra_process_default() const override;
 
