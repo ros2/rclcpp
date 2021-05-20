@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+9.1.0 (2021-05-20)
+------------------
 * Bump the benchmark timeout for benchmark_action_client (`#1672 <https://github.com/ros2/rclcpp/issues/1672>`_)
 * Contributors: Scott K Logan
 
