@@ -2,6 +2,9 @@
 Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.16 (2021-05-21)
+-------------------
+
 0.7.15 (2020-11-24)
 -------------------
 * Fix typo in action client logger name. (`#1414 <https://github.com/ros2/rclcpp/issues/1414>`_)

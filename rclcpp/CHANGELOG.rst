@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.16 (2021-05-21)
+-------------------
+* Fix documented example in create_publisher. (`#1558 <https://github.com/ros2/rclcpp/issues/1558>`_) (`#1560 <https://github.com/ros2/rclcpp/issues/1560>`_)
+* Fix NodeOptions copy constructor. (`#1376 <https://github.com/ros2/rclcpp/issues/1376>`_) (`#1466 <https://github.com/ros2/rclcpp/issues/1466>`_)
+* Contributors: Ivan Santiago Paunovic, Jacob Perron
+
 0.7.15 (2020-11-24)
 -------------------
 * Fix implementation of NodeOptions::use_global_arguments(). (`#1176 <https://github.com/ros2/rclcpp/issues/1176>`_) (`#1206 <https://github.com/ros2/rclcpp/issues/1206>`_)
