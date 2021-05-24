@@ -27,7 +27,7 @@ CallbackGroup::CallbackGroup(
 : type_(group_type), associated_with_executor_(false),
   can_be_taken_from_(true),
   automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node),
-  notify_guard_condition_(std::make_shared<rclcpp::GuardCondition>(context_ptr))
+  notify_guard_condition_(rclcpp::GuardCondition(context_ptr))
 {}
 
 
@@ -100,7 +100,7 @@ CallbackGroup::automatically_add_to_executor_with_node() const
   return automatically_add_to_executor_with_node_;
 }
 
-rclcpp::GuardCondition::SharedPtr
+rclcpp::GuardCondition &
 CallbackGroup::get_notify_guard_condition()
 {
   return notify_guard_condition_;

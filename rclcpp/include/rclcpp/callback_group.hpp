@@ -177,7 +177,7 @@ public:
 
   /// Return the notify guard condition.
   RCLCPP_PUBLIC
-  rclcpp::GuardCondition::SharedPtr
+  rclcpp::GuardCondition &
   get_notify_guard_condition();
 
 protected:
@@ -222,7 +222,7 @@ protected:
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
   const bool automatically_add_to_executor_with_node_;
-  rclcpp::GuardCondition::SharedPtr notify_guard_condition_;
+  rclcpp::GuardCondition notify_guard_condition_;
 
 private:
   template<typename TypeT, typename Function>

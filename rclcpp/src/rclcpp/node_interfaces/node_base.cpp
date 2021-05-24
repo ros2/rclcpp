@@ -148,10 +148,11 @@ NodeBase::~NodeBase()
     notify_guard_condition_is_valid_ = false;
   }
 
+  std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   for (auto & weak_gc : this->callback_groups_) {
     auto strong_gc = weak_gc.lock();
     if (strong_gc) {
-      strong_gc->get_notify_guard_condition()->trigger();
+      strong_gc->get_notify_guard_condition().trigger();
     }
   }
 }

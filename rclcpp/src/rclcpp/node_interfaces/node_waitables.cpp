@@ -49,7 +49,7 @@ NodeWaitables::add_waitable(
     throw std::runtime_error(
             std::string("failed to notify wait set on waitable creation: ") + ex.what());
   }
-  group->get_notify_guard_condition()->trigger();
+  group->get_notify_guard_condition().trigger();
 }
 
 void

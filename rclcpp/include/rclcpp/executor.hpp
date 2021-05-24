@@ -560,19 +560,10 @@ protected:
   virtual void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
-  typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rclcpp::GuardCondition *,
-      std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
-    WeakNodesToGuardConditionsMap;
-
   typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-      const rcl_guard_condition_t *,
+      const rclcpp::GuardCondition *,
       std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
     WeakCallbackGroupsToGuardConditionsMap;
-
-  /// maps nodes to guard conditions
-  WeakNodesToGuardConditionsMap
-  weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// maps callback groups to guard conditions
   WeakCallbackGroupsToGuardConditionsMap

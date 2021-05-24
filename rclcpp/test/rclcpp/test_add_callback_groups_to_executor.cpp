@@ -301,7 +301,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
     });
 
   // expect the subscriber to receive a message
-  auto sub_callback = [&received_message_promise](const test_msgs::msg::Empty::SharedPtr) {
+  auto sub_callback = [&received_message_promise](test_msgs::msg::Empty::ConstSharedPtr) {
       received_message_promise.set_value(true);
     };
 

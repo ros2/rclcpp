@@ -49,7 +49,7 @@ NodeServices::add_service(
     throw std::runtime_error(
             std::string("failed to notify wait set on service creation: ") + ex.what());
   }
-  group->get_notify_guard_condition()->trigger();
+  group->get_notify_guard_condition().trigger();
 }
 
 void
@@ -76,7 +76,7 @@ NodeServices::add_client(
     throw std::runtime_error(
             std::string("failed to notify wait set on client creation: ") + ex.what());
   }
-  group->get_notify_guard_condition()->trigger();
+  group->get_notify_guard_condition().trigger();
 }
 
 std::string
