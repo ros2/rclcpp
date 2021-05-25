@@ -299,14 +299,15 @@ __set_parameters_atomically_common(
   const OnParametersSetCallbackType & callback,
   bool allow_undeclared = false)
 {
-  // Call the user callback to see if the new value(s) are allowed.
-  rcl_interfaces::msg::SetParametersResult result =
-    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
+  // Check if the value being set complies with the descriptor.
+  rcl_interfaces::msg::SetParametersResult result = __check_parameters(
+    parameter_infos, parameters, allow_undeclared);
   if (!result.successful) {
     return result;
   }
-  // Check if the value being set complies with the descriptor.
-  result = __check_parameters(parameter_infos, parameters, allow_undeclared);
+  // Call the user callback to see if the new value(s) are allowed.
+  result =
+    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
   if (!result.successful) {
     return result;
   }
@@ -346,6 +347,21 @@ __declare_parameter_common(
   auto overrides_it = overrides.find(name);
   if (!ignore_override && overrides_it != overrides.end()) {
     initial_value = &overrides_it->second;
+  }
+
+  // If there is no initial value, then skip initialization
+  if (initial_value->get_type() == rclcpp::PARAMETER_NOT_SET) {
+    // Add declared parameters to storage (without a value)
+    parameter_infos[name].descriptor.name = name;
+    if (parameter_descriptor.dynamic_typing) {
+      parameter_infos[name].descriptor.type = rclcpp::PARAMETER_NOT_SET;
+    } else {
+      parameter_infos[name].descriptor.type = parameter_descriptor.type;
+    }
+    parameters_out[name] = parameter_infos.at(name);
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = true;
+    return result;
   }
 
   // Check with the user's callback to see if the initial value can be set.
@@ -410,14 +426,6 @@ declare_parameter_helper(
       };
     }
     parameter_descriptor.type = static_cast<uint8_t>(type);
-  }
-
-  if (
-    rclcpp::PARAMETER_NOT_SET == default_value.get_type() &&
-    overrides.find(name) == overrides.end() &&
-    parameter_descriptor.dynamic_typing == false)
-  {
-    throw rclcpp::exceptions::NoParameterOverrideProvided(name);
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
@@ -805,14 +813,21 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 rclcpp::Parameter
 NodeParameters::get_parameter(const std::string & name) const
 {
-  rclcpp::Parameter parameter;
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (get_parameter(name, parameter)) {
-    return parameter;
+  auto param_iter = parameters_.find(name);
+  if (
+    parameters_.end() != param_iter &&
+    (param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
+    param_iter->second.descriptor.dynamic_typing))
+  {
+    return rclcpp::Parameter{name, param_iter->second.value};
   } else if (this->allow_undeclared_) {
-    return parameter;
-  } else {
+    return rclcpp::Parameter{};
+  } else if (parameters_.end() == param_iter) {
     throw rclcpp::exceptions::ParameterNotDeclaredException(name);
+  } else {
+    throw rclcpp::exceptions::ParameterUninitializedException(name);
   }
 }
 

@@ -500,9 +500,13 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
     result_response = create_result_response(action_msgs::msg::GoalStatus::STATUS_UNKNOWN);
   } else {
     // Goal exists, check if a result is already available
+    std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
     auto iter = pimpl_->goal_results_.find(uuid);
     if (iter != pimpl_->goal_results_.end()) {
       result_response = iter->second;
+    } else {
+      // Store the request so it can be responded to later
+      pimpl_->result_requests_[uuid].push_back(request_header);
     }
   }
 
@@ -514,10 +518,6 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
     if (RCL_RET_OK != rcl_ret) {
       rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
-  } else {
-    // Store the request so it can be responded to later
-    std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
-    pimpl_->result_requests_[uuid].push_back(request_header);
   }
   data.reset();
 }
@@ -627,19 +627,30 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
   }
 
   {
-    std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
+    /**
+    * NOTE: There is a potential deadlock issue if both unordered_map_mutex_ and
+    * action_server_reentrant_mutex_ locked in other block scopes. Unless using
+    * std::scoped_lock, locking order must be consistent with the current.
+    *
+    * Current locking order:
+    *
+    *   1. unordered_map_mutex_
+    *   2. action_server_reentrant_mutex_
+    *
+    */
+    std::lock_guard<std::recursive_mutex> unordered_map_lock(pimpl_->unordered_map_mutex_);
     pimpl_->goal_results_[uuid] = result_msg;
-  }
 
-  // if there are clients who already asked for the result, send it to them
-  auto iter = pimpl_->result_requests_.find(uuid);
-  if (iter != pimpl_->result_requests_.end()) {
-    for (auto & request_header : iter->second) {
+    // if there are clients who already asked for the result, send it to them
+    auto iter = pimpl_->result_requests_.find(uuid);
+    if (iter != pimpl_->result_requests_.end()) {
       std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
-      rcl_ret_t ret = rcl_action_send_result_response(
-        pimpl_->action_server_.get(), &request_header, result_msg.get());
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+      for (auto & request_header : iter->second) {
+        rcl_ret_t ret = rcl_action_send_result_response(
+          pimpl_->action_server_.get(), &request_header, result_msg.get());
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
       }
     }
   }

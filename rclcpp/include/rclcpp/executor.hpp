@@ -30,6 +30,7 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/executor_options.hpp"
@@ -571,6 +572,9 @@ protected:
   /// nodes that are associated with the executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>
   weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// shutdown callback handle registered to Context
+  rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
 };
 
 }  // namespace rclcpp

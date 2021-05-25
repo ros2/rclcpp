@@ -43,7 +43,42 @@ TEST_F(TestLoanedMessage, initialize) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
-  auto loaned_msg = rclcpp::LoanedMessage<MessageT>(pub.get(), pub->get_allocator());
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  auto pub_allocator = pub->get_allocator();
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  auto loaned_msg = rclcpp::LoanedMessage<MessageT>(pub.get(), pub_allocator);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
   ASSERT_TRUE(loaned_msg.is_valid());
   loaned_msg.get().float32_value = 42.0f;
   ASSERT_EQ(42.0f, loaned_msg.get().float32_value);

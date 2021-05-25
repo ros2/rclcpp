@@ -282,8 +282,8 @@ class ParameterModifiedInCallbackException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
-/// Thrown when a parameter override wasn't provided and one was required.
-class NoParameterOverrideProvided : public std::runtime_error
+/// Thrown when an uninitialized parameter is accessed.
+class ParameterUninitializedException : public std::runtime_error
 {
 public:
   /// Construct an instance.
@@ -291,8 +291,8 @@ public:
    * \param[in] name the name of the parameter.
    * \param[in] message custom exception message.
    */
-  explicit NoParameterOverrideProvided(const std::string & name)
-  : std::runtime_error("parameter '" + name + "' requires an user provided parameter override")
+  explicit ParameterUninitializedException(const std::string & name)
+  : std::runtime_error("parameter '" + name + "' is not initialized")
   {}
 };
 

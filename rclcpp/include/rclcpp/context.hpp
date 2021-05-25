@@ -23,6 +23,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -46,6 +47,17 @@ public:
 
 /// Forward declare WeakContextsWrapper
 class WeakContextsWrapper;
+
+class OnShutdownCallbackHandle
+{
+  friend class Context;
+
+public:
+  using OnShutdownCallbackType = std::function<void ()>;
+
+private:
+  std::weak_ptr<OnShutdownCallbackType> callback;
+};
 
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
@@ -80,7 +92,7 @@ public:
    *
    * Note that this function does not setup any signal handlers, so if you want
    * it to be shutdown by the signal handler, then you need to either install
-   * them manually with rclcpp::install_signal_handers() or use rclcpp::init().
+   * them manually with rclcpp::install_signal_handlers() or use rclcpp::init().
    * In addition to installing the signal handlers, the shutdown_on_sigint
    * of the InitOptions needs to be `true` for this context to be shutdown by
    * the signal handler, otherwise it will be passed over.
@@ -177,7 +189,7 @@ public:
   bool
   shutdown(const std::string & reason);
 
-  using OnShutdownCallback = std::function<void ()>;
+  using OnShutdownCallback = OnShutdownCallbackHandle::OnShutdownCallbackType;
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
@@ -203,23 +215,47 @@ public:
   OnShutdownCallback
   on_shutdown(OnShutdownCallback callback);
 
-  /// Return the shutdown callbacks as const.
+  /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
-   * Using the returned reference is not thread-safe with calls that modify
-   * the list of "on shutdown" callbacks, i.e. on_shutdown().
+   * These callbacks will be called in the order they are added as the second
+   * to last step in shutdown().
+   *
+   * When shutdown occurs due to the signal handler, these callbacks are run
+   * asynchronously in the dedicated singal handling thread.
+   *
+   * Also, shutdown() may be called from the destructor of this function.
+   * Therefore, it is not safe to throw exceptions from these callbacks.
+   * Instead, log errors or use some other mechanism to indicate an error has
+   * occurred.
+   *
+   * On shutdown callbacks may be registered before init and after shutdown,
+   * and persist on repeated init's.
+   *
+   * \param[in] callback the on_shutdown callback to be registered
+   * \return the created callback handle
    */
   RCLCPP_PUBLIC
-  const std::vector<OnShutdownCallback> &
-  get_on_shutdown_callbacks() const;
+  virtual
+  OnShutdownCallbackHandle
+  add_on_shutdown_callback(OnShutdownCallback callback);
+
+  /// Remove an registered on_shutdown callbacks.
+  /**
+   * \param[in] callback_handle the on_shutdown callback handle to be removed.
+   * \return true if the callback is found and removed, otherwise false.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_handle);
 
   /// Return the shutdown callbacks.
   /**
-   * Using the returned reference is not thread-safe with calls that modify
-   * the list of "on shutdown" callbacks, i.e. on_shutdown().
+   * Returned callbacks are a copy of the registered callbacks.
    */
   RCLCPP_PUBLIC
-  std::vector<OnShutdownCallback> &
-  get_on_shutdown_callbacks();
+  std::vector<OnShutdownCallback>
+  get_on_shutdown_callbacks() const;
 
   /// Return the internal rcl context.
   RCLCPP_PUBLIC
@@ -299,8 +335,8 @@ private:
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
 
-  std::vector<OnShutdownCallback> on_shutdown_callbacks_;
-  std::mutex on_shutdown_callbacks_mutex_;
+  std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
+  mutable std::mutex on_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
   std::condition_variable interrupt_condition_variable_;

@@ -261,9 +261,9 @@ void TimeSource::create_clock_sub()
     clock_executor_ =
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>(exec_options);
     if (!clock_executor_thread_.joinable()) {
+      cancel_clock_executor_promise_ = std::promise<void>{};
       clock_executor_thread_ = std::thread(
         [this]() {
-          cancel_clock_executor_promise_ = std::promise<void>{};
           auto future = cancel_clock_executor_promise_.get_future();
           clock_executor_->add_callback_group(clock_callback_group_, node_base_);
           clock_executor_->spin_until_future_complete(future);

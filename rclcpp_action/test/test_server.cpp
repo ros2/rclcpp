@@ -1306,3 +1306,15 @@ TEST_F(TestDeadlockServer, deadlock_while_canceled)
   send_goal_request(node_, uuid2_);  // deadlock here
   t.join();
 }
+
+TEST_F(TestDeadlockServer, deadlock_while_succeed_and_canceled)
+{
+  send_goal_request(node_, uuid1_);
+  std::thread t(&TestDeadlockServer::GoalSucceeded, this);
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  auto response_ptr = send_cancel_request(node_, uuid1_);
+
+  // current goal handle is not cancelable, so it returns ERROR_REJECTED
+  EXPECT_EQ(CancelResponse::ERROR_REJECTED, response_ptr->return_code);
+  t.join();
+}

@@ -3,6 +3,22 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+11.0.0 (2021-05-18)
+-------------------
+* Fix destruction order in lifecycle benchmark (`#1675 <https://github.com/ros2/rclcpp/issues/1675>`_)
+* Contributors: Scott K Logan
+
+10.0.0 (2021-05-11)
+-------------------
+* [rclcpp] Type Adaptation feature (`#1557 <https://github.com/ros2/rclcpp/issues/1557>`_)
+* Contributors: Audrow Nash, William Woodall
+
+9.0.2 (2021-04-14)
+------------------
+
+9.0.1 (2021-04-12)
+------------------
+
 9.0.0 (2021-04-06)
 ------------------
 * Add generic publisher and generic subscription for serialized messages (`#1452 <https://github.com/ros2/rclcpp/issues/1452>`_)

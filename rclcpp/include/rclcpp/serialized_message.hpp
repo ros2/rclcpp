@@ -47,7 +47,7 @@ public:
    * \param[in] initial_capacity The amount of memory to be allocated.
    * \param[in] allocator The allocator to be used for the initialization.
    */
-  SerializedMessage(
+  explicit SerializedMessage(
     size_t initial_capacity,
     const rcl_allocator_t & allocator = rcl_get_default_allocator());
 

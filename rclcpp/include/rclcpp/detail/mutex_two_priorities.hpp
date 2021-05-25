@@ -15,6 +15,7 @@
 #ifndef RCLCPP__DETAIL__MUTEX_TWO_PRIORITIES_HPP_
 #define RCLCPP__DETAIL__MUTEX_TWO_PRIORITIES_HPP_
 
+#include <condition_variable>
 #include <mutex>
 
 namespace rclcpp
@@ -62,11 +63,11 @@ private:
   get_low_priority_lockable();
 
 private:
-  // Implementation detail: the idea here is that only one low priority thread can be
-  // trying to take the data_ mutex while the others are excluded by the barrier_ mutex.
-  // All high priority threads are already waiting for the data_ mutex.
-  std::mutex barrier_;
-  std::mutex data_;
+  std::condition_variable hp_cv_;
+  std::condition_variable lp_cv_;
+  std::mutex cv_mutex_;
+  size_t hp_waiting_count_{0u};
+  bool data_taken_{false};
 };
 
 }  // namespace detail

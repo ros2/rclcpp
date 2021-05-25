@@ -2,6 +2,40 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+11.0.0 (2021-05-18)
+-------------------
+* Allow declare uninitialized parameters (`#1673 <https://github.com/ros2/rclcpp/issues/1673>`_)
+* Fix syntax issue with gcc (`#1674 <https://github.com/ros2/rclcpp/issues/1674>`_)
+* [service] Don't use a weak_ptr to avoid leaking (`#1668 <https://github.com/ros2/rclcpp/issues/1668>`_)
+* Contributors: Ivan Santiago Paunovic, Jacob Perron, William Woodall
+
+10.0.0 (2021-05-11)
+-------------------
+* Fix doc typo (`#1663 <https://github.com/ros2/rclcpp/issues/1663>`_)
+* [rclcpp] Type Adaptation feature (`#1557 <https://github.com/ros2/rclcpp/issues/1557>`_)
+* Do not attempt to use void allocators for memory allocation. (`#1657 <https://github.com/ros2/rclcpp/issues/1657>`_)
+* Keep custom allocator in publisher and subscription options alive. (`#1647 <https://github.com/ros2/rclcpp/issues/1647>`_)
+* Fix get_publishers_subscriptions_info_by_topic test in test_node.cpp (`#1648 <https://github.com/ros2/rclcpp/issues/1648>`_)
+* Use OnShutdown callback handle instead of OnShutdown callback (`#1639 <https://github.com/ros2/rclcpp/issues/1639>`_)
+* use dynamic_pointer_cast to detect allocator mismatch in intra process manager (`#1643 <https://github.com/ros2/rclcpp/issues/1643>`_)
+* Increase cppcheck timeout to 500s (`#1634 <https://github.com/ros2/rclcpp/issues/1634>`_)
+* Clarify node parameters docs (`#1631 <https://github.com/ros2/rclcpp/issues/1631>`_)
+* Contributors: Audrow Nash, Barry Xu, Jacob Perron, Michel Hidalgo, Shane Loretz, William Woodall
+
+9.0.2 (2021-04-14)
+------------------
+* Avoid returning loan when none was obtained. (`#1629 <https://github.com/ros2/rclcpp/issues/1629>`_)
+* Use a different implementation of mutex two priorities (`#1628 <https://github.com/ros2/rclcpp/issues/1628>`_)
+* Do not test the value of the history policy when testing the get_publishers/subscriptions_info_by_topic() methods (`#1626 <https://github.com/ros2/rclcpp/issues/1626>`_)
+* Check first parameter type and range before calling the user validation callbacks (`#1627 <https://github.com/ros2/rclcpp/issues/1627>`_)
+* Contributors: Ivan Santiago Paunovic, Miguel Company
+
+9.0.1 (2021-04-12)
+------------------
+* Restore test exception for Connext (`#1625 <https://github.com/ros2/rclcpp/issues/1625>`_)
+* Fix race condition in TimeSource clock thread setup (`#1623 <https://github.com/ros2/rclcpp/issues/1623>`_)
+* Contributors: Andrea Sorbini, Michel Hidalgo
+
 9.0.0 (2021-04-06)
 ------------------
 * remove deprecated code which was deprecated in foxy and should be removed in galactic (`#1622 <https://github.com/ros2/rclcpp/issues/1622>`_)
