@@ -95,7 +95,7 @@ void set_allocator_for_deleter(AllocatorDeleter<T> * deleter, Alloc * alloc)
 template<typename Alloc, typename T>
 using Deleter = typename std::conditional<
   std::is_same<typename std::allocator_traits<Alloc>::template rebind_alloc<T>,
-  typename std::allocator<void>::template rebind<T>::other>::value,
+  std::allocator<T>>::value,
   std::default_delete<T>,
   AllocatorDeleter<Alloc>
   >::type;
