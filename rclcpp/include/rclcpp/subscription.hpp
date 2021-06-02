@@ -197,6 +197,11 @@ public:
                 "intraprocess communication allowed only with volatile durability");
       }
 
+      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
+        CallbackMessageT,
+        AllocatorT,
+        typename MessageUniquePtr::deleter_type>;
+
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
