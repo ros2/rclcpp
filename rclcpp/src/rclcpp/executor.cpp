@@ -60,7 +60,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-  memory_strategy_->add_guard_condition(shutdown_guard_condition_);
+  memory_strategy_->add_guard_condition(*shutdown_guard_condition_.get());
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(interrupt_guard_condition_);
@@ -118,7 +118,7 @@ Executor::~Executor()
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
-  memory_strategy_->remove_guard_condition(shutdown_guard_condition_);
+  memory_strategy_->remove_guard_condition(*shutdown_guard_condition_.get());
   memory_strategy_->remove_guard_condition(interrupt_guard_condition_);
 
   // Remove shutdown callback handle registered to Context

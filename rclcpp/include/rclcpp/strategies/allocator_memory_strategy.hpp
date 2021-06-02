@@ -64,22 +64,22 @@ public:
 
   void add_guard_condition(const rclcpp::GuardCondition & guard_condition) override
   {
-    add_guard_condition(&guard_condition);
-  }
-
-  void add_guard_condition(const rclcpp::GuardCondition::SharedPtr guard_condition) override
-  {
-    add_guard_condition(guard_condition.get());
+    for (const auto & existing_guard_condition : guard_conditions_) {
+      if (existing_guard_condition == &guard_condition) {
+        return;
+      }
+    }
+    guard_conditions_.push_back(&guard_condition);
   }
 
   void remove_guard_condition(const rclcpp::GuardCondition & guard_condition) override
   {
-    remove_guard_condition(&guard_condition);
-  }
-
-  void remove_guard_condition(const rclcpp::GuardCondition::SharedPtr guard_condition) override
-  {
-    remove_guard_condition(guard_condition.get());
+    for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
+      if (*it == &guard_condition) {
+        guard_conditions_.erase(it);
+        break;
+      }
+    }
   }
 
   void clear_handles() override
@@ -495,26 +495,6 @@ public:
   }
 
 private:
-  void add_guard_condition(const rclcpp::GuardCondition * guard_condition)
-  {
-    for (const auto & existing_guard_condition : guard_conditions_) {
-      if (existing_guard_condition == guard_condition) {
-        return;
-      }
-    }
-    guard_conditions_.push_back(guard_condition);
-  }
-
-  void remove_guard_condition(const rclcpp::GuardCondition * guard_condition)
-  {
-    for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
-      if (*it == guard_condition) {
-        guard_conditions_.erase(it);
-        break;
-      }
-    }
-  }
-
   template<typename T>
   using VectorRebind =
     std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;

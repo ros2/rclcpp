@@ -65,6 +65,7 @@ public:
   rcl_guard_condition_t &
   get_rcl_guard_condition();
 
+  /// Return the underlying rcl guard condition structure.
   RCLCPP_PUBLIC
   const rcl_guard_condition_t &
   get_rcl_guard_condition() const;
