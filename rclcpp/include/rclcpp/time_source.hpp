@@ -74,14 +74,14 @@ public:
     const rclcpp::QoS & qos = rclcpp::ClockQoS(),
     bool use_clock_thread = true);
 
-  /// Attack node to the time source.
+  /// Attach node to the time source.
   /**
    * \param node std::shared pointer to a initialized node
    */
   RCLCPP_PUBLIC
   void attachNode(rclcpp::Node::SharedPtr node);
 
-  /// Attack node to the time source.
+  /// Attach node to the time source.
   /**
    * If the parameter `use_sim_time` is `true` then the source time is the simulation time,
    * otherwise the source time is defined by the system.
