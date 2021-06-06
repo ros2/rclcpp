@@ -268,7 +268,9 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   // If the node already has an executor
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   if (has_executor.exchange(true)) {
-    throw std::runtime_error("Node has already been added to an executor.");
+    throw std::runtime_error(
+            std::string("Node '") + node_ptr->get_fully_qualified_name() +
+            "' has already been added to an executor.");
   }
   std::lock_guard<std::mutex> guard{mutex_};
   for (auto & weak_group : node_ptr->get_callback_groups()) {
