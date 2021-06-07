@@ -262,7 +262,7 @@ StaticExecutorEntitiesCollector::refresh_wait_set(std::chrono::nanoseconds timeo
   }
 }
 
-bool
+void
 StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   // Add waitable guard conditions (one for each registered node) into the wait set.
@@ -270,7 +270,6 @@ StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
     auto & gc = pair.second;
     detail::add_guard_condition_to_rcl_wait_set(*wait_set, *gc);
   }
-  return true;
 }
 
 size_t StaticExecutorEntitiesCollector::get_number_of_ready_guard_conditions()

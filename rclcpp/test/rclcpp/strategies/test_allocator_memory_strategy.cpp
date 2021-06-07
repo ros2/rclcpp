@@ -39,9 +39,11 @@ static bool test_waitable_result = false;
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  bool add_to_wait_set(rcl_wait_set_t *) override
+  void add_to_wait_set(rcl_wait_set_t *) override
   {
-    return test_waitable_result;
+    if (!test_waitable_result) {
+      throw std::runtime_error("TestWaitable add_to_wait_set failed");
+    }
   }
 
   bool is_ready(rcl_wait_set_t *) override
@@ -616,7 +618,9 @@ TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_waitable) {
   EXPECT_TRUE(allocator_memory_strategy()->add_handles_to_wait_set(nullptr));
 
   test_waitable_result = false;
-  EXPECT_FALSE(allocator_memory_strategy()->add_handles_to_wait_set(nullptr));
+  EXPECT_THROW(
+    allocator_memory_strategy()->add_handles_to_wait_set(nullptr),
+    std::runtime_error);
 
   // This calls TestWaitable's functions, so rcl errors are not set
   EXPECT_FALSE(rcl_error_is_set());

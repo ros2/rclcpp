@@ -356,11 +356,10 @@ class TestWaitable : public rclcpp::Waitable
 public:
   TestWaitable() = default;
 
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     rclcpp::detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
-    return true;
   }
 
   void trigger()

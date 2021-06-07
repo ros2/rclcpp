@@ -51,7 +51,7 @@ public:
   TestWaitable()
   : is_ready_(false) {}
 
-  bool add_to_wait_set(rcl_wait_set_t *) override {return true;}
+  void add_to_wait_set(rcl_wait_set_t *) override {}
 
   bool is_ready(rcl_wait_set_t *) override {return is_ready_;}
 

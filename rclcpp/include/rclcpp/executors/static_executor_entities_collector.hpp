@@ -104,7 +104,7 @@ public:
    * \throws std::runtime_error if it couldn't add guard condition to wait set
    */
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   RCLCPP_PUBLIC
