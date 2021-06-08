@@ -254,6 +254,23 @@ public:
   {}
 };
 
+/// Thrown if user attempts to create an uninitialized statically typed parameter
+/**
+ * (see https://github.com/ros2/rclcpp/issues/1691)
+ */
+class UninitializedStaticallyTypedParameterException : public std::runtime_error
+{
+public:
+  /// Construct an instance.
+  /**
+   * \param[in] name the name of the parameter.
+   */
+  RCLCPP_PUBLIC
+  explicit UninitializedStaticallyTypedParameterException(const std::string & name)
+  : std::runtime_error("Statically typed parameter '" + name + "' must be initialized.")
+  {}
+};
+
 /// Thrown if parameter is already declared.
 class ParameterAlreadyDeclaredException : public std::runtime_error
 {
