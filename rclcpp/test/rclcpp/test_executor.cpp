@@ -155,7 +155,7 @@ TEST_F(TestExecutor, add_callback_group_failed_trigger_guard_condition) {
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.add_callback_group(cb_group, node->get_node_base_interface(), true),
-    std::runtime_error("error not set"));
+    std::runtime_error("Failed to trigger guard condition on callback group add: error not set"));
 }
 
 TEST_F(TestExecutor, remove_callback_group_null_node) {
@@ -186,7 +186,7 @@ TEST_F(TestExecutor, remove_callback_group_failed_trigger_guard_condition) {
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_callback_group(cb_group, true),
     std::runtime_error(
-      "error not set"));
+      "Failed to trigger guard condition on callback group remove: error not set"));
 }
 
 TEST_F(TestExecutor, remove_node_not_associated) {
@@ -325,7 +325,7 @@ TEST_F(TestExecutor, cancel_failed_trigger_guard_condition) {
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.cancel(),
-    std::runtime_error("error not set"));
+    std::runtime_error("Failed to trigger guard condition in cancel: error not set"));
 }
 
 TEST_F(TestExecutor, set_memory_strategy_nullptr) {
@@ -360,7 +360,7 @@ TEST_F(TestExecutor, spin_once_failed_trigger_guard_condition) {
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_once(std::chrono::milliseconds(1)),
     std::runtime_error(
-      "error not set"));
+      "Failed to trigger guard condition from execute_any_executable: error not set"));
 }
 
 TEST_F(TestExecutor, spin_some_fail_wait_set_clear) {

@@ -61,7 +61,12 @@ NodeTopics::add_publisher(
 
   // Notify the executor that a new publisher was created using the parent Node.
   auto & node_gc = node_base_->get_notify_guard_condition();
-  node_gc.trigger();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("Failed to notify wait set on publisher creation: ") + ex.what());
+  }
 }
 
 rclcpp::SubscriptionBase::SharedPtr
@@ -103,7 +108,12 @@ NodeTopics::add_subscription(
 
   // Notify the executor that a new subscription was created using the parent Node.
   auto & node_gc = node_base_->get_notify_guard_condition();
-  node_gc.trigger();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("Failed to notify wait set on subscription creation: ") + ex.what());
+  }
 }
 
 rclcpp::node_interfaces::NodeBaseInterface *

@@ -42,7 +42,12 @@ NodeWaitables::add_waitable(
 
   // Notify the executor that a new waitable was created using the parent Node.
   auto & node_gc = node_base_->get_notify_guard_condition();
-  node_gc.trigger();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("Failed to notify wait set on waitable creation: ") + ex.what());
+  }
 }
 
 void

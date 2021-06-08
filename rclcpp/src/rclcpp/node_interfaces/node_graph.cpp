@@ -349,7 +349,12 @@ NodeGraph::notify_graph_change()
   }
   graph_cv_.notify_all();
   auto & node_gc = node_base_->get_notify_guard_condition();
-  node_gc.trigger();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("Failed to notify wait set on graph change: ") + ex.what());
+  }
 }
 
 void

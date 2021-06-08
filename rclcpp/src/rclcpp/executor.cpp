@@ -220,7 +220,13 @@ Executor::add_callback_group_to_map(
     weak_nodes_to_guard_conditions_[node_ptr] = &gc;
     if (notify) {
       // Interrupt waiting to handle new node
-      interrupt_guard_condition_.trigger();
+      try {
+        interrupt_guard_condition_.trigger();
+      } catch (const rclcpp::exceptions::RCLError & ex) {
+        throw std::runtime_error(
+                std::string(
+                  "Failed to trigger guard condition on callback group add: ") + ex.what());
+      }
     }
     // Add the node's notify condition to the guard condition handles
     memory_strategy_->add_guard_condition(gc);
@@ -292,7 +298,13 @@ Executor::remove_callback_group_from_map(
   {
     weak_nodes_to_guard_conditions_.erase(node_ptr);
     if (notify) {
-      interrupt_guard_condition_.trigger();
+      try {
+        interrupt_guard_condition_.trigger();
+      } catch (const rclcpp::exceptions::RCLError & ex) {
+        throw std::runtime_error(
+                std::string(
+                  "Failed to trigger guard condition on callback group remove: ") + ex.what());
+      }
     }
     memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
   }
@@ -465,7 +477,12 @@ void
 Executor::cancel()
 {
   spinning.store(false);
-  interrupt_guard_condition_.trigger();
+  try {
+    interrupt_guard_condition_.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("Failed to trigger guard condition in cancel: ") + ex.what());
+  }
 }
 
 void
@@ -503,7 +520,13 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   any_exec.callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  interrupt_guard_condition_.trigger();
+  try {
+    interrupt_guard_condition_.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition from execute_any_executable: ") + ex.what());
+  }
 }
 
 static
