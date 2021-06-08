@@ -41,7 +41,8 @@ NodeWaitables::add_waitable(
   }
 
   // Notify the executor that a new waitable was created using the parent Node.
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 }
 
 void

@@ -118,10 +118,6 @@ public:
   resolve_topic_or_service_name(
     const std::string & name, bool is_service, bool only_expand = false) const override;
 
-  RCLCPP_PUBLIC
-  void
-  trigger_notify_guard_condition() override;
-
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 

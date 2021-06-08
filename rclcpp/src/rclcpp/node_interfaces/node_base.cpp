@@ -281,9 +281,3 @@ NodeBase::resolve_topic_or_service_name(
   allocator.deallocate(output_cstr, allocator.state);
   return output;
 }
-
-void
-NodeBase::trigger_notify_guard_condition()
-{
-  notify_guard_condition_.trigger();
-}

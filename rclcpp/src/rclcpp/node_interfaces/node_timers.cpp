@@ -42,7 +42,8 @@ NodeTimers::add_timer(
     node_base_->get_default_callback_group()->add_timer(timer);
   }
 
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 
   TRACEPOINT(
     rclcpp_timer_link_node,

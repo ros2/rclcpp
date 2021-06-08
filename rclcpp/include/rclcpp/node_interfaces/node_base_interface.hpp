@@ -164,12 +164,6 @@ public:
   std::string
   resolve_topic_or_service_name(
     const std::string & name, bool is_service, bool only_expand = false) const = 0;
-
-  /// Trigger the node's notify guard condition.
-  RCLCPP_PUBLIC
-  virtual
-  void
-  trigger_notify_guard_condition() = 0;
 };
 
 }  // namespace node_interfaces

@@ -60,7 +60,8 @@ NodeTopics::add_publisher(
   }
 
   // Notify the executor that a new publisher was created using the parent Node.
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 }
 
 rclcpp::SubscriptionBase::SharedPtr
@@ -101,7 +102,8 @@ NodeTopics::add_subscription(
   }
 
   // Notify the executor that a new subscription was created using the parent Node.
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 }
 
 rclcpp::node_interfaces::NodeBaseInterface *

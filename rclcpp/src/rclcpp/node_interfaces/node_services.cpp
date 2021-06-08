@@ -41,7 +41,8 @@ NodeServices::add_service(
   }
 
   // Notify the executor that a new service was created using the parent Node.
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 }
 
 void
@@ -60,7 +61,8 @@ NodeServices::add_client(
   }
 
   // Notify the executor that a new client was created using the parent Node.
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 }
 
 std::string

@@ -348,7 +348,8 @@ NodeGraph::notify_graph_change()
     }
   }
   graph_cv_.notify_all();
-  node_base_->trigger_notify_guard_condition();
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  node_gc.trigger();
 }
 
 void
