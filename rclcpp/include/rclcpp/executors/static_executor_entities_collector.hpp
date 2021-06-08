@@ -65,7 +65,7 @@ public:
   init(
     rcl_wait_set_t * p_wait_set,
     rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-    rcl_guard_condition_t * executor_guard_condition);
+    rclcpp::GuardCondition & executor_guard_condition);
 
   /// Finalize StaticExecutorEntitiesCollector to clear resources
   RCLCPP_PUBLIC
@@ -104,7 +104,7 @@ public:
    * \throws std::runtime_error if it couldn't add guard condition to wait set
    */
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   RCLCPP_PUBLIC
@@ -330,7 +330,7 @@ private:
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
 
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rcl_guard_condition_t *,
+      const rclcpp::GuardCondition *,
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;

@@ -28,7 +28,7 @@
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  bool add_to_wait_set(rcl_wait_set_t *) override {return false;}
+  void add_to_wait_set(rcl_wait_set_t *) override {}
   bool is_ready(rcl_wait_set_t *) override {return false;}
 
   std::shared_ptr<void>

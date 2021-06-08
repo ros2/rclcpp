@@ -397,7 +397,7 @@ TEST_F(TestClient, is_ready) {
   ASSERT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 10, 10, 10, 10, 10, 10, rcl_context, allocator));
-  ASSERT_TRUE(action_client->add_to_wait_set(&wait_set));
+  ASSERT_NO_THROW(action_client->add_to_wait_set(&wait_set));
   EXPECT_TRUE(action_client->is_ready(&wait_set));
 
   {

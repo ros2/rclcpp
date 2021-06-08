@@ -108,7 +108,7 @@ public:
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// \internal

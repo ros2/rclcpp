@@ -315,7 +315,7 @@ TEST_F(TestQosEvent, add_to_wait_set) {
   {
     rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_add_event, RCL_RET_OK);
-    EXPECT_TRUE(handler.add_to_wait_set(&wait_set));
+    EXPECT_NO_THROW(handler.add_to_wait_set(&wait_set));
   }
 
   {

@@ -30,7 +30,9 @@
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "test_msgs/msg/empty.hpp"
@@ -352,40 +354,17 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  TestWaitable()
-  {
-    rcl_guard_condition_options_t guard_condition_options =
-      rcl_guard_condition_get_default_options();
+  TestWaitable() = default;
 
-    gc_ = rcl_get_zero_initialized_guard_condition();
-    rcl_ret_t ret = rcl_guard_condition_init(
-      &gc_,
-      rclcpp::contexts::get_global_default_context()->get_rcl_context().get(),
-      guard_condition_options);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-  }
-
-  ~TestWaitable()
-  {
-    rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
-    if (RCL_RET_OK != ret) {
-      fprintf(stderr, "failed to call rcl_guard_condition_fini\n");
-    }
-  }
-
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, &gc_, NULL);
-    return RCL_RET_OK == ret;
+    rclcpp::detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
   }
 
-  bool trigger()
+  void trigger()
   {
-    rcl_ret_t ret = rcl_trigger_guard_condition(&gc_);
-    return RCL_RET_OK == ret;
+    gc_.trigger();
   }
 
   bool
@@ -420,7 +399,7 @@ public:
 
 private:
   size_t count_ = 0;
-  rcl_guard_condition_t gc_;
+  rclcpp::GuardCondition gc_;
 };
 
 TYPED_TEST(TestExecutors, spinAll) {
