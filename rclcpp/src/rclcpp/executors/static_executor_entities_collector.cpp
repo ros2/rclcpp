@@ -61,8 +61,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
-  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-  rcl_guard_condition_t * executor_guard_condition)
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
 {
   // Empty initialize executable list
   exec_list_ = rclcpp::experimental::ExecutableList();
@@ -73,9 +72,6 @@ StaticExecutorEntitiesCollector::init(
     throw std::runtime_error("Received NULL memory strategy in executor waitable.");
   }
   memory_strategy_ = memory_strategy;
-
-  // Add executor's guard condition
-  memory_strategy_->add_guard_condition(executor_guard_condition);
 
   // Get memory strategy and executable list. Prepare wait_set_
   std::shared_ptr<void> shared_ptr;
@@ -108,6 +104,14 @@ StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
   fill_executable_list();
   // Resize the wait_set_ based on memory_strategy handles (rcl_wait_set_resize)
   prepare_wait_set();
+  // Add new nodes guard conditions to map
+  std::lock_guard<std::mutex> guard{new_nodes_mutex_};
+  for (const auto & weak_node : new_nodes_) {
+    if (auto node_ptr = weak_node.lock()) {
+      weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
+    }
+  }
+  new_nodes_.clear();
 }
 
 void
@@ -277,7 +281,8 @@ StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
 
 size_t StaticExecutorEntitiesCollector::get_number_of_ready_guard_conditions()
 {
-  return weak_nodes_to_guard_conditions_.size();
+  std::lock_guard<std::mutex> guard{new_nodes_mutex_};
+  return weak_nodes_to_guard_conditions_.size() + new_nodes_.size();
 }
 
 bool
@@ -329,7 +334,8 @@ StaticExecutorEntitiesCollector::add_callback_group(
     throw std::runtime_error("Callback group was already added to executor.");
   }
   if (is_new_node) {
-    weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
+    std::lock_guard<std::mutex> guard{new_nodes_mutex_};
+    new_nodes_.push_back(node_ptr);
     return true;
   }
   return false;
