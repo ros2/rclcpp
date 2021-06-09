@@ -108,6 +108,13 @@ StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
   fill_executable_list();
   // Resize the wait_set_ based on memory_strategy handles (rcl_wait_set_resize)
   prepare_wait_set();
+  // Add new nodes guard conditions to map
+  for (const auto & weak_node : new_nodes_) {
+    if (auto node_ptr = weak_node.lock()) {
+      weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
+    }
+  }
+  new_nodes_.clear();
 }
 
 void
@@ -327,7 +334,7 @@ StaticExecutorEntitiesCollector::add_callback_group(
     throw std::runtime_error("Callback group was already added to executor.");
   }
   if (is_new_node) {
-    weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
+    new_nodes_.push_back(node_ptr);
     return true;
   }
   return false;
