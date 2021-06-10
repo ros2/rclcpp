@@ -38,7 +38,8 @@ ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph)
 : node_graph_(node_graph),
   node_handle_(node_base->get_shared_rcl_node_handle()),
-  context_(node_base->get_context())
+  context_(node_base->get_context()),
+  node_logger_(rclcpp::get_node_logger(node_handle_.get()))
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
   rcl_client_t * new_rcl_client = new rcl_client_t;
@@ -197,4 +198,18 @@ bool
 ClientBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void
+ClientBase::set_on_new_response_callback(rcl_event_callback_t callback, const void * user_data)
+{
+  rcl_ret_t ret = rcl_client_set_on_new_response_callback(
+    client_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on new response callback for client");
+  }
 }

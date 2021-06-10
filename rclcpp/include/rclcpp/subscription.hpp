@@ -197,6 +197,11 @@ public:
                 "intraprocess communication allowed only with volatile durability");
       }
 
+      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
+        CallbackMessageT,
+        AllocatorT,
+        typename MessageUniquePtr::deleter_type>;
+
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
@@ -404,13 +409,6 @@ private:
 
   /// Component which computes and publishes topic statistics for this subscriber
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
-
-  using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-    ROSMessageType,
-    AllocatorT,
-    ROSMessageTypeDeleter,
-    MessageT>;
-  std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 };
 
 }  // namespace rclcpp

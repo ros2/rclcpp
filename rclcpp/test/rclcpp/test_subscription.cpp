@@ -441,6 +441,146 @@ TEST_F(TestSubscription, handle_loaned_message) {
 }
 
 /*
+   Testing on_new_message callbacks.
+ */
+TEST_F(TestSubscription, on_new_message_callback) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+  using test_msgs::msg::Empty;
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
+  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
+
+  std::atomic<size_t> c1 {0};
+  auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
+  sub->set_on_new_message_callback(increase_c1_cb);
+
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1);
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  auto start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c1 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+
+  std::atomic<size_t> c2 {0};
+  auto increase_c2_cb = [&c2](size_t count_msgs) {c2 += count_msgs;};
+  sub->set_on_new_message_callback(increase_c2_cb);
+
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c2 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+  EXPECT_EQ(c2.load(), 1u);
+
+  sub->clear_on_new_message_callback();
+
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+    pub->publish(msg);
+    pub->publish(msg);
+  }
+
+  std::atomic<size_t> c3 {0};
+  auto increase_c3_cb = [&c3](size_t count_msgs) {c3 += count_msgs;};
+  sub->set_on_new_message_callback(increase_c3_cb);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c3 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+  EXPECT_EQ(c2.load(), 1u);
+  EXPECT_EQ(c3.load(), 3u);
+
+  std::function<void(size_t)> invalid_cb = nullptr;
+  EXPECT_THROW(sub->set_on_new_message_callback(invalid_cb), std::invalid_argument);
+}
+
+/*
+   Testing on_new_intra_process_message callbacks.
+ */
+TEST_F(TestSubscription, on_new_intra_process_message_callback) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  using test_msgs::msg::Empty;
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
+  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
+
+  std::atomic<size_t> c1 {0};
+  auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
+  sub->set_on_new_intra_process_message_callback(increase_c1_cb);
+
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1);
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  auto start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c1 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+
+  std::atomic<size_t> c2 {0};
+  auto increase_c2_cb = [&c2](size_t count_msgs) {c2 += count_msgs;};
+  sub->set_on_new_intra_process_message_callback(increase_c2_cb);
+
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c2 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+  EXPECT_EQ(c2.load(), 1u);
+
+  sub->clear_on_new_intra_process_message_callback();
+
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+    pub->publish(msg);
+    pub->publish(msg);
+  }
+
+  std::atomic<size_t> c3 {0};
+  auto increase_c3_cb = [&c3](size_t count_msgs) {c3 += count_msgs;};
+  sub->set_on_new_intra_process_message_callback(increase_c3_cb);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c3 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+  EXPECT_EQ(c2.load(), 1u);
+  EXPECT_EQ(c3.load(), 3u);
+
+  std::function<void(size_t)> invalid_cb = nullptr;
+  EXPECT_THROW(sub->set_on_new_intra_process_message_callback(invalid_cb), std::invalid_argument);
+}
+
+/*
    Testing subscription with intraprocess enabled and invalid QoS
  */
 TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {

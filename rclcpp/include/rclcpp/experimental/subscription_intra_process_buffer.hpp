@@ -109,6 +109,7 @@ public:
   provide_intra_process_message(ConstMessageSharedPtr message)
   {
     buffer_->add_shared(std::move(message));
+    invoke_callback();
     trigger_guard_condition();
   }
 
@@ -116,6 +117,7 @@ public:
   provide_intra_process_message(MessageUniquePtr message)
   {
     buffer_->add_unique(std::move(message));
+    invoke_callback();
     trigger_guard_condition();
   }
 
@@ -126,6 +128,17 @@ public:
   }
 
 protected:
+  void
+  invoke_callback()
+  {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    if (on_new_message_callback_) {
+      on_new_message_callback_(1);
+    } else {
+      unread_count_++;
+    }
+  }
+
   void
   trigger_guard_condition()
   {
