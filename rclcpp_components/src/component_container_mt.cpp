@@ -21,8 +21,23 @@
 int main(int argc, char * argv[])
 {
   /// Component container with a multi-threaded executor.
-  rclcpp::init(argc, argv);
-  auto exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+  auto vargv = rclcpp::init_and_remove_ros_arguments(argc, argv);
+  size_t number_of_threads{0};
+  rclcpp::Logger logger{rclcpp::get_logger("component_container_mt")};
+
+  if (vargv.size() == 3 && (vargv.at(1) == "--thread-num" || vargv.at(1) == "-t")) {
+    try {
+      number_of_threads = static_cast<size_t>(std::stoi(vargv.at(2)));
+      RCLCPP_INFO_STREAM(logger, "number of threads: " << number_of_threads);
+    } catch (const std::invalid_argument & ex) {
+      RCLCPP_ERROR_STREAM(logger, ex.what());
+    } catch (const std::out_of_range & ex) {
+      RCLCPP_ERROR_STREAM(logger, ex.what());
+    }
+  }
+
+  auto exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
+    rclcpp::ExecutorOptions(), number_of_threads);
   auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
   exec->add_node(node);
   exec->spin();
