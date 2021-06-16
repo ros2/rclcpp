@@ -305,25 +305,6 @@ public:
   get_subscription_intra_process(uint64_t intra_process_subscription_id);
 
 private:
-  struct SubscriptionInfo
-  {
-    SubscriptionInfo() = default;
-
-    rclcpp::experimental::SubscriptionIntraProcessBase::WeakPtr subscription;
-    rmw_qos_profile_t qos;
-    const char * topic_name;
-    bool use_take_shared_method;
-  };
-
-  struct PublisherInfo
-  {
-    PublisherInfo() = default;
-
-    rclcpp::PublisherBase::WeakPtr publisher;
-    rmw_qos_profile_t qos;
-    const char * topic_name;
-  };
-
   struct SplittedSubscriptions
   {
     std::vector<uint64_t> take_shared_subscriptions;
@@ -331,10 +312,10 @@ private:
   };
 
   using SubscriptionMap =
-    std::unordered_map<uint64_t, SubscriptionInfo>;
+    std::unordered_map<uint64_t, rclcpp::experimental::SubscriptionIntraProcessBase::WeakPtr>;
 
   using PublisherMap =
-    std::unordered_map<uint64_t, PublisherInfo>;
+    std::unordered_map<uint64_t, rclcpp::PublisherBase::WeakPtr>;
 
   using PublisherToSubscriptionIdsMap =
     std::unordered_map<uint64_t, SplittedSubscriptions>;
@@ -350,7 +331,9 @@ private:
 
   RCLCPP_PUBLIC
   bool
-  can_communicate(PublisherInfo pub_info, SubscriptionInfo sub_info) const;
+  can_communicate(
+    rclcpp::PublisherBase::SharedPtr pub,
+    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const;
 
   template<
     typename MessageT,
@@ -366,7 +349,7 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
-      auto subscription_base = subscription_it->second.subscription.lock();
+      auto subscription_base = subscription_it->second.lock();
       if (subscription_base) {
         auto subscription = std::dynamic_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>
@@ -404,7 +387,7 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
-      auto subscription_base = subscription_it->second.subscription.lock();
+      auto subscription_base = subscription_it->second.lock();
       if (subscription_base) {
         auto subscription = std::dynamic_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>

@@ -186,15 +186,15 @@ public:
       // Get the intra process manager instance for this context.
       auto ipm = context->get_sub_context<rclcpp::experimental::IntraProcessManager>();
       // Register the publisher with the intra process manager.
-      if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
+      if (qos.history() != rclcpp::HistoryPolicy::KeepLast) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with keep all history qos policy");
+                "intraprocess communication allowed only with keep last history qos policy");
       }
-      if (qos.get_rmw_qos_profile().depth == 0) {
+      if (qos.depth() == 0) {
         throw std::invalid_argument(
                 "intraprocess communication is not allowed with a zero qos history depth value");
       }
-      if (qos.get_rmw_qos_profile().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+      if (qos.durability() != rclcpp::DurabilityPolicy::Volatile) {
         throw std::invalid_argument(
                 "intraprocess communication allowed only with volatile durability");
       }

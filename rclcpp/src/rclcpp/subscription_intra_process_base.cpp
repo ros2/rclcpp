@@ -31,7 +31,7 @@ SubscriptionIntraProcessBase::get_topic_name() const
   return topic_name_.c_str();
 }
 
-rmw_qos_profile_t
+rclcpp::QoS
 SubscriptionIntraProcessBase::get_actual_qos() const
 {
   return qos_profile_;
