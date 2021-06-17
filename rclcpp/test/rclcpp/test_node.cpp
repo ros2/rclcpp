@@ -2515,6 +2515,44 @@ TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
   }
 }
 
+// test declare parameter with int and int64_t vector
+TEST_F(TestNode, declare_parameter_with_int_vector) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_with_int_vector"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // declare parameter and then get types to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, std::vector<int>{});
+    node->declare_parameter(name2, std::vector<int64_t>{});
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+
+    auto results = node->get_parameter_types({name1, name2});
+    EXPECT_EQ(results.size(), 2u);
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+  }
+  {
+    // declare parameter and then get values to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    int64_t bigger_than_int = INT64_MAX - 42;
+    node->declare_parameter(name1, std::vector<int>{1, 2});
+    node->declare_parameter(name2, std::vector<int64_t>{3, bigger_than_int});
+
+    std::vector<rclcpp::Parameter> expected = {
+      {name1, std::vector<int>{1, 2}},
+      {name2, std::vector<int64_t>{3, bigger_than_int}},
+    };
+    EXPECT_EQ(node->get_parameters({name1, name2}), expected);
+  }
+}
+
 void expect_qos_profile_eq(
   const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
 {

@@ -305,6 +305,16 @@ public:
   constexpr
   typename std::enable_if<
     std::is_convertible<
+      type, const std::vector<int> &>::value, const std::vector<int64_t> &>::type
+  get() const
+  {
+    return get<ParameterType::PARAMETER_INTEGER_ARRAY>();
+  }
+
+  template<typename type>
+  constexpr
+  typename std::enable_if<
+    std::is_convertible<
       type, const std::vector<int64_t> &>::value, const std::vector<int64_t> &>::type
   get() const
   {
