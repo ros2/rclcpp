@@ -25,17 +25,33 @@ int main(int argc, char * argv[])
   size_t number_of_threads{0};
   rclcpp::Logger logger{rclcpp::get_logger("component_container_mt")};
 
-  if (!vargv.empty()) {
-    for (auto itr = vargv.begin(); itr != vargv.end() - 1; ++itr) {
-      if (*itr == "--thread-num" || *itr == "-t") {
+  if (vargv.size() > 1) {
+    for (auto itr = vargv.begin() + 1; itr != vargv.end(); ++itr) {
+      if (*itr == "--help" || *itr == "-h") {
+        RCLCPP_INFO_STREAM(logger,
+          "Usage: component_container_mt --thread-num <number of thread>" << std::endl);
+        return 0;
+      } else if (*itr == "--thread-num" || *itr == "-t") {
+        if (itr == vargv.end() - 1) {
+          RCLCPP_ERROR_STREAM(logger, "Empty thread number" << std::endl
+            << "Usage: component_container_mt --thread-num <number of thread>" << std::endl);
+          return 0;
+        }
         try {
           number_of_threads = static_cast<size_t>(std::stoi(*(itr + 1)));
           RCLCPP_INFO_STREAM(logger, "Number of threads: " << number_of_threads);
+          ++itr;
         } catch (const std::invalid_argument & ex) {
           RCLCPP_ERROR_STREAM(logger, "Invalid number of threads: " << *(itr + 1));
+          return 0;
         } catch (const std::out_of_range & ex) {
           RCLCPP_ERROR_STREAM(logger, "Number of threads is out of range: " << *(itr + 1));
+          return 0;
         }
+      } else {
+        RCLCPP_ERROR_STREAM(logger, "Invalid argument" << std::endl
+          << "Usage: component_container_mt --thread-num <number of thread>" << std::endl);
+        return 0;
       }
     }
   }
