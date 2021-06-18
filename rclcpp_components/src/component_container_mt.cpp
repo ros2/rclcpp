@@ -28,13 +28,15 @@ int main(int argc, char * argv[])
   if (vargv.size() > 1) {
     for (auto itr = vargv.begin() + 1; itr != vargv.end(); ++itr) {
       if (*itr == "--help" || *itr == "-h") {
-        RCLCPP_INFO_STREAM(logger,
+        RCLCPP_INFO_STREAM(
+          logger,
           "Usage: component_container_mt --thread-num <number of thread>");
         return 0;
       } else if (*itr == "--thread-num" || *itr == "-t") {
         if (itr == vargv.end() - 1) {
-          RCLCPP_ERROR_STREAM(logger, "Empty thread number" << std::endl
-            << "Usage: component_container_mt --thread-num <number of thread>");
+          RCLCPP_ERROR_STREAM(
+            logger, "Empty thread number" << std::endl <<
+              "Usage: component_container_mt --thread-num <number of thread>");
           return 0;
         }
         try {
@@ -55,8 +57,9 @@ int main(int argc, char * argv[])
           return 0;
         }
       } else {
-        RCLCPP_ERROR_STREAM(logger, "Invalid argument" << std::endl
-          << "Usage: component_container_mt --thread-num <number of thread>");
+        RCLCPP_ERROR_STREAM(
+          logger, "Invalid argument" << std::endl <<
+            "Usage: component_container_mt --thread-num <number of thread>");
         return 0;
       }
     }
