@@ -38,8 +38,14 @@ int main(int argc, char * argv[])
           return 0;
         }
         try {
-          number_of_threads = static_cast<size_t>(std::stoi(*(itr + 1)));
-          RCLCPP_INFO_STREAM(logger, "Number of threads: " << number_of_threads);
+          const auto arg_number_of_threads{std::stoi(*(itr + 1))};
+          if (arg_number_of_threads > 0) {
+            number_of_threads = static_cast<size_t>(arg_number_of_threads);
+            RCLCPP_INFO_STREAM(logger, "Number of threads: " << number_of_threads);
+          } else if (arg_number_of_threads < 0) {
+            RCLCPP_ERROR_STREAM(logger, "Number of threads is minus: " << *(itr + 1));
+            return 0;
+          }
           ++itr;
         } catch (const std::invalid_argument & ex) {
           RCLCPP_ERROR_STREAM(logger, "Invalid number of threads: " << *(itr + 1));
