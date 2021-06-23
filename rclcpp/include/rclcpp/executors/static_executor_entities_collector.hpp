@@ -57,15 +57,13 @@ public:
   /**
    * \param p_wait_set A reference to the wait set to be used in the executor
    * \param memory_strategy Shared pointer to the memory strategy to set.
-   * \param executor_guard_condition executor's guard condition
    * \throws std::runtime_error if memory strategy is null
    */
   RCLCPP_PUBLIC
   void
   init(
     rcl_wait_set_t * p_wait_set,
-    rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-    rcl_guard_condition_t * executor_guard_condition);
+    rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
   /// Finalize StaticExecutorEntitiesCollector to clear resources
   RCLCPP_PUBLIC

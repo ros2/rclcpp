@@ -61,8 +61,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
-  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-  rcl_guard_condition_t * executor_guard_condition)
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
 {
   // Empty initialize executable list
   exec_list_ = rclcpp::experimental::ExecutableList();
@@ -73,9 +72,6 @@ StaticExecutorEntitiesCollector::init(
     throw std::runtime_error("Received NULL memory strategy in executor waitable.");
   }
   memory_strategy_ = memory_strategy;
-
-  // Add executor's guard condition
-  memory_strategy_->add_guard_condition(executor_guard_condition);
 
   // Get memory strategy and executable list. Prepare wait_set_
   std::shared_ptr<void> shared_ptr;
