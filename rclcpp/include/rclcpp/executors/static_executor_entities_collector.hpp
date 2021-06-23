@@ -337,6 +337,9 @@ private:
 
   /// List of weak nodes registered in the static executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+
+  // Mutex to protect vector of new nodes.
+  std::mutex new_nodes_mutex_;
   std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> new_nodes_;
 
   /// Wait set for managing entities that the rmw layer waits on.
