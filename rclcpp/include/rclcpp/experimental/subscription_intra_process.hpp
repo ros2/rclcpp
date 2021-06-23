@@ -31,6 +31,7 @@
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/experimental/subscription_intra_process_buffer.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 #include "tracetools/tracetools.h"
@@ -72,7 +73,7 @@ public:
     std::shared_ptr<Alloc> allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
-    rmw_qos_profile_t qos_profile,
+    const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
   : SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>(
       allocator,
