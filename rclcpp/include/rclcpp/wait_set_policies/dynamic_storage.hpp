@@ -28,7 +28,13 @@
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/wait_set_policies/detail/client_entry.hpp"
+#include "rclcpp/wait_set_policies/detail/guard_condition_entry.hpp"
+#include "rclcpp/wait_set_policies/detail/service_entry.hpp"
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
+#include "rclcpp/wait_set_policies/detail/subscription_entry.hpp"
+#include "rclcpp/wait_set_policies/detail/timer_entry.hpp"
+#include "rclcpp/wait_set_policies/detail/waitable_entry.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
@@ -42,124 +48,27 @@ class DynamicStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCo
 protected:
   using is_mutable = std::true_type;
 
-  class SubscriptionEntry
-  {
-    // (wjwwood): indent of 'public:' is weird, I know. uncrustify is dumb.
+  using WeakSubscriptionEntry = detail::WeakSubscriptionEntry;
+  using SubscriptionEntry = detail::SubscriptionEntry;
 
-public:
-    std::shared_ptr<rclcpp::SubscriptionBase> subscription;
-    rclcpp::SubscriptionWaitSetMask mask;
-
-    /// Conversion constructor, which is intentionally not marked explicit.
-    SubscriptionEntry(
-      std::shared_ptr<rclcpp::SubscriptionBase> subscription_in = nullptr,
-      const rclcpp::SubscriptionWaitSetMask & mask_in = {})
-    : subscription(std::move(subscription_in)),
-      mask(mask_in)
-    {}
-
-    void
-    reset() noexcept
-    {
-      subscription.reset();
-    }
-  };
-  class WeakSubscriptionEntry
-  {
-public:
-    std::weak_ptr<rclcpp::SubscriptionBase> subscription;
-    rclcpp::SubscriptionWaitSetMask mask;
-
-    explicit WeakSubscriptionEntry(
-      const std::shared_ptr<rclcpp::SubscriptionBase> & subscription_in,
-      const rclcpp::SubscriptionWaitSetMask & mask_in) noexcept
-    : subscription(subscription_in),
-      mask(mask_in)
-    {}
-
-    explicit WeakSubscriptionEntry(const SubscriptionEntry & other)
-    : subscription(other.subscription),
-      mask(other.mask)
-    {}
-
-    std::shared_ptr<rclcpp::SubscriptionBase>
-    lock() const
-    {
-      return subscription.lock();
-    }
-
-    bool
-    expired() const noexcept
-    {
-      return subscription.expired();
-    }
-  };
   using SequenceOfWeakSubscriptions = std::vector<WeakSubscriptionEntry>;
   using SubscriptionsIterable = std::vector<SubscriptionEntry>;
 
-  using SequenceOfWeakGuardConditions = std::vector<std::weak_ptr<rclcpp::GuardCondition>>;
-  using GuardConditionsIterable = std::vector<std::shared_ptr<rclcpp::GuardCondition>>;
+  using SequenceOfWeakGuardConditions = std::vector<detail::WeakGuardConditionEntry>;
+  using GuardConditionsIterable = std::vector<detail::GuardConditionEntry>;
 
-  using SequenceOfWeakTimers = std::vector<std::weak_ptr<rclcpp::TimerBase>>;
-  using TimersIterable = std::vector<std::shared_ptr<rclcpp::TimerBase>>;
+  using SequenceOfWeakTimers = std::vector<detail::WeakTimerEntry>;
+  using TimersIterable = std::vector<detail::TimerEntry>;
 
-  using SequenceOfWeakClients = std::vector<std::weak_ptr<rclcpp::ClientBase>>;
-  using ClientsIterable = std::vector<std::shared_ptr<rclcpp::ClientBase>>;
+  using SequenceOfWeakClients = std::vector<detail::WeakClientEntry>;
+  using ClientsIterable = std::vector<detail::ClientEntry>;
 
-  using SequenceOfWeakServices = std::vector<std::weak_ptr<rclcpp::ServiceBase>>;
-  using ServicesIterable = std::vector<std::shared_ptr<rclcpp::ServiceBase>>;
+  using SequenceOfWeakServices = std::vector<detail::WeakServiceEntry>;
+  using ServicesIterable = std::vector<detail::ServiceEntry>;
 
-  class WaitableEntry
-  {
-public:
-    std::shared_ptr<rclcpp::Waitable> waitable;
-    std::shared_ptr<void> associated_entity;
+  using WeakWaitableEntry = detail::WeakWaitableEntry;
+  using WaitableEntry = detail::WaitableEntry;
 
-    /// Conversion constructor, which is intentionally not marked explicit.
-    WaitableEntry(
-      std::shared_ptr<rclcpp::Waitable> waitable_in = nullptr,
-      std::shared_ptr<void> associated_entity_in = nullptr) noexcept
-    : waitable(std::move(waitable_in)),
-      associated_entity(std::move(associated_entity_in))
-    {}
-
-    void
-    reset() noexcept
-    {
-      waitable.reset();
-      associated_entity.reset();
-    }
-  };
-  class WeakWaitableEntry
-  {
-public:
-    std::weak_ptr<rclcpp::Waitable> waitable;
-    std::weak_ptr<void> associated_entity;
-
-    explicit WeakWaitableEntry(
-      const std::shared_ptr<rclcpp::Waitable> & waitable_in,
-      const std::shared_ptr<void> & associated_entity_in) noexcept
-    : waitable(waitable_in),
-      associated_entity(associated_entity_in)
-    {}
-
-    explicit WeakWaitableEntry(const WaitableEntry & other)
-    : waitable(other.waitable),
-      associated_entity(other.associated_entity)
-    {}
-
-    std::shared_ptr<rclcpp::Waitable>
-    lock() const
-    {
-      return waitable.lock();
-    }
-
-    bool
-    expired() const noexcept
-    {
-      return waitable.expired();
-    }
-  };
   using SequenceOfWeakWaitables = std::vector<WeakWaitableEntry>;
   using WaitablesIterable = std::vector<WaitableEntry>;
 
@@ -184,8 +93,9 @@ public:
       services,
       waitables,
       context),
-    subscriptions_(subscriptions.cbegin(), subscriptions.cend()),
-    shared_subscriptions_(subscriptions_.size()),
+    // subscriptions_ is populated in the constructor dynamically, in order
+    // to respect the mask.
+    // shared_subscriptions_ is resized based on the result of subscriptions_.
     guard_conditions_(guard_conditions.cbegin(), guard_conditions.cend()),
     shared_guard_conditions_(guard_conditions_.size()),
     timers_(timers.cbegin(), timers.cend()),
@@ -194,9 +104,39 @@ public:
     shared_clients_(clients_.size()),
     services_(services.cbegin(), services.cend()),
     shared_services_(services_.size()),
-    waitables_(waitables.cbegin(), waitables.cend()),
-    shared_waitables_(waitables_.size())
-  {}
+    waitables_(waitables.cbegin(), waitables.cend())
+    // shared_waitables_ is resized based on the result of waitables_ after
+    // waitables from subscriptions are added, if any.
+  {
+    // Ensure subscriptions are not being used by other wait sets and extract
+    // their waitables, if they have them.
+    std::vector<WaitableEntry> waitables_from_subscriptions;
+    for (auto subscription_entry : subscriptions) {
+      std::vector<WaitableEntry> local_waitables_from_subscriptions = subscription_entry.manage();
+      if (subscription_entry.get_mask().include_subscription) {
+        subscriptions_.push_back(subscription_entry);
+      }
+    }
+    // Add subscription entries from subscriptions, if the subscription mask indicates.
+    std::copy_if(
+      subscriptions.cbegin(),
+      subscriptions.cend(),
+      std::back_inserter(subscriptions_),
+      [](const auto & subscription_entry) {
+        return subscription_entry.mask.include_subscription;
+      }
+    );
+    shared_subscriptions_.resize(subscriptions_.size());
+    // Add waitables from subscriptions, if the subscription mask indicates.
+    for (const auto & subscription_entry : subscriptions) {
+      if (subscription_entry.mask.include_events) {
+        for (const auto & event : subscription_entry.subscription->get_event_handlers()) {
+          waitables_.push_back({event, subscription_entry.subscription});
+        }
+      }
+    }
+    shared_waitables_.resize(waitables_.size());
+  }
 
   ~DynamicStorage() = default;
 

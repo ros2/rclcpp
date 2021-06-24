@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "rcutils/logging_macros.h"
-#include "rmw/impl/cpp/demangle.hpp"
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
