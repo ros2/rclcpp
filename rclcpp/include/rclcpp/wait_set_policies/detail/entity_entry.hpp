@@ -29,31 +29,69 @@ namespace detail
 
 // Forward declaration for use in friend statement.
 template<typename EntityT>
-class WeakEntityEntryTemplate;
+class ManagedEntityEntryTemplate;
 
-/// RAII-style class to acquire/release "use of" an entity for the wait set automatically.
+/// Encapsulating class for wait set entities, and gateway to the ManagedEntityEntryTemplate.
 /**
- * The entity is stored as a std::shared_ptr, but a "weak" version of this class
- * can be created which stores the entity as a std::weak_ptr instead along with
- * whether or not it is associated and should unassociated when destructed.
+ * The entity is stored as a std::shared_ptr.
  *
- * This is actually quasi-RAII, because the "resource acquisition" only occurs
- * when manage() is called, and is only released if manage was called before
- * destruction.
+ * This is class can be converted to a "managed" version which ensures the
+ * entity is not associated with another wait set already, then associates it
+ * with the current wait set, and then dissociates it on destruction.
  */
 template<typename EntityT>
 class EntityEntryTemplate
 {
-  std::shared_ptr<EntityT> entity_;
-
 public:
   EntityEntryTemplate(std::shared_ptr<EntityT> entity_in = nullptr)
   : entity_(entity_in)
   {}
+private:
+  std::shared_ptr<EntityT> entity_;
 
-  ~EntityEntryTemplate()
+  friend ManagedEntityEntryTemplate<EntityT>;
+};
+
+/// Managing class for wait set entities, with RAII-style (dis)association with the wait set.
+/**
+ * The entity is stored as a std::shared_ptr, but ths class can be converted
+ * (one way) into a weak version that stores it as a std::weak_ptr.
+ *
+ * This class will assert that the entity is not already associated with a
+ * wait set, while atomically indicating it is associated with this wait set
+ * to prevent other wait sets from using it, and then on destruction this class
+ * will disassociate it.
+ *
+ * \throws rclcpp::wait_set_policies::AlreadyAssociatedWithWaitSetException if entity
+ *   is already associated with a wait set.
+ */
+template<typename EntityT>
+class ManagedEntityEntryTemplate
+{
+public:
+  /// The only valid way to construct this is with an unmanaged entity entry.
+  explicit ManagedEntityEntryTemplate(const EntityEntryTemplate<EntityT> & unmanaged_entity_entry)
+  : entity_(unmanaged_entity_entry.entity_)
   {
-    if ((nullptr != entity_) && should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_) {
+    if (nullptr == entity_) {
+      throw std::invalid_argument("entity cannot be nullptr for a managed entry");
+    }
+    bool already_in_use = entity_->exchange_in_use_by_wait_set_state(true);
+    if (already_in_use) {
+      throw rclcpp::wait_set_policies::AlreadyAssociatedWithWaitSetException(*entity_);
+    }
+  }
+
+  // ManagedEntityEntryTemplate(const ManagedEntityEntryTemplate<EntityT> & other)
+  // {
+  //   if (other.should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_) {
+  //     throw std::runtime_error("")
+  //   }
+  // }
+
+  ~ManagedEntityEntryTemplate()
+  {
+    if ((nullptr != entity_)) {
       bool was_in_use = entity_->exchange_in_use_by_wait_set_state(false);
       assert(was_in_use);
     }
@@ -66,68 +104,40 @@ public:
     return entity_;
   }
 
-  /// Bring the entity under "management" by setting it to "in use" by a wait set.
-  /**
-   * This is reversed in the destruction of this class.
-   *
-   * \throws std::runtime_error if entity is nullptr
-   */
-  void
-  manage()
-  {
-    if (nullptr == entity_) {
-      throw std::runtime_error("manage() called on EntityEntry with null entity");
-    }
-    bool already_in_use = entity_->exchange_in_use_by_wait_set_state(true);
-    if (already_in_use) {
-      throw rclcpp::wait_set_policies::AlreadyAssociatedWithWaitSetException(*entity_);
-    }
-    should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_ = true;
-  }
-
   /// Reset the entity.
   /**
    * Specializations of this class may reset more than one item.
    * Having this method in all instantiations of this class provides uniform access.
    */
-  void
-  reset() noexcept
-  {
-    entity_.reset();
-  }
+  // void
+  // reset() noexcept
+  // {
+  //   entity_.reset();
+  // }
 
 protected:
-  bool should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_{false};
-
-  friend WeakEntityEntryTemplate<EntityT>;
+  std::shared_ptr<EntityT> entity_;
 
 };
 
-/// Weak version of EntityEntryTemplate, which can only be created from an EntityEntryTemplate.
+/// Version of ManagedEntityEntryTemplate with weak ownership and best effort disassociation.
 /**
  * The entity is stored as a std::weak_ptr, but on destruction, the entity is
- * locked, and if not null and should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_
- * is true, then it will be marked as not in use by a wait set.
+ * locked, and if not nullptr, then it will be marked as not in use by a wait set.
  */
 template<typename EntityT>
-class WeakEntityEntryTemplate
+class WeakManagedEntityEntryTemplate
 {
-  std::weak_ptr<EntityT> weak_entity_;
-
 public:
-  explicit WeakEntityEntryTemplate(EntityEntryTemplate<EntityT> && moved_entity_entry)
-  : weak_entity_(moved_entity_entry.get_entity()),
-    should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_(
-      moved_entity_entry.should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_
-    )
-  {
-    moved_entity_entry.should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_ = false;
-  }
+  /// Can only be constructed from a moved ManagedEntityEntryTemplate.
+  explicit WeakManagedEntityEntryTemplate(ManagedEntityEntryTemplate<EntityT> && moved_entity_entry)
+  : weak_entity_(moved_entity_entry.get_entity())
+  {}
 
-  ~WeakEntityEntryTemplate()
+  ~WeakManagedEntityEntryTemplate()
   {
     auto entity = weak_entity_.lock();
-    if ((nullptr != entity) && should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_) {
+    if (nullptr != entity) {
       bool was_in_use = entity->exchange_in_use_by_wait_set_state(false);
       assert(was_in_use);
     }
@@ -140,252 +150,34 @@ public:
     return weak_entity_;
   }
 
-  /// Lock the entity.
-  /**
-   * Specializations of this class may select from more than one item to lock.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::shared_ptr<EntityT>
-  lock() const
-  {
-    return weak_entity_.lock();
-  }
+  // /// Lock the entity.
+  // /**
+  //  * Specializations of this class may select from more than one item to lock.
+  //  * Having this method in all instantiations of this class provides uniform access.
+  //  */
+  // std::shared_ptr<EntityT>
+  // lock() const
+  // {
+  //   return weak_entity_.lock();
+  // }
 
-  /// Return true if the entity has expired, otherwise false.
-  /**
-   * Specializations of this class may select from more than one item to check.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  bool
-  expired() const noexcept
-  {
-    return weak_entity_.expired();
-  }
-
-protected:
-  bool should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_{false};
-
-};
-
-}  // namespace detail
-}  // namespace wait_set_policies
-}  // namespace rclcpp
-
-#if 0
-namespace rclcpp
-{
-namespace wait_set_policies
-{
-namespace detail
-{
-
-/// RAII-style class to acquire/release "use of" an entity for the wait set automatically.
-/**
- * The entity can be stored as either a std::shared_ptr or std::weak_ptr, based
- * on the SmartPointerT template argument.
- *
- * This is actually quasi-RAII, because the "resource acquisition" only occurs
- * when manage() is called, and is only released if manage was called before
- * destruction.
- */
-template<typename EntityT, typename SmartPointerT>
-class EntityEntryTemplate
-{
-  static constexpr bool is_shared_ptr = std::is_same_v<SmartPointerT, std::shared_ptr<EntityT>>;
-
-public:
-  SmartPointerT entity;
-
-  EntityEntryTemplate(std::shared_ptr<EntityT> entity_in = nullptr)
-  : entity(entity_in)
-  {}
-
-  ~EntityEntryTemplate()
-  {
-    if (should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_) {
-      bool was_in_use = entity->exchange_in_use_by_wait_set_state(false);
-      assert(was_in_use);
-    }
-  }
-
-  /// Bring the entity under "management" by setting it to "in use" by a wait set.
-  /**
-   * This is reversed in the destruction of this class.
-   */
-  void
-  manage()
-  {
-    bool already_in_use = entity->exchange_in_use_by_wait_set_state(true);
-    if (already_in_use) {
-      throw rclcpp::wait_set_policies::AlreadyAssociatedWithWaitSetException(*entity);
-    }
-    should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_ = true;
-  }
-
-  /// Reset the entity.
-  /**
-   * Specializations of this class may reset more than one item.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::enable_if_t<is_shared_ptr>
-  reset() noexcept
-  {
-    entity.reset();
-  }
-
-  /// Lock the entity.
-  /**
-   * Specializations of this class may select from more than one item to lock.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::enable_if_t<!is_shared_ptr, std::shared_ptr<EntityT>>
-  lock() const
-  {
-    return entity.lock();
-  }
-
-  /// Return true if the entity has expired, otherwise false.
-  /**
-   * Specializations of this class may select from more than one item to check.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::enable_if_t<!is_shared_ptr, bool>
-  expired() const noexcept
-  {
-    return entity.expired();
-  }
-
-protected:
-  bool should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_{false};
+  // /// Return true if the entity has expired, otherwise false.
+  // /**
+  //  * Specializations of this class may select from more than one item to check.
+  //  * Having this method in all instantiations of this class provides uniform access.
+  //  */
+  // bool
+  // expired() const noexcept
+  // {
+  //   return weak_entity_.expired();
+  // }
+private:
+  std::weak_ptr<EntityT> weak_entity_;
 
 };
 
 }  // namespace detail
 }  // namespace wait_set_policies
 }  // namespace rclcpp
-#endif
-
-
-#if 0
-namespace rclcpp
-{
-namespace wait_set_policies
-{
-namespace detail
-{
-
-/// Template declaration for a class that adds utility methods based on the smart pointer type.
-template<typename EntityT, typename SmartPointerT>
-class EntityEntryUtilityMethodsHelper
-{};
-
-/// Partial specialization for shared_ptr.
-template<typename EntityT>
-class EntityEntryUtilityMethodsHelper<EntityT, std::shared_ptr<EntityT>>
-{
-protected:
-  static constexpr bool is_shared_ptr = true;
-
-public:
-  std::shared_ptr<EntityT> entity;
-
-  /// Reset the entity.
-  /**
-   * Specializations of this class may reset more than one item.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::enable_if_t<is_shared_ptr>
-  reset() noexcept
-  {
-    entity.reset();
-  }
-};
-
-/// Partial specialization for weak_ptr.
-template<typename EntityT>
-class EntityEntryUtilityMethodsHelper<EntityT, std::weak_ptr<EntityT>>
-{
-protected:
-  static constexpr bool is_shared_ptr = false;
-
-public:
-  std::weak_ptr<EntityT> entity;
-
-  /// Lock the entity.
-  /**
-   * Specializations of this class may select from more than one item to lock.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::enable_if_t<!is_shared_ptr, std::shared_ptr<EntityT>>
-  lock() const
-  {
-    return entity.lock();
-  }
-
-  /// Return true if the entity has expired, otherwise false.
-  /**
-   * Specializations of this class may select from more than one item to check.
-   * Having this method in all instantiations of this class provides uniform access.
-   */
-  std::enable_if_t<!is_shared_ptr, bool>
-  expired() const noexcept
-  {
-    return entity.expired();
-  }
-};
-
-/// RAII-style class to acquire/release "use of" an entity for the wait set automatically.
-/**
- * The entity can be stored as either a std::shared_ptr or std::weak_ptr, based
- * on the SmartPointerT template argument.
- *
- * This is actually quasi-RAII, because the "resource acquisition" only occurs
- * when manage() is called, and is only released if manage was called before
- * destruction.
- */
-template<
-  typename EntityT,
-  typename SmartPointerT,
-  typename EntityEntryUtilityMethodsT = EntityEntryUtilityMethodsHelper<EntityT, SmartPointerT>>
-class EntityEntryTemplate : public EntityEntryUtilityMethodsT
-{
-  static constexpr bool is_shared_ptr = EntityEntryUtilityMethodsT::is_shared_ptr;
-
-public:
-  EntityEntryTemplate(std::shared_ptr<EntityT> entity_in = nullptr)
-  : EntityEntryUtilityMethodsT(entity_in)
-  {}
-
-  ~EntityEntryTemplate()
-  {
-    if (should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_) {
-      bool was_in_use = entity->exchange_in_use_by_wait_set_state(false);
-      assert(was_in_use);
-    }
-  }
-
-  /// Bring the entity under "management" by setting it to "in use" by a wait set.
-  /**
-   * This is reversed in the destruction of this class.
-   */
-  void
-  manage()
-  {
-    bool already_in_use = entity->exchange_in_use_by_wait_set_state(true);
-    if (already_in_use) {
-      throw rclcpp::wait_set_policies::AlreadyAssociatedWithWaitSetException(*entity);
-    }
-    should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_ = true;
-  }
-
-protected:
-  bool should_set_in_use_by_wait_set_of_entity_to_false_on_destruction_{false};
-
-};
-
-}  // namespace detail
-}  // namespace wait_set_policies
-}  // namespace rclcpp
-#endif
 
 #endif  // RCLCPP__WAIT_SET_POLICIES__DETAIL__ENTITY_ENTRY_HPP_

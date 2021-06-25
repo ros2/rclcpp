@@ -48,10 +48,12 @@ class DynamicStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCo
 protected:
   using is_mutable = std::true_type;
 
-  using WeakSubscriptionEntry = detail::WeakSubscriptionEntry;
+  using WeakManagedSubscriptionEntry = detail::WeakManagedSubscriptionEntry;
   using SubscriptionEntry = detail::SubscriptionEntry;
 
-  using SequenceOfWeakSubscriptions = std::vector<WeakSubscriptionEntry>;
+  ??? fix references to use new entry/managed_entry/weak_managed_entry style
+
+  using SequenceOfWeakSubscriptions = std::vector<WeakManagedSubscriptionEntry>;
   using SubscriptionsIterable = std::vector<SubscriptionEntry>;
 
   using SequenceOfWeakGuardConditions = std::vector<detail::WeakGuardConditionEntry>;
@@ -111,7 +113,7 @@ protected:
     // Ensure subscriptions are not being used by other wait sets and extract
     // their waitables, if they have them.
     std::vector<WaitableEntry> waitables_from_subscriptions;
-    for (auto subscription_entry : subscriptions) {
+    for (auto & subscription_entry : subscriptions) {
       std::vector<WaitableEntry> local_waitables_from_subscriptions = subscription_entry.manage();
       if (subscription_entry.get_mask().include_subscription) {
         subscriptions_.push_back(subscription_entry);
@@ -183,7 +185,7 @@ protected:
     if (this->storage_has_entity(*subscription, subscriptions_)) {
       throw std::runtime_error("subscription already in wait set");
     }
-    WeakSubscriptionEntry weak_entry{std::move(subscription), {}};
+    WeakManagedSubscriptionEntry weak_entry{std::move(subscription), {}};
     subscriptions_.push_back(std::move(weak_entry));
     this->storage_flag_for_resize();
   }
