@@ -17,6 +17,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(class_loader REQUIRED)
 find_package(composition_interfaces REQUIRED)
+find_package(domain_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 
@@ -44,6 +45,16 @@ add_executable(
 )
 target_link_libraries(component_container component_manager)
 ament_target_dependencies(component_container
+  "rclcpp"
+)
+
+add_executable(
+  domain_bridge_container
+  src/domain_bridge_container.cpp
+)
+target_link_libraries(domain_bridge_container component_manager)
+ament_target_dependencies(domain_bridge_container
+  "domain_bridge"
   "rclcpp"
 )
 
@@ -135,7 +146,7 @@ install(
 
 # Install executables
 install(
-  TARGETS component_container component_container_mt
+  TARGETS component_container component_container_mt domain_bridge_container
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
