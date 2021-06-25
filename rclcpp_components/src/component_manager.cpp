@@ -178,12 +178,10 @@ ComponentManager::OnLoadNode(
                     "Extra component argument 'use_intra_process_comms' must be a boolean");
           }
           options.use_intra_process_comms(extra_argument.get_value<bool>());
-        }
-          
-        else if (extra_argument.get_name() == "domain") {
+        } else if (extra_argument.get_name() == "domain") {
           if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_INTEGER) {
             throw ComponentManagerException(
-              "Extra component argument 'domain' must be an integer");
+                    "Extra component argument 'domain' must be an integer");
           }
           std::size_t domain_id = extra_argument.get_value<std::size_t>();
           auto context = std::make_shared<rclcpp::Context>();
