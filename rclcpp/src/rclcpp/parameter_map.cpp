@@ -64,7 +64,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
         throw InvalidParametersException(message);
       }
       const rcl_variant_t * const c_param_value = &(c_params_node->parameter_values[p]);
-      params[c_param_name].first = Parameter(c_param_name, parameter_value_from(c_param_value));
+      params[c_param_name].value = parameter_value_from(c_param_value);
     }
 
     const rcl_node_params_descriptors_t * const c_param_descriptors_node =
@@ -78,10 +78,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
       }
       const rcl_param_descriptor_t * const c_param_descriptor =
         &(c_param_descriptors_node->parameter_descriptors[p]);
-      if (params.count(std::string(c_param_name)) < 1) {
-        params[c_param_name].first = Parameter(c_param_name);
-      }
-      params[c_param_name].second = parameter_descriptor_from(c_param_descriptor);
+      params[c_param_name].descriptor = parameter_descriptor_from(c_param_descriptor);
     }
   }
   return parameters;
@@ -194,7 +191,9 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
       i.step = *(c_param_descriptor->step_int);
     }
     p.integer_range.push_back(i);
-  } else if (c_param_descriptor->min_value_double || c_param_descriptor->max_value_double ||  // NOLINT
+  } else if (
+    c_param_descriptor->min_value_double ||
+    c_param_descriptor->max_value_double ||
     c_param_descriptor->step_double)
   {
     FloatingPointRange f;

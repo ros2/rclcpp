@@ -60,11 +60,8 @@ rclcpp::detail::resolve_parameter_overrides(
         if (initial_map.count(node_name) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
           for (const auto & param : initial_map.at(node_name)) {
-            rclcpp::node_interfaces::ParameterInfo param_info;
-            param_info.value = rclcpp::ParameterValue((param.second.first).get_value_message());
-            param_info.descriptor = param.second.second;
-            param_info.descriptor.dynamic_typing = true;
-            result[(param.second.first).get_name()] = param_info;
+            result[param.first] = param.second;
+            result[param.first].descriptor.dynamic_typing = true;
           }
         }
       }

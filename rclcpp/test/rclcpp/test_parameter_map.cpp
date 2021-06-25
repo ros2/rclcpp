@@ -216,10 +216,10 @@ TEST(Test_parameter_map_from, bool_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("true_bool", params.at("true_bool").first.get_name().c_str());
-  EXPECT_TRUE(params.at("true_bool").first.get_value<bool>());
-  EXPECT_STREQ("false_bool", params.at("false_bool").first.get_name().c_str());
-  EXPECT_FALSE(params.at("false_bool").first.get_value<bool>());
+  EXPECT_TRUE(params.count("true_bool"));
+  EXPECT_TRUE(params.at("true_bool").value.get<bool>());
+  EXPECT_TRUE(params.count("false_bool"));
+  EXPECT_FALSE(params.at("false_bool").value.get<bool>());
 
   c_params->params[0].parameter_values[0].bool_value = NULL;
   c_params->params[0].parameter_values[1].bool_value = NULL;
@@ -237,10 +237,10 @@ TEST(Test_parameter_map_from, integer_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/bar");
-  EXPECT_STREQ("positive.int", params.at("positive.int").first.get_name().c_str());
-  EXPECT_EQ(42, params.at("positive.int").first.get_value<int64_t>());
-  EXPECT_STREQ("negative.int", params.at("negative.int").first.get_name().c_str());
-  EXPECT_EQ(-12345, params.at("negative.int").first.get_value<int64_t>());
+  EXPECT_TRUE(params.count("positive.int"));
+  EXPECT_EQ(42, params.at("positive.int").value.get<int64_t>());
+  EXPECT_TRUE(params.count("negative.int"));
+  EXPECT_EQ(-12345, params.at("negative.int").value.get<int64_t>());
 
   c_params->params[0].parameter_values[0].integer_value = NULL;
   c_params->params[0].parameter_values[1].integer_value = NULL;
@@ -258,10 +258,10 @@ TEST(Test_parameter_map_from, double_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo/bar");
-  EXPECT_STREQ("positive.double", params.at("positive.double").first.get_name().c_str());
-  EXPECT_DOUBLE_EQ(3.14, params.at("positive.double").first.get_value<double>());
-  EXPECT_STREQ("negative.double", params.at("negative.double").first.get_name().c_str());
-  EXPECT_DOUBLE_EQ(-2.718, params.at("negative.double").first.get_value<double>());
+  EXPECT_TRUE(params.count("positive.double"));
+  EXPECT_DOUBLE_EQ(3.14, params.at("positive.double").value.get<double>());
+  EXPECT_TRUE(params.count("negative.double"));
+  EXPECT_DOUBLE_EQ(-2.718, params.at("negative.double").value.get<double>());
 
   c_params->params[0].parameter_values[0].double_value = NULL;
   c_params->params[0].parameter_values[1].double_value = NULL;
@@ -279,9 +279,9 @@ TEST(Test_parameter_map_from, string_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo/bar");
-  EXPECT_STREQ("string_param", params.at("string_param").first.get_name().c_str());
+  EXPECT_TRUE(params.count("string_param"));
   EXPECT_STREQ(hello_world.c_str(),
-    params.at("string_param").first.get_value<std::string>().c_str());
+    params.at("string_param").value.get<std::string>().c_str());
 
   c_params->params[0].parameter_values[0].string_value = NULL;
   delete[] c_hello_world;
@@ -311,9 +311,9 @@ TEST(Test_parameter_map_from, byte_array_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foobar");
-  EXPECT_STREQ("byte_array_param", params.at("byte_array_param").first.get_name().c_str());
+  EXPECT_TRUE(params.count("byte_array_param"));
   std::vector<uint8_t> byte_array =
-    params.at("byte_array_param").first.get_value<std::vector<uint8_t>>();
+    params.at("byte_array_param").value.get<std::vector<uint8_t>>();
   ASSERT_EQ(2u, byte_array.size());
   EXPECT_EQ(0xf0, byte_array.at(0));
   EXPECT_EQ(0xaa, byte_array.at(1));
@@ -333,8 +333,8 @@ TEST(Test_parameter_map_from, bool_array_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo/bar/baz");
-  EXPECT_STREQ("bool_array_param", params.at("bool_array_param").first.get_name().c_str());
-  std::vector<bool> bool_array = params.at("bool_array_param").first.get_value<std::vector<bool>>();
+  EXPECT_TRUE(params.count("bool_array_param"));
+  std::vector<bool> bool_array = params.at("bool_array_param").value.get<std::vector<bool>>();
   ASSERT_EQ(2u, bool_array.size());
   EXPECT_TRUE(bool_array.at(0));
   EXPECT_FALSE(bool_array.at(1));
@@ -354,9 +354,9 @@ TEST(Test_parameter_map_from, integer_array_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("integer_array_param", params.at("integer_array_param").first.get_name().c_str());
+  EXPECT_TRUE(params.count("integer_array_param"));
   std::vector<int64_t> integer_array =
-    params.at("integer_array_param").first.get_value<std::vector<int64_t>>();
+    params.at("integer_array_param").value.get<std::vector<int64_t>>();
   ASSERT_EQ(2u, integer_array.size());
   EXPECT_EQ(42, integer_array.at(0));
   EXPECT_EQ(-12345, integer_array.at(1));
@@ -376,9 +376,9 @@ TEST(Test_parameter_map_from, double_array_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("double_array_param", params.at("double_array_param").first.get_name().c_str());
+  EXPECT_TRUE(params.count("double_array_param"));
   std::vector<double> double_array =
-    params.at("double_array_param").first.get_value<std::vector<double>>();
+    params.at("double_array_param").value.get<std::vector<double>>();
   ASSERT_EQ(2u, double_array.size());
   EXPECT_DOUBLE_EQ(3.14, double_array.at(0));
   EXPECT_DOUBLE_EQ(-2.718, double_array.at(1));
@@ -400,9 +400,9 @@ TEST(Test_parameter_map_from, string_array_param_value)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("string_array_param", params.at("string_array_param").first.get_name().c_str());
+  EXPECT_TRUE(params.count("string_array_param"));
   std::vector<std::string> string_array =
-    params.at("string_array_param").first.get_value<std::vector<std::string>>();
+    params.at("string_array_param").value.get<std::vector<std::string>>();
   ASSERT_EQ(2u, string_array.size());
   EXPECT_STREQ("Hello", string_array.at(0).c_str());
   EXPECT_STREQ("World", string_array.at(1).c_str());
@@ -434,19 +434,19 @@ TEST(Test_parameter_map_from, descriptor_integer_range)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("bar", params.at("bar").second.name.c_str());
-  EXPECT_STREQ("Integer Range Descriptor", params.at("bar").second.description.c_str());
-  EXPECT_STREQ("Even numbers only", params.at("bar").second.additional_constraints.c_str());
-  EXPECT_EQ(-1234, params.at("bar").second.integer_range[0].from_value);
-  EXPECT_EQ(99, params.at("bar").second.integer_range[0].to_value);
-  EXPECT_EQ(2U, params.at("bar").second.integer_range[0].step);
-  EXPECT_STREQ("baz", params.at("baz").second.name.c_str());
-  EXPECT_EQ(-1234, params.at("baz").second.integer_range[0].from_value);
-  EXPECT_EQ(std::numeric_limits<int64_t>::max(), params.at("baz").second.integer_range[0].to_value);
-  EXPECT_STREQ("foobar", params.at("foobar").second.name.c_str());
+  EXPECT_TRUE(params.count("bar"));
+  EXPECT_STREQ("Integer Range Descriptor", params.at("bar").descriptor.description.c_str());
+  EXPECT_STREQ("Even numbers only", params.at("bar").descriptor.additional_constraints.c_str());
+  EXPECT_EQ(-1234, params.at("bar").descriptor.integer_range[0].from_value);
+  EXPECT_EQ(99, params.at("bar").descriptor.integer_range[0].to_value);
+  EXPECT_EQ(2U, params.at("bar").descriptor.integer_range[0].step);
+  EXPECT_TRUE(params.count("baz"));
+  EXPECT_EQ(-1234, params.at("baz").descriptor.integer_range[0].from_value);
+  EXPECT_EQ(std::numeric_limits<int64_t>::max(), params.at("baz").descriptor.integer_range[0].to_value);
+  EXPECT_TRUE(params.count("foobar"));
   EXPECT_EQ(std::numeric_limits<int64_t>::min(), params.at(
-      "foobar").second.integer_range[0].from_value);
-  EXPECT_EQ(99, params.at("foobar").second.integer_range[0].to_value);
+      "foobar").descriptor.integer_range[0].from_value);
+  EXPECT_EQ(99, params.at("foobar").descriptor.integer_range[0].to_value);
 
   c_params->descriptors[0].parameter_descriptors[0].name = NULL;
   c_params->descriptors[0].parameter_descriptors[0].min_value_int = NULL;
@@ -484,20 +484,20 @@ TEST(Test_parameter_map_from, descriptor_double_range)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("bar", params.at("bar").second.name.c_str());
-  EXPECT_STREQ("Double Range Descriptor", params.at("bar").second.description.c_str());
-  EXPECT_STREQ("Multiples of 5", params.at("bar").second.additional_constraints.c_str());
-  EXPECT_DOUBLE_EQ(-1000.0, params.at("bar").second.floating_point_range[0].from_value);
-  EXPECT_DOUBLE_EQ(500.0, params.at("bar").second.floating_point_range[0].to_value);
-  EXPECT_DOUBLE_EQ(5.0, params.at("bar").second.floating_point_range[0].step);
-  EXPECT_STREQ("baz", params.at("baz").second.name.c_str());
-  EXPECT_DOUBLE_EQ(-1000.0, params.at("baz").second.floating_point_range[0].from_value);
+  EXPECT_TRUE(params.count("bar"));
+  EXPECT_STREQ("Double Range Descriptor", params.at("bar").descriptor.description.c_str());
+  EXPECT_STREQ("Multiples of 5", params.at("bar").descriptor.additional_constraints.c_str());
+  EXPECT_DOUBLE_EQ(-1000.0, params.at("bar").descriptor.floating_point_range[0].from_value);
+  EXPECT_DOUBLE_EQ(500.0, params.at("bar").descriptor.floating_point_range[0].to_value);
+  EXPECT_DOUBLE_EQ(5.0, params.at("bar").descriptor.floating_point_range[0].step);
+  EXPECT_TRUE(params.count("baz"));
+  EXPECT_DOUBLE_EQ(-1000.0, params.at("baz").descriptor.floating_point_range[0].from_value);
   EXPECT_DOUBLE_EQ(std::numeric_limits<double>::max(),
-    params.at("baz").second.floating_point_range[0].to_value);
-  EXPECT_STREQ("foobar", params.at("foobar").second.name.c_str());
+    params.at("baz").descriptor.floating_point_range[0].to_value);
+  EXPECT_TRUE(params.count("foobar"));
   EXPECT_DOUBLE_EQ(std::numeric_limits<double>::lowest(), params.at(
-      "foobar").second.floating_point_range[0].from_value);
-  EXPECT_DOUBLE_EQ(500.0, params.at("foobar").second.floating_point_range[0].to_value);
+      "foobar").descriptor.floating_point_range[0].from_value);
+  EXPECT_DOUBLE_EQ(500.0, params.at("foobar").descriptor.floating_point_range[0].to_value);
 
   c_params->descriptors[0].parameter_descriptors[0].name = NULL;
   c_params->descriptors[0].parameter_descriptors[0].min_value_double = NULL;
@@ -548,12 +548,12 @@ TEST(Test_parameter_map_from, descriptor_read_only)
 
   rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params);
   const rclcpp::ParameterAndDescriptor & params = map.at("/foo");
-  EXPECT_STREQ("bar", params.at("bar").second.name.c_str());
-  EXPECT_STREQ("read-only param", params.at("bar").second.description.c_str());
-  EXPECT_TRUE(params.at("bar").second.read_only);
-  EXPECT_STREQ("baz", params.at("baz").second.name.c_str());
-  EXPECT_STREQ("not read-only", params.at("baz").second.description.c_str());
-  EXPECT_FALSE(params.at("baz").second.read_only);
+  EXPECT_TRUE(params.count("bar"));
+  EXPECT_STREQ("read-only param", params.at("bar").descriptor.description.c_str());
+  EXPECT_TRUE(params.at("bar").descriptor.read_only);
+  EXPECT_TRUE(params.count("baz"));
+  EXPECT_STREQ("not read-only", params.at("baz").descriptor.description.c_str());
+  EXPECT_FALSE(params.at("baz").descriptor.read_only);
 
 
   c_params->descriptors[0].parameter_descriptors[0].name = NULL;

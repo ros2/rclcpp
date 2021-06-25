@@ -34,8 +34,7 @@ namespace rclcpp
 
 /// A map of fully qualified node names to a list of parameters
 using rcl_interfaces::msg::ParameterDescriptor;
-using ParameterAndDescriptor = std::unordered_map<std::string, std::pair<Parameter,
-    ParameterDescriptor>>;
+using ParameterAndDescriptor = std::unordered_map<std::string, rclcpp::node_interfaces::ParameterInfo>;
 using ParameterMap = std::unordered_map<std::string, ParameterAndDescriptor>;
 
 /// Convert parameters from rcl_yaml_param_parser into C++ class instances.

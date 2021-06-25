@@ -21,7 +21,6 @@
 
 #include "rcl/arguments.h"
 
-#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"

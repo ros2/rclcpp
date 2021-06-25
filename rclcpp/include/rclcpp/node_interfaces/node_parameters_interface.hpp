@@ -33,16 +33,6 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-// Internal struct for holding useful info about parameters
-struct ParameterInfo
-{
-  /// Current value of the parameter.
-  rclcpp::ParameterValue value;
-
-  /// A description of the parameter
-  rcl_interfaces::msg::ParameterDescriptor descriptor;
-};
-
 struct OnSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetParametersCallbackHandle)
