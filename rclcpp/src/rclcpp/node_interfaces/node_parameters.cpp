@@ -96,38 +96,8 @@ NodeParameters::NodeParameters(
   }
   combined_name_ = node_base->get_fully_qualified_name();
 
-  for (const rcl_arguments_t * source : argument_sources) {
-    rcl_params_t * params = NULL;
-    rcl_ret_t ret = rcl_arguments_get_param_overrides(source, &params);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-    if (params) {
-      auto cleanup_params = make_scope_exit(
-        [params]() {
-          rcl_yaml_node_struct_fini(params);
-        });
-      rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
-      for (auto iter = initial_map.begin(); initial_map.end() != iter; iter++) {
-        // TODO(cottsay) implement further wildcard matching
-        if (iter->first == "/**" || iter->first == combined_name_) {
-          // Combine parameter yaml files, overwriting values in older ones
-          for (auto & param : iter->second) {
-            rclcpp::node_interfaces::ParameterInfo param_info;
-            param_info.value = rclcpp::ParameterValue((param.second.first).get_value_message());
-            param_info.descriptor = param.second.second;
-            parameter_overrides_[(param.second.first).get_name()] = param_info;
-          }
-        }
-      }
-    }
-  }
-
-  // parameter overrides passed to constructor will overwrite overrides from yaml file sources
-  for (auto & param : parameter_overrides) {
-    parameter_overrides_[param.get_name()].value =
-      rclcpp::ParameterValue(param.get_value_message());
-  }
+  parameter_overrides_ = rclcpp::detail::resolve_parameter_overrides(
+    combined_name_, parameter_overrides, &options->arguments, global_args);
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
@@ -448,7 +418,7 @@ declare_parameter_helper(
   rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
   bool ignore_override,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters,
-  const std::map<std::string, rclcpp::ParameterValue> & overrides,
+  const std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & overrides,
   CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback,
   rclcpp::Publisher<rcl_interfaces::msg::ParameterEvent> * events_publisher,

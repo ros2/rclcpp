@@ -23,14 +23,14 @@
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/parameter_map.hpp"
 
-std::map<std::string, rclcpp::ParameterInfo>
+std::map<std::string, rclcpp::node_interfaces::ParameterInfo>
 rclcpp::detail::resolve_parameter_overrides(
   const std::string & node_fqn,
   const std::vector<rclcpp::Parameter> & parameter_overrides,
   const rcl_arguments_t * local_args,
   const rcl_arguments_t * global_args)
 {
-  std::map<std::string, rclcpp::ParameterValue> result;
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> result;
 
   // global before local so that local overwrites global
   std::array<const rcl_arguments_t *, 2> argument_sources = {global_args, local_args};

@@ -308,7 +308,7 @@ AsyncParametersClient::load_parameters(
       (node_name == remote_name))
     {
       for (const auto & param : params.second) {
-        parameters.push_back(param);
+        parameters.push_back(param.second.first);
       }
     }
   }

@@ -21,6 +21,7 @@
 
 #include "rcl/arguments.h"
 
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -31,7 +32,7 @@ namespace detail
 {
 /// \internal Get the parameter overrides from the arguments.
 RCLCPP_LOCAL
-std::map<std::string, rclcpp::ParameterInfo>
+std::map<std::string, rclcpp::node_interfaces::ParameterInfo>
 resolve_parameter_overrides(
   const std::string & node_name,
   const std::vector<rclcpp::Parameter> & parameter_overrides,

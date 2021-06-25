@@ -133,7 +133,7 @@ get_parameter_events_qos(
     auto param_name = prefix + rclcpp::qos_policy_kind_to_cstr(policy);
     auto it = parameter_overrides.find(param_name);
     auto value = it != parameter_overrides.end() ?
-      it->second :
+      it->second.value :
       rclcpp::detail::get_default_qos_param_value(policy, options.parameter_event_qos());
     rclcpp::detail::apply_qos_override(policy, value, final_qos);
   }
