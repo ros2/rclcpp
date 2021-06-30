@@ -180,6 +180,41 @@ protected:
     const std::shared_ptr<ListNodes::Request> request,
     std::shared_ptr<ListNodes::Response> response);
 
+  RCLCPP_COMPONENTS_PUBLIC
+  const std::weak_ptr<rclcpp::Executor>
+  GetExecutor() const
+  {
+    return executor_;
+  }
+
+  RCLCPP_COMPONENTS_PUBLIC
+  uint64_t
+  GetUniqueId()
+  {
+    return unique_id_;
+  }
+
+  RCLCPP_COMPONENTS_PUBLIC
+  void
+  SetUniqueId(uint64_t id)
+  {
+    unique_id_ = id;
+  }
+
+  RCLCPP_COMPONENTS_PUBLIC
+  rclcpp_components::NodeInstanceWrapper
+  GetNodeWrapper(uint64_t node_id)
+  {
+    return node_wrappers_[node_id];
+  }
+
+  RCLCPP_COMPONENTS_PUBLIC
+  void
+  SetNodeWrapper(uint64_t node_id, rclcpp_components::NodeInstanceWrapper node_wrapper)
+  {
+    node_wrappers_[node_id] = node_wrapper;
+  }
+
 private:
   std::weak_ptr<rclcpp::Executor> executor_;
 
