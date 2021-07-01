@@ -36,11 +36,12 @@ TEST(TestUtilities, wait_for_message) {
 
   MsgT out;
   auto received = false;
-  auto wait = std::async([&]() {
+  auto wait = std::async(
+    [&]() {
       auto ret = rclcpp::wait_for_message(out, node, "wait_for_message_topic", 5s);
       EXPECT_TRUE(ret);
       received = true;
-      });
+    });
 
   for (auto i = 0u; i < 10 && received == false; ++i) {
     pub->publish(*get_messages_strings()[0]);

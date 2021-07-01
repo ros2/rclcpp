@@ -15,6 +15,9 @@
 #ifndef RCLCPP__WAIT_FOR_MESSAGE_HPP_
 #define RCLCPP__WAIT_FOR_MESSAGE_HPP_
 
+#include <memory>
+#include <string>
+
 #include "rclcpp/node.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set.hpp"
@@ -37,19 +40,19 @@ bool wait_for_message(
   std::shared_ptr<rclcpp::Subscription<MsgT>> subscription,
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
 {
-    rclcpp::WaitSet wait_set;
-    wait_set.add_subscription(subscription);
-    auto ret = wait_set.wait(time_to_wait);
-    if (ret.kind() != rclcpp::WaitResultKind::Ready) {
-      return false;
-    }
+  rclcpp::WaitSet wait_set;
+  wait_set.add_subscription(subscription);
+  auto ret = wait_set.wait(time_to_wait);
+  if (ret.kind() != rclcpp::WaitResultKind::Ready) {
+    return false;
+  }
 
-    rclcpp::MessageInfo info;
-    if (!subscription->take(out, info)) {
-      return false;
-    }
+  rclcpp::MessageInfo info;
+  if (!subscription->take(out, info)) {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 /// Wait for the next incoming message.
