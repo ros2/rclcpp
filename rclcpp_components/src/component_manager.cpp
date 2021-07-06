@@ -122,11 +122,31 @@ ComponentManager::create_component_factory(const ComponentResource & resource)
 }
 
 rclcpp::NodeOptions
-ComponentManager::SetNodeOptions(
-  std::vector<rclcpp::Parameter> parameters,
-  std::vector<std::string> remap_rules,
-  const std::shared_ptr<LoadNode::Request> request)
+ComponentManager::CreateNodeOptions(const std::shared_ptr<LoadNode::Request> request)
 {
+  std::vector<rclcpp::Parameter> parameters;
+  for (const auto & p : request->parameters) {
+    parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
+  }
+
+  std::vector<std::string> remap_rules;
+  remap_rules.reserve(request->remap_rules.size() * 2 + 1);
+  remap_rules.push_back("--ros-args");
+  for (const std::string & rule : request->remap_rules) {
+    remap_rules.push_back("-r");
+    remap_rules.push_back(rule);
+  }
+
+  if (!request->node_name.empty()) {
+    remap_rules.push_back("-r");
+    remap_rules.push_back("__node:=" + request->node_name);
+  }
+
+  if (!request->node_namespace.empty()) {
+    remap_rules.push_back("-r");
+    remap_rules.push_back("__ns:=" + request->node_namespace);
+  }
+
   auto options = rclcpp::NodeOptions()
     .use_global_arguments(false)
     .parameter_overrides(parameters)
@@ -167,30 +187,7 @@ ComponentManager::OnLoadNode(
         continue;
       }
 
-      std::vector<rclcpp::Parameter> parameters;
-      for (const auto & p : request->parameters) {
-        parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
-      }
-
-      std::vector<std::string> remap_rules;
-      remap_rules.reserve(request->remap_rules.size() * 2 + 1);
-      remap_rules.push_back("--ros-args");
-      for (const std::string & rule : request->remap_rules) {
-        remap_rules.push_back("-r");
-        remap_rules.push_back(rule);
-      }
-
-      if (!request->node_name.empty()) {
-        remap_rules.push_back("-r");
-        remap_rules.push_back("__node:=" + request->node_name);
-      }
-
-      if (!request->node_namespace.empty()) {
-        remap_rules.push_back("-r");
-        remap_rules.push_back("__ns:=" + request->node_namespace);
-      }
-
-      auto options = SetNodeOptions(parameters, remap_rules, request);
+      auto options = CreateNodeOptions(request);
       auto node_id = unique_id_++;
 
       if (0 == node_id) {

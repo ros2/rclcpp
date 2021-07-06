@@ -131,19 +131,14 @@ public:
   create_component_factory(const ComponentResource & resource);
 
 protected:
-  /// Set node options for componenet
+  /// Create node options for loaded component
   /*
-   * \param parameters node parameters
-   * \param remap_rules node remap rules
    * \param request information with the node to load
    * \return node options
    */
   RCLCPP_COMPONENTS_PUBLIC
   virtual rclcpp::NodeOptions
-  SetNodeOptions(
-    std::vector<rclcpp::Parameter> parameters,
-    std::vector<std::string> remap_rules,
-    const std::shared_ptr<LoadNode::Request> request);
+  CreateNodeOptions(const std::shared_ptr<LoadNode::Request> request);
 
   /// Service callback to load a new node in the component
   /*
