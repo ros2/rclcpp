@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -2512,6 +2513,59 @@ TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
     EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
 
     EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+  }
+}
+
+// test declare parameter with int, int64_t, float and double vector
+TEST_F(TestNode, declare_parameter_with_vector) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_with_vector"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // declare parameter and then get types to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+
+    node->declare_parameter(name1, std::vector<int>{});
+    node->declare_parameter(name2, std::vector<int64_t>{});
+    node->declare_parameter(name3, std::vector<float>{});
+    node->declare_parameter(name4, std::vector<double>{});
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+    EXPECT_TRUE(node->has_parameter(name4));
+
+    auto results = node->get_parameter_types({name1, name2, name3, name4});
+    EXPECT_EQ(results.size(), 4u);
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(results[3], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+  }
+  {
+    // declare parameter and then get values to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+
+    int64_t bigger_than_int = INT64_MAX - 42;
+    double bigger_than_float = std::numeric_limits<double>::max() - 42;
+    node->declare_parameter(name1, std::vector<int>{1, 2});
+    node->declare_parameter(name2, std::vector<int64_t>{3, bigger_than_int});
+    node->declare_parameter(name3, std::vector<float>{1.5f, 2.8f});
+    node->declare_parameter(name4, std::vector<double>{3.0, bigger_than_float});
+
+    std::vector<rclcpp::Parameter> expected = {
+      {name1, std::vector<int>{1, 2}},
+      {name2, std::vector<int64_t>{3, bigger_than_int}},
+      {name3, std::vector<float>{1.5f, 2.8f}},
+      {name4, std::vector<double>{3.0, bigger_than_float}},
+    };
+    EXPECT_EQ(node->get_parameters({name1, name2, name3, name4}), expected);
   }
 }
 
