@@ -131,6 +131,15 @@ public:
   create_component_factory(const ComponentResource & resource);
 
 protected:
+  /// Create node options for loaded component
+  /*
+   * \param request information with the node to load
+   * \return node options
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual rclcpp::NodeOptions
+  CreateNodeOptions(const std::shared_ptr<LoadNode::Request> request);
+
   /// Service callback to load a new node in the component
   /*
    * This function allows to add parameters, remap rules, a specific node, name a namespace
