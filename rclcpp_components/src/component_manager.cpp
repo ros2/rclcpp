@@ -46,6 +46,20 @@ ComponentManager::ComponentManager(
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor desc{};
+    desc.name = "thread_num";
+    desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    desc.description = "Number of thread";
+    rcl_interfaces::msg::IntegerRange range{};
+    range.from_value = 1;
+    range.to_value = std::thread::hardware_concurrency();
+    desc.integer_range.push_back(range);
+    desc.read_only = true;
+    this->declare_parameter(
+      desc.name, static_cast<int>(std::thread::hardware_concurrency()), desc);
+  }
 }
 
 ComponentManager::~ComponentManager()
