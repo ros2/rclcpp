@@ -157,12 +157,6 @@ ok(Context::SharedPtr context)
 }
 
 bool
-is_initialized(Context::SharedPtr context)
-{
-  return ok(context);
-}
-
-bool
 shutdown(Context::SharedPtr context, const std::string & reason)
 {
   using rclcpp::contexts::get_global_default_context;
