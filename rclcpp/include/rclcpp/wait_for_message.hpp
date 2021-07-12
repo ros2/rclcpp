@@ -31,6 +31,7 @@ namespace rclcpp
  *
  * \param[out] out is the message to be filled when a new message is arriving.
  * \param[in] subscription shared pointer to a previously initialized subscription.
+ * \param[in] context shared pointer to a context to watch for SIGINT requests.
  * \param[in] time_to_wait parameter specifying the timeout before returning.
  * \return true if a message was successfully received, false otherwise.
  */
@@ -38,12 +39,28 @@ template<class MsgT, class Rep = int64_t, class Period = std::milli>
 bool wait_for_message(
   MsgT & out,
   std::shared_ptr<rclcpp::Subscription<MsgT>> subscription,
+  std::shared_ptr<rclcpp::Context> context,
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
 {
+  auto shutdown_requested = false;
+  auto gc = std::make_shared<rclcpp::GuardCondition>(context);
+  auto shutdown_callback_handle = context->add_on_shutdown_callback(
+    [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{gc}, &shutdown_requested]() {
+      auto strong_gc = weak_gc.lock();
+      if (strong_gc) {
+        shutdown_requested = true;
+        strong_gc->trigger();
+      }
+    });
+
   rclcpp::WaitSet wait_set;
   wait_set.add_subscription(subscription);
+  wait_set.add_guard_condition(gc);
   auto ret = wait_set.wait(time_to_wait);
   if (ret.kind() != rclcpp::WaitResultKind::Ready) {
+    return false;
+  }
+  if (shutdown_requested) {
     return false;
   }
 
@@ -73,7 +90,8 @@ bool wait_for_message(
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
 {
   auto sub = node->create_subscription<MsgT>(topic, 1, [](const std::shared_ptr<MsgT>) {});
-  return wait_for_message<MsgT, Rep, Period>(out, sub, time_to_wait);
+  return wait_for_message<MsgT, Rep, Period>(
+    out, sub, node->get_node_options().context(), time_to_wait);
 }
 
 }  // namespace rclcpp
