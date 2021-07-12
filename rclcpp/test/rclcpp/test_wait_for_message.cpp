@@ -49,4 +49,26 @@ TEST(TestUtilities, wait_for_message) {
   }
   ASSERT_TRUE(received);
   EXPECT_EQ(out, *get_messages_strings()[0]);
+
+  rclcpp::shutdown();
+}
+
+TEST(TestUtilities, wait_for_message_indefinitely) {
+  rclcpp::init(0, nullptr);
+
+  auto node = std::make_shared<rclcpp::Node>("wait_for_message_node2");
+
+  using MsgT = test_msgs::msg::Strings;
+  MsgT out;
+  auto received = false;
+  auto wait = std::async(
+    [&]() {
+      auto ret = rclcpp::wait_for_message(out, node, "wait_for_message_topic" /*, -1 */);
+      EXPECT_TRUE(ret);
+      received = true;
+    });
+
+  rclcpp::shutdown();
+
+  ASSERT_FALSE(received);
 }
