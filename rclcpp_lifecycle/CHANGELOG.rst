@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 11.0.0 (2021-05-18)
 -------------------
 * Fix destruction order in lifecycle benchmark (`#1675 <https://github.com/ros2/rclcpp/issues/1675>`_)

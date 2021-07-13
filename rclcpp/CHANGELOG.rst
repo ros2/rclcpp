@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Removed left over ``is_initialized()`` implementation (`#1711 <https://github.com/ros2/rclcpp/issues/1711>`_)
+  Leftover from https://github.com/ros2/rclcpp/pull/1622
+* Fixed declare parameter methods for int and float vectors (`#1696 <https://github.com/ros2/rclcpp/issues/1696>`_)
+* Cleaned up implementation of the intra-process manager (`#1695 <https://github.com/ros2/rclcpp/issues/1695>`_)
+* Added the node name to an executor ``runtime_error`` (`#1686 <https://github.com/ros2/rclcpp/issues/1686>`_)
+* Fixed a typo "Attack" -> "Attach" (`#1687 <https://github.com/ros2/rclcpp/issues/1687>`_)
+* Removed use of std::allocator<>::rebind (`#1678 <https://github.com/ros2/rclcpp/issues/1678>`_)
+  rebind is deprecated in c++17 and removed in c++20
+* Contributors: Alberto Soragna, Chen Lihui, Chris Lalancette, Petter Nilsson, Steve Macenski, William Woodall
+
 11.0.0 (2021-05-18)
 -------------------
 * Allow declare uninitialized parameters (`#1673 <https://github.com/ros2/rclcpp/issues/1673>`_)
