@@ -112,10 +112,42 @@ TEST(TestUtilities, multi_init) {
   EXPECT_FALSE(rclcpp::ok(context2));
 }
 
+TEST(TestUtilities, test_pre_shutdown_callback_add_remove) {
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  context1->init(0, nullptr);
+
+  bool is_called1 = false;
+  bool is_called2 = false;
+  auto callback1 = [&is_called1]() {is_called1 = true;};
+  auto callback2 = [&is_called2]() {is_called2 = true;};
+
+  EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::PreShutdownCallbackHandle callback_handle1 =
+    context1->add_pre_shutdown_callback(callback1);
+  EXPECT_EQ(1u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::PreShutdownCallbackHandle callback_handle2 =
+    context1->add_pre_shutdown_callback(callback2);
+  EXPECT_EQ(2u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::PreShutdownCallbackHandle wrong_callback_handle;
+  EXPECT_FALSE(context1->remove_pre_shutdown_callback(wrong_callback_handle));
+
+  EXPECT_TRUE(context1->remove_pre_shutdown_callback(callback_handle1));
+  EXPECT_EQ(1u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::shutdown(context1);
+
+  EXPECT_FALSE(is_called1);
+  EXPECT_TRUE(is_called2);
+}
+
 TEST(TestUtilities, test_context_basic_access) {
   auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
   EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
   EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
   EXPECT_EQ(std::string{""}, context1->shutdown_reason());
 }
 
@@ -124,6 +156,7 @@ TEST(TestUtilities, test_context_basic_access_const_methods) {
 
   EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
   EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
 }
 
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
