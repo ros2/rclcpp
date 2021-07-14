@@ -198,7 +198,7 @@ public:
       }
 
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-        CallbackMessageT,
+        ROSMessageType,
         AllocatorT,
         typename MessageUniquePtr::deleter_type>;
 
