@@ -160,6 +160,20 @@ protected:
     const std::shared_ptr<LoadNode::Request> request,
     std::shared_ptr<LoadNode::Response> response);
 
+  /**
+   * \deprecated Use on_load_node() instead
+   */
+  [[deprecated("Use on_load_node() instead")]]
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  OnLoadNode(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<LoadNode::Request> request,
+    std::shared_ptr<LoadNode::Response> response)
+  {
+    on_load_node(request_header, request, response);
+  }
+
   /// Service callback to unload a node in the component
   /**
    * \param request_header unused
@@ -173,6 +187,20 @@ protected:
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<UnloadNode::Request> request,
     std::shared_ptr<UnloadNode::Response> response);
+
+  /**
+   * \deprecated Use on_unload_node() instead
+   */
+  [[deprecated("Use on_unload_node() instead")]]
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  OnUnloadNode(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<UnloadNode::Request> request,
+    std::shared_ptr<UnloadNode::Response> response)
+  {
+    on_unload_node(request_header, request, response);
+  }
 
   /// Service callback to get the list of nodes in the component
   /**
@@ -188,6 +216,20 @@ protected:
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<ListNodes::Request> request,
     std::shared_ptr<ListNodes::Response> response);
+
+  /**
+   * \deprecated Use on_list_nodes() instead
+   */
+  [[deprecated("Use on_list_nodes() instead")]]
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  OnListNodes(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<ListNodes::Request> request,
+    std::shared_ptr<ListNodes::Response> response)
+  {
+    on_list_nodes(request_header, request, response);
+  }
 
 private:
   std::weak_ptr<rclcpp::Executor> executor_;
