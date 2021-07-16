@@ -979,12 +979,15 @@ public:
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
-  /// Return the number of publishers that are advertised on a given topic.
+  /// Return a map of existing service names to list of service types for a specific node.
   /**
-   * \param[in] node_name the node_name on which to count the publishers.
-   * \param[in] namespace_ the namespace of the node associated with the name
-   * \return number of publishers that are advertised on a given topic.
-   * \throws std::runtime_error if publishers could not be counted
+   * This function only considers services - not clients.
+   * The returned names are the actual names used and do not have remap rules applied.
+   *
+   * \param[in] node_name name of the node.
+   * \param[in] namespace_ namespace of the node.
+   * \return a map of existing service names to list of service types.
+   * \throws std::runtime_error anything that rcl_error can throw.
    */
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
