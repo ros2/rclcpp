@@ -45,6 +45,10 @@ struct can_be_nullptr<T, std::void_t<
   : std::true_type {};
 }  // namespace detail
 
+// Forward declare
+template<typename ServiceT>
+class Service;
+
 template<typename ServiceT>
 class AnyServiceCallback
 {
@@ -77,7 +81,8 @@ public:
   // template<typename Allocator = std::allocator<typename ServiceT::Response>>
   std::shared_ptr<typename ServiceT::Response>
   dispatch(
-    std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<rclcpp::Service<ServiceT>> & service_handle,
+    const std::shared_ptr<rmw_request_id_t> & request_header,
     std::shared_ptr<typename ServiceT::Request> request)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), false);
@@ -88,7 +93,12 @@ public:
     }
     if (std::holds_alternative<SharedPtrDeferResponseCallback>(callback_)) {
       const auto & cb = std::get<SharedPtrDeferResponseCallback>(callback_);
-      cb(std::move(request_header), std::move(request));
+      cb(request_header, std::move(request));
+      return nullptr;
+    }
+    if (std::holds_alternative<SharedPtrDeferResponseCallbackWithServiceHandle>(callback_)) {
+      const auto & cb = std::get<SharedPtrDeferResponseCallbackWithServiceHandle>(callback_);
+      cb(service_handle, request_header, std::move(request));
       return nullptr;
     }
     // auto response = allocate_shared<typename ServiceT::Response, Allocator>();
@@ -99,7 +109,7 @@ public:
       cb(std::move(request), response);
     } else if (std::holds_alternative<SharedPtrWithRequestHeaderCallback>(callback_)) {
       const auto & cb = std::get<SharedPtrWithRequestHeaderCallback>(callback_);
-      cb(std::move(request_header), std::move(request), response);
+      cb(request_header, std::move(request), response);
     }
     TRACEPOINT(callback_end, static_cast<const void *>(this));
     return response;
@@ -135,12 +145,19 @@ private:
       std::shared_ptr<rmw_request_id_t>,
       std::shared_ptr<typename ServiceT::Request>
     )>;
+  using SharedPtrDeferResponseCallbackWithServiceHandle = std::function<
+    void (
+      std::shared_ptr<rclcpp::Service<ServiceT>>,
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<typename ServiceT::Request>
+    )>;
 
   std::variant<
     std::monostate,
     SharedPtrCallback,
     SharedPtrWithRequestHeaderCallback,
-    SharedPtrDeferResponseCallback> callback_;
+    SharedPtrDeferResponseCallback,
+    SharedPtrDeferResponseCallbackWithServiceHandle> callback_;
 };
 
 }  // namespace rclcpp
