@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "rcl_logging_interface/rcl_logging_interface.h"
+#include "rcl/logging_rosout.h"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
+
+#include "./logging_mutex.hpp"
 
 namespace rclcpp
 {
@@ -60,6 +65,46 @@ get_logging_directory()
   std::string path{log_dir};
   allocator.deallocate(log_dir, allocator.state);
   return path;
+}
+
+Logger
+Logger::get_child(const std::string & suffix)
+{
+  if (!name_) {
+    return Logger();
+  }
+
+  rcl_ret_t rcl_ret = RCL_RET_OK;
+  std::shared_ptr<std::recursive_mutex> logging_mutex;
+  logging_mutex = get_global_logging_mutex();
+  {
+    std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+    rcl_ret = rcl_logging_rosout_add_sublogger((*name_).c_str(), suffix.c_str());
+    if (RCL_RET_OK != rcl_ret && RCL_RET_SUBLOGGER_ALREADY_EXIST != rcl_ret) {
+      exceptions::throw_from_rcl_error(
+        rcl_ret, "failed to call rcl_logging_rosout_add_sublogger",
+        rcutils_get_error_state(), rcutils_reset_error);
+    }
+  }
+
+  Logger logger(*name_ + "." + suffix);
+  if (RCL_RET_OK == rcl_ret) {
+    logger.logger_sublogger_pairname_.reset(
+      new std::pair<std::string, std::string>({*name_, suffix}),
+      [logging_mutex](std::pair<std::string, std::string> * logger_sublogger_pairname_ptr) {
+        std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+        rcl_ret_t rcl_ret = rcl_logging_rosout_remove_sublogger(
+          logger_sublogger_pairname_ptr->first.c_str(),
+          logger_sublogger_pairname_ptr->second.c_str());
+        delete logger_sublogger_pairname_ptr;
+        if (RCL_RET_OK != rcl_ret) {
+          exceptions::throw_from_rcl_error(
+            rcl_ret, "failed to call rcl_logging_rosout_remove_sublogger",
+            rcutils_get_error_state(), rcutils_reset_error);
+        }
+      });
+  }
+  return logger;
 }
 
 void

@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -122,6 +123,7 @@ private:
   : name_(new std::string(name)) {}
 
   std::shared_ptr<const std::string> name_;
+  std::shared_ptr<std::pair<std::string, std::string>> logger_sublogger_pairname_ = nullptr;
 
 public:
   RCLCPP_PUBLIC
@@ -150,6 +152,9 @@ public:
    * For example, ```get_logger('abc').get_child('def')``` will return a logger
    * with name `abc.def`.
    *
+   * It is recommended to use a temporary variable to store the return logger
+   * instead of calling it every time.
+   *
    * \param[in] suffix the child logger's suffix
    * \return a logger with the fully-qualified name including the suffix, or
    * \return a dummy logger if this logger is invalid (e.g. because logging is
@@ -157,13 +162,7 @@ public:
    */
   RCLCPP_PUBLIC
   Logger
-  get_child(const std::string & suffix)
-  {
-    if (!name_) {
-      return Logger();
-    }
-    return Logger(*name_ + "." + suffix);
-  }
+  get_child(const std::string & suffix);
 
   /// Set level for current logger.
   /**
