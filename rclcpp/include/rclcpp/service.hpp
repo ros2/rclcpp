@@ -177,9 +177,9 @@ public:
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
 
-    std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
     // rcl does the static memory allocation here
     service_handle_ = std::shared_ptr<rcl_service_t>(
+<<<<<<< HEAD
       new rcl_service_t, [weak_node_handle](rcl_service_t * service)
       {
         auto handle = weak_node_handle.lock();
@@ -196,6 +196,16 @@ public:
             rclcpp::get_logger("rclcpp"),
             "Error in destruction of rcl service handle: "
             "the Node Handle was destructed too early. You will leak memory");
+=======
+      new rcl_service_t, [handle = node_handle_, service_name](rcl_service_t * service)
+      {
+        if (rcl_service_fini(service, handle.get()) != RCL_RET_OK) {
+          RCLCPP_ERROR(
+            rclcpp::get_node_logger(handle.get()).get_child("rclcpp"),
+            "Error in destruction of rcl service handle: %s",
+            rcl_get_error_string().str);
+          rcl_reset_error();
+>>>>>>> d488535f... [service] Don't use a weak_ptr to avoid leaking (#1668)
         }
         delete service;
       });
