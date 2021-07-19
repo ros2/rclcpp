@@ -39,13 +39,13 @@ ComponentManager::ComponentManager(
 {
   loadNode_srv_ = create_service<LoadNode>(
     "~/_container/load_node",
-    std::bind(&ComponentManager::OnLoadNode, this, _1, _2, _3));
+    std::bind(&ComponentManager::on_load_node, this, _1, _2, _3));
   unloadNode_srv_ = create_service<UnloadNode>(
     "~/_container/unload_node",
-    std::bind(&ComponentManager::OnUnloadNode, this, _1, _2, _3));
+    std::bind(&ComponentManager::on_unload_node, this, _1, _2, _3));
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
-    std::bind(&ComponentManager::OnListNodes, this, _1, _2, _3));
+    std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
 }
 
 ComponentManager::~ComponentManager()
@@ -122,7 +122,7 @@ ComponentManager::create_component_factory(const ComponentResource & resource)
 }
 
 rclcpp::NodeOptions
-ComponentManager::CreateNodeOptions(const std::shared_ptr<LoadNode::Request> request)
+ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> request)
 {
   std::vector<rclcpp::Parameter> parameters;
   for (const auto & p : request->parameters) {
@@ -167,7 +167,7 @@ ComponentManager::CreateNodeOptions(const std::shared_ptr<LoadNode::Request> req
 }
 
 void
-ComponentManager::OnLoadNode(
+ComponentManager::on_load_node(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<LoadNode::Request> request,
   std::shared_ptr<LoadNode::Response> response)
@@ -187,7 +187,7 @@ ComponentManager::OnLoadNode(
         continue;
       }
 
-      auto options = CreateNodeOptions(request);
+      auto options = create_node_options(request);
       auto node_id = unique_id_++;
 
       if (0 == node_id) {
@@ -237,7 +237,7 @@ ComponentManager::OnLoadNode(
 }
 
 void
-ComponentManager::OnUnloadNode(
+ComponentManager::on_unload_node(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<UnloadNode::Request> request,
   std::shared_ptr<UnloadNode::Response> response)
@@ -262,7 +262,7 @@ ComponentManager::OnUnloadNode(
 }
 
 void
-ComponentManager::OnListNodes(
+ComponentManager::on_list_nodes(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<ListNodes::Request> request,
   std::shared_ptr<ListNodes::Response> response)
