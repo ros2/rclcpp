@@ -216,7 +216,10 @@ public:
   const char * topic_name;
 };
 
-template<typename MessageT>
+template<
+  typename MessageT,
+  typename Alloc = std::allocator<void>,
+  typename Deleter = std::default_delete<MessageT>>
 class SubscriptionIntraProcess : public SubscriptionIntraProcessBase
 {
 public:

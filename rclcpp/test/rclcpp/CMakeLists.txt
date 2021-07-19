@@ -134,6 +134,13 @@ if(TARGET test_intra_process_manager)
   )
   target_link_libraries(test_intra_process_manager ${PROJECT_NAME})
 endif()
+ament_add_gmock(test_intra_process_manager_with_allocators test_intra_process_manager_with_allocators.cpp)
+if(TARGET test_intra_process_manager_with_allocators)
+  ament_target_dependencies(test_intra_process_manager_with_allocators
+    "test_msgs"
+  )
+  target_link_libraries(test_intra_process_manager_with_allocators ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_ring_buffer_implementation test_ring_buffer_implementation.cpp)
 if(TARGET test_ring_buffer_implementation)
   ament_target_dependencies(test_ring_buffer_implementation
