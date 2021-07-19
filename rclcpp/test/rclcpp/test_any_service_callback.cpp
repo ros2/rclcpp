@@ -40,6 +40,7 @@ protected:
   std::shared_ptr<rmw_request_id_t> request_header_;
   std::shared_ptr<test_msgs::srv::Empty::Request> request_;
   std::shared_ptr<test_msgs::srv::Empty::Response> response_;
+  std::shared_ptr<rclcpp::Service<test_msgs::srv::Empty>> service_;
 };
 
 TEST_F(TestAnyServiceCallback, no_set_and_dispatch_throw) {
