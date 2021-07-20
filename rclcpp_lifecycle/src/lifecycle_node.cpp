@@ -371,6 +371,13 @@ LifecycleNode::get_callback_groups() const
   return node_base_->get_callback_groups();
 }
 
+void
+LifecycleNode::for_each_callback_group(
+  const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
+{
+  node_base_->for_each_callback_group(func);
+}
+
 rclcpp::Event::SharedPtr
 LifecycleNode::get_graph_event()
 {

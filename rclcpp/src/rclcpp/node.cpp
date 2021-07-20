@@ -488,6 +488,13 @@ Node::get_callback_groups() const
   return node_base_->get_callback_groups();
 }
 
+void
+Node::for_each_callback_group(
+  const node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
+{
+  node_base_->for_each_callback_group(func);
+}
+
 rclcpp::Event::SharedPtr
 Node::get_graph_event()
 {

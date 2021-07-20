@@ -2733,13 +2733,33 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
 
 TEST_F(TestNode, callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  size_t num_callback_groups_in_basic_node = node->get_callback_groups().size();
+  size_t num_callback_groups_in_basic_node = 0;
+  node->for_each_callback_group(
+    [&num_callback_groups_in_basic_node](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      (void)group;
+      num_callback_groups_in_basic_node++;
+    });
 
   auto group1 = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  EXPECT_EQ(1u + num_callback_groups_in_basic_node, node->get_callback_groups().size());
+  size_t num_callback_groups = 0;
+  node->for_each_callback_group(
+    [&num_callback_groups](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      (void)group;
+      num_callback_groups++;
+    });
+  EXPECT_EQ(1u + num_callback_groups_in_basic_node, num_callback_groups);
 
   auto group2 = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  EXPECT_EQ(2u + num_callback_groups_in_basic_node, node->get_callback_groups().size());
+  size_t num_callback_groups2 = 0;
+  node->for_each_callback_group(
+    [&num_callback_groups2](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      (void)group;
+      num_callback_groups2++;
+    });
+  EXPECT_EQ(2u + num_callback_groups_in_basic_node, num_callback_groups2);
 }
 
 // This is tested more thoroughly in node_interfaces/test_node_graph

@@ -41,38 +41,38 @@ struct NumberOfEntities
 std::unique_ptr<NumberOfEntities> get_number_of_default_entities(rclcpp::Node::SharedPtr node)
 {
   auto number_of_entities = std::make_unique<NumberOfEntities>();
-  for (auto & weak_group : node->get_callback_groups()) {
-    auto group = weak_group.lock();
-    EXPECT_NE(nullptr, group);
-    if (!group || !group->can_be_taken_from().load()) {
-      return nullptr;
-    }
-    group->find_subscription_ptrs_if(
-      [&number_of_entities](rclcpp::SubscriptionBase::SharedPtr &)
-      {
-        number_of_entities->subscriptions++; return false;
-      });
-    group->find_timer_ptrs_if(
-      [&number_of_entities](rclcpp::TimerBase::SharedPtr &)
-      {
-        number_of_entities->timers++; return false;
-      });
-    group->find_service_ptrs_if(
-      [&number_of_entities](rclcpp::ServiceBase::SharedPtr &)
-      {
-        number_of_entities->services++; return false;
-      });
-    group->find_client_ptrs_if(
-      [&number_of_entities](rclcpp::ClientBase::SharedPtr &)
-      {
-        number_of_entities->clients++; return false;
-      });
-    group->find_waitable_ptrs_if(
-      [&number_of_entities](rclcpp::Waitable::SharedPtr &)
-      {
-        number_of_entities->waitables++; return false;
-      });
-  }
+  node->for_each_callback_group(
+    [&number_of_entities](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      if (!group->can_be_taken_from().load()) {
+        return;
+      }
+      group->find_subscription_ptrs_if(
+        [&number_of_entities](rclcpp::SubscriptionBase::SharedPtr &)
+        {
+          number_of_entities->subscriptions++; return false;
+        });
+      group->find_timer_ptrs_if(
+        [&number_of_entities](rclcpp::TimerBase::SharedPtr &)
+        {
+          number_of_entities->timers++; return false;
+        });
+      group->find_service_ptrs_if(
+        [&number_of_entities](rclcpp::ServiceBase::SharedPtr &)
+        {
+          number_of_entities->services++; return false;
+        });
+      group->find_client_ptrs_if(
+        [&number_of_entities](rclcpp::ClientBase::SharedPtr &)
+        {
+          number_of_entities->clients++; return false;
+        });
+      group->find_waitable_ptrs_if(
+        [&number_of_entities](rclcpp::Waitable::SharedPtr &)
+        {
+          number_of_entities->waitables++; return false;
+        });
+    });
 
   return number_of_entities;
 }

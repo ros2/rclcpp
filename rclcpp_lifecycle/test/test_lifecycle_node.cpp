@@ -717,16 +717,27 @@ TEST_F(TestDefaultStateMachine, test_graph_services_by_node) {
 
 TEST_F(TestDefaultStateMachine, test_callback_groups) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
-  auto groups = test_node->get_callback_groups();
-  EXPECT_EQ(groups.size(), 1u);
+  size_t num_groups = 0;
+  test_node->for_each_callback_group(
+    [&num_groups](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    {
+      (void)group_ptr;
+      num_groups++;
+    });
+  EXPECT_EQ(num_groups, 1u);
 
   auto group = test_node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, true);
   EXPECT_NE(nullptr, group);
 
-  groups = test_node->get_callback_groups();
-  EXPECT_EQ(groups.size(), 2u);
-  EXPECT_EQ(groups[1].lock().get(), group.get());
+  num_groups = 0;
+  test_node->for_each_callback_group(
+    [&num_groups](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    {
+      (void)group_ptr;
+      num_groups++;
+    });
+  EXPECT_EQ(num_groups, 2u);
 }
 
 TEST_F(TestDefaultStateMachine, wait_for_graph_change)
