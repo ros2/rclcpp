@@ -200,6 +200,12 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
+  /// Iterate over the callback groups in the node, calling func on each valid one.
+  RCLCPP_PUBLIC
+  void
+  for_each_callback_group(
+    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
+
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
