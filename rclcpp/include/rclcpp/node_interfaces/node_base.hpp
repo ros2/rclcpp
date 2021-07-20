@@ -15,11 +15,14 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
 
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "rcl/node.h"
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -100,6 +103,10 @@ public:
   get_callback_groups() const override;
 
   RCLCPP_PUBLIC
+  void
+  callback_groups_for_each(const CallbackGroupCallback & func) override;
+
+  RCLCPP_PUBLIC
   std::atomic_bool &
   get_associated_with_executor_atomic() override;
 
@@ -132,6 +139,7 @@ private:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rclcpp::CallbackGroup::SharedPtr default_callback_group_;
+  std::mutex callback_groups_mutex_;
   std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_;
 
   std::atomic_bool associated_with_executor_;

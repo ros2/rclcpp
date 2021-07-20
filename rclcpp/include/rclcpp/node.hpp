@@ -153,6 +153,11 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
+  /// Iterate over the callback groups in the node, calling func on each valid one.
+  RCLCPP_PUBLIC
+  void
+  callback_groups_for_each(const node_interfaces::NodeBaseInterface::CallbackGroupCallback & func);
+
   /// Create and return a Publisher.
   /**
    * The rclcpp::QoS has several convenient constructors, including a
