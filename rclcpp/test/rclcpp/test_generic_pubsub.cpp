@@ -187,7 +187,7 @@ TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
   auto publisher = node_->create_generic_publisher(topic_name, topic_type, qos);
   auto subscription = node_->create_subscription<test_msgs::msg::Strings>(
     topic_name, qos,
-    [](std::shared_ptr<test_msgs::msg::Strings>/* message */) {});
+    [](std::shared_ptr<const test_msgs::msg::Strings>/* message */) {});
   auto connected = [publisher, subscription]() -> bool {
       return publisher->get_subscription_count() && subscription->get_publisher_count();
     };
