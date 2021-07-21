@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+11.2.0 (2021-07-21)
+-------------------
 * Support to defer to send a response in services. (`#1709 <https://github.com/ros2/rclcpp/issues/1709>`_)
   Signed-off-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
 * Fix documentation bug. (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_)
