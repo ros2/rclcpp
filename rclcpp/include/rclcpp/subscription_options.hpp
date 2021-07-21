@@ -81,6 +81,42 @@ struct SubscriptionOptionsBase
   TopicStatisticsOptions topic_stats_options;
 
   QosOverridingOptions qos_overriding_options;
+
+  /// Set use_default_callbacks.
+  RCLCPP_PUBLIC
+  SubscriptionOptionsBase &
+  set_use_default_callbacks(bool uses)
+  {
+    use_default_callbacks = uses;
+    return *this;
+  }
+
+  /// Set ignore_local_publications.
+  RCLCPP_PUBLIC
+  SubscriptionOptionsBase &
+  set_ignore_local_publications(bool ignores)
+  {
+    ignore_local_publications = ignores;
+    return *this;
+  }
+
+  /// Set callback group.
+  RCLCPP_PUBLIC
+  SubscriptionOptionsBase &
+  set_callback_group(rclcpp::CallbackGroup::SharedPtr group)
+  {
+    callback_group = group;
+    return *this;
+  }
+
+  /// Set intra_process_comm.
+  RCLCPP_PUBLIC
+  SubscriptionOptionsBase &
+  set_use_intra_process_comm(bool uses)
+  {
+    use_intra_process_comm = uses ? IntraProcessSetting::Enable : IntraProcessSetting::Disable;
+    return *this;
+  }
 };
 
 /// Structure containing optional configuration for Subscriptions.

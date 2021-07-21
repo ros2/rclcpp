@@ -101,3 +101,33 @@ TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
       *(node->get_node_base_interface())),
     std::runtime_error("Unrecognized EnableTopicStatistics value"));
 }
+
+TEST_F(TestSubscriptionOptions, set_use_default_callbacks) {
+  auto option = rclcpp::SubscriptionOptions().set_use_default_callbacks(false);
+  EXPECT_EQ(option.use_default_callbacks, false);
+
+  option.set_use_default_callbacks(true);
+  EXPECT_EQ(option.use_default_callbacks, true);
+}
+
+TEST_F(TestSubscriptionOptions, ignore_local_publications_setters) {
+  auto option = rclcpp::SubscriptionOptions().set_ignore_local_publications(true);
+  EXPECT_EQ(option.ignore_local_publications, true);
+
+  option.set_ignore_local_publications(false);
+  EXPECT_EQ(option.ignore_local_publications, false);
+}
+
+TEST_F(TestSubscriptionOptions, callback_group_setters) {
+  auto group = std::make_shared<rclcpp::CallbackGroup>(rclcpp::CallbackGroupType::Reentrant);
+  auto option = rclcpp::SubscriptionOptions().set_callback_group(group);
+  EXPECT_EQ(option.callback_group, group);
+}
+
+TEST_F(TestSubscriptionOptions, use_intra_process_com_setters) {
+  auto option = rclcpp::SubscriptionOptions().set_use_intra_process_comm(true);
+  EXPECT_EQ(option.use_intra_process_comm, rclcpp::IntraProcessSetting::Enable);
+
+  option.set_use_intra_process_comm(false);
+  EXPECT_EQ(option.use_intra_process_comm, rclcpp::IntraProcessSetting::Disable);
+}
