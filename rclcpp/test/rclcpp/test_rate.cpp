@@ -21,14 +21,14 @@
 /*
    Basic tests for the Rate and WallRate classes.
  */
-TEST(TestRate, rate_basics) {
+TEST(TestRate, wall_rate_basics) {
   auto period = std::chrono::milliseconds(1000);
   auto offset = std::chrono::milliseconds(500);
   auto epsilon = std::chrono::milliseconds(100);
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::system_clock::now();
-  rclcpp::Rate r(period);
+  rclcpp::WallRate r(period);
   EXPECT_EQ(period, r.period());
   ASSERT_FALSE(r.is_steady());
   ASSERT_TRUE(r.sleep());
@@ -61,14 +61,14 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(epsilon > delta);
 }
 
-TEST(TestRate, wall_rate_basics) {
+TEST(TestRate, steady_rate_basics) {
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::steady_clock::now();
-  rclcpp::WallRate r(period);
+  rclcpp::SteadyRate r(period);
   EXPECT_EQ(period, r.period());
   ASSERT_TRUE(r.is_steady());
   ASSERT_TRUE(r.sleep());
