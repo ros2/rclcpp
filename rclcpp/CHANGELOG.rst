@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Support to defer to send a response in services. (`#1709 <https://github.com/ros2/rclcpp/issues/1709>`_)
+  Signed-off-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+* Fix documentation bug. (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_)
+  Signed-off-by: William Woodall <william@osrfoundation.org>
+* Contributors: Ivan Santiago Paunovic, William Woodall
+
 11.1.0 (2021-07-13)
 -------------------
 * Removed left over ``is_initialized()`` implementation (`#1711 <https://github.com/ros2/rclcpp/issues/1711>`_)

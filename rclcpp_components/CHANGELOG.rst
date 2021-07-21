@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deprecate method names that use CamelCase in rclcpp_components. (`#1716 <https://github.com/ros2/rclcpp/issues/1716>`_)
+* Contributors: Rebecca Butler
+
 11.1.0 (2021-07-13)
 -------------------
 * Added a hook to generate node options in ComponentManager (`#1702 <https://github.com/ros2/rclcpp/issues/1702>`_)
