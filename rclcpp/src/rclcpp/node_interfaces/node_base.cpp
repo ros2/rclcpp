@@ -166,6 +166,13 @@ NodeBase::~NodeBase()
         "failed to destroy guard condition: %s", rcl_get_error_string().str);
     }
   }
+
+  for (auto & weak_gc : this->callback_groups_) {
+    auto strong_gc = weak_gc.lock();
+    if (strong_gc) {
+      strong_gc->get_notify_guard_condition()->trigger();
+    }
+  }
 }
 
 const char *
@@ -225,6 +232,7 @@ NodeBase::create_callback_group(
   using rclcpp::CallbackGroupType;
   auto group = CallbackGroup::SharedPtr(
     new CallbackGroup(
+      this->get_context(),
       group_type,
       automatically_add_to_executor_with_node));
   callback_groups_.push_back(group);

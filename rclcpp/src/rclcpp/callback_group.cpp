@@ -14,17 +14,20 @@
 
 #include "rclcpp/callback_group.hpp"
 
+#include <memory>
 #include <vector>
 
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;
 
 CallbackGroup::CallbackGroup(
+  rclcpp::Context::SharedPtr context_ptr,
   CallbackGroupType group_type,
   bool automatically_add_to_executor_with_node)
 : type_(group_type), associated_with_executor_(false),
   can_be_taken_from_(true),
-  automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node)
+  automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node),
+  notify_guard_condition_(std::make_shared<rclcpp::GuardCondition>(context_ptr))
 {}
 
 
@@ -50,6 +53,12 @@ bool
 CallbackGroup::automatically_add_to_executor_with_node() const
 {
   return automatically_add_to_executor_with_node_;
+}
+
+rclcpp::GuardCondition::SharedPtr
+CallbackGroup::get_notify_guard_condition()
+{
+  return notify_guard_condition_;
 }
 
 void

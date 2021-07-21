@@ -68,6 +68,7 @@ NodeTopics::add_publisher(
               rmw_get_error_string().str);
     }
   }
+  callback_group->get_notify_guard_condition()->trigger();
 }
 
 rclcpp::SubscriptionBase::SharedPtr
@@ -116,6 +117,7 @@ NodeTopics::add_subscription(
       throw_from_rcl_error(ret, "failed to notify wait set on subscription creation");
     }
   }
+  callback_group->get_notify_guard_condition()->trigger();
 }
 
 rclcpp::node_interfaces::NodeBaseInterface *

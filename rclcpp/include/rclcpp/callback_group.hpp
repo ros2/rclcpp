@@ -21,6 +21,8 @@
 #include <vector>
 
 #include "rclcpp/client.hpp"
+#include "rclcpp/context.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
@@ -85,6 +87,7 @@ public:
    * group, or after, is irrelevant; the callback group will be automatically
    * added to the executor in either case.
    *
+   * \param[in] context_ptr Shared pointer to the context.
    * \param[in] group_type The type of the callback group.
    * \param[in] automatically_add_to_executor_with_node A boolean that
    *   determines whether a callback group is automatically added to an executor
@@ -92,6 +95,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit CallbackGroup(
+    rclcpp::Context::SharedPtr context_ptr,
     CallbackGroupType group_type,
     bool automatically_add_to_executor_with_node = true);
 
@@ -163,6 +167,11 @@ public:
   bool
   automatically_add_to_executor_with_node() const;
 
+  /// Return the notify guard condition.
+  RCLCPP_PUBLIC
+  rclcpp::GuardCondition::SharedPtr
+  get_notify_guard_condition();
+
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
 
@@ -205,6 +214,7 @@ protected:
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
   const bool automatically_add_to_executor_with_node_;
+  rclcpp::GuardCondition::SharedPtr notify_guard_condition_;
 
 private:
   template<typename TypeT, typename Function>
