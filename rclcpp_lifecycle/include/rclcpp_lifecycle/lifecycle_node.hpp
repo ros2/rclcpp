@@ -899,6 +899,14 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
+  raise_error();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  raise_error(LifecycleNodeInterface::CallbackReturn & cb_return_code);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
   shutdown();
 
   /// Trigger the shutdown transition and get the callback return code.
