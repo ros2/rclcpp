@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/service.hpp"
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/srv/empty.h"
 
@@ -44,7 +45,7 @@ protected:
 
 TEST_F(TestAnyServiceCallback, no_set_and_dispatch_throw) {
   EXPECT_THROW(
-    any_service_callback_.dispatch(request_header_, request_, response_),
+    any_service_callback_.dispatch(nullptr, request_header_, request_),
     std::runtime_error);
 }
 
@@ -57,7 +58,7 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_no_header) {
 
   any_service_callback_.set(callback);
   EXPECT_NO_THROW(
-    any_service_callback_.dispatch(request_header_, request_, response_));
+    EXPECT_NE(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
   EXPECT_EQ(callback_calls, 1);
 }
 
@@ -73,6 +74,36 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_header) {
 
   any_service_callback_.set(callback_with_header);
   EXPECT_NO_THROW(
-    any_service_callback_.dispatch(request_header_, request_, response_));
+    EXPECT_NE(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
+  EXPECT_EQ(callback_with_header_calls, 1);
+}
+
+TEST_F(TestAnyServiceCallback, set_and_dispatch_defered) {
+  int callback_with_header_calls = 0;
+  auto callback_with_header =
+    [&callback_with_header_calls](const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<test_msgs::srv::Empty::Request>) {
+      callback_with_header_calls++;
+    };
+
+  any_service_callback_.set(callback_with_header);
+  EXPECT_NO_THROW(
+    EXPECT_EQ(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
+  EXPECT_EQ(callback_with_header_calls, 1);
+}
+
+TEST_F(TestAnyServiceCallback, set_and_dispatch_defered_with_service_handle) {
+  int callback_with_header_calls = 0;
+  auto callback_with_header =
+    [&callback_with_header_calls](std::shared_ptr<rclcpp::Service<test_msgs::srv::Empty>>,
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<test_msgs::srv::Empty::Request>)
+    {
+      callback_with_header_calls++;
+    };
+
+  any_service_callback_.set(callback_with_header);
+  EXPECT_NO_THROW(
+    EXPECT_EQ(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
   EXPECT_EQ(callback_with_header_calls, 1);
 }
