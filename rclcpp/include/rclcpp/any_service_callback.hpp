@@ -71,21 +71,21 @@ public:
       >::value)
     {
       callback_.template emplace<SharedPtrCallback>(callback);
-    } else if constexpr (
+    } else if constexpr (  // NOLINT, can't satisfy both cpplint and uncrustify
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrWithRequestHeaderCallback
       >::value)
     {
       callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
-    } else if constexpr (
+    } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallback
       >::value)
     {
       callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
-    } else if constexpr (
+    } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallbackWithServiceHandle
@@ -116,21 +116,21 @@ public:
       >::value)
     {
       callback_.template emplace<SharedPtrCallback>(callback);
-    } else if constexpr (
+    } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrWithRequestHeaderCallback
       >::value)
     {
       callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
-    } else if constexpr (
+    } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallback
       >::value)
     {
       callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
-    } else if constexpr (
+    } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallbackWithServiceHandle
