@@ -29,6 +29,7 @@
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
+#include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
@@ -40,7 +41,6 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/scope_exit.hpp"
 
 namespace rclcpp
 {
@@ -354,7 +354,7 @@ public:
     if (spinning.exchange(true)) {
       throw std::runtime_error("spin_until_future_complete() called while already spinning");
     }
-    RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
     while (rclcpp::ok(this->context_) && spinning.load()) {
       // Do one item of work.
       spin_once_impl(timeout_left);

@@ -15,10 +15,11 @@
 #include <rcl_action/action_server.h>
 #include <rcl_action/wait.h>
 
+#include <rcpputils/scope_exit.hpp>
+
 #include <action_msgs/msg/goal_status_array.hpp>
 #include <action_msgs/srv/cancel_goal.hpp>
 #include <rclcpp/exceptions.hpp>
-#include <rclcpp/scope_exit.hpp>
 #include <rclcpp_action/server.hpp>
 
 #include <memory>
@@ -416,7 +417,7 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
   {
     ret = rcl_action_cancel_response_fini(&cancel_response);
     if (RCL_RET_OK != ret) {
@@ -581,7 +582,7 @@ ServerBase::publish_status()
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
   {
     ret = rcl_action_goal_status_array_fini(&c_status_array);
     if (RCL_RET_OK != ret) {

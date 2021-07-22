@@ -21,8 +21,8 @@
 
 #include "gtest/gtest.h"
 
-#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
+#include "rcpputils/scope_exit.hpp"
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"
 
@@ -268,7 +268,7 @@ protected:
              "Calling rcl_wait_set_init() with expected sufficient capacities failed";
     }
 
-    RCLCPP_SCOPE_EXIT(
+    RCPPUTILS_SCOPE_EXIT(
     {
       EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
     });
@@ -296,7 +296,7 @@ protected:
              "Calling rcl_wait_set_init() with expected insufficient capacities failed";
     }
 
-    RCLCPP_SCOPE_EXIT(
+    RCPPUTILS_SCOPE_EXIT(
     {
       EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set_no_capacity));
     });
@@ -594,7 +594,7 @@ TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_guard_condition) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_guard_condition_init(&guard_condition, rcl_context, guard_condition_options));
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
   {
     EXPECT_EQ(RCL_RET_OK, rcl_guard_condition_fini(&guard_condition));
   });

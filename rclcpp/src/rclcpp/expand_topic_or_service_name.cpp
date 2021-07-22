@@ -19,7 +19,6 @@
 #include "rcl/expand_topic_name.h"
 #include "rcl/validate_topic_name.h"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/scope_exit.hpp"
 #include "rcutils/logging_macros.h"
 #include "rcutils/types/string_map.h"
 #include "rmw/error_handling.h"

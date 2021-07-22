@@ -20,7 +20,7 @@
 #include "performance_test_fixture/performance_test_fixture.hpp"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/scope_exit.hpp"
+#include "rcpputils/scope_exit.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 using namespace std::chrono_literals;
@@ -366,7 +366,7 @@ BENCHMARK_F(
   if (ret != RCL_RET_OK) {
     st.SkipWithError(rcutils_get_error_string().str);
   }
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
   {
     rcl_ret_t ret = rcl_wait_set_fini(&wait_set);
     if (ret != RCL_RET_OK) {
@@ -379,7 +379,7 @@ BENCHMARK_F(
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   reset_heap_counters();
 
