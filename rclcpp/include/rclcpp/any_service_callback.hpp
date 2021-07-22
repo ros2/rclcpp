@@ -71,30 +71,30 @@ public:
       >::value)
     {
       // one would think that the following works:
-      // callback_.emplace<SharedPtrCallback>(callback);
+      // callback_.template emplace<SharedPtrCallback>(callback);
       // but it does not for some reason.
-      callback_.emplace<1>(callback);
+      callback_.template emplace<SharedPtrCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrWithRequestHeaderCallback
       >::value)
     {
-      callback_.emplace<2>(callback);
+      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallback
       >::value)
     {
-      callback_.emplace<3>(callback);
+      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallbackWithServiceHandle
       >::value)
     {
-      callback_.emplace<4>(callback);
+      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -119,30 +119,30 @@ public:
       >::value)
     {
       // one would think that the following works:
-      // callback_.emplace<SharedPtrCallback>(callback);
+      // callback_.template emplace<SharedPtrCallback>(callback);
       // but it does not for some reason.
-      callback_.emplace<1>(callback);
+      callback_.template emplace<SharedPtrCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrWithRequestHeaderCallback
       >::value)
     {
-      callback_.emplace<2>(callback);
+      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallback
       >::value)
     {
-      callback_.emplace<3>(callback);
+      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrDeferResponseCallbackWithServiceHandle
       >::value)
     {
-      callback_.emplace<4>(callback);
+      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
