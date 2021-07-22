@@ -713,6 +713,23 @@ if(TARGET test_rosout_qos)
   target_link_libraries(test_rosout_qos ${PROJECT_NAME})
 endif()
 
+function(test_rosout_subscription_for_rmw_implementation)
+  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+  ament_add_gmock(test_rosout_subscription${target_suffix} test_rosout_subscription.cpp
+    ENV ${rmw_implementation_env_var}
+  )
+  if(TARGET test_rosout_subscription${target_suffix})
+    target_link_libraries(test_rosout_subscription${target_suffix} ${PROJECT_NAME})
+    ament_target_dependencies(test_rosout_subscription${target_suffix}
+      "rcl_interfaces"
+      "rmw"
+      "rosidl_runtime_cpp"
+      "rosidl_typesupport_cpp"
+    )
+  endif()
+endfunction()
+call_for_each_rmw_implementation(test_rosout_subscription_for_rmw_implementation)
+
 ament_add_gtest(test_executor test_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 120)
