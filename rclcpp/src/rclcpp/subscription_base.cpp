@@ -143,6 +143,7 @@ SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & mes
     &message_info_out.get_rmw_message_info(),
     nullptr  // rmw_subscription_allocation_t is unused here
   );
+  TRACEPOINT(rclcpp_take, static_cast<const void *>(message_out));
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
     return false;
   } else if (RCL_RET_OK != ret) {
