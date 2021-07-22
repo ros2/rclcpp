@@ -152,9 +152,6 @@ public:
    * For example, ```get_logger('abc').get_child('def')``` will return a logger
    * with name `abc.def`.
    *
-   * It is recommended to use a temporary variable to store the return logger
-   * instead of calling it every time.
-   *
    * \param[in] suffix the child logger's suffix
    * \return a logger with the fully-qualified name including the suffix, or
    * \return a dummy logger if this logger is invalid (e.g. because logging is
