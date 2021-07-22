@@ -63,7 +63,40 @@ public:
   void
   set(CallbackT && callback)
   {
-    callback_ = std::forward<CallbackT>(callback);
+    // Workaround Windows issue with std::bind
+    if constexpr (
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT, can't satisfy both cpplint and uncrustify
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else {
+      // the else clause is not needed, but anyways we should only be doing this instead
+      // of all the above workaround ...
+      callback_ = std::forward<CallbackT>(callback);
+    }
   }
 
   template<
@@ -75,7 +108,40 @@ public:
     if (!callback) {
       throw std::invalid_argument("AnyServiceCallback::set(): callback cannot be nullptr");
     }
-    callback_ = std::forward<CallbackT>(callback);
+    // Workaround Windows issue with std::bind
+    if constexpr (
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else {
+      // the else clause is not needed, but anyways we should only be doing this instead
+      // of all the above workaround ...
+      callback_ = std::forward<CallbackT>(callback);
+    }
   }
 
   // template<typename Allocator = std::allocator<typename ServiceT::Response>>
