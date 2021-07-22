@@ -75,7 +75,43 @@ public:
     if (!callback) {
       throw std::invalid_argument("AnyServiceCallback::set(): callback cannot be nullptr");
     }
-    callback_ = std::forward<CallbackT>(callback);
+    // Workaround Windows issue with std::bind
+    if constexpr (
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrCallback
+      >::value)
+    {
+      // one would think that the following works:
+      // callback_.emplace<SharedPtrCallback>(callback);
+      // but it does not for some reason.
+      callback_.emplace<1>(callback);
+    } else if constexpr (
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.emplace<2>(callback);
+    } else if constexpr (
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.emplace<3>(callback);
+    } else if constexpr (
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.emplace<4>(callback);
+    } else {
+      // the else clause is not needed, but anyways we should only be doing this instead
+      // of all the above workaround ...
+      callback_ = std::forward<CallbackT>(callback);
+    }
   }
 
   // template<typename Allocator = std::allocator<typename ServiceT::Response>>
