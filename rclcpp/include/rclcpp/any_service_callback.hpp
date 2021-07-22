@@ -70,9 +70,6 @@ public:
         SharedPtrCallback
       >::value)
     {
-      // one would think that the following works:
-      // callback_.template emplace<SharedPtrCallback>(callback);
-      // but it does not for some reason.
       callback_.template emplace<SharedPtrCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
@@ -118,9 +115,6 @@ public:
         SharedPtrCallback
       >::value)
     {
-      // one would think that the following works:
-      // callback_.template emplace<SharedPtrCallback>(callback);
-      // but it does not for some reason.
       callback_.template emplace<SharedPtrCallback>(callback);
     } else if constexpr (
       rclcpp::function_traits::same_arguments<
