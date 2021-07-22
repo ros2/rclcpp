@@ -128,6 +128,13 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const = 0;
 
+  using CallbackGroupCallback = std::function<void (rclcpp::CallbackGroup::SharedPtr)>;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  callback_groups_for_each(const CallbackGroupCallback & func) = 0;
+
   /// Return the atomic bool which is used to ensure only one executor is used.
   RCLCPP_PUBLIC
   virtual
