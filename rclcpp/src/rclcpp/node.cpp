@@ -482,12 +482,6 @@ Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_ma
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-Node::get_callback_groups() const
-{
-  return node_base_->get_callback_groups();
-}
-
 void
 Node::for_each_callback_group(
   const node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)

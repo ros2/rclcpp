@@ -122,12 +122,6 @@ public:
   bool
   callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) = 0;
 
-  /// Return list of callback groups associated with this node.
-  RCLCPP_PUBLIC
-  virtual
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-  get_callback_groups() const = 0;
-
   using CallbackGroupFunction = std::function<void (rclcpp::CallbackGroup::SharedPtr)>;
 
   /// Iterate over the stored callback groups, calling the given function on each valid one.
