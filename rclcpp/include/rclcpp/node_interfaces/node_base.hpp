@@ -98,10 +98,6 @@ public:
   bool
   callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) override;
 
-  RCLCPP_PUBLIC
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-  get_callback_groups() const override;
-
   /// Iterate over the stored callback groups, calling the given function on each valid one.
   /**
    * This method is called in a thread-safe way, and also makes sure to only call the given

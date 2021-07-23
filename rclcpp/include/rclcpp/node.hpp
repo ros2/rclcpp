@@ -148,11 +148,6 @@ public:
     rclcpp::CallbackGroupType group_type,
     bool automatically_add_to_executor_with_node = true);
 
-  /// Return the list of callback groups in the node.
-  RCLCPP_PUBLIC
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-  get_callback_groups() const;
-
   /// Iterate over the callback groups in the node, calling the given function on each valid one.
   /**
    * This method is called in a thread-safe way, and also makes sure to only call the given

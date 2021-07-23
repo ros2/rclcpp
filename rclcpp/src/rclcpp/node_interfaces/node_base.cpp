@@ -248,12 +248,6 @@ NodeBase::callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group)
   return false;
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-NodeBase::get_callback_groups() const
-{
-  return callback_groups_;
-}
-
 void NodeBase::for_each_callback_group(const CallbackGroupFunction & func)
 {
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
