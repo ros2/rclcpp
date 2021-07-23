@@ -388,6 +388,11 @@ public:
           ++it;
           continue;
         }
+        if (!timer->call()) {
+          // timer was cancelled, skip it.
+          ++it;
+          continue;
+        }
         // Otherwise it is safe to set and return the any_exec
         any_exec.timer = timer;
         any_exec.callback_group = group;
@@ -395,7 +400,7 @@ public:
         timer_handles_.erase(it);
         return;
       }
-      // Else, the service is no longer valid, remove it and continue
+      // Else, the timer is no longer valid, remove it and continue
       it = timer_handles_.erase(it);
     }
   }
