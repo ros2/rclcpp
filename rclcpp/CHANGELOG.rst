@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+12.0.0 (2021-07-26)
+-------------------
 * Remove unsafe get_callback_groups API.
   Callers should change to using for_each_callback_group(), or
   store the callback groups they need internally.
