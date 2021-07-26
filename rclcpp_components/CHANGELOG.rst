@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 11.2.0 (2021-07-21)
 -------------------
 * Deprecate method names that use CamelCase in rclcpp_components. (`#1716 <https://github.com/ros2/rclcpp/issues/1716>`_)

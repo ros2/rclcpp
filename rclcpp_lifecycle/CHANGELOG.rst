@@ -3,6 +3,22 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Remove unsafe get_callback_groups API.
+  Callers should change to using for_each_callback_group(), or
+  store the callback groups they need internally.
+* Add in callback_groups_for_each.
+  The main reason to add this method in is to make accesses to the
+  callback_groups\_ vector thread-safe.  By having a
+  callback_groups_for_each that accepts a std::function, we can
+  just have the callers give us the callback they are interested
+  in, and we can take care of the locking.
+  The rest of this fairly large PR is cleaning up all of the places
+  that use get_callback_groups() to instead use
+  callback_groups_for_each().
+* Contributors: Chris Lalancette
+
 11.2.0 (2021-07-21)
 -------------------
 
