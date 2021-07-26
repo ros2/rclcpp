@@ -15,7 +15,7 @@
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/scope_exit.hpp>
+#include <rcpputils/scope_exit.hpp>
 #include <test_msgs/action/fibonacci.hpp>
 
 #include <gtest/gtest.h>
@@ -1082,7 +1082,7 @@ TEST_F(TestGoalRequestServer, is_ready_rcl_error) {
   ASSERT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 10, 10, 10, 10, 10, 10, rcl_context, allocator));
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
   {
     EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
   });

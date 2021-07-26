@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 
-#include "rclcpp/scope_exit.hpp"
+#include "rcpputils/scope_exit.hpp"
 
 using rclcpp::executors::StaticSingleThreadedExecutor;
 using rclcpp::experimental::ExecutableList;
@@ -43,7 +43,7 @@ StaticSingleThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
   // Set memory_strategy_ and exec_list_ based on weak_nodes_
   // Prepare wait_set_ based on memory_strategy_
@@ -100,7 +100,7 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     // Get executables that are ready now

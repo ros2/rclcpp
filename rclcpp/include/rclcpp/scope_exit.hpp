@@ -19,6 +19,10 @@
 #ifndef RCLCPP__SCOPE_EXIT_HPP_
 #define RCLCPP__SCOPE_EXIT_HPP_
 
+// TODO(christophebedard) remove this header completely in I-turtle
+
+#warning rclcpp/scope_exit.hpp has been deprecated, please use rcpputils/scope_exit.hpp instead
+
 #include <functional>
 
 #include "rclcpp/macros.hpp"

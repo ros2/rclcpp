@@ -19,8 +19,9 @@
 #include <memory>
 #include <vector>
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "rclcpp/utilities.hpp"
-#include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::MultiThreadedExecutor;
 
@@ -47,7 +48,7 @@ MultiThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {

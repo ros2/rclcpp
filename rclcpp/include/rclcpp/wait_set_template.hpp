@@ -20,13 +20,13 @@
 #include <utility>
 
 #include "rcl/wait.h"
+#include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/client.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
@@ -657,7 +657,7 @@ public:
 
     // ensure the ownership of the entities in the wait set is shared for the duration of wait
     this->storage_acquire_ownerships();
-    RCLCPP_SCOPE_EXIT({this->storage_release_ownerships();});
+    RCPPUTILS_SCOPE_EXIT({this->storage_release_ownerships();});
 
     // this method comes from the SynchronizationPolicy
     return this->template sync_wait<WaitResult<WaitSetTemplate>>(

@@ -19,8 +19,8 @@
 #include <vector>
 
 #include "rcl_yaml_param_parser/parser.h"
+#include "rcpputils/scope_exit.hpp"
 
-#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/parameter_map.hpp"
 
 std::map<std::string, rclcpp::ParameterValue>
@@ -47,7 +47,7 @@ rclcpp::detail::resolve_parameter_overrides(
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
     if (params) {
-      auto cleanup_params = make_scope_exit(
+      auto cleanup_params = rcpputils::make_scope_exit(
         [params]() {
           rcl_yaml_node_struct_fini(params);
         });
