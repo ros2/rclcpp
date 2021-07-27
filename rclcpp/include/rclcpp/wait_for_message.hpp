@@ -33,7 +33,8 @@ namespace rclcpp
  * \param[in] subscription shared pointer to a previously initialized subscription.
  * \param[in] context shared pointer to a context to watch for SIGINT requests.
  * \param[in] time_to_wait parameter specifying the timeout before returning.
- * \return true if a message was successfully received, false otherwise.
+ * \return true if a message was successfully received, false if message could not
+ * be obtained or shutdown was triggered asynchronously on the context.
  */
 template<class MsgT, class Rep = int64_t, class Period = std::milli>
 bool wait_for_message(
@@ -80,7 +81,8 @@ bool wait_for_message(
  * \param[in] node the node pointer to initialize the subscription on.
  * \param[in] topic the topic to wait for messages.
  * \param[in] time_to_wait parameter specifying the timeout before returning.
- * \return true if a message was successfully received, false otherwise.
+ * \return true if a message was successfully received, false if message could not
+ * be obtained or shutdown was triggered asynchronously on the context.
  */
 template<class MsgT, class Rep = int64_t, class Period = std::milli>
 bool wait_for_message(
