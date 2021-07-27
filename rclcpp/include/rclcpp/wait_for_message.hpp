@@ -43,13 +43,11 @@ bool wait_for_message(
   std::shared_ptr<rclcpp::Context> context,
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
 {
-  auto shutdown_requested = false;
   auto gc = std::make_shared<rclcpp::GuardCondition>(context);
   auto shutdown_callback_handle = context->add_on_shutdown_callback(
-    [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{gc}, &shutdown_requested]() {
+    [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{gc}]() {
       auto strong_gc = weak_gc.lock();
       if (strong_gc) {
-        shutdown_requested = true;
         strong_gc->trigger();
       }
     });
@@ -61,7 +59,8 @@ bool wait_for_message(
   if (ret.kind() != rclcpp::WaitResultKind::Ready) {
     return false;
   }
-  if (shutdown_requested) {
+
+  if (wait_set.get_rcl_wait_set().guard_conditions[0]) {
     return false;
   }
 
