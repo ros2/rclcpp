@@ -17,12 +17,14 @@
 
 #include <atomic>
 #include <future>
-#include <map>
+#include <unordered_map>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
@@ -178,6 +180,9 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
+  using Request = typename ServiceT::Request;
+  using Response = typename ServiceT::Response;
+
   using SharedRequest = typename ServiceT::Request::SharedPtr;
   using SharedResponse = typename ServiceT::Response::SharedPtr;
 
@@ -187,6 +192,7 @@ public:
   using SharedPromise = std::shared_ptr<Promise>;
   using SharedPromiseWithRequest = std::shared_ptr<PromiseWithRequest>;
 
+  using Future = std::future<SharedResponse>;
   using SharedFuture = std::shared_future<SharedResponse>;
   using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
 
@@ -194,6 +200,54 @@ public:
   using CallbackWithRequestType = std::function<void (SharedFutureWithRequest)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
+
+  class FutureAndRequestId {
+    public:
+      FutureAndRequestId(Future impl, int64_t req_id)
+      : impl_(std::move(impl)), req_id_(req_id)
+      {}
+
+      // implicit convertion to Future by reference for backwards compatibility
+      operator Future&() {return impl_;}
+      // also allow to implicitly convert to a future by value
+      // only for backwards comp
+      [[deprecated("FutureAndRequestId: use take_future() instead of an implicit conversion")]]
+      operator Future() {return impl_;}
+
+      Future
+      take_future() {
+        return impl_; // we're moving the future out
+      }
+
+      int64_t get_request_id() const {return req_id_;}
+
+      // rule of five
+      FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
+      FutureAndRequestId(const FutureAndRequestId & other) = delete;
+      FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
+      FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
+      ~FutureAndRequestId() = default;
+
+      // delegate future like methods to the std::future impl_
+      SharedFuture share() noexcept {return impl_.share();}
+      SharedResponse get() {return impl_.get();}
+      bool valid() const noexcept {return impl_.valid();}
+      void wait() const {return impl_.wait();}
+
+      template<class Rep, class Period>
+      std::future_status wait_for(const std::chrono::duration<Rep,Period> & timeout_duration) const
+      {
+        return impl_.wait_for(timeout_duration);
+      }
+      template<class Clock, class Duration>
+      std::future_status wait_until(const std::chrono::time_point<Clock,Duration> & timeout_time) const
+      {
+        return impl_.wait_until(timeout_time);
+      }
+    private:
+      Future impl_;
+      int64_t req_id_;
+  };
 
   /// Default constructor.
   /**
@@ -292,32 +346,38 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response) override
   {
-    std::unique_lock<std::mutex> lock(pending_requests_mutex_);
-    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
-    int64_t sequence_number = request_header->sequence_number;
-    // TODO(esteve) this should throw instead since it is not expected to happen in the first place
-    if (this->pending_requests_.count(sequence_number) == 0) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "Received invalid sequence number. Ignoring...");
+    auto opt = this->get_and_erase_pending_request(request_header->sequence_number);
+    if (!opt) {
       return;
     }
-    auto tuple = this->pending_requests_[sequence_number];
-    auto call_promise = std::get<0>(tuple);
-    auto callback = std::get<1>(tuple);
-    auto future = std::get<2>(tuple);
-    this->pending_requests_.erase(sequence_number);
-    // Unlock here to allow the service to be called recursively from one of its callbacks.
-    lock.unlock();
-
-    call_promise->set_value(typed_response);
-    callback(future);
+    auto & value = *opt;
+    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(std::move(response));
+    if (std::holds_alternative<Promise>(value)) {
+      auto & promise = std::get<Promise>(value);
+      promise.set_value(std::move(typed_response));
+    } else if (std::holds_alternative<CallbackType>(value)) {
+      Promise promise;
+      promise.set_value(std::move(typed_response));
+      const auto & callback = std::get<CallbackType>(value);
+      callback(promise.get_future().share());
+    } else if (std::holds_alternative<std::pair<CallbackWithRequestType, SharedRequest>>(value)) {
+      PromiseWithRequest promise;
+      const auto & pair = std::get<std::pair<CallbackWithRequestType, SharedRequest>>(value);
+      promise.set_value(std::make_pair(std::move(pair.second), std::move(typed_response)));
+      pair.first(promise.get_future().share());
+    }
   }
 
-  SharedFuture
+  // Future
+  FutureAndRequestId
   async_send_request(SharedRequest request)
   {
-    return async_send_request(request, [](SharedFuture) {});
+    Promise promise;
+    auto future = promise.get_future();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::move(promise));
+    return FutureAndRequestId(std::move(future), req_id);
   }
 
   template<
@@ -329,21 +389,12 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFuture
+  int64_t
   async_send_request(SharedRequest request, CallbackT && cb)
   {
-    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-    int64_t sequence_number;
-    rcl_ret_t ret = rcl_send_request(get_client_handle().get(), request.get(), &sequence_number);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
-    }
-
-    SharedPromise call_promise = std::make_shared<Promise>();
-    SharedFuture f(call_promise->get_future());
-    pending_requests_[sequence_number] =
-      std::make_tuple(call_promise, std::forward<CallbackType>(cb), f);
-    return f;
+    return async_send_request_impl(
+      *request,
+      CallbackType{std::forward<CallbackT>(cb)});
   }
 
   template<
@@ -355,28 +406,70 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFutureWithRequest
+  int64_t
   async_send_request(SharedRequest request, CallbackT && cb)
   {
-    SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
-    SharedFutureWithRequest future_with_request(promise->get_future());
-
-    auto wrapping_cb = [future_with_request, promise, request,
-        cb = std::forward<CallbackWithRequestType>(cb)](SharedFuture future) {
-        auto response = future.get();
-        promise->set_value(std::make_pair(request, response));
-        cb(future_with_request);
-      };
-
-    async_send_request(request, wrapping_cb);
-
-    return future_with_request;
+    auto & req = *request;
+    return async_send_request_impl(
+      req,
+      std::make_pair(CallbackWithRequestType{std::forward<CallbackT>(cb)}, std::move(request)));
   }
 
-private:
+  bool
+  remove_pending_request(int64_t request_id)
+  {
+    std::lock_guard guard(pending_requests_mutex_);
+    return pending_requests_.erase(request_id) != 0u;
+  }
+
+  bool
+  remove_pending_request(const FutureAndRequestId & future)
+  {
+    return this->remove_pending_request(future.get_request_id());
+  }
+
+protected:
+  using PendingRequestsMapValue = std::variant<
+    std::promise<SharedResponse>,
+    CallbackType,
+    std::pair<CallbackWithRequestType, SharedRequest>>;
+
+  RCLCPP_PUBLIC
+  int64_t
+  async_send_request_impl(const Request & request, PendingRequestsMapValue value)
+  {
+    int64_t sequence_number;
+    rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &request, &sequence_number);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
+    }
+    {
+      std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+      pending_requests_.try_emplace(sequence_number, std::move(value));
+    }
+    return sequence_number;
+  }
+
+  RCLCPP_PUBLIC
+  std::optional<PendingRequestsMapValue>
+  get_and_erase_pending_request(int64_t request_number)
+  {
+    std::unique_lock<std::mutex> lock(pending_requests_mutex_);
+    auto it = this->pending_requests_.find(request_number);
+    if (it == this->pending_requests_.end()) {
+      RCUTILS_LOG_DEBUG_NAMED(
+        "rclcpp",
+        "Received invalid sequence number. Ignoring...");
+      return std::nullopt;
+    }
+    auto value = std::move(it->second);
+    this->pending_requests_.erase(request_number);
+    return value;
+  }
+
   RCLCPP_DISABLE_COPY(Client)
 
-  std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
+  std::unordered_map<int64_t, PendingRequestsMapValue> pending_requests_;
   std::mutex pending_requests_mutex_;
 };
 
