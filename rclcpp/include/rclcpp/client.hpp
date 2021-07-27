@@ -19,12 +19,12 @@
 #include <future>
 #include <unordered_map>
 #include <memory>
-#include <optional>
+#include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
-#include <variant>
+#include <variant>  // NOLINT
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
@@ -201,52 +201,86 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
-  class FutureAndRequestId {
-    public:
-      FutureAndRequestId(Future impl, int64_t req_id)
-      : impl_(std::move(impl)), req_id_(req_id)
-      {}
+  /// A convenient Client::Future and request id pair.
+  class FutureAndRequestId
+  {
+public:
+    FutureAndRequestId(Future impl, int64_t req_id)
+    : impl_(std::move(impl)), req_id_(req_id)
+    {}
 
-      // implicit convertion to Future by reference for backwards compatibility
-      operator Future&() {return impl_;}
-      // also allow to implicitly convert to a future by value
-      // only for backwards comp
-      [[deprecated("FutureAndRequestId: use take_future() instead of an implicit conversion")]]
-      operator Future() {return impl_;}
+    /// Allow implicit conversions to `std::future` by reference.
+    // TODO(ivanpauno): Maybe, deprecate this in favor of get_future() (?)
+    operator Future &() {return impl_;}
 
-      Future
-      take_future() {
-        return impl_; // we're moving the future out
-      }
+    /// Deprecated, use take_future() instead.
+    /**
+     * Allow implicit conversions to `std::future` by value.
+     * \deprecated
+     */
+    [[deprecated("FutureAndRequestId: use take_future() instead of an implicit conversion")]]
+    operator Future() {return impl_;}
 
-      int64_t get_request_id() const {return req_id_;}
+    /// Returns the internal `std::future`, moving it out.
+    /**
+     * After calling this method, the internal future gets invalidated.
+     */
+    Future
+    take_future() {return impl_;}
 
-      // rule of five
-      FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
-      FutureAndRequestId(const FutureAndRequestId & other) = delete;
-      FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
-      FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
-      ~FutureAndRequestId() = default;
+    /// Getter for the internal future.
+    Future &
+    get_future() {return impl_;}
 
-      // delegate future like methods to the std::future impl_
-      SharedFuture share() noexcept {return impl_.share();}
-      SharedResponse get() {return impl_.get();}
-      bool valid() const noexcept {return impl_.valid();}
-      void wait() const {return impl_.wait();}
+    /// Getter for the internal future.
+    const Future &
+    get_future() const {return impl_;}
 
-      template<class Rep, class Period>
-      std::future_status wait_for(const std::chrono::duration<Rep,Period> & timeout_duration) const
-      {
-        return impl_.wait_for(timeout_duration);
-      }
-      template<class Clock, class Duration>
-      std::future_status wait_until(const std::chrono::time_point<Clock,Duration> & timeout_time) const
-      {
-        return impl_.wait_until(timeout_time);
-      }
-    private:
-      Future impl_;
-      int64_t req_id_;
+    /// Returns the request id associated with this future.
+    int64_t get_request_id() const {return req_id_;}
+
+    // delegate future like methods in the std::future impl_
+
+    /// See std::future::share().
+    SharedFuture share() noexcept {return impl_.share();}
+    /// See std::future::get().
+    SharedResponse get() {return impl_.get();}
+    /// See std::future::valid().
+    bool valid() const noexcept {return impl_.valid();}
+    /// See std::future::wait().
+    void wait() const {return impl_.wait();}
+    /// See std::future::wait_for().
+    template<class Rep, class Period>
+    std::future_status wait_for(
+      const std::chrono::duration<Rep, Period> & timeout_duration) const
+    {
+      return impl_.wait_for(timeout_duration);
+    }
+    /// See std::future::wait_until().
+    template<class Clock, class Duration>
+    std::future_status wait_until(
+      const std::chrono::time_point<Clock, Duration> & timeout_time) const
+    {
+      return impl_.wait_until(timeout_time);
+    }
+
+    // Rule of five, we could use the rule of zero here, but better be explicit as some of the
+    // methods are deleted.
+
+    /// Move constructor.
+    FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
+    /// Deleted copy constructor, each instance is a unique owner of the future.
+    FutureAndRequestId(const FutureAndRequestId & other) = delete;
+    /// Move assignment.
+    FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
+    /// Deleted copy assignment, each instance is a unique owner of the future.
+    FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
+    /// Destructor.
+    ~FutureAndRequestId() = default;
+
+private:
+    Future impl_;
+    int64_t req_id_;
   };
 
   /// Default constructor.
@@ -351,7 +385,8 @@ public:
       return;
     }
     auto & value = *opt;
-    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(std::move(response));
+    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(
+      std::move(response));
     if (std::holds_alternative<Promise>(value)) {
       auto & promise = std::get<Promise>(value);
       promise.set_value(std::move(typed_response));
@@ -368,7 +403,34 @@ public:
     }
   }
 
-  // Future
+  /// Send a request to the service server.
+  /**
+   * This method returns a `FutureAndRequestId` instance
+   * that can be passed to Executor::spin_until_future_complete() to
+   * wait until it has been completed.
+   *
+   * If the future never completes,
+   * e.g. the call to Executor::spin_until_future_complete() times out,
+   * Client::remove_pending_request() must be called to clean the client internal state.
+   * Not doing so will make the `Client` instance to use more memory each time a response is not
+   * received from the service server.
+   *
+   * ```cpp
+   * auto future = client->async_send_request(my_request);
+   * if (
+   *   rclcpp::FutureReturnCode::TIMEOUT ==
+   *   executor->spin_until_future_complete(future, timeout))
+   * {
+   *   client->remove_pending_request(future);
+   *   // handle timeout
+   * } else {
+   *   handle_response(future.get());
+   * }
+   * ```
+   *
+   * \param[in] request request to be send.
+   * \return a FutureAndRequestId instance.
+   */
   FutureAndRequestId
   async_send_request(SharedRequest request)
   {
@@ -380,6 +442,21 @@ public:
     return FutureAndRequestId(std::move(future), req_id);
   }
 
+  /// Send a request to the service server and schedule a callback in the executor.
+  /**
+   * Similar to the previous overload, but a callback will automatically be called when a response is get.
+   *
+   * If the callback is never called, because we never got a reply for the service server, remove_pending_request()
+   * has to be called with the returned request id or prune_pending_requests().
+   * Not doing so will make the `Client` instance to use more memory each time a response is not
+   * received from the service server.
+   * In this case, it's convenient to setup a timer to cleanup the pending requests.
+   *
+   * \param[in] request request to be send.
+   * \param[in] cb callback that will be called when we get a response for this request.
+   * \return the request id representing the request just sent.
+   */
+  // TODO(ivanpauno): Link to example that shows how to cleanup requests.
   template<
     typename CallbackT,
     typename std::enable_if<
@@ -397,6 +474,16 @@ public:
       CallbackType{std::forward<CallbackT>(cb)});
   }
 
+  /// Send a request to the service server and schedule a callback in the executor.
+  /**
+   * Similar to the previous method, but you can get both the request and response in the callback.
+   *
+   * \param[in] request request to be send.
+   * \param[in] cb callback that will be called when we get a response for this request.
+   * \return the request id representing the request just sent.
+   */
+  // TODO(ivanpauno): Deprecate this.
+  // If someone wants the request they can capture it in the lambda.
   template<
     typename CallbackT,
     typename std::enable_if<
@@ -415,6 +502,17 @@ public:
       std::make_pair(CallbackWithRequestType{std::forward<CallbackT>(cb)}, std::move(request)));
   }
 
+  /// Cleanup a pending request.
+  /**
+   * This notifies the client that we have waited long enough for a response from the server
+   * to come, we have given up and we are not waiting for a response anymore.
+   *
+   * Not calling this will make the client start using more memory for each request
+   * that never got a reply from the server.
+   *
+   * \param[in] request_id request id returned by async_send_request().
+   * \return true when a pending request was removed, false if not (e.g. a response was received).
+   */
   bool
   remove_pending_request(int64_t request_id)
   {
@@ -422,10 +520,29 @@ public:
     return pending_requests_.erase(request_id) != 0u;
   }
 
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `Client::remove_pending_request(this, future.get_request_id())`.
+   */
   bool
   remove_pending_request(const FutureAndRequestId & future)
   {
     return this->remove_pending_request(future.get_request_id());
+  }
+
+  /// Clean all pending requests.
+  /**
+   * \return number of pending requests that were removed.
+   */
+  size_t
+  prune_requests()
+  {
+    std::lock_guard guard(pending_requests_mutex_);
+    auto ret = pending_requests_.size();
+    pending_requests_.clear();
+    return ret;
   }
 
 protected:
