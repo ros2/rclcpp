@@ -12,6 +12,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   LIBRARY_NAME ${PROJECT_NAME}
   SKIP_INSTALL
 )
+# Need the target name to depend on generated interface libraries
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_test_msgs" "rosidl_typesupport_cpp")
 
 ament_add_gtest(
   test_allocator_common
@@ -374,8 +376,10 @@ if(TARGET test_publisher_with_type_adapter)
     "rosidl_typesupport_cpp"
     "test_msgs"
   )
-  rosidl_target_interfaces(test_publisher_with_type_adapter ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
-  target_link_libraries(test_publisher_with_type_adapter ${PROJECT_NAME} mimick)
+  target_link_libraries(test_publisher_with_type_adapter
+    ${PROJECT_NAME}
+    mimick
+    ${cpp_typesupport_target})
 endif()
 
 ament_add_gtest(test_subscription_with_type_adapter test_subscription_with_type_adapter.cpp
@@ -390,8 +394,10 @@ if(TARGET test_subscription_with_type_adapter)
     "rosidl_typesupport_cpp"
     "test_msgs"
   )
-  rosidl_target_interfaces(test_subscription_with_type_adapter ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
-  target_link_libraries(test_subscription_with_type_adapter ${PROJECT_NAME} mimick)
+  target_link_libraries(test_subscription_with_type_adapter
+    ${PROJECT_NAME}
+    mimick
+    ${cpp_typesupport_target})
 endif()
 
 ament_add_gtest(test_publisher_subscription_count_api test_publisher_subscription_count_api.cpp)
@@ -673,8 +679,9 @@ if(TARGET test_subscription_topic_statistics)
     "rosidl_typesupport_cpp"
     "statistics_msgs"
     "test_msgs")
-  rosidl_target_interfaces(test_subscription_topic_statistics ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
-  target_link_libraries(test_subscription_topic_statistics ${PROJECT_NAME})
+  target_link_libraries(test_subscription_topic_statistics
+    ${PROJECT_NAME}
+    ${cpp_typesupport_target})
 endif()
 
 ament_add_gtest(test_subscription_options test_subscription_options.cpp)
