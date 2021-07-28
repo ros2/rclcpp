@@ -599,6 +599,13 @@ if(TARGET test_utilities)
   target_link_libraries(test_utilities ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_wait_for_message test_wait_for_message.cpp)
+if(TARGET test_wait_for_message)
+  ament_target_dependencies(test_wait_for_message
+    "test_msgs")
+  target_link_libraries(test_wait_for_message ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_interface_traits test_interface_traits.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_interface_traits)
