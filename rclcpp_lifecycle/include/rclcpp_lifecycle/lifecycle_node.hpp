@@ -193,7 +193,7 @@ public:
     bool automatically_add_to_executor_with_node = true);
 
   /// Iterate over the callback groups in the node, calling func on each valid one.
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   void
   for_each_callback_group(
     const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
