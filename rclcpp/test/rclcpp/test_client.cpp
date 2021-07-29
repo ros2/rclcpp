@@ -216,7 +216,7 @@ protected:
         received_response = true;
       };
 
-    auto req_id = client->async_send_request(request, std::move(callback));
+    auto future = client->async_send_request(request, std::move(callback));
 
     auto start = std::chrono::steady_clock::now();
     while (!received_response &&
@@ -227,9 +227,6 @@ protected:
 
     if (!received_response) {
       return ::testing::AssertionFailure() << "Waiting for response timed out";
-    }
-    if (client->remove_pending_request(req_id)) {
-      return ::testing::AssertionFailure() << "Should not be able to remove a finished request";
     }
 
     return request_result;
@@ -259,7 +256,7 @@ TEST_F(TestClientWithServer, async_send_request_callback_with_request) {
       EXPECT_NE(nullptr, request_response_pair.second);
       received_response = true;
     };
-  auto req_id = client->async_send_request(request, std::move(callback));
+  auto future = client->async_send_request(request, std::move(callback));
 
   auto start = std::chrono::steady_clock::now();
   while (!received_response &&
@@ -268,15 +265,6 @@ TEST_F(TestClientWithServer, async_send_request_callback_with_request) {
     rclcpp::spin_some(node);
   }
   EXPECT_TRUE(received_response);
-  EXPECT_FALSE(client->remove_pending_request(req_id));
-}
-
-TEST_F(TestClientWithServer, test_client_remove_pending_request) {
-  auto client = node->create_client<test_msgs::srv::Empty>("no_service_server_available_here");
-  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
-  auto future = client->async_send_request(request);
-
-  EXPECT_TRUE(client->remove_pending_request(future));
 }
 
 TEST_F(TestClientWithServer, async_send_request_rcl_send_request_error) {
