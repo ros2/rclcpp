@@ -444,7 +444,7 @@ private:
 
   /// Send a request to the service server and schedule a callback in the executor.
   /**
-   * Similar to the previous overload, but a callback will automatically be called when a response is get.
+   * Similar to the previous overload, but a callback will automatically be called when a response is received.
    *
    * If the callback is never called, because we never got a reply for the service server, remove_pending_request()
    * has to be called with the returned request id or prune_pending_requests().
