@@ -49,19 +49,19 @@ namespace rclcpp
 
 namespace detail
 {
-template<template<typename> typename FutureT, typename T>
+template<typename FutureT>
 struct FutureAndRequestId
 {
-  FutureT<T> future;
+  FutureT future;
   int64_t request_id;
 
-  FutureAndRequestId(FutureT<T> impl, int64_t req_id)
+  FutureAndRequestId(FutureT impl, int64_t req_id)
   : future(std::move(impl)), request_id(req_id)
   {}
 
   /// Allow implicit conversions to `std::future` by reference.
   // TODO(ivanpauno): Maybe, deprecate this in favor of get_future() (?)
-  operator FutureT<T>&() {return this->future;}
+  operator FutureT&() {return this->future;}
 
   /// Deprecated, use the `future` member variable instead.
   /**
@@ -69,12 +69,12 @@ struct FutureAndRequestId
    * \deprecated
    */
   [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
-  operator FutureT<T>() {return this->future;}
+  operator FutureT() {return this->future;}
 
   // delegate future like methods in the std::future impl_
 
   /// See std::future::get().
-  T get() {return this->future.get();}
+  auto get() {return this->future.get();}
   /// See std::future::valid().
   bool valid() const noexcept {return this->future.valid();}
   /// See std::future::wait().
@@ -273,9 +273,9 @@ public:
    * All the other methods are equivalent to the ones std::future provides.
    */
   struct FutureAndRequestId
-    : detail::FutureAndRequestId<std::future, SharedResponse>
+    : detail::FutureAndRequestId<std::future<SharedResponse>>
   {
-    using detail::FutureAndRequestId<std::future, SharedResponse>::FutureAndRequestId;
+    using detail::FutureAndRequestId<std::future<SharedResponse>>::FutureAndRequestId;
 
     /// Deprecated, use `.future.share()` instead.
     /**
@@ -301,9 +301,9 @@ public:
    * All the other methods are equivalent to the ones std::shared_future provides.
    */
   struct SharedFutureAndRequestId
-    : detail::FutureAndRequestId<std::shared_future, SharedResponse>
+    : detail::FutureAndRequestId<std::shared_future<SharedResponse>>
   {
-    using detail::FutureAndRequestId<std::shared_future, SharedResponse>::FutureAndRequestId;
+    using detail::FutureAndRequestId<std::shared_future<SharedResponse>>::FutureAndRequestId;
   };
 
   /// A convenient Client::SharedFutureWithRequest and request id pair.
@@ -315,11 +315,10 @@ public:
    * All the other methods are equivalent to the ones std::shared_future provides.
    */
   struct SharedFutureWithRequestAndRequestId
-    : detail::FutureAndRequestId<std::shared_future, std::pair<SharedRequest, SharedResponse>>
+    : detail::FutureAndRequestId<std::shared_future<std::pair<SharedRequest, SharedResponse>>>
   {
     using detail::FutureAndRequestId<
-      std::shared_future,
-      std::pair<SharedRequest, SharedResponse>
+      std::shared_future<std::pair<SharedRequest, SharedResponse>>
     >::FutureAndRequestId;
   };
 
@@ -444,7 +443,7 @@ public:
       auto & future = std::get<SharedFutureWithRequest>(inner);
       auto & request = std::get<SharedRequest>(inner);
       promise.set_value(std::make_pair(std::move(request), std::move(typed_response)));
-      callback(future);
+      callback(std::move(future));
     }
   }
 
