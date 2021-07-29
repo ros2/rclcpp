@@ -651,4 +651,12 @@ LifecycleNode::add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer)
   impl_->add_timer_handle(timer);
 }
 
+void
+LifecycleNode::for_each_callback_group(
+    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
+{
+  auto node_base = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(node_base_);
+  node_base->for_each_callback_group(func);
+}
+
 }  // namespace rclcpp_lifecycle
