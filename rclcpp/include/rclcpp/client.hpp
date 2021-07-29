@@ -47,6 +47,69 @@
 namespace rclcpp
 {
 
+namespace detail
+{
+template<template<typename> typename FutureT, typename T>
+struct FutureAndRequestId
+{
+  FutureT<T> future;
+  int64_t request_id;
+
+  FutureAndRequestId(FutureT<T> impl, int64_t req_id)
+  : future(std::move(impl)), request_id(req_id)
+  {}
+
+  /// Allow implicit conversions to `std::future` by reference.
+  // TODO(ivanpauno): Maybe, deprecate this in favor of get_future() (?)
+  operator FutureT<T>&() {return this->future;}
+
+  /// Deprecated, use the `future` member variable instead.
+  /**
+   * Allow implicit conversions to `std::future` by value.
+   * \deprecated
+   */
+  [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
+  operator FutureT<T>() {return this->future;}
+
+  // delegate future like methods in the std::future impl_
+
+  /// See std::future::get().
+  T get() {return this->future.get();}
+  /// See std::future::valid().
+  bool valid() const noexcept {return this->future.valid();}
+  /// See std::future::wait().
+  void wait() const {return this->future.wait();}
+  /// See std::future::wait_for().
+  template<class Rep, class Period>
+  std::future_status wait_for(
+    const std::chrono::duration<Rep, Period> & timeout_duration) const
+  {
+    return this->future.wait_for(timeout_duration);
+  }
+  /// See std::future::wait_until().
+  template<class Clock, class Duration>
+  std::future_status wait_until(
+    const std::chrono::time_point<Clock, Duration> & timeout_time) const
+  {
+    return this->future.wait_until(timeout_time);
+  }
+
+  // Rule of five, we could use the rule of zero here, but better be explicit as some of the
+  // methods are deleted.
+
+  /// Move constructor.
+  FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
+  /// Deleted copy constructor, each instance is a unique owner of the future.
+  FutureAndRequestId(const FutureAndRequestId & other) = delete;
+  /// Move assignment.
+  FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
+  /// Deleted copy assignment, each instance is a unique owner of the future.
+  FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
+  /// Destructor.
+  ~FutureAndRequestId() = default;
+};
+}  // namespace detail
+
 namespace node_interfaces
 {
 class NodeBaseInterface;
@@ -202,85 +265,62 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
   /// A convenient Client::Future and request id pair.
-  class FutureAndRequestId
+  /**
+   * Public members:
+   * - future: a std::future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::future provides.
+   */
+  struct FutureAndRequestId
+    : detail::FutureAndRequestId<std::future, SharedResponse>
   {
-public:
-    FutureAndRequestId(Future impl, int64_t req_id)
-    : impl_(std::move(impl)), req_id_(req_id)
-    {}
+    using detail::FutureAndRequestId<std::future, SharedResponse>::FutureAndRequestId;
 
-    /// Allow implicit conversions to `std::future` by reference.
-    // TODO(ivanpauno): Maybe, deprecate this in favor of get_future() (?)
-    operator Future &() {return impl_;}
-
-    /// Deprecated, use take_future() instead.
+    /// Deprecated, use `.future.share()` instead.
     /**
-     * Allow implicit conversions to `std::future` by value.
+     * Allow implicit conversions to `std::shared_future` by value.
      * \deprecated
      */
-    [[deprecated("FutureAndRequestId: use take_future() instead of an implicit conversion")]]
-    operator Future() {return impl_;}
-
-    /// Returns the internal `std::future`, moving it out.
-    /**
-     * After calling this method, the internal future gets invalidated.
-     */
-    Future
-    take_future() {return impl_;}
-
-    /// Getter for the internal future.
-    Future &
-    get_future() {return impl_;}
-
-    /// Getter for the internal future.
-    const Future &
-    get_future() const {return impl_;}
-
-    /// Returns the request id associated with this future.
-    int64_t get_request_id() const {return req_id_;}
+    [[deprecated(
+      "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
+    operator SharedFuture() {return this->future.share();}
 
     // delegate future like methods in the std::future impl_
 
     /// See std::future::share().
-    SharedFuture share() noexcept {return impl_.share();}
-    /// See std::future::get().
-    SharedResponse get() {return impl_.get();}
-    /// See std::future::valid().
-    bool valid() const noexcept {return impl_.valid();}
-    /// See std::future::wait().
-    void wait() const {return impl_.wait();}
-    /// See std::future::wait_for().
-    template<class Rep, class Period>
-    std::future_status wait_for(
-      const std::chrono::duration<Rep, Period> & timeout_duration) const
-    {
-      return impl_.wait_for(timeout_duration);
-    }
-    /// See std::future::wait_until().
-    template<class Clock, class Duration>
-    std::future_status wait_until(
-      const std::chrono::time_point<Clock, Duration> & timeout_time) const
-    {
-      return impl_.wait_until(timeout_time);
-    }
+    SharedFuture share() noexcept {return this->future.share();}
+  };
 
-    // Rule of five, we could use the rule of zero here, but better be explicit as some of the
-    // methods are deleted.
+  /// A convenient Client::SharedFuture and request id pair.
+  /**
+   * Public members:
+   * - future: a std::shared_future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::shared_future provides.
+   */
+  struct SharedFutureAndRequestId
+    : detail::FutureAndRequestId<std::shared_future, SharedResponse>
+  {
+    using detail::FutureAndRequestId<std::shared_future, SharedResponse>::FutureAndRequestId;
+  };
 
-    /// Move constructor.
-    FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
-    /// Deleted copy constructor, each instance is a unique owner of the future.
-    FutureAndRequestId(const FutureAndRequestId & other) = delete;
-    /// Move assignment.
-    FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
-    /// Deleted copy assignment, each instance is a unique owner of the future.
-    FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
-    /// Destructor.
-    ~FutureAndRequestId() = default;
-
-private:
-    Future impl_;
-    int64_t req_id_;
+  /// A convenient Client::SharedFutureWithRequest and request id pair.
+  /**
+   * Public members:
+   * - future: a std::shared_future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::shared_future provides.
+   */
+  struct SharedFutureWithRequestAndRequestId
+    : detail::FutureAndRequestId<std::shared_future, std::pair<SharedRequest, SharedResponse>>
+  {
+    using detail::FutureAndRequestId<
+      std::shared_future,
+      std::pair<SharedRequest, SharedResponse>
+    >::FutureAndRequestId;
   };
 
   /// Default constructor.
@@ -390,16 +430,21 @@ private:
     if (std::holds_alternative<Promise>(value)) {
       auto & promise = std::get<Promise>(value);
       promise.set_value(std::move(typed_response));
-    } else if (std::holds_alternative<CallbackType>(value)) {
-      Promise promise;
+    } else if (std::holds_alternative<CallbackTypeValueVariant>(value)) {
+      auto & inner = std::get<CallbackTypeValueVariant>(value);
+      const auto & callback = std::get<CallbackType>(inner);
+      auto & promise = std::get<Promise>(inner);
+      auto & future = std::get<SharedFuture>(inner);
       promise.set_value(std::move(typed_response));
-      const auto & callback = std::get<CallbackType>(value);
-      callback(promise.get_future().share());
-    } else if (std::holds_alternative<std::pair<CallbackWithRequestType, SharedRequest>>(value)) {
-      PromiseWithRequest promise;
-      const auto & pair = std::get<std::pair<CallbackWithRequestType, SharedRequest>>(value);
-      promise.set_value(std::make_pair(std::move(pair.second), std::move(typed_response)));
-      pair.first(promise.get_future().share());
+      callback(std::move(future));
+    } else if (std::holds_alternative<CallbackWithRequestTypeValueVariant>(value)) {
+      auto & inner = std::get<CallbackWithRequestTypeValueVariant>(value);
+      const auto & callback = std::get<CallbackWithRequestType>(inner);
+      auto & promise = std::get<PromiseWithRequest>(inner);
+      auto & future = std::get<SharedFutureWithRequest>(inner);
+      auto & request = std::get<SharedRequest>(inner);
+      promise.set_value(std::make_pair(std::move(request), std::move(typed_response)));
+      callback(future);
     }
   }
 
@@ -466,12 +511,18 @@ private:
       >::value
     >::type * = nullptr
   >
-  int64_t
+  SharedFutureAndRequestId
   async_send_request(SharedRequest request, CallbackT && cb)
   {
-    return async_send_request_impl(
+    Promise promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
       *request,
-      CallbackType{std::forward<CallbackT>(cb)});
+      std::make_tuple(
+        CallbackType{std::forward<CallbackT>(cb)},
+        shared_future,
+        std::move(promise)));
+    return SharedFutureAndRequestId{std::move(shared_future), req_id};
   }
 
   /// Send a request to the service server and schedule a callback in the executor.
@@ -493,13 +544,20 @@ private:
       >::value
     >::type * = nullptr
   >
-  int64_t
+  SharedFutureWithRequestAndRequestId
   async_send_request(SharedRequest request, CallbackT && cb)
   {
     auto & req = *request;
-    return async_send_request_impl(
+    PromiseWithRequest promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
       req,
-      std::make_pair(CallbackWithRequestType{std::forward<CallbackT>(cb)}, std::move(request)));
+      std::make_tuple(
+        CallbackWithRequestType{std::forward<CallbackT>(cb)},
+        std::move(request),
+        shared_future,
+        std::move(promise)));
+    return SharedFutureWithRequestAndRequestId{std::move(shared_future), req_id};
   }
 
   /// Cleanup a pending request.
@@ -529,7 +587,19 @@ private:
   bool
   remove_pending_request(const FutureAndRequestId & future)
   {
-    return this->remove_pending_request(future.get_request_id());
+    return this->remove_pending_request(future.request_id);
+  }
+
+  bool
+  remove_pending_request(const SharedFutureAndRequestId & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  bool
+  remove_pending_request(const SharedFutureWithRequestAndRequestId & future)
+  {
+    return this->remove_pending_request(future.request_id);
   }
 
   /// Clean all pending requests.
@@ -537,7 +607,7 @@ private:
    * \return number of pending requests that were removed.
    */
   size_t
-  prune_requests()
+  prune_pending_requests()
   {
     std::lock_guard guard(pending_requests_mutex_);
     auto ret = pending_requests_.size();
@@ -546,10 +616,14 @@ private:
   }
 
 protected:
+  using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
+  using CallbackWithRequestTypeValueVariant = std::tuple<
+    CallbackWithRequestType, SharedRequest, SharedFutureWithRequest, PromiseWithRequest>;
+
   using PendingRequestsMapValue = std::variant<
     std::promise<SharedResponse>,
-    CallbackType,
-    std::pair<CallbackWithRequestType, SharedRequest>>;
+    CallbackTypeValueVariant,
+    CallbackWithRequestTypeValueVariant>;
 
   RCLCPP_PUBLIC
   int64_t
