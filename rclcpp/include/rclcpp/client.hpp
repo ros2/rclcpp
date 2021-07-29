@@ -448,7 +448,7 @@ private:
    *
    * If the callback is never called, because we never got a reply for the service server, remove_pending_request()
    * has to be called with the returned request id or prune_pending_requests().
-   * Not doing so will make the `Client` instance to use more memory each time a response is not
+   * Not doing so will make the `Client` instance use more memory each time a response is not
    * received from the service server.
    * In this case, it's convenient to setup a timer to cleanup the pending requests.
    *
