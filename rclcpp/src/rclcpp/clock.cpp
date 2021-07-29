@@ -14,10 +14,13 @@
 
 #include "rclcpp/clock.hpp"
 
+#include <condition_variable>
 #include <memory>
 #include <thread>
 
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rcutils/logging_macros.h"
 
@@ -47,6 +50,8 @@ public:
   rcl_clock_t rcl_clock_;
   rcl_allocator_t allocator_;
   std::mutex clock_mutex_;
+  std::condition_variable cv_;
+  rclcpp::OnShutdownCallbackHandle shutdown_cb_;
 };
 
 JumpHandler::JumpHandler(
@@ -59,9 +64,18 @@ JumpHandler::JumpHandler(
 {}
 
 Clock::Clock(rcl_clock_type_t clock_type)
-: impl_(new Clock::Impl(clock_type)) {}
+: impl_(new Clock::Impl(clock_type))
+{
+  impl_->shutdown_cb_ = rclcpp::contexts::get_global_default_context()->add_on_shutdown_callback(
+    [this]() {
+      impl_->cv_.notify_all();
+    });
+}
 
-Clock::~Clock() {}
+Clock::~Clock()
+{
+  rclcpp::contexts::get_global_default_context()->remove_on_shutdown_callback(impl_->shutdown_cb_);
+}
 
 Time
 Clock::now()
@@ -74,6 +88,80 @@ Clock::now()
   }
 
   return now;
+}
+
+bool
+Clock::sleep_until(Time until)
+{
+  const auto this_clock_type = get_clock_type();
+  if (until.get_clock_type() != this_clock_type) {
+    RCUTILS_LOG_ERROR("sleep_until Time clock type does not match this clock's type.");
+    return false;
+  }
+
+  if (this_clock_type == RCL_STEADY_TIME) {
+    auto steady_time = std::chrono::steady_clock::time_point(
+      std::chrono::nanoseconds(until.nanoseconds()));
+
+    // loop over spurious wakeups but notice shutdown
+    std::unique_lock lock(impl_->clock_mutex_);
+    while (now() < until) {
+      if (!rclcpp::ok()) {
+        return false;
+      }
+      impl_->cv_.wait_until(lock, steady_time);
+    }
+  } else if (this_clock_type == RCL_SYSTEM_TIME) {
+    auto system_time = std::chrono::system_clock::time_point(
+      std::chrono::nanoseconds(until.nanoseconds()));
+
+    // loop over spurious wakeups but notice shutdown
+    std::unique_lock lock(impl_->clock_mutex_);
+    while (now() < until) {
+      if (!rclcpp::ok()) {
+        return false;
+      }
+      impl_->cv_.wait_until(lock, system_time);
+    }
+  } else if (this_clock_type == RCL_ROS_TIME) {
+    // Install jump handler for any amount of time change,
+    // to check if time has been reached on each new sample
+    rcl_jump_threshold_t threshold;
+    threshold.on_clock_change = true;
+    threshold.min_backward.nanoseconds = 0;
+    threshold.min_forward.nanoseconds = 0;
+    auto clock_handler = create_jump_callback(
+      []() {},
+      [this](const rcl_time_jump_t &) {impl_->cv_.notify_all();},
+      threshold);
+
+    if (!ros_time_is_active()) {
+      auto system_time = std::chrono::system_clock::time_point(
+        std::chrono::nanoseconds(until.nanoseconds()));
+
+      // loop over spurious wakeups but notice shutdown or time source change
+      std::unique_lock lock(impl_->clock_mutex_);
+      while (now() < until) {
+        if (!rclcpp::ok() || ros_time_is_active()) {
+          return false;
+        }
+        impl_->cv_.wait_until(lock, system_time);
+      }
+    } else {
+      // RCL_ROS_TIME with ros_time_is_active.
+      // Just wait without "until" because installed
+      // jump callbacks wake the cv on every new sample.
+      std::unique_lock lock(impl_->clock_mutex_);
+      while (now() < until) {
+        if (!rclcpp::ok() || !ros_time_is_active()) {
+          return false;
+        }
+        impl_->cv_.wait(lock);
+      }
+    }
+  }
+
+  return now() >= until;
 }
 
 bool
