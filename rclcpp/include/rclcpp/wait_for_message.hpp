@@ -44,7 +44,7 @@ bool wait_for_message(
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
 {
   auto gc = std::make_shared<rclcpp::GuardCondition>(context);
-  auto shutdown_callback_handle = context->on_shutdown(
+  auto shutdown_callback = context->on_shutdown(
     [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{gc}]() {
       auto strong_gc = weak_gc.lock();
       if (strong_gc) {
