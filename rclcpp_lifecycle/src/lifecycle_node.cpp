@@ -126,7 +126,18 @@ LifecycleNode::LifecycleNode(
 }
 
 LifecycleNode::~LifecycleNode()
-{}
+{
+  // release sub-interfaces in an order that allows them to consult with node_base during tear-down
+  node_waitables_.reset();
+  node_time_source_.reset();
+  node_parameters_.reset();
+  node_clock_.reset();
+  node_services_.reset();
+  node_topics_.reset();
+  node_timers_.reset();
+  node_logging_.reset();
+  node_graph_.reset();
+}
 
 const char *
 LifecycleNode::get_name() const

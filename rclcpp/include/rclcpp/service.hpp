@@ -180,7 +180,7 @@ public:
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
     // rcl does the static memory allocation here
     service_handle_ = std::shared_ptr<rcl_service_t>(
-      new rcl_service_t, [weak_node_handle](rcl_service_t * service)
+      new rcl_service_t, [weak_node_handle, service_name](rcl_service_t * service)
       {
         auto handle = weak_node_handle.lock();
         if (handle) {
@@ -192,10 +192,10 @@ public:
             rcl_reset_error();
           }
         } else {
-          RCLCPP_ERROR(
+          RCLCPP_ERROR_STREAM(
             rclcpp::get_logger("rclcpp"),
-            "Error in destruction of rcl service handle: "
-            "the Node Handle was destructed too early. You will leak memory");
+            "Error in destruction of rcl service handle " << service_name <<
+              ": the Node Handle was destructed too early. You will leak memory");
         }
         delete service;
       });
