@@ -2589,6 +2589,49 @@ TEST_F(TestNode, declare_parameter_with_vector) {
   }
 }
 
+// test declare parameter templates with fixed length integers
+TEST_F(TestNode, declare_parameter_fixed_len_integer_templates) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_fixed_len_integer_templates"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // declare parameter and then get types to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+    auto name5 = "parameter"_unq;
+    auto name6 = "parameter"_unq;
+    auto name7 = "parameter"_unq;
+    auto name8 = "parameter"_unq;
+
+    node->declare_parameter<int8_t>(name1, 5);
+    node->declare_parameter<uint8_t>(name2, 5);
+    node->declare_parameter<int16_t>(name3, 5);
+    node->declare_parameter<uint16_t>(name4, 5);
+    node->declare_parameter<int32_t>(name5, 5);
+    node->declare_parameter<uint32_t>(name6, 5);
+    node->declare_parameter<int64_t>(name7, 5);
+    node->declare_parameter<uint64_t>(name8, 5);
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+    EXPECT_TRUE(node->has_parameter(name4));
+    EXPECT_TRUE(node->has_parameter(name5));
+    EXPECT_TRUE(node->has_parameter(name6));
+    EXPECT_TRUE(node->has_parameter(name7));
+    EXPECT_TRUE(node->has_parameter(name8));
+
+    auto results = node->get_parameter_types({name1, name2, name3, name4, name5, name6, name7, name8});
+    EXPECT_EQ(results.size(), 8u);
+    for(const auto& item_type: results)
+    {
+      EXPECT_EQ(item_type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    }
+  }
+}
+
 void expect_qos_profile_eq(
   const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
 {
