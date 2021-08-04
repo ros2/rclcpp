@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "rcpputils/scope_exit.hpp"
