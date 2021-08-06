@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.12)
 
 project(rclcpp)
 
@@ -109,6 +109,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/waitable.cpp
 )
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 # "watch" template for changes
 configure_file(
   "resource/logging.hpp.em"
@@ -122,7 +124,7 @@ set(python_code_logging
 string(REPLACE ";" "$<SEMICOLON>" python_code_logging "${python_code_logging}")
 add_custom_command(OUTPUT include/rclcpp/logging.hpp
   COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
-  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code_logging}"
+  COMMAND Python3::Interpreter ARGS -c "${python_code_logging}"
   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
   COMMENT "Expanding logging.hpp.em"
   VERBATIM
@@ -146,7 +148,7 @@ foreach(interface_file ${interface_files})
   string(REPLACE ";" "$<SEMICOLON>" python_${interface_name}_traits "${python_${interface_name}_traits}")
   add_custom_command(OUTPUT include/rclcpp/node_interfaces/${interface_name}_traits.hpp
     COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
-    COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_${interface_name}_traits}"
+    COMMAND Python3::Interpreter ARGS -c "${python_${interface_name}_traits}"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${interface_name}_traits.hpp.em.watch"
     COMMENT "Expanding interface_traits.hpp.em into ${interface_name}_traits.hpp"
     VERBATIM
@@ -166,7 +168,7 @@ foreach(interface_file ${interface_files})
   string(REPLACE ";" "$<SEMICOLON>" python_get_${interface_name} "${python_get_${interface_name}}")
   add_custom_command(OUTPUT include/rclcpp/node_interfaces/get_${interface_name}.hpp
     COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
-    COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_get_${interface_name}}"
+    COMMAND Python3::Interpreter ARGS -c "${python_get_${interface_name}}"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/get_${interface_name}.hpp.em.watch"
     COMMENT "Expanding get_interface.hpp.em into get_${interface_file}.hpp"
     VERBATIM

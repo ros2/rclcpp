@@ -11,6 +11,7 @@
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
+  <buildtool_depend>python3</buildtool_depend>
 
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>builtin_interfaces</build_depend>
