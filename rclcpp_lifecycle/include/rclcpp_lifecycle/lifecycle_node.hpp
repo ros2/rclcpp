@@ -211,7 +211,7 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   void
   for_each_callback_group(
-      const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
+    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
 
   /// Create and return a Publisher.
   /**

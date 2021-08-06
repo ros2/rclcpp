@@ -54,10 +54,10 @@ NodeBase::NodeBase(
       this->map_init_flag = true;
     }
   }
-  
+
   // Generate a mutex for this instance of NodeBase
   this->map_object_ptr->create_mutex_of_nodebase(this);
-  
+
   // Setup the guard condition that is notified when changes occur in the graph.
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(
@@ -236,8 +236,8 @@ NodeBase::create_callback_group(
   bool automatically_add_to_executor_with_node)
 {
   auto group = std::make_shared<rclcpp::CallbackGroup>(
-      group_type,
-      automatically_add_to_executor_with_node);
+    group_type,
+    automatically_add_to_executor_with_node);
   auto mutex_ptr = this->map_object_ptr->get_mutex_of_nodebase(this);
   std::lock_guard<std::mutex> lock(*mutex_ptr);
   callback_groups_.push_back(group);
@@ -334,19 +334,22 @@ rclcpp::node_interfaces::map_of_mutexes::map_of_mutexes()
 {
 }
 
-void rclcpp::node_interfaces::map_of_mutexes::create_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase* nodebase)
+void rclcpp::node_interfaces::map_of_mutexes::create_mutex_of_nodebase(
+  const rclcpp::node_interfaces::NodeBase * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   this->data.emplace(nodebase, std::make_shared<std::mutex>() );
 }
 
-std::shared_ptr<std::mutex> rclcpp::node_interfaces::map_of_mutexes::get_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase* nodebase)
+std::shared_ptr<std::mutex> rclcpp::node_interfaces::map_of_mutexes::get_mutex_of_nodebase(
+  const rclcpp::node_interfaces::NodeBase * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   return this->data[nodebase];
 }
 
-void rclcpp::node_interfaces::map_of_mutexes::delete_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase* nodebase)
+void rclcpp::node_interfaces::map_of_mutexes::delete_mutex_of_nodebase(
+  const rclcpp::node_interfaces::NodeBase * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   this->data.erase(nodebase);
@@ -364,10 +367,8 @@ void NodeBase::for_each_callback_group(const CallbackGroupFunction & func)
 
   for (rclcpp::CallbackGroup::WeakPtr & weak_group : this->callback_groups_) {
     rclcpp::CallbackGroup::SharedPtr group = weak_group.lock();
-    if (group){
+    if (group) {
       func(group);
     }
   }
-
 }
-

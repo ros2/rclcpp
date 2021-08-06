@@ -163,18 +163,19 @@ private:
 // Class to hold the global map of mutexes
 class rclcpp::node_interfaces::map_of_mutexes
 {
-  public:
-    map_of_mutexes();
-    ~map_of_mutexes();
+public:
+  map_of_mutexes();
+  ~map_of_mutexes();
 
-    // Methods need to be protected by internal mutex
-    void create_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase* nodebase);
-    std::shared_ptr<std::mutex> get_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase* nodebase);
-    void delete_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase* nodebase);
+  // Methods need to be protected by internal mutex
+  void create_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase * nodebase);
+  std::shared_ptr<std::mutex>
+  get_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase * nodebase);
+  void delete_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase * nodebase);
 
-    // Members
-    std::unordered_map<const rclcpp::node_interfaces::NodeBase*, std::shared_ptr<std::mutex>> data;
-    std::mutex internal_mutex;
+  // Members
+  std::unordered_map<const rclcpp::node_interfaces::NodeBase *, std::shared_ptr<std::mutex>> data;
+  std::mutex internal_mutex;
 };
 
 #endif  // RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
