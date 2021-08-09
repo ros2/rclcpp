@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "rcpputils/scope_exit.hpp"
@@ -237,7 +238,9 @@ StaticSingleThreadedExecutor::execute_ready_executables(bool spin_once)
   for (size_t i = 0; i < wait_set_.size_of_timers; ++i) {
     if (i < entities_collector_->get_number_of_timers()) {
       if (wait_set_.timers[i] && entities_collector_->get_timer(i)->is_ready()) {
-        execute_timer(entities_collector_->get_timer(i));
+        auto timer = entities_collector_->get_timer(i);
+        timer->call();
+        execute_timer(std::move(timer));
         if (spin_once) {
           return true;
         }
