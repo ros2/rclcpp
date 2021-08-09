@@ -2614,6 +2614,56 @@ TEST_F(TestNode, declare_parameter_with_vector) {
   }
 }
 
+// test allowed non-array data types for declare parameter function templates
+TEST_F(TestNode, declare_parameter_allowed_simple_types_function_templates) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_allowed_simple_types_function_templates"_unq);
+  {
+    // declare parameter and then get types to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+
+    node->declare_parameter<bool>(name1, false);
+    node->declare_parameter<int64_t>(name2, 1234);
+    node->declare_parameter<double>(name3, 12.34); // float64
+    node->declare_parameter<std::string>(name4, "test string");
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+    EXPECT_TRUE(node->has_parameter(name4));
+
+    auto results = node->get_parameter_types({name1, name2, name3, name4});
+    EXPECT_EQ(results.size(), 4u);
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_BOOL);
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
+    EXPECT_EQ(results[3], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+  }
+  {
+    // declare parameter and then get values to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+
+    node->declare_parameter<bool>(name1, false);
+    node->declare_parameter<int64_t>(name2, 1234);
+    node->declare_parameter<double>(name3, 12.34);
+    node->declare_parameter<std::string>(name4, "test string");
+
+    std::vector<rclcpp::Parameter> expected = {
+      {name1, false},
+      {name2, 1234},
+      {name3, 12.34},
+      {name4, "test string"},
+    };
+    EXPECT_EQ(node->get_parameters({name1, name2, name3, name4}), expected);
+  }
+}
+
 void expect_qos_profile_eq(
   const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
 {
