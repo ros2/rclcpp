@@ -438,7 +438,7 @@ protected:
   void
   do_inter_process_publish(const ROSMessageType & msg)
   {
-    TRACEPOINT(rclcpp_publish, static_cast<const void *>(&msg));
+    TRACEPOINT(rclcpp_publish, nullptr, static_cast<const void *>(&msg));
     auto status = rcl_publish(publisher_handle_.get(), &msg, nullptr);
 
     if (RCL_RET_PUBLISHER_INVALID == status) {
