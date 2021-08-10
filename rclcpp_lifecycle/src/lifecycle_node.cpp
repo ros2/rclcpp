@@ -656,7 +656,9 @@ LifecycleNode::for_each_callback_group(
   const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
 {
   auto node_base = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(node_base_);
-  node_base->for_each_callback_group(func);
+  if (node_base) {
+    node_base->for_each_callback_group(func);
+  }
 }
 
 }  // namespace rclcpp_lifecycle
