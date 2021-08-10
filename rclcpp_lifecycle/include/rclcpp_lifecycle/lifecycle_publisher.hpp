@@ -82,13 +82,7 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN_FUNCTION(
-        logger_,
-        [this]() {return should_log_;},
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      should_log_ = false;
+      log_publisher_not_enabled();
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(std::move(msg));
@@ -104,13 +98,7 @@ public:
   publish(const MessageT & msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN_FUNCTION(
-        logger_,
-        [this]() {return should_log_;},
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      should_log_ = false;
+      log_publisher_not_enabled();
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -136,6 +124,27 @@ public:
   }
 
 private:
+  /**
+   * @brief Helper function that logs a message saying that publisher can't publish
+   * because it's not enabled.
+   */
+  void log_publisher_not_enabled()
+  {
+    // Nothing to do if we are not meant to log
+    if (!should_log_) {
+      return;
+    }
+
+    // Log the message
+    RCLCPP_WARN(
+      logger_,
+      "Trying to publish message on the topic '%s', but the publisher is not activated",
+      this->get_topic_name());
+
+    // We stop logging until the flag gets enabled again
+    should_log_ = false;
+  }
+
   bool enabled_ = false;
   bool should_log_ = true;
   rclcpp::Logger logger_;
