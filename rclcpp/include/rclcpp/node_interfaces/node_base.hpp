@@ -42,9 +42,7 @@ class NodeBase : public NodeBaseInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBase)
 
-  static std::unique_ptr<map_of_mutexes> map_object_ptr;
-  static bool map_init_flag;
-  static std::mutex map_init_flag_mutex;
+  static map_of_mutexes map_object;
 
   // Non virtual method
   void for_each_callback_group(const CallbackGroupFunction & func);
