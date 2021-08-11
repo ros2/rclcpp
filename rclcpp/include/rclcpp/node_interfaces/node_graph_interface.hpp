@@ -147,7 +147,9 @@ public:
   /**
    * A topic is considered to exist when at least one publisher or subscriber
    * exists for it, whether they be local or remote to this process.
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create publishers or subscribers using names returned by this function may not
+   * result in the desired topic name being used depending on the remap rules in use.
    *
    * \param[in] no_demangle if true, topic names and types are not demangled
    */
@@ -161,7 +163,9 @@ public:
    * A service is considered to exist when at least one service server or
    * service client exists for it, whether they be local or remote to this
    * process.
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create clients or services using names returned by this function may not result in
+   * the desired service name being used depending on the remap rules in use.
    */
   RCLCPP_PUBLIC
   virtual
@@ -171,7 +175,9 @@ public:
   /// Return a map of existing service names to list of service types for a specific node.
   /**
    * This function only considers services - not clients.
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create service clients using names returned by this function may not
+   * result in the desired service name being used depending on the remap rules in use.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
@@ -186,7 +192,9 @@ public:
   /// Return a map of existing service names and types with a specific node.
   /**
    * This function only considers clients - not service servers.
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create service servers using names returned by this function may not
+   * result in the desired service name being used depending on the remap rules in use.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
@@ -201,7 +209,9 @@ public:
   /// Return a map of existing topic names to list of topic types for a specific node.
   /**
    * This function only considers publishers - not subscribers.
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create publishers or subscribers using names returned by this function may not
+   * result in the desired topic name being used depending on the remap rules in use.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
@@ -218,7 +228,9 @@ public:
   /// Return a map of existing topic names to list of topic types for a specific node.
   /**
    * This function only considers subscribers - not publishers.
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create publishers or subscribers using names returned by this function may not
+   * result in the desired topic name being used depending on the remap rules in use.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
@@ -234,7 +246,7 @@ public:
 
   /// Return a vector of existing node names (string).
   /*
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
    */
   RCLCPP_PUBLIC
   virtual
@@ -243,7 +255,7 @@ public:
 
   /// Return a vector of existing node names, namespaces and enclaves (tuple of string).
   /*
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
    */
   RCLCPP_PUBLIC
   virtual
@@ -252,7 +264,7 @@ public:
 
   /// Return a vector of existing node names and namespaces (pair of string).
   /*
-   * The returned names are the actual names used and do not have remap rules applied.
+   * The returned names are the actual names after remap rules applied.
    */
   RCLCPP_PUBLIC
   virtual

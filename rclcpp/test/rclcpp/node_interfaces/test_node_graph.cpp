@@ -239,7 +239,7 @@ TEST_F(TestNodeGraph, get_client_names_and_types_by_node)
   // rcl_get_client_names_and_types_by_node() expects the node to exist, otherwise it fails
   EXPECT_THROW(
     node_graph()->get_client_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
-    std::runtime_error);
+    rclcpp::exceptions::RCLError);
 
   // Check that node1_service exists for node1 but not node2. This shouldn't exercise graph
   // discovery as node_graph belongs to node1 anyway. This is just to test the API itself.
@@ -294,8 +294,7 @@ TEST_F(TestNodeGraph, get_client_names_and_types_by_node_rcl_errors)
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_client_names_and_types_by_node(node_name, node_namespace),
     std::runtime_error(
-      "failed to get service names and types by node: error not set, failed also to cleanup"
-      " service names and types, leaking memory: error not set"));
+      "failed to get service names and types by node: error not set"));
 }
 
 TEST_F(TestNodeGraph, get_service_names_and_types_by_node_names_and_types_fini_error)
@@ -319,9 +318,8 @@ TEST_F(TestNodeGraph, get_client_names_and_types_by_node_names_and_types_fini_er
   auto mock_names_fini = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
 
-  EXPECT_THROW(
-    node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace),
-    rclcpp::exceptions::RCLError);
+  EXPECT_NO_THROW(
+    node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace));
 }
 
 TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node)
@@ -335,7 +333,7 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node)
   // rcl_get_publisher_names_and_types_by_node() expects the node to exist, otherwise it fails
   EXPECT_THROW(
     node_graph()->get_publisher_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
-    std::runtime_error);
+    rclcpp::exceptions::RCLError);
 
   // Check that node1_topic exists for node1 but not node2. This shouldn't exercise graph
   // discovery as node_graph belongs to node1 anyway. This is just to test the API itself.
@@ -373,7 +371,7 @@ TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node)
   // rcl_get_subscriber_names_and_types_by_node() expects the node to exist, otherwise it fails
   EXPECT_THROW(
     node_graph()->get_subscriber_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
-    std::runtime_error);
+    rclcpp::exceptions::RCLError);
 
   // Check that node1_topic exists for node1 but not node2. This shouldn't exercise graph
   // discovery as node_graph belongs to node1 anyway. This is just to test the API itself.
@@ -409,8 +407,7 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_rcl_errors)
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_publisher_names_and_types_by_node(node_name, node_namespace),
     std::runtime_error(
-      "failed to get topic names and types by node: error not set, failed also to cleanup"
-      " topic names and types, leaking memory: error not set"));
+      "failed to get topic names and types by node: error not set"));
 }
 
 
@@ -429,8 +426,7 @@ TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_rcl_errors)
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_subscriber_names_and_types_by_node(node_name, node_namespace),
     std::runtime_error(
-      "failed to get topic names and types by node: error not set, failed also to cleanup"
-      " topic names and types, leaking memory: error not set"));
+      "failed to get topic names and types by node: error not set"));
 }
 
 TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_names_and_types_fini_error)
@@ -441,9 +437,8 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_names_and_types_fini
   auto mock_names_fini = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
 
-  EXPECT_THROW(
-    node_graph()->get_publisher_names_and_types_by_node(node_name, absolute_namespace),
-    rclcpp::exceptions::RCLError);
+  EXPECT_NO_THROW(
+    node_graph()->get_publisher_names_and_types_by_node(node_name, absolute_namespace));
 }
 
 TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_names_and_types_fini_error)
@@ -457,9 +452,8 @@ TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_names_and_types_fin
   auto mock_names_fini = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
 
-  EXPECT_THROW(
-    node_graph()->get_subscriber_names_and_types_by_node(node_name, absolute_namespace),
-    rclcpp::exceptions::RCLError);
+  EXPECT_NO_THROW(
+    node_graph()->get_subscriber_names_and_types_by_node(node_name, absolute_namespace));
 }
 
 TEST_F(TestNodeGraph, get_node_names_and_namespaces)

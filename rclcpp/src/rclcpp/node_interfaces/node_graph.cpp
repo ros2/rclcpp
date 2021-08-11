@@ -28,6 +28,7 @@
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rcpputils/scope_exit.hpp"
 
 using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -185,6 +186,13 @@ NodeGraph::get_client_names_and_types_by_node(
   const std::string & namespace_) const
 {
   rcl_names_and_types_t service_names_and_types = rcl_get_zero_initialized_names_and_types();
+  auto service_names_and_types_finalizer = rcpputils::make_scope_exit(
+    [&service_names_and_types]() {
+      if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "could not destroy service names and types");
+      }
+    });
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_get_client_names_and_types_by_node(
     node_base_->get_rcl_node_handle(),
@@ -193,16 +201,7 @@ NodeGraph::get_client_names_and_types_by_node(
     namespace_.c_str(),
     &service_names_and_types);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("failed to get service names and types by node: ") +
-      rcl_get_error_string().str;
-    rcl_reset_error();
-    if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
-      error_msg +=
-        std::string(", failed also to cleanup service names and types, leaking memory: ") +
-        rcl_get_error_string().str;
-      rcl_reset_error();
-    }
-    throw std::runtime_error(error_msg);
+    throw_from_rcl_error(ret, "failed to get service names and types by node");
   }
 
   std::map<std::string, std::vector<std::string>> services_and_types;
@@ -211,11 +210,6 @@ NodeGraph::get_client_names_and_types_by_node(
     for (size_t j = 0; j < service_names_and_types.types[i].size; ++j) {
       services_and_types[service_name].emplace_back(service_names_and_types.types[i].data[j]);
     }
-  }
-
-  ret = rcl_names_and_types_fini(&service_names_and_types);
-  if (ret != RCL_RET_OK) {
-    throw_from_rcl_error(ret, "could not destroy service names and types");
   }
 
   return services_and_types;
@@ -228,6 +222,13 @@ NodeGraph::get_publisher_names_and_types_by_node(
   bool no_demangle) const
 {
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
+  auto topic_names_and_types_finalizer = rcpputils::make_scope_exit(
+    [&topic_names_and_types]() {
+      if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "could not destroy topic names and types");
+      }
+    });
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_get_publisher_names_and_types_by_node(
     node_base_->get_rcl_node_handle(),
@@ -237,16 +238,7 @@ NodeGraph::get_publisher_names_and_types_by_node(
     namespace_.c_str(),
     &topic_names_and_types);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("failed to get topic names and types by node: ") +
-      rcl_get_error_string().str;
-    rcl_reset_error();
-    if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
-      error_msg +=
-        std::string(", failed also to cleanup topic names and types, leaking memory: ") +
-        rcl_get_error_string().str;
-      rcl_reset_error();
-    }
-    throw std::runtime_error(error_msg);
+    throw_from_rcl_error(ret, "failed to get topic names and types by node");
   }
 
   std::map<std::string, std::vector<std::string>> topics_and_types;
@@ -255,11 +247,6 @@ NodeGraph::get_publisher_names_and_types_by_node(
     for (size_t j = 0; j < topic_names_and_types.types[i].size; ++j) {
       topics_and_types[topic_name].emplace_back(topic_names_and_types.types[i].data[j]);
     }
-  }
-
-  ret = rcl_names_and_types_fini(&topic_names_and_types);
-  if (ret != RCL_RET_OK) {
-    throw_from_rcl_error(ret, "could not destroy topic names and types");
   }
 
   return topics_and_types;
@@ -272,6 +259,13 @@ NodeGraph::get_subscriber_names_and_types_by_node(
   bool no_demangle) const
 {
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
+  auto topic_names_and_types_finalizer = rcpputils::make_scope_exit(
+    [&topic_names_and_types]() {
+      if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "could not destroy topic names and types");
+      }
+    });
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_get_subscriber_names_and_types_by_node(
     node_base_->get_rcl_node_handle(),
@@ -281,16 +275,7 @@ NodeGraph::get_subscriber_names_and_types_by_node(
     namespace_.c_str(),
     &topic_names_and_types);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("failed to get topic names and types by node: ") +
-      rcl_get_error_string().str;
-    rcl_reset_error();
-    if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
-      error_msg +=
-        std::string(", failed also to cleanup topic names and types, leaking memory: ") +
-        rcl_get_error_string().str;
-      rcl_reset_error();
-    }
-    throw std::runtime_error(error_msg);
+    throw_from_rcl_error(ret, "failed to get topic names and types by node");
   }
 
   std::map<std::string, std::vector<std::string>> topics_and_types;
@@ -299,11 +284,6 @@ NodeGraph::get_subscriber_names_and_types_by_node(
     for (size_t j = 0; j < topic_names_and_types.types[i].size; ++j) {
       topics_and_types[topic_name].emplace_back(topic_names_and_types.types[i].data[j]);
     }
-  }
-
-  ret = rcl_names_and_types_fini(&topic_names_and_types);
-  if (ret != RCL_RET_OK) {
-    throw_from_rcl_error(ret, "could not destroy topic names and types");
   }
 
   return topics_and_types;
