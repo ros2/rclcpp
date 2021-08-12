@@ -132,30 +132,15 @@ NodeBase::NodeBase(
   node_handle_(nullptr),
   default_callback_group_(nullptr),
   associated_with_executor_(false),
+  notify_guard_condition_(context),
   notify_guard_condition_is_valid_(false)
 {
-  // Setup the guard condition that is notified when changes occur in the graph.
-  rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
-  rcl_ret_t ret = rcl_guard_condition_init(
-    &notify_guard_condition_, context_->get_rcl_context().get(), guard_condition_options);
-  if (ret != RCL_RET_OK) {
-    throw_from_rcl_error(ret, "failed to create interrupt guard condition");
-  }
-
-  // Setup a safe exit lamda to clean up the guard condition in case of an error here.
-  auto finalize_notify_guard_condition = [this]() {
-      // Finalize the interrupt guard condition.
-      if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "failed to destroy guard condition: %s", rcl_get_error_string().str);
-      }
-    };
-
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
 
   std::shared_ptr<std::recursive_mutex> logging_mutex = get_global_logging_mutex();
+
+  rcl_ret_t ret;
   {
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
     // TODO(ivanpauno): /rosout Qos should be reconfigurable.
@@ -168,9 +153,6 @@ NodeBase::NodeBase(
       context_->get_rcl_context().get(), &rcl_node_options);
   }
   if (ret != RCL_RET_OK) {
-    // Finalize the interrupt guard condition.
-    finalize_notify_guard_condition();
-
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
       int validation_result;
@@ -235,11 +217,6 @@ NodeBase::~NodeBase()
   {
     std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
     notify_guard_condition_is_valid_ = false;
-    if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "failed to destroy guard condition: %s", rcl_get_error_string().str);
-    }
   }
 }
 
@@ -340,20 +317,14 @@ NodeBase::get_associated_with_executor_atomic()
   return associated_with_executor_;
 }
 
-rcl_guard_condition_t *
+rclcpp::GuardCondition &
 NodeBase::get_notify_guard_condition()
 {
   std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
   if (!notify_guard_condition_is_valid_) {
-    return nullptr;
+    throw std::runtime_error("Trying to get invalid notify guard condition");
   }
-  return &notify_guard_condition_;
-}
-
-std::unique_lock<std::recursive_mutex>
-NodeBase::acquire_notify_guard_condition_lock() const
-{
-  return std::unique_lock<std::recursive_mutex>(notify_guard_condition_mutex_);
+  return notify_guard_condition_;
 }
 
 bool

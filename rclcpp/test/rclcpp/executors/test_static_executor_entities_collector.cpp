@@ -230,7 +230,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  bool add_to_wait_set(rcl_wait_set_t *) override {return true;}
+  void add_to_wait_set(rcl_wait_set_t *) override {}
 
   bool is_ready(rcl_wait_set_t *) override {return true;}
 
@@ -513,9 +513,9 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
   entities_collector_->init(&wait_set, memory_strategy);
   RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
-  RCLCPP_EXPECT_THROW_EQ(
+  EXPECT_THROW(
     entities_collector_->add_to_wait_set(nullptr),
-    std::runtime_error("Executor waitable: couldn't add guard condition to wait set"));
+    std::invalid_argument);
   rcl_reset_error();
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));

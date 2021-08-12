@@ -22,6 +22,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
@@ -40,19 +41,9 @@ GraphListener::GraphListener(const std::shared_ptr<Context> & parent_context)
 : weak_parent_context_(parent_context),
   rcl_parent_context_(parent_context->get_rcl_context()),
   is_started_(false),
-  is_shutdown_(false)
+  is_shutdown_(false),
+  interrupt_guard_condition_(parent_context)
 {
-  // TODO(wjwwood): make a guard condition class in rclcpp so this can be tracked
-  //   automatically with the rcl guard condition
-  // hold on to this context to prevent it from going out of scope while this
-  // guard condition is using it.
-  rcl_ret_t ret = rcl_guard_condition_init(
-    &interrupt_guard_condition_,
-    rcl_parent_context_.get(),
-    rcl_guard_condition_get_default_options());
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to create interrupt guard condition");
-  }
 }
 
 GraphListener::~GraphListener()
@@ -159,10 +150,7 @@ GraphListener::run_loop()
       throw_from_rcl_error(ret, "failed to clear wait set");
     }
     // Put the interrupt guard condition in the wait set.
-    ret = rcl_wait_set_add_guard_condition(&wait_set_, &interrupt_guard_condition_, NULL);
-    if (RCL_RET_OK != ret) {
-      throw_from_rcl_error(ret, "failed to add interrupt guard condition to wait set");
-    }
+    detail::add_guard_condition_to_rcl_wait_set(wait_set_, interrupt_guard_condition_);
 
     // Put graph guard conditions for each node into the wait set.
     std::vector<size_t> graph_gc_indexes(node_graph_interfaces_size, 0u);
@@ -211,19 +199,16 @@ GraphListener::run_loop()
 }
 
 static void
-interrupt_(rcl_guard_condition_t * interrupt_guard_condition)
+interrupt_(GuardCondition * interrupt_guard_condition)
 {
-  rcl_ret_t ret = rcl_trigger_guard_condition(interrupt_guard_condition);
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to trigger the interrupt guard condition");
-  }
+  interrupt_guard_condition->trigger();
 }
 
 static void
 acquire_nodes_lock_(
   std::mutex * node_graph_interfaces_barrier_mutex,
   std::mutex * node_graph_interfaces_mutex,
-  rcl_guard_condition_t * interrupt_guard_condition)
+  GuardCondition * interrupt_guard_condition)
 {
   {
     // Acquire this lock to prevent the run loop from re-locking the
@@ -350,10 +335,6 @@ GraphListener::__shutdown()
     if (is_started_) {
       interrupt_(&interrupt_guard_condition_);
       listener_thread_.join();
-    }
-    rcl_ret_t ret = rcl_guard_condition_fini(&interrupt_guard_condition_);
-    if (RCL_RET_OK != ret) {
-      throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
     }
     if (is_started_) {
       cleanup_wait_set();

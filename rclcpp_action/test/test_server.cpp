@@ -1107,7 +1107,7 @@ TEST_F(TestGoalRequestServer, is_ready_rcl_error) {
   {
     EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
   });
-  ASSERT_TRUE(action_server_->add_to_wait_set(&wait_set));
+  EXPECT_NO_THROW(action_server_->add_to_wait_set(&wait_set));
 
   EXPECT_TRUE(action_server_->is_ready(&wait_set));
   auto mock = mocking_utils::patch_and_return(
