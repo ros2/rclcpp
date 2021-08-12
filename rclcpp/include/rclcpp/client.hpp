@@ -419,11 +419,12 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response) override
   {
-    auto opt = this->get_and_erase_pending_request(request_header->sequence_number);
-    if (!opt) {
+    std::optional<PendingRequestsMapValue>
+    optional_pending_request = this->get_and_erase_pending_request(request_header->sequence_number);
+    if (!optional_pending_request) {
       return;
     }
-    auto & value = *opt;
+    auto & value = *optional_pending_request;
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(
       std::move(response));
     if (std::holds_alternative<Promise>(value)) {
