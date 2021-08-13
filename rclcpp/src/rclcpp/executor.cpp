@@ -107,8 +107,8 @@ Executor::~Executor()
   weak_groups_to_nodes_associated_with_executor_.clear();
   weak_groups_to_nodes_.clear();
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
-    auto & guard_condition = pair.second;
-    memory_strategy_->remove_guard_condition(*guard_condition);
+    auto guard_condition = pair.second;
+    memory_strategy_->remove_guard_condition(guard_condition);
   }
   weak_nodes_to_guard_conditions_.clear();
 
@@ -120,8 +120,8 @@ Executor::~Executor()
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
-  memory_strategy_->remove_guard_condition(*shutdown_guard_condition_.get());
-  memory_strategy_->remove_guard_condition(interrupt_guard_condition_);
+  memory_strategy_->remove_guard_condition(shutdown_guard_condition_.get());
+  memory_strategy_->remove_guard_condition(&interrupt_guard_condition_);
 
   // Remove shutdown callback handle registered to Context
   if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
@@ -310,7 +310,7 @@ Executor::remove_callback_group_from_map(
                   "Failed to trigger guard condition on callback group remove: ") + ex.what());
       }
     }
-    memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
+    memory_strategy_->remove_guard_condition(&node_ptr->get_notify_guard_condition());
   }
 }
 
@@ -702,9 +702,9 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
           invalid_group_ptrs.push_back(weak_group_ptr);
           auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
           if (node_guard_pair != weak_nodes_to_guard_conditions_.end()) {
-            const auto & guard_condition = node_guard_pair->second;
+            auto guard_condition = node_guard_pair->second;
             weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
-            memory_strategy_->remove_guard_condition(*guard_condition);
+            memory_strategy_->remove_guard_condition(guard_condition);
           }
         }
       }

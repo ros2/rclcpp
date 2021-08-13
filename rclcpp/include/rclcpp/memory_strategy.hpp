@@ -68,7 +68,7 @@ public:
   add_guard_condition(const rclcpp::GuardCondition & guard_condition) = 0;
 
   virtual void
-  remove_guard_condition(const rclcpp::GuardCondition & guard_condition) = 0;
+  remove_guard_condition(const rclcpp::GuardCondition * guard_condition) = 0;
 
   virtual void
   get_next_subscription(

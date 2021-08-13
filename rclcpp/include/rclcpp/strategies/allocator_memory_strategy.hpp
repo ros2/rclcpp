@@ -72,10 +72,10 @@ public:
     guard_conditions_.push_back(&guard_condition);
   }
 
-  void remove_guard_condition(const rclcpp::GuardCondition & guard_condition) override
+  void remove_guard_condition(const rclcpp::GuardCondition * guard_condition) override
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
-      if (*it == &guard_condition) {
+      if (*it == guard_condition) {
         guard_conditions_.erase(it);
         break;
       }

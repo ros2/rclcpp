@@ -470,15 +470,15 @@ TEST_F(TestAllocatorMemoryStrategy, add_remove_guard_conditions) {
   EXPECT_NO_THROW(allocator_memory_strategy()->add_guard_condition(guard_condition3));
   EXPECT_EQ(3u, allocator_memory_strategy()->number_of_guard_conditions());
 
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition1));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition2));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition3));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition1));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition2));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition3));
   EXPECT_EQ(0u, allocator_memory_strategy()->number_of_guard_conditions());
 
   // Removing second time should have no effect
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition1));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition2));
-  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(guard_condition3));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition1));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition2));
+  EXPECT_NO_THROW(allocator_memory_strategy()->remove_guard_condition(&guard_condition3));
   EXPECT_EQ(0u, allocator_memory_strategy()->number_of_guard_conditions());
 }
 
