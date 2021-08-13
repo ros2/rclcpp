@@ -324,21 +324,21 @@ rclcpp::node_interfaces::map_of_mutexes::map_of_mutexes()
 }
 
 void rclcpp::node_interfaces::map_of_mutexes::create_mutex_of_nodebase(
-  const rclcpp::node_interfaces::NodeBase * nodebase)
+  const rclcpp::node_interfaces::NodeBaseInterface * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   this->data.emplace(nodebase, std::make_shared<std::mutex>() );
 }
 
 std::shared_ptr<std::mutex> rclcpp::node_interfaces::map_of_mutexes::get_mutex_of_nodebase(
-  const rclcpp::node_interfaces::NodeBase * nodebase)
+  const rclcpp::node_interfaces::NodeBaseInterface * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   return this->data[nodebase];
 }
 
 void rclcpp::node_interfaces::map_of_mutexes::delete_mutex_of_nodebase(
-  const rclcpp::node_interfaces::NodeBase * nodebase)
+  const rclcpp::node_interfaces::NodeBaseInterface * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   this->data.erase(nodebase);
@@ -348,16 +348,19 @@ rclcpp::node_interfaces::map_of_mutexes::~map_of_mutexes()
 {
 }
 
-// For each callback group implementation
-void NodeBase::for_each_callback_group(const CallbackGroupFunction & func)
+// For each callback group free function implementation
+void rclcpp::node_interfaces::global_for_each_callback_group(
+  NodeBaseInterface * node_base_interface, const NodeBaseInterface::CallbackGroupFunction & func)
 {
-  auto mutex_ptr = this->map_object.get_mutex_of_nodebase(this);
-  std::lock_guard<std::mutex> lock(*mutex_ptr);
+  auto mutex_ptr = NodeBase::map_object.get_mutex_of_nodebase(node_base_interface);
+  if (mutex_ptr) {
+    std::lock_guard<std::mutex> lock(*mutex_ptr);
 
-  for (rclcpp::CallbackGroup::WeakPtr & weak_group : this->callback_groups_) {
-    rclcpp::CallbackGroup::SharedPtr group = weak_group.lock();
-    if (group) {
-      func(group);
+    for (const auto & weak_group : node_base_interface->get_callback_groups()) {
+      auto group = weak_group.lock();
+      if (group) {
+        func(group);
+      }
     }
   }
 }

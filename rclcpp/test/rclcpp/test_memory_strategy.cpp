@@ -277,9 +277,9 @@ TEST_F(TestMemoryStrategy, get_node_by_group) {
   rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto node_handle = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(
-      node->get_node_base_interface());
-    node_handle->for_each_callback_group(
+    auto node_handle = node->get_node_base_interface();
+    rclcpp::node_interfaces::global_for_each_callback_group(
+      node_handle.get(),
       [node_handle, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
       {
         weak_groups_to_nodes.insert(

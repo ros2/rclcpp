@@ -191,9 +191,9 @@ Executor::add_callback_groups_from_nodes_associated_to_executor()
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
-      auto node_base = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(node);
-      node_base->for_each_callback_group(
-        [this, node_base](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
+      rclcpp::node_interfaces::global_for_each_callback_group(
+        node.get(),
+        [this, node](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
         {
           if (
             shared_group_ptr->automatically_add_to_executor_with_node() &&
@@ -201,7 +201,7 @@ Executor::add_callback_groups_from_nodes_associated_to_executor()
           {
             this->add_callback_group_to_map(
               shared_group_ptr,
-              node_base,
+              node,
               weak_groups_to_nodes_associated_with_executor_,
               true);
           }
@@ -271,22 +271,22 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
     throw std::runtime_error("Node has already been added to an executor.");
   }
   std::lock_guard<std::mutex> guard{mutex_};
-  auto node_base = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(node_ptr);
-  node_base->for_each_callback_group(
-    [this, node_base, notify](rclcpp::CallbackGroup::SharedPtr group_ptr)
+  rclcpp::node_interfaces::global_for_each_callback_group(
+    node_ptr.get(),
+    [this, node_ptr, notify](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
       if (!group_ptr->get_associated_with_executor_atomic().load() &&
       group_ptr->automatically_add_to_executor_with_node())
       {
         this->add_callback_group_to_map(
           group_ptr,
-          node_base,
+          node_ptr,
           weak_groups_to_nodes_associated_with_executor_,
           notify);
       }
     });
 
-  weak_nodes_.push_back(node_base);
+  weak_nodes_.push_back(node_ptr);
 }
 
 void

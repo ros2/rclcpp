@@ -374,12 +374,11 @@ protected:
     std::function<rclcpp::AnyExecutable(WeakCallbackGroupsToNodesMap)> get_next_entity_func)
   {
     auto basic_node = std::make_shared<rclcpp::Node>("basic_node", "ns");
-    auto basic_node_base = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(
-      basic_node->get_node_base_interface());
-    auto node_base = std::dynamic_pointer_cast<rclcpp::node_interfaces::NodeBase>(
-      node_with_entity->get_node_base_interface());
+    auto basic_node_base = basic_node->get_node_base_interface();
+    auto node_base = node_with_entity->get_node_base_interface();
     WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
-    basic_node_base->for_each_callback_group(
+    rclcpp::node_interfaces::global_for_each_callback_group(
+      basic_node_base.get(),
       [basic_node_base, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
       {
         weak_groups_to_nodes.insert(
@@ -388,7 +387,8 @@ protected:
             group_ptr,
             basic_node_base));
       });
-    node_base->for_each_callback_group(
+    rclcpp::node_interfaces::global_for_each_callback_group(
+      node_base.get(),
       [node_base, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
       {
         weak_groups_to_nodes.insert(

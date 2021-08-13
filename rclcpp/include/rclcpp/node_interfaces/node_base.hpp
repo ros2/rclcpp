@@ -35,6 +35,9 @@ namespace node_interfaces
 {
 
 class map_of_mutexes;
+void global_for_each_callback_group(
+  NodeBaseInterface * node_base_interface,
+  const NodeBaseInterface::CallbackGroupFunction & func);
 
 /// Implementation of the NodeBase part of the Node API.
 class NodeBase : public NodeBaseInterface
@@ -43,9 +46,6 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBase)
 
   static map_of_mutexes map_object;
-
-  // Non virtual method
-  void for_each_callback_group(const CallbackGroupFunction & func);
 
   RCLCPP_PUBLIC
   NodeBase(
@@ -164,13 +164,14 @@ public:
   ~map_of_mutexes();
 
   // Methods need to be protected by internal mutex
-  void create_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase * nodebase);
+  void create_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBaseInterface * nodebase);
   std::shared_ptr<std::mutex>
-  get_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase * nodebase);
-  void delete_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBase * nodebase);
+  get_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBaseInterface * nodebase);
+  void delete_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBaseInterface * nodebase);
 
   // Members
-  std::unordered_map<const rclcpp::node_interfaces::NodeBase *, std::shared_ptr<std::mutex>> data;
+  std::unordered_map<const rclcpp::node_interfaces::NodeBaseInterface *,
+    std::shared_ptr<std::mutex>> data;
   std::mutex internal_mutex;
 };
 
