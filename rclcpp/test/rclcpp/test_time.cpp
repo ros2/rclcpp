@@ -547,36 +547,8 @@ TEST_F(TestClockSleep, sleep_until_ros_time_disable_interrupt)
     [clock, until, &sleep_succeeded]() {
       sleep_succeeded = clock->sleep_until(until);
     });
-
-
-  // WIP test - checking if we are receiving clock messages in test environment
-  // which shouldn't be happening, but seems to be
-  rcl_jump_threshold_t threshold;
-  threshold.on_clock_change = true;
-  threshold.min_backward.nanoseconds = 0;
-  threshold.min_forward.nanoseconds = 0;
-  auto handler = clock->create_jump_callback(
-    []() {},
-    [](const rcl_time_jump_t & jump) {
-      switch (jump.clock_change) {
-        case RCL_ROS_TIME_NO_CHANGE:
-          RCUTILS_LOG_ERROR("Time Jump: ROS Time - /clock received... bad");
-          break;
-        case RCL_SYSTEM_TIME_NO_CHANGE:
-          RCUTILS_LOG_ERROR("Time Jump: Why is it system time??");
-          break;
-        case RCL_ROS_TIME_ACTIVATED:
-          RCUTILS_LOG_ERROR("ROS TIME ACTIVATED");
-          break;
-        case RCL_ROS_TIME_DEACTIVATED:
-          RCUTILS_LOG_ERROR("ROS TIME DEACTIVATED: the sleep is done and the test should end.");
-          break;
-      }
-    },
-    threshold);
-
   // yield execution long enough to let the sleep thread get to waiting on the condition variable
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
   auto set_parameters_results = param_client->set_parameters(
     {rclcpp::Parameter("use_sim_time", false)});
   for (auto & result : set_parameters_results) {
