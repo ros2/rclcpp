@@ -112,7 +112,8 @@ Clock::sleep_until(Time until)
       impl_->cv_.wait_until(lock, steady_time);
     }
   } else if (this_clock_type == RCL_SYSTEM_TIME) {
-    auto system_time = std::chrono::system_clock::time_point(
+    auto system_time = std::chrono::time_point<
+      std::chrono::system_clock, std::chrono::nanoseconds>(
       std::chrono::nanoseconds(until.nanoseconds()));
 
     // loop over spurious wakeups but notice shutdown
@@ -136,7 +137,8 @@ Clock::sleep_until(Time until)
       threshold);
 
     if (!ros_time_is_active()) {
-      auto system_time = std::chrono::system_clock::time_point(
+      auto system_time = std::chrono::time_point<
+        std::chrono::system_clock, std::chrono::nanoseconds>(
         std::chrono::nanoseconds(until.nanoseconds()));
 
       // loop over spurious wakeups but notice shutdown or time source change
