@@ -60,8 +60,7 @@ struct FutureAndRequestId
   {}
 
   /// Allow implicit conversions to `std::future` by reference.
-  // TODO(ivanpauno): Maybe, deprecate this in favor of get_future() (?)
-  operator FutureT&() {return this->future;}
+  operator FutureT &() {return this->future;}
 
   /// Deprecated, use the `future` member variable instead.
   /**
@@ -419,7 +418,7 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response) override
   {
-    std::optional<PendingRequestsMapValue>
+    std::optional<CallbackInfoVariant>
     optional_pending_request = this->get_and_erase_pending_request(request_header->sequence_number);
     if (!optional_pending_request) {
       return;
@@ -496,12 +495,12 @@ public:
    * Not doing so will make the `Client` instance use more memory each time a response is not
    * received from the service server.
    * In this case, it's convenient to setup a timer to cleanup the pending requests.
+   * See for example the `examples_rclcpp_async_client` package in https://github.com/ros2/examples.
    *
    * \param[in] request request to be send.
    * \param[in] cb callback that will be called when we get a response for this request.
    * \return the request id representing the request just sent.
    */
-  // TODO(ivanpauno): Link to example that shows how to cleanup requests.
   template<
     typename CallbackT,
     typename std::enable_if<
@@ -533,8 +532,6 @@ public:
    * \param[in] cb callback that will be called when we get a response for this request.
    * \return the request id representing the request just sent.
    */
-  // TODO(ivanpauno): Deprecate this.
-  // If someone wants the request they can capture it in the lambda.
   template<
     typename CallbackT,
     typename std::enable_if<
@@ -547,14 +544,13 @@ public:
   SharedFutureWithRequestAndRequestId
   async_send_request(SharedRequest request, CallbackT && cb)
   {
-    auto & req = *request;
     PromiseWithRequest promise;
     auto shared_future = promise.get_future().share();
     auto req_id = async_send_request_impl(
-      req,
+      *request,
       std::make_tuple(
         CallbackWithRequestType{std::forward<CallbackT>(cb)},
-        std::move(request),
+        request,
         shared_future,
         std::move(promise)));
     return SharedFutureWithRequestAndRequestId{std::move(shared_future), req_id};
@@ -582,7 +578,7 @@ public:
   /**
    * Convenient overload, same as:
    *
-   * `Client::remove_pending_request(this, future.get_request_id())`.
+   * `Client::remove_pending_request(this, future.request_id)`.
    */
   bool
   remove_pending_request(const FutureAndRequestId & future)
@@ -590,12 +586,24 @@ public:
     return this->remove_pending_request(future.request_id);
   }
 
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `Client::remove_pending_request(this, future.request_id)`.
+   */
   bool
   remove_pending_request(const SharedFutureAndRequestId & future)
   {
     return this->remove_pending_request(future.request_id);
   }
 
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `Client::remove_pending_request(this, future.request_id)`.
+   */
   bool
   remove_pending_request(const SharedFutureWithRequestAndRequestId & future)
   {
@@ -615,19 +623,45 @@ public:
     return ret;
   }
 
+  /// Clean all pending requests older than a time_point.
+  /**
+   * \param[in] time_point Requests that were sent before this point are going to be removed.
+   * \param[inout] pruned_requests Removed requests id will be pushed to the vector
+   *  if a pointer is provided.
+   * \return number of pending requests that were removed.
+   */
+  template<typename AllocatorT = std::allocator<int64_t>>
+  size_t
+  prune_requests_older_than(
+    std::chrono::time_point<std::chrono::system_clock> time_point,
+    std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
+  {
+    std::lock_guard guard(pending_requests_mutex_);
+    auto old_size = pending_requests_.size();
+    for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
+      if (it->second.first < time_point) {
+        pruned_requests->push_back(it->first);
+        it = pending_requests_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    return old_size - pending_requests_.size();
+  }
+
 protected:
   using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
   using CallbackWithRequestTypeValueVariant = std::tuple<
     CallbackWithRequestType, SharedRequest, SharedFutureWithRequest, PromiseWithRequest>;
 
-  using PendingRequestsMapValue = std::variant<
+  using CallbackInfoVariant = std::variant<
     std::promise<SharedResponse>,
     CallbackTypeValueVariant,
     CallbackWithRequestTypeValueVariant>;
 
   RCLCPP_PUBLIC
   int64_t
-  async_send_request_impl(const Request & request, PendingRequestsMapValue value)
+  async_send_request_impl(const Request & request, CallbackInfoVariant value)
   {
     int64_t sequence_number;
     rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &request, &sequence_number);
@@ -636,13 +670,15 @@ protected:
     }
     {
       std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-      pending_requests_.try_emplace(sequence_number, std::move(value));
+      pending_requests_.try_emplace(
+        sequence_number,
+        std::make_pair(std::chrono::system_clock::now(), std::move(value)));
     }
     return sequence_number;
   }
 
   RCLCPP_PUBLIC
-  std::optional<PendingRequestsMapValue>
+  std::optional<CallbackInfoVariant>
   get_and_erase_pending_request(int64_t request_number)
   {
     std::unique_lock<std::mutex> lock(pending_requests_mutex_);
@@ -653,14 +689,19 @@ protected:
         "Received invalid sequence number. Ignoring...");
       return std::nullopt;
     }
-    auto value = std::move(it->second);
+    auto value = std::move(it->second.second);
     this->pending_requests_.erase(request_number);
     return value;
   }
 
   RCLCPP_DISABLE_COPY(Client)
 
-  std::unordered_map<int64_t, PendingRequestsMapValue> pending_requests_;
+  std::unordered_map<
+    int64_t,
+    std::pair<
+      std::chrono::time_point<std::chrono::system_clock>,
+      CallbackInfoVariant>>
+  pending_requests_;
   std::mutex pending_requests_mutex_;
 };
 
