@@ -98,6 +98,7 @@ Clock::sleep_until(Time until)
     RCUTILS_LOG_ERROR("sleep_until Time clock type does not match this clock's type.");
     return false;
   }
+  bool time_source_changed = false;
 
   if (this_clock_type == RCL_STEADY_TIME) {
     auto steady_time = std::chrono::steady_clock::time_point(
@@ -105,10 +106,7 @@ Clock::sleep_until(Time until)
 
     // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->clock_mutex_);
-    while (now() < until) {
-      if (!rclcpp::ok()) {
-        return false;
-      }
+    while (now() < until && rclcpp::ok()) {
       impl_->cv_.wait_until(lock, steady_time);
     }
   } else if (this_clock_type == RCL_SYSTEM_TIME) {
@@ -118,10 +116,7 @@ Clock::sleep_until(Time until)
 
     // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->clock_mutex_);
-    while (now() < until) {
-      if (!rclcpp::ok()) {
-        return false;
-      }
+    while (now() < until && rclcpp::ok()) {
       impl_->cv_.wait_until(lock, system_time);
     }
   } else if (this_clock_type == RCL_ROS_TIME) {
@@ -143,24 +138,24 @@ Clock::sleep_until(Time until)
 
       // loop over spurious wakeups but notice shutdown or time source change
       std::unique_lock lock(impl_->clock_mutex_);
-      while (now() < until) {
-        if (!rclcpp::ok() || ros_time_is_active()) {
-          return false;
-        }
+      while (now() < until && rclcpp::ok() && !ros_time_is_active()) {
         impl_->cv_.wait_until(lock, system_time);
       }
+      time_source_changed = ros_time_is_active();
     } else {
       // RCL_ROS_TIME with ros_time_is_active.
       // Just wait without "until" because installed
       // jump callbacks wake the cv on every new sample.
       std::unique_lock lock(impl_->clock_mutex_);
-      while (now() < until) {
-        if (!rclcpp::ok() || !ros_time_is_active()) {
-          return false;
-        }
+      while (now() < until && rclcpp::ok() && ros_time_is_active()) {
         impl_->cv_.wait(lock);
       }
+      time_source_changed = !ros_time_is_active();
     }
+  }
+
+  if (!rclcpp::ok() || time_source_changed) {
+    return false;
   }
 
   return now() >= until;
