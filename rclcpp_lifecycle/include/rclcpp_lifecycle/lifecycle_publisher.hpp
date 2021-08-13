@@ -124,8 +124,9 @@ public:
   }
 
 private:
+  /// LifecyclePublisher log helper function
   /**
-   * @brief Helper function that logs a message saying that publisher can't publish
+   * Helper function that logs a message saying that publisher can't publish
    * because it's not enabled.
    */
   void log_publisher_not_enabled()
