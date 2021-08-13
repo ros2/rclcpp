@@ -22,16 +22,18 @@
 
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
+#include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/utilities.hpp"
 
 #include "rcutils/logging_macros.h"
+
+#include "tracetools/tracetools.h"
 
 using namespace std::chrono_literals;
 
@@ -190,14 +192,12 @@ Executor::add_callback_groups_from_nodes_associated_to_executor()
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
-      auto group_ptrs = node->get_callback_groups();
-      std::for_each(
-        group_ptrs.begin(), group_ptrs.end(),
-        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+      node->for_each_callback_group(
+        [this, node](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
         {
-          auto shared_group_ptr = group_ptr.lock();
-          if (shared_group_ptr && shared_group_ptr->automatically_add_to_executor_with_node() &&
-          !shared_group_ptr->get_associated_with_executor_atomic().load())
+          if (
+            shared_group_ptr->automatically_add_to_executor_with_node() &&
+            !shared_group_ptr->get_associated_with_executor_atomic().load())
           {
             this->add_callback_group_to_map(
               shared_group_ptr,
@@ -273,18 +273,20 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
             "' has already been added to an executor.");
   }
   std::lock_guard<std::mutex> guard{mutex_};
-  for (auto & weak_group : node_ptr->get_callback_groups()) {
-    auto group_ptr = weak_group.lock();
-    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
-      group_ptr->automatically_add_to_executor_with_node())
+  node_ptr->for_each_callback_group(
+    [this, node_ptr, notify](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      this->add_callback_group_to_map(
-        group_ptr,
-        node_ptr,
-        weak_groups_to_nodes_associated_with_executor_,
-        notify);
-    }
-  }
+      if (!group_ptr->get_associated_with_executor_atomic().load() &&
+      group_ptr->automatically_add_to_executor_with_node())
+      {
+        this->add_callback_group_to_map(
+          group_ptr,
+          node_ptr,
+          weak_groups_to_nodes_associated_with_executor_,
+          notify);
+      }
+    });
+
   weak_nodes_.push_back(node_ptr);
 }
 
@@ -450,7 +452,7 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
   bool work_available = false;
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
@@ -484,7 +486,7 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
   spin_once_impl(timeout);
 }
 
@@ -515,9 +517,15 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     return;
   }
   if (any_exec.timer) {
+    TRACEPOINT(
+      rclcpp_executor_execute,
+      static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
     execute_timer(any_exec.timer);
   }
   if (any_exec.subscription) {
+    TRACEPOINT(
+      rclcpp_executor_execute,
+      static_cast<const void *>(any_exec.subscription->get_subscription_handle().get()));
     execute_subscription(any_exec.subscription);
   }
   if (any_exec.service) {
@@ -678,6 +686,7 @@ Executor::execute_client(
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
+  TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
   {
     std::lock_guard<std::mutex> guard(mutex_);
 
@@ -827,6 +836,7 @@ Executor::get_next_ready_executable_from_map(
   const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
   weak_groups_to_nodes)
 {
+  TRACEPOINT(rclcpp_executor_get_next_ready);
   bool success = false;
   std::lock_guard<std::mutex> guard{mutex_};
   // Check the timers to see if there are any that are ready

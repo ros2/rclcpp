@@ -20,6 +20,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"
 
@@ -41,38 +43,38 @@ struct NumberOfEntities
 std::unique_ptr<NumberOfEntities> get_number_of_default_entities(rclcpp::Node::SharedPtr node)
 {
   auto number_of_entities = std::make_unique<NumberOfEntities>();
-  for (auto & weak_group : node->get_callback_groups()) {
-    auto group = weak_group.lock();
-    EXPECT_NE(nullptr, group);
-    if (!group || !group->can_be_taken_from().load()) {
-      return nullptr;
-    }
-    group->find_subscription_ptrs_if(
-      [&number_of_entities](rclcpp::SubscriptionBase::SharedPtr &)
-      {
-        number_of_entities->subscriptions++; return false;
-      });
-    group->find_timer_ptrs_if(
-      [&number_of_entities](rclcpp::TimerBase::SharedPtr &)
-      {
-        number_of_entities->timers++; return false;
-      });
-    group->find_service_ptrs_if(
-      [&number_of_entities](rclcpp::ServiceBase::SharedPtr &)
-      {
-        number_of_entities->services++; return false;
-      });
-    group->find_client_ptrs_if(
-      [&number_of_entities](rclcpp::ClientBase::SharedPtr &)
-      {
-        number_of_entities->clients++; return false;
-      });
-    group->find_waitable_ptrs_if(
-      [&number_of_entities](rclcpp::Waitable::SharedPtr &)
-      {
-        number_of_entities->waitables++; return false;
-      });
-  }
+  node->for_each_callback_group(
+    [&number_of_entities](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      if (!group->can_be_taken_from().load()) {
+        return;
+      }
+      group->find_subscription_ptrs_if(
+        [&number_of_entities](rclcpp::SubscriptionBase::SharedPtr &)
+        {
+          number_of_entities->subscriptions++; return false;
+        });
+      group->find_timer_ptrs_if(
+        [&number_of_entities](rclcpp::TimerBase::SharedPtr &)
+        {
+          number_of_entities->timers++; return false;
+        });
+      group->find_service_ptrs_if(
+        [&number_of_entities](rclcpp::ServiceBase::SharedPtr &)
+        {
+          number_of_entities->services++; return false;
+        });
+      group->find_client_ptrs_if(
+        [&number_of_entities](rclcpp::ClientBase::SharedPtr &)
+        {
+          number_of_entities->clients++; return false;
+        });
+      group->find_waitable_ptrs_if(
+        [&number_of_entities](rclcpp::Waitable::SharedPtr &)
+        {
+          number_of_entities->waitables++; return false;
+        });
+    });
 
   return number_of_entities;
 }
@@ -138,7 +140,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, init_bad_arguments) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
@@ -163,14 +165,14 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_basic_node) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
   EXPECT_EQ(
     expected_number_of_entities->subscriptions,
     entities_collector_->get_number_of_subscriptions());
@@ -210,7 +212,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
@@ -218,7 +220,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 
   // Expect weak_node pointers to be cleaned up and used
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
   EXPECT_EQ(0u, entities_collector_->get_number_of_subscriptions());
   EXPECT_EQ(0u, entities_collector_->get_number_of_timers());
   EXPECT_EQ(0u, entities_collector_->get_number_of_services());
@@ -281,7 +283,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
 
@@ -289,7 +291,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   EXPECT_EQ(
     1u + expected_number_of_entities->subscriptions,
@@ -361,14 +363,14 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_clear_
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
@@ -392,14 +394,14 @@ TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_resize
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_resize, RCL_RET_ERROR);
@@ -430,14 +432,14 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_rcl_wait_failed) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait, RCL_RET_ERROR);
@@ -478,7 +480,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
 
@@ -486,7 +488,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, refresh_wait_set_add_handles_to_wait
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   {
     auto mock = mocking_utils::patch_and_return(
@@ -511,14 +513,14 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   RCLCPP_EXPECT_THROW_EQ(
     entities_collector_->add_to_wait_set(nullptr),
@@ -539,7 +541,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) 
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
@@ -554,7 +556,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) 
   cb_group.reset();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
   ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
@@ -617,14 +619,14 @@ TEST_F(
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
-  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+  RCPPUTILS_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
   entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition);
-  RCLCPP_SCOPE_EXIT(entities_collector_->fini());
+  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
 
   cb_group->get_associated_with_executor_atomic().exchange(false);
   std::shared_ptr<void> data = entities_collector_->take_data();

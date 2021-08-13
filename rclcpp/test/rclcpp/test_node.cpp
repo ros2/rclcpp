@@ -25,10 +25,10 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
+#include "rcpputils/scope_exit.hpp"
 
 #include "rmw/validate_namespace.h"
 
@@ -102,6 +102,7 @@ TEST_F(TestNode, get_name_and_namespace) {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/ns", node->get_namespace());
+    EXPECT_STREQ("/ns", node->get_effective_namespace().c_str());
     EXPECT_STREQ("/ns/my_node", node->get_fully_qualified_name());
   }
   {
@@ -116,30 +117,35 @@ TEST_F(TestNode, get_name_and_namespace) {
     auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/ns", node->get_namespace());
+    EXPECT_STREQ("/ns", node->get_effective_namespace().c_str());
     EXPECT_STREQ("/ns/my_node", node->get_fully_qualified_name());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/", node->get_namespace());
+    EXPECT_STREQ("/", node->get_effective_namespace().c_str());
     EXPECT_STREQ("/my_node", node->get_fully_qualified_name());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/", node->get_namespace());
+    EXPECT_STREQ("/", node->get_effective_namespace().c_str());
     EXPECT_STREQ("/my_node", node->get_fully_qualified_name());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/my/ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/my/ns", node->get_namespace());
+    EXPECT_STREQ("/my/ns", node->get_effective_namespace().c_str());
     EXPECT_STREQ("/my/ns/my_node", node->get_fully_qualified_name());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "my/ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/my/ns", node->get_namespace());
+    EXPECT_STREQ("/my/ns", node->get_effective_namespace().c_str());
     EXPECT_STREQ("/my/ns/my_node", node->get_fully_qualified_name());
   }
   {
@@ -278,6 +284,13 @@ TEST_F(TestNode, subnode_construction_and_destruction) {
       auto subnode = node->create_sub_node("~sub_ns");
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
+  {
+    ASSERT_THROW(
+    {
+      auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+      auto subnode = node->create_sub_node("");
+    }, rclcpp::exceptions::NameValidationError);
+  }
 }
 
 TEST_F(TestNode, get_logger) {
@@ -410,7 +423,8 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});   // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
     EXPECT_THROW(
       {node->declare_parameter<std::string>(name, "not an int");},
       rclcpp::exceptions::InvalidParameterValueException);
@@ -657,7 +671,8 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
     EXPECT_THROW(
       {node->declare_parameter<int>(name, 43);},
       rclcpp::exceptions::InvalidParameterValueException);
@@ -784,7 +799,8 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
     EXPECT_THROW(
       {node->declare_parameters<std::string>("", {{name, "not an int"}});},
       rclcpp::exceptions::InvalidParameterValueException);
@@ -1012,7 +1028,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
 
     EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 43)).successful);
   }
@@ -1520,7 +1537,8 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
 
     auto rets = node->set_parameters(
     {
@@ -1712,7 +1730,8 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
 
     auto ret = node->set_parameters_atomically(
     {
@@ -1838,7 +1857,8 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
 
     auto ret = node->set_parameters_atomically(
     {
@@ -2733,13 +2753,33 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
 
 TEST_F(TestNode, callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  size_t num_callback_groups_in_basic_node = node->get_callback_groups().size();
+  size_t num_callback_groups_in_basic_node = 0;
+  node->for_each_callback_group(
+    [&num_callback_groups_in_basic_node](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      (void)group;
+      num_callback_groups_in_basic_node++;
+    });
 
   auto group1 = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  EXPECT_EQ(1u + num_callback_groups_in_basic_node, node->get_callback_groups().size());
+  size_t num_callback_groups = 0;
+  node->for_each_callback_group(
+    [&num_callback_groups](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      (void)group;
+      num_callback_groups++;
+    });
+  EXPECT_EQ(1u + num_callback_groups_in_basic_node, num_callback_groups);
 
   auto group2 = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  EXPECT_EQ(2u + num_callback_groups_in_basic_node, node->get_callback_groups().size());
+  size_t num_callback_groups2 = 0;
+  node->for_each_callback_group(
+    [&num_callback_groups2](rclcpp::CallbackGroup::SharedPtr group)
+    {
+      (void)group;
+      num_callback_groups2++;
+    });
+  EXPECT_EQ(2u + num_callback_groups_in_basic_node, num_callback_groups2);
 }
 
 // This is tested more thoroughly in node_interfaces/test_node_graph

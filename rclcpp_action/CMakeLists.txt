@@ -6,6 +6,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_action REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 
 # Default to C++14
@@ -39,6 +40,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
   "rcl_action"
   "rclcpp"
+  "rcpputils"
   "rosidl_runtime_c"
 )
 
@@ -94,6 +96,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_server test/test_server.cpp TIMEOUT 180)
   if(TARGET test_server)
     ament_target_dependencies(test_server
+      "rcpputils"
       "rcutils"
       "test_msgs"
     )

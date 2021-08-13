@@ -148,10 +148,16 @@ public:
     rclcpp::CallbackGroupType group_type,
     bool automatically_add_to_executor_with_node = true);
 
-  /// Return the list of callback groups in the node.
+  /// Iterate over the callback groups in the node, calling the given function on each valid one.
+  /**
+   * This method is called in a thread-safe way, and also makes sure to only call the given
+   * function on those items that are still valid.
+   *
+   * \param[in] func The callback function to call on each valid callback group.
+   */
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-  get_callback_groups() const;
+  void
+  for_each_callback_group(const node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
 
   /// Create and return a Publisher.
   /**
@@ -979,12 +985,15 @@ public:
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
-  /// Return the number of publishers that are advertised on a given topic.
+  /// Return a map of existing service names to list of service types for a specific node.
   /**
-   * \param[in] node_name the node_name on which to count the publishers.
-   * \param[in] namespace_ the namespace of the node associated with the name
-   * \return number of publishers that are advertised on a given topic.
-   * \throws std::runtime_error if publishers could not be counted
+   * This function only considers services - not clients.
+   * The returned names are the actual names used and do not have remap rules applied.
+   *
+   * \param[in] node_name name of the node.
+   * \param[in] namespace_ namespace of the node.
+   * \return a map of existing service names to list of service types.
+   * \throws std::runtime_error anything that rcl_error can throw.
    */
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>

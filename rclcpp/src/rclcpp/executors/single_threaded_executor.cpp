@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/any_executable.hpp"
-#include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::SingleThreadedExecutor;
 
@@ -29,7 +30,7 @@ SingleThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {

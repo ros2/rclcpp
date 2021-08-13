@@ -122,11 +122,19 @@ public:
   bool
   callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) = 0;
 
-  /// Return list of callback groups associated with this node.
+  using CallbackGroupFunction = std::function<void (rclcpp::CallbackGroup::SharedPtr)>;
+
+  /// Iterate over the stored callback groups, calling the given function on each valid one.
+  /**
+   * This method is called in a thread-safe way, and also makes sure to only call the given
+   * function on those items that are still valid.
+   *
+   * \param[in] func The callback function to call on each valid callback group.
+   */
   RCLCPP_PUBLIC
   virtual
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-  get_callback_groups() const = 0;
+  void
+  for_each_callback_group(const CallbackGroupFunction & func) = 0;
 
   /// Return the atomic bool which is used to ensure only one executor is used.
   RCLCPP_PUBLIC

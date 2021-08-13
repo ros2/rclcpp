@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rclcpp</name>
-  <version>11.1.0</version>
+  <version>12.0.0</version>
   <description>The ROS client library in C++.</description>
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
   <maintainer email="mabel@openrobotics.org">Mabel Zhang</maintainer>
@@ -11,6 +11,7 @@
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
+  <buildtool_depend>python3</buildtool_depend>
 
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>builtin_interfaces</build_depend>

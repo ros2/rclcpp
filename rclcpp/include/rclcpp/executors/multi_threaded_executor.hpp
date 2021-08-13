@@ -22,7 +22,6 @@
 #include <thread>
 #include <unordered_map>
 
-#include "rclcpp/detail/mutex_two_priorities.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -82,12 +81,10 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
-  detail::MutexTwoPriorities wait_mutex_;
+  std::mutex wait_mutex_;
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
-
-  std::set<TimerBase::SharedPtr> scheduled_timers_;
 };
 
 }  // namespace executors

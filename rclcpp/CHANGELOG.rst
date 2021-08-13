@@ -2,6 +2,33 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+12.0.0 (2021-07-26)
+-------------------
+* Remove unsafe get_callback_groups API.
+  Callers should change to using for_each_callback_group(), or
+  store the callback groups they need internally.
+* Add in callback_groups_for_each.
+  The main reason to add this method in is to make accesses to the
+  callback_groups\_ vector thread-safe.  By having a
+  callback_groups_for_each that accepts a std::function, we can
+  just have the callers give us the callback they are interested
+  in, and we can take care of the locking.
+  The rest of this fairly large PR is cleaning up all of the places
+  that use get_callback_groups() to instead use
+  callback_groups_for_each().
+* Use a different mechanism to avoid timers being scheduled multiple times by the MultiThreadedExecutor (`#1692 <https://github.com/ros2/rclcpp/issues/1692>`_)
+* Fix windows CI (`#1726 <https://github.com/ros2/rclcpp/issues/1726>`_)
+  Fix bug in AnyServiceCallback introduced in `#1709 <https://github.com/ros2/rclcpp/issues/1709>`_.
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic
+
+11.2.0 (2021-07-21)
+-------------------
+* Support to defer to send a response in services. (`#1709 <https://github.com/ros2/rclcpp/issues/1709>`_)
+  Signed-off-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+* Fix documentation bug. (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_)
+  Signed-off-by: William Woodall <william@osrfoundation.org>
+* Contributors: Ivan Santiago Paunovic, William Woodall
+
 11.1.0 (2021-07-13)
 -------------------
 * Removed left over ``is_initialized()`` implementation (`#1711 <https://github.com/ros2/rclcpp/issues/1711>`_)

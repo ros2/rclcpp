@@ -141,7 +141,9 @@ protected:
 };
 
 template<typename ServiceT>
-class Service : public ServiceBase
+class Service
+  : public ServiceBase,
+  public std::enable_shared_from_this<Service<ServiceT>>
 {
 public:
   using CallbackType = std::function<
@@ -335,9 +337,10 @@ public:
     std::shared_ptr<void> request) override
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto response = std::make_shared<typename ServiceT::Response>();
-    any_callback_.dispatch(request_header, typed_request, response);
-    send_response(*request_header, *response);
+    auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+    if (response) {
+      send_response(*request_header, *response);
+    }
   }
 
   void

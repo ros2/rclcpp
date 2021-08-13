@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+12.0.0 (2021-07-26)
+-------------------
+
+11.2.0 (2021-07-21)
+-------------------
+
 11.1.0 (2021-07-13)
 -------------------
 * Fixed occasionally missing goal result caused by race condition (`#1677 <https://github.com/ros2/rclcpp/issues/1677>`_)

@@ -37,6 +37,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "./mocking_utils/patch.hpp"
 
 using namespace std::chrono_literals;
@@ -395,7 +397,8 @@ TEST_F(TestLifecycleServiceClient, declare_parameter_with_no_initial_values)
     };
 
   auto handler = node1->add_on_set_parameters_callback(on_set_parameters);
-  RCLCPP_SCOPE_EXIT({node1->remove_on_set_parameters_callback(handler.get());});    // always reset
+  RCPPUTILS_SCOPE_EXIT(
+    {node1->remove_on_set_parameters_callback(handler.get());});  // always reset
 }
 
 TEST_F(TestLifecycleServiceClient, wait_for_graph_change)

@@ -221,12 +221,10 @@ NodeBase::create_callback_group(
   rclcpp::CallbackGroupType group_type,
   bool automatically_add_to_executor_with_node)
 {
-  using rclcpp::CallbackGroup;
-  using rclcpp::CallbackGroupType;
-  auto group = CallbackGroup::SharedPtr(
-    new CallbackGroup(
-      group_type,
-      automatically_add_to_executor_with_node));
+  auto group = std::make_shared<rclcpp::CallbackGroup>(
+    group_type,
+    automatically_add_to_executor_with_node);
+  std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
   return group;
 }
@@ -240,20 +238,25 @@ NodeBase::get_default_callback_group()
 bool
 NodeBase::callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group)
 {
-  bool group_belongs_to_this_node = false;
+  std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   for (auto & weak_group : this->callback_groups_) {
     auto cur_group = weak_group.lock();
     if (cur_group && (cur_group == group)) {
-      group_belongs_to_this_node = true;
+      return true;
     }
   }
-  return group_belongs_to_this_node;
+  return false;
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-NodeBase::get_callback_groups() const
+void NodeBase::for_each_callback_group(const CallbackGroupFunction & func)
 {
-  return callback_groups_;
+  std::lock_guard<std::mutex> lock(callback_groups_mutex_);
+  for (rclcpp::CallbackGroup::WeakPtr & weak_group : this->callback_groups_) {
+    rclcpp::CallbackGroup::SharedPtr group = weak_group.lock();
+    if (group) {
+      func(group);
+    }
+  }
 }
 
 std::atomic_bool &

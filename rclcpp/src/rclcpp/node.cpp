@@ -61,6 +61,12 @@ extend_sub_namespace(const std::string & existing_sub_namespace, const std::stri
             extension.c_str(),
             "a sub-namespace should not have a leading /",
             0);
+  } else if (existing_sub_namespace.empty() && extension.empty()) {
+    throw rclcpp::exceptions::NameValidationError(
+            "sub_namespace",
+            extension.c_str(),
+            "sub-nodes should not extend nodes by an empty sub-namespace",
+            0);
   }
 
   std::string new_sub_namespace;
@@ -86,7 +92,11 @@ create_effective_namespace(const std::string & node_namespace, const std::string
   // and do not need trimming of `/` and other things, as they were validated
   // in other functions already.
 
-  if (node_namespace.back() == '/') {
+  // A node may not have a sub_namespace if it is no sub_node. In this case,
+  // just return the original namespace
+  if (sub_namespace.empty()) {
+    return node_namespace;
+  } else if (node_namespace.back() == '/') {
     // this is the special case where node_namespace is just `/`
     return node_namespace + sub_namespace;
   } else {
@@ -482,10 +492,11 @@ Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_ma
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-Node::get_callback_groups() const
+void
+Node::for_each_callback_group(
+  const node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
 {
-  return node_base_->get_callback_groups();
+  node_base_->for_each_callback_group(func);
 }
 
 rclcpp::Event::SharedPtr

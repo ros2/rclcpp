@@ -365,10 +365,11 @@ LifecycleNode::get_subscriptions_info_by_topic(const std::string & topic_name, b
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-LifecycleNode::get_callback_groups() const
+void
+LifecycleNode::for_each_callback_group(
+  const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
 {
-  return node_base_->get_callback_groups();
+  node_base_->for_each_callback_group(func);
 }
 
 rclcpp::Event::SharedPtr

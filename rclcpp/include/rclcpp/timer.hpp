@@ -91,6 +91,17 @@ public:
   void
   reset();
 
+  /// Indicate that we're about to execute the callback.
+  /**
+   * The multithreaded executor takes advantage of this to avoid scheduling
+   * the callback multiple times.
+   *
+   * \return `true` if the callback should be executed, `false` if the timer was canceled.
+   */
+  RCLCPP_PUBLIC
+  virtual bool
+  call() = 0;
+
   /// Call the callback function when the timer signal is emitted.
   RCLCPP_PUBLIC
   virtual void
@@ -192,19 +203,28 @@ public:
   }
 
   /**
-   * \sa rclcpp::TimerBase::execute_callback
-   * \throws std::runtime_error if it failed to notify timer that callback occurred
+   * \sa rclcpp::TimerBase::call
+   * \throws std::runtime_error if it failed to notify timer that callback will occurr
    */
-  void
-  execute_callback() override
+  bool
+  call() override
   {
     rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
     if (ret == RCL_RET_TIMER_CANCELED) {
-      return;
+      return false;
     }
     if (ret != RCL_RET_OK) {
       throw std::runtime_error("Failed to notify timer that callback occurred");
     }
+    return true;
+  }
+
+  /**
+   * \sa rclcpp::TimerBase::execute_callback
+   */
+  void
+  execute_callback() override
+  {
     TRACEPOINT(callback_start, static_cast<const void *>(&callback_), false);
     execute_callback_delegate<>();
     TRACEPOINT(callback_end, static_cast<const void *>(&callback_));

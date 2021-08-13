@@ -32,7 +32,6 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/parameter_map.hpp"
-#include "rclcpp/scope_exit.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/qos_profiles.h"
 

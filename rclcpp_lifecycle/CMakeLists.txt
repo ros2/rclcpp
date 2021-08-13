@@ -103,6 +103,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_lifecycle_service_client
       "rcl_lifecycle"
       "rclcpp"
+      "rcpputils"
       "rcutils"
     )
     target_link_libraries(test_lifecycle_service_client ${PROJECT_NAME} mimick)
