@@ -31,6 +31,8 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 using rclcpp::node_interfaces::NodeBase;
 
+using rclcpp::node_interfaces::map_of_mutexes;
+
 NodeBase::NodeBase(
   const std::string & node_name,
   const std::string & namespace_,
@@ -317,35 +319,27 @@ NodeBase::resolve_topic_or_service_name(
   return output;
 }
 
-rclcpp::node_interfaces::map_of_mutexes NodeBase::map_object = map_of_mutexes();
+map_of_mutexes NodeBase::map_object = map_of_mutexes();
 
-rclcpp::node_interfaces::map_of_mutexes::map_of_mutexes()
-{
-}
-
-void rclcpp::node_interfaces::map_of_mutexes::create_mutex_of_nodebase(
+void map_of_mutexes::create_mutex_of_nodebase(
   const rclcpp::node_interfaces::NodeBaseInterface * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   this->data.emplace(nodebase, std::make_shared<std::mutex>() );
 }
 
-std::shared_ptr<std::mutex> rclcpp::node_interfaces::map_of_mutexes::get_mutex_of_nodebase(
+std::shared_ptr<std::mutex> map_of_mutexes::get_mutex_of_nodebase(
   const rclcpp::node_interfaces::NodeBaseInterface * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   return this->data[nodebase];
 }
 
-void rclcpp::node_interfaces::map_of_mutexes::delete_mutex_of_nodebase(
+void map_of_mutexes::delete_mutex_of_nodebase(
   const rclcpp::node_interfaces::NodeBaseInterface * nodebase)
 {
   std::lock_guard<std::mutex> guard(this->internal_mutex);
   this->data.erase(nodebase);
-}
-
-rclcpp::node_interfaces::map_of_mutexes::~map_of_mutexes()
-{
 }
 
 // For each callback group free function implementation
@@ -362,5 +356,8 @@ void rclcpp::node_interfaces::global_for_each_callback_group(
         func(group);
       }
     }
+  } else {
+    auto logger = rclcpp::get_logger("ForEachCallbackGroup");
+    RCLCPP_ERROR(logger, "Mutex entry not found in the global map");
   }
 }

@@ -34,10 +34,25 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-class map_of_mutexes;
 void global_for_each_callback_group(
   NodeBaseInterface * node_base_interface,
   const NodeBaseInterface::CallbackGroupFunction & func);
+
+// Class to hold the global map of mutexes
+class map_of_mutexes final
+{
+public:
+  // Methods need to be protected by internal mutex
+  void create_mutex_of_nodebase(const NodeBaseInterface * nodebase);
+  std::shared_ptr<std::mutex>
+  get_mutex_of_nodebase(const NodeBaseInterface * nodebase);
+  void delete_mutex_of_nodebase(const NodeBaseInterface * nodebase);
+
+private:
+  // Members
+  std::unordered_map<const NodeBaseInterface *, std::shared_ptr<std::mutex>> data;
+  std::mutex internal_mutex;
+};
 
 /// Implementation of the NodeBase part of the Node API.
 class NodeBase : public NodeBaseInterface
@@ -155,24 +170,5 @@ private:
 
 }  // namespace node_interfaces
 }  // namespace rclcpp
-
-// Class to hold the global map of mutexes
-class rclcpp::node_interfaces::map_of_mutexes
-{
-public:
-  map_of_mutexes();
-  ~map_of_mutexes();
-
-  // Methods need to be protected by internal mutex
-  void create_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBaseInterface * nodebase);
-  std::shared_ptr<std::mutex>
-  get_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBaseInterface * nodebase);
-  void delete_mutex_of_nodebase(const rclcpp::node_interfaces::NodeBaseInterface * nodebase);
-
-  // Members
-  std::unordered_map<const rclcpp::node_interfaces::NodeBaseInterface *,
-    std::shared_ptr<std::mutex>> data;
-  std::mutex internal_mutex;
-};
 
 #endif  // RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
