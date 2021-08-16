@@ -28,7 +28,6 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-
 namespace rclcpp
 {
 namespace node_interfaces
@@ -49,9 +48,8 @@ public:
   void delete_mutex_of_nodebase(const NodeBaseInterface * nodebase);
 
 private:
-  // Members
-  std::unordered_map<const NodeBaseInterface *, std::shared_ptr<std::mutex>> data;
-  std::mutex internal_mutex;
+  std::unordered_map<const NodeBaseInterface *, std::shared_ptr<std::mutex>> data_;
+  std::mutex internal_mutex_;
 };
 
 /// Implementation of the NodeBase part of the Node API.
