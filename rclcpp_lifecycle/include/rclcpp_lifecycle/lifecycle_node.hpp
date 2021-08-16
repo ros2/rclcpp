@@ -89,7 +89,6 @@
 #include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
-
 namespace rclcpp_lifecycle
 {
 

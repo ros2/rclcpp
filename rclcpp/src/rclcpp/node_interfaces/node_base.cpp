@@ -49,7 +49,7 @@ NodeBase::NodeBase(
   notify_guard_condition_is_valid_(false)
 {
   // Generate a mutex for this instance of NodeBase
-  this->map_object.create_mutex_of_nodebase(this);
+  NodeBase::map_object.create_mutex_of_nodebase(this);
 
   // Setup the guard condition that is notified when changes occur in the graph.
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
@@ -172,7 +172,7 @@ NodeBase::~NodeBase()
     }
   }
 
-  this->map_object.delete_mutex_of_nodebase(this);
+  NodeBase::map_object.delete_mutex_of_nodebase(this);
 }
 
 const char *
@@ -231,7 +231,7 @@ NodeBase::create_callback_group(
   auto group = std::make_shared<rclcpp::CallbackGroup>(
     group_type,
     automatically_add_to_executor_with_node);
-  auto mutex_ptr = this->map_object.get_mutex_of_nodebase(this);
+  auto mutex_ptr = NodeBase::map_object.get_mutex_of_nodebase(this);
   std::lock_guard<std::mutex> lock(*mutex_ptr);
   callback_groups_.push_back(group);
   return group;
@@ -246,7 +246,7 @@ NodeBase::get_default_callback_group()
 bool
 NodeBase::callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group)
 {
-  auto mutex_ptr = this->map_object.get_mutex_of_nodebase(this);
+  auto mutex_ptr = NodeBase::map_object.get_mutex_of_nodebase(this);
   std::lock_guard<std::mutex> lock(*mutex_ptr);
 
   for (auto & weak_group : this->callback_groups_) {
