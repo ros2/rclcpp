@@ -33,6 +33,7 @@ namespace rclcpp
 namespace node_interfaces
 {
 
+RCLCPP_PUBLIC
 void global_for_each_callback_group(
   NodeBaseInterface * node_base_interface,
   const NodeBaseInterface::CallbackGroupFunction & func);
