@@ -25,6 +25,7 @@
 #include <tuple>
 #include <utility>
 #include <variant>  // NOLINT
+#include <vector>
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
