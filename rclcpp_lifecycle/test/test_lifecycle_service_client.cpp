@@ -98,8 +98,9 @@ public:
       return unknown_state;
     }
 
-    if (future_result.get()) {
-      return future_result.get()->current_state;
+    auto result = future_result.get();
+    if (result) {
+      return result->current_state;
     } else {
       return unknown_state;
     }
@@ -140,9 +141,9 @@ public:
     if (future_status != std::future_status::ready) {
       return std::vector<lifecycle_msgs::msg::State>();
     }
-
-    if (future_result.get()) {
-      return future_result.get()->available_states;
+    auto result = future_result.get();
+    if (result) {
+      return result->available_states;
     }
 
     return std::vector<lifecycle_msgs::msg::State>();
@@ -164,8 +165,9 @@ public:
       return std::vector<lifecycle_msgs::msg::TransitionDescription>();
     }
 
-    if (future_result.get()) {
-      return future_result.get()->available_transitions;
+    auto result = future_result.get();
+    if (result) {
+      return result->available_transitions;
     }
 
     return std::vector<lifecycle_msgs::msg::TransitionDescription>();
@@ -187,8 +189,9 @@ public:
       return std::vector<lifecycle_msgs::msg::TransitionDescription>();
     }
 
-    if (future_result.get()) {
-      return future_result.get()->available_transitions;
+    auto result = future_result.get();
+    if (result) {
+      return result->available_transitions;
     }
 
     return std::vector<lifecycle_msgs::msg::TransitionDescription>();
