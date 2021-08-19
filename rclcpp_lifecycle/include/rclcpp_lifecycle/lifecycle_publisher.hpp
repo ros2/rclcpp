@@ -65,6 +65,7 @@ public:
     const rclcpp::PublisherOptionsWithAllocator<Alloc> & options)
   : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options),
     enabled_(false),
+    should_log_(true),
     logger_(rclcpp::get_logger("LifecyclePublisher"))
   {
   }
@@ -81,11 +82,7 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN(
-        logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
+      log_publisher_not_enabled();
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(std::move(msg));
@@ -101,11 +98,7 @@ public:
   publish(const MessageT & msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN(
-        logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
+      log_publisher_not_enabled();
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -121,6 +114,7 @@ public:
   on_deactivate()
   {
     enabled_ = false;
+    should_log_ = true;
   }
 
   virtual bool
@@ -130,7 +124,30 @@ public:
   }
 
 private:
+  /// LifecyclePublisher log helper function
+  /**
+   * Helper function that logs a message saying that publisher can't publish
+   * because it's not enabled.
+   */
+  void log_publisher_not_enabled()
+  {
+    // Nothing to do if we are not meant to log
+    if (!should_log_) {
+      return;
+    }
+
+    // Log the message
+    RCLCPP_WARN(
+      logger_,
+      "Trying to publish message on the topic '%s', but the publisher is not activated",
+      this->get_topic_name());
+
+    // We stop logging until the flag gets enabled again
+    should_log_ = false;
+  }
+
   bool enabled_ = false;
+  bool should_log_ = true;
   rclcpp::Logger logger_;
 };
 
