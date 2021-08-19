@@ -660,7 +660,6 @@ protected:
     CallbackTypeValueVariant,
     CallbackWithRequestTypeValueVariant>;
 
-  RCLCPP_PUBLIC
   int64_t
   async_send_request_impl(const Request & request, CallbackInfoVariant value)
   {
@@ -678,7 +677,6 @@ protected:
     return sequence_number;
   }
 
-  RCLCPP_PUBLIC
   std::optional<CallbackInfoVariant>
   get_and_erase_pending_request(int64_t request_number)
   {
