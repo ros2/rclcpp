@@ -605,3 +605,9 @@ Node::get_node_options() const
 {
   return this->node_options_;
 }
+
+void Node::for_each_callback_group(
+  const node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
+{
+  rclcpp::node_interfaces::global_for_each_callback_group(node_base_.get(), func);
+}

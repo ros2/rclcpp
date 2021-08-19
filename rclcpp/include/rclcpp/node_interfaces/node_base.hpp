@@ -16,10 +16,13 @@
 #define RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
 
 #include <memory>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rcl/node.h"
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -30,11 +33,33 @@ namespace rclcpp
 namespace node_interfaces
 {
 
+RCLCPP_PUBLIC
+void global_for_each_callback_group(
+  NodeBaseInterface * node_base_interface,
+  const NodeBaseInterface::CallbackGroupFunction & func);
+
+// Class to hold the global map of mutexes
+class map_of_mutexes final
+{
+public:
+  // Methods need to be protected by internal mutex
+  void create_mutex_of_nodebase(const NodeBaseInterface * nodebase);
+  std::shared_ptr<std::mutex>
+  get_mutex_of_nodebase(const NodeBaseInterface * nodebase);
+  void delete_mutex_of_nodebase(const NodeBaseInterface * nodebase);
+
+private:
+  std::unordered_map<const NodeBaseInterface *, std::shared_ptr<std::mutex>> data_;
+  std::mutex internal_mutex_;
+};
+
 /// Implementation of the NodeBase part of the Node API.
 class NodeBase : public NodeBaseInterface
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBase)
+
+  static map_of_mutexes map_object;
 
   RCLCPP_PUBLIC
   NodeBase(

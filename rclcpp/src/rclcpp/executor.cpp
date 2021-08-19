@@ -30,6 +30,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rcutils/logging_macros.h"
 
@@ -190,14 +191,13 @@ Executor::add_callback_groups_from_nodes_associated_to_executor()
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
-      auto group_ptrs = node->get_callback_groups();
-      std::for_each(
-        group_ptrs.begin(), group_ptrs.end(),
-        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+      rclcpp::node_interfaces::global_for_each_callback_group(
+        node.get(),
+        [this, node](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
         {
-          auto shared_group_ptr = group_ptr.lock();
-          if (shared_group_ptr && shared_group_ptr->automatically_add_to_executor_with_node() &&
-          !shared_group_ptr->get_associated_with_executor_atomic().load())
+          if (
+            shared_group_ptr->automatically_add_to_executor_with_node() &&
+            !shared_group_ptr->get_associated_with_executor_atomic().load())
           {
             this->add_callback_group_to_map(
               shared_group_ptr,
@@ -271,18 +271,21 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
     throw std::runtime_error("Node has already been added to an executor.");
   }
   std::lock_guard<std::mutex> guard{mutex_};
-  for (auto & weak_group : node_ptr->get_callback_groups()) {
-    auto group_ptr = weak_group.lock();
-    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
-      group_ptr->automatically_add_to_executor_with_node())
+  rclcpp::node_interfaces::global_for_each_callback_group(
+    node_ptr.get(),
+    [this, node_ptr, notify](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      this->add_callback_group_to_map(
-        group_ptr,
-        node_ptr,
-        weak_groups_to_nodes_associated_with_executor_,
-        notify);
-    }
-  }
+      if (!group_ptr->get_associated_with_executor_atomic().load() &&
+      group_ptr->automatically_add_to_executor_with_node())
+      {
+        this->add_callback_group_to_map(
+          group_ptr,
+          node_ptr,
+          weak_groups_to_nodes_associated_with_executor_,
+          notify);
+      }
+    });
+
   weak_nodes_.push_back(node_ptr);
 }
 

@@ -23,6 +23,7 @@
 
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
+#include "rclcpp/node_interfaces/node_base.hpp"
 
 using rclcpp::executors::StaticExecutorEntitiesCollector;
 
@@ -290,18 +291,21 @@ StaticExecutorEntitiesCollector::add_node(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
-  for (const auto & weak_group : node_ptr->get_callback_groups()) {
-    auto group_ptr = weak_group.lock();
-    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
-      group_ptr->automatically_add_to_executor_with_node())
+  rclcpp::node_interfaces::global_for_each_callback_group(
+    node_ptr.get(),
+    [this, node_ptr, &is_new_node](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      is_new_node = (add_callback_group(
+      if (
+        !group_ptr->get_associated_with_executor_atomic().load() &&
+        group_ptr->automatically_add_to_executor_with_node())
+      {
+        is_new_node = (add_callback_group(
           group_ptr,
           node_ptr,
           weak_groups_to_nodes_associated_with_executor_) ||
         is_new_node);
-    }
-  }
+      }
+    });
   weak_nodes_.push_back(node_ptr);
   return is_new_node;
 }
@@ -467,13 +471,11 @@ StaticExecutorEntitiesCollector::add_callback_groups_from_nodes_associated_to_ex
   for (const auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
-      auto group_ptrs = node->get_callback_groups();
-      std::for_each(
-        group_ptrs.begin(), group_ptrs.end(),
-        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+      rclcpp::node_interfaces::global_for_each_callback_group(
+        node.get(),
+        [this, node](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
         {
-          auto shared_group_ptr = group_ptr.lock();
-          if (shared_group_ptr && shared_group_ptr->automatically_add_to_executor_with_node() &&
+          if (shared_group_ptr->automatically_add_to_executor_with_node() &&
           !shared_group_ptr->get_associated_with_executor_atomic().load())
           {
             add_callback_group(

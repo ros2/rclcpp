@@ -21,6 +21,7 @@
 
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 #include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/node_interfaces/node_base.hpp"
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"
 
@@ -84,14 +85,13 @@ TEST_F(TestMemoryStrategy, get_subscription_by_handle) {
   rclcpp::SubscriptionBase::SharedPtr found_subscription = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -131,14 +131,13 @@ TEST_F(TestMemoryStrategy, get_service_by_handle) {
   rclcpp::ServiceBase::SharedPtr found_service = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -184,14 +183,13 @@ TEST_F(TestMemoryStrategy, get_client_by_handle) {
   rclcpp::ClientBase::SharedPtr found_client = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -232,14 +230,13 @@ TEST_F(TestMemoryStrategy, get_timer_by_handle) {
   rclcpp::TimerBase::SharedPtr found_timer = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -281,14 +278,14 @@ TEST_F(TestMemoryStrategy, get_node_by_group) {
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
     auto node_handle = node->get_node_base_interface();
-    auto callback_groups = node_handle->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node_handle](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    rclcpp::node_interfaces::global_for_each_callback_group(
+      node_handle.get(),
+      [node_handle, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node_handle));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -325,14 +322,13 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
   rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -379,14 +375,13 @@ TEST_F(TestMemoryStrategy, get_group_by_service) {
   rclcpp::ServiceBase::SharedPtr service = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -424,14 +419,13 @@ TEST_F(TestMemoryStrategy, get_group_by_client) {
   rclcpp::ClientBase::SharedPtr client = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -464,14 +458,13 @@ TEST_F(TestMemoryStrategy, get_group_by_timer) {
   rclcpp::TimerBase::SharedPtr timer = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);
@@ -504,14 +497,13 @@ TEST_F(TestMemoryStrategy, get_group_by_waitable) {
   rclcpp::Waitable::SharedPtr waitable = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    auto callback_groups = node->get_node_base_interface()->get_callback_groups();
-    std::for_each(
-      callback_groups.begin(), callback_groups.end(),
-      [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+    node->for_each_callback_group(
+      [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
+      {
         weak_groups_to_nodes.insert(
           std::pair<rclcpp::CallbackGroup::WeakPtr,
           rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
-            weak_group_ptr,
+            group_ptr,
             node->get_node_base_interface()));
       });
     memory_strategy()->collect_entities(weak_groups_to_nodes);

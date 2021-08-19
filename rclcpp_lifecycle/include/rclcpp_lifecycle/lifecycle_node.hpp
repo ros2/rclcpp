@@ -200,6 +200,18 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
+  /// Iterate over the callback groups in the node, calling the given function on each valid one.
+  /**
+   * This method is called in a thread-safe way, and also makes sure to only call the given
+   * function on those items that are still valid.
+   *
+   * \param[in] func The callback function to call on each valid callback group.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  for_each_callback_group(
+    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
+
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
