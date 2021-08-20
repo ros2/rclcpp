@@ -40,9 +40,14 @@ struct can_be_nullptr : std::false_type {};
 // but we see a warning that they can never be null when using it.
 // We also test if `T &` can be assigned to `nullptr` to avoid the issue.
 template<typename T>
+#ifdef __QNXNTO__
+struct can_be_nullptr<T, std::void_t<
+    decltype(std::declval<T>() == nullptr)>>: std::true_type {};
+#else
 struct can_be_nullptr<T, std::void_t<
     decltype(std::declval<T>() == nullptr), decltype(std::declval<T &>() = nullptr)>>
   : std::true_type {};
+#endif
 }  // namespace detail
 
 // Forward declare
