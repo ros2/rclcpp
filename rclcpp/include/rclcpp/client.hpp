@@ -17,12 +17,15 @@
 
 #include <atomic>
 #include <future>
-#include <map>
+#include <unordered_map>
 #include <memory>
+#include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>  // NOLINT
+#include <vector>
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
@@ -44,6 +47,68 @@
 
 namespace rclcpp
 {
+
+namespace detail
+{
+template<typename FutureT>
+struct FutureAndRequestId
+{
+  FutureT future;
+  int64_t request_id;
+
+  FutureAndRequestId(FutureT impl, int64_t req_id)
+  : future(std::move(impl)), request_id(req_id)
+  {}
+
+  /// Allow implicit conversions to `std::future` by reference.
+  operator FutureT &() {return this->future;}
+
+  /// Deprecated, use the `future` member variable instead.
+  /**
+   * Allow implicit conversions to `std::future` by value.
+   * \deprecated
+   */
+  [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
+  operator FutureT() {return this->future;}
+
+  // delegate future like methods in the std::future impl_
+
+  /// See std::future::get().
+  auto get() {return this->future.get();}
+  /// See std::future::valid().
+  bool valid() const noexcept {return this->future.valid();}
+  /// See std::future::wait().
+  void wait() const {return this->future.wait();}
+  /// See std::future::wait_for().
+  template<class Rep, class Period>
+  std::future_status wait_for(
+    const std::chrono::duration<Rep, Period> & timeout_duration) const
+  {
+    return this->future.wait_for(timeout_duration);
+  }
+  /// See std::future::wait_until().
+  template<class Clock, class Duration>
+  std::future_status wait_until(
+    const std::chrono::time_point<Clock, Duration> & timeout_time) const
+  {
+    return this->future.wait_until(timeout_time);
+  }
+
+  // Rule of five, we could use the rule of zero here, but better be explicit as some of the
+  // methods are deleted.
+
+  /// Move constructor.
+  FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
+  /// Deleted copy constructor, each instance is a unique owner of the future.
+  FutureAndRequestId(const FutureAndRequestId & other) = delete;
+  /// Move assignment.
+  FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
+  /// Deleted copy assignment, each instance is a unique owner of the future.
+  FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
+  /// Destructor.
+  ~FutureAndRequestId() = default;
+};
+}  // namespace detail
 
 namespace node_interfaces
 {
@@ -178,6 +243,9 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
+  using Request = typename ServiceT::Request;
+  using Response = typename ServiceT::Response;
+
   using SharedRequest = typename ServiceT::Request::SharedPtr;
   using SharedResponse = typename ServiceT::Response::SharedPtr;
 
@@ -187,6 +255,7 @@ public:
   using SharedPromise = std::shared_ptr<Promise>;
   using SharedPromiseWithRequest = std::shared_ptr<PromiseWithRequest>;
 
+  using Future = std::future<SharedResponse>;
   using SharedFuture = std::shared_future<SharedResponse>;
   using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
 
@@ -194,6 +263,64 @@ public:
   using CallbackWithRequestType = std::function<void (SharedFutureWithRequest)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
+
+  /// A convenient Client::Future and request id pair.
+  /**
+   * Public members:
+   * - future: a std::future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::future provides.
+   */
+  struct FutureAndRequestId
+    : detail::FutureAndRequestId<std::future<SharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::future<SharedResponse>>::FutureAndRequestId;
+
+    /// Deprecated, use `.future.share()` instead.
+    /**
+     * Allow implicit conversions to `std::shared_future` by value.
+     * \deprecated
+     */
+    [[deprecated(
+      "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
+    operator SharedFuture() {return this->future.share();}
+
+    // delegate future like methods in the std::future impl_
+
+    /// See std::future::share().
+    SharedFuture share() noexcept {return this->future.share();}
+  };
+
+  /// A convenient Client::SharedFuture and request id pair.
+  /**
+   * Public members:
+   * - future: a std::shared_future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::shared_future provides.
+   */
+  struct SharedFutureAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<SharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::shared_future<SharedResponse>>::FutureAndRequestId;
+  };
+
+  /// A convenient Client::SharedFutureWithRequest and request id pair.
+  /**
+   * Public members:
+   * - future: a std::shared_future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::shared_future provides.
+   */
+  struct SharedFutureWithRequestAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<std::pair<SharedRequest, SharedResponse>>>
+  {
+    using detail::FutureAndRequestId<
+      std::shared_future<std::pair<SharedRequest, SharedResponse>>
+    >::FutureAndRequestId;
+  };
 
   /// Default constructor.
   /**
@@ -292,34 +419,89 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response) override
   {
-    std::unique_lock<std::mutex> lock(pending_requests_mutex_);
-    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
-    int64_t sequence_number = request_header->sequence_number;
-    // TODO(esteve) this should throw instead since it is not expected to happen in the first place
-    if (this->pending_requests_.count(sequence_number) == 0) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "Received invalid sequence number. Ignoring...");
+    std::optional<CallbackInfoVariant>
+    optional_pending_request = this->get_and_erase_pending_request(request_header->sequence_number);
+    if (!optional_pending_request) {
       return;
     }
-    auto tuple = this->pending_requests_[sequence_number];
-    auto call_promise = std::get<0>(tuple);
-    auto callback = std::get<1>(tuple);
-    auto future = std::get<2>(tuple);
-    this->pending_requests_.erase(sequence_number);
-    // Unlock here to allow the service to be called recursively from one of its callbacks.
-    lock.unlock();
-
-    call_promise->set_value(typed_response);
-    callback(future);
+    auto & value = *optional_pending_request;
+    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(
+      std::move(response));
+    if (std::holds_alternative<Promise>(value)) {
+      auto & promise = std::get<Promise>(value);
+      promise.set_value(std::move(typed_response));
+    } else if (std::holds_alternative<CallbackTypeValueVariant>(value)) {
+      auto & inner = std::get<CallbackTypeValueVariant>(value);
+      const auto & callback = std::get<CallbackType>(inner);
+      auto & promise = std::get<Promise>(inner);
+      auto & future = std::get<SharedFuture>(inner);
+      promise.set_value(std::move(typed_response));
+      callback(std::move(future));
+    } else if (std::holds_alternative<CallbackWithRequestTypeValueVariant>(value)) {
+      auto & inner = std::get<CallbackWithRequestTypeValueVariant>(value);
+      const auto & callback = std::get<CallbackWithRequestType>(inner);
+      auto & promise = std::get<PromiseWithRequest>(inner);
+      auto & future = std::get<SharedFutureWithRequest>(inner);
+      auto & request = std::get<SharedRequest>(inner);
+      promise.set_value(std::make_pair(std::move(request), std::move(typed_response)));
+      callback(std::move(future));
+    }
   }
 
-  SharedFuture
+  /// Send a request to the service server.
+  /**
+   * This method returns a `FutureAndRequestId` instance
+   * that can be passed to Executor::spin_until_future_complete() to
+   * wait until it has been completed.
+   *
+   * If the future never completes,
+   * e.g. the call to Executor::spin_until_future_complete() times out,
+   * Client::remove_pending_request() must be called to clean the client internal state.
+   * Not doing so will make the `Client` instance to use more memory each time a response is not
+   * received from the service server.
+   *
+   * ```cpp
+   * auto future = client->async_send_request(my_request);
+   * if (
+   *   rclcpp::FutureReturnCode::TIMEOUT ==
+   *   executor->spin_until_future_complete(future, timeout))
+   * {
+   *   client->remove_pending_request(future);
+   *   // handle timeout
+   * } else {
+   *   handle_response(future.get());
+   * }
+   * ```
+   *
+   * \param[in] request request to be send.
+   * \return a FutureAndRequestId instance.
+   */
+  FutureAndRequestId
   async_send_request(SharedRequest request)
   {
-    return async_send_request(request, [](SharedFuture) {});
+    Promise promise;
+    auto future = promise.get_future();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::move(promise));
+    return FutureAndRequestId(std::move(future), req_id);
   }
 
+  /// Send a request to the service server and schedule a callback in the executor.
+  /**
+   * Similar to the previous overload, but a callback will automatically be called when a response is received.
+   *
+   * If the callback is never called, because we never got a reply for the service server, remove_pending_request()
+   * has to be called with the returned request id or prune_pending_requests().
+   * Not doing so will make the `Client` instance use more memory each time a response is not
+   * received from the service server.
+   * In this case, it's convenient to setup a timer to cleanup the pending requests.
+   * See for example the `examples_rclcpp_async_client` package in https://github.com/ros2/examples.
+   *
+   * \param[in] request request to be send.
+   * \param[in] cb callback that will be called when we get a response for this request.
+   * \return the request id representing the request just sent.
+   */
   template<
     typename CallbackT,
     typename std::enable_if<
@@ -329,23 +511,28 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFuture
+  SharedFutureAndRequestId
   async_send_request(SharedRequest request, CallbackT && cb)
   {
-    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-    int64_t sequence_number;
-    rcl_ret_t ret = rcl_send_request(get_client_handle().get(), request.get(), &sequence_number);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
-    }
-
-    SharedPromise call_promise = std::make_shared<Promise>();
-    SharedFuture f(call_promise->get_future());
-    pending_requests_[sequence_number] =
-      std::make_tuple(call_promise, std::forward<CallbackType>(cb), f);
-    return f;
+    Promise promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::make_tuple(
+        CallbackType{std::forward<CallbackT>(cb)},
+        shared_future,
+        std::move(promise)));
+    return SharedFutureAndRequestId{std::move(shared_future), req_id};
   }
 
+  /// Send a request to the service server and schedule a callback in the executor.
+  /**
+   * Similar to the previous method, but you can get both the request and response in the callback.
+   *
+   * \param[in] request request to be send.
+   * \param[in] cb callback that will be called when we get a response for this request.
+   * \return the request id representing the request just sent.
+   */
   template<
     typename CallbackT,
     typename std::enable_if<
@@ -355,28 +542,165 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFutureWithRequest
+  SharedFutureWithRequestAndRequestId
   async_send_request(SharedRequest request, CallbackT && cb)
   {
-    SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
-    SharedFutureWithRequest future_with_request(promise->get_future());
-
-    auto wrapping_cb = [future_with_request, promise, request,
-        cb = std::forward<CallbackWithRequestType>(cb)](SharedFuture future) {
-        auto response = future.get();
-        promise->set_value(std::make_pair(request, response));
-        cb(future_with_request);
-      };
-
-    async_send_request(request, wrapping_cb);
-
-    return future_with_request;
+    PromiseWithRequest promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::make_tuple(
+        CallbackWithRequestType{std::forward<CallbackT>(cb)},
+        request,
+        shared_future,
+        std::move(promise)));
+    return SharedFutureWithRequestAndRequestId{std::move(shared_future), req_id};
   }
 
-private:
+  /// Cleanup a pending request.
+  /**
+   * This notifies the client that we have waited long enough for a response from the server
+   * to come, we have given up and we are not waiting for a response anymore.
+   *
+   * Not calling this will make the client start using more memory for each request
+   * that never got a reply from the server.
+   *
+   * \param[in] request_id request id returned by async_send_request().
+   * \return true when a pending request was removed, false if not (e.g. a response was received).
+   */
+  bool
+  remove_pending_request(int64_t request_id)
+  {
+    std::lock_guard guard(pending_requests_mutex_);
+    return pending_requests_.erase(request_id) != 0u;
+  }
+
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `Client::remove_pending_request(this, future.request_id)`.
+   */
+  bool
+  remove_pending_request(const FutureAndRequestId & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `Client::remove_pending_request(this, future.request_id)`.
+   */
+  bool
+  remove_pending_request(const SharedFutureAndRequestId & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `Client::remove_pending_request(this, future.request_id)`.
+   */
+  bool
+  remove_pending_request(const SharedFutureWithRequestAndRequestId & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  /// Clean all pending requests.
+  /**
+   * \return number of pending requests that were removed.
+   */
+  size_t
+  prune_pending_requests()
+  {
+    std::lock_guard guard(pending_requests_mutex_);
+    auto ret = pending_requests_.size();
+    pending_requests_.clear();
+    return ret;
+  }
+
+  /// Clean all pending requests older than a time_point.
+  /**
+   * \param[in] time_point Requests that were sent before this point are going to be removed.
+   * \param[inout] pruned_requests Removed requests id will be pushed to the vector
+   *  if a pointer is provided.
+   * \return number of pending requests that were removed.
+   */
+  template<typename AllocatorT = std::allocator<int64_t>>
+  size_t
+  prune_requests_older_than(
+    std::chrono::time_point<std::chrono::system_clock> time_point,
+    std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
+  {
+    std::lock_guard guard(pending_requests_mutex_);
+    auto old_size = pending_requests_.size();
+    for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
+      if (it->second.first < time_point) {
+        pruned_requests->push_back(it->first);
+        it = pending_requests_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    return old_size - pending_requests_.size();
+  }
+
+protected:
+  using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
+  using CallbackWithRequestTypeValueVariant = std::tuple<
+    CallbackWithRequestType, SharedRequest, SharedFutureWithRequest, PromiseWithRequest>;
+
+  using CallbackInfoVariant = std::variant<
+    std::promise<SharedResponse>,
+    CallbackTypeValueVariant,
+    CallbackWithRequestTypeValueVariant>;
+
+  int64_t
+  async_send_request_impl(const Request & request, CallbackInfoVariant value)
+  {
+    int64_t sequence_number;
+    rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &request, &sequence_number);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
+    }
+    {
+      std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+      pending_requests_.try_emplace(
+        sequence_number,
+        std::make_pair(std::chrono::system_clock::now(), std::move(value)));
+    }
+    return sequence_number;
+  }
+
+  std::optional<CallbackInfoVariant>
+  get_and_erase_pending_request(int64_t request_number)
+  {
+    std::unique_lock<std::mutex> lock(pending_requests_mutex_);
+    auto it = this->pending_requests_.find(request_number);
+    if (it == this->pending_requests_.end()) {
+      RCUTILS_LOG_DEBUG_NAMED(
+        "rclcpp",
+        "Received invalid sequence number. Ignoring...");
+      return std::nullopt;
+    }
+    auto value = std::move(it->second.second);
+    this->pending_requests_.erase(request_number);
+    return value;
+  }
+
   RCLCPP_DISABLE_COPY(Client)
 
-  std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
+  std::unordered_map<
+    int64_t,
+    std::pair<
+      std::chrono::time_point<std::chrono::system_clock>,
+      CallbackInfoVariant>>
+  pending_requests_;
   std::mutex pending_requests_mutex_;
 };
 
