@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+13.0.0 (2021-08-23)
+-------------------
 * Remove can_be_nullptr assignment check for QNX case. (`#1752 <https://github.com/ros2/rclcpp/issues/1752>`_)
 * Update client API to be able to remove pending requests. (`#1734 <https://github.com/ros2/rclcpp/issues/1734>`_)
 * Fix: Allow to add a node while spinning in the StaticSingleThreadedExecutor. (`#1690 <https://github.com/ros2/rclcpp/issues/1690>`_)
