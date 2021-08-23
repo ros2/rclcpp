@@ -218,6 +218,9 @@ public:
    * If the timeout is greater than 0 then this function will return after that period of time has
    * elapsed (return false) or all published message data were acknowledged (return true).
    *
+   * This function only waits for acknowledgments if the publisher's QOS profile is RELIABLE.
+   * Otherwise this function will immediately return `true`.
+   *
    * \param[in] timeout the duration to wait for all published message data were acknowledged.
    * \return `true` if all published message data were acknowledged before timeout, otherwise
    *   `false`.
