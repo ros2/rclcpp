@@ -147,7 +147,7 @@ public:
   /**
    * A topic is considered to exist when at least one publisher or subscriber
    * exists for it, whether they be local or remote to this process.
-   * The returned names are the actual names after remap rules applied.
+   * The returned names are the actual names of the topics, either announced by another nodes or by this one.
    * Attempting to create publishers or subscribers using names returned by this function may not
    * result in the desired topic name being used depending on the remap rules in use.
    *
@@ -163,7 +163,7 @@ public:
    * A service is considered to exist when at least one service server or
    * service client exists for it, whether they be local or remote to this
    * process.
-   * The returned names are the actual names after remap rules applied.
+   * The returned names are the actual names of the services, either announced by another nodes or by this one.
    * Attempting to create clients or services using names returned by this function may not result in
    * the desired service name being used depending on the remap rules in use.
    */
