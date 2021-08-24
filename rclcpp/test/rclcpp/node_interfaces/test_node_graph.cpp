@@ -215,7 +215,7 @@ TEST_F(TestNodeGraph, get_service_names_and_types_by_node)
     node_graph()->get_service_names_and_types_by_node(node2_name, absolute_namespace);
 
   auto start = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(3)) {
     services_of_node1 =
       node_graph()->get_service_names_and_types_by_node(node_name, absolute_namespace);
     services_of_node2 =
@@ -249,7 +249,7 @@ TEST_F(TestNodeGraph, get_client_names_and_types_by_node)
     node_graph()->get_client_names_and_types_by_node(node2_name, absolute_namespace);
 
   auto start = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(3)) {
     services_of_node1 =
       node_graph()->get_client_names_and_types_by_node(node_name, absolute_namespace);
     services_of_node2 =
@@ -343,7 +343,7 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node)
     node_graph()->get_publisher_names_and_types_by_node(node2_name, absolute_namespace);
 
   auto start = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(3)) {
     topics_of_node1 =
       node_graph()->get_publisher_names_and_types_by_node(node_name, absolute_namespace);
     topics_of_node2 =
@@ -381,7 +381,7 @@ TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node)
     node_graph()->get_subscriber_names_and_types_by_node(node2_name, absolute_namespace);
 
   auto start = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(3)) {
     topics_of_node1 =
       node_graph()->get_subscriber_names_and_types_by_node(node_name, absolute_namespace);
     topics_of_node2 =
@@ -512,8 +512,9 @@ TEST_F(TestNodeGraph, get_node_names_with_enclaves_fini_errors)
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_node_names_with_enclaves(),
     std::runtime_error(
-      "could not destroy node names, could not destroy node namespaces, "
-      "could not destroy node enclaves"));
+      "failed to finalize array, could not destroy node names, leaking memory: error not set"
+      ", could not destroy node namespaces, leaking memory: error not set"
+      ", could not destroy node enclaves, leaking memory: error not set"));
 }
 
 TEST_F(TestNodeGraph, count_publishers_rcl_error)
