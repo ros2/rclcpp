@@ -256,6 +256,8 @@ public:
   /// Return a vector of existing node names, namespaces and enclaves (tuple of string).
   /*
    * The returned names are the actual names after remap rules applied.
+   * The enclaves contain the runtime security artifacts, those can be
+   * used to establish secured network.
    */
   RCLCPP_PUBLIC
   virtual
