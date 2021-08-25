@@ -143,6 +143,7 @@ private:
   node_interfaces::LifecycleNodeInterface::CallbackReturn
   execute_callback(unsigned int cb_id, const State & previous_state) const;
 
+  mutable std::recursive_mutex state_machine_mutex_;
   rcl_lifecycle_state_machine_t state_machine_;
   State current_state_;
   std::map<
