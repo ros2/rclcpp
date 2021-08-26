@@ -95,7 +95,8 @@ Clock::sleep_until(Time until)
 {
   const auto this_clock_type = get_clock_type();
   if (until.get_clock_type() != this_clock_type) {
-    RCUTILS_LOG_ERROR("sleep_until Time clock type does not match this clock's type.");
+    RCUTILS_LOG_ERROR("sleep_until Time clock type %d does not match this clock's type %d.",
+      until.get_clock_type(), this_clock_type);
     return false;
   }
   bool time_source_changed = false;
@@ -120,8 +121,9 @@ Clock::sleep_until(Time until)
       impl_->cv_.wait_until(lock, system_time);
     }
   } else if (this_clock_type == RCL_ROS_TIME) {
-    // Install jump handler for any amount of time change,
-    // to check if time has been reached on each new sample
+    // Install jump handler for any amount of time change, for two purposes:
+    // - if ROS time is active, check if time reached on each new clock sample
+    // - Trigger via on_clock_change to detect if time source changes, to invalidate sleep
     rcl_jump_threshold_t threshold;
     threshold.on_clock_change = true;
     threshold.min_backward.nanoseconds = 0;
@@ -131,26 +133,31 @@ Clock::sleep_until(Time until)
       [this](const rcl_time_jump_t &) {impl_->cv_.notify_all();},
       threshold);
 
-    if (!ros_time_is_active()) {
-      auto system_time = std::chrono::time_point<
-        std::chrono::system_clock, std::chrono::nanoseconds>(
-        std::chrono::nanoseconds(until.nanoseconds()));
+    try {
+      if (!ros_time_is_active()) {
+        auto system_time = std::chrono::time_point<
+          std::chrono::system_clock, std::chrono::nanoseconds>(
+          std::chrono::nanoseconds(until.nanoseconds()));
 
-      // loop over spurious wakeups but notice shutdown or time source change
-      std::unique_lock lock(impl_->clock_mutex_);
-      while (now() < until && rclcpp::ok() && !ros_time_is_active()) {
-        impl_->cv_.wait_until(lock, system_time);
+        // loop over spurious wakeups but notice shutdown or time source change
+        std::unique_lock lock(impl_->clock_mutex_);
+        while (now() < until && rclcpp::ok() && !ros_time_is_active()) {
+          impl_->cv_.wait_until(lock, system_time);
+        }
+        time_source_changed = ros_time_is_active();
+      } else {
+        // RCL_ROS_TIME with ros_time_is_active.
+        // Just wait without "until" because installed
+        // jump callbacks wake the cv on every new sample.
+        std::unique_lock lock(impl_->clock_mutex_);
+        while (now() < until && rclcpp::ok() && ros_time_is_active()) {
+          impl_->cv_.wait(lock);
+        }
+        time_source_changed = !ros_time_is_active();
       }
-      time_source_changed = ros_time_is_active();
-    } else {
-      // RCL_ROS_TIME with ros_time_is_active.
-      // Just wait without "until" because installed
-      // jump callbacks wake the cv on every new sample.
-      std::unique_lock lock(impl_->clock_mutex_);
-      while (now() < until && rclcpp::ok() && ros_time_is_active()) {
-        impl_->cv_.wait(lock);
-      }
-      time_source_changed = !ros_time_is_active();
+    } catch (...) {
+      RCUTILS_LOG_ERROR("Unexpected exception from ros_time_is_active()");
+      return false;
     }
   }
 

@@ -480,12 +480,12 @@ TEST_F(TestClockSleep, sleep_until_basic_system) {
   auto delay = rclcpp::Duration(0, milliseconds * MILLION);
   auto sleep_until = clock.now() + delay;
 
-  auto steady_start = std::chrono::steady_clock::now();
+  auto start = std::chrono::system_clock::now();
   ASSERT_TRUE(clock.sleep_until(sleep_until));
-  auto steady_end = std::chrono::steady_clock::now();
+  auto end = std::chrono::system_clock::now();
 
   EXPECT_GE(clock.now(), sleep_until);
-  EXPECT_GE(steady_end - steady_start, std::chrono::milliseconds(milliseconds));
+  EXPECT_GE(end - start, std::chrono::milliseconds(milliseconds));
 }
 
 TEST_F(TestClockSleep, sleep_until_basic_steady) {
