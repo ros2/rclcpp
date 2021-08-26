@@ -485,10 +485,10 @@ TEST_F(TestServer, publish_status_accepted)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -548,10 +548,10 @@ TEST_F(TestServer, publish_status_canceling)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -605,10 +605,10 @@ TEST_F(TestServer, publish_status_canceled)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -664,10 +664,10 @@ TEST_F(TestServer, publish_status_succeeded)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -721,10 +721,10 @@ TEST_F(TestServer, publish_status_aborted)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -779,9 +779,9 @@ TEST_F(TestServer, publish_feedback)
 
   // Subscribe to feedback messages
   using FeedbackT = Fibonacci::Impl::FeedbackMessage;
-  std::vector<FeedbackT::SharedPtr> received_msgs;
+  std::vector<FeedbackT::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<FeedbackT>(
-    "fibonacci/_action/feedback", 10, [&received_msgs](FeedbackT::SharedPtr msg)
+    "fibonacci/_action/feedback", 10, [&received_msgs](FeedbackT::ConstSharedPtr msg)
     {
       received_msgs.push_back(msg);
     });

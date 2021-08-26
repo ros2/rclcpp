@@ -191,7 +191,7 @@ TEST_F(
 
   auto callback =
     [message_data, &is_received](
-    const rclcpp::msg::String::SharedPtr msg,
+    const rclcpp::msg::String::ConstSharedPtr msg,
     const rclcpp::MessageInfo & message_info
     ) -> void
     {
