@@ -146,8 +146,26 @@ ParameterValue::ParameterValue(const int int_value)
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
 }
 
+ParameterValue::ParameterValue(const unsigned int int_value)
+{
+  if (int_value > INT32_MAX) {
+    throw std::runtime_error("Can not set a unsinged parameter to negitive value");
+  }
+  value_.integer_value = int_value;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+}
+
 ParameterValue::ParameterValue(const int64_t int_value)
 {
+  value_.integer_value = int_value;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+}
+
+ParameterValue::ParameterValue(const uint64_t int_value)
+{
+  if (int_value > INT64_MAX) {
+    throw std::runtime_error("Can not set a unsinged parameter to negitive value");
+  }
   value_.integer_value = int_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
 }

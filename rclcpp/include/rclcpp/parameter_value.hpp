@@ -85,7 +85,13 @@ public:
   explicit ParameterValue(const int int_value);
   /// Construct a parameter value with type PARAMETER_INTEGER.
   RCLCPP_PUBLIC
+  explicit ParameterValue(const unsigned int int_value);
+  /// Construct a parameter value with type PARAMETER_INTEGER.
+  RCLCPP_PUBLIC
   explicit ParameterValue(const int64_t int_value);
+  /// Construct a parameter value with type PARAMETER_INTEGER.
+  RCLCPP_PUBLIC
+  explicit ParameterValue(const uint64_t int_value);
   /// Construct a parameter value with type PARAMETER_DOUBLE.
   RCLCPP_PUBLIC
   explicit ParameterValue(const float double_value);
