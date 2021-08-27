@@ -95,7 +95,8 @@ Clock::sleep_until(Time until)
 {
   const auto this_clock_type = get_clock_type();
   if (until.get_clock_type() != this_clock_type) {
-    RCUTILS_LOG_ERROR("sleep_until Time clock type %d does not match this clock's type %d.",
+    RCUTILS_LOG_ERROR(
+      "sleep_until Time clock type %d does not match this clock's type %d.",
       until.get_clock_type(), this_clock_type);
     return false;
   }
