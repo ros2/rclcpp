@@ -97,6 +97,31 @@ TEST_F(TestNode, construction_and_destruction) {
   }
 }
 
+/*
+   Testing lifecycles of subscriptions and publishers after node dies
+ */
+TEST_F(TestNode, pub_and_sub_lifecycles) {
+  using test_msgs::msg::Empty;
+  rclcpp::Publisher<Empty>::SharedPtr pub;
+  rclcpp::Subscription<Empty>::SharedPtr sub;
+  const auto callback = [](Empty::ConstSharedPtr) {};
+
+  {
+    // Create the node and context in a nested scope so that their
+    // std::shared_ptrs expire before we use pub and sub
+    auto context = std::make_shared<rclcpp::Context>();
+    context->init(0, nullptr);
+    rclcpp::NodeOptions options;
+    options.context(context);
+
+    const auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", options);
+    pub = node->create_publisher<Empty>("topic", 10);
+    sub = node->create_subscription<Empty>("topic", 10, callback);
+  }
+
+  pub->publish(Empty());
+}
+
 TEST_F(TestNode, get_name_and_namespace) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
