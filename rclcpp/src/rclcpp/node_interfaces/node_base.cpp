@@ -64,8 +64,8 @@ public:
   // std::shared_ptr that it was originally provided in.
   NodeHandleWithContext(const NodeHandleWithContext &) = delete;
   NodeHandleWithContext(NodeHandleWithContext &&) = delete;
-  NodeHandleWithContext& operator=(const NodeHandleWithContext &) = delete;
-  NodeHandleWithContext& operator=(NodeHandleWithContext &&) = delete;
+  NodeHandleWithContext & operator=(const NodeHandleWithContext &) = delete;
+  NodeHandleWithContext & operator=(NodeHandleWithContext &&) = delete;
 
   ~NodeHandleWithContext()
   {
