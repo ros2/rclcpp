@@ -60,6 +60,13 @@ public:
     return std::shared_ptr<rcl_node_t>(std::move(aliased_ptr), node_handle);
   }
 
+  // This class should not be copied or moved. It should only exist in the
+  // std::shared_ptr that it was originally provided in.
+  NodeHandleWithContext(const NodeHandleWithContext&) = delete;
+  NodeHandleWithContext(NodeHandleWithContext&&) = delete;
+  NodeHandleWithContext& operator=(const NodeHandleWithContext&) = delete;
+  NodeHandleWithContext& operator=(NodeHandleWithContext&&) = delete;
+
   ~NodeHandleWithContext()
   {
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex_);
