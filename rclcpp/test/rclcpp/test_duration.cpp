@@ -240,7 +240,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    auto duration = rclcpp::Duration::from_nanoseconds(MAX_NANOSECONDS);
+    auto duration = rclcpp::Duration(MAX_NANOSECONDS);
 
     const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, std::numeric_limits<int32_t>::max());
@@ -255,7 +255,7 @@ TEST_F(TestDuration, conversions) {
   }
 
   {
-    auto duration = rclcpp::Duration::from_nanoseconds(-MAX_NANOSECONDS);
+    auto duration = rclcpp::Duration(-MAX_NANOSECONDS);
 
     const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
     EXPECT_EQ(duration_msg.sec, std::numeric_limits<int32_t>::min());
