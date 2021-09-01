@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.0 (2021-09-01)
+------------------
+* Guard against integer overflow in duration conversion (`#1584 <https://github.com/ros2/rclcpp/issues/1584>`_) (`#1761 <https://github.com/ros2/rclcpp/issues/1761>`_)
+* Update for checking correct variable (`#1534 <https://github.com/ros2/rclcpp/issues/1534>`_) (`#1760 <https://github.com/ros2/rclcpp/issues/1760>`_)
+* Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_) (`#1736 <https://github.com/ros2/rclcpp/issues/1736>`_)
+* Add wait for message API (`#1705 <https://github.com/ros2/rclcpp/issues/1705>`_) (`#1737 <https://github.com/ros2/rclcpp/issues/1737>`_)
+* Fix documentation bug (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_) (`#1721 <https://github.com/ros2/rclcpp/issues/1721>`_)
+* Fix clock thread issue (`#1266 <https://github.com/ros2/rclcpp/issues/1266>`_) (`#1267 <https://github.com/ros2/rclcpp/issues/1267>`_) (`#1685 <https://github.com/ros2/rclcpp/issues/1685>`_)
+* Allow timers to keep up the intended rate in MultiThreadedExecutor `#1516 <https://github.com/ros2/rclcpp/issues/1516>`_ (`#1636 <https://github.com/ros2/rclcpp/issues/1636>`_)
+  Backports `#1516 <https://github.com/ros2/rclcpp/issues/1516>`_ and follow-up fix `#1628 <https://github.com/ros2/rclcpp/issues/1628>`_
+* Contributors: Chen Lihui, Colin MacKenzie, Daisuke Sato, Jacob Perron, Karsten Knese, Tomoya Fujita, hsgwa, William Woodall
+
 2.3.1 (2021-04-14)
 ------------------
 * Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1616 <https://github.com/ros2/rclcpp/issues/1616>`_)

@@ -3,6 +3,13 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.4.0 (2021-09-01)
+------------------
+* Fix occasionally missing goal result caused by race condition (`#1677 <https://github.com/ros2/rclcpp/issues/1677>`_) (`#1682 <https://github.com/ros2/rclcpp/issues/1682>`_)
+* Returns CancelResponse::REJECT while goal handle failed to transit to CANCELING state (`#1641 <https://github.com/ros2/rclcpp/issues/1641>`_) (`#1659 <https://github.com/ros2/rclcpp/issues/1659>`_)
+* Fix action server deadlock issue that caused by other mutexes locked in CancelCallback (`#1635 <https://github.com/ros2/rclcpp/issues/1635>`_) (`#1654 <https://github.com/ros2/rclcpp/issues/1654>`_)
+* Contributors: Kaven Yau, Tomoya Fujita
+
 2.3.1 (2021-04-14)
 ------------------
 * Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1616 <https://github.com/ros2/rclcpp/issues/1616>`_)
