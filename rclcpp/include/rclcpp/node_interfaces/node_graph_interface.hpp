@@ -258,6 +258,7 @@ public:
    * The returned names are the actual names after remap rules applied.
    * The enclaves contain the runtime security artifacts, those can be
    * used to establish secured network.
+   * See https://design.ros2.org/articles/ros2_security_enclaves.html
    */
   RCLCPP_PUBLIC
   virtual
