@@ -47,6 +47,9 @@ using rclcpp::Node;
 using rclcpp::NodeOptions;
 using rclcpp::exceptions::throw_from_rcl_error;
 
+namespace
+{
+
 RCLCPP_LOCAL
 std::string
 extend_sub_namespace(const std::string & existing_sub_namespace, const std::string & extension)
@@ -54,18 +57,18 @@ extend_sub_namespace(const std::string & existing_sub_namespace, const std::stri
   // Assumption is that the existing_sub_namespace does not need checking
   // because it would be checked already when it was set with this function.
 
-  // check if the new sub-namespace extension is absolute
-  if (extension.front() == '/') {
-    throw rclcpp::exceptions::NameValidationError(
-            "sub_namespace",
-            extension.c_str(),
-            "a sub-namespace should not have a leading /",
-            0);
-  } else if (existing_sub_namespace.empty() && extension.empty()) {
+  if (extension.empty()) {
     throw rclcpp::exceptions::NameValidationError(
             "sub_namespace",
             extension.c_str(),
             "sub-nodes should not extend nodes by an empty sub-namespace",
+            0);
+  } else if (extension.front() == '/') {
+    // check if the new sub-namespace extension is absolute
+    throw rclcpp::exceptions::NameValidationError(
+            "sub_namespace",
+            extension.c_str(),
+            "a sub-namespace should not have a leading /",
             0);
   }
 
@@ -76,7 +79,7 @@ extend_sub_namespace(const std::string & existing_sub_namespace, const std::stri
     new_sub_namespace = existing_sub_namespace + "/" + extension;
   }
 
-  // remove any trailing `/` so that new extensions do no result in `//`
+  // remove any trailing `/` so that new extensions do not result in `//`
   if (new_sub_namespace.back() == '/') {
     new_sub_namespace = new_sub_namespace.substr(0, new_sub_namespace.size() - 1);
   }
@@ -103,6 +106,8 @@ create_effective_namespace(const std::string & node_namespace, const std::string
     return node_namespace + "/" + sub_namespace;
   }
 }
+
+}  // namespace
 
 Node::Node(
   const std::string & node_name,
