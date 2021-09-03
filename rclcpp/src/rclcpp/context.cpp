@@ -402,16 +402,15 @@ bool
 Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
   std::chrono::nanoseconds time_left = nanoseconds;
-  {
-    std::unique_lock<std::mutex> lock(interrupt_mutex_);
-    auto start = std::chrono::steady_clock::now();
-    // this will release the lock while waiting
-    interrupt_condition_variable_.wait_for(lock, nanoseconds);
-    time_left -= std::chrono::steady_clock::now() - start;
-  }
-  if (time_left > std::chrono::nanoseconds::zero() && this->is_valid()) {
-    return sleep_for(time_left);
-  }
+  do {
+    {
+      std::unique_lock<std::mutex> lock(interrupt_mutex_);
+      auto start = std::chrono::steady_clock::now();
+      // this will release the lock while waiting
+      interrupt_condition_variable_.wait_for(lock, nanoseconds);
+      time_left -= std::chrono::steady_clock::now() - start;
+    }
+  } while (time_left > std::chrono::nanoseconds::zero() && this->is_valid());
   // Return true if the timeout elapsed successfully, otherwise false.
   return this->is_valid();
 }
