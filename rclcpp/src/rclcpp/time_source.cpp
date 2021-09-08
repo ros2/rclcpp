@@ -33,40 +33,43 @@
 namespace rclcpp
 {
 
-TimeSource::TimeSource(
-  std::shared_ptr<rclcpp::Node> node,
+TimeSource::NodeState::NodeState(
+  TimeSource::ClocksState & clocks_state,
   const rclcpp::QoS & qos,
   bool use_clock_thread)
-: use_clock_thread_(use_clock_thread),
-  logger_(rclcpp::get_logger("rclcpp")),
-  qos_(qos)
-{
-  this->attachNode(node);
-}
-
-TimeSource::TimeSource(
-  const rclcpp::QoS & qos,
-  bool use_clock_thread)
-: use_clock_thread_(use_clock_thread),
+: clocks_state_(clocks_state),
+  use_clock_thread_(use_clock_thread),
   logger_(rclcpp::get_logger("rclcpp")),
   qos_(qos)
 {
 }
 
-void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
+TimeSource::NodeState::~NodeState()
 {
-  use_clock_thread_ = node->get_node_options().use_clock_thread();
-  attachNode(
-    node->get_node_base_interface(),
-    node->get_node_topics_interface(),
-    node->get_node_graph_interface(),
-    node->get_node_services_interface(),
-    node->get_node_logging_interface(),
-    node->get_node_clock_interface(),
-    node->get_node_parameters_interface());
+  if (
+    node_base_ || node_topics_ || node_graph_ || node_services_ ||
+    node_logging_ || node_clock_ || node_parameters_)
+  {
+    detachNode();
+  }
 }
 
-void TimeSource::attachNode(
+bool TimeSource::NodeState::getUseClockThread()
+{
+  return use_clock_thread_;
+}
+
+void TimeSource::NodeState::setUseClockThread(bool use_clock_thread)
+{
+  use_clock_thread_ = use_clock_thread;
+}
+
+bool TimeSource::NodeState::clockThreadIsJoinable()
+{
+  return clock_executor_thread_.joinable();
+}
+
+void TimeSource::NodeState::attachNode(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
@@ -101,7 +104,7 @@ void TimeSource::attachNode(
   if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
     if (use_sim_time_param.get<bool>()) {
       parameter_state_ = SET_TRUE;
-      enable_ros_time();
+      clocks_state_.enable_ros_time();
       create_clock_sub();
     }
   } else {
@@ -129,12 +132,19 @@ void TimeSource::attachNode(
   // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
     node_topics_,
-    std::bind(&TimeSource::on_parameter_event, this, std::placeholders::_1));
+    [state = std::weak_ptr<NodeState>(this->shared_from_this())](
+      std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event) {
+        if (auto state_ptr = state.lock()) {
+          state_ptr->on_parameter_event(event);
+        }
+        // Do nothing if the pointer could not be locked because it means the TimeSource is now
+        // without an attached node
+    });
 }
 
-void TimeSource::detachNode()
+void TimeSource::NodeState::detachNode()
 {
-  this->ros_time_active_ = false;
+  clocks_state_.disable_ros_time();
   destroy_clock_sub();
   parameter_subscription_.reset();
   node_base_.reset();
@@ -148,92 +158,23 @@ void TimeSource::detachNode()
   }
   sim_time_cb_handler_.reset();
   node_parameters_.reset();
-  disable_ros_time();
 }
 
-void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
+void TimeSource::NodeState::clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
 {
-  if (clock->get_clock_type() != RCL_ROS_TIME) {
-    throw std::invalid_argument("Cannot attach clock to a time source that's not a ROS clock");
-  }
-
-  std::lock_guard<std::mutex> guard(clock_list_lock_);
-  associated_clocks_.push_back(clock);
-  // Set the clock to zero unless there's a recently received message
-  auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
-  if (last_msg_set_) {
-    time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
-  }
-  set_clock(time_msg, ros_time_active_, clock);
-}
-
-void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
-{
-  std::lock_guard<std::mutex> guard(clock_list_lock_);
-  auto result = std::find(associated_clocks_.begin(), associated_clocks_.end(), clock);
-  if (result != associated_clocks_.end()) {
-    associated_clocks_.erase(result);
-  } else {
-    RCLCPP_ERROR(logger_, "failed to remove clock");
-  }
-}
-
-TimeSource::~TimeSource()
-{
-  if (
-    node_base_ || node_topics_ || node_graph_ || node_services_ ||
-    node_logging_ || node_clock_ || node_parameters_)
-  {
-    this->detachNode();
-  }
-}
-
-void TimeSource::set_clock(
-  const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
-  std::shared_ptr<rclcpp::Clock> clock)
-{
-  std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
-
-  // Do change
-  if (!set_ros_time_enabled && clock->ros_time_is_active()) {
-    auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "Failed to disable ros_time_override_status");
-    }
-  } else if (set_ros_time_enabled && !clock->ros_time_is_active()) {
-    auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "Failed to enable ros_time_override_status");
-    }
-  }
-
-  auto ret = rcl_set_ros_time_override(clock->get_clock_handle(), rclcpp::Time(*msg).nanoseconds());
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "Failed to set ros_time_override_status");
-  }
-}
-
-void TimeSource::clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
-{
-  if (!this->ros_time_active_ && SET_TRUE == this->parameter_state_) {
-    enable_ros_time();
+  if (!clocks_state_.is_ros_time_active() && SET_TRUE == this->parameter_state_) {
+    clocks_state_.enable_ros_time();
   }
   // Cache the last message in case a new clock is attached.
-  last_msg_set_ = msg;
+  clocks_state_.cache_last_msg(msg);
   auto time_msg = std::make_shared<builtin_interfaces::msg::Time>(msg->clock);
 
   if (SET_TRUE == this->parameter_state_) {
-    std::lock_guard<std::mutex> guard(clock_list_lock_);
-    for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-      set_clock(time_msg, true, *it);
-    }
+    clocks_state_.set_all_clocks(time_msg, true);
   }
 }
 
-void TimeSource::create_clock_sub()
+void TimeSource::NodeState::create_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
   if (clock_subscription_) {
@@ -277,12 +218,19 @@ void TimeSource::create_clock_sub()
     node_topics_,
     "/clock",
     rclcpp::QoS(KeepLast(1)).best_effort(),
-    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
+    [state = std::weak_ptr<NodeState>(this->shared_from_this())](
+      std::shared_ptr<const rosgraph_msgs::msg::Clock> msg) {
+        if (auto state_ptr = state.lock()) {
+          state_ptr->clock_cb(msg);
+        }
+        // Do nothing if the pointer could not be locked because it means the TimeSource is now
+        // without an attached node
+    },
     options
   );
 }
 
-void TimeSource::destroy_clock_sub()
+void TimeSource::NodeState::destroy_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
   if (clock_executor_thread_.joinable()) {
@@ -294,7 +242,7 @@ void TimeSource::destroy_clock_sub()
   clock_subscription_.reset();
 }
 
-void TimeSource::on_parameter_event(
+void TimeSource::NodeState::on_parameter_event(
   std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
 {
   // Filter out events on 'use_sim_time' parameter instances in other nodes.
@@ -312,11 +260,11 @@ void TimeSource::on_parameter_event(
     }
     if (it.second->value.bool_value) {
       parameter_state_ = SET_TRUE;
-      enable_ros_time();
+      clocks_state_.enable_ros_time();
       create_clock_sub();
     } else {
       parameter_state_ = SET_FALSE;
-      disable_ros_time();
+      clocks_state_.disable_ros_time();
       destroy_clock_sub();
     }
   }
@@ -330,7 +278,16 @@ void TimeSource::on_parameter_event(
   }
 }
 
-void TimeSource::enable_ros_time()
+
+
+
+
+TimeSource::ClocksState::ClocksState()
+: logger_(rclcpp::get_logger("rclcpp"))
+{
+}
+
+void TimeSource::ClocksState::enable_ros_time()
 {
   if (ros_time_active_) {
     // already enabled no-op
@@ -351,7 +308,7 @@ void TimeSource::enable_ros_time()
   }
 }
 
-void TimeSource::disable_ros_time()
+void TimeSource::ClocksState::disable_ros_time()
 {
   if (!ros_time_active_) {
     // already disabled no-op
@@ -367,6 +324,178 @@ void TimeSource::disable_ros_time()
     auto msg = std::make_shared<builtin_interfaces::msg::Time>();
     set_clock(msg, false, *it);
   }
+}
+
+bool TimeSource::ClocksState::is_ros_time_active() const
+{
+  return ros_time_active_;
+}
+
+void TimeSource::ClocksState::attachClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  if (clock->get_clock_type() != RCL_ROS_TIME) {
+    throw std::invalid_argument("Cannot attach clock to a time source that's not a ROS clock");
+  }
+
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  associated_clocks_.push_back(clock);
+  // Set the clock to zero unless there's a recently received message
+  auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
+  if (last_msg_set_) {
+    time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
+  }
+  set_clock(time_msg, ros_time_active_, clock);
+}
+
+void TimeSource::ClocksState::detachClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  auto result = std::find(associated_clocks_.begin(), associated_clocks_.end(), clock);
+  if (result != associated_clocks_.end()) {
+    associated_clocks_.erase(result);
+  } else {
+    RCLCPP_ERROR(logger_, "failed to remove clock");
+  }
+}
+
+void TimeSource::ClocksState::set_clock(
+  const builtin_interfaces::msg::Time::SharedPtr msg,
+  bool set_ros_time_enabled,
+  std::shared_ptr<rclcpp::Clock> clock)
+{
+  std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+
+  // Do change
+  if (!set_ros_time_enabled && clock->ros_time_is_active()) {
+    auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "Failed to disable ros_time_override_status");
+    }
+  } else if (set_ros_time_enabled && !clock->ros_time_is_active()) {
+    auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "Failed to enable ros_time_override_status");
+    }
+  }
+
+  auto ret = rcl_set_ros_time_override(clock->get_clock_handle(), rclcpp::Time(*msg).nanoseconds());
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "Failed to set ros_time_override_status");
+  }
+}
+
+void TimeSource::ClocksState::set_all_clocks(
+  const builtin_interfaces::msg::Time::SharedPtr msg,
+  bool set_ros_time_enabled)
+{
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
+    set_clock(msg, set_ros_time_enabled, *it);
+  }
+}
+
+void TimeSource::ClocksState::cache_last_msg(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
+{
+  last_msg_set_ = msg;
+}
+
+
+
+
+TimeSource::TimeSource(
+  std::shared_ptr<rclcpp::Node> node,
+  const rclcpp::QoS & qos,
+  bool use_clock_thread)
+: constructed_use_clock_thread_(use_clock_thread),
+  constructed_qos_(qos)
+{
+  clocks_state_ = std::make_shared<ClocksState>();
+  node_state_ = std::make_shared<NodeState>(*clocks_state_, qos, use_clock_thread);
+  attachNode(node);
+}
+
+TimeSource::TimeSource(
+  const rclcpp::QoS & qos,
+  bool use_clock_thread)
+: constructed_use_clock_thread_(use_clock_thread),
+  constructed_qos_(qos)
+{
+  clocks_state_ = std::make_shared<ClocksState>();
+  node_state_ = std::make_shared<NodeState>(*clocks_state_, qos, use_clock_thread);
+}
+
+void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
+{
+  node_state_->setUseClockThread(node->get_node_options().use_clock_thread());
+  attachNode(
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_clock_interface(),
+    node->get_node_parameters_interface());
+}
+
+void TimeSource::attachNode(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface)
+{
+  node_state_->attachNode(
+    std::move(node_base_interface),
+    std::move(node_topics_interface),
+    std::move(node_graph_interface),
+    std::move(node_services_interface),
+    std::move(node_logging_interface),
+    std::move(node_clock_interface),
+    std::move(node_parameters_interface));
+}
+
+void TimeSource::detachNode()
+{
+  //state_->detachNode();
+  node_state_.reset();
+  node_state_ = std::make_shared<NodeState>(
+    *clocks_state_,
+    constructed_qos_,
+    constructed_use_clock_thread_);
+}
+
+void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  clocks_state_->attachClock(std::move(clock));
+}
+
+void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  clocks_state_->detachClock(std::move(clock));
+}
+
+bool TimeSource::getUseClockThread()
+{
+  return node_state_->getUseClockThread();
+}
+
+void TimeSource::setUseClockThread(bool use_clock_thread)
+{
+  node_state_->setUseClockThread(use_clock_thread);
+}
+
+bool TimeSource::clockThreadIsJoinable()
+{
+  return node_state_->clockThreadIsJoinable();
+}
+
+TimeSource::~TimeSource()
+{
 }
 
 }  // namespace rclcpp
