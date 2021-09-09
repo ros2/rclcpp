@@ -116,15 +116,19 @@ public:
   RCLCPP_PUBLIC
   void attachClock(rclcpp::Clock::SharedPtr clock);
 
-  /// Detach a clock to the time source
+  /// Detach a clock from the time source
   RCLCPP_PUBLIC
   void detachClock(rclcpp::Clock::SharedPtr clock);
 
+  /// Get whether a separate clock thread is used or not
   RCLCPP_PUBLIC
   bool getUseClockThread();
+
+  /// Set whether to use a separate clock thread or not
   RCLCPP_PUBLIC
   void setUseClockThread(bool use_clock_thread);
 
+  /// Check if the clock thread is joinable
   RCLCPP_PUBLIC
   bool clockThreadIsJoinable();
 
@@ -143,22 +147,27 @@ private:
     // An internal method to use in the clock callback that iterates and disables all clocks
     void disable_ros_time();
 
+    // Check if ROS time is active
     bool is_ros_time_active() const;
 
+    // Attach a clock
     void attachClock(rclcpp::Clock::SharedPtr clock);
 
+    // Detach a clock
     void detachClock(rclcpp::Clock::SharedPtr clock);
 
-    // Internal helper functions used inside iterators
+    // Internal helper function used inside iterators
     static void set_clock(
       const builtin_interfaces::msg::Time::SharedPtr msg,
       bool set_ros_time_enabled,
       rclcpp::Clock::SharedPtr clock);
 
+    // Internal helper function
     void set_all_clocks(
       const builtin_interfaces::msg::Time::SharedPtr msg,
       bool set_ros_time_enabled);
 
+    // Cache the last clock message received
     void cache_last_msg(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg);
 
   private:
@@ -185,11 +194,16 @@ private:
 
     ~NodeState();
 
+    // Check if a clock thread will be used
     bool getUseClockThread();
+
+    // Set whether a clock thread will be used
     void setUseClockThread(bool use_clock_thread);
 
+    // Check if the clock thread is joinable
     bool clockThreadIsJoinable();
 
+    // Attach a node to this time source
     void attachNode(
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
       rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
@@ -199,6 +213,7 @@ private:
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
       rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface);
 
+    // Detach the attached node
     void detachNode();
 
   private:
@@ -259,6 +274,7 @@ private:
   };
   std::shared_ptr<NodeState> node_state_;
 
+  // Preserve the arguments received by the constructor for reuse at runtime
   bool constructed_use_clock_thread_;
   rclcpp::QoS constructed_qos_;
 };
