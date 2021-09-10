@@ -57,7 +57,7 @@ set_signal_handler(
     char error_string[1024];
     rcutils_strerror(error_string, sizeof(error_string));
     auto msg =
-      "Failed to set SIGINT signal handler (" + std::to_string(errno) + "): " + error_string;
+      "Failed to set signal handler (" + std::to_string(errno) + "): " + error_string;
     throw std::runtime_error(msg);
   }
   return old_signal_handler;
@@ -281,7 +281,7 @@ SignalHandler::signal_handler_common()
   instance.signal_received_.store(true);
   RCLCPP_DEBUG(
     get_logger(),
-    "signal_handler(): SIGINT received, notifying deferred signal handler");
+    "signal_handler(): notifying deferred signal handler");
   instance.notify_signal_handler();
 }
 
@@ -290,7 +290,7 @@ SignalHandler::deferred_signal_handler()
 {
   while (true) {
     if (signal_received_.exchange(false)) {
-      RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): SIGINT received, shutting down");
+      RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
       for (auto context_ptr : rclcpp::get_contexts()) {
         if (context_ptr->get_init_options().shutdown_on_sigint) {
           RCLCPP_DEBUG(
@@ -306,9 +306,9 @@ SignalHandler::deferred_signal_handler()
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): signal handling uninstalled");
       break;
     }
-    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): waiting for SIGINT or uninstall");
+    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall");
     wait_for_signal();
-    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): woken up due to SIGINT or uninstall");
+    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): woken up due to SIGINT/SIGTERM or uninstall");
   }
 }
 
