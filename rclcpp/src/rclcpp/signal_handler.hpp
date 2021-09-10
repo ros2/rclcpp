@@ -88,21 +88,26 @@ private:
 
   ~SignalHandler();
 
+  SignalHandler(const SignalHandler &) = delete;
+  SignalHandler(SignalHandler &&) = delete;
+  SignalHandler &
+  operator=(const SignalHandler &) = delete;
+  SignalHandler &&
+  operator=(SignalHandler &&) = delete;
+
 #if defined(RCLCPP_HAS_SIGACTION)
   using signal_handler_type = struct sigaction;
 #else
   using signal_handler_type = void (*)(int);
 #endif
   // POSIX signal handler structure storage for the existing signal handler.
-  static SignalHandler::signal_handler_type old_signal_handler_;
+  SignalHandler::signal_handler_type old_signal_handler_;
 
   /// Set the signal handler function.
-  static
   SignalHandler::signal_handler_type
   set_signal_handler(int signal_value, const SignalHandler::signal_handler_type & signal_handler);
 
   /// Common signal handler code between sigaction and non-sigaction versions.
-  static
   void
   signal_handler_common();
 
@@ -127,7 +132,6 @@ private:
    * This must be called before wait_for_signal() or notify_signal_handler().
    * This is not thread-safe.
    */
-  static
   void
   setup_wait_for_signal();
 
@@ -137,7 +141,6 @@ private:
    *
    * This is not thread-safe.
    */
-  static
   void
   teardown_wait_for_signal() noexcept;
 
@@ -147,7 +150,6 @@ private:
    *
    * This is not thread-safe.
    */
-  static
   void
   wait_for_signal();
 
@@ -158,29 +160,28 @@ private:
    *
    * This is thread-safe.
    */
-  static
   void
   notify_signal_handler() noexcept;
 
   // Whether or not a signal has been received.
-  static std::atomic_bool signal_received_;
+  std::atomic_bool signal_received_ = false;
   // A thread to which singal handling tasks are deferred.
   std::thread signal_handler_thread_;
 
   // A mutex used to synchronize the install() and uninstall() methods.
   std::mutex install_mutex_;
   // Whether or not the signal handler has been installed.
-  std::atomic_bool installed_{false};
+  std::atomic_bool installed_ = false;
 
   // Whether or not the semaphore for wait_for_signal is setup.
-  static std::atomic_bool wait_for_signal_is_setup_;
+  std::atomic_bool wait_for_signal_is_setup_;
   // Storage for the wait_for_signal semaphore.
 #if defined(_WIN32)
-  static HANDLE signal_handler_sem_;
+  HANDLE signal_handler_sem_;
 #elif defined(__APPLE__)
-  static dispatch_semaphore_t signal_handler_sem_;
+  dispatch_semaphore_t signal_handler_sem_;
 #else  // posix
-  static sem_t signal_handler_sem_;
+  sem_t signal_handler_sem_;
 #endif
 };
 

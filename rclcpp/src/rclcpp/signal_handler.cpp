@@ -35,18 +35,6 @@
 
 using rclcpp::SignalHandler;
 
-// initialize static storage in SignalHandler class
-SignalHandler::signal_handler_type SignalHandler::old_signal_handler_;
-std::atomic_bool SignalHandler::signal_received_ = ATOMIC_VAR_INIT(false);
-std::atomic_bool SignalHandler::wait_for_signal_is_setup_ = ATOMIC_VAR_INIT(false);
-#if defined(_WIN32)
-HANDLE SignalHandler::signal_handler_sem_;
-#elif defined(__APPLE__)
-dispatch_semaphore_t SignalHandler::signal_handler_sem_;
-#else  // posix
-sem_t SignalHandler::signal_handler_sem_;
-#endif
-
 // The logger must be initialized before the local static variable signal_handler,
 // from the method get_global_signal_handler(), so that it is destructed after
 // it, because the destructor of SignalHandler uses this logger object.
@@ -188,11 +176,12 @@ SignalHandler::set_signal_handler(
 void
 SignalHandler::signal_handler_common()
 {
-  signal_received_.store(true);
+  auto & instance = SignalHandler::get_global_signal_handler();
+  instance.signal_received_.store(true);
   RCLCPP_DEBUG(
     get_logger(),
     "signal_handler(): SIGINT received, notifying deferred signal handler");
-  notify_signal_handler();
+  instance.notify_signal_handler();
 }
 
 #if defined(RCLCPP_HAS_SIGACTION)
@@ -201,21 +190,23 @@ SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * cont
 {
   RCLCPP_INFO(get_logger(), "signal_handler(signal_value=%d)", signal_value);
 
-  if (old_signal_handler_.sa_flags & SA_SIGINFO) {
-    if (old_signal_handler_.sa_sigaction != NULL) {
-      old_signal_handler_.sa_sigaction(signal_value, siginfo, context);
+  auto & instance = SignalHandler::get_global_signal_handler();
+
+  if (instance.old_signal_handler_.sa_flags & SA_SIGINFO) {
+    if (instance.old_signal_handler_.sa_sigaction != NULL) {
+      instance.old_signal_handler_.sa_sigaction(signal_value, siginfo, context);
     }
   } else {
     if (
-      old_signal_handler_.sa_handler != NULL &&  // Is set
-      old_signal_handler_.sa_handler != SIG_DFL &&  // Is not default
-      old_signal_handler_.sa_handler != SIG_IGN)  // Is not ignored
+      instance.old_signal_handler_.sa_handler != NULL &&  // Is set
+      instance.old_signal_handler_.sa_handler != SIG_DFL &&  // Is not default
+      instance.old_signal_handler_.sa_handler != SIG_IGN)  // Is not ignored
     {
-      old_signal_handler_.sa_handler(signal_value);
+      instance.old_signal_handler_.sa_handler(signal_value);
     }
   }
 
-  signal_handler_common();
+  instance.signal_handler_common();
 }
 #else
 void
