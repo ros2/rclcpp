@@ -163,6 +163,9 @@ private:
   void
   notify_signal_handler() noexcept;
 
+  // logger instance
+  rclcpp::Logger logger_ = rclcpp::get_logger("rclcpp");
+
   // Whether or not a signal has been received.
   std::atomic_bool signal_received_ = false;
   // A thread to which singal handling tasks are deferred.
