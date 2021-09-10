@@ -29,10 +29,10 @@ ParameterEventCallbackHandle::SharedPtr
 ParameterEventHandler::add_parameter_event_callback(
   ParameterEventCallbackType callback)
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto handle = std::make_shared<ParameterEventCallbackHandle>();
   handle->callback = callback;
-  event_callbacks_.emplace_front(handle);
+  callbacks_->event_callbacks_.emplace_front(handle);
 
   return handle;
 }
@@ -41,15 +41,15 @@ void
 ParameterEventHandler::remove_parameter_event_callback(
   ParameterEventCallbackHandle::SharedPtr callback_handle)
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto it = std::find_if(
-    event_callbacks_.begin(),
-    event_callbacks_.end(),
+    callbacks_->event_callbacks_.begin(),
+    callbacks_->event_callbacks_.end(),
     [callback_handle](const auto & weak_handle) {
       return callback_handle.get() == weak_handle.lock().get();
     });
-  if (it != event_callbacks_.end()) {
-    event_callbacks_.erase(it);
+  if (it != callbacks_->event_callbacks_.end()) {
+    callbacks_->event_callbacks_.erase(it);
   } else {
     throw std::runtime_error("Callback doesn't exist");
   }
@@ -61,7 +61,7 @@ ParameterEventHandler::add_parameter_callback(
   ParameterCallbackType callback,
   const std::string & node_name)
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto full_node_name = resolve_path(node_name);
 
   auto handle = std::make_shared<ParameterCallbackHandle>();
@@ -69,7 +69,7 @@ ParameterEventHandler::add_parameter_callback(
   handle->parameter_name = parameter_name;
   handle->node_name = full_node_name;
   // the last callback registered is executed first.
-  parameter_callbacks_[{parameter_name, full_node_name}].emplace_front(handle);
+  callbacks_->parameter_callbacks_[{parameter_name, full_node_name}].emplace_front(handle);
 
   return handle;
 }
@@ -78,9 +78,9 @@ void
 ParameterEventHandler::remove_parameter_callback(
   ParameterCallbackHandle::SharedPtr callback_handle)
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto handle = callback_handle.get();
-  auto & container = parameter_callbacks_[{handle->parameter_name, handle->node_name}];
+  auto & container = callbacks_->parameter_callbacks_[{handle->parameter_name, handle->node_name}];
   auto it = std::find_if(
     container.begin(),
     container.end(),
@@ -90,7 +90,7 @@ ParameterEventHandler::remove_parameter_callback(
   if (it != container.end()) {
     container.erase(it);
     if (container.empty()) {
-      parameter_callbacks_.erase({handle->parameter_name, handle->node_name});
+      callbacks_->parameter_callbacks_.erase({handle->parameter_name, handle->node_name});
     }
   } else {
     throw std::runtime_error("Callback doesn't exist");
@@ -158,7 +158,7 @@ ParameterEventHandler::get_parameters_from_event(
 }
 
 void
-ParameterEventHandler::event_callback(const rcl_interfaces::msg::ParameterEvent & event)
+ParameterEventHandler::Callbacks::event_callback(const rcl_interfaces::msg::ParameterEvent & event)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -176,7 +176,8 @@ ParameterEventHandler::event_callback(const rcl_interfaces::msg::ParameterEvent 
     }
   }
 
-  for (auto event_cb = event_callbacks_.begin(); event_cb != event_callbacks_.end(); ++event_cb) {
+  for (auto event_cb = event_callbacks_.begin(); event_cb != event_callbacks_.end(); ++event_cb)
+  {
     auto shared_event_handle = event_cb->lock();
     if (nullptr != shared_event_handle) {
       shared_event_handle->callback(event);

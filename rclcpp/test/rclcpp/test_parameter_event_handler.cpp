@@ -29,17 +29,17 @@ public:
 
   void test_event(rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
   {
-    event_callback(*event);
+    callbacks_->event_callback(*event);
   }
 
   size_t num_event_callbacks()
   {
-    return event_callbacks_.size();
+    return callbacks_->event_callbacks_.size();
   }
 
   size_t num_parameter_callbacks()
   {
-    return parameter_callbacks_.size();
+    return callbacks_->parameter_callbacks_.size();
   }
 };
 
