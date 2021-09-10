@@ -306,9 +306,11 @@ SignalHandler::deferred_signal_handler()
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): signal handling uninstalled");
       break;
     }
-    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall");
+    RCLCPP_DEBUG(
+      get_logger(), "deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall");
     wait_for_signal();
-    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): woken up due to SIGINT/SIGTERM or uninstall");
+    RCLCPP_DEBUG(
+      get_logger(), "deferred_signal_handler(): woken up due to SIGINT/SIGTERM or uninstall");
   }
 }
 
