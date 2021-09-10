@@ -39,6 +39,60 @@
 namespace rclcpp
 {
 
+// forward declare
+class SignalHandler;
+
+namespace detail
+{
+/// Handles one signal, e.g. sigint or sigterm.
+class OneSignalHandler final
+{
+  friend ::rclcpp::SignalHandler;
+
+public:
+  /// Signal handler type, platform dependent.
+#if defined(RCLCPP_HAS_SIGACTION)
+  using signal_handler_type = struct sigaction;
+#else
+  using signal_handler_type = void (*)(int);
+#endif
+
+private:
+  /// Construct signal handler for `signum` signal.
+  explicit OneSignalHandler(int signum);
+
+  /// Destruct.
+  ~OneSignalHandler();
+
+  /// Install the specified signal handler, return true if successful.
+  bool
+  install(const signal_handler_type & signal_handler);
+
+  bool
+  /// Uninstall the specified signal handler and reinstall the old one, return true if successful.
+  uninstall();
+
+  /// Deleted copy constructor.
+  OneSignalHandler(const OneSignalHandler &) = delete;
+  /// Deleted move constructor.
+  OneSignalHandler(OneSignalHandler &&) = delete;
+  /// Deleted copy assignment.
+  OneSignalHandler &
+  operator=(const OneSignalHandler &) = delete;
+  /// Deleted move assignment.
+  OneSignalHandler &
+  operator=(OneSignalHandler &&) = delete;
+
+  /// signal number
+  int signum_;
+  /// true if a signal handler was already installed
+  bool installed_;
+  /// POSIX signal handler structure storage for the existing signal handler.
+  signal_handler_type old_signal_handler_;
+};
+}  // namespace detail
+
+
 /// Responsible for manaaging the SIGINT signal handling.
 /**
  * This class is responsible for:
@@ -95,32 +149,30 @@ private:
   SignalHandler &&
   operator=(SignalHandler &&) = delete;
 
-#if defined(RCLCPP_HAS_SIGACTION)
-  using signal_handler_type = struct sigaction;
-#else
-  using signal_handler_type = void (*)(int);
-#endif
-  // POSIX signal handler structure storage for the existing signal handler.
-  SignalHandler::signal_handler_type old_signal_handler_;
-
-  /// Set the signal handler function.
-  SignalHandler::signal_handler_type
-  set_signal_handler(int signal_value, const SignalHandler::signal_handler_type & signal_handler);
-
   /// Common signal handler code between sigaction and non-sigaction versions.
   void
   signal_handler_common();
 
 #if defined(RCLCPP_HAS_SIGACTION)
-  /// Signal handler function.
+  /// Signal handler function for SIGINT.
   static
   void
-  signal_handler(int signal_value, siginfo_t * siginfo, void * context);
+  signal_handler_sigint(int signal_value, siginfo_t * siginfo, void * context);
+
+  /// Signal handler function for SIGTERM.
+  static
+  void
+  signal_handler_sigterm(int signal_value, siginfo_t * siginfo, void * context);
 #else
-  /// Signal handler function.
+  /// Signal handler function for SIGINT.
   static
   void
-  signal_handler(int signal_value);
+  signal_handler_sigint(int signal_value);
+
+  /// Signal handler function for SIGTERM.
+  static
+  void
+  signal_handler_sigterm(int signal_value);
 #endif
 
   /// Target of the dedicated signal handling thread.
@@ -162,6 +214,17 @@ private:
    */
   void
   notify_signal_handler() noexcept;
+
+  using OneSignalHandler = detail::OneSignalHandler;
+
+  OneSignalHandler::signal_handler_type
+  get_sigint_old_handler();
+
+  OneSignalHandler::signal_handler_type
+  get_sigterm_old_handler();
+
+  OneSignalHandler sigint_handler_ = OneSignalHandler{SIGINT};
+  OneSignalHandler sigterm_handler_ = OneSignalHandler{SIGTERM};
 
   // logger instance
   rclcpp::Logger logger_ = rclcpp::get_logger("rclcpp");
