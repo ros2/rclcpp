@@ -32,7 +32,7 @@ protected:
 TEST_F(TestComponentManager, get_component_resources_invalid)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>();
 
   EXPECT_THROW(
     manager->get_component_resources("invalid_package"),
@@ -42,7 +42,7 @@ TEST_F(TestComponentManager, get_component_resources_invalid)
 TEST_F(TestComponentManager, get_component_resources_valid)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>();
 
   auto resources = manager->get_component_resources("rclcpp_components");
   EXPECT_EQ(3u, resources.size());
@@ -60,7 +60,7 @@ TEST_F(TestComponentManager, get_component_resources_valid)
 TEST_F(TestComponentManager, create_component_factory_valid)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>();
 
   auto resources = manager->get_component_resources("rclcpp_components");
   EXPECT_EQ(3u, resources.size());
@@ -78,7 +78,7 @@ TEST_F(TestComponentManager, create_component_factory_valid)
 TEST_F(TestComponentManager, create_component_factory_invalid)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>();
 
   // Test invalid library
   EXPECT_THROW(

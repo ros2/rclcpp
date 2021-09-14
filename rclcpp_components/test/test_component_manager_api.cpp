@@ -40,7 +40,7 @@ TEST_F(TestComponentManager, components_api)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   auto node = rclcpp::Node::make_shared("test_component_manager");
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>();
 
   exec->add_node(manager);
   exec->add_node(node);

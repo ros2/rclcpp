@@ -47,7 +47,7 @@ public:
     executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>(exec_options);
 
     manager = std::make_shared<rclcpp_components::ComponentManager>(
-      executor, component_manager_name, rclcpp::NodeOptions().context(context));
+      component_manager_name, rclcpp::NodeOptions().context(context));
     executor->add_node(manager);
   }
 

@@ -93,13 +93,11 @@ public:
    * Initializes the component manager. It creates the services: load node, unload node
    * and list nodes.
    *
-   * \param executor the executor which will spin the node.
    * \param node_name the name of the node that the data originates from.
    * \param node_options additional options to control creation of the node.
    */
   RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
-    std::weak_ptr<rclcpp::Executor> executor,
     std::string node_name = "ComponentManager",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
     .start_parameter_services(false)
@@ -232,7 +230,14 @@ protected:
   }
 
 private:
-  std::weak_ptr<rclcpp::Executor> executor_;
+  bool use_multi_threads_{false};
+  bool use_multi_executors_{false};
+  // used by single executor mode
+  std::shared_ptr<rclcpp::Executor> executor_;
+  std::shared_ptr<std::thread> executor_thread_;
+  // used by multi executor mode (one executor for each node)
+  std::map<uint64_t, std::shared_ptr<rclcpp::Executor>> executors_;
+  std::map<uint64_t, std::shared_ptr<std::thread>> executor_threads_;
 
   uint64_t unique_id_ {1};
   std::map<std::string, std::unique_ptr<class_loader::ClassLoader>> loaders_;

@@ -31,12 +31,16 @@ namespace rclcpp_components
 {
 
 ComponentManager::ComponentManager(
-  std::weak_ptr<rclcpp::Executor> executor,
   std::string node_name,
   const rclcpp::NodeOptions & node_options)
-: Node(std::move(node_name), node_options),
-  executor_(executor)
+: Node(std::move(node_name), node_options)
 {
+  declare_parameter("use_multi_executors", false);
+  declare_parameter("use_multi_threads", false);
+
+  get_parameter("use_multi_executors", use_multi_executors_);
+  get_parameter("use_multi_threads", use_multi_threads_);
+
   loadNode_srv_ = create_service<LoadNode>(
     "~/_container/load_node",
     std::bind(&ComponentManager::on_load_node, this, _1, _2, _3));
@@ -46,16 +50,32 @@ ComponentManager::ComponentManager(
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
+  if (!use_multi_executors_) {
+    if (use_multi_threads_) {
+      // use a multi-threaded executor
+      executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+    } else {
+      // use a single-threaded executor
+      executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    }
+  }
+  // if use_multi_executors_, use a bunch of single threaded executors with multiple threads.
 }
 
 ComponentManager::~ComponentManager()
 {
   if (node_wrappers_.size()) {
     RCLCPP_DEBUG(get_logger(), "Removing components from executor");
-    if (auto exec = executor_.lock()) {
-      for (auto & wrapper : node_wrappers_) {
-        exec->remove_node(wrapper.second.get_node_base_interface());
+    if (use_multi_executors_) {
+      for (auto & exec : executors_) {
+        (exec.second)->cancel();
       }
+      for (auto & t : executor_threads_) {
+        (t.second)->join();
+      }
+    } else {
+      executor_->cancel();
+      executor_thread_->join();
     }
   }
 }
@@ -215,8 +235,16 @@ ComponentManager::on_load_node(
       }
 
       auto node = node_wrappers_[node_id].get_node_base_interface();
-      if (auto exec = executor_.lock()) {
-        exec->add_node(node, true);
+      if (use_multi_executors_) {
+        auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+        exec->add_node(node);
+        executors_[node_id] = exec;
+        executor_threads_[node_id] = std::make_shared<std::thread>([exec]() {exec->spin();});
+      } else {
+        executor_->add_node(node);
+        if (node_wrappers_.size() == 1) {
+          executor_thread_ = std::make_shared<std::thread>([&]() {executor_->spin();});
+        }
       }
       response->full_node_name = node->get_fully_qualified_name();
       response->unique_id = node_id;
@@ -253,8 +281,20 @@ ComponentManager::on_unload_node(
     response->error_message = ss.str();
     RCLCPP_WARN(get_logger(), "%s", ss.str().c_str());
   } else {
-    if (auto exec = executor_.lock()) {
-      exec->remove_node(wrapper->second.get_node_base_interface());
+    if (use_multi_executors_) {
+      auto exec = executors_.find(request->unique_id);
+      auto t = executor_threads_.find(request->unique_id);
+      (exec->second)->cancel();
+      (t->second)->join();
+      executors_.erase(exec);
+      executor_threads_.erase(t);
+    } else {
+      if (node_wrappers_.size() == 1) {
+        executor_->cancel();
+        executor_thread_->join();
+        executor_thread_.reset();
+      }
+      executor_->remove_node(wrapper->second.get_node_base_interface());
     }
     node_wrappers_.erase(wrapper);
     response->success = true;
