@@ -349,6 +349,9 @@ public:
    * global arguments (e.g. parameter overrides from a YAML file), which are
    * not explicitly declared will not appear on the node at all, even if
    * `allow_undeclared_parameters` is true.
+   * Parameter declaration from overrides is done in the node's base constructor,
+   * so the user must take care to check if the parameter is already (e.g.
+   * automatically) declared before declaring it themselves.
    * Already declared parameters will not be re-declared, and parameters
    * declared in this way will use the default constructed ParameterDescriptor.
    */
