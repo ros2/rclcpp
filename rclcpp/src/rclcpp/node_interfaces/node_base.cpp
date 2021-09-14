@@ -34,17 +34,23 @@ using rclcpp::node_interfaces::NodeBase;
 
 namespace
 {
-/// This class bundles together the lifetime of the rcl_node_t handle with the
-/// lifetime of the RCL context. This ensures that the context will remain alive
-/// for as long as the rcl_node_t handle is alive.
+/// A class to manage the lifetime of a node handle and its context
+/**
+ * This class bundles together the lifetime of the rcl_node_t handle with the
+ * lifetime of the RCL context. This ensures that the context will remain alive
+ * for as long as the rcl_node_t handle is alive.
+ */
 class NodeHandleWithContext
 {
 public:
-  /// The make function returns a std::shared_ptr<rcl_node_t> which is actually
-  /// an alias for a std::shared_ptr<NodeHandleWithContext>. There is no use for
-  /// accessing a NodeHandleWithContext instance directly, because its only job
-  /// is to couple together the lifetime of a context with the lifetime of a
-  /// node handle that depends on it.
+  /// Make an instance of a NodeHandleWithContext
+  /**
+   * The make function returns a std::shared_ptr<rcl_node_t> which is actually
+   * an alias for a std::shared_ptr<NodeHandleWithContext>. There is no use for
+   * accessing a NodeHandleWithContext instance directly, because its only job
+   * is to couple together the lifetime of a context with the lifetime of a
+   * node handle that depends on it.
+   */
   static std::shared_ptr<rcl_node_t>
   make(
     rclcpp::Context::SharedPtr context,
@@ -82,8 +88,9 @@ public:
   }
 
 private:
-  /// The constructor is private because this class is only meant to be aliased
-  /// into a std::shared_ptr<rcl_node_t>.
+  // The constructor is private because this class is only meant to be aliased
+  // into a std::shared_ptr<rcl_node_t> and should not be constructed any other
+  // way.
   NodeHandleWithContext(
     rclcpp::Context::SharedPtr context,
     std::shared_ptr<std::recursive_mutex> logging_mutex,
@@ -91,9 +98,7 @@ private:
   : context_(std::move(context)),
     logging_mutex_(std::move(logging_mutex)),
     node_handle_(node_handle)
-  {
-    // Do nothing
-  }
+  {}
 
   rclcpp::Context::SharedPtr context_;
   std::shared_ptr<std::recursive_mutex> logging_mutex_;
@@ -201,8 +206,7 @@ NodeBase::NodeBase(
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }
 
-  node_handle_ = NodeHandleWithContext::make(
-    context_, logging_mutex, rcl_node.release());
+  node_handle_ = NodeHandleWithContext::make(context_, logging_mutex, rcl_node.release());
 
   // Create the default callback group.
   using rclcpp::CallbackGroupType;
