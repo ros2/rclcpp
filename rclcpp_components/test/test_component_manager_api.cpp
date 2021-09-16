@@ -211,6 +211,50 @@ TEST_F(TestComponentManager, components_api)
     EXPECT_EQ(result->unique_id, 0u);
   }
 
+  {
+    // use_global_arguments
+    auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
+    request->package_name = "rclcpp_components";
+    request->plugin_name = "test_rclcpp_components::TestComponentFoo";
+    request->node_name = "test_component_global_arguments";
+    rclcpp::Parameter use_global_arguments("use_global_arguments",
+      rclcpp::ParameterValue(true));
+    request->extra_arguments.push_back(use_global_arguments.to_parameter_msg());
+
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    std::cout << result->full_node_name << std::endl;
+    EXPECT_EQ(result->full_node_name, "/test_component_global_arguments");
+    EXPECT_EQ(result->unique_id, 7u);
+  }
+
+  {
+    // use_global_arguments is not a bool type parameter
+    auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
+    request->package_name = "rclcpp_components";
+    request->plugin_name = "test_rclcpp_components::TestComponentFoo";
+    request->node_name = "test_component_global_arguments_str";
+
+    rclcpp::Parameter use_global_arguments("use_global_arguments",
+      rclcpp::ParameterValue("hello"));
+    request->extra_arguments.push_back(use_global_arguments.to_parameter_msg());
+
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(result->success, false);
+    EXPECT_EQ(
+      result->error_message,
+      "Extra component argument 'use_global_arguments' must be a boolean");
+    EXPECT_EQ(result->full_node_name, "");
+    EXPECT_EQ(result->unique_id, 0u);
+  }
+
   auto node_names = node->get_node_names();
 
   auto find_in_nodes = [node_names](std::string name) {
@@ -239,20 +283,22 @@ TEST_F(TestComponentManager, components_api)
       auto result_node_names = result->full_node_names;
       auto result_unique_ids = result->unique_ids;
 
-      EXPECT_EQ(result_node_names.size(), 6u);
+      EXPECT_EQ(result_node_names.size(), 7u);
       EXPECT_EQ(result_node_names[0], "/test_component_foo");
       EXPECT_EQ(result_node_names[1], "/test_component_bar");
       EXPECT_EQ(result_node_names[2], "/test_component_baz");
       EXPECT_EQ(result_node_names[3], "/ns/test_component_bing");
       EXPECT_EQ(result_node_names[4], "/test_component_remap");
       EXPECT_EQ(result_node_names[5], "/test_component_intra_process");
-      EXPECT_EQ(result_unique_ids.size(), 6u);
+      EXPECT_EQ(result_node_names[6], "/test_component_global_arguments");
+      EXPECT_EQ(result_unique_ids.size(), 7u);
       EXPECT_EQ(result_unique_ids[0], 1u);
       EXPECT_EQ(result_unique_ids[1], 2u);
       EXPECT_EQ(result_unique_ids[2], 3u);
       EXPECT_EQ(result_unique_ids[3], 4u);
       EXPECT_EQ(result_unique_ids[4], 5u);
       EXPECT_EQ(result_unique_ids[5], 6u);
+      EXPECT_EQ(result_unique_ids[6], 7u);
     }
   }
 
@@ -306,18 +352,20 @@ TEST_F(TestComponentManager, components_api)
       auto result_node_names = result->full_node_names;
       auto result_unique_ids = result->unique_ids;
 
-      EXPECT_EQ(result_node_names.size(), 5u);
+      EXPECT_EQ(result_node_names.size(), 6u);
       EXPECT_EQ(result_node_names[0], "/test_component_bar");
       EXPECT_EQ(result_node_names[1], "/test_component_baz");
       EXPECT_EQ(result_node_names[2], "/ns/test_component_bing");
       EXPECT_EQ(result_node_names[3], "/test_component_remap");
       EXPECT_EQ(result_node_names[4], "/test_component_intra_process");
-      EXPECT_EQ(result_unique_ids.size(), 5u);
+      EXPECT_EQ(result_node_names[5], "/test_component_global_arguments");
+      EXPECT_EQ(result_unique_ids.size(), 6u);
       EXPECT_EQ(result_unique_ids[0], 2u);
       EXPECT_EQ(result_unique_ids[1], 3u);
       EXPECT_EQ(result_unique_ids[2], 4u);
       EXPECT_EQ(result_unique_ids[3], 5u);
       EXPECT_EQ(result_unique_ids[4], 6u);
+      EXPECT_EQ(result_unique_ids[5], 7u);
     }
   }
 }
