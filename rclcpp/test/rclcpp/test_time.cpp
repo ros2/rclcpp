@@ -473,6 +473,15 @@ protected:
   rclcpp::SyncParametersClient::SharedPtr param_client;
 };
 
+TEST_F(TestClockSleep, bad_clock_type) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  rclcpp::Time steady_until(12345, 0, RCL_STEADY_TIME);
+  ASSERT_FALSE(clock.sleep_until(steady_until));
+
+  rclcpp::Time ros_until(54321, 0, RCL_ROS_TIME);
+  ASSERT_FALSE(clock.sleep_until(ros_until));
+}
+
 TEST_F(TestClockSleep, sleep_until_basic_system) {
   static const auto MILLION = 1000L * 1000L;
   const auto milliseconds = 300;
@@ -503,8 +512,21 @@ TEST_F(TestClockSleep, sleep_until_basic_steady) {
   EXPECT_GE(steady_end - steady_start, std::chrono::milliseconds(milliseconds));
 }
 
-TEST_F(TestClockSleep, sleep_until_ros_time_enable_interrupt)
-{
+TEST_F(TestClockSleep, sleep_until_steady_past_returns_immediately) {
+  rclcpp::Clock clock(RCL_STEADY_TIME);
+  auto until = clock.now() - rclcpp::Duration(1000, 0);
+  // This should return immediately, other possible behavior might be sleep forever and timeout
+  ASSERT_TRUE(clock.sleep_until(until));
+}
+
+TEST_F(TestClockSleep, sleep_until_system_past_returns_immediately) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto until = clock.now() - rclcpp::Duration(1000, 0);
+  // This should return immediately, other possible behavior might be sleep forever and timeout
+  ASSERT_TRUE(clock.sleep_until(until));
+}
+
+TEST_F(TestClockSleep, sleep_until_ros_time_enable_interrupt) {
   auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   rclcpp::TimeSource time_source;
   time_source.attachNode(node);
@@ -520,7 +542,7 @@ TEST_F(TestClockSleep, sleep_until_ros_time_enable_interrupt)
       sleep_succeeded = clock->sleep_until(until);
     });
   // yield execution long enough to let the sleep thread get to waiting on the condition variable
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
   auto set_parameters_results = param_client->set_parameters(
     {rclcpp::Parameter("use_sim_time", true)});
   for (auto & result : set_parameters_results) {
@@ -530,8 +552,7 @@ TEST_F(TestClockSleep, sleep_until_ros_time_enable_interrupt)
   EXPECT_FALSE(sleep_succeeded);
 }
 
-TEST_F(TestClockSleep, sleep_until_ros_time_disable_interrupt)
-{
+TEST_F(TestClockSleep, sleep_until_ros_time_disable_interrupt) {
   param_client->set_parameters({rclcpp::Parameter("use_sim_time", true)});
   auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   rclcpp::TimeSource time_source;
@@ -548,7 +569,7 @@ TEST_F(TestClockSleep, sleep_until_ros_time_disable_interrupt)
       sleep_succeeded = clock->sleep_until(until);
     });
   // yield execution long enough to let the sleep thread get to waiting on the condition variable
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
   auto set_parameters_results = param_client->set_parameters(
     {rclcpp::Parameter("use_sim_time", false)});
   for (auto & result : set_parameters_results) {
@@ -558,8 +579,7 @@ TEST_F(TestClockSleep, sleep_until_ros_time_disable_interrupt)
   EXPECT_FALSE(sleep_succeeded);
 }
 
-TEST_F(TestClockSleep, sleep_until_shutdown_interrupt)
-{
+TEST_F(TestClockSleep, sleep_until_shutdown_interrupt) {
   param_client->set_parameters({rclcpp::Parameter("use_sim_time", true)});
   auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   rclcpp::TimeSource time_source;
@@ -567,7 +587,7 @@ TEST_F(TestClockSleep, sleep_until_shutdown_interrupt)
   time_source.attachClock(clock);
 
   // the timeout doesn't matter here - no /clock is being published, so it should never wake
-  const auto until = clock->now() + rclcpp::Duration(5, 0);
+  const auto until = clock->now() + rclcpp::Duration(600, 0);
 
   bool sleep_succeeded = true;
   auto sleep_thread = std::thread(
@@ -575,7 +595,7 @@ TEST_F(TestClockSleep, sleep_until_shutdown_interrupt)
       sleep_succeeded = clock->sleep_until(until);
     });
   // yield execution long enough to let the sleep thread get to waiting on the condition variable
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
   rclcpp::shutdown();
   sleep_thread.join();
   EXPECT_FALSE(sleep_succeeded);
