@@ -24,7 +24,6 @@ namespace detail
 
 /// Adds the guard condition to a waitset
 /**
- * This function is thread-safe.
  * \param[in] wait_set reference to a wait set where to add the guard condition
  * \param[in] guard_condition reference to the guard_condition to be added
  */

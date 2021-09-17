@@ -558,7 +558,7 @@ TEST_F(TestNodeGraph, notify_graph_change_rcl_error)
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     node()->get_node_graph_interface()->notify_graph_change(),
-    std::runtime_error("Failed to notify wait set on graph change: error not set"));
+    std::runtime_error("failed to notify wait set on graph change: error not set"));
 }
 
 TEST_F(TestNodeGraph, get_info_by_topic)

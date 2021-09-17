@@ -538,7 +538,7 @@ NodeGraph::notify_graph_change()
     node_gc.trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-            std::string("Failed to notify wait set on graph change: ") + ex.what());
+            std::string("failed to notify wait set on graph change: ") + ex.what());
   }
 }
 

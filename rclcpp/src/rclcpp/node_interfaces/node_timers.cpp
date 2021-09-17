@@ -47,7 +47,7 @@ NodeTimers::add_timer(
     node_gc.trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-            std::string("Failed to notify wait set on timer creation: ") + ex.what());
+            std::string("failed to notify wait set on timer creation: ") + ex.what());
   }
 
   TRACEPOINT(

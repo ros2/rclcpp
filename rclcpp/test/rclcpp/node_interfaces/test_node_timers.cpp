@@ -87,5 +87,5 @@ TEST_F(TestNodeTimers, add_timer_rcl_trigger_guard_condition_error)
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     node_timers->add_timer(timer, callback_group),
-    std::runtime_error("Failed to notify wait set on timer creation: error not set"));
+    std::runtime_error("failed to notify wait set on timer creation: error not set"));
 }

@@ -46,7 +46,7 @@ NodeWaitables::add_waitable(
     node_gc.trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-            std::string("Failed to notify wait set on waitable creation: ") + ex.what());
+            std::string("failed to notify wait set on waitable creation: ") + ex.what());
   }
 }
 
