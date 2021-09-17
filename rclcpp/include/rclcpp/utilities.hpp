@@ -53,7 +53,11 @@ namespace rclcpp
  */
 RCLCPP_PUBLIC
 void
-init(int argc, char const * const argv[], const InitOptions & init_options = InitOptions());
+init(
+  int argc,
+  char const * const argv[],
+  const InitOptions & init_options = InitOptions(),
+  bool install_sigterm_handler = true);
 
 /// Install the global signal handler for rclcpp.
 /**
@@ -71,7 +75,7 @@ init(int argc, char const * const argv[], const InitOptions & init_options = Ini
  */
 RCLCPP_PUBLIC
 bool
-install_signal_handlers();
+install_signal_handlers(bool install_sigterm_handler = true);
 
 /// Return true if the signal handlers are installed, otherwise false.
 RCLCPP_PUBLIC

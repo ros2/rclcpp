@@ -31,18 +31,22 @@ namespace rclcpp
 {
 
 void
-init(int argc, char const * const argv[], const InitOptions & init_options)
+init(
+  int argc,
+  char const * const argv[],
+  const InitOptions & init_options,
+  bool install_sigterm_handler)
 {
   using rclcpp::contexts::get_global_default_context;
   get_global_default_context()->init(argc, argv, init_options);
   // Install the signal handlers.
-  install_signal_handlers();
+  install_signal_handlers(install_sigterm_handler);
 }
 
 bool
-install_signal_handlers()
+install_signal_handlers(bool install_sigterm_handler)
 {
-  return SignalHandler::get_global_signal_handler().install();
+  return SignalHandler::get_global_signal_handler().install(install_sigterm_handler);
 }
 
 bool
