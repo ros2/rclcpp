@@ -138,11 +138,11 @@ SignalHandler::install(bool install_sigterm)
 #else
     handler_argument = &this->signal_handler;
 #endif
-    set_signal_handler(SIGINT, handler_argument);
+    old_sigint_handler_ = set_signal_handler(SIGINT, handler_argument);
 
     if (install_sigterm_) {
       // install sigterm handler
-      set_signal_handler(SIGTERM, handler_argument);
+      old_sigterm_handler_ = set_signal_handler(SIGTERM, handler_argument);
     }
 
     signal_handler_thread_ = std::thread(&SignalHandler::deferred_signal_handler, this);
