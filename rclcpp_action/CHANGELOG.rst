@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Fixed a bug where it would occasionally miss a goal result, which was caused by race condition (`#1677 <https://github.com/ros2/rclcpp/issues/1677>`_) (`#1683 <https://github.com/ros2/rclcpp/issues/1683>`_)
+  * Co-authored-by: Kaven Yau <kavenyau@foxmail.com>
+* Contributors: Tomoya Fujita
+
 9.1.0 (2021-05-20)
 ------------------
 * Bump the benchmark timeout for benchmark_action_client (`#1672 <https://github.com/ros2/rclcpp/issues/1672>`_)

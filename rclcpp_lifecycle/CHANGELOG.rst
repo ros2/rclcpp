@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Added thread safe for_each_callback_group method (`#1741 <https://github.com/ros2/rclcpp/issues/1741>`_)
+* Contributors: Aditya Pande
+
 9.1.0 (2021-05-20)
 ------------------
 * Fix destruction order in lifecycle benchmark (`#1676 <https://github.com/ros2/rclcpp/issues/1676>`_)

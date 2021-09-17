@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added thread safe for_each_callback_group method (`#1741 <https://github.com/ros2/rclcpp/issues/1741>`_)
+* Added a function rclcpp::wait_for_message() convenience function (`#1705 <https://github.com/ros2/rclcpp/issues/1705>`_) (`#1740 <https://github.com/ros2/rclcpp/issues/1740>`_)
+* Fixed a documentation bug (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_) (`#1720 <https://github.com/ros2/rclcpp/issues/1720>`_)
+* Contributors: Aditya Pande, Karsten Knese, mergify[bot]
+
 9.1.0 (2021-05-20)
 ------------------
 * Allow declaring uninitialized statically typed parameters. (`#1673 <https://github.com/ros2/rclcpp/issues/1673>`_) (`#1681 <https://github.com/ros2/rclcpp/issues/1681>`_)
