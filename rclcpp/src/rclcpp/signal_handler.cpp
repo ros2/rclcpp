@@ -35,17 +35,13 @@
 
 using rclcpp::SignalHandler;
 
-using rclcpp::detail::OneSignalHandler;
-
-
-static
-OneSignalHandler::signal_handler_type
-set_signal_handler(
+SignalHandler::signal_handler_type
+SignalHandler::set_signal_handler(
   int signal_value,
-  const OneSignalHandler::signal_handler_type & signal_handler)
+  const SignalHandler::signal_handler_type & signal_handler)
 {
   bool signal_handler_install_failed;
-  OneSignalHandler::signal_handler_type old_signal_handler;
+  SignalHandler::signal_handler_type old_signal_handler;
 #if defined(RCLCPP_HAS_SIGACTION)
   ssize_t ret = sigaction(signal_value, &signal_handler, &old_signal_handler);
   signal_handler_install_failed = (ret == -1);
@@ -63,85 +59,48 @@ set_signal_handler(
   return old_signal_handler;
 }
 
-
-OneSignalHandler::OneSignalHandler(int signum)
-: signum_{signum},
-  installed_{false}
-{}
-
-OneSignalHandler::~OneSignalHandler()
-{
-  this->uninstall();
-}
-
-bool
-OneSignalHandler::install(const OneSignalHandler::signal_handler_type & signal_handler)
-{
-  if (installed_) {
-    return false;
-  }
-  old_signal_handler_ = set_signal_handler(signum_, signal_handler);
-  installed_ = true;
-  return true;
-}
-
-bool
-OneSignalHandler::uninstall()
-{
-  if (!installed_) {
-    return false;
-  }
-  set_signal_handler(signum_, old_signal_handler_);
-  installed_ = false;
-  return true;
-}
-
 // Unfortunately macros (or duplicated code) are needed here,
 // as the signal handler must be a function pointer.
 #if defined(RCLCPP_HAS_SIGACTION)
-#define DEFINE_SIGNAL_HANDLER(SIGNAL_NAME_LOWER_CASE) \
-  void \
-  SignalHandler::signal_handler_ ## SIGNAL_NAME_LOWER_CASE( \
-    int signal_value, siginfo_t * siginfo, void * context) \
-  { \
-    RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signal_value=%d)", signal_value); \
- \
-    auto & instance = SignalHandler::get_global_signal_handler(); \
- \
-    auto old_signal_handler = instance.get_ ## SIGNAL_NAME_LOWER_CASE ## _old_handler(); \
-    if (old_signal_handler.sa_flags & SA_SIGINFO) { \
-      if (old_signal_handler.sa_sigaction != NULL) { \
-        old_signal_handler.sa_sigaction(signal_value, siginfo, context); \
-      } \
-    } else { \
-      if ( \
-        old_signal_handler.sa_handler != NULL &&  /* Is set */ \
-        old_signal_handler.sa_handler != SIG_DFL &&  /* Is not default*/ \
-        old_signal_handler.sa_handler != SIG_IGN)  /* Is not ignored */ \
-      { \
-        old_signal_handler.sa_handler(signal_value); \
-      } \
-    } \
- \
-    instance.signal_handler_common(); \
-  }
-#else
-#define DEFINE_SIGNAL_HANDLER(SIGNAL_NAME_LOWER_CASE) \
-  void \
-  SignalHandler::signal_handler_ ## SIGNAL_NAME_LOWER_CASE(int signal_value) \
-  { \
-    RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signal_value=%d)", signal_value); \
-    auto & instance = SignalHandler::get_global_signal_handler(); \
- \
-    auto old_signal_handler = instance.get_ ## SIGNAL_NAME_LOWER_CASE ## _old_handler(); \
-    if (old_signal_handler) { \
-      old_signal_handler(signal_value); \
-    } \
- \
-    instance.signal_handler_common(); \
-  }
-#endif
+void
+SignalHandler::signal_handler(
+  int signum, siginfo_t * siginfo, void * context)
+{
+  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
+  auto & instance = SignalHandler::get_global_signal_handler();
 
+  auto old_signal_handler = instance.get_old_signal_handler(signum);
+  if (old_signal_handler.sa_flags & SA_SIGINFO) {
+    if (old_signal_handler.sa_sigaction != NULL) {
+      old_signal_handler.sa_sigaction(signum, siginfo, context);
+    }
+  } else {
+    if (
+      old_signal_handler.sa_handler != NULL &&  /* Is set */
+      old_signal_handler.sa_handler != SIG_DFL &&  /* Is not default*/
+      old_signal_handler.sa_handler != SIG_IGN)  /* Is not ignored */
+    {
+      old_signal_handler.sa_handler(signum);
+    }
+  }
+  instance.signal_handler_common();
+}
+#else
+void
+SignalHandler::signal_handler(int signum)
+{
+  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
+  auto & instance = SignalHandler::get_global_signal_handler();
+  auto old_signal_handler = instance.get_old_signal_handler(signum);
+  if (
+    SIG_ERR != old_signal_handler && SIG_IGN != old_signal_handler &&
+    SIG_DFL != old_signal_handler)
+  {
+    old_signal_handler(signum);
+  }
+  instance.signal_handler_common();
+}
+#endif
 
 rclcpp::Logger &
 SignalHandler::get_logger()
@@ -156,52 +115,35 @@ SignalHandler::get_global_signal_handler()
   return signal_handler;
 }
 
-#if defined(RCLCPP_HAS_SIGACTION)
-static
-void
-initialize_handler_argument(
-  void (* handler)(
-    int signal_value, siginfo_t * siginfo, void * context),
-  OneSignalHandler::signal_handler_type * out)
-{
-  memset(out, 0, sizeof(*out));
-  sigemptyset(&out->sa_mask);
-  out->sa_sigaction = handler;
-  out->sa_flags = SA_SIGINFO;
-}
-#endif
-
 bool
-SignalHandler::install()
+SignalHandler::install(bool install_sigterm)
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
   bool already_installed = installed_.exchange(true);
   if (already_installed) {
     return false;
   }
+  install_sigterm_ = install_sigterm;
   try {
     setup_wait_for_signal();
     signal_received_.store(false);
 
     // install sigint handler
-    OneSignalHandler::signal_handler_type sigint_handler_argument;
+    SignalHandler::signal_handler_type handler_argument;
 #if defined(RCLCPP_HAS_SIGACTION)
-    initialize_handler_argument(signal_handler_sigint, &sigint_handler_argument);
+    memset(&handler_argument, 0, sizeof(handler_argument));
+    sigemptyset(&handler_argument.sa_mask);
+    handler_argument.sa_sigaction = &this->signal_handler;
+    handler_argument.sa_flags = SA_SIGINFO;
 #else
-    sigint_handler_argument = signal_handler_sigint;
+    handler_argument = &this->signal_handler;
 #endif
+    set_signal_handler(SIGINT, handler_argument);
 
-    sigint_handler_.install(sigint_handler_argument);
-
-    // install sigterm handler
-    OneSignalHandler::signal_handler_type sigterm_handler_argument;
-#if defined(RCLCPP_HAS_SIGACTION)
-    initialize_handler_argument(signal_handler_sigterm, &sigterm_handler_argument);
-#else
-    sigterm_handler_argument = signal_handler_sigterm;
-#endif
-
-    sigterm_handler_.install(sigterm_handler_argument);
+    if (install_sigterm_) {
+      // install sigterm handler
+      set_signal_handler(SIGTERM, handler_argument);
+    }
 
     signal_handler_thread_ = std::thread(&SignalHandler::deferred_signal_handler, this);
   } catch (...) {
@@ -223,8 +165,11 @@ SignalHandler::uninstall()
   try {
     // TODO(wjwwood): what happens if someone overrides our signal handler then calls uninstall?
     //   I think we need to assert that we're the current signal handler, and mitigate if not.
-    sigint_handler_.uninstall();
-    sigterm_handler_.uninstall();
+    set_signal_handler(SIGINT, old_sigint_handler_);
+    if (install_sigterm_) {
+      set_signal_handler(SIGTERM, old_sigterm_handler_);
+      install_sigterm_ = false;
+    }
     RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): notifying deferred signal handler");
     notify_signal_handler();
     signal_handler_thread_.join();
@@ -259,19 +204,23 @@ SignalHandler::~SignalHandler()
   }
 }
 
-DEFINE_SIGNAL_HANDLER(sigint)
-DEFINE_SIGNAL_HANDLER(sigterm)
-
-OneSignalHandler::signal_handler_type
-SignalHandler::get_sigint_old_handler()
+SignalHandler::signal_handler_type
+SignalHandler::get_old_signal_handler(int signum)
 {
-  return sigint_handler_.old_signal_handler_;
-}
-
-OneSignalHandler::signal_handler_type
-SignalHandler::get_sigterm_old_handler()
-{
-  return sigterm_handler_.old_signal_handler_;
+  if (SIGINT == signum) {
+    return old_sigint_handler_;
+  } else if (SIGTERM == signum) {
+    return old_sigterm_handler_;
+  }
+#if defined(RCLCPP_HAS_SIGACTION)
+  SignalHandler::signal_handler_type ret;
+  memset(&ret, 0, sizeof(ret));
+  sigemptyset(&ret.sa_mask);
+  ret.sa_handler = SIG_DFL;
+  return ret;
+#else
+  return SIG_DFL;
+#endif
 }
 
 void
