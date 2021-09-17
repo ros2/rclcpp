@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.2.0 (2021-09-17)
+------------------
 * Added thread safe for_each_callback_group method (`#1741 <https://github.com/ros2/rclcpp/issues/1741>`_)
 * Added a function rclcpp::wait_for_message() convenience function (`#1705 <https://github.com/ros2/rclcpp/issues/1705>`_) (`#1740 <https://github.com/ros2/rclcpp/issues/1740>`_)
 * Fixed a documentation bug (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_) (`#1720 <https://github.com/ros2/rclcpp/issues/1720>`_)
