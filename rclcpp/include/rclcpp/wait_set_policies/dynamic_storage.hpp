@@ -51,8 +51,6 @@ protected:
   using WeakManagedSubscriptionEntry = detail::WeakManagedSubscriptionEntry;
   using SubscriptionEntry = detail::SubscriptionEntry;
 
-  ??? fix references to use new entry/managed_entry/weak_managed_entry style
-
   using SequenceOfWeakSubscriptions = std::vector<WeakManagedSubscriptionEntry>;
   using SubscriptionsIterable = std::vector<SubscriptionEntry>;
 
