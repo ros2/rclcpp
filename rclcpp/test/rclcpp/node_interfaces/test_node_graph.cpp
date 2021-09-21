@@ -360,7 +360,7 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node)
 TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node)
 {
   const rclcpp::QoS subscriber_qos(10);
-  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   auto subscription =
     node()->create_subscription<test_msgs::msg::Empty>(
     "node1_topic", subscriber_qos, std::move(callback));
@@ -414,7 +414,7 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_rcl_errors)
 TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_rcl_errors)
 {
   const rclcpp::QoS subscriber_qos(10);
-  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   auto subscription =
     node()->create_subscription<test_msgs::msg::Empty>(
     "topic", subscriber_qos, std::move(callback));
@@ -444,7 +444,7 @@ TEST_F(TestNodeGraph, get_publisher_names_and_types_by_node_names_and_types_fini
 TEST_F(TestNodeGraph, get_subscriber_names_and_types_by_node_names_and_types_fini_error)
 {
   const rclcpp::QoS subscriber_qos(10);
-  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   auto subscription =
     node()->create_subscription<test_msgs::msg::Empty>(
     "topic", subscriber_qos, std::move(callback));
