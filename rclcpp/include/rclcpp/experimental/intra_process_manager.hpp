@@ -173,6 +173,7 @@ public:
    *
    * \param intra_process_publisher_id the id of the publisher of this message.
    * \param message the message that is being stored.
+   * \param allocator for allocations when buffering messages.
    */
   template<
     typename MessageT,

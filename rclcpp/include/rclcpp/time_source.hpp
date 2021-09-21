@@ -56,6 +56,7 @@ public:
    *
    * \param node std::shared pointer to a initialized node
    * \param qos QoS that will be used when creating a `/clock` subscription.
+   * \param use_clock_thread whether to spin the attached node in a separate thread
    */
   RCLCPP_PUBLIC
   explicit TimeSource(
@@ -68,6 +69,7 @@ public:
    * An Empty TimeSource class
    *
    * \param qos QoS that will be used when creating a `/clock` subscription.
+   * \param use_clock_thread whether to spin the attached node in a separate thread.
    */
   RCLCPP_PUBLIC
   explicit TimeSource(
