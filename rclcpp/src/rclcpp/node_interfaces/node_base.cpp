@@ -73,17 +73,16 @@ public:
   NodeHandleWithContext & operator=(NodeHandleWithContext &&) = delete;
 
   NodeHandleWithContext(NodeHandleWithContext && other)
-    : context_(std::move(other.context_)),
-      logging_mutex_(std::move(other.logging_mutex_)),
-      node_handle_(other.node_handle_)
+  : context_(std::move(other.context_)),
+    logging_mutex_(std::move(other.logging_mutex_)),
+    node_handle_(other.node_handle_)
   {
     other.node_handle_ = nullptr;
   }
 
   ~NodeHandleWithContext()
   {
-    if (!node_handle_)
-    {
+    if (!node_handle_) {
       // If the node_handle_ is null, then this object was moved-from. We don't
       // need to do any cleanup.
       return;
