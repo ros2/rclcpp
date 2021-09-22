@@ -240,11 +240,11 @@ SignalHandler::deferred_signal_handler()
     if (signal_received_.exchange(false)) {
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
       for (auto context_ptr : rclcpp::get_contexts()) {
-        if (context_ptr->get_init_options().shutdown_on_sigint) {
+        if (context_ptr->get_init_options().shutdown_on_signal) {
           RCLCPP_DEBUG(
             get_logger(),
             "deferred_signal_handler(): "
-            "shutting down rclcpp::Context @ %p, because it had shutdown_on_sigint == true",
+            "shutting down rclcpp::Context @ %p, because it had shutdown_on_signal == true",
             static_cast<void *>(context_ptr.get()));
           context_ptr->shutdown("signal handler");
         }
