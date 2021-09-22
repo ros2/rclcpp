@@ -57,8 +57,8 @@ public:
     std::shared_ptr<std::recursive_mutex> logging_mutex,
     rcl_node_t * node_handle)
   {
-    auto aliased_ptr = std::shared_ptr<NodeHandleWithContext>(
-      new NodeHandleWithContext(
+    auto aliased_ptr = std::make_shared<NodeHandleWithContext>(
+      NodeHandleWithContext(
         std::move(context),
         std::move(logging_mutex),
         node_handle));
@@ -66,15 +66,29 @@ public:
     return std::shared_ptr<rcl_node_t>(std::move(aliased_ptr), node_handle);
   }
 
-  // This class should not be copied or moved. It should only exist in the
+  // This class should not be copied. It should only exist in the
   // std::shared_ptr that it was originally provided in.
   NodeHandleWithContext(const NodeHandleWithContext &) = delete;
-  NodeHandleWithContext(NodeHandleWithContext &&) = delete;
   NodeHandleWithContext & operator=(const NodeHandleWithContext &) = delete;
   NodeHandleWithContext & operator=(NodeHandleWithContext &&) = delete;
 
+  NodeHandleWithContext(NodeHandleWithContext && other)
+    : context_(std::move(other.context_)),
+      logging_mutex_(std::move(other.logging_mutex_)),
+      node_handle_(other.node_handle_)
+  {
+    other.node_handle_ = nullptr;
+  }
+
   ~NodeHandleWithContext()
   {
+    if (!node_handle_)
+    {
+      // If the node_handle_ is null, then this object was moved-from. We don't
+      // need to do any cleanup.
+      return;
+    }
+
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex_);
     // TODO(ivanpauno): Instead of mutually excluding rcl_node_fini with the global logger mutex,
     // rcl_logging_rosout_fini_publisher_for_node could be decoupled from there and be called
