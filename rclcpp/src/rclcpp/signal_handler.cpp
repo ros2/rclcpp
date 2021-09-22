@@ -128,7 +128,6 @@ SignalHandler::install(bool install_sigterm)
     setup_wait_for_signal();
     signal_received_.store(false);
 
-    // install sigint handler
     SignalHandler::signal_handler_type handler_argument;
 #if defined(RCLCPP_HAS_SIGACTION)
     memset(&handler_argument, 0, sizeof(handler_argument));
@@ -195,12 +194,12 @@ SignalHandler::~SignalHandler()
   } catch (const std::exception & exc) {
     RCLCPP_ERROR(
       get_logger(),
-      "caught %s exception when uninstalling the sigint handler in rclcpp::~SignalHandler: %s",
+      "caught %s exception when uninstalling signal handlers in rclcpp::~SignalHandler: %s",
       rmw::impl::cpp::demangle(exc).c_str(), exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       get_logger(),
-      "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler");
+      "caught unknown exception when uninstalling signal handlers in rclcpp::~SignalHandler");
   }
 }
 

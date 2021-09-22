@@ -39,14 +39,14 @@
 namespace rclcpp
 {
 
-/// Responsible for manaaging the SIGINT signal handling.
+/// Responsible for manaaging the SIGINT/SIGTERM signal handling.
 /**
  * This class is responsible for:
  *
- * - installing the signal handler for SIGINT
- * - uninstalling the signal handler for SIGINT
- * - creating a thread to execute "on sigint" work outside of the signal handler
- * - safely notifying the dedicated signal handling thread when receiving SIGINT
+ * - installing the signal handler for SIGINT/SIGTERM
+ * - uninstalling the signal handler for SIGINT/SIGTERM
+ * - creating a thread to execute "on signal" work outside of the signal handler
+ * - safely notifying the dedicated signal handling thread when receiving SIGINT/SIGTERM
  * - implementation of all of the signal handling work, like shutting down contexts
  *
  * \internal
@@ -64,15 +64,18 @@ public:
   rclcpp::Logger &
   get_logger();
 
-  /// Install the signal handler for SIGINT and start the dedicated signal handling thread.
+  /// Install the signal handler for SIGINT/SIGTERM and start the dedicated signal handling thread.
   /**
-   * Also stores the current signal handler to be called on SIGINT and to
+   * Also stores the current signal handler to be called on signal and to
    * restore when uninstalling this signal handler.
+   *
+   * \param install_sigterm If true, a SIGTERM handler is also installed.
    */
   bool
-  install(bool install_sigterm = false);
+  install(bool install_sigterm = true);
 
-  /// Uninstall the signal handler for SIGINT and join the dedicated singal handling thread.
+  /// Uninstall the signal handler for SIGINT/SIGTERM and join the dedicated singal handling
+  /// thread.
   /**
    * Also restores the previous signal handler.
    */
@@ -108,12 +111,12 @@ private:
   signal_handler_common();
 
 #if defined(RCLCPP_HAS_SIGACTION)
-  /// Signal handler function for SIGINT.
+  /// Signal handler function.
   static
   void
   signal_handler(int signal_value, siginfo_t * siginfo, void * context);
 #else
-  /// Signal handler function for SIGINT.
+  /// Signal handler function.
   static
   void
   signal_handler(int signal_value);
