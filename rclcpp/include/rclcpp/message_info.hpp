@@ -33,8 +33,10 @@ public:
   /**
    * \param[in] rmw_message_info message info to initialize the class
    */
+  // intentionally allow implicit conversions
   // cppcheck-suppress noExplicitConstructor
-  MessageInfo(const rmw_message_info_t & rmw_message_info);  // NOLINT(runtime/explicit)
+  // NOLINTNEXTLINE(runtime/explicit, google-explicit-constructor)
+  MessageInfo(const rmw_message_info_t & rmw_message_info);
 
   virtual ~MessageInfo();
 

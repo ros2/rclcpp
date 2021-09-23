@@ -51,13 +51,17 @@ public:
   // This constructor matches any std::chrono value other than nanoseconds
   // intentionally not using explicit to create a conversion constructor
   template<class Rep, class Period>
+  // intentionally allow implicit conversions
   // cppcheck-suppress noExplicitConstructor
-  Duration(const std::chrono::duration<Rep, Period> & duration)  // NOLINT(runtime/explicit)
+  // NOLINTNEXTLINE(runtime/explicit, google-explicit-constructor)
+  Duration(const std::chrono::duration<Rep, Period> & duration)
   : Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(duration))
   {}
 
+  // intentionally allow implicit conversions
   // cppcheck-suppress noExplicitConstructor
-  Duration(const builtin_interfaces::msg::Duration & duration_msg);  // NOLINT(runtime/explicit)
+  // NOLINTNEXTLINE(runtime/explicit, google-explicit-constructor)
+  Duration(const builtin_interfaces::msg::Duration & duration_msg);
 
   /// Time constructor
   /**
@@ -69,6 +73,8 @@ public:
 
   virtual ~Duration() = default;
 
+  // intentionally allow implicit conversions
+  // NOLINTNEXTLINE(google-explicit-constructor)
   operator builtin_interfaces::msg::Duration() const;
 
   // cppcheck-suppress operatorEq // this is a false positive from cppcheck

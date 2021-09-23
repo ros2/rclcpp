@@ -112,7 +112,9 @@ public:
   : LoanedMessage(*pub, *allocator)
   {}
 
-  /// Move semantic for RVO
+  /// Move constructor to support RVO.
+  // move constructors should not be explicit
+  // NOLINTNEXTLINE(google-explicit-constructor)
   LoanedMessage(LoanedMessage<MessageT> && other)
   : pub_(std::move(other.pub_)),
     message_(std::move(other.message_)),

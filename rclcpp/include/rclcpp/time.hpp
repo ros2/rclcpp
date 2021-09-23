@@ -64,6 +64,9 @@ public:
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
+  // intentionally allow implicit conversions
+  // cppcheck-suppress noExplicitConstructor
+  // NOLINTNEXTLINE(google-explicit-constructor)
   Time(
     const builtin_interfaces::msg::Time & time_msg,
     rcl_clock_type_t clock_type = RCL_ROS_TIME);
@@ -81,6 +84,8 @@ public:
 
   /// Return a builtin_interfaces::msg::Time object based
   RCLCPP_PUBLIC
+  // intentionally allow implicit conversions
+  // NOLINTNEXTLINE(google-explicit-constructor)
   operator builtin_interfaces::msg::Time() const;
 
   /**
