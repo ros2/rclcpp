@@ -268,7 +268,7 @@ public:
    *
    *   - this context is shutdown()
    *   - this context is destructed (resulting in shutdown)
-   *   - this context has shutdown_on_signal=true and SIGINT occurs (resulting in shutdown)
+   *   - this context has shutdown_on_signal=true and SIGINT/SIGTERM occurs (resulting in shutdown)
    *   - interrupt_all_sleep_for() is called
    *
    * \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
