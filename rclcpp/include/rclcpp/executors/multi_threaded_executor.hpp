@@ -52,7 +52,7 @@ public:
    * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
-  MultiThreadedExecutor(
+  explicit MultiThreadedExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions(),
     size_t number_of_threads = 0,
     bool yield_before_execute = false,
