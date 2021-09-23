@@ -499,7 +499,7 @@ TEST_F(TestClockSleep, sleep_until_basic_system) {
 
 TEST_F(TestClockSleep, sleep_until_basic_steady) {
   static const auto MILLION = 1000L * 1000L;
-  const auto milliseconds = 100;
+  const auto milliseconds = 300;
   rclcpp::Clock clock(RCL_STEADY_TIME);
   auto delay = rclcpp::Duration(0, milliseconds * MILLION);
   auto sleep_until = clock.now() + delay;

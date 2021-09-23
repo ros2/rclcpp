@@ -87,9 +87,11 @@ public:
    *     false. There is not a consistent choice of sleeping time when the time source changes,
    *     so this is up to the caller to call again if needed.
    *
-   * \param until absolute time according to current clock type to sleep until
-   * \return true if the time `until` is reached
-   * \return false if time cannot be reached reliably, such as on shutdown
+   * \param until absolute time according to current clock type to sleep until.
+   * \return true immediately if `until` is in the past
+   * \return true when the time `until` is reached
+   * \return false if time cannot be reached reliably, for example from shutdown or a change
+   *    of time source.
    */
   RCLCPP_PUBLIC
   bool
