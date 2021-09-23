@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -71,8 +72,32 @@ public:
     const std::string & namespace_) const override;
 
   RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_publisher_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_,
+    bool no_demangle = false) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_subscriber_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_,
+    bool no_demangle = false) const override;
+
+  RCLCPP_PUBLIC
   std::vector<std::string>
   get_node_names() const override;
+
+  RCLCPP_PUBLIC
+  std::vector<std::tuple<std::string, std::string, std::string>>
+  get_node_names_with_enclaves() const override;
 
   RCLCPP_PUBLIC
   std::vector<std::pair<std::string, std::string>>
