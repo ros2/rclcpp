@@ -125,15 +125,15 @@ public:
 
   /// Get whether a separate clock thread is used or not
   RCLCPP_PUBLIC
-  bool getUseClockThread();
+  bool get_use_clock_thread();
 
   /// Set whether to use a separate clock thread or not
   RCLCPP_PUBLIC
-  void setUseClockThread(bool use_clock_thread);
+  void set_use_clock_thread(bool use_clock_thread);
 
   /// Check if the clock thread is joinable
   RCLCPP_PUBLIC
-  bool clockThreadIsJoinable();
+  bool clock_thread_is_joinable();
 
   /// TimeSource Destructor
   RCLCPP_PUBLIC

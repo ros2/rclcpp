@@ -554,17 +554,17 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
   clocks_state_->detachClock(std::move(clock));
 }
 
-bool TimeSource::getUseClockThread()
+bool TimeSource::get_use_clock_thread()
 {
   return node_state_->get_use_clock_thread();
 }
 
-void TimeSource::setUseClockThread(bool use_clock_thread)
+void TimeSource::set_use_clock_thread(bool use_clock_thread)
 {
   node_state_->set_use_clock_thread(use_clock_thread);
 }
 
-bool TimeSource::clockThreadIsJoinable()
+bool TimeSource::clock_thread_is_joinable()
 {
   return node_state_->clock_thread_is_joinable();
 }
