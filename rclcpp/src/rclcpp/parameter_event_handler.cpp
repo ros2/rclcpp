@@ -101,8 +101,8 @@ bool
 ParameterEventHandler::get_parameter_from_event(
   const rcl_interfaces::msg::ParameterEvent & event,
   rclcpp::Parameter & parameter,
-  const std::string parameter_name,
-  const std::string node_name)
+  const std::string & parameter_name,
+  const std::string & node_name)
 {
   if (event.node != node_name) {
     return false;
@@ -128,8 +128,8 @@ ParameterEventHandler::get_parameter_from_event(
 rclcpp::Parameter
 ParameterEventHandler::get_parameter_from_event(
   const rcl_interfaces::msg::ParameterEvent & event,
-  const std::string parameter_name,
-  const std::string node_name)
+  const std::string & parameter_name,
+  const std::string & node_name)
 {
   rclcpp::Parameter p;
   if (!get_parameter_from_event(event, p, parameter_name, node_name)) {

@@ -169,8 +169,8 @@ public:
     NodeT node,
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
+  : node_base_(rclcpp::node_interfaces::get_node_base_interface(node))
   {
-    node_base_ = rclcpp::node_interfaces::get_node_base_interface(node);
     auto node_topics = rclcpp::node_interfaces::get_node_topics_interface(node);
 
     event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
@@ -249,8 +249,8 @@ public:
   get_parameter_from_event(
     const rcl_interfaces::msg::ParameterEvent & event,
     rclcpp::Parameter & parameter,
-    const std::string parameter_name,
-    const std::string node_name = "");
+    const std::string & parameter_name,
+    const std::string & node_name = "");
 
   /// Get an rclcpp::Parameter from parameter event
   /**
@@ -269,8 +269,8 @@ public:
   static rclcpp::Parameter
   get_parameter_from_event(
     const rcl_interfaces::msg::ParameterEvent & event,
-    const std::string parameter_name,
-    const std::string node_name = "");
+    const std::string & parameter_name,
+    const std::string & node_name = "");
 
   /// Get all rclcpp::Parameter values from a parameter event
   /**
