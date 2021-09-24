@@ -74,6 +74,9 @@ public:
     const rclcpp::QoS & qos = rclcpp::ClockQoS(),
     bool use_clock_thread = true);
 
+  // The TimeSource is uncopyable
+  TimeSource(const TimeSource &) = delete;
+
   /// Attach node to the time source.
   /**
    * \param node std::shared pointer to a initialized node
@@ -137,149 +140,10 @@ public:
   ~TimeSource();
 
 private:
-  class ClocksState : public std::enable_shared_from_this<ClocksState>
-  {
-// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
-  public:
-// *INDENT-ON*
-    ClocksState();
-
-    // An internal method to use in the clock callback that iterates and enables all clocks
-    void enable_ros_time();
-    // An internal method to use in the clock callback that iterates and disables all clocks
-    void disable_ros_time();
-
-    // Check if ROS time is active
-    bool is_ros_time_active() const;
-
-    // Attach a clock
-    void attachClock(rclcpp::Clock::SharedPtr clock);
-
-    // Detach a clock
-    void detachClock(rclcpp::Clock::SharedPtr clock);
-
-    // Internal helper function used inside iterators
-    static void set_clock(
-      const builtin_interfaces::msg::Time::SharedPtr msg,
-      bool set_ros_time_enabled,
-      rclcpp::Clock::SharedPtr clock);
-
-    // Internal helper function
-    void set_all_clocks(
-      const builtin_interfaces::msg::Time::SharedPtr msg,
-      bool set_ros_time_enabled);
-
-    // Cache the last clock message received
-    void cache_last_msg(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg);
-
-// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
-  private:
-// *INDENT-ON*
-    // Store (and update on node attach) logger for logging.
-    Logger logger_;
-
-    // A lock to protect iterating the associated_clocks_ field.
-    std::mutex clock_list_lock_;
-    // A vector to store references to associated clocks.
-    std::vector<rclcpp::Clock::SharedPtr> associated_clocks_;
-
-    // Local storage of validity of ROS time
-    // This is needed when new clocks are added.
-    bool ros_time_active_{false};
-    // Last set message to be passed to newly registered clocks
-    std::shared_ptr<const rosgraph_msgs::msg::Clock> last_msg_set_;
-  };
+  class ClocksState;
   std::shared_ptr<ClocksState> clocks_state_;
 
-  class NodeState : public std::enable_shared_from_this<NodeState>
-  {
-// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
-  public:
-// *INDENT-ON*
-    NodeState(ClocksState & clocks_state, const rclcpp::QoS & qos, bool use_clock_thread);
-
-    ~NodeState();
-
-    // Check if a clock thread will be used
-    bool getUseClockThread();
-
-    // Set whether a clock thread will be used
-    void setUseClockThread(bool use_clock_thread);
-
-    // Check if the clock thread is joinable
-    bool clockThreadIsJoinable();
-
-    // Attach a node to this time source
-    void attachNode(
-      rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
-      rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
-      rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
-      rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
-      rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
-      rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
-      rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface);
-
-    // Detach the attached node
-    void detachNode();
-
-// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
-  private:
-// *INDENT-ON*
-    ClocksState & clocks_state_;
-
-    // Dedicated thread for clock subscription.
-    bool use_clock_thread_;
-    std::thread clock_executor_thread_;
-
-    // Preserve the node reference
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
-    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
-    rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
-    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
-
-    // Store (and update on node attach) logger for logging.
-    Logger logger_;
-
-    // QoS of the clock subscription.
-    rclcpp::QoS qos_;
-
-    // The subscription for the clock callback
-    using MessageT = rosgraph_msgs::msg::Clock;
-    using Alloc = std::allocator<void>;
-    using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
-    std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
-    std::mutex clock_sub_lock_;
-    rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
-    rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
-    std::promise<void> cancel_clock_executor_promise_;
-
-    // The clock callback itself
-    void clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg);
-
-    // Create the subscription for the clock topic
-    void create_clock_sub();
-
-    // Destroy the subscription for the clock topic
-    void destroy_clock_sub();
-
-    // Parameter Event subscription
-    using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
-    using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
-    std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
-
-    // Callback for parameter updates
-    void on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event);
-
-    // An enum to hold the parameter state
-    enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
-    UseSimTimeParameterState parameter_state_;
-
-    // A handler for the use_sim_time parameter callback.
-    rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler_{nullptr};
-  };
+  class NodeState;
   std::shared_ptr<NodeState> node_state_;
 
   // Preserve the arguments received by the constructor for reuse at runtime
