@@ -39,7 +39,7 @@
 namespace rclcpp
 {
 
-/// Responsible for manaaging the SIGINT/SIGTERM signal handling.
+/// Responsible for managing the SIGINT/SIGTERM signal handling.
 /**
  * This class is responsible for:
  *
