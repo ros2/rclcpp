@@ -139,7 +139,9 @@ public:
 private:
   class ClocksState : public std::enable_shared_from_this<ClocksState>
   {
+// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   public:
+// *INDENT-ON*
     ClocksState();
 
     // An internal method to use in the clock callback that iterates and enables all clocks
@@ -170,7 +172,9 @@ private:
     // Cache the last clock message received
     void cache_last_msg(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg);
 
+// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   private:
+// *INDENT-ON*
     // Store (and update on node attach) logger for logging.
     Logger logger_;
 
@@ -189,7 +193,9 @@ private:
 
   class NodeState : public std::enable_shared_from_this<NodeState>
   {
+// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   public:
+// *INDENT-ON*
     NodeState(ClocksState & clocks_state, const rclcpp::QoS & qos, bool use_clock_thread);
 
     ~NodeState();
@@ -216,7 +222,9 @@ private:
     // Detach the attached node
     void detachNode();
 
+// *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   private:
+// *INDENT-ON*
     ClocksState & clocks_state_;
 
     // Dedicated thread for clock subscription.

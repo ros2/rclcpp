@@ -134,11 +134,11 @@ void TimeSource::NodeState::attachNode(
     node_topics_,
     [state = std::weak_ptr<NodeState>(this->shared_from_this())](
       std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event) {
-        if (auto state_ptr = state.lock()) {
-          state_ptr->on_parameter_event(event);
-        }
-        // Do nothing if the pointer could not be locked because it means the TimeSource is now
-        // without an attached node
+      if (auto state_ptr = state.lock()) {
+        state_ptr->on_parameter_event(event);
+      }
+      // Do nothing if the pointer could not be locked because it means the TimeSource is now
+      // without an attached node
     });
 }
 
@@ -220,11 +220,11 @@ void TimeSource::NodeState::create_clock_sub()
     rclcpp::QoS(KeepLast(1)).best_effort(),
     [state = std::weak_ptr<NodeState>(this->shared_from_this())](
       std::shared_ptr<const rosgraph_msgs::msg::Clock> msg) {
-        if (auto state_ptr = state.lock()) {
-          state_ptr->clock_cb(msg);
-        }
-        // Do nothing if the pointer could not be locked because it means the TimeSource is now
-        // without an attached node
+      if (auto state_ptr = state.lock()) {
+        state_ptr->clock_cb(msg);
+      }
+      // Do nothing if the pointer could not be locked because it means the TimeSource is now
+      // without an attached node
     },
     options
   );
@@ -277,10 +277,6 @@ void TimeSource::NodeState::on_parameter_event(
     parameter_state_ = UNSET;
   }
 }
-
-
-
-
 
 TimeSource::ClocksState::ClocksState()
 : logger_(rclcpp::get_logger("rclcpp"))
@@ -402,9 +398,6 @@ void TimeSource::ClocksState::cache_last_msg(std::shared_ptr<const rosgraph_msgs
   last_msg_set_ = msg;
 }
 
-
-
-
 TimeSource::TimeSource(
   std::shared_ptr<rclcpp::Node> node,
   const rclcpp::QoS & qos,
@@ -461,7 +454,6 @@ void TimeSource::attachNode(
 
 void TimeSource::detachNode()
 {
-  //state_->detachNode();
   node_state_.reset();
   node_state_ = std::make_shared<NodeState>(
     *clocks_state_,
