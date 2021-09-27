@@ -30,10 +30,12 @@
 #endif
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rcutils/strerror.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
 using rclcpp::SignalHandler;
+using rclcpp::SignalHandlerOptions;
 
 SignalHandler::signal_handler_type
 SignalHandler::set_signal_handler(
@@ -116,14 +118,17 @@ SignalHandler::get_global_signal_handler()
 }
 
 bool
-SignalHandler::install(bool install_sigterm)
+SignalHandler::install(SignalHandlerOptions signal_handler_options)
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
   bool already_installed = installed_.exchange(true);
   if (already_installed) {
     return false;
   }
-  install_sigterm_ = install_sigterm;
+  if (signal_handler_options == SignalHandlerOptions::None) {
+    return true;
+  }
+  signal_handlers_options_ = signal_handler_options;
   try {
     setup_wait_for_signal();
     signal_received_.store(false);
@@ -137,10 +142,17 @@ SignalHandler::install(bool install_sigterm)
 #else
     handler_argument = &this->signal_handler;
 #endif
-    old_sigint_handler_ = set_signal_handler(SIGINT, handler_argument);
+    if (
+      signal_handler_options == SignalHandlerOptions::SigInt ||
+      signal_handler_options == SignalHandlerOptions::All)
+    {
+      old_sigint_handler_ = set_signal_handler(SIGINT, handler_argument);
+    }
 
-    if (install_sigterm_) {
-      // install sigterm handler
+    if (
+      signal_handler_options == SignalHandlerOptions::SigTerm ||
+      signal_handler_options == SignalHandlerOptions::All)
+    {
       old_sigterm_handler_ = set_signal_handler(SIGTERM, handler_argument);
     }
 
@@ -164,11 +176,19 @@ SignalHandler::uninstall()
   try {
     // TODO(wjwwood): what happens if someone overrides our signal handler then calls uninstall?
     //   I think we need to assert that we're the current signal handler, and mitigate if not.
-    set_signal_handler(SIGINT, old_sigint_handler_);
-    if (install_sigterm_) {
-      set_signal_handler(SIGTERM, old_sigterm_handler_);
-      install_sigterm_ = false;
+    if (
+      SignalHandlerOptions::SigInt == signal_handlers_options_ ||
+      SignalHandlerOptions::All == signal_handlers_options_)
+    {
+      set_signal_handler(SIGINT, old_sigint_handler_);
     }
+    if (
+      SignalHandlerOptions::SigTerm == signal_handlers_options_ ||
+      SignalHandlerOptions::All == signal_handlers_options_)
+    {
+      set_signal_handler(SIGTERM, old_sigterm_handler_);
+    }
+    signal_handlers_options_ = SignalHandlerOptions::All;
     RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): notifying deferred signal handler");
     notify_signal_handler();
     signal_handler_thread_.join();

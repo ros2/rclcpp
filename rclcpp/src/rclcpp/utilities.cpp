@@ -35,18 +35,18 @@ init(
   int argc,
   char const * const argv[],
   const InitOptions & init_options,
-  bool install_sigterm_handler)
+  SignalHandlerOptions signal_handler_options)
 {
   using rclcpp::contexts::get_global_default_context;
   get_global_default_context()->init(argc, argv, init_options);
   // Install the signal handlers.
-  install_signal_handlers(install_sigterm_handler);
+  install_signal_handlers(signal_handler_options);
 }
 
 bool
-install_signal_handlers(bool install_sigterm_handler)
+install_signal_handlers(SignalHandlerOptions signal_handler_options)
 {
-  return SignalHandler::get_global_signal_handler().install(install_sigterm_handler);
+  return SignalHandler::get_global_signal_handler().install(signal_handler_options);
 }
 
 bool

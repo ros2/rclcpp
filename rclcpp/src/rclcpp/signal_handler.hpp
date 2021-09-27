@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/utilities.hpp"
 
 // includes for semaphore notification code
 #if defined(_WIN32)
@@ -69,10 +70,10 @@ public:
    * Also stores the current signal handler to be called on signal and to
    * restore when uninstalling this signal handler.
    *
-   * \param install_sigterm If true, a SIGTERM handler is also installed.
+   * \param signal_handler_options option to indicate which signal handlers should be installed.
    */
   bool
-  install(bool install_sigterm = true);
+  install(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
 
   /// Uninstall the signal handler for SIGINT/SIGTERM and join the dedicated singal handling
   /// thread.
@@ -171,7 +172,7 @@ private:
   signal_handler_type
   get_old_signal_handler(int signum);
 
-  bool install_sigterm_;
+  rclcpp::SignalHandlerOptions signal_handlers_options_ = rclcpp::SignalHandlerOptions::All;
 
   signal_handler_type old_sigint_handler_;
   signal_handler_type old_sigterm_handler_;
