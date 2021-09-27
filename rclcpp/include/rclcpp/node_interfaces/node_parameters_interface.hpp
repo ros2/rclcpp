@@ -214,7 +214,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback, bool allowRecursion) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**

@@ -537,7 +537,7 @@ public:
   RCUTILS_WARN_UNUSED
   rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(
-    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);
+    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback, bool allowRecursion = false);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**

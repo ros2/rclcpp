@@ -435,9 +435,9 @@ Node::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth)
 }
 
 rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
-Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
+Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback, bool allowRecursion)
 {
-  return node_parameters_->add_on_set_parameters_callback(callback);
+  return node_parameters_->add_on_set_parameters_callback(callback, allowRecursion);
 }
 
 void

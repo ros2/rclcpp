@@ -929,7 +929,7 @@ public:
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback);
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback, bool allowRecursion = false);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**

@@ -39,6 +39,8 @@
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include <iostream>
+
 namespace rclcpp
 {
 namespace node_interfaces
@@ -61,6 +63,7 @@ public:
   explicit ParameterMutationRecursionGuard(bool & allow_mod)
   : allow_modification_(allow_mod)
   {
+    std::cout << "Locking mutation guard" << std::endl;
     if (!allow_modification_) {
       throw rclcpp::exceptions::ParameterModifiedInCallbackException(
               "cannot set or declare a parameter, or change the callback from within set callback");
@@ -71,6 +74,7 @@ public:
 
   ~ParameterMutationRecursionGuard()
   {
+    std::cout << "Unlocking mutation guard" << std::endl;
     allow_modification_ = true;
   }
 
@@ -193,7 +197,7 @@ public:
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback, bool allowRecursion) override;
 
   RCLCPP_PUBLIC
   void
@@ -218,6 +222,8 @@ private:
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   CallbacksContainerType on_parameters_set_callback_container_;
+
+  CallbacksContainerType on_parameters_set_callback_container_recursive_;
 
   std::map<std::string, ParameterInfo> parameters_;
 

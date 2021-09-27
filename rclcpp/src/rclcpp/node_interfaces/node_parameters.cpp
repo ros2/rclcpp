@@ -37,6 +37,8 @@
 
 #include "../detail/resolve_parameter_overrides.hpp"
 
+#include <iostream>
+
 using rclcpp::node_interfaces::NodeParameters;
 
 NodeParameters::NodeParameters(
@@ -266,8 +268,10 @@ rcl_interfaces::msg::SetParametersResult
 __call_on_parameters_set_callbacks(
   const std::vector<rclcpp::Parameter> & parameters,
   CallbacksContainerType & callback_container,
+  CallbacksContainerType & callback_container_recursive,
   const OnParametersSetCallbackType & callback)
 {
+  std::cout << "In __call_on_params_set_cbs" << std::endl;
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   auto it = callback_container.begin();
@@ -283,6 +287,19 @@ __call_on_parameters_set_callbacks(
       it = callback_container.erase(it);
     }
   }
+  it = callback_container_recursive.begin();
+  while (it != callback_container_recursive.end()) {
+    auto shared_handle = it->lock();
+    if (nullptr != shared_handle) {
+      result = shared_handle->callback(parameters);
+      if (!result.successful) {
+        return result;
+      }
+      it++;
+    } else {
+      it = callback_container_recursive.erase(it);
+    }
+  }
   if (callback) {
     result = callback(parameters);
   }
@@ -295,6 +312,7 @@ __set_parameters_atomically_common(
   const std::vector<rclcpp::Parameter> & parameters,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
   CallbacksContainerType & callback_container,
+  CallbacksContainerType & callback_container_recursive,
   const OnParametersSetCallbackType & callback,
   bool allow_undeclared = false)
 {
@@ -306,7 +324,7 @@ __set_parameters_atomically_common(
   }
   // Call the user callback to see if the new value(s) are allowed.
   result =
-    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
+    __call_on_parameters_set_callbacks(parameters, callback_container, callback_container_recursive, callback);
   if (!result.successful) {
     return result;
   }
@@ -333,10 +351,12 @@ __declare_parameter_common(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   CallbacksContainerType & callback_container,
+  CallbacksContainerType & callback_container_recursive,
   const OnParametersSetCallbackType & callback,
   rcl_interfaces::msg::ParameterEvent * parameter_event_out,
   bool ignore_override = false)
 {
+  std::cout << "In declare_param_common:" << name << std::endl;
   using rclcpp::node_interfaces::ParameterInfo;
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
   parameter_infos.at(name).descriptor = parameter_descriptor;
@@ -370,6 +390,7 @@ __declare_parameter_common(
     parameter_wrappers,
     parameter_infos,
     callback_container,
+    callback_container_recursive,
     callback);
 
   if (!result.successful) {
@@ -398,6 +419,7 @@ declare_parameter_helper(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   CallbacksContainerType & callback_container,
+  CallbacksContainerType & callback_container_recursive,
   const OnParametersSetCallbackType & callback,
   rclcpp::Publisher<rcl_interfaces::msg::ParameterEvent> * events_publisher,
   const std::string & combined_name,
@@ -435,6 +457,7 @@ declare_parameter_helper(
     parameters,
     overrides,
     callback_container,
+    callback_container_recursive,
     callback,
     &parameter_event,
     ignore_override);
@@ -482,6 +505,8 @@ NodeParameters::declare_parameter(
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
+  std::cout << "\ndeclared param 1 :" << name << std::endl;
+
   return declare_parameter_helper(
     name,
     rclcpp::PARAMETER_NOT_SET,
@@ -491,6 +516,7 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_parameters_set_callback_container_,
+    on_parameters_set_callback_container_recursive_,
     on_parameters_set_callback_,
     events_publisher_.get(),
     combined_name_,
@@ -506,6 +532,8 @@ NodeParameters::declare_parameter(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+  
+  std::cout << "declared param 2 :" << name << std::endl;
 
   if (rclcpp::PARAMETER_NOT_SET == type) {
     throw std::invalid_argument{
@@ -527,6 +555,7 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_parameters_set_callback_container_,
+    on_parameters_set_callback_container_recursive_,
     on_parameters_set_callback_,
     events_publisher_.get(),
     combined_name_,
@@ -595,6 +624,7 @@ __find_parameter_by_name(
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
+  std::cout << " Set params atomically called" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
@@ -647,6 +677,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   rcl_interfaces::msg::ParameterEvent parameter_event_msg;
   parameter_event_msg.node = combined_name_;
   CallbacksContainerType empty_callback_container;
+  CallbacksContainerType empty_callback_container_recursive;
 
   // Implicit declare uses dynamic type descriptor.
   rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -662,6 +693,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       parameter_overrides_,
       // Only call callbacks once below
       empty_callback_container,  // callback_container is explicitly empty
+      empty_callback_container_recursive,
       nullptr,  // callback is explicitly null.
       &parameter_event_msg,
       true);
@@ -724,6 +756,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     parameters_,
     // this will get called once, with all the parameters to be set
     on_parameters_set_callback_container_,
+    on_parameters_set_callback_container_recursive_,
     // These callbacks are called once. When a callback returns an unsuccessful result,
     // the remaining aren't called.
     on_parameters_set_callback_,
@@ -974,6 +1007,8 @@ NodeParameters::remove_on_set_parameters_callback(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+  
+  bool callback_found = false;
 
   auto it = std::find_if(
     on_parameters_set_callback_container_.begin(),
@@ -983,13 +1018,28 @@ NodeParameters::remove_on_set_parameters_callback(
     });
   if (it != on_parameters_set_callback_container_.end()) {
     on_parameters_set_callback_container_.erase(it);
-  } else {
+    callback_found = true;
+  }
+
+
+  it = std::find_if(
+    on_parameters_set_callback_container_recursive_.begin(),
+    on_parameters_set_callback_container_recursive_.end(),
+    [handle](const auto & weak_handle) {
+      return handle == weak_handle.lock().get();
+    });
+  if (it != on_parameters_set_callback_container_recursive_.end()) {
+    on_parameters_set_callback_container_recursive_.erase(it);
+    callback_found = true;
+  }
+
+  if (!callback_found) {
     throw std::runtime_error("Callback doesn't exist");
   }
 }
 
 OnSetParametersCallbackHandle::SharedPtr
-NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
+NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callback, bool allowRecursion)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
@@ -997,7 +1047,13 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
   auto handle = std::make_shared<OnSetParametersCallbackHandle>();
   handle->callback = callback;
   // the last callback registered is executed first.
-  on_parameters_set_callback_container_.emplace_front(handle);
+  if (!allowRecursion) {
+    std::cout << "Added cb to regular container" << std::endl;
+    on_parameters_set_callback_container_.emplace_front(handle);
+  } else {
+    std::cout << "Added cb to recursive container" << std::endl;
+    on_parameters_set_callback_container_recursive_.emplace_front(handle);
+  }
   return handle;
 }
 

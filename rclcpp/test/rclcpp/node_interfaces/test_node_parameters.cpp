@@ -187,7 +187,7 @@ TEST_F(TestNodeParameters, add_remove_parameters_callback) {
       return result;
     };
 
-  auto handle = node_parameters->add_on_set_parameters_callback(callback);
+  auto handle = node_parameters->add_on_set_parameters_callback(callback, false);
   auto result = node_parameters->set_parameters(parameters);
   ASSERT_EQ(1u, result.size());
   EXPECT_FALSE(result[0].successful);
