@@ -30,7 +30,7 @@ namespace detail
 
 std::vector<std::string>
 get_unparsed_ros_arguments(
-  int argc, char const * const argv[],
+  int argc, char const * const * argv,
   rcl_arguments_t * arguments,
   rcl_allocator_t allocator);
 

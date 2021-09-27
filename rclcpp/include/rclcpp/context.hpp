@@ -127,7 +127,7 @@ public:
   void
   init(
     int argc,
-    char const * const argv[],
+    char const * const * argv,
     const rclcpp::InitOptions & init_options = rclcpp::InitOptions());
 
   /// Return true if the context is valid, otherwise false.
