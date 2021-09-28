@@ -22,8 +22,8 @@
 
 #include "rcutils/allocator.h"
 
-// forward declare rcl_transition_t
-typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
+// forward declare rcl_lifecycle_transition_t
+typedef struct rcl_lifecycle_transition_s rcl_lifecycle_transition_t;
 
 namespace rclcpp_lifecycle
 {

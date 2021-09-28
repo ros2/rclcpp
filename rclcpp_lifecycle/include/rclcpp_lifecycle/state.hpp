@@ -21,8 +21,8 @@
 
 #include "rcutils/allocator.h"
 
-// forward declare rcl_state_t
-typedef struct rcl_lifecycle_state_t rcl_lifecycle_state_t;
+// forward declare rcl_lifecycle_state_t
+typedef struct rcl_lifecycle_state_s rcl_lifecycle_state_t;
 
 namespace rclcpp_lifecycle
 {
