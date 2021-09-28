@@ -43,7 +43,7 @@ std::string to_string(T value)
 namespace rclcpp
 {
 
-/// Option to indicate what signal handlers should rclcpp install.
+/// Option to indicate which signal handlers rclcpp should install.
 enum class SignalHandlerOptions
 {
   /// Install both sigint and sigterm, this is the default behavior.
