@@ -87,6 +87,13 @@ public:
   bool
   is_installed();
 
+  /// Get the current signal handler options.
+  /**
+   * If no signal handler is installed, SignalHandlerOptions::None is returned.
+   */
+  rclcpp::SignalHandlerOptions
+  get_current_signal_handler_options();
+
 private:
   /// Signal handler type, platform dependent.
 #if defined(RCLCPP_HAS_SIGACTION)
@@ -172,7 +179,7 @@ private:
   signal_handler_type
   get_old_signal_handler(int signum);
 
-  rclcpp::SignalHandlerOptions signal_handlers_options_ = rclcpp::SignalHandlerOptions::All;
+  rclcpp::SignalHandlerOptions signal_handlers_options_ = rclcpp::SignalHandlerOptions::None;
 
   signal_handler_type old_sigint_handler_;
   signal_handler_type old_sigterm_handler_;

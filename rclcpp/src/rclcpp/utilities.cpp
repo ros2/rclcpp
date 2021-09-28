@@ -55,6 +55,13 @@ signal_handlers_installed()
   return SignalHandler::get_global_signal_handler().is_installed();
 }
 
+SignalHandlerOptions
+get_current_signal_handler_options()
+{
+  return SignalHandler::get_global_signal_handler().get_current_signal_handler_options();
+}
+
+
 bool
 uninstall_signal_handlers()
 {

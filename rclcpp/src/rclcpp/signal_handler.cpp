@@ -188,7 +188,7 @@ SignalHandler::uninstall()
     {
       set_signal_handler(SIGTERM, old_sigterm_handler_);
     }
-    signal_handlers_options_ = SignalHandlerOptions::All;
+    signal_handlers_options_ = SignalHandlerOptions::None;
     RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): notifying deferred signal handler");
     notify_signal_handler();
     signal_handler_thread_.join();
@@ -379,4 +379,10 @@ SignalHandler::notify_signal_handler() noexcept
     RCLCPP_ERROR(get_logger(), "sem_post failed in notify_signal_handler()");
   }
 #endif
+}
+
+rclcpp::SignalHandlerOptions
+SignalHandler::get_current_signal_handler_options()
+{
+  return signal_handlers_options_;
 }

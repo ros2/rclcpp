@@ -99,6 +99,14 @@ RCLCPP_PUBLIC
 bool
 signal_handlers_installed();
 
+/// Get the current signal handler options.
+/**
+ * If no signal handler is installed, SignalHandlerOptions::None is returned.
+ */
+RCLCPP_PUBLIC
+SignalHandlerOptions
+get_current_signal_handler_options();
+
 /// Uninstall the global signal handler for rclcpp.
 /**
  * This function does not necessarily need to be called, but can be used to
