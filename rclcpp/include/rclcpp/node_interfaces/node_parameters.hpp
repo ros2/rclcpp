@@ -57,29 +57,48 @@ struct ParameterInfo
 };
 
 // Internal RAII-style guard for mutation recursion
+// class ParameterMutationRecursionGuard
+// {
+// public:
+//   explicit ParameterMutationRecursionGuard(bool & allow_mod)
+//   : allow_modification_(allow_mod)
+//   {
+//     std::cout << "Locking mutation guard" << std::endl;
+//     if (!allow_modification_) {
+//       throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+//               "cannot set or declare a parameter, or change the callback from within set callback");
+//     }
+// 
+//     allow_modification_ = false;
+//   }
+// 
+//   ~ParameterMutationRecursionGuard()
+//   {
+//     std::cout << "Unlocking mutation guard" << std::endl;
+//     allow_modification_ = true;
+//   }
+// 
+// private:
+//   bool & allow_modification_;
+// };
+
 class ParameterMutationRecursionGuard
 {
 public:
-  explicit ParameterMutationRecursionGuard(bool & allow_mod)
-  : allow_modification_(allow_mod)
+  explicit ParameterMutationRecursionGuard(int * loop_counter)
   {
-    std::cout << "Locking mutation guard" << std::endl;
-    if (!allow_modification_) {
-      throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-              "cannot set or declare a parameter, or change the callback from within set callback");
-    }
-
-    allow_modification_ = false;
+    counter_ = loop_counter;
+    (*counter_)++;
+    std::cout << "Incrementing Loop Counter:" << (*counter_)  << std::endl;
   }
 
   ~ParameterMutationRecursionGuard()
   {
-    std::cout << "Unlocking mutation guard" << std::endl;
-    allow_modification_ = true;
+    (*counter_)--;
+    std::cout << "Decreasing loop counter:" << (*counter_) << std::endl;
   }
 
-private:
-  bool & allow_modification_;
+  int * counter_;
 };
 
 /// Implementation of the NodeParameters part of the Node API.
@@ -208,6 +227,10 @@ public:
   get_parameter_overrides() const override;
 
   using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+
+  int callback_loop_counter = 0;
+  int callback_loop_counter_max = 5;
+  std::string prev_context = "None";
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
