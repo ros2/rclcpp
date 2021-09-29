@@ -17,13 +17,11 @@
 
 #include <string>
 
+#include "rcl_lifecycle/data_types.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 #include "rcutils/allocator.h"
-
-// forward declare rcl_transition_t
-typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
 
 namespace rclcpp_lifecycle
 {
