@@ -76,6 +76,11 @@ public:
 
   // The TimeSource is uncopyable
   TimeSource(const TimeSource &) = delete;
+  TimeSource & operator=(const TimeSource &) = delete;
+
+  // The TimeSource is moveable
+  TimeSource(TimeSource &&) = default;
+  TimeSource & operator=(TimeSource &&) = default;
 
   /// Attach node to the time source.
   /**
