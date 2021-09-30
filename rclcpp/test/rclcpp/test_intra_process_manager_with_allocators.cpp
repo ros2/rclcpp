@@ -208,7 +208,7 @@ do_custom_allocator_test(
   std::unique_ptr<test_msgs::msg::Empty, PublishedMessageDeleter> msg(ptr, message_deleter);
 
   // publisher and receive
-  if (std::is_same_v<ExpectedExceptionT, void>) {
+  if (std::is_same<ExpectedExceptionT, void>::value) {
     // no exception expected
     EXPECT_NO_THROW(
     {
