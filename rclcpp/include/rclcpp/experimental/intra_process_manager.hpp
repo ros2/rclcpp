@@ -365,27 +365,18 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
-<<<<<<< HEAD
       auto subscription_base = subscription_it->second.subscription;
-=======
-      auto subscription_base = subscription_it->second.subscription.lock();
-      if (subscription_base) {
-        auto subscription = std::dynamic_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
-          >(subscription_base);
-        if (nullptr == subscription) {
-          throw std::runtime_error(
-                  "failed to dynamic cast SubscriptionIntraProcessBase to "
-                  "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
-                  "can happen when the publisher and subscription use different "
-                  "allocator types, which is not supported");
-        }
->>>>>>> 79c2dd8e... use dynamic_pointer_cast to detect allocator mismatch in intra process manager (#1643)
 
-      auto subscription = std::static_pointer_cast<
-        rclcpp::experimental::SubscriptionIntraProcess<MessageT>
+      auto subscription = std::dynamic_pointer_cast<
+        rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
         >(subscription_base);
-
+      if (nullptr == subscription) {
+        throw std::runtime_error(
+                "failed to dynamic cast SubscriptionIntraProcessBase to "
+                "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
+                "can happen when the publisher and subscription use different "
+                "allocator types, which is not supported");
+      }
       subscription->provide_intra_process_message(message);
     }
   }
@@ -408,44 +399,22 @@ private:
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
-<<<<<<< HEAD
       auto subscription_base = subscription_it->second.subscription;
 
-      auto subscription = std::static_pointer_cast<
-        rclcpp::experimental::SubscriptionIntraProcess<MessageT>
+      auto subscription = std::dynamic_pointer_cast<
+        rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
         >(subscription_base);
+      if (nullptr == subscription) {
+        throw std::runtime_error(
+                "failed to dynamic cast SubscriptionIntraProcessBase to "
+                "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
+                "can happen when the publisher and subscription use different "
+                "allocator types, which is not supported");
+      }
 
       if (std::next(it) == subscription_ids.end()) {
         // If this is the last subscription, give up ownership
         subscription->provide_intra_process_message(std::move(message));
-=======
-      auto subscription_base = subscription_it->second.subscription.lock();
-      if (subscription_base) {
-        auto subscription = std::dynamic_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<MessageT, Alloc, Deleter>
-          >(subscription_base);
-        if (nullptr == subscription) {
-          throw std::runtime_error(
-                  "failed to dynamic cast SubscriptionIntraProcessBase to "
-                  "SubscriptionIntraProcess<MessageT, Alloc, Deleter>, which "
-                  "can happen when the publisher and subscription use different "
-                  "allocator types, which is not supported");
-        }
-
-        if (std::next(it) == subscription_ids.end()) {
-          // If this is the last subscription, give up ownership
-          subscription->provide_intra_process_message(std::move(message));
-        } else {
-          // Copy the message since we have additional subscriptions to serve
-          MessageUniquePtr copy_message;
-          Deleter deleter = message.get_deleter();
-          auto ptr = MessageAllocTraits::allocate(*allocator.get(), 1);
-          MessageAllocTraits::construct(*allocator.get(), ptr, *message);
-          copy_message = MessageUniquePtr(ptr, deleter);
-
-          subscription->provide_intra_process_message(std::move(copy_message));
-        }
->>>>>>> 79c2dd8e... use dynamic_pointer_cast to detect allocator mismatch in intra process manager (#1643)
       } else {
         // Copy the message since we have additional subscriptions to serve
         MessageUniquePtr copy_message;
