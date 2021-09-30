@@ -102,7 +102,7 @@ template<
   typename std::enable_if<std::is_same<ExpectedExceptionT, void>::value, int>::type = 0>
 void check_exception(
   PublisherT & publisher, rclcpp::Executor & executor, FutureT received_message_future,
-  uint32_t counter, MessageT msg, ExpectedMessagePtr expected_ptr)
+  uint32_t & counter, MessageT msg, ExpectedMessagePtr expected_ptr)
 {
   // no exception expected
   EXPECT_NO_THROW(
