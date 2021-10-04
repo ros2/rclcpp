@@ -176,8 +176,7 @@ ParameterEventHandler::Callbacks::event_callback(const rcl_interfaces::msg::Para
     }
   }
 
-  for (auto event_cb = event_callbacks_.begin(); event_cb != event_callbacks_.end(); ++event_cb)
-  {
+  for (auto event_cb = event_callbacks_.begin(); event_cb != event_callbacks_.end(); ++event_cb) {
     auto shared_event_handle = event_cb->lock();
     if (nullptr != shared_event_handle) {
       shared_event_handle->callback(event);
