@@ -104,6 +104,7 @@ declare_parameter_or_get(
   }
 }
 
+#ifdef DOXYGEN_ONLY
 /// \internal Declare QoS parameters for the given entity.
 /**
  * \tparam NodeT Node pointer or reference type.
@@ -116,6 +117,17 @@ declare_parameter_or_get(
  * \param default_qos User provided qos. It will be used as a default for the parameters declared.
  * \return qos profile based on the user provided parameter overrides.
  */
+template<typename NodeT, typename EntityQosParametersTraits>
+rclcpp::QoS
+declare_qos_parameters(
+  const ::rclcpp::QosOverridingOptions & options,
+  NodeT & node,
+  const std::string & topic_name,
+  const ::rclcpp::QoS & default_qos,
+  EntityQosParametersTraits);
+
+#else
+
 template<typename NodeT, typename EntityQosParametersTraits>
 std::enable_if_t<
   (rclcpp::node_interfaces::has_node_parameters_interface<
@@ -203,6 +215,8 @@ declare_qos_parameters(
   }
   return default_qos;
 }
+
+#endif
 
 /// \internal Helper function to get a rmw qos policy value from a string.
 #define RCLCPP_DETAIL_APPLY_QOS_OVERRIDE_FROM_PARAMETER_STRING( \
