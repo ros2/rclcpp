@@ -236,7 +236,22 @@ Node::Node(
   node_topics_(other.node_topics_),
   node_services_(other.node_services_),
   node_clock_(other.node_clock_),
-  node_parameters_(other.node_parameters_),
+  node_parameters_(std::make_shared<rclcpp::node_interfaces::NodeParameters>(
+      other.node_base_,
+      other.node_logging_,
+      other.node_topics_,
+      other.node_services_,
+      other.node_clock_,
+      other.node_options_.parameter_overrides(),
+      other.node_options_.start_parameter_services(),
+      other.node_options_.start_parameter_event_publisher(),
+      // This is needed in order to apply parameter overrides to the qos profile provided in
+      // options.
+      get_parameter_events_qos(*other.node_base_, other.node_options_),
+      other.node_options_.parameter_event_publisher_options(),
+      other.node_options_.allow_undeclared_parameters(),
+      other.node_options_.automatically_declare_parameters_from_overrides()
+    )),
   node_time_source_(other.node_time_source_),
   node_waitables_(other.node_waitables_),
   node_options_(other.node_options_),

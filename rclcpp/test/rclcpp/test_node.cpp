@@ -211,6 +211,75 @@ TEST_F(TestNode, subnode_get_name_and_namespace) {
     }, rclcpp::exceptions::NameValidationError);
   }
 }
+
+TEST_F(TestNode, subnode_params) {
+  // create a node, a sub node, and a sub node of the sub node
+  auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
+  auto subnode = node->create_sub_node("sub_ns");
+  auto subsubnode = subnode->create_sub_node("subsub_ns");
+
+  std::string name = "a";
+  ASSERT_NO_THROW(
+  {
+    // declare/set a parameter with the same name in each node, they
+    // should not be considered duplicates and thus should not throw
+    node->declare_parameter(name, 3.);
+    subnode->declare_parameter(name, 2.);
+    subsubnode->declare_parameter(name, 1.);
+  });
+
+  // retrieve and check the values
+  EXPECT_EQ(node->get_parameter(name).as_double(), 3.);
+  EXPECT_EQ(subnode->get_parameter(name).as_double(), 2.);
+  EXPECT_EQ(subsubnode->get_parameter(name).as_double(), 1.);
+
+  ASSERT_NO_THROW(
+  {
+    // change the values
+    node->set_parameter({name, 6.});
+    subnode->set_parameter({name, 5.});
+    subsubnode->set_parameter({name, 4.});
+  });
+
+  // check once more
+  EXPECT_EQ(node->get_parameter(name).as_double(), 6.);
+  EXPECT_EQ(subnode->get_parameter(name).as_double(), 5.);
+  EXPECT_EQ(subsubnode->get_parameter(name).as_double(), 4.);
+
+  // variable to keep track of how many times the callback is hit
+  int count = 0;
+  auto on_set_parameters =
+    [&count](const std::vector<rclcpp::Parameter> & parameters) {
+      // void this so there's no unused-variable warning
+      (void)parameters;
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      count++;
+      return result;
+    };
+
+  auto node_handler = node->add_on_set_parameters_callback(on_set_parameters);
+  auto subnode_handler = subnode->add_on_set_parameters_callback(on_set_parameters);
+  auto subsubnode_handler = subsubnode->add_on_set_parameters_callback(on_set_parameters);
+
+  subsubnode->set_parameter({name, -1.});
+  // subsubnode is the only one that had its parameter modified, so
+  // the callback should only have been called once, incrementing
+  // count by one
+  EXPECT_EQ(count, 1);
+  EXPECT_EQ(subsubnode->get_parameter(name).as_double(), -1);
+
+  subnode->set_parameter({name, -2.});
+  // again this should only increment count by one
+  EXPECT_EQ(count, 2);
+  EXPECT_EQ(subnode->get_parameter(name).as_double(), -2);
+
+  node->set_parameter({name, -3.});
+  // again this should only increment count by one
+  EXPECT_EQ(count, 3);
+  EXPECT_EQ(node->get_parameter(name).as_double(), -3);
+}
+
 /*
    Testing node construction and destruction.
  */

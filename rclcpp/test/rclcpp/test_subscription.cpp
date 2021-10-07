@@ -360,6 +360,69 @@ TEST_F(TestSubscription, take_serialized) {
   }
 }
 
+/*
+   Testing take_serialized with sub node.
+ */
+TEST_F(TestSubscriptionSub, take_serialized) {
+  using test_msgs::msg::Empty;
+  auto do_nothing = [](std::shared_ptr<const rclcpp::SerializedMessage>) {FAIL();};
+  {
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+    std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
+    rclcpp::MessageInfo msg_info;
+    EXPECT_FALSE(sub->take_serialized(*msg, msg_info));
+  }
+  {
+    auto sub = subnode->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+    std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
+    rclcpp::MessageInfo msg_info;
+    EXPECT_FALSE(sub->take_serialized(*msg, msg_info));
+  }
+  {
+    rclcpp::SubscriptionOptions so;
+    so.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
+    rclcpp::PublisherOptions po;
+    po.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
+    {
+      test_msgs::msg::Empty msg;
+      pub->publish(msg);
+    }
+    std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
+    rclcpp::MessageInfo msg_info;
+    bool message_recieved = false;
+    auto start = std::chrono::steady_clock::now();
+    do {
+      message_recieved = sub->take_serialized(*msg, msg_info);
+      std::this_thread::sleep_for(100ms);
+    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_recieved);
+  }
+  {
+    rclcpp::SubscriptionOptions so;
+    so.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto sub =
+      subnode->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
+    rclcpp::PublisherOptions po;
+    po.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto pub = subnode->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
+    {
+      test_msgs::msg::Empty msg;
+      pub->publish(msg);
+    }
+    std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
+    rclcpp::MessageInfo msg_info;
+    bool message_recieved = false;
+    auto start = std::chrono::steady_clock::now();
+    do {
+      message_recieved = sub->take_serialized(*msg, msg_info);
+      std::this_thread::sleep_for(100ms);
+    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_recieved);
+  }
+}
+
 TEST_F(TestSubscription, rcl_subscription_init_error) {
   initialize();
   auto callback = [](std::shared_ptr<const test_msgs::msg::Empty>) {};

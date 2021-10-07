@@ -523,6 +523,8 @@ public:
    *   has not been declared.
    * \throws rclcpp::exceptions::ParameterImmutableException if the parameter
    *   was create as read_only (immutable).
+   * \throws rclcpp::exceptions::InvalidParameterTypeException if the parameter
+   *   was created as statically typed
    */
   RCLCPP_PUBLIC
   void
