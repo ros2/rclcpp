@@ -491,21 +491,20 @@ public:
     event_handlers_[event_type]->clear_on_ready_callback();
   }
 
-  /// Check if subscription instance can support content filter topic feature.
+  /// Check if content filtered topic feature of the subscription instance is enabled.
   /**
-   * Depending on the middleware and the message type, this will return true if the middleware
-   * can support content filter topic feature.
-   *
-   * \return boolean flag indicating if middleware can support content filter topic feature.
+   * \return boolean flag indicating if middleware can support content filtered topic feature.
    */
   RCLCPP_PUBLIC
   bool
-  is_cft_supported() const;
+  is_cft_enabled() const;
 
   /// Set the filter expression and expression parameters for the subscription.
   /**
    * \param[in] filter_expression An filter expression to set.
    * \param[in] expression_parameters Array of expression parameters to set.
+   * \throws RCLBadAlloc if memory cannot be allocated
+   * \throws RCLError if an unexpect error occurs
    */
   RCLCPP_PUBLIC
   virtual
@@ -518,6 +517,8 @@ public:
   /**
    * \param[out] filter_expression An filter expression to get.
    * \param[out] expression_parameters Array of expression parameters to get.
+   * \throws RCLBadAlloc if memory cannot be allocated
+   * \throws RCLError if an unexpect error occurs
    */
   RCLCPP_PUBLIC
   virtual

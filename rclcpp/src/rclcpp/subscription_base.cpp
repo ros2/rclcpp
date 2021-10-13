@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "rcutils/strdup.h"
 #include "rcutils/types/string_array.h"
 
@@ -360,9 +362,9 @@ SubscriptionBase::set_on_new_message_callback(
 }
 
 bool
-SubscriptionBase::is_cft_supported() const
+SubscriptionBase::is_cft_enabled() const
 {
-  return rcl_subscription_is_cft_supported(subscription_handle_.get());
+  return rcl_subscription_is_cft_enabled(subscription_handle_.get());
 }
 
 void
@@ -370,38 +372,34 @@ SubscriptionBase::set_cft_expression_parameters(
   const std::string & filter_expression,
   const std::vector<std::string> & expression_parameters)
 {
-  rcl_allocator_t allocator = rcl_get_default_allocator();
-  rcutils_string_array_t parameters;
-  parameters = rcutils_get_zero_initialized_string_array();
-  rcutils_ret_t rcutils_ret = rcutils_string_array_init(
-    &parameters, expression_parameters.size(), &allocator);
-  if (RCUTILS_RET_OK != rcutils_ret) {
+  rcl_subscription_content_filtered_topic_options_t options =
+    rcl_subscription_get_default_content_filtered_topic_options();
+
+  std::vector<const char *> cstrings =
+    get_c_vector_string(expression_parameters);
+  rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_init(
+    get_c_string(filter_expression),
+    cstrings.size(),
+    cstrings.data(),
+    &options);
+  if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(
-      RCL_RET_ERROR,
-      "failed to initialize string array for expression parameters");
+      ret, "failed to init subscription content_filtered_topic option");
   }
-  RCLCPP_SCOPE_EXIT(
-  {
-    rcutils_ret_t rcutils_ret = rcutils_string_array_fini(&parameters);
-    if (RCUTILS_RET_OK != rcutils_ret) {
+  RCPPUTILS_SCOPE_EXIT(
+    rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_fini(&options);
+    if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
-        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
-        "failed to finalize parameters: %s",
+        rclcpp::get_logger("rclcpp"),
+        "Failed to fini subscription content_filtered_topic option: %s",
         rcl_get_error_string().str);
       rcl_reset_error();
     }
-  });
+  );
 
-  for (size_t i = 0; i < expression_parameters.size(); ++i) {
-    parameters.data[i] = rcutils_strdup(expression_parameters[i].c_str(), allocator);
-    if (!parameters.data[i]) {
-      throw std::runtime_error("failed to allocate memory for expression parameters");
-    }
-  }
-  rcl_ret_t ret = rcl_subscription_set_cft_expression_parameters(
+  ret = rcl_subscription_set_cft_expression_parameters(
     subscription_handle_.get(),
-    filter_expression.c_str(),
-    &parameters);
+    &options);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set cft expression parameters");
@@ -413,31 +411,39 @@ SubscriptionBase::get_cft_expression_parameters(
   std::string & filter_expression,
   std::vector<std::string> & expression_parameters) const
 {
-  char * expression = NULL;
-  rcutils_string_array_t parameters;
-  parameters = rcutils_get_zero_initialized_string_array();
+  rcl_subscription_content_filtered_topic_options_t options =
+    rcl_subscription_get_default_content_filtered_topic_options();
+
+  // use rcl_content_filtered_topic_options_t
   rcl_ret_t ret = rcl_subscription_get_cft_expression_parameters(
     subscription_handle_.get(),
-    &expression,
-    &parameters);
+    &options);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get cft expression parameters");
   }
 
-  filter_expression = expression;
-  for (size_t i = 0; i < parameters.size; ++i) {
-    expression_parameters.push_back(parameters.data[i]);
+  RCLCPP_SCOPE_EXIT(
+    rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_fini(&options);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "Failed to fini subscription content_filtered_topic option: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  );
+
+  rmw_subscription_content_filtered_topic_options_t * content_filtered_topic_options =
+    options.rmw_subscription_content_filtered_topic_options;
+  if (content_filtered_topic_options->filter_expression) {
+    filter_expression = content_filtered_topic_options->filter_expression;
   }
 
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  allocator.deallocate(expression, allocator.state);
-  rcutils_ret_t rcutils_ret = rcutils_string_array_fini(&parameters);
-  if (RCUTILS_RET_OK != rcutils_ret) {
-    RCLCPP_ERROR(
-      rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
-      "failed to finalize parameters: %s",
-      rcl_get_error_string().str);
-    rcl_reset_error();
+  if (content_filtered_topic_options->expression_parameters) {
+    for (size_t i = 0; i < content_filtered_topic_options->expression_parameters->size; ++i) {
+      expression_parameters.push_back(
+        content_filtered_topic_options->expression_parameters->data[i]);
+    }
   }
 }
