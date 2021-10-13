@@ -420,7 +420,7 @@ private:
       node_parameters_,
       node_topics_,
       "/clock",
-      rclcpp::QoS(KeepLast(1)).best_effort(),
+      qos_,
       [state = std::weak_ptr<NodeState>(this->shared_from_this())](
         std::shared_ptr<const rosgraph_msgs::msg::Clock> msg) {
         if (auto state_ptr = state.lock()) {
