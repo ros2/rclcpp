@@ -75,7 +75,7 @@ public:
    * Every context which is constructed is added to a global vector of contexts,
    * which is used by the signal handler to conditionally shutdown each context
    * on SIGINT.
-   * See the shutdown_on_sigint option in the InitOptions class.
+   * See the shutdown_on_signal option in the InitOptions class.
    */
   RCLCPP_PUBLIC
   Context();
@@ -92,8 +92,8 @@ public:
    *
    * Note that this function does not setup any signal handlers, so if you want
    * it to be shutdown by the signal handler, then you need to either install
-   * them manually with rclcpp::install_signal_handers() or use rclcpp::init().
-   * In addition to installing the signal handlers, the shutdown_on_sigint
+   * them manually with rclcpp::install_signal_handlers() or use rclcpp::init().
+   * In addition to installing the signal handlers, the shutdown_on_signal
    * of the InitOptions needs to be `true` for this context to be shutdown by
    * the signal handler, otherwise it will be passed over.
    *
@@ -268,7 +268,7 @@ public:
    *
    *   - this context is shutdown()
    *   - this context is destructed (resulting in shutdown)
-   *   - this context has shutdown_on_sigint=true and SIGINT occurs (resulting in shutdown)
+   *   - this context has shutdown_on_signal=true and SIGINT/SIGTERM occurs (resulting in shutdown)
    *   - interrupt_all_sleep_for() is called
    *
    * \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
