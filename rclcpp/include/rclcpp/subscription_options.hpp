@@ -88,9 +88,9 @@ struct SubscriptionOptionsBase
   // Options to configure content filtered topic in the subscription.
   struct ContentFilterOptions
   {
-    // Filter expression like SQL statement
+    // Filter expression like the 'where' part of SQL statement
     std::string filter_expression;
-    // Expression parameters for filter expression
+    // Expression parameters if there is placeholder '%n' in the filter expression
     std::vector<std::string> expression_parameters;
   };
 
@@ -137,59 +137,18 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
       rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
     }
 
-    auto fail_clean = [&result]()
-      {
-        rcl_ret_t ret = rcl_subscription_options_fini(&result);
-        if (RCL_RET_OK != ret) {
-          RCLCPP_ERROR(
-            rclcpp::get_logger("rclcpp"),
-            "Failed to fini subscription option: %s",
-            rcl_get_error_string().str);
-          rcl_reset_error();
-        }
-      };
-
-    // utils, string -> char *
-    // utils, vector<string> -> rcutils_string_array_t *
-
-    // Copy content_filter_options into rcl_subscription_options if necessary.
+    // Copy content_filter_options into rcl_subscription_options.
     if (!content_filter_options.filter_expression.empty()) {
-      char * expression =
-        rcutils_strdup(content_filter_options.filter_expression.c_str(), allocator);
-      if (!expression) {
-        throw std::runtime_error("failed to allocate memory for filter expression");
-      }
-      result.rmw_subscription_options.filter_expression = expression;
-
-      if (!content_filter_options.expression_parameters.empty()) {
-        rcutils_string_array_t * parameters =
-          static_cast<rcutils_string_array_t *>(allocator.zero_allocate(
-            1,
-            sizeof(rcutils_string_array_t),
-            allocator.state));
-        if (!parameters) {
-          fail_clean();
-          throw std::runtime_error("failed to allocate memory for expression parameters");
-        }
-        result.rmw_subscription_options.expression_parameters = parameters;
-        rcutils_ret_t ret = rcutils_string_array_init(
-          parameters, content_filter_options.expression_parameters.size(), &allocator);
-        if (RCUTILS_RET_OK != ret) {
-          fail_clean();
-          rclcpp::exceptions::throw_from_rcl_error(
-            RCL_RET_ERROR,
-            "failed to initialize string array for expression parameters");
-        }
-
-        for (size_t i = 0; i < content_filter_options.expression_parameters.size(); ++i) {
-          char * parameter =
-            rcutils_strdup(content_filter_options.expression_parameters[i].c_str(), allocator);
-          if (!parameter) {
-            fail_clean();
-            throw std::runtime_error("failed to allocate memory for expression parameters");
-          }
-          parameters->data[i] = parameter;
-        }
+      std::vector<const char *> cstrings =
+        get_c_vector_string(content_filter_options.expression_parameters);
+      rcl_ret_t ret = rcl_subscription_options_set_content_filtered_topic_options(
+        get_c_string(content_filter_options.filter_expression),
+        cstrings.size(),
+        cstrings.data(),
+        &result);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "failed to set content_filtered_topic_options");
       }
     }
 

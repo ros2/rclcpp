@@ -739,3 +739,15 @@ ament_add_gtest(test_graph_listener test_graph_listener.cpp)
 if(TARGET test_graph_listener)
   target_link_libraries(test_graph_listener ${PROJECT_NAME} mimick)
 endif()
+
+ament_add_gtest(test_subscription_content_filtered_topic test_subscription_content_filtered_topic.cpp)
+if(TARGET test_subscription_content_filtered_topic)
+  ament_target_dependencies(test_subscription_content_filtered_topic
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  target_link_libraries(test_subscription_content_filtered_topic ${PROJECT_NAME} mimick)
+endif()
