@@ -30,80 +30,131 @@
 #endif
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rcutils/strerror.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
 using rclcpp::SignalHandler;
+using rclcpp::SignalHandlerOptions;
 
-// initialize static storage in SignalHandler class
-SignalHandler::signal_handler_type SignalHandler::old_signal_handler_;
-std::atomic_bool SignalHandler::signal_received_ = ATOMIC_VAR_INIT(false);
-std::atomic_bool SignalHandler::wait_for_signal_is_setup_ = ATOMIC_VAR_INIT(false);
-#if defined(_WIN32)
-HANDLE SignalHandler::signal_handler_sem_;
-#elif defined(__APPLE__)
-dispatch_semaphore_t SignalHandler::signal_handler_sem_;
-#else  // posix
-sem_t SignalHandler::signal_handler_sem_;
+SignalHandler::signal_handler_type
+SignalHandler::set_signal_handler(
+  int signal_value,
+  const SignalHandler::signal_handler_type & signal_handler)
+{
+  bool signal_handler_install_failed;
+  SignalHandler::signal_handler_type old_signal_handler;
+#if defined(RCLCPP_HAS_SIGACTION)
+  ssize_t ret = sigaction(signal_value, &signal_handler, &old_signal_handler);
+  signal_handler_install_failed = (ret == -1);
+#else
+  old_signal_handler = std::signal(signal_value, signal_handler);
+  signal_handler_install_failed = (old_signal_handler == SIG_ERR);
 #endif
+  if (signal_handler_install_failed) {
+    char error_string[1024];
+    rcutils_strerror(error_string, sizeof(error_string));
+    auto msg =
+      "Failed to set signal handler (" + std::to_string(errno) + "): " + error_string;
+    throw std::runtime_error(msg);
+  }
+  return old_signal_handler;
+}
 
-// The logger must be initialized before the local static variable signal_handler,
-// from the method get_global_signal_handler(), so that it is destructed after
-// it, because the destructor of SignalHandler uses this logger object.
-static rclcpp::Logger g_logger = rclcpp::get_logger("rclcpp");
+// Unfortunately macros (or duplicated code) are needed here,
+// as the signal handler must be a function pointer.
+#if defined(RCLCPP_HAS_SIGACTION)
+void
+SignalHandler::signal_handler(
+  int signum, siginfo_t * siginfo, void * context)
+{
+  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
+  auto & instance = SignalHandler::get_global_signal_handler();
+
+  auto old_signal_handler = instance.get_old_signal_handler(signum);
+  if (old_signal_handler.sa_flags & SA_SIGINFO) {
+    if (old_signal_handler.sa_sigaction != NULL) {
+      old_signal_handler.sa_sigaction(signum, siginfo, context);
+    }
+  } else {
+    if (
+      old_signal_handler.sa_handler != NULL &&  /* Is set */
+      old_signal_handler.sa_handler != SIG_DFL &&  /* Is not default*/
+      old_signal_handler.sa_handler != SIG_IGN)  /* Is not ignored */
+    {
+      old_signal_handler.sa_handler(signum);
+    }
+  }
+  instance.signal_handler_common();
+}
+#else
+void
+SignalHandler::signal_handler(int signum)
+{
+  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
+  auto & instance = SignalHandler::get_global_signal_handler();
+  auto old_signal_handler = instance.get_old_signal_handler(signum);
+  if (
+    SIG_ERR != old_signal_handler && SIG_IGN != old_signal_handler &&
+    SIG_DFL != old_signal_handler)
+  {
+    old_signal_handler(signum);
+  }
+  instance.signal_handler_common();
+}
+#endif
 
 rclcpp::Logger &
 SignalHandler::get_logger()
 {
-  return g_logger;
+  return SignalHandler::get_global_signal_handler().logger_;
 }
 
 SignalHandler &
 SignalHandler::get_global_signal_handler()
 {
-  // This is initialized after the g_logger static global, ensuring
-  // SignalHandler::get_logger() may be called from the destructor of
-  // SignalHandler, according to this:
-  //
-  //   Variables declared at block scope with the specifier static have static
-  //   storage duration but are initialized the first time control passes
-  //   through their declaration (unless their initialization is zero- or
-  //   constant-initialization, which can be performed before the block is
-  //   first entered). On all further calls, the declaration is skipped.
-  //
-  // -- https://en.cppreference.com/w/cpp/language/storage_duration#Static_local_variables
-  //
-  // Which is guaranteed to occur after static initialization for global (see:
-  // https://en.cppreference.com/w/cpp/language/initialization#Static_initialization),
-  // which is when g_logger will be initialized.
-  // And destruction will occur in the reverse order.
   static SignalHandler signal_handler;
   return signal_handler;
 }
 
 bool
-SignalHandler::install()
+SignalHandler::install(SignalHandlerOptions signal_handler_options)
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
   bool already_installed = installed_.exchange(true);
   if (already_installed) {
     return false;
   }
+  if (signal_handler_options == SignalHandlerOptions::None) {
+    return true;
+  }
+  signal_handlers_options_ = signal_handler_options;
   try {
     setup_wait_for_signal();
     signal_received_.store(false);
 
-    SignalHandler::signal_handler_type signal_handler_argument;
+    SignalHandler::signal_handler_type handler_argument;
 #if defined(RCLCPP_HAS_SIGACTION)
-    memset(&signal_handler_argument, 0, sizeof(signal_handler_argument));
-    sigemptyset(&signal_handler_argument.sa_mask);
-    signal_handler_argument.sa_sigaction = signal_handler;
-    signal_handler_argument.sa_flags = SA_SIGINFO;
+    memset(&handler_argument, 0, sizeof(handler_argument));
+    sigemptyset(&handler_argument.sa_mask);
+    handler_argument.sa_sigaction = &this->signal_handler;
+    handler_argument.sa_flags = SA_SIGINFO;
 #else
-    signal_handler_argument = signal_handler;
+    handler_argument = &this->signal_handler;
 #endif
+    if (
+      signal_handler_options == SignalHandlerOptions::SigInt ||
+      signal_handler_options == SignalHandlerOptions::All)
+    {
+      old_sigint_handler_ = set_signal_handler(SIGINT, handler_argument);
+    }
 
-    old_signal_handler_ = SignalHandler::set_signal_handler(SIGINT, signal_handler_argument);
+    if (
+      signal_handler_options == SignalHandlerOptions::SigTerm ||
+      signal_handler_options == SignalHandlerOptions::All)
+    {
+      old_sigterm_handler_ = set_signal_handler(SIGTERM, handler_argument);
+    }
 
     signal_handler_thread_ = std::thread(&SignalHandler::deferred_signal_handler, this);
   } catch (...) {
@@ -125,7 +176,19 @@ SignalHandler::uninstall()
   try {
     // TODO(wjwwood): what happens if someone overrides our signal handler then calls uninstall?
     //   I think we need to assert that we're the current signal handler, and mitigate if not.
-    set_signal_handler(SIGINT, old_signal_handler_);
+    if (
+      SignalHandlerOptions::SigInt == signal_handlers_options_ ||
+      SignalHandlerOptions::All == signal_handlers_options_)
+    {
+      set_signal_handler(SIGINT, old_sigint_handler_);
+    }
+    if (
+      SignalHandlerOptions::SigTerm == signal_handlers_options_ ||
+      SignalHandlerOptions::All == signal_handlers_options_)
+    {
+      set_signal_handler(SIGTERM, old_sigterm_handler_);
+    }
+    signal_handlers_options_ = SignalHandlerOptions::None;
     RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): notifying deferred signal handler");
     notify_signal_handler();
     signal_handler_thread_.join();
@@ -151,98 +214,57 @@ SignalHandler::~SignalHandler()
   } catch (const std::exception & exc) {
     RCLCPP_ERROR(
       get_logger(),
-      "caught %s exception when uninstalling the sigint handler in rclcpp::~SignalHandler: %s",
+      "caught %s exception when uninstalling signal handlers in rclcpp::~SignalHandler: %s",
       rmw::impl::cpp::demangle(exc).c_str(), exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       get_logger(),
-      "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler");
+      "caught unknown exception when uninstalling signal handlers in rclcpp::~SignalHandler");
   }
 }
 
 SignalHandler::signal_handler_type
-SignalHandler::set_signal_handler(
-  int signal_value,
-  const SignalHandler::signal_handler_type & signal_handler)
+SignalHandler::get_old_signal_handler(int signum)
 {
-  bool signal_handler_install_failed;
-  SignalHandler::signal_handler_type old_signal_handler;
-#if defined(RCLCPP_HAS_SIGACTION)
-  ssize_t ret = sigaction(signal_value, &signal_handler, &old_signal_handler);
-  signal_handler_install_failed = (ret == -1);
-#else
-  old_signal_handler = std::signal(signal_value, signal_handler);
-  signal_handler_install_failed = (old_signal_handler == SIG_ERR);
-#endif
-  if (signal_handler_install_failed) {
-    char error_string[1024];
-    rcutils_strerror(error_string, sizeof(error_string));
-    auto msg =
-      "Failed to set SIGINT signal handler (" + std::to_string(errno) + "): " + error_string;
-    throw std::runtime_error(msg);
+  if (SIGINT == signum) {
+    return old_sigint_handler_;
+  } else if (SIGTERM == signum) {
+    return old_sigterm_handler_;
   }
-
-  return old_signal_handler;
+#if defined(RCLCPP_HAS_SIGACTION)
+  SignalHandler::signal_handler_type ret;
+  memset(&ret, 0, sizeof(ret));
+  sigemptyset(&ret.sa_mask);
+  ret.sa_handler = SIG_DFL;
+  return ret;
+#else
+  return SIG_DFL;
+#endif
 }
 
 void
 SignalHandler::signal_handler_common()
 {
-  signal_received_.store(true);
+  auto & instance = SignalHandler::get_global_signal_handler();
+  instance.signal_received_.store(true);
   RCLCPP_DEBUG(
     get_logger(),
-    "signal_handler(): SIGINT received, notifying deferred signal handler");
-  notify_signal_handler();
+    "signal_handler(): notifying deferred signal handler");
+  instance.notify_signal_handler();
 }
-
-#if defined(RCLCPP_HAS_SIGACTION)
-void
-SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * context)
-{
-  RCLCPP_INFO(get_logger(), "signal_handler(signal_value=%d)", signal_value);
-
-  if (old_signal_handler_.sa_flags & SA_SIGINFO) {
-    if (old_signal_handler_.sa_sigaction != NULL) {
-      old_signal_handler_.sa_sigaction(signal_value, siginfo, context);
-    }
-  } else {
-    if (
-      old_signal_handler_.sa_handler != NULL &&  // Is set
-      old_signal_handler_.sa_handler != SIG_DFL &&  // Is not default
-      old_signal_handler_.sa_handler != SIG_IGN)  // Is not ignored
-    {
-      old_signal_handler_.sa_handler(signal_value);
-    }
-  }
-
-  signal_handler_common();
-}
-#else
-void
-SignalHandler::signal_handler(int signal_value)
-{
-  RCLCPP_INFO(get_logger(), "signal_handler(signal_value=%d)", signal_value);
-
-  if (old_signal_handler_) {
-    old_signal_handler_(signal_value);
-  }
-
-  signal_handler_common();
-}
-#endif
 
 void
 SignalHandler::deferred_signal_handler()
 {
   while (true) {
     if (signal_received_.exchange(false)) {
-      RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): SIGINT received, shutting down");
+      RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
       for (auto context_ptr : rclcpp::get_contexts()) {
-        if (context_ptr->get_init_options().shutdown_on_sigint) {
+        if (context_ptr->get_init_options().shutdown_on_signal) {
           RCLCPP_DEBUG(
             get_logger(),
             "deferred_signal_handler(): "
-            "shutting down rclcpp::Context @ %p, because it had shutdown_on_sigint == true",
+            "shutting down rclcpp::Context @ %p, because it had shutdown_on_signal == true",
             static_cast<void *>(context_ptr.get()));
           context_ptr->shutdown("signal handler");
         }
@@ -252,9 +274,11 @@ SignalHandler::deferred_signal_handler()
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): signal handling uninstalled");
       break;
     }
-    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): waiting for SIGINT or uninstall");
+    RCLCPP_DEBUG(
+      get_logger(), "deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall");
     wait_for_signal();
-    RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): woken up due to SIGINT or uninstall");
+    RCLCPP_DEBUG(
+      get_logger(), "deferred_signal_handler(): woken up due to SIGINT/SIGTERM or uninstall");
   }
 }
 
@@ -355,4 +379,10 @@ SignalHandler::notify_signal_handler() noexcept
     RCLCPP_ERROR(get_logger(), "sem_post failed in notify_signal_handler()");
   }
 #endif
+}
+
+rclcpp::SignalHandlerOptions
+SignalHandler::get_current_signal_handler_options()
+{
+  return signal_handlers_options_;
 }

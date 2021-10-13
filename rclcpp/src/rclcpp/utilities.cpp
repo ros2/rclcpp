@@ -31,18 +31,22 @@ namespace rclcpp
 {
 
 void
-init(int argc, char const * const argv[], const InitOptions & init_options)
+init(
+  int argc,
+  char const * const argv[],
+  const InitOptions & init_options,
+  SignalHandlerOptions signal_handler_options)
 {
   using rclcpp::contexts::get_global_default_context;
   get_global_default_context()->init(argc, argv, init_options);
   // Install the signal handlers.
-  install_signal_handlers();
+  install_signal_handlers(signal_handler_options);
 }
 
 bool
-install_signal_handlers()
+install_signal_handlers(SignalHandlerOptions signal_handler_options)
 {
-  return SignalHandler::get_global_signal_handler().install();
+  return SignalHandler::get_global_signal_handler().install(signal_handler_options);
 }
 
 bool
@@ -50,6 +54,13 @@ signal_handlers_installed()
 {
   return SignalHandler::get_global_signal_handler().is_installed();
 }
+
+SignalHandlerOptions
+get_current_signal_handler_options()
+{
+  return SignalHandler::get_global_signal_handler().get_current_signal_handler_options();
+}
+
 
 bool
 uninstall_signal_handlers()
