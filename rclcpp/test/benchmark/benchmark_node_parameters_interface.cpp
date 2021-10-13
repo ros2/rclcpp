@@ -71,6 +71,7 @@ protected:
 BENCHMARK_F(NodeParametersInterfaceTest, declare_undeclare)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     node->declare_parameter(param3_name, rclcpp::ParameterValue{}, dynamically_typed_descriptor);
     node->undeclare_parameter(param3_name);
   }
@@ -79,6 +80,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, declare_undeclare)(benchmark::State & s
 BENCHMARK_F(NodeParametersInterfaceTest, has_parameter_hit)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     if (!node->has_parameter(param1_name)) {
       state.SkipWithError("Parameter was expected");
       break;
@@ -89,6 +91,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, has_parameter_hit)(benchmark::State & s
 BENCHMARK_F(NodeParametersInterfaceTest, has_parameter_miss)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     if (node->has_parameter(param3_name)) {
       state.SkipWithError("Parameter was not expected");
       break;
@@ -112,6 +115,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_bool)(benchmark::State &
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     node->set_parameters(param_values2);
     node->set_parameters(param_values1);
   }
@@ -133,6 +137,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_atomically_bool)(benchma
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     node->set_parameters_atomically(param_values2);
     node->set_parameters_atomically(param_values1);
   }
@@ -164,6 +169,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_callback_bool)(benchmark
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     node->set_parameters(param_values2);
     node->set_parameters(param_values1);
   }
@@ -191,6 +197,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_string)(benchmark::State
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     node->set_parameters(param_values2);
     node->set_parameters(param_values1);
   }
@@ -212,6 +219,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, set_parameters_array)(benchmark::State 
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     node->set_parameters(param_values2);
     node->set_parameters(param_values1);
   }
@@ -224,6 +232,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, get_parameter)(benchmark::State & state
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     node->get_parameter(param1_name, param1_value);
   }
 }
@@ -239,6 +248,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, list_parameters_hit)(benchmark::State &
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     param_list = node->list_parameters(prefixes, 10);
     if (param_list.names.size() != 2) {
       state.SkipWithError("Expected node names");
@@ -258,6 +268,7 @@ BENCHMARK_F(NodeParametersInterfaceTest, list_parameters_miss)(benchmark::State 
   reset_heap_counters();
 
   for (auto _ : state) {
+    (void)_;
     param_list = node->list_parameters(prefixes, 10);
     if (param_list.names.size() != 0) {
       state.SkipWithError("Expected no node names");

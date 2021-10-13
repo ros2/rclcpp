@@ -74,6 +74,7 @@ protected:
 BENCHMARK_F(ComponentTest, get_component_resources)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     std::vector<rclcpp_components::ComponentManager::ComponentResource> resources =
       manager->get_component_resources("rclcpp_components");
     if (resources.size() != 3) {
@@ -93,6 +94,7 @@ BENCHMARK_F(ComponentTest, create_component_factory)(benchmark::State & state)
   }
 
   for (auto _ : state) {
+    (void)_;
     manager->create_component_factory(resources[0]).reset();
   }
 }
@@ -114,6 +116,7 @@ BENCHMARK_F(ComponentTest, create_node_instance)(benchmark::State & state)
   const rclcpp::NodeOptions options = rclcpp::NodeOptions().context(context);
 
   for (auto _ : state) {
+    (void)_;
     rclcpp_components::NodeInstanceWrapper node = factory->create_node_instance(options);
     benchmark::DoNotOptimize(node);
     benchmark::ClobberMemory();
