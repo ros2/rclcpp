@@ -530,12 +530,12 @@ public:
 
   bool GetUseClockThreadOption()
   {
-    return this->use_clock_thread_;
+    return this->get_use_clock_thread();
   }
 
   bool IsClockThreadJoinable()
   {
-    return this->clock_executor_thread_.joinable();
+    return this->clock_thread_is_joinable();
   }
 };
 

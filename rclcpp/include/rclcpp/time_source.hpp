@@ -74,6 +74,14 @@ public:
     const rclcpp::QoS & qos = rclcpp::ClockQoS(),
     bool use_clock_thread = true);
 
+  // The TimeSource is uncopyable
+  TimeSource(const TimeSource &) = delete;
+  TimeSource & operator=(const TimeSource &) = delete;
+
+  // The TimeSource is moveable
+  TimeSource(TimeSource &&) = default;
+  TimeSource & operator=(TimeSource &&) = default;
+
   /// Attach node to the time source.
   /**
    * \param node std::shared pointer to a initialized node
@@ -116,89 +124,36 @@ public:
   RCLCPP_PUBLIC
   void attachClock(rclcpp::Clock::SharedPtr clock);
 
-  /// Detach a clock to the time source
+  /// Detach a clock from the time source
   RCLCPP_PUBLIC
   void detachClock(rclcpp::Clock::SharedPtr clock);
+
+  /// Get whether a separate clock thread is used or not
+  RCLCPP_PUBLIC
+  bool get_use_clock_thread();
+
+  /// Set whether to use a separate clock thread or not
+  RCLCPP_PUBLIC
+  void set_use_clock_thread(bool use_clock_thread);
+
+  /// Check if the clock thread is joinable
+  RCLCPP_PUBLIC
+  bool clock_thread_is_joinable();
 
   /// TimeSource Destructor
   RCLCPP_PUBLIC
   ~TimeSource();
 
-protected:
-  // Dedicated thread for clock subscription.
-  bool use_clock_thread_;
-  std::thread clock_executor_thread_;
-
 private:
-  // Preserve the node reference
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
-  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
-  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
+  class ClocksState;
+  std::shared_ptr<ClocksState> clocks_state_;
 
-  // Store (and update on node attach) logger for logging.
-  Logger logger_;
+  class NodeState;
+  std::shared_ptr<NodeState> node_state_;
 
-  // QoS of the clock subscription.
-  rclcpp::QoS qos_;
-
-  // The subscription for the clock callback
-  using MessageT = rosgraph_msgs::msg::Clock;
-  using Alloc = std::allocator<void>;
-  using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
-  std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
-  std::mutex clock_sub_lock_;
-  rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
-  rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
-  std::promise<void> cancel_clock_executor_promise_;
-
-  // The clock callback itself
-  void clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg);
-
-  // Create the subscription for the clock topic
-  void create_clock_sub();
-
-  // Destroy the subscription for the clock topic
-  void destroy_clock_sub();
-
-  // Parameter Event subscription
-  using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
-  using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
-  std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
-
-  // Callback for parameter updates
-  void on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event);
-
-  // An enum to hold the parameter state
-  enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
-  UseSimTimeParameterState parameter_state_;
-
-  // An internal method to use in the clock callback that iterates and enables all clocks
-  void enable_ros_time();
-  // An internal method to use in the clock callback that iterates and disables all clocks
-  void disable_ros_time();
-
-  // Internal helper functions used inside iterators
-  static void set_clock(
-    const builtin_interfaces::msg::Time::SharedPtr msg,
-    bool set_ros_time_enabled,
-    rclcpp::Clock::SharedPtr clock);
-
-  // Local storage of validity of ROS time
-  // This is needed when new clocks are added.
-  bool ros_time_active_{false};
-  // Last set message to be passed to newly registered clocks
-  std::shared_ptr<const rosgraph_msgs::msg::Clock> last_msg_set_;
-
-  // A lock to protect iterating the associated_clocks_ field.
-  std::mutex clock_list_lock_;
-  // A vector to store references to associated clocks.
-  std::vector<rclcpp::Clock::SharedPtr> associated_clocks_;
-  // A handler for the use_sim_time parameter callback.
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler_{nullptr};
+  // Preserve the arguments received by the constructor for reuse at runtime
+  bool constructed_use_clock_thread_;
+  rclcpp::QoS constructed_qos_;
 };
 
 }  // namespace rclcpp
