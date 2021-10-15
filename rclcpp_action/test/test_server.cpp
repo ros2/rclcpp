@@ -205,6 +205,27 @@ TEST_F(TestServer, construction_and_destruction_wait_set_error)
   }, rclcpp::exceptions::RCLError);
 }
 
+TEST_F(TestServer, construction_and_destruction_sub_node)
+{
+  auto parent_node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  auto sub_node = parent_node->create_sub_node("construct_sub_node");
+
+  ASSERT_NO_THROW(
+  {
+    using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+    auto as = rclcpp_action::create_server<Fibonacci>(
+      sub_node, "fibonacci",
+      [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        return rclcpp_action::GoalResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {});
+    (void)as;
+  });
+}
+
 TEST_F(TestServer, handle_goal_called)
 {
   auto node = std::make_shared<rclcpp::Node>("handle_goal_node", "/rclcpp_action/handle_goal");

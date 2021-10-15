@@ -79,25 +79,6 @@ public:
   now();
 
   /**
-   * Sleep until a specified Time, according to clock type.
-   *
-   * Notes for RCL_ROS_TIME clock type:
-   *   - Can sleep forever if ros time is active and received clock never reaches `until`
-   *   - If ROS time enabled state changes during the sleep, this method will immediately return
-   *     false. There is not a consistent choice of sleeping time when the time source changes,
-   *     so this is up to the caller to call again if needed.
-   *
-   * \param until absolute time according to current clock type to sleep until.
-   * \return true immediately if `until` is in the past
-   * \return true when the time `until` is reached
-   * \return false if time cannot be reached reliably, for example from shutdown or a change
-   *    of time source.
-   */
-  RCLCPP_PUBLIC
-  bool
-  sleep_until(Time until);
-
-  /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
    *
    * \return true if the clock is active
