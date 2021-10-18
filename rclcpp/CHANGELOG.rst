@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+13.1.0 (2021-10-18)
+-------------------
 * Fix dangerous std::bind capture in TimeSource implementation. (`#1768 <https://github.com/ros2/rclcpp/issues/1768>`_)
 * Fix dangerous std::bind capture in ParameterEventHandler implementation. (`#1770 <https://github.com/ros2/rclcpp/issues/1770>`_)
 * Handle sigterm, in the same way sigint is being handled. (`#1771 <https://github.com/ros2/rclcpp/issues/1771>`_)

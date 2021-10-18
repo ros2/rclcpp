@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+13.1.0 (2021-10-18)
+-------------------
 * Update forward declarations of `rcl_lifecycle` types (`#1788 <https://github.com/ros2/rclcpp/issues/1788>`_)
 * Deprecate the `void shared_ptr<MessageT>` subscription callback signatures (`#1713 <https://github.com/ros2/rclcpp/issues/1713>`_)
 * Contributors: Abrar Rahman Protyasha, Michel Hidalgo
