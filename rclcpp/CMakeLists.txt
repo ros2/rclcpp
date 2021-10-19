@@ -253,3 +253,5 @@ if(TEST cppcheck)
   # must set the property after ament_package()
   set_tests_properties(cppcheck PROPERTIES TIMEOUT 500)
 endif()
+
+ament_cmake_gen_version_h()
