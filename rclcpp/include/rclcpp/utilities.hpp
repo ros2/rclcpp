@@ -73,7 +73,7 @@ init(
   int argc,
   char const * const argv[],
   const InitOptions & init_options = InitOptions(),
-  SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
+  SignalHandlerOptions signal_handler_options = SignalHandlerOptions::SigTerm);
 
 /// Install the global signal handler for rclcpp.
 /**
@@ -92,7 +92,7 @@ init(
  */
 RCLCPP_PUBLIC
 bool
-install_signal_handlers(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
+install_signal_handlers(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::SigTerm);
 
 /// Return true if the signal handlers are installed, otherwise false.
 RCLCPP_PUBLIC
