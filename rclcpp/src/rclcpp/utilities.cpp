@@ -34,6 +34,15 @@ void
 init(
   int argc,
   char const * const argv[],
+  const InitOptions & init_options)
+{
+  init(argc, argv, init_options, SignalHandlerOptions::SigTerm);
+}
+
+void
+init(
+  int argc,
+  char const * const argv[],
   const InitOptions & init_options,
   SignalHandlerOptions signal_handler_options)
 {
