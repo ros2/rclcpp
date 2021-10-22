@@ -109,7 +109,8 @@ init(
  */
 RCLCPP_PUBLIC
 bool
-install_signal_handlers(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::SigTerm);
+install_signal_handlers(
+  SignalHandlerOptions signal_handler_options = SignalHandlerOptions::SigTerm);
 
 /// Return true if the signal handlers are installed, otherwise false.
 RCLCPP_PUBLIC
