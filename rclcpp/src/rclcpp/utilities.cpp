@@ -53,6 +53,12 @@ init(
 }
 
 bool
+install_signal_handlers()
+{
+  return SignalHandler::get_global_signal_handler().install(SignalHandlerOptions::SigInt);
+}
+
+bool
 install_signal_handlers(SignalHandlerOptions signal_handler_options)
 {
   return SignalHandler::get_global_signal_handler().install(signal_handler_options);

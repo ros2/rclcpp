@@ -98,6 +98,25 @@ init(
  * It is implicitly run by rclcpp::init(), and therefore this function does not
  * need to be run manually if rclcpp::init() has already been run.
  *
+ * The signal handler will shutdown all initialized context by default under the
+ * SIGINT signal. It will also interrupt any blocking functions in ROS
+ * allowing them react to any changes in the state of the system (like
+ * shutdown).
+ *
+ * This function is thread-safe.
+ *
+ * \return true if signal handler was installed by this function, false if already installed.
+ */
+RCLCPP_PUBLIC
+bool
+install_signal_handlers();
+
+/// Install the global signal handler for rclcpp.
+/**
+ * This function should only need to be run one time per process.
+ * It is implicitly run by rclcpp::init(), and therefore this function does not
+ * need to be run manually if rclcpp::init() has already been run.
+ *
  * The signal handler will shutdown all initialized context.
  * It will also interrupt any blocking functions in ROS allowing them react to
  * any changes in the state of the system (like shutdown).
@@ -109,8 +128,8 @@ init(
  */
 RCLCPP_PUBLIC
 bool
-install_signal_handlers(
-  SignalHandlerOptions signal_handler_options = SignalHandlerOptions::SigTerm);
+install_signal_handlers(SignalHandlerOptions signal_handler_options);
+
 
 /// Return true if the signal handlers are installed, otherwise false.
 RCLCPP_PUBLIC
