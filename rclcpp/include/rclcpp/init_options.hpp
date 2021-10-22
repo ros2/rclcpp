@@ -28,7 +28,8 @@ namespace rclcpp
 class InitOptions
 {
 public:
-  /// If true, the context will be shutdown on SIGINT/SIGTERM by the signal handler (if it was installed).
+  /// If true, the context will be shutdown on SIGINT/SIGTERM by the signal handler
+  /// (if it was installed).
   /**
    * Note: the variable name mention sigint but it also handles SIGTERM.
    * The variable has been renamed in newer ROS versions but not here to
