@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <utility>
 
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/rclcpp.hpp"
