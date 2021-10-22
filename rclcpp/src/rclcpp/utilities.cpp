@@ -36,7 +36,7 @@ init(
   char const * const argv[],
   const InitOptions & init_options)
 {
-  init(argc, argv, init_options, SignalHandlerOptions::SigTerm);
+  init(argc, argv, init_options, SignalHandlerOptions::SigInt);
 }
 
 void

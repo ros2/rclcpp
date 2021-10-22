@@ -62,7 +62,7 @@ enum class SignalHandlerOptions
  *
  * Initializes the global context which is accessible via the function
  * rclcpp::contexts::get_global_default_context().
- * Also, installs the global signal handlers to SignalHandlerOptions::SigTerm
+ * Also, installs the global signal handlers to SignalHandlerOptions::SigInt
  *
  * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  */
