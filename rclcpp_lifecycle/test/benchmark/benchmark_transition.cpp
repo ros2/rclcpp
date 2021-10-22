@@ -22,6 +22,7 @@ using PerformanceTest = performance_test_fixture::PerformanceTest;
 BENCHMARK_F(PerformanceTest, construct_destruct_transition)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     rclcpp_lifecycle::Transition transition(1, "transition");
     benchmark::DoNotOptimize(transition);
     benchmark::ClobberMemory();
@@ -32,6 +33,7 @@ BENCHMARK_F(PerformanceTest, copy_destruct_transition)(benchmark::State & state)
 {
   rclcpp_lifecycle::Transition transition(1, "transition");
   for (auto _ : state) {
+    (void)_;
     rclcpp_lifecycle::Transition transition_copy(transition);
     benchmark::DoNotOptimize(transition_copy);
     benchmark::ClobberMemory();

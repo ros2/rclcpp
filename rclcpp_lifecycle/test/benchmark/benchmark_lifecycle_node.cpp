@@ -49,6 +49,7 @@ BENCHMARK_F(BenchmarkLifecycleNodeConstruction, construct_lifecycle_node)(
   benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     auto node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("node", "ns");
     PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
       state,
@@ -60,6 +61,7 @@ BENCHMARK_F(BenchmarkLifecycleNodeConstruction, construct_lifecycle_node)(
 
 BENCHMARK_F(BenchmarkLifecycleNodeConstruction, destroy_lifecycle_node)(benchmark::State & state) {
   for (auto _ : state) {
+    (void)_;
     std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node(nullptr);
     PERFORMANCE_TEST_FIXTURE_PAUSE_MEASUREMENTS(
       state,
@@ -94,6 +96,7 @@ protected:
 // This is a simple getter, but it crosses over into the rcl library.
 BENCHMARK_F(BenchmarkLifecycleNode, get_current_state)(benchmark::State & state) {
   for (auto _ : state) {
+    (void)_;
     const auto & lifecycle_state = node->get_current_state();
     if (lifecycle_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
       const std::string message =
@@ -107,6 +110,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_current_state)(benchmark::State & state)
 
 BENCHMARK_F(BenchmarkLifecycleNode, get_available_states)(benchmark::State & state) {
   for (auto _ : state) {
+    (void)_;
     constexpr size_t expected_states = 11u;
     const auto lifecycle_states = node->get_available_states();
     if (lifecycle_states.size() != expected_states) {
@@ -120,6 +124,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_available_states)(benchmark::State & sta
 
 BENCHMARK_F(BenchmarkLifecycleNode, get_available_transitions)(benchmark::State & state) {
   for (auto _ : state) {
+    (void)_;
     constexpr size_t expected_transitions = 2u;
     const auto & transitions = node->get_available_transitions();
     if (transitions.size() != expected_transitions) {
@@ -133,6 +138,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_available_transitions)(benchmark::State 
 
 BENCHMARK_F(BenchmarkLifecycleNode, get_transition_graph)(benchmark::State & state) {
   for (auto _ : state) {
+    (void)_;
     constexpr size_t expected_transitions = 25u;
     const auto & transitions = node->get_transition_graph();
     if (transitions.size() != expected_transitions) {
@@ -155,6 +161,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, transition_valid_state)(benchmark::State & s
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     const auto & active =
       node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
     if (active.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {

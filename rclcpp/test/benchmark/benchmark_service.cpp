@@ -69,6 +69,7 @@ BENCHMARK_F(ServicePerformanceTest, construct_service_no_client)(benchmark::Stat
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto service = node->create_service<test_msgs::srv::Empty>("not_a_service", callback);
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
@@ -87,6 +88,7 @@ BENCHMARK_F(ServicePerformanceTest, construct_service_empty_srv)(benchmark::Stat
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
@@ -105,6 +107,7 @@ BENCHMARK_F(ServicePerformanceTest, destroy_service_empty_srv)(benchmark::State 
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     auto service = node->create_service<test_msgs::srv::Empty>(empty_service_name, callback);
     state.ResumeTiming();
@@ -123,6 +126,7 @@ BENCHMARK_F(ServicePerformanceTest, async_send_response)(benchmark::State & stat
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     // Clear executor queue
     rclcpp::spin_some(node->get_node_base_interface());
