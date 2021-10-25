@@ -21,9 +21,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "rcutils/strdup.h"
-#include "rcutils/types/string_array.h"
-
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/detail/rmw_implementation_specific_subscription_payload.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
