@@ -21,16 +21,12 @@
 
 #include "rcpputils/scope_exit.hpp"
 
-#include "rcutils/strdup.h"
-#include "rcutils/types/string_array.h"
-
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/qos_event.hpp"
-#include "rclcpp/scope_exit.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -359,6 +355,7 @@ SubscriptionBase::set_cft_expression_parameters(
       ret, "failed to init subscription content_filtered_topic option");
   }
   RCPPUTILS_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_fini(&options);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
@@ -367,7 +364,7 @@ SubscriptionBase::set_cft_expression_parameters(
         rcl_get_error_string().str);
       rcl_reset_error();
     }
-  );
+  });
 
   ret = rcl_subscription_set_cft_expression_parameters(
     subscription_handle_.get(),
@@ -386,7 +383,7 @@ SubscriptionBase::get_cft_expression_parameters(
   rcl_subscription_content_filtered_topic_options_t options =
     rcl_subscription_get_default_content_filtered_topic_options();
 
-  // use rcl_content_filtered_topic_options_t
+  // use rcl_content_filtered_topic_options_t instead of char * and
   rcl_ret_t ret = rcl_subscription_get_cft_expression_parameters(
     subscription_handle_.get(),
     &options);
@@ -395,7 +392,8 @@ SubscriptionBase::get_cft_expression_parameters(
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get cft expression parameters");
   }
 
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_fini(&options);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
@@ -404,7 +402,7 @@ SubscriptionBase::get_cft_expression_parameters(
         rcl_get_error_string().str);
       rcl_reset_error();
     }
-  );
+  });
 
   rmw_subscription_content_filtered_topic_options_t * content_filtered_topic_options =
     options.rmw_subscription_content_filtered_topic_options;
