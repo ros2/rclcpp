@@ -493,7 +493,7 @@ public:
 
   /// Check if content filtered topic feature of the subscription instance is enabled.
   /**
-   * \return boolean flag indicating if middleware can support content filtered topic feature.
+   * \return boolean flag indicating if the content filtered topic of this subscription is enabled.
    */
   RCLCPP_PUBLIC
   bool
