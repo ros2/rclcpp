@@ -80,7 +80,9 @@ struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(A
 
 // std::bind for object methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
+#if defined DOXYGEN_ONLY
+struct function_traits<std::bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
+#elif defined _LIBCPP_VERSION  // libc++ (Clang)
 struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
 #elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
 struct function_traits<std::_Bind<ReturnTypeT(ClassT::* (FArgs ...))(Args ...)>>
@@ -97,7 +99,9 @@ struct function_traits<
 
 // std::bind for object const methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
+#if defined DOXYGEN_ONLY
+struct function_traits<std::bind<ReturnTypeT (ClassT::*)(Args ...) const, FArgs ...>>
+#elif defined _LIBCPP_VERSION  // libc++ (Clang)
 struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...) const, FArgs ...>>
 #elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
 struct function_traits<std::_Bind<ReturnTypeT(ClassT::* (FArgs ...))(Args ...) const>>
@@ -114,7 +118,9 @@ struct function_traits<
 
 // std::bind for free functions
 template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
+#if defined DOXYGEN_ONLY
+struct function_traits<std::bind<ReturnTypeT( &)(Args ...), FArgs ...>>
+#elif defined _LIBCPP_VERSION  // libc++ (Clang)
 struct function_traits<std::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
 #elif defined __GLIBCXX__  // glibc++ (GNU C++)
 struct function_traits<std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>>
