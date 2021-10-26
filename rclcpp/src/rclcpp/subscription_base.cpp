@@ -364,16 +364,16 @@ SubscriptionBase::is_cft_enabled() const
 }
 
 void
-SubscriptionBase::set_cft_expression_parameters(
+SubscriptionBase::set_content_filter(
   const std::string & filter_expression,
   const std::vector<std::string> & expression_parameters)
 {
-  rcl_subscription_content_filtered_topic_options_t options =
-    rcl_subscription_get_default_content_filtered_topic_options();
+  rcl_subscription_content_filter_options_t options =
+    rcl_subscription_get_default_content_filter_options();
 
   std::vector<const char *> cstrings =
     get_c_vector_string(expression_parameters);
-  rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_init(
+  rcl_ret_t ret = rcl_subscription_content_filter_options_init(
     get_c_string(filter_expression),
     cstrings.size(),
     cstrings.data(),
@@ -384,7 +384,7 @@ SubscriptionBase::set_cft_expression_parameters(
   }
   RCPPUTILS_SCOPE_EXIT(
   {
-    rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_fini(&options);
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(&options);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
         rclcpp::get_logger("rclcpp"),
@@ -394,7 +394,7 @@ SubscriptionBase::set_cft_expression_parameters(
     }
   });
 
-  ret = rcl_subscription_set_cft_expression_parameters(
+  ret = rcl_subscription_set_content_filter(
     subscription_handle_.get(),
     &options);
 
@@ -404,15 +404,15 @@ SubscriptionBase::set_cft_expression_parameters(
 }
 
 void
-SubscriptionBase::get_cft_expression_parameters(
+SubscriptionBase::get_content_filter(
   std::string & filter_expression,
   std::vector<std::string> & expression_parameters) const
 {
-  rcl_subscription_content_filtered_topic_options_t options =
-    rcl_subscription_get_default_content_filtered_topic_options();
+  rcl_subscription_content_filter_options_t options =
+    rcl_subscription_get_default_content_filter_options();
 
-  // use rcl_content_filtered_topic_options_t instead of char * and
-  rcl_ret_t ret = rcl_subscription_get_cft_expression_parameters(
+  // use rcl_content_filter_options_t instead of char * and
+  rcl_ret_t ret = rcl_subscription_get_content_filter(
     subscription_handle_.get(),
     &options);
 
@@ -422,7 +422,7 @@ SubscriptionBase::get_cft_expression_parameters(
 
   RCPPUTILS_SCOPE_EXIT(
   {
-    rcl_ret_t ret = rcl_subscription_content_filtered_topic_options_fini(&options);
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(&options);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
         rclcpp::get_logger("rclcpp"),
@@ -432,16 +432,16 @@ SubscriptionBase::get_cft_expression_parameters(
     }
   });
 
-  rmw_subscription_content_filtered_topic_options_t * content_filtered_topic_options =
-    options.rmw_subscription_content_filtered_topic_options;
-  if (content_filtered_topic_options->filter_expression) {
-    filter_expression = content_filtered_topic_options->filter_expression;
+  rmw_subscription_content_filter_options_t * content_filter_options =
+    options.rmw_subscription_content_filter_options;
+  if (content_filter_options->filter_expression) {
+    filter_expression = content_filter_options->filter_expression;
   }
 
-  if (content_filtered_topic_options->expression_parameters) {
-    for (size_t i = 0; i < content_filtered_topic_options->expression_parameters->size; ++i) {
+  if (content_filter_options->expression_parameters) {
+    for (size_t i = 0; i < content_filter_options->expression_parameters->size; ++i) {
       expression_parameters.push_back(
-        content_filtered_topic_options->expression_parameters->data[i]);
+        content_filter_options->expression_parameters->data[i]);
     }
   }
 }

@@ -81,24 +81,24 @@ TEST_F(TestCftSubscription, is_cft_enabled) {
   }
 }
 
-TEST_F(TestCftSubscription, get_cft_expression_parameters_error) {
+TEST_F(TestCftSubscription, get_content_filter_error) {
   auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp", rcl_subscription_get_cft_expression_parameters, RCL_RET_ERROR);
+    "lib:rclcpp", rcl_subscription_get_content_filter, RCL_RET_ERROR);
 
   std::string filter_expression;
   std::vector<std::string> expression_parameters;
   EXPECT_THROW(
-    sub->get_cft_expression_parameters(filter_expression, expression_parameters),
+    sub->get_content_filter(filter_expression, expression_parameters),
     rclcpp::exceptions::RCLError);
 }
 
-TEST_F(TestCftSubscription, set_cft_expression_parameters_error) {
+TEST_F(TestCftSubscription, set_content_filter_error) {
   auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp", rcl_subscription_set_cft_expression_parameters, RCL_RET_ERROR);
+    "lib:rclcpp", rcl_subscription_set_content_filter, RCL_RET_ERROR);
 
   std::string filter_expression = "int32_value = %0";
   std::string expression_parameter = "100";
   EXPECT_THROW(
-    sub->set_cft_expression_parameters(filter_expression, {expression_parameter}),
+    sub->set_content_filter(filter_expression, {expression_parameter}),
     rclcpp::exceptions::RCLError);
 }
