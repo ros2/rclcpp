@@ -303,7 +303,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  set_cft_expression_parameters(
+  set_content_filter(
     const std::string & filter_expression,
     const std::vector<std::string> & expression_parameters = {});
 
@@ -317,7 +317,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  get_cft_expression_parameters(
+  get_content_filter(
     std::string & filter_expression,
     std::vector<std::string> & expression_parameters) const;
 
