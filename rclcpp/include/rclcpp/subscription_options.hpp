@@ -82,12 +82,15 @@ struct SubscriptionOptionsBase
 
   QosOverridingOptions qos_overriding_options;
 
-  // Options to configure content filtered topic in the subscription.
+  /// Options to configure content filtered topic in the subscription.
   struct ContentFilterOptions
   {
-    // Filter expression like the 'where' part of SQL statement
+    /// Filter expression is similar to the WHERE part of an SQL clause
     std::string filter_expression;
-    // Expression parameters if there is placeholder '%n' in the filter expression
+    /**
+     * Expression parameters is the tokens placeholder ‘parameters’ (i.e., "%n" tokens begin from 0)
+     * in the filter_expression
+     */
     std::vector<std::string> expression_parameters;
   };
 

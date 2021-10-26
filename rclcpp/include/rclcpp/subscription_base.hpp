@@ -294,7 +294,9 @@ public:
   /// Set the filter expression and expression parameters for the subscription.
   /**
    * \param[in] filter_expression An filter expression to set.
+   *   \sa SubscriptionOptionsBase::ContentFilterOptions::filter_expression
    * \param[in] expression_parameters Array of expression parameters to set.
+   *   \sa SubscriptionOptionsBase::ContentFilterOptions::expression_parameters
    * \throws RCLBadAlloc if memory cannot be allocated
    * \throws RCLError if an unexpect error occurs
    */
