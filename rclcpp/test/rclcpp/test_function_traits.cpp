@@ -394,6 +394,7 @@ TEST(TestFunctionTraits, argument_types) {
   auto bind_one_bool = std::bind(
     &ObjectMember::callback_one_bool, &object_member, std::placeholders::_1);
 
+  (void)bind_one_bool;
   static_assert(
     std::is_same<
       bool,
@@ -403,6 +404,7 @@ TEST(TestFunctionTraits, argument_types) {
   auto bind_one_bool_const = std::bind(
     &ObjectMember::callback_one_bool_const, &object_member, std::placeholders::_1);
 
+  (void)bind_one_bool_const;
   static_assert(
     std::is_same<
       bool,
@@ -414,6 +416,7 @@ TEST(TestFunctionTraits, argument_types) {
     &ObjectMember::callback_two_bools, &object_member, std::placeholders::_1,
     std::placeholders::_2);
 
+  (void)bind_two_bools;
   static_assert(
     std::is_same<
       bool,
@@ -430,6 +433,7 @@ TEST(TestFunctionTraits, argument_types) {
     &ObjectMember::callback_one_bool_one_float, &object_member, std::placeholders::_1,
     std::placeholders::_2);
 
+  (void)bind_one_bool_one_float;
   static_assert(
     std::is_same<
       bool,
@@ -448,6 +452,7 @@ TEST(TestFunctionTraits, argument_types) {
 
   auto bind_one_int = std::bind(func_one_int, std::placeholders::_1);
 
+  (void)bind_one_int;
   static_assert(
     std::is_same<
       int,
@@ -456,6 +461,7 @@ TEST(TestFunctionTraits, argument_types) {
 
   auto bind_two_ints = std::bind(func_two_ints, std::placeholders::_1, std::placeholders::_2);
 
+  (void)bind_two_ints;
   static_assert(
     std::is_same<
       int,
@@ -471,6 +477,7 @@ TEST(TestFunctionTraits, argument_types) {
   auto bind_one_int_one_char = std::bind(
     func_one_int_one_char, std::placeholders::_1, std::placeholders::_2);
 
+  (void)bind_one_int_one_char;
   static_assert(
     std::is_same<
       int,
@@ -573,6 +580,7 @@ TEST(TestFunctionTraits, check_arguments) {
   auto bind_one_bool = std::bind(
     &ObjectMember::callback_one_bool, &object_member, std::placeholders::_1);
 
+  (void)bind_one_bool;
   // Test std::bind functions
   static_assert(
     rclcpp::function_traits::check_arguments<decltype(bind_one_bool), bool>::value,
@@ -581,6 +589,7 @@ TEST(TestFunctionTraits, check_arguments) {
   auto bind_one_bool_const = std::bind(
     &ObjectMember::callback_one_bool_const, &object_member, std::placeholders::_1);
 
+  (void)bind_one_bool_const;
   // Test std::bind functions
   static_assert(
     rclcpp::function_traits::check_arguments<decltype(bind_one_bool_const), bool>::value,
@@ -746,6 +755,7 @@ TEST_F(TestMember, bind_member_functor) {
     &TestMember::MemberFunctor, this, std::placeholders::_1,
     std::placeholders::_2, std::placeholders::_3);
 
+  (void)bind_member_functor;
   static_assert(
     rclcpp::function_traits::check_arguments<decltype(bind_member_functor), int, float,
     std::string>::value,

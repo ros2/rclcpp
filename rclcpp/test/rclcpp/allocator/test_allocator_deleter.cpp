@@ -38,12 +38,13 @@ TEST(TestAllocatorDeleter, construct_destruct) {
 TEST(TestAllocatorDeleter, delete) {
   std::allocator<int> allocator;
   int * some_mem = allocator.allocate(1u);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != some_mem);
-
   rclcpp::allocator::AllocatorDeleter<std::allocator<int>> deleter(&allocator);
-  EXPECT_NO_THROW(deleter(some_mem));
+  try {
+    deleter(some_mem);
+  } catch (const std::exception &) {
+    allocator.deallocate(some_mem, 1u);
+    FAIL() << "Failed to delete memory with rclcpp::allocator::AllocatorDeleter";
+  }
 }
 
 TEST(TestAllocatorDeleter, set_allocator_for_deleter_AllocatorDeleter) {

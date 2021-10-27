@@ -23,32 +23,33 @@ TEST(TestAllocatorCommon, retyped_allocate) {
   void * untyped_allocator = &allocator;
   void * allocated_mem =
     rclcpp::allocator::retyped_allocate<std::allocator<char>>(1u, untyped_allocator);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != allocated_mem);
 
   auto code = [&untyped_allocator, allocated_mem]() {
       rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
         allocated_mem, untyped_allocator);
     };
-  EXPECT_NO_THROW(code());
+  try {
+    code();
+  } catch (const std::exception &) {
+    allocator.deallocate(static_cast<int *>(allocated_mem), 1u);
+    FAIL() << "Failed to delete memory with retyped_deallocate";
+  }
 
   allocated_mem = allocator.allocate(1);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != allocated_mem);
   void * reallocated_mem =
     rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
     allocated_mem, 2u, untyped_allocator);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != reallocated_mem);
 
   auto code2 = [&untyped_allocator, reallocated_mem]() {
       rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
         reallocated_mem, untyped_allocator);
     };
-  EXPECT_NO_THROW(code2());
+  try {
+    code2();
+  } catch (const std::exception &) {
+    allocator.deallocate(static_cast<int *>(reallocated_mem), 1);
+    FAIL() << "Failed to delete reallocated memory with retyped_deallocate";
+  }
 }
 
 TEST(TestAllocatorCommon, get_rcl_allocator) {

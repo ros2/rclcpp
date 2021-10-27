@@ -1896,7 +1896,7 @@ TEST_F(TestNode, get_parameter_undeclared_parameters_not_allowed) {
     }
     // version that returns bool and never throws, but is templated to store in a primitive type
     {
-      int value;
+      int value = 0;
       EXPECT_TRUE(node->get_parameter(name, value));
       EXPECT_EQ(value, 42);
     }
@@ -1953,7 +1953,7 @@ TEST_F(TestNode, get_parameter_undeclared_parameters_allowed) {
     }
     // version that returns bool and never throws, but is templated to store in a primitive type
     {
-      int value;
+      int value = 0;
       EXPECT_TRUE(node->get_parameter(name, value));
       EXPECT_EQ(value, 42);
     }

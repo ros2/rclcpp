@@ -67,8 +67,6 @@ TEST(TestSerializedMessage, various_constructors) {
   rclcpp::SerializedMessage yet_another_serialized_message(std::move(other_serialized_message));
   auto & yet_another_rcl_handle = yet_another_serialized_message.get_rcl_serialized_message();
   EXPECT_TRUE(nullptr == other_rcl_handle.buffer);
-  EXPECT_EQ(0u, other_serialized_message.capacity());
-  EXPECT_EQ(0u, other_serialized_message.size());
   EXPECT_TRUE(nullptr != yet_another_rcl_handle.buffer);
   EXPECT_EQ(content_size, yet_another_serialized_message.size());
   EXPECT_EQ(content_size, yet_another_serialized_message.capacity());
