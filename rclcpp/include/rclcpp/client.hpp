@@ -61,8 +61,6 @@ struct FutureAndRequestId
   {}
 
   /// Allow implicit conversions to `std::future` by reference.
-  // intentionally allow implicit conversions
-  // NOLINTNEXTLINE(google-explicit-constructor)
   operator FutureT &() {return this->future;}
 
   /// Deprecated, use the `future` member variable instead.
@@ -71,8 +69,6 @@ struct FutureAndRequestId
    * \deprecated
    */
   [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
-  // intentionally allow implicit conversions
-  // NOLINTNEXTLINE(google-explicit-constructor)
   operator FutureT() {return this->future;}
 
   // delegate future like methods in the std::future impl_
@@ -288,8 +284,6 @@ public:
      */
     [[deprecated(
       "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
-    // intentionally allow implicit conversions
-    // NOLINTNEXTLINE(google-explicit-constructor)
     operator SharedFuture() {return this->future.share();}
 
     // delegate future like methods in the std::future impl_

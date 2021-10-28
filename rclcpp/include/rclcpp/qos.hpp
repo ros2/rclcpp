@@ -137,10 +137,8 @@ public:
    *   with a Publisher, or how many messages can be queued before being replaced
    *   by a Subscription.
    */
-  // intentionally allow implicit conversions
   // cppcheck-suppress noExplicitConstructor
-  // NOLINTNEXTLINE(runtime/explicit, google-explicit-constructor)
-  QoS(size_t history_depth);
+  QoS(size_t history_depth);  // NOLINT(runtime/explicit): conversion constructor
 
   /// Return the rmw qos profile.
   rmw_qos_profile_t &
