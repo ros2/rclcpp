@@ -200,7 +200,7 @@ public:
    * to last step in shutdown().
    *
    * When shutdown occurs due to the signal handler, these callbacks are run
-   * asynchronoulsy in the dedicated singal handling thread.
+   * asynchronously in the dedicated singal handling thread.
    *
    * Also, shutdown() may be called from the destructor of this function.
    * Therefore, it is not safe to throw exceptions from these callbacks.
@@ -224,7 +224,7 @@ public:
    * to last step in shutdown().
    *
    * When shutdown occurs due to the signal handler, these callbacks are run
-   * asynchronously in the dedicated singal handling thread.
+   * asynchronously in the dedicated signal handling thread.
    *
    * Also, shutdown() may be called from the destructor of this function.
    * Therefore, it is not safe to throw exceptions from these callbacks.
@@ -259,7 +259,7 @@ public:
    * These callbacks will be called in the order they are added.
    *
    * When shutdown occurs due to the signal handler, these callbacks are run
-   * asynchronously in the dedicated singal handling thread.
+   * asynchronously in the dedicated signal handling thread.
    *
    * \param[in] callback the pre_shutdown callback to be registered
    * \return the created callback handle
@@ -395,11 +395,13 @@ private:
 
   using ShutdownCallback = ShutdownCallbackHandle::ShutdownCallbackType;
 
+  RCLCPP_LOCAL
   ShutdownCallbackHandle
   add_shutdown_callback(
     ShutdownType shutdown_type,
     ShutdownCallback callback);
 
+  RCLCPP_LOCAL
   bool
   remove_shutdown_callback(
     ShutdownType shutdown_type,

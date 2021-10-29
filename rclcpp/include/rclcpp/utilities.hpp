@@ -211,43 +211,6 @@ RCLCPP_PUBLIC
 void
 on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context = nullptr);
 
-/// Register a function to be called before shutdown is called on the context.
-/**
- * If nullptr is given for the context, then the global context is used, i.e.
- * the context initialized by rclcpp::init().
- *
- * These callbacks are called before the associated Context is shutdown.
- * When shutdown by the SIGINT handler, these callbacks are called asynchronously
- * from the dedicated signal handling thread, at some point after the SIGINT
- * signal is received.
- *
- * \sa rclcpp::Context::add_pre_shutdown_callback()
- * \param[in] callback to be called before the given context is shutdown
- * \param[in] context with which to associate the context
- * \return the created callback handle
- */
-RCLCPP_PUBLIC
-PreShutdownCallbackHandle
-add_pre_shutdown_callback(
-  rclcpp::PreShutdownCallbackHandle::ShutdownCallbackType callback,
-  rclcpp::Context::SharedPtr context = nullptr);
-
-/// Remove an registered pre_shutdown callback.
-/**
- * If nullptr is given for the context, then the global context is used, i.e.
- * the context initialized by rclcpp::init().
- *
- * \sa rclcpp::Context::remove_pre_shutdown_callback()
- * \param[in] callback_handle the pre_shutdown callback handle to be removed.
- * \param[in] context with which to associate the context
- * \return true if the callback is found and removed, otherwise false.
- */
-RCLCPP_PUBLIC
-bool
-remove_pre_shutdown_callback(
-  const rclcpp::PreShutdownCallbackHandle & callback_handle,
-  rclcpp::Context::SharedPtr context = nullptr);
-
 /// Use the global condition variable to block for the specified amount of time.
 /**
  * This function can be interrupted early if the associated context becomes

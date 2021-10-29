@@ -192,32 +192,6 @@ on_shutdown(std::function<void()> callback, Context::SharedPtr context)
   context->on_shutdown(callback);
 }
 
-rclcpp::PreShutdownCallbackHandle
-add_pre_shutdown_callback(
-  rclcpp::PreShutdownCallbackHandle::ShutdownCallbackType callback,
-  rclcpp::Context::SharedPtr context)
-{
-  using rclcpp::contexts::get_global_default_context;
-  if (nullptr == context) {
-    context = get_global_default_context();
-  }
-
-  return context->add_pre_shutdown_callback(callback);
-}
-
-bool
-remove_pre_shutdown_callback(
-  const rclcpp::PreShutdownCallbackHandle & callback_handle,
-  rclcpp::Context::SharedPtr context)
-{
-  using rclcpp::contexts::get_global_default_context;
-  if (nullptr == context) {
-    context = get_global_default_context();
-  }
-
-  return context->remove_pre_shutdown_callback(callback_handle);
-}
-
 bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds, Context::SharedPtr context)
 {

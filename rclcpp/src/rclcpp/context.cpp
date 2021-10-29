@@ -420,7 +420,7 @@ Context::remove_shutdown_callback(
   ShutdownType shutdown_type,
   const ShutdownCallbackHandle & callback_handle)
 {
-  std::mutex * mutex_ptr;
+  std::mutex * mutex_ptr = nullptr;
   std::unordered_set<
     std::shared_ptr<ShutdownCallbackHandle::ShutdownCallbackType>> * callback_list_ptr;
 
@@ -458,7 +458,7 @@ Context::get_pre_shutdown_callbacks() const
 std::vector<rclcpp::Context::ShutdownCallback>
 Context::get_shutdown_callback(ShutdownType shutdown_type) const
 {
-  std::mutex * mutex_ptr;
+  std::mutex * mutex_ptr = nullptr;
   const std::unordered_set<
     std::shared_ptr<ShutdownCallbackHandle::ShutdownCallbackType>> * callback_list_ptr;
 
