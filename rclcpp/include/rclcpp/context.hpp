@@ -48,16 +48,19 @@ public:
 /// Forward declare WeakContextsWrapper
 class WeakContextsWrapper;
 
-class OnShutdownCallbackHandle
+class ShutdownCallbackHandle
 {
   friend class Context;
 
 public:
-  using OnShutdownCallbackType = std::function<void ()>;
+  using ShutdownCallbackType = std::function<void ()>;
 
 private:
-  std::weak_ptr<OnShutdownCallbackType> callback;
+  std::weak_ptr<ShutdownCallbackType> callback;
 };
+
+using OnShutdownCallbackHandle = ShutdownCallbackHandle;
+using PreShutdownCallbackHandle = ShutdownCallbackHandle;
 
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
@@ -189,7 +192,7 @@ public:
   bool
   shutdown(const std::string & reason);
 
-  using OnShutdownCallback = OnShutdownCallbackHandle::OnShutdownCallbackType;
+  using OnShutdownCallback = OnShutdownCallbackHandle::ShutdownCallbackType;
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
@@ -197,7 +200,7 @@ public:
    * to last step in shutdown().
    *
    * When shutdown occurs due to the signal handler, these callbacks are run
-   * asynchronoulsy in the dedicated singal handling thread.
+   * asynchronously in the dedicated singal handling thread.
    *
    * Also, shutdown() may be called from the destructor of this function.
    * Therefore, it is not safe to throw exceptions from these callbacks.
@@ -221,7 +224,7 @@ public:
    * to last step in shutdown().
    *
    * When shutdown occurs due to the signal handler, these callbacks are run
-   * asynchronously in the dedicated singal handling thread.
+   * asynchronously in the dedicated signal handling thread.
    *
    * Also, shutdown() may be called from the destructor of this function.
    * Therefore, it is not safe to throw exceptions from these callbacks.
@@ -249,6 +252,33 @@ public:
   bool
   remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_handle);
 
+  using PreShutdownCallback = PreShutdownCallbackHandle::ShutdownCallbackType;
+
+  /// Add a pre_shutdown callback to be called before shutdown is called for this context.
+  /**
+   * These callbacks will be called in the order they are added.
+   *
+   * When shutdown occurs due to the signal handler, these callbacks are run
+   * asynchronously in the dedicated signal handling thread.
+   *
+   * \param[in] callback the pre_shutdown callback to be registered
+   * \return the created callback handle
+   */
+  RCLCPP_PUBLIC
+  virtual
+  PreShutdownCallbackHandle
+  add_pre_shutdown_callback(PreShutdownCallback callback);
+
+  /// Remove an registered pre_shutdown callback.
+  /**
+   * \param[in] callback_handle the pre_shutdown callback handle to be removed.
+   * \return true if the callback is found and removed, otherwise false.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  remove_pre_shutdown_callback(const PreShutdownCallbackHandle & callback_handle);
+
   /// Return the shutdown callbacks.
   /**
    * Returned callbacks are a copy of the registered callbacks.
@@ -256,6 +286,14 @@ public:
   RCLCPP_PUBLIC
   std::vector<OnShutdownCallback>
   get_on_shutdown_callbacks() const;
+
+  /// Return the pre-shutdown callbacks.
+  /**
+   * Returned callbacks are a copy of the registered callbacks.
+   */
+  RCLCPP_PUBLIC
+  std::vector<PreShutdownCallback>
+  get_pre_shutdown_callbacks() const;
 
   /// Return the internal rcl context.
   RCLCPP_PUBLIC
@@ -338,6 +376,9 @@ private:
   std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
   mutable std::mutex on_shutdown_callbacks_mutex_;
 
+  std::unordered_set<std::shared_ptr<PreShutdownCallback>> pre_shutdown_callbacks_;
+  mutable std::mutex pre_shutdown_callbacks_mutex_;
+
   /// Condition variable for timed sleep (see sleep_for).
   std::condition_variable interrupt_condition_variable_;
   /// Mutex for protecting the global condition variable.
@@ -345,6 +386,29 @@ private:
 
   /// Keep shared ownership of global vector of weak contexts
   std::shared_ptr<WeakContextsWrapper> weak_contexts_;
+
+  enum class ShutdownType
+  {
+    pre_shutdown,
+    on_shutdown
+  };
+
+  using ShutdownCallback = ShutdownCallbackHandle::ShutdownCallbackType;
+
+  RCLCPP_LOCAL
+  ShutdownCallbackHandle
+  add_shutdown_callback(
+    ShutdownType shutdown_type,
+    ShutdownCallback callback);
+
+  RCLCPP_LOCAL
+  bool
+  remove_shutdown_callback(
+    ShutdownType shutdown_type,
+    const ShutdownCallbackHandle & callback_handle);
+
+  std::vector<rclcpp::Context::ShutdownCallback>
+  get_shutdown_callback(ShutdownType shutdown_type) const;
 };
 
 /// Return a copy of the list of context shared pointers.
