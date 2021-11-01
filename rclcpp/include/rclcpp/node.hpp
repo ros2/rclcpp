@@ -720,6 +720,25 @@ public:
     ParameterT & parameter,
     const ParameterT & alternative_value) const;
 
+  /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
+  /**
+   * If the parameter was not set, then the "parameter" argument is assigned
+   * the "alternative_value".
+   *
+   * This method will not throw the rclcpp::exceptions::ParameterNotDeclaredException exception.
+   *
+   * In all cases, the parameter is never set or declared within the node.
+   *
+   * \param[in] name The name of the parameter to get.
+   * \param[in] alternative_value Value to be stored in output if the parameter was not set.
+   * \returns The value of the parameter.
+   */
+  template<typename ParameterT>
+  ParameterT
+  get_parameter_or(
+    const std::string & name,
+    const ParameterT & alternative_value) const;
+
   /// Return the parameters by the given parameter names.
   /**
    * Like get_parameters(), this method may throw the

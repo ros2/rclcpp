@@ -313,6 +313,17 @@ Node::get_parameter_or(
   return got_parameter;
 }
 
+template<typename ParameterT>
+ParameterT
+Node::get_parameter_or(
+  const std::string & name,
+  const ParameterT & alternative_value) const
+{
+  ParameterT parameter;
+  get_parameter_or(name, parameter, alternative_value);
+  return parameter;
+}
+
 // this is a partially-specialized version of get_parameter above,
 // where our concrete type for ParameterT is std::map, but the to-be-determined
 // type is the value in the map.
