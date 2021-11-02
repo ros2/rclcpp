@@ -720,10 +720,9 @@ public:
     ParameterT & parameter,
     const ParameterT & alternative_value) const;
 
-  /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
+  /// Return the parameter value, or the "alternative_value" if not set.
   /**
-   * If the parameter was not set, then the "parameter" argument is assigned
-   * the "alternative_value".
+   * If the parameter was not set, then the "alternative_value" argument is returned.
    *
    * This method will not throw the rclcpp::exceptions::ParameterNotDeclaredException exception.
    *
