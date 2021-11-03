@@ -27,6 +27,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rcutils/time.h"
 
 #include "../utils/rclcpp_gtest_macros.hpp"
 
@@ -93,8 +94,8 @@ TEST_F(TestTime, time_sources) {
   EXPECT_NE(0u, steady_now.nanosec);
 }
 
-static const int64_t HALF_SEC_IN_NS = 500 * 1000 * 1000;
-static const int64_t ONE_SEC_IN_NS = 1000 * 1000 * 1000;
+static const int64_t HALF_SEC_IN_NS = RCUTILS_MS_TO_NS(500);
+static const int64_t ONE_SEC_IN_NS = RCUTILS_MS_TO_NS(1000);
 static const int64_t ONE_AND_HALF_SEC_IN_NS = 3 * HALF_SEC_IN_NS;
 
 TEST_F(TestTime, conversions) {
@@ -487,10 +488,9 @@ TEST_F(TestClockSleep, bad_clock_type) {
 }
 
 TEST_F(TestClockSleep, sleep_until_basic_system) {
-  static const auto MILLION = 1000L * 1000L;
   const auto milliseconds = 300;
   rclcpp::Clock clock(RCL_SYSTEM_TIME);
-  auto delay = rclcpp::Duration(0, milliseconds * MILLION);
+  auto delay = rclcpp::Duration(0, RCUTILS_MS_TO_NS(milliseconds));
   auto sleep_until = clock.now() + delay;
 
   auto start = std::chrono::system_clock::now();
@@ -502,10 +502,9 @@ TEST_F(TestClockSleep, sleep_until_basic_system) {
 }
 
 TEST_F(TestClockSleep, sleep_until_basic_steady) {
-  static const auto MILLION = 1000L * 1000L;
   const auto milliseconds = 300;
   rclcpp::Clock clock(RCL_STEADY_TIME);
-  auto delay = rclcpp::Duration(0, milliseconds * MILLION);
+  auto delay = rclcpp::Duration(0, RCUTILS_MS_TO_NS(milliseconds));
   auto sleep_until = clock.now() + delay;
 
   auto steady_start = std::chrono::steady_clock::now();
