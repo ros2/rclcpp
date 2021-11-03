@@ -110,7 +110,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 
     // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->clock_mutex_);
-    while (now() < until && rclcpp::ok()) {
+    while (now() < until && context->is_valid()) {
       cv.wait_until(lock, steady_time);
     }
   } else if (this_clock_type == RCL_SYSTEM_TIME) {
@@ -119,7 +119,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 
     // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->clock_mutex_);
-    while (now() < until && rclcpp::ok()) {
+    while (now() < until && context->is_valid()) {
       cv.wait_until(lock, system_time);
     }
   } else if (this_clock_type == RCL_ROS_TIME) {
@@ -143,7 +143,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 
         // loop over spurious wakeups but notice shutdown or time source change
         std::unique_lock lock(impl_->clock_mutex_);
-        while (now() < until && rclcpp::ok() && !ros_time_is_active()) {
+        while (now() < until && context->is_valid() && !ros_time_is_active()) {
           cv.wait_until(lock, system_time);
         }
         time_source_changed = ros_time_is_active();
@@ -152,7 +152,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
         // Just wait without "until" because installed
         // jump callbacks wake the cv on every new sample.
         std::unique_lock lock(impl_->clock_mutex_);
-        while (now() < until && rclcpp::ok() && ros_time_is_active()) {
+        while (now() < until && context->is_valid() && ros_time_is_active()) {
           cv.wait(lock);
         }
         time_source_changed = !ros_time_is_active();
@@ -163,7 +163,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
     }
   }
 
-  if (!rclcpp::ok() || time_source_changed) {
+  if (!context->is_valid() || time_source_changed) {
     return false;
   }
 
