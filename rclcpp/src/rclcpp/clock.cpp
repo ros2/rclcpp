@@ -136,30 +136,25 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
       [&cv](const rcl_time_jump_t &) {cv.notify_one();},
       threshold);
 
-    try {
-      if (!ros_time_is_active()) {
-        auto system_time = std::chrono::system_clock::time_point(
-          std::chrono::nanoseconds(until.nanoseconds()));
+    if (!ros_time_is_active()) {
+      auto system_time = std::chrono::system_clock::time_point(
+        std::chrono::nanoseconds(until.nanoseconds()));
 
-        // loop over spurious wakeups but notice shutdown or time source change
-        std::unique_lock lock(impl_->clock_mutex_);
-        while (now() < until && context->is_valid() && !ros_time_is_active()) {
-          cv.wait_until(lock, system_time);
-        }
-        time_source_changed = ros_time_is_active();
-      } else {
-        // RCL_ROS_TIME with ros_time_is_active.
-        // Just wait without "until" because installed
-        // jump callbacks wake the cv on every new sample.
-        std::unique_lock lock(impl_->clock_mutex_);
-        while (now() < until && context->is_valid() && ros_time_is_active()) {
-          cv.wait(lock);
-        }
-        time_source_changed = !ros_time_is_active();
+      // loop over spurious wakeups but notice shutdown or time source change
+      std::unique_lock lock(impl_->clock_mutex_);
+      while (now() < until && context->is_valid() && !ros_time_is_active()) {
+        cv.wait_until(lock, system_time);
       }
-    } catch (...) {
-      RCUTILS_LOG_ERROR("Unexpected exception from ros_time_is_active()");
-      return false;
+      time_source_changed = ros_time_is_active();
+    } else {
+      // RCL_ROS_TIME with ros_time_is_active.
+      // Just wait without "until" because installed
+      // jump callbacks wake the cv on every new sample.
+      std::unique_lock lock(impl_->clock_mutex_);
+      while (now() < until && context->is_valid() && ros_time_is_active()) {
+        cv.wait(lock);
+      }
+      time_source_changed = !ros_time_is_active();
     }
   }
 
