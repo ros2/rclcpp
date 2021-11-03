@@ -757,13 +757,13 @@ TEST_F(TestTimeSource, clock_sleep_until_with_ros_time_basic) {
   {
     rcl_jump_threshold_t threshold;
     threshold.on_clock_change = false;
-    threshold.min_backward.nanoseconds = 0;
-    threshold.min_forward.nanoseconds = 0;
+    threshold.min_backward.nanoseconds = -1;
+    threshold.min_forward.nanoseconds = 1;
 
     std::condition_variable cv;
     std::mutex mutex;
     auto handler = clock->create_jump_callback(
-      []() {},
+      nullptr,
       [&cv](const rcl_time_jump_t &) {cv.notify_all();},
       threshold);
     std::unique_lock lock(mutex);
