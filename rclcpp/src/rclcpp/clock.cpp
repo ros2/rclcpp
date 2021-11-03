@@ -133,7 +133,12 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
     threshold.min_forward.nanoseconds = 1;
     auto clock_handler = create_jump_callback(
       nullptr,
-      [&cv](const rcl_time_jump_t &) {cv.notify_one();},
+      [&cv, &time_source_changed](const rcl_time_jump_t & jump) {
+        if (jump.clock_change != RCL_ROS_TIME_NO_CHANGE) {
+          time_source_changed = true;
+        }
+        cv.notify_one();
+      },
       threshold);
 
     if (!ros_time_is_active()) {
@@ -142,19 +147,17 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 
       // loop over spurious wakeups but notice shutdown or time source change
       std::unique_lock lock(impl_->clock_mutex_);
-      while (now() < until && context->is_valid() && !ros_time_is_active()) {
+      while (now() < until && context->is_valid() && !time_source_changed) {
         cv.wait_until(lock, system_time);
       }
-      time_source_changed = ros_time_is_active();
     } else {
       // RCL_ROS_TIME with ros_time_is_active.
       // Just wait without "until" because installed
       // jump callbacks wake the cv on every new sample.
       std::unique_lock lock(impl_->clock_mutex_);
-      while (now() < until && context->is_valid() && ros_time_is_active()) {
+      while (now() < until && context->is_valid() && !time_source_changed) {
         cv.wait(lock);
       }
-      time_source_changed = !ros_time_is_active();
     }
   }
 
