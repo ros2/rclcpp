@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -87,7 +88,9 @@ public:
    *     false. There is not a consistent choice of sleeping time when the time source changes,
    *     so this is up to the caller to call again if needed.
    *
+   * \throws std::runtime_error if the context is invalid
    * \param until absolute time according to current clock type to sleep until.
+   * \param context the rclcpp context the clock should use to check that ROS is still initialized.
    * \return true immediately if `until` is in the past
    * \return true when the time `until` is reached
    * \return false if time cannot be reached reliably, for example from shutdown or a change
@@ -95,7 +98,9 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  sleep_until(Time until);
+  sleep_until(
+    Time until,
+    Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
