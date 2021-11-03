@@ -476,10 +476,14 @@ protected:
 TEST_F(TestClockSleep, bad_clock_type) {
   rclcpp::Clock clock(RCL_SYSTEM_TIME);
   rclcpp::Time steady_until(12345, 0, RCL_STEADY_TIME);
-  ASSERT_FALSE(clock.sleep_until(steady_until));
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_until(steady_until),
+    std::runtime_error("until's clock type does not match this clock's type"));
 
   rclcpp::Time ros_until(54321, 0, RCL_ROS_TIME);
-  ASSERT_FALSE(clock.sleep_until(ros_until));
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_until(ros_until),
+    std::runtime_error("until's clock type does not match this clock's type"));
 }
 
 TEST_F(TestClockSleep, sleep_until_basic_system) {

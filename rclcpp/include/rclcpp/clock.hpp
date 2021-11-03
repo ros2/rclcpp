@@ -89,6 +89,7 @@ public:
    *     so this is up to the caller to call again if needed.
    *
    * \throws std::runtime_error if the context is invalid
+   * \throws std::runtime_error if `until` has a different clock type from this clock
    * \param until absolute time according to current clock type to sleep until.
    * \param context the rclcpp context the clock should use to check that ROS is still initialized.
    * \return true immediately if `until` is in the past
