@@ -138,8 +138,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 
     try {
       if (!ros_time_is_active()) {
-        auto system_time = std::chrono::time_point<
-          std::chrono::system_clock, std::chrono::nanoseconds>(
+        auto system_time = std::chrono::system_clock::time_point(
           std::chrono::nanoseconds(until.nanoseconds()));
 
         // loop over spurious wakeups but notice shutdown or time source change
