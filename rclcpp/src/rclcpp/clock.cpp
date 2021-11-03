@@ -132,7 +132,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
     threshold.min_backward.nanoseconds = -1;
     threshold.min_forward.nanoseconds = 1;
     auto clock_handler = create_jump_callback(
-      []() {},
+      nullptr,
       [&cv](const rcl_time_jump_t &) {cv.notify_one();},
       threshold);
 
