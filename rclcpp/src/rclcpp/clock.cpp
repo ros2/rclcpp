@@ -94,8 +94,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
   std::condition_variable cv;
 
   // Wake this thread if the context is shutdown
-  rclcpp::OnShutdownCallbackHandle shutdown_cb_handle;
-  shutdown_cb_handle = context->add_on_shutdown_callback(
+  rclcpp::OnShutdownCallbackHandle shutdown_cb_handle = context->add_on_shutdown_callback(
     [&cv]() {
       cv.notify_one();
     });
