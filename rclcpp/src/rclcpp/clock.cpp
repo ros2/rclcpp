@@ -128,8 +128,9 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
     // - Trigger via on_clock_change to detect if time source changes, to invalidate sleep
     rcl_jump_threshold_t threshold;
     threshold.on_clock_change = true;
-    threshold.min_backward.nanoseconds = 0;
-    threshold.min_forward.nanoseconds = 0;
+    // 0 is disable, so -1 and 1 are smallest possible time changes
+    threshold.min_backward.nanoseconds = -1;
+    threshold.min_forward.nanoseconds = 1;
     auto clock_handler = create_jump_callback(
       []() {},
       [&cv](const rcl_time_jump_t &) {cv.notify_one();},

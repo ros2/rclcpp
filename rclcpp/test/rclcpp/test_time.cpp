@@ -604,3 +604,39 @@ TEST_F(TestClockSleep, sleep_until_shutdown_interrupt) {
   sleep_thread.join();
   EXPECT_FALSE(sleep_succeeded);
 }
+
+TEST_F(TestClockSleep, sleep_until_basic_ros) {
+  rclcpp::Clock clock(RCL_ROS_TIME);
+  rcl_clock_t * rcl_clock = clock.get_clock_handle();
+
+  ASSERT_EQ(RCL_ROS_TIME, clock.get_clock_type());
+
+  // Not zero, because 0 means time not initialized
+  const rcl_time_point_value_t start_time = 1337;
+  const rcl_time_point_value_t end_time = start_time + 1;
+
+  // Initialize time
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(rcl_clock));
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock, start_time));
+
+  const auto until = rclcpp::Time(end_time, RCL_ROS_TIME);
+
+  bool sleep_succeeded = false;
+  auto sleep_thread = std::thread(
+    [&clock, until, &sleep_succeeded]() {
+      sleep_succeeded = clock.sleep_until(until);
+    });
+
+  // yield execution long enough to let the sleep thread get to waiting on the condition variable
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+  // False because still sleeping
+  EXPECT_FALSE(sleep_succeeded);
+
+  // Jump time to the end
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock, end_time));
+  ASSERT_EQ(until, clock.now());
+
+  sleep_thread.join();
+  EXPECT_TRUE(sleep_succeeded);
+}
