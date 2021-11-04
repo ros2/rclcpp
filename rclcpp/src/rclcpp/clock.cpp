@@ -115,7 +115,9 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
     }
   } else if (this_clock_type == RCL_SYSTEM_TIME) {
     auto system_time = std::chrono::system_clock::time_point(
-      std::chrono::nanoseconds(until.nanoseconds()));
+      // Cast because system clock resolution is too big for nanoseconds on some systems
+      std::chrono::duration_cast<std::chrono::system_clock::duration>(
+        std::chrono::nanoseconds(until.nanoseconds())));
 
     // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->clock_mutex_);
@@ -143,7 +145,9 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 
     if (!ros_time_is_active()) {
       auto system_time = std::chrono::system_clock::time_point(
-        std::chrono::nanoseconds(until.nanoseconds()));
+        // Cast because system clock resolution is too big for nanoseconds on some systems
+        std::chrono::duration_cast<std::chrono::system_clock::duration>(
+          std::chrono::nanoseconds(until.nanoseconds())));
 
       // loop over spurious wakeups but notice shutdown or time source change
       std::unique_lock lock(impl_->clock_mutex_);
