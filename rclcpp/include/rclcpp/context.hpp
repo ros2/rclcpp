@@ -183,6 +183,11 @@ public:
    *
    * This function is thread-safe.
    *
+   * Note that if you override this method, but leave shutdown to be called in
+   * the destruction of this base class, it will not call the overridden
+   * version from your base class.
+   * So you need to ensure you call your class's shutdown() in its destructor.
+   *
    * \param[in] reason the description of why shutdown happened
    * \return true if shutdown was successful, false if context was already shutdown
    * \throw various exceptions derived from rclcpp::exceptions::RCLError, if rcl_shutdown fails
@@ -318,7 +323,6 @@ public:
 
   /// Interrupt any blocking sleep_for calls, causing them to return immediately and return true.
   RCLCPP_PUBLIC
-  virtual
   void
   interrupt_all_sleep_for();
 
@@ -351,7 +355,6 @@ protected:
   // Called by constructor and destructor to clean up by finalizing the
   // shutdown rcl context and preparing for a new init cycle.
   RCLCPP_PUBLIC
-  virtual
   void
   clean_up();
 

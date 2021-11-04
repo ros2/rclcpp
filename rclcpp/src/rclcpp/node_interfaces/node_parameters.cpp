@@ -101,16 +101,39 @@ NodeParameters::NodeParameters(
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
   if (automatically_declare_parameters_from_overrides) {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.dynamic_typing = true;
-    for (const auto & pair : this->get_parameter_overrides()) {
-      if (!this->has_parameter(pair.first)) {
-        this->declare_parameter(
-          pair.first,
-          pair.second,
-          descriptor,
-          true);
-      }
+    non_virtual_perform_automatically_declare_parameters_from_overrides();
+  }
+}
+
+RCLCPP_LOCAL
+void
+NodeParameters::non_virtual_perform_automatically_declare_parameters_from_overrides()
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.dynamic_typing = true;
+  for (const auto & pair : NodeParameters::get_parameter_overrides()) {
+    if (!NodeParameters::has_parameter(pair.first)) {
+      NodeParameters::declare_parameter(
+        pair.first,
+        pair.second,
+        descriptor,
+        true);
+    }
+  }
+}
+
+void
+NodeParameters::perform_automatically_declare_parameters_from_overrides()
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.dynamic_typing = true;
+  for (const auto & pair : this->get_parameter_overrides()) {
+    if (!this->has_parameter(pair.first)) {
+      this->declare_parameter(
+        pair.first,
+        pair.second,
+        descriptor,
+        true);
     }
   }
 }
