@@ -88,14 +88,14 @@ public:
    *     false. There is not a consistent choice of sleeping time when the time source changes,
    *     so this is up to the caller to call again if needed.
    *
-   * \throws std::runtime_error if the context is invalid
-   * \throws std::runtime_error if `until` has a different clock type from this clock
    * \param until absolute time according to current clock type to sleep until.
    * \param context the rclcpp context the clock should use to check that ROS is still initialized.
    * \return true immediately if `until` is in the past
    * \return true when the time `until` is reached
    * \return false if time cannot be reached reliably, for example from shutdown or a change
    *    of time source.
+   * \throws std::runtime_error if the context is invalid
+   * \throws std::runtime_error if `until` has a different clock type from this clock
    */
   RCLCPP_PUBLIC
   bool
