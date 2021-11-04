@@ -487,6 +487,36 @@ TEST_F(TestClockSleep, bad_clock_type) {
     std::runtime_error("until's clock type does not match this clock's type"));
 }
 
+TEST_F(TestClockSleep, invalid_context) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto until = clock.now();
+
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_until(until, nullptr),
+    std::runtime_error("context cannot be slept with because it's invalid"));
+
+  auto uninitialized_context = std::make_shared<rclcpp::Context>();
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_until(until, uninitialized_context),
+    std::runtime_error("context cannot be slept with because it's invalid"));
+
+  auto shutdown_context = std::make_shared<rclcpp::Context>();
+  shutdown_context->init(0, nullptr);
+  shutdown_context->shutdown("i am a teapot");
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_until(until, shutdown_context),
+    std::runtime_error("context cannot be slept with because it's invalid"));
+}
+
+TEST_F(TestClockSleep, non_global_context) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto until = clock.now() + rclcpp::Duration(0, 1);
+
+  auto non_global_context = std::make_shared<rclcpp::Context>();
+  non_global_context->init(0, nullptr);
+  ASSERT_TRUE(clock.sleep_until(until, non_global_context));
+}
+
 TEST_F(TestClockSleep, sleep_until_basic_system) {
   const auto milliseconds = 300;
   rclcpp::Clock clock(RCL_SYSTEM_TIME);
