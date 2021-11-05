@@ -204,9 +204,6 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
-  void
-  non_virtual_perform_automatically_declare_parameters_from_overrides();
-
   mutable std::recursive_mutex mutex_;
 
   // There are times when we don't want to allow modifications to parameters
