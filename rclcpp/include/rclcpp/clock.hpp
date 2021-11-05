@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -77,6 +78,30 @@ public:
   RCLCPP_PUBLIC
   Time
   now();
+
+  /**
+   * Sleep until a specified Time, according to clock type.
+   *
+   * Notes for RCL_ROS_TIME clock type:
+   *   - Can sleep forever if ros time is active and received clock never reaches `until`
+   *   - If ROS time enabled state changes during the sleep, this method will immediately return
+   *     false. There is not a consistent choice of sleeping time when the time source changes,
+   *     so this is up to the caller to call again if needed.
+   *
+   * \param until absolute time according to current clock type to sleep until.
+   * \param context the rclcpp context the clock should use to check that ROS is still initialized.
+   * \return true immediately if `until` is in the past
+   * \return true when the time `until` is reached
+   * \return false if time cannot be reached reliably, for example from shutdown or a change
+   *    of time source.
+   * \throws std::runtime_error if the context is invalid
+   * \throws std::runtime_error if `until` has a different clock type from this clock
+   */
+  RCLCPP_PUBLIC
+  bool
+  sleep_until(
+    Time until,
+    Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
