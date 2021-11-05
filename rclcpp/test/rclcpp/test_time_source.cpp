@@ -304,8 +304,8 @@ public:
 TEST_F(TestTimeSource, callbacks) {
   CallbackObject cbo;
   rcl_jump_threshold_t jump_threshold;
-  jump_threshold.min_forward.nanoseconds = 0;
-  jump_threshold.min_backward.nanoseconds = 0;
+  jump_threshold.min_forward.nanoseconds = 1;
+  jump_threshold.min_backward.nanoseconds = -1;
   jump_threshold.on_clock_change = true;
 
   rclcpp::TimeSource ts(node);
@@ -396,8 +396,8 @@ TEST_F(TestTimeSource, callbacks) {
 TEST_F(TestTimeSource, callback_handler_erasure) {
   CallbackObject cbo;
   rcl_jump_threshold_t jump_threshold;
-  jump_threshold.min_forward.nanoseconds = 0;
-  jump_threshold.min_backward.nanoseconds = 0;
+  jump_threshold.min_forward.nanoseconds = 1;
+  jump_threshold.min_backward.nanoseconds = -1;
   jump_threshold.on_clock_change = true;
 
   rclcpp::TimeSource ts(node);
