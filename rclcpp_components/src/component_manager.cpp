@@ -181,6 +181,12 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
 }
 
 void
+ComponentManager::set_executor(const std::weak_ptr<rclcpp::Executor> executor)
+{
+  executor_ = executor;
+}
+
+void
 ComponentManager::add_node_to_executor(uint64_t node_id)
 {
   if (auto exec = executor_.lock()) {

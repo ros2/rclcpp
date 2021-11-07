@@ -130,6 +130,14 @@ public:
   virtual std::shared_ptr<rclcpp_components::NodeFactory>
   create_component_factory(const ComponentResource & resource);
 
+  /// Member function to set a executor in the component
+  /**
+   * \param executor executor to be set
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  set_executor(const std::weak_ptr<rclcpp::Executor> executor);
+
 protected:
   /// Create node options for loaded component
   /**
