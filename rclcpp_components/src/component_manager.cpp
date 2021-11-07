@@ -58,7 +58,7 @@ ComponentManager::ComponentManager(
     desc.integer_range.push_back(range);
     desc.read_only = true;
     this->declare_parameter(
-      desc.name, static_cast<int>(std::thread::hardware_concurrency()), desc);
+      desc.name, static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
   }
 }
 
