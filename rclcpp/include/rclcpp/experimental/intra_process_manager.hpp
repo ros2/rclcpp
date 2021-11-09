@@ -206,38 +206,36 @@ public:
 
       this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
         msg, sub_ids.take_shared_subscriptions);
-    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
-      sub_ids.take_shared_subscriptions.size() <= 1)
-    {
+    } else {
+      if (sub_ids.take_shared_subscriptions.size() <= 1) {
+        // There is at maximum 1 buffer that does not require ownership.
+        // So this case is equivalent to all the buffers requiring ownership
 
-      std::cout << " to all the buffers requiring ownership --- " << std::endl;
-      // There is at maximum 1 buffer that does not require ownership.
-      // So this case is equivalent to all the buffers requiring ownership
+        std::cout << " to all the buffers requiring ownership --- " << std::endl;
 
-      std::cout << "message has type : " << typeid(message).name() << std::endl;
+        std::cout << "message has type : " << typeid(message).name() << std::endl;
 
-      // Merge the two vector of ids into a unique one
-      std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
-      concatenated_vector.insert(
-        concatenated_vector.end(),
-        sub_ids.take_ownership_subscriptions.begin(),
-        sub_ids.take_ownership_subscriptions.end());
+        // Merge the two vector of ids into a unique one
+        std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
+        concatenated_vector.insert(
+          concatenated_vector.end(),
+          sub_ids.take_ownership_subscriptions.begin(),
+          sub_ids.take_ownership_subscriptions.end());
 
-      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-        std::move(message),
-        concatenated_vector,
-        allocator);
-    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
-      sub_ids.take_shared_subscriptions.size() > 1)
-    {
-      // Construct a new shared pointer from the message
-      // for the buffers that do not require ownership
-      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(allocator, *message);
+        this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+          std::move(message),
+          concatenated_vector,
+          allocator);
+      } else {
+        // Construct a new shared pointer from the message
+        // for the buffers that do not require ownership
+        auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(allocator, *message);
 
-      this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
-        shared_msg, sub_ids.take_shared_subscriptions);
-      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-        std::move(message), sub_ids.take_ownership_subscriptions, allocator);
+        this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
+          shared_msg, sub_ids.take_shared_subscriptions);
+        this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+          std::move(message), sub_ids.take_ownership_subscriptions, allocator);
+      }
     }
   }
 
@@ -284,12 +282,11 @@ public:
           shared_msg,
           sub_ids.take_shared_subscriptions);
       }
-      if (!sub_ids.take_ownership_subscriptions.empty()) {
-        this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-          std::move(message),
-          sub_ids.take_ownership_subscriptions,
-          allocator);
-      }
+
+      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+        std::move(message),
+        sub_ids.take_ownership_subscriptions,
+        allocator);
 
       return shared_msg;
     }
