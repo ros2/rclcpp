@@ -9,7 +9,6 @@
   <maintainer email="william@openrobotics.org">William Woodall</maintainer>
   <license>Apache License 2.0</license>
   <author email="karsten@openrobotics.org">Karsten Knese</author>
-  <author email="mabel@openrobotics.org">Mabel Zhang</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 

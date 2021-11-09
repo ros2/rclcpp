@@ -9,7 +9,6 @@
   <maintainer email="william@openrobotics.org">William Woodall</maintainer>
   <license>Apache License 2.0</license>
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
-  <author email="mabel@openrobotics.org">Mabel Zhang</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>python3</buildtool_depend>
