@@ -131,7 +131,11 @@ protected:
   trigger_guard_condition()
   {
     rcl_ret_t ret = rcl_trigger_guard_condition(&gc_);
-    (void)ret;
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret,
+        "Failed to trigger guard condition in intra-process buffer");
+    }
   }
 
   BufferUniquePtr buffer_;
