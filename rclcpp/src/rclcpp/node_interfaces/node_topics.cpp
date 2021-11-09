@@ -14,9 +14,18 @@
 
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
+#include <stdexcept>
 #include <string>
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/publisher_base.hpp"
+#include "rclcpp/publisher_factory.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_factory.hpp"
+#include "rclcpp/qos.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 

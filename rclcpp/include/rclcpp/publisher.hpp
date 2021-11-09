@@ -20,12 +20,14 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "rcl/error_handling.h"
 #include "rcl/publisher.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+#include "rosidl_runtime_cpp/traits.hpp"
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"

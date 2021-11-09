@@ -15,7 +15,6 @@
 #ifndef RCLCPP__EXPERIMENTAL__EXECUTABLE_LIST_HPP_
 #define RCLCPP__EXPERIMENTAL__EXECUTABLE_LIST_HPP_
 
-#include <memory>
 #include <vector>
 
 #include "rclcpp/client.hpp"
