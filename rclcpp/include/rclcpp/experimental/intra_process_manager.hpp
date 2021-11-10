@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <typeinfo>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
@@ -184,6 +185,9 @@ public:
     std::unique_ptr<MessageT, Deleter> message,
     typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator)
   {
+
+    std::cout << "do_intra_process_publish --- " << std::endl;
+
     using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
 
@@ -208,8 +212,12 @@ public:
     } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
       sub_ids.take_shared_subscriptions.size() <= 1)
     {
+
+      std::cout << " to all the buffers requiring ownership --- " << std::endl;
       // There is at maximum 1 buffer that does not require ownership.
       // So this case is equivalent to all the buffers requiring ownership
+
+      std::cout << "message has type : " << typeid(message).name() << std::endl;
 
       // Merge the two vector of ids into a unique one
       std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
@@ -379,6 +387,11 @@ private:
     std::vector<uint64_t> subscription_ids,
     typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator)
   {
+
+    std::cout << "add owned msg to buffers" << std::endl;
+
+    std::cout << "message has type : " << typeid(message).name() << std::endl;
+
     using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
 
@@ -388,6 +401,7 @@ private:
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
       auto subscription_base = subscription_it->second.lock();
+      std::cout << "subscription_base has type : " << typeid(subscription_base).name() << std::endl;
       if (subscription_base) {
         auto subscription = std::dynamic_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>

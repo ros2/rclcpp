@@ -411,6 +411,13 @@ private:
     ROSMessageTypeDeleter,
     MessageT>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
+
+  // using SubscriptionIntraProcessSubscribedT = rclcpp::experimental::SubscriptionIntraProcess<
+  //   SubscribedT,
+  //   AllocatorT,
+  //   SubscribedTypeDeleter,
+  //   MessageT>;
+  //   std::shared_ptr<SubscriptionIntraProcessT> raw_type_subscription_intra_process_;
 };
 
 }  // namespace rclcpp
