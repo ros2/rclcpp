@@ -541,13 +541,11 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    auto unique_ros_msg = this->create_ros_message_unique_ptr();
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
-
-    ipm->template do_intra_process_publish<ROSMessageType, AllocatorT>(
+    ipm->template do_blah<MessageT, T, AllocatorT>(
       intra_process_publisher_id_,
-      std::move(unique_ros_msg),
-      ros_message_type_allocator_);
+      std::move(msg),
+      ros_message_type_allocator_,
+      ros_message_type_deleter_);
   }
 
   template<typename T>
@@ -593,14 +591,11 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    auto unique_ros_msg = this->create_ros_message_unique_ptr();
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
-
-    return ipm->template do_intra_process_publish_and_return_shared<ROSMessageType,
-             AllocatorT>(
+    return ipm->template do_blah_and_return_shared<MessageT, T, AllocatorT>(
       intra_process_publisher_id_,
-      std::move(unique_ros_msg),
-      ros_message_type_allocator_);
+      std::move(msg),
+      ros_message_type_allocator_,
+      ros_message_type_deleter_);
   }
 
   /// Return a new unique_ptr using the ROSMessageType of the publisher.
