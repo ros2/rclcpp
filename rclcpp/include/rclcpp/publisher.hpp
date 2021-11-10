@@ -323,9 +323,11 @@ public:
     // process manager and let it decide if it needs to be converted or not.
     // For now, convert it unconditionally and pass it the ROSMessageType
     // publish function specialization.
-    auto unique_ros_msg = this->create_ros_message_unique_ptr();
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
-    this->publish(std::move(unique_ros_msg));
+    std::cout << "Publisher LALA" << std::endl;
+    // auto unique_ros_msg = this->create_ros_message_unique_ptr();
+    // rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
+    //this->publish(std::move(unique_ros_msg));
+    this->do_intra_process_publish(std::move(msg));
   }
 
   /// Publish a message on the topic.
@@ -490,8 +492,12 @@ protected:
     }
   }
 
-  void
-  do_intra_process_publish(std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> msg)
+  template<typename T>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSMessageType>::value
+  >
+  do_intra_process_publish(std::unique_ptr<T, ROSMessageTypeDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -507,6 +513,29 @@ protected:
       std::move(msg),
       ros_message_type_allocator_);
   }
+
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
+    std::is_same<T, PublishedType>::value
+  >
+  do_intra_process_publish(std::unique_ptr<T, PublishedTypeDeleter> msg)
+  {
+    auto ipm = weak_ipm_.lock();
+    if (!ipm) {
+      throw std::runtime_error(
+              "intra process publish called after destruction of intra process manager");
+    }
+    if (!msg) {
+      throw std::runtime_error("cannot publish msg which is a null pointer");
+    }
+
+    ipm->template do_intra_process_publish<PublishedType, AllocatorT>(
+      intra_process_publisher_id_,
+      std::move(msg),
+      published_type_allocator_);
+  }
+
 
   std::shared_ptr<const ROSMessageType>
   do_intra_process_publish_and_return_shared(
