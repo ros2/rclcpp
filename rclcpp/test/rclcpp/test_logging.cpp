@@ -249,6 +249,12 @@ TEST_F(TestLoggingMacros, test_throttle) {
   }
 }
 
+TEST_F(TestLoggingMacros, test_parameter_expression) {
+  RCLCPP_DEBUG_STREAM(*&g_logger, "message");
+  EXPECT_EQ(1u, g_log_calls);
+  EXPECT_EQ("message", g_last_log_event.message);
+}
+
 bool log_function(rclcpp::Logger logger)
 {
   RCLCPP_INFO(logger, "successful log");

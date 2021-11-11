@@ -149,7 +149,7 @@ def get_rclcpp_suffix_from_features(features):
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params if p != stream_arg]))@
 @[ end if]@
-      logger.get_name(), \
+      (logger).get_name(), \
 @[ if 'stream' not in feature_combination]@
       rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
         RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
