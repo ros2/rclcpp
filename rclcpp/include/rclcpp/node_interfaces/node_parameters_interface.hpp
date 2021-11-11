@@ -112,6 +112,15 @@ public:
   void
   undeclare_parameter(const std::string & name) = 0;
 
+  /// Undeclare a parameter ignoring "read_only" and "dynamic_typing" flags.
+  /**
+   * \sa rclcpp::Node::undeclare_parameter
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  force_undeclare_parameter(const std::string & name) = 0;
+
   /// Return true if the parameter has been declared, otherwise false.
   /**
    * \sa rclcpp::Node::has_parameter
@@ -130,6 +139,15 @@ public:
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
+  /// Set one or more parameters, one at a time, ignoring "read_only" and "dynamic_typing" flags.
+  /**
+   * \sa rclcpp::Node::set_parameters
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  force_set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
+
   /// Set one or more parameters, all at once.
   /**
    * \sa rclcpp::Node::set_parameters_atomically
@@ -137,8 +155,16 @@ public:
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(
-    const std::vector<rclcpp::Parameter> & parameters) = 0;
+  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters) = 0;
+
+  /// Set one or more parameters, all at once, ignoring "read_only" and "dynamic_typing" flags.
+  /**
+   * \sa rclcpp::Node::set_parameters_atomically
+   */
+  RCLCPP_PUBLIC
+  virtual
+  rcl_interfaces::msg::SetParametersResult
+  force_set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
   /*

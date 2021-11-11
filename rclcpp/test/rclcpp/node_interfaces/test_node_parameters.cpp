@@ -161,6 +161,10 @@ TEST_F(TestNodeParameters, set_parameters) {
     "parameter 'read_only_parameter' cannot be set because it is read-only",
     result[1].reason.c_str());
 
+  result = node_parameters->force_set_parameters({rclcpp::Parameter("read_only_parameter", 55)});
+  ASSERT_EQ(1u, result.size());
+  EXPECT_TRUE(result[0].successful);
+
   RCLCPP_EXPECT_THROW_EQ(
     node_parameters->set_parameters({rclcpp::Parameter("", true)}),
     rclcpp::exceptions::InvalidParametersException("parameter name must not be empty"));
@@ -168,6 +172,63 @@ TEST_F(TestNodeParameters, set_parameters) {
   result = node_parameters->set_parameters({rclcpp::Parameter("undeclared_parameter", 3.14159)});
   ASSERT_EQ(1u, result.size());
   EXPECT_TRUE(result[0].successful);
+}
+
+TEST_F(TestNodeParameters, undeclare_parameters)
+{
+  constexpr bool READ_ONLY = true;
+  constexpr bool NOT_READ_ONLY = false;
+  constexpr bool DYNAMIC_TYPING = true;
+  constexpr bool STATIC_TYPING = false;
+
+  const std::string param_name = "my_parameter";
+  auto declare_param_helper =
+    [this, &param_name](bool read_only, bool dynamic_typing) {
+      ASSERT_FALSE(node_parameters->has_parameter(param_name));
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.name = param_name;
+      descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+      descriptor.read_only = read_only;
+      descriptor.dynamic_typing = dynamic_typing;
+      node_parameters->declare_parameter(
+        param_name, rclcpp::ParameterValue(false), descriptor, false);
+      ASSERT_TRUE(node_parameters->has_parameter(param_name));
+    };
+
+  // Not read-only with dynamic typing parameter
+  declare_param_helper(NOT_READ_ONLY, DYNAMIC_TYPING);
+  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name));
+  EXPECT_FALSE(node_parameters->has_parameter(param_name));
+  declare_param_helper(NOT_READ_ONLY, DYNAMIC_TYPING);
+  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_FALSE(node_parameters->has_parameter(param_name));
+
+  // Read-only with dynamic typing parameter
+  declare_param_helper(READ_ONLY, DYNAMIC_TYPING);
+  EXPECT_THROW(
+    node_parameters->undeclare_parameter(param_name),
+    rclcpp::exceptions::ParameterImmutableException);
+  EXPECT_TRUE(node_parameters->has_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_FALSE(node_parameters->has_parameter(param_name));
+
+  // Not read-only with static typing parameter
+  declare_param_helper(NOT_READ_ONLY, STATIC_TYPING);
+  EXPECT_THROW(
+    node_parameters->undeclare_parameter(param_name),
+    rclcpp::exceptions::InvalidParameterTypeException);
+  EXPECT_TRUE(node_parameters->has_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_FALSE(node_parameters->has_parameter(param_name));
+
+  // Read-only with static typing parameter
+  declare_param_helper(READ_ONLY, STATIC_TYPING);
+  EXPECT_THROW(
+    node_parameters->undeclare_parameter(param_name),
+    rclcpp::exceptions::ParameterImmutableException);
+  EXPECT_TRUE(node_parameters->has_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_FALSE(node_parameters->has_parameter(param_name));
 }
 
 TEST_F(TestNodeParameters, add_remove_parameters_callback) {

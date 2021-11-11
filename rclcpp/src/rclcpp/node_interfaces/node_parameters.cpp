@@ -536,6 +536,18 @@ NodeParameters::declare_parameter(
 void
 NodeParameters::undeclare_parameter(const std::string & name)
 {
+  undeclare_parameter(name, false);
+}
+
+void
+NodeParameters::force_undeclare_parameter(const std::string & name)
+{
+  undeclare_parameter(name, true);
+}
+
+void
+NodeParameters::undeclare_parameter(const std::string & name, bool force)
+{
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
@@ -546,13 +558,13 @@ NodeParameters::undeclare_parameter(const std::string & name)
             "cannot undeclare parameter '" + name + "' which has not yet been declared");
   }
 
-  if (parameter_info->second.descriptor.read_only) {
+  if (parameter_info->second.descriptor.read_only && !force) {
     throw rclcpp::exceptions::ParameterImmutableException(
             "cannot undeclare parameter '" + name + "' because it is read-only");
   }
-  if (!parameter_info->second.descriptor.dynamic_typing) {
+  if (!parameter_info->second.descriptor.dynamic_typing && !force) {
     throw rclcpp::exceptions::InvalidParameterTypeException{
-            name, "cannot undeclare an statically typed parameter"};
+            name, "cannot undeclare a statically typed parameter"};
   }
 
   parameters_.erase(parameter_info);
@@ -569,11 +581,25 @@ NodeParameters::has_parameter(const std::string & name) const
 std::vector<rcl_interfaces::msg::SetParametersResult>
 NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
+  return set_parameters(parameters, false);
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+NodeParameters::force_set_parameters(const std::vector<rclcpp::Parameter> & parameters)
+{
+  return set_parameters(parameters, true);
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+NodeParameters::set_parameters(
+  const std::vector<rclcpp::Parameter> & parameters,
+  bool force)
+{
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
   results.reserve(parameters.size());
 
   for (const auto & p : parameters) {
-    auto result = set_parameters_atomically({{p}});
+    auto result = set_parameters_atomically({{p}}, force);
     results.push_back(result);
   }
 
@@ -594,6 +620,20 @@ __find_parameter_by_name(
 
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
+{
+  return set_parameters_atomically(parameters, false);
+}
+
+rcl_interfaces::msg::SetParametersResult
+NodeParameters::force_set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
+{
+  return set_parameters_atomically(parameters, true);
+}
+
+rcl_interfaces::msg::SetParametersResult
+NodeParameters::set_parameters_atomically(
+  const std::vector<rclcpp::Parameter> & parameters,
+  bool force)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -632,7 +672,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     }
 
     // Check to see if it is read-only.
-    if (parameter_info->second.descriptor.read_only) {
+    if (parameter_info->second.descriptor.read_only && !force) {
       result.successful = false;
       result.reason = "parameter '" + name + "' cannot be set because it is read-only";
       return result;
@@ -706,8 +746,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     if (rclcpp::PARAMETER_NOT_SET == parameter.get_type()) {
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
-        if (!it->second.descriptor.dynamic_typing) {
-          result.reason = "cannot undeclare an statically typed parameter";
+        if (!it->second.descriptor.dynamic_typing && !force) {
+          result.reason = "cannot undeclare a statically typed parameter";
           result.successful = false;
           return result;
         }

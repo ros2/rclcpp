@@ -145,6 +145,10 @@ public:
   undeclare_parameter(const std::string & name) override;
 
   RCLCPP_PUBLIC
+  void
+  force_undeclare_parameter(const std::string & name) override;
+
+  RCLCPP_PUBLIC
   bool
   has_parameter(const std::string & name) const override;
 
@@ -154,8 +158,18 @@ public:
     const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  force_set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters) override;
+
+  RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters) override;
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  force_set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
@@ -207,6 +221,19 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
+
+  void
+  undeclare_parameter(const std::string & name, bool force);
+
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters,
+    bool force);
+
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    bool force);
 
   mutable std::recursive_mutex mutex_;
 

@@ -929,26 +929,22 @@ TEST_F(TestNode, undeclare_parameter) {
       rclcpp::exceptions::ParameterNotDeclaredException);
   }
   {
-    // statically typed parameter throws
+    // statically typed parameter can be undeclared from its node
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
     EXPECT_TRUE(node->has_parameter(name));
-    EXPECT_THROW(
-      {node->undeclare_parameter(name);},
-      rclcpp::exceptions::InvalidParameterTypeException);
-    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_NO_THROW(node->undeclare_parameter(name));
+    EXPECT_FALSE(node->has_parameter(name));
   }
   {
-    // read only parameter throws
+    // read only parameter can be undeclared from its node
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.read_only = true;
     node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
-    EXPECT_THROW(
-      {node->undeclare_parameter(name);},
-      rclcpp::exceptions::ParameterImmutableException);
-    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_NO_THROW(node->undeclare_parameter(name));
+    EXPECT_FALSE(node->has_parameter(name));
   }
 }
 
