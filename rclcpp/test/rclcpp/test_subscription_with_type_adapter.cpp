@@ -50,15 +50,17 @@ static const std::chrono::milliseconds g_sleep_per_loop(10);
 
 class TestSubscription : public ::testing::Test
 {
-public:
+protected:
   static void SetUpTestCase()
   {
-    if (!rclcpp::ok()) {
-      rclcpp::init(0, nullptr);
-    }
+    rclcpp::init(0, nullptr);
   }
 
-protected:
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
     node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
@@ -70,22 +72,6 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node;
-};
-
-class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    if (!rclcpp::ok()) {
-      rclcpp::init(0, nullptr);
-    }
-  }
-
-  static void TearDownTestCase()
-  {
-    rclcpp::shutdown();
-  }
 };
 
 namespace rclcpp
@@ -154,28 +140,29 @@ TEST_F(TestSubscription, various_creation_signatures) {
     auto sub =
       node->create_subscription<StringTypeAdapter>("topic", 42, [](const std::string &) {});
     (void)sub;
+    ASSERT_EQ(node->count_subscribers("topic"), 1u);
   }
   {
     using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
     auto sub =
       node->create_subscription<StringTypeAdapter>("topic", 42, [](const std::string &) {});
     (void)sub;
+    ASSERT_EQ(node->count_subscribers("topic"), 1u);
   }
 }
 
 /*
  * Testing that subscriber receives type adapted types and ROS message types with intra proccess communications.
  */
-TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
-  check_type_adapted_messages_are_received_by_intra_process_subscription) {
+TEST_F(TestSubscription, check_type_adapted_messages_are_received_by_intra_process_subscription) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
   const std::string topic_name = "topic_name";
 
-  auto node = rclcpp::Node::make_shared(
-    "test_intra_process",
-    rclcpp::NodeOptions().use_intra_process_comms(true));
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(true);
+  initialize(options);
+
   auto pub = node->create_publisher<rclcpp::msg::String>(topic_name, 1);
 
   rclcpp::msg::String msg;
@@ -385,16 +372,15 @@ TEST_F(
 /*
  * Testing that subscriber receives type adapted types and ROS message types with inter proccess communications.
  */
-TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
-  check_type_adapted_messages_are_received_by_inter_process_subscription) {
+TEST_F(TestSubscription, check_type_adapted_messages_are_received_by_inter_process_subscription) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
   const std::string topic_name = "topic_name";
 
-  auto node = rclcpp::Node::make_shared(
-    "test_intra_process",
-    rclcpp::NodeOptions().use_intra_process_comms(false));
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(false);
+  initialize(options);
+
   auto pub = node->create_publisher<rclcpp::msg::String>(topic_name, 1);
 
   rclcpp::msg::String msg;

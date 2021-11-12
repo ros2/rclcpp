@@ -34,14 +34,6 @@
 #include "rclcpp/msg/string.hpp"
 
 
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
-
-
 using namespace std::chrono_literals;
 
 static const int g_max_loops = 200;
@@ -50,15 +42,17 @@ static const std::chrono::milliseconds g_sleep_per_loop(10);
 
 class TestPublisher : public ::testing::Test
 {
-public:
+protected:
   static void SetUpTestCase()
   {
-    if (!rclcpp::ok()) {
-      rclcpp::init(0, nullptr);
-    }
+    rclcpp::init(0, nullptr);
   }
 
-protected:
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
     node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
@@ -70,20 +64,6 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node;
-};
-
-class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  static void TearDownTestCase()
-  {
-    rclcpp::shutdown();
-  }
 };
 
 namespace rclcpp
@@ -146,44 +126,70 @@ struct TypeAdapter<int, rclcpp::msg::String>
 /*
  * Testing publisher creation signatures with a type adapter.
  */
-TEST_F(TestPublisher, various_creation_signatures) {
-  for (auto is_intra_process : {true, false}) {
-    rclcpp::NodeOptions options;
-    options.use_intra_process_comms(is_intra_process);
-    initialize(options);
-    {
-      using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
-      auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
-      (void)publisher;
-    }
-    {
-      using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
-      auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
-      (void)publisher;
-    }
+TEST_F(TestPublisher, creation_signatures_with_intra) {
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(true);
+  initialize(options);
+  {
+    using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
+    (void)publisher;
+    ASSERT_EQ(node->count_publishers("topic"), 1u);
+  }
+  {
+    using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
+    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
+    (void)publisher;
+    ASSERT_EQ(node->count_publishers("topic"), 1u);
+  }
+}
+
+/*
+ * Testing publisher creation signatures with a type adapter.
+ */
+TEST_F(TestPublisher, creation_signatures_without_intra) {
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(false);
+  initialize(options);
+  {
+    using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
+    (void)publisher;
+    ASSERT_EQ(node->count_publishers("topic"), 1u);
+  }
+  {
+    using StringTypeAdapter = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
+    auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
+    (void)publisher;
+    ASSERT_EQ(node->count_publishers("topic"), 1u);
   }
 }
 
 /*
  * Testing that conversion errors are passed up.
  */
-TEST_F(TestPublisher, conversion_exception_is_passed_up) {
+TEST_F(TestPublisher, conversion_exception_is_passed_up_with_intra) {
   using BadStringTypeAdapter = rclcpp::TypeAdapter<int, rclcpp::msg::String>;
-  for (auto is_intra_process : {true, false}) {
-    rclcpp::NodeOptions options;
-    options.use_intra_process_comms(is_intra_process);
-    initialize(options);
-    auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
-    EXPECT_THROW(pub->publish(1), std::runtime_error);
-  }
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(true);
+  initialize(options);
+  auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
+  EXPECT_THROW(pub->publish(1), std::runtime_error);
+}
+
+TEST_F(TestPublisher, conversion_exception_is_passed_up_without_intra) {
+  using BadStringTypeAdapter = rclcpp::TypeAdapter<int, rclcpp::msg::String>;
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(false);
+  initialize(options);
+  auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
+  EXPECT_THROW(pub->publish(1), std::runtime_error);
 }
 
 /*
  * Testing that publisher sends type adapted types and ROS message types with intra proccess communications.
  */
-TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
-  check_type_adapted_message_is_sent_and_received_intra_process) {
+TEST_F(TestPublisher, check_type_adapted_message_is_sent_and_received_intra_process) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
   const std::string topic_name = "topic_name";
@@ -200,13 +206,14 @@ TEST_F(
       ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
     };
 
-  auto node = rclcpp::Node::make_shared(
-    "test_intra_process",
-    rclcpp::NodeOptions().use_intra_process_comms(true));
+  rclcpp::NodeOptions options;
+  options.use_intra_process_comms(true);
+  initialize(options);
+
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 10);
   auto sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, callback);
 
-  auto wait_for_message_to_be_received = [&is_received, &node]() {
+  auto wait_for_message_to_be_received = [this, &is_received]() {
       rclcpp::executors::SingleThreadedExecutor executor;
       int i = 0;
       executor.add_node(node);
