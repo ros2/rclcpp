@@ -545,7 +545,8 @@ protected:
       intra_process_publisher_id_,
       std::move(msg),
       ros_message_type_allocator_,
-      ros_message_type_deleter_);
+      ros_message_type_deleter_,
+      published_type_allocator_);
   }
 
   template<typename T>
@@ -595,7 +596,8 @@ protected:
       intra_process_publisher_id_,
       std::move(msg),
       ros_message_type_allocator_,
-      ros_message_type_deleter_);
+      ros_message_type_deleter_,
+      published_type_allocator_);
   }
 
   /// Return a new unique_ptr using the ROSMessageType of the publisher.

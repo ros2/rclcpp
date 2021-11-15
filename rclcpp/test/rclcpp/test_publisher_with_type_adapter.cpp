@@ -174,6 +174,24 @@ TEST_F(TestPublisher, conversion_exception_is_passed_up_with_intra) {
   options.use_intra_process_comms(true);
   initialize(options);
   auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
+
+  auto callback =
+    [](
+    const rclcpp::msg::String::ConstSharedPtr msg,
+    const rclcpp::MessageInfo & message_info
+    ) -> void
+    {
+      (void)msg;
+      (void)message_info;
+    };
+
+  // When we are doing type adaptation with intra-process comms, we have to have a subscriber
+  // for the 'convert_to_ros_msg' method in the TypeAdapter to be called.  That's because the
+  // intra-process manager delays doing the type conversion until it actually adds the message
+  // to the subscription's internal buffers.  No subscriptions -> no conversions.  We add a
+  // dummy subscription here just to trigger the conversion.
+  auto sub = node->create_subscription<rclcpp::msg::String>("topic_name", 1, callback);
+
   EXPECT_THROW(pub->publish(1), std::runtime_error);
 }
 
