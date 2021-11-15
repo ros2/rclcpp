@@ -201,7 +201,8 @@ public:
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
         callback,
-        options.get_allocator(),
+        std::make_shared<AllocatorT>(*options.get_allocator()),
+        std::make_shared<SubscribedTypeAllocator>(*options.get_allocator()),
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
@@ -407,17 +408,14 @@ private:
 
   using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
     ROSMessageType,
+    SubscribedType,
+    SubscribedTypeAllocator,
+    SubscribedTypeDeleter,
     AllocatorT,
     ROSMessageTypeDeleter,
     MessageT>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 
-  // using SubscriptionIntraProcessSubscribedT = rclcpp::experimental::SubscriptionIntraProcess<
-  //   SubscribedT,
-  //   AllocatorT,
-  //   SubscribedTypeDeleter,
-  //   MessageT>;
-  //   std::shared_ptr<SubscriptionIntraProcessT> raw_type_subscription_intra_process_;
 };
 
 }  // namespace rclcpp

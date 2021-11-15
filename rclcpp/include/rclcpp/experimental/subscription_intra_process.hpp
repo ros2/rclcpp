@@ -43,20 +43,23 @@ namespace experimental
 
 template<
   typename MessageT,
+  typename BufferMessageT,
+  typename BufferMessageAlloc = std::allocator<void>,
+  typename BufferMessageDeleter = std::default_delete<MessageT>,
   typename Alloc = std::allocator<void>,
   typename Deleter = std::default_delete<MessageT>,
   typename CallbackMessageT = MessageT>
 class SubscriptionIntraProcess
   : public SubscriptionIntraProcessBuffer<
-    MessageT,
-    Alloc,
-    Deleter
+    BufferMessageT,
+    BufferMessageAlloc,
+    BufferMessageDeleter
   >
 {
   using SubscriptionIntraProcessBufferT = SubscriptionIntraProcessBuffer<
-    MessageT,
-    Alloc,
-    Deleter
+    BufferMessageT,
+    BufferMessageAlloc,
+    BufferMessageDeleter
   >;
 
 public:
@@ -71,12 +74,13 @@ public:
   SubscriptionIntraProcess(
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
     std::shared_ptr<Alloc> allocator,
+    std::shared_ptr<BufferMessageAlloc> buffer_allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>(
-      allocator,
+  : SubscriptionIntraProcessBuffer<BufferMessageT, BufferMessageAlloc, BufferMessageDeleter>(
+      buffer_allocator,
       context,
       topic_name,
       qos_profile,
