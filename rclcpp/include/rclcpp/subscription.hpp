@@ -406,18 +406,11 @@ private:
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 
   using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-    ROSMessageType,
+    SubscribedType,
     AllocatorT,
-    ROSMessageTypeDeleter,
-    MessageT>;
+    SubscribedTypeDeleter>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 
-  // using SubscriptionIntraProcessSubscribedT = rclcpp::experimental::SubscriptionIntraProcess<
-  //   SubscribedT,
-  //   AllocatorT,
-  //   SubscribedTypeDeleter,
-  //   MessageT>;
-  //   std::shared_ptr<SubscriptionIntraProcessT> raw_type_subscription_intra_process_;
 };
 
 }  // namespace rclcpp

@@ -42,40 +42,43 @@ namespace experimental
 {
 
 template<
-  typename MessageT,
-  typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>,
-  typename CallbackMessageT = MessageT>
+/// MessageT::custom_type if MessageT is a TypeAdapter,
+/// otherwise just MessageT.
+  typename SubscribedType,
+  typename SubscribedTypeAlloc = std::allocator<void>,
+  typename SubscribedTypeDeleter = std::default_delete<SubscribedType>,
+  typename CallbackMessageT = SubscribedType
+  >
 class SubscriptionIntraProcess
   : public SubscriptionIntraProcessBuffer<
-    MessageT,
-    Alloc,
-    Deleter
-  >
+      SubscribedType,
+      SubscribedTypeAlloc,
+      SubscribedTypeDeleter
+    >
 {
   using SubscriptionIntraProcessBufferT = SubscriptionIntraProcessBuffer<
-    MessageT,
-    Alloc,
-    Deleter
+  SubscribedType,
+  SubscribedTypeAlloc,
+  SubscribedTypeDeleter
   >;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcess)
 
-  using MessageAllocTraits = typename SubscriptionIntraProcessBufferT::MessageAllocTraits;
-  using MessageAlloc = typename SubscriptionIntraProcessBufferT::MessageAlloc;
+  using MessageAllocTraits = typename SubscriptionIntraProcessBufferT::SubscribedTypeAllocatorTraits;
+  using MessageAlloc = typename SubscriptionIntraProcessBufferT::SubscribedTypeAllocator;
   using ConstMessageSharedPtr = typename SubscriptionIntraProcessBufferT::ConstMessageSharedPtr;
   using MessageUniquePtr = typename SubscriptionIntraProcessBufferT::MessageUniquePtr;
   using BufferUniquePtr = typename SubscriptionIntraProcessBufferT::BufferUniquePtr;
 
   SubscriptionIntraProcess(
-    AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
-    std::shared_ptr<Alloc> allocator,
+    AnySubscriptionCallback<CallbackMessageT, SubscribedTypeAlloc> callback,
+    std::shared_ptr<SubscribedTypeAlloc> allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>(
+  : SubscriptionIntraProcessBuffer<SubscribedType, SubscribedTypeAlloc, SubscribedTypeDeleter>(
       allocator,
       context,
       topic_name,
@@ -117,7 +120,7 @@ public:
 
   void execute(std::shared_ptr<void> & data)
   {
-    execute_impl<MessageT>(data);
+    execute_impl<SubscribedType>(data);
   }
 
 protected:
@@ -154,7 +157,7 @@ protected:
     shared_ptr.reset();
   }
 
-  AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
+  AnySubscriptionCallback<CallbackMessageT, SubscribedTypeAlloc> any_callback_;
 };
 
 }  // namespace experimental

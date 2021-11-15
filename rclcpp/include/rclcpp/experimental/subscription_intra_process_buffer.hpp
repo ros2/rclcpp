@@ -30,6 +30,7 @@
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
@@ -43,22 +44,40 @@ namespace experimental
 template<
   typename MessageT,
   typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>
+  typename Deleter = std::default_delete<MessageT>,
+  /// MessageT::custom_type if MessageT is a TypeAdapter,
+  /// otherwise just MessageT.
+  typename SubscribedT = typename rclcpp::TypeAdapter<MessageT>::custom_type,
+  /// MessageT::ros_message_type if MessageT is a TypeAdapter,
+  /// otherwise just MessageT.
+  typename ROSMessageT = typename rclcpp::TypeAdapter<MessageT>::ros_message_type
 >
-class SubscriptionIntraProcessBuffer : public SubscriptionIntraProcessBase
+class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageT, Alloc, Deleter>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
 
-  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
-  using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
+  using SubscribedType = SubscribedT;
+  using ROSMessageType = ROSMessageT;
+
+  using SubscribedTypeAllocatorTraits = allocator::AllocRebind<SubscribedType, Alloc>;
+  using SubscribedTypeAllocator = typename SubscribedTypeAllocatorTraits::allocator_type;
+  using SubscribedTypeDeleter = allocator::Deleter<SubscribedTypeAllocator, SubscribedType>;
+
+  using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;
+  using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
+  using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
+
+  using ConstMessageSharedPtr = std::shared_ptr<const ROSMessageType>;
+  using MessageUniquePtr = std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>;
+
+  using ConstDataSharedPtr = std::shared_ptr<const SubscribedType>;
+  using DataUniquePtr = std::unique_ptr<SubscribedType, SubscribedTypeDeleter>;
 
   using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
-    MessageT,
+    SubscribedType,
     Alloc,
-    Deleter
+    SubscribedTypeDeleter
     >::UniquePtr;
 
   SubscriptionIntraProcessBuffer(
@@ -67,10 +86,10 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : SubscriptionIntraProcessBase(context, topic_name, qos_profile)
+  : ROSMessageIntraProcessBuffer<ROSMessageT, Alloc, ROSMessageTypeDeleter>(context, topic_name, qos_profile)
   {
     // Create the intra-process buffer.
-    buffer_ = rclcpp::experimental::create_intra_process_buffer<MessageT, Alloc, Deleter>(
+    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc, SubscribedTypeDeleter>(
       buffer_type,
       qos_profile,
       allocator);
@@ -86,12 +105,44 @@ public:
   void
   provide_intra_process_message(ConstMessageSharedPtr message)
   {
+
+    if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
+      buffer_->add_shared(std::move(message));
+      trigger_guard_condition();
+    } else {
+      // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
+      // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr, *message);
+      // buffer_->add_shared(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
+      // trigger_guard_condition();
+    }
+  }
+
+  void
+  provide_intra_process_message(MessageUniquePtr message)
+  {
+
+    if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
+      buffer_->add_unique(std::move(message));
+      trigger_guard_condition();
+    } else {
+      // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
+      // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
+      // rclcpp::TypeAdapter<MessageT>::convert_to_custom(*message, *ptr);
+      // buffer_->add_unique(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
+      // trigger_guard_condition();
+    }
+
+  }
+
+  void
+  provide_intra_process_data(ConstDataSharedPtr message)
+  {
     buffer_->add_shared(std::move(message));
     trigger_guard_condition();
   }
 
   void
-  provide_intra_process_message(MessageUniquePtr message)
+  provide_intra_process_data(DataUniquePtr message)
   {
     buffer_->add_unique(std::move(message));
     trigger_guard_condition();
@@ -107,7 +158,7 @@ protected:
   void
   trigger_guard_condition()
   {
-    gc_.trigger();
+    this->gc_.trigger();
   }
 
   BufferUniquePtr buffer_;
