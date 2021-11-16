@@ -116,6 +116,7 @@ public:
   {
     auto allocator = std::make_shared<Alloc>();
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    message_deleter_ = std::make_shared<MessageDeleter>();
   }
 
   // The following functions use the IntraProcessManager
@@ -123,6 +124,7 @@ public:
   void publish(MessageUniquePtr msg);
 
   std::shared_ptr<MessageAlloc> message_allocator_;
+  std::shared_ptr<MessageDeleter> message_deleter_;
 };
 
 }  // namespace mock
@@ -328,9 +330,15 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
     throw std::runtime_error("cannot publish msg which is a null pointer");
   }
 
-  ipm->template do_intra_process_publish<T, Alloc>(
+  using MessageAllocTraits = allocator::AllocRebind<T, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, T>;
+
+  ipm->template do_intra_process_publish<T, MessageDeleter, T, Alloc>(
     intra_process_publisher_id_,
     std::move(msg),
+    *message_allocator_,
+    *message_deleter_,
     *message_allocator_);
 }
 
