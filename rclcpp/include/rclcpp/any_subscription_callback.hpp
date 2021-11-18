@@ -762,6 +762,15 @@ public:
     TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
+
+  void
+  dispatch_intra_process(
+    std::unique_ptr<SubscribedType, SubscribedTypeDeleter> message,
+    const rclcpp::MessageInfo & message_info)
+  {
+    (std::get<std::unique_ptr<SubscribedType, SubscribedTypeDeleter>>(callback_variant_))(*message);
+  }
+
   void
   dispatch_intra_process(
     std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> message,
