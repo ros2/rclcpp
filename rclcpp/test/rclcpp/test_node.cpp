@@ -929,21 +929,43 @@ TEST_F(TestNode, undeclare_parameter) {
       rclcpp::exceptions::ParameterNotDeclaredException);
   }
   {
-    // statically typed parameter can be undeclared from its node
+    // statically typed parameter throws
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
     EXPECT_TRUE(node->has_parameter(name));
-    EXPECT_NO_THROW(node->undeclare_parameter(name));
+    EXPECT_THROW(
+      {node->undeclare_parameter(name);},
+      rclcpp::exceptions::InvalidParameterTypeException);
+    EXPECT_TRUE(node->has_parameter(name));
+  }
+  {
+    // statically typed parameter can be force undeclared from its node
+    auto name = "parameter"_unq;
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_NO_THROW(node->force_undeclare_parameter(name));
     EXPECT_FALSE(node->has_parameter(name));
   }
   {
-    // read only parameter can be undeclared from its node
+    // read only parameter throws
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.read_only = true;
     node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
-    EXPECT_NO_THROW(node->undeclare_parameter(name));
+    EXPECT_THROW(
+      {node->undeclare_parameter(name);},
+      rclcpp::exceptions::ParameterImmutableException);
+    EXPECT_TRUE(node->has_parameter(name));
+  }
+  {
+    // read only parameter can be force undeclared from its node
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter(name, 42, descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_NO_THROW(node->force_undeclare_parameter(name));
     EXPECT_FALSE(node->has_parameter(name));
   }
 }
@@ -1892,6 +1914,64 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
     EXPECT_FALSE(node->has_parameter(name2));  // important! name2 remains undeclared
     EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "test");
+  }
+}
+
+// test force_set_parameters
+TEST_F(TestNode, force_set_parameters) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "force_set_parameters"_unq);
+  {
+    // Read only parameter
+    auto name = "parameter"_unq;
+    EXPECT_FALSE(node->has_parameter(name));
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter(name, 42, descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+
+    // Regular methods will fail
+    EXPECT_FALSE(node->set_parameter({name, 43}).successful);
+    EXPECT_FALSE(node->set_parameters_atomically({{name, 43}}).successful);
+    EXPECT_FALSE(node->set_parameters({{name, 43}})[0].successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+
+    // Forced methods will succeed
+    EXPECT_TRUE(node->force_set_parameter({name, 43}).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 43);
+
+    EXPECT_TRUE(node->force_set_parameters_atomically({{name, 44}}).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 44);
+
+    EXPECT_TRUE(node->force_set_parameters({{name, 45}})[0].successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 45);
+  }
+  {
+    // Static type parameter
+    auto name = "parameter"_unq;
+    EXPECT_FALSE(node->has_parameter(name));
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.dynamic_typing = false;
+    node->declare_parameter(name, 42, descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+
+    // Regular methods will fail
+    EXPECT_FALSE(node->set_parameter({name, "this is a string"}).successful);
+    EXPECT_FALSE(node->set_parameters_atomically({{name, "this is a string"}}).successful);
+    EXPECT_FALSE(node->set_parameters({{name, "this is a string"}})[0].successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+
+    // Forced methods will succeed
+    EXPECT_TRUE(node->force_set_parameter({name, "this is a string"}).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::string>(), "this is a string");
+
+    EXPECT_TRUE(node->force_set_parameters_atomically({{name, 44}}).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 44);
+
+    EXPECT_TRUE(node->force_set_parameters({{name, "this is another string"}})[0].successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::string>(), "this is another string");
   }
 }
 

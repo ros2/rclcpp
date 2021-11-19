@@ -359,7 +359,13 @@ Node::declare_parameter(
 void
 Node::undeclare_parameter(const std::string & name)
 {
-  this->node_parameters_->force_undeclare_parameter(name);
+  this->node_parameters_->undeclare_parameter(name, false);
+}
+
+void
+Node::force_undeclare_parameter(const std::string & name)
+{
+  this->node_parameters_->undeclare_parameter(name, true);
 }
 
 bool
@@ -374,16 +380,34 @@ Node::set_parameter(const rclcpp::Parameter & parameter)
   return this->set_parameters_atomically({parameter});
 }
 
+rcl_interfaces::msg::SetParametersResult
+Node::force_set_parameter(const rclcpp::Parameter & parameter)
+{
+  return this->force_set_parameters_atomically({parameter});
+}
+
 std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->force_set_parameters(parameters);
+  return node_parameters_->set_parameters(parameters, false);
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+Node::force_set_parameters(const std::vector<rclcpp::Parameter> & parameters)
+{
+  return node_parameters_->set_parameters(parameters, true);
 }
 
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->force_set_parameters_atomically(parameters);
+  return node_parameters_->set_parameters_atomically(parameters, false);
+}
+
+rcl_interfaces::msg::SetParametersResult
+Node::force_set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
+{
+  return node_parameters_->set_parameters_atomically(parameters, true);
 }
 
 rclcpp::Parameter

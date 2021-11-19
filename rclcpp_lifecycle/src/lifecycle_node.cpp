@@ -217,7 +217,13 @@ LifecycleNode::declare_parameter(
 void
 LifecycleNode::undeclare_parameter(const std::string & name)
 {
-  this->node_parameters_->undeclare_parameter(name);
+  this->node_parameters_->undeclare_parameter(name, false);
+}
+
+void
+LifecycleNode::force_undeclare_parameter(const std::string & name)
+{
+  this->node_parameters_->undeclare_parameter(name, true);
 }
 
 bool
@@ -229,21 +235,41 @@ LifecycleNode::has_parameter(const std::string & name) const
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::set_parameter(const rclcpp::Parameter & parameter)
 {
-  return this->set_parameters_atomically({parameter});
+  return this->set_parameters_atomically({parameter}, false);
+}
+
+rcl_interfaces::msg::SetParametersResult
+LifecycleNode::force_set_parameter(const rclcpp::Parameter & parameter)
+{
+  return this->set_parameters_atomically({parameter}, true);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 LifecycleNode::set_parameters(
   const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->set_parameters(parameters);
+  return node_parameters_->set_parameters(parameters, false);
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+LifecycleNode::force_set_parameters(
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  return node_parameters_->set_parameters(parameters, true);
 }
 
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::set_parameters_atomically(
   const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->set_parameters_atomically(parameters);
+  return node_parameters_->set_parameters_atomically(parameters, false);
+}
+
+rcl_interfaces::msg::SetParametersResult
+LifecycleNode::force_set_parameters_atomically(
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  return node_parameters_->set_parameters_atomically(parameters, true);
 }
 
 std::vector<rclcpp::Parameter>

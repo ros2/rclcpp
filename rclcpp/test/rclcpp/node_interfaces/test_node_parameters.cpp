@@ -153,7 +153,7 @@ TEST_F(TestNodeParameters, set_parameters) {
     rclcpp::Parameter("bool_parameter", true),
     rclcpp::Parameter("read_only_parameter", 42),
   };
-  auto result = node_parameters->set_parameters(parameters);
+  auto result = node_parameters->set_parameters(parameters, false);
   ASSERT_EQ(parameters.size(), result.size());
   EXPECT_TRUE(result[0].successful);
   EXPECT_FALSE(result[1].successful);
@@ -161,15 +161,18 @@ TEST_F(TestNodeParameters, set_parameters) {
     "parameter 'read_only_parameter' cannot be set because it is read-only",
     result[1].reason.c_str());
 
-  result = node_parameters->force_set_parameters({rclcpp::Parameter("read_only_parameter", 55)});
+  result = node_parameters->set_parameters({rclcpp::Parameter("read_only_parameter", 55)}, true);
   ASSERT_EQ(1u, result.size());
   EXPECT_TRUE(result[0].successful);
 
   RCLCPP_EXPECT_THROW_EQ(
-    node_parameters->set_parameters({rclcpp::Parameter("", true)}),
+    node_parameters->set_parameters({rclcpp::Parameter("", true)}, false),
     rclcpp::exceptions::InvalidParametersException("parameter name must not be empty"));
 
-  result = node_parameters->set_parameters({rclcpp::Parameter("undeclared_parameter", 3.14159)});
+  result = node_parameters->set_parameters(
+    {rclcpp::Parameter(
+        "undeclared_parameter",
+        3.14159)}, false);
   ASSERT_EQ(1u, result.size());
   EXPECT_TRUE(result[0].successful);
 }
@@ -197,37 +200,37 @@ TEST_F(TestNodeParameters, undeclare_parameters)
 
   // Not read-only with dynamic typing parameter
   declare_param_helper(NOT_READ_ONLY, DYNAMIC_TYPING);
-  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name, false));
   EXPECT_FALSE(node_parameters->has_parameter(param_name));
   declare_param_helper(NOT_READ_ONLY, DYNAMIC_TYPING);
-  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name, true));
   EXPECT_FALSE(node_parameters->has_parameter(param_name));
 
   // Read-only with dynamic typing parameter
   declare_param_helper(READ_ONLY, DYNAMIC_TYPING);
   EXPECT_THROW(
-    node_parameters->undeclare_parameter(param_name),
+    node_parameters->undeclare_parameter(param_name, false),
     rclcpp::exceptions::ParameterImmutableException);
   EXPECT_TRUE(node_parameters->has_parameter(param_name));
-  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name, true));
   EXPECT_FALSE(node_parameters->has_parameter(param_name));
 
   // Not read-only with static typing parameter
   declare_param_helper(NOT_READ_ONLY, STATIC_TYPING);
   EXPECT_THROW(
-    node_parameters->undeclare_parameter(param_name),
+    node_parameters->undeclare_parameter(param_name, false),
     rclcpp::exceptions::InvalidParameterTypeException);
   EXPECT_TRUE(node_parameters->has_parameter(param_name));
-  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name, true));
   EXPECT_FALSE(node_parameters->has_parameter(param_name));
 
   // Read-only with static typing parameter
   declare_param_helper(READ_ONLY, STATIC_TYPING);
   EXPECT_THROW(
-    node_parameters->undeclare_parameter(param_name),
+    node_parameters->undeclare_parameter(param_name, false),
     rclcpp::exceptions::ParameterImmutableException);
   EXPECT_TRUE(node_parameters->has_parameter(param_name));
-  EXPECT_NO_THROW(node_parameters->force_undeclare_parameter(param_name));
+  EXPECT_NO_THROW(node_parameters->undeclare_parameter(param_name, true));
   EXPECT_FALSE(node_parameters->has_parameter(param_name));
 }
 
@@ -249,7 +252,7 @@ TEST_F(TestNodeParameters, add_remove_parameters_callback) {
     };
 
   auto handle = node_parameters->add_on_set_parameters_callback(callback);
-  auto result = node_parameters->set_parameters(parameters);
+  auto result = node_parameters->set_parameters(parameters, false);
   ASSERT_EQ(1u, result.size());
   EXPECT_FALSE(result[0].successful);
   EXPECT_EQ(reason, result[0].reason);

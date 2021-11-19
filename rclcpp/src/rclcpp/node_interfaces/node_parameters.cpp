@@ -534,18 +534,6 @@ NodeParameters::declare_parameter(
 }
 
 void
-NodeParameters::undeclare_parameter(const std::string & name)
-{
-  undeclare_parameter(name, false);
-}
-
-void
-NodeParameters::force_undeclare_parameter(const std::string & name)
-{
-  undeclare_parameter(name, true);
-}
-
-void
 NodeParameters::undeclare_parameter(const std::string & name, bool force)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -579,18 +567,6 @@ NodeParameters::has_parameter(const std::string & name) const
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
-NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
-{
-  return set_parameters(parameters, false);
-}
-
-std::vector<rcl_interfaces::msg::SetParametersResult>
-NodeParameters::force_set_parameters(const std::vector<rclcpp::Parameter> & parameters)
-{
-  return set_parameters(parameters, true);
-}
-
-std::vector<rcl_interfaces::msg::SetParametersResult>
 NodeParameters::set_parameters(
   const std::vector<rclcpp::Parameter> & parameters,
   bool force)
@@ -616,18 +592,6 @@ __find_parameter_by_name(
     parameters.begin(),
     parameters.end(),
     [&](auto parameter) {return parameter.get_name() == name;});
-}
-
-rcl_interfaces::msg::SetParametersResult
-NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
-{
-  return set_parameters_atomically(parameters, false);
-}
-
-rcl_interfaces::msg::SetParametersResult
-NodeParameters::force_set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
-{
-  return set_parameters_atomically(parameters, true);
 }
 
 rcl_interfaces::msg::SetParametersResult
