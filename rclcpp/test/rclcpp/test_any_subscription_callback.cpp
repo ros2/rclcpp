@@ -86,10 +86,12 @@ TEST_F(TestAnySubscriptionCallback, unset_dispatch_throw) {
     any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_),
     std::runtime_error);
   EXPECT_THROW(
-    any_subscription_callback_.dispatch_intra_process(msg_shared_ptr_, message_info_),
+    any_subscription_callback_.template dispatch_intra_process<test_msgs::msg::Empty>(
+      msg_shared_ptr_, message_info_),
     std::runtime_error);
   EXPECT_THROW(
-    any_subscription_callback_.dispatch_intra_process(get_unique_ptr_msg(), message_info_),
+    any_subscription_callback_.template dispatch_intra_process<test_msgs::msg::Empty>(
+      get_unique_ptr_msg(), message_info_),
     std::runtime_error);
 }
 
@@ -203,13 +205,15 @@ format_parameter_with_ta(const ::testing::TestParamInfo<DispatchTestsWithTA::Par
   /* Testing dispatch with shared_ptr<const MessageT> as input */ \
   TEST_P(DispatchTests_name, test_intra_shared_dispatch) { \
     auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
-    any_subscription_callback_to_test.dispatch_intra_process(msg_shared_ptr_, message_info_); \
+    any_subscription_callback_to_test.template dispatch_intra_process<test_msgs::msg::Empty>( \
+      msg_shared_ptr_, message_info_); \
   } \
  \
   /* Testing dispatch with unique_ptr<MessageT> as input */ \
   TEST_P(DispatchTests_name, test_intra_unique_dispatch) { \
     auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
-    any_subscription_callback_to_test.dispatch_intra_process(get_unique_ptr_msg(), message_info_); \
+    any_subscription_callback_to_test.template dispatch_intra_process<test_msgs::msg::Empty>( \
+      get_unique_ptr_msg(), message_info_); \
   }
 
 PARAMETERIZED_TESTS(DispatchTests)

@@ -656,7 +656,12 @@ public:
     TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
-  void
+  template<typename T>
+  typename
+  std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSMessageType>::value
+  >
   dispatch_intra_process(
     std::shared_ptr<const ROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
@@ -672,83 +677,83 @@ public:
     // Dispatch.
     std::visit(
       [&message, &message_info, this](auto && callback) {
-        using T = std::decay_t<decltype(callback)>;
+        using CallbackT = std::decay_t<decltype(callback)>;
         static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
 
         // conditions for custom type
-        if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
+        if constexpr (is_ta && std::is_same_v<CallbackT, ConstRefCallback>) {
           auto local_message = convert_ros_message_to_custom_type_unique_ptr(*message);
           callback(*local_message);
-        } else if constexpr (is_ta && std::is_same_v<T, ConstRefWithInfoCallback>) {  // NOLINT
+        } else if constexpr (is_ta && std::is_same_v<CallbackT, ConstRefWithInfoCallback>) {  // NOLINT
           auto local_message = convert_ros_message_to_custom_type_unique_ptr(*message);
           callback(*local_message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrCallback>||
-            std::is_same_v<T, SharedPtrCallback>
+            std::is_same_v<CallbackT, UniquePtrCallback>||
+            std::is_same_v<CallbackT, SharedPtrCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrWithInfoCallback>||
-            std::is_same_v<T, SharedPtrWithInfoCallback>
+            std::is_same_v<CallbackT, UniquePtrWithInfoCallback>||
+            std::is_same_v<CallbackT, SharedPtrWithInfoCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, SharedConstPtrCallback>||
-            std::is_same_v<T, ConstRefSharedConstPtrCallback>
+            std::is_same_v<CallbackT, SharedConstPtrCallback>||
+            std::is_same_v<CallbackT, ConstRefSharedConstPtrCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, SharedConstPtrWithInfoCallback>||
-            std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>
+            std::is_same_v<CallbackT, SharedConstPtrWithInfoCallback>||
+            std::is_same_v<CallbackT, ConstRefSharedConstPtrWithInfoCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
         }
         // conditions for ros message type
-        else if constexpr (std::is_same_v<T, ConstRefROSMessageCallback>) {  // NOLINT
+        else if constexpr (std::is_same_v<CallbackT, ConstRefROSMessageCallback>) {  // NOLINT
           callback(*message);
-        } else if constexpr (std::is_same_v<T, ConstRefWithInfoROSMessageCallback>) {
+        } else if constexpr (std::is_same_v<CallbackT, ConstRefWithInfoROSMessageCallback>) {
           callback(*message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrROSMessageCallback>||
-          std::is_same_v<T, SharedPtrROSMessageCallback>)
+          std::is_same_v<CallbackT, UniquePtrROSMessageCallback>||
+          std::is_same_v<CallbackT, SharedPtrROSMessageCallback>)
         {
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message));
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>)
+          std::is_same_v<CallbackT, UniquePtrWithInfoROSMessageCallback>||
+          std::is_same_v<CallbackT, SharedPtrWithInfoROSMessageCallback>)
         {
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, SharedConstPtrROSMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>)
+          std::is_same_v<CallbackT, SharedConstPtrROSMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrROSMessageCallback>)
         {
           callback(message);
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, SharedConstPtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrWithInfoROSMessageCallback>)
+          std::is_same_v<CallbackT, SharedConstPtrWithInfoROSMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrWithInfoROSMessageCallback>)
         {
           callback(message, message_info);
         }
         // condition to catch SerializedMessage types
         else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, ConstRefSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, UniquePtrSerializedMessageCallback>||
-          std::is_same_v<T, UniquePtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageWithInfoCallback>)
+          std::is_same_v<CallbackT, ConstRefSerializedMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, UniquePtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, UniquePtrSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, SharedConstPtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, SharedConstPtrSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, SharedPtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, SharedPtrSerializedMessageWithInfoCallback>)
         {
           throw std::runtime_error(
             "Cannot dispatch std::shared_ptr<const ROSMessageType> message "
@@ -756,13 +761,18 @@ public:
         }
         // condition to catch unhandled callback types
         else {  // NOLINT[readability/braces]
-          static_assert(always_false_v<T>, "unhandled callback type");
+          static_assert(always_false_v<CallbackT>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
-  void
+  template<typename T>
+  typename
+  std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSMessageType>::value
+  >
   dispatch_intra_process(
     std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> message,
     const rclcpp::MessageInfo & message_info)
@@ -778,83 +788,83 @@ public:
     // Dispatch.
     std::visit(
       [&message, &message_info, this](auto && callback) {
-        using T = std::decay_t<decltype(callback)>;
+        using CallbackT = std::decay_t<decltype(callback)>;
         static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
 
         // conditions for custom type
-        if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
+        if constexpr (is_ta && std::is_same_v<CallbackT, ConstRefCallback>) {
           auto local_message = convert_ros_message_to_custom_type_unique_ptr(*message);
           callback(*local_message);
-        } else if constexpr (is_ta && std::is_same_v<T, ConstRefWithInfoCallback>) {  // NOLINT
+        } else if constexpr (is_ta && std::is_same_v<CallbackT, ConstRefWithInfoCallback>) {  // NOLINT
           auto local_message = convert_ros_message_to_custom_type_unique_ptr(*message);
           callback(*local_message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrCallback>||
-            std::is_same_v<T, SharedPtrCallback>
+            std::is_same_v<CallbackT, UniquePtrCallback>||
+            std::is_same_v<CallbackT, SharedPtrCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrWithInfoCallback>||
-            std::is_same_v<T, SharedPtrWithInfoCallback>
+            std::is_same_v<CallbackT, UniquePtrWithInfoCallback>||
+            std::is_same_v<CallbackT, SharedPtrWithInfoCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, SharedConstPtrCallback>||
-            std::is_same_v<T, ConstRefSharedConstPtrCallback>
+            std::is_same_v<CallbackT, SharedConstPtrCallback>||
+            std::is_same_v<CallbackT, ConstRefSharedConstPtrCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, SharedConstPtrWithInfoCallback>||
-            std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>
+            std::is_same_v<CallbackT, SharedConstPtrWithInfoCallback>||
+            std::is_same_v<CallbackT, ConstRefSharedConstPtrWithInfoCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
         }
         // conditions for ros message type
-        else if constexpr (std::is_same_v<T, ConstRefROSMessageCallback>) {  // NOLINT
+        else if constexpr (std::is_same_v<CallbackT, ConstRefROSMessageCallback>) {  // NOLINT
           callback(*message);
-        } else if constexpr (std::is_same_v<T, ConstRefWithInfoROSMessageCallback>) {
+        } else if constexpr (std::is_same_v<CallbackT, ConstRefWithInfoROSMessageCallback>) {
           callback(*message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrROSMessageCallback>||
-          std::is_same_v<T, SharedPtrROSMessageCallback>)
+          std::is_same_v<CallbackT, UniquePtrROSMessageCallback>||
+          std::is_same_v<CallbackT, SharedPtrROSMessageCallback>)
         {
           callback(std::move(message));
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>)
+          std::is_same_v<CallbackT, UniquePtrWithInfoROSMessageCallback>||
+          std::is_same_v<CallbackT, SharedPtrWithInfoROSMessageCallback>)
         {
           callback(std::move(message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, SharedConstPtrROSMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>)
+          std::is_same_v<CallbackT, SharedConstPtrROSMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrROSMessageCallback>)
         {
           callback(std::move(message));
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, SharedConstPtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrWithInfoROSMessageCallback>)
+          std::is_same_v<CallbackT, SharedConstPtrWithInfoROSMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrWithInfoROSMessageCallback>)
         {
           callback(std::move(message), message_info);
         }
         // condition to catch SerializedMessage types
         else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, ConstRefSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, UniquePtrSerializedMessageCallback>||
-          std::is_same_v<T, UniquePtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageWithInfoCallback>)
+          std::is_same_v<CallbackT, ConstRefSerializedMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, UniquePtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, UniquePtrSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, SharedConstPtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, SharedConstPtrSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
+          std::is_same_v<CallbackT, SharedPtrSerializedMessageCallback>||
+          std::is_same_v<CallbackT, SharedPtrSerializedMessageWithInfoCallback>)
         {
           throw std::runtime_error(
             "Cannot dispatch std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> message "
@@ -862,7 +872,7 @@ public:
         }
         // condition to catch unhandled callback types
         else {  // NOLINT[readability/braces]
-          static_assert(always_false_v<T>, "unhandled callback type");
+          static_assert(always_false_v<CallbackT>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACEPOINT(callback_end, static_cast<const void *>(this));
