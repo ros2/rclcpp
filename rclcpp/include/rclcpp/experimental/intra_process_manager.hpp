@@ -187,9 +187,10 @@ public:
     typename PublishedTypeAllocatorTraits = allocator::AllocRebind<PublishedType, AllocatorT>,
     typename PublishedTypeAllocator = typename PublishedTypeAllocatorTraits::allocator_type
   >
+  typename
   std::enable_if_t<
     rosidl_generator_traits::is_message<T>::value &&
-    std::is_same<T, ROSMessageType>::value, void
+    std::is_same<T, ROSMessageType>::value
   >
   do_intra_process_publish(
     uint64_t intra_process_publisher_id,
@@ -265,7 +266,7 @@ public:
   typename
   std::enable_if_t<
     rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
-    std::is_same<T, PublishedType>::value, void
+    std::is_same<T, PublishedType>::value
   >
   do_intra_process_publish(
     uint64_t intra_process_publisher_id,
@@ -346,6 +347,7 @@ public:
     typename PublishedTypeAllocatorTraits = allocator::AllocRebind<PublishedType, AllocatorT>,
     typename PublishedTypeAllocator = typename PublishedTypeAllocatorTraits::allocator_type
   >
+  typename
   std::enable_if_t<
     rosidl_generator_traits::is_message<T>::value &&
     std::is_same<T, ROSMessageType>::value,
@@ -530,9 +532,10 @@ private:
     typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>,
     typename ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type>
+  typename
   std::enable_if_t<
     rosidl_generator_traits::is_message<MessageT>::value &&
-    std::is_same<MessageT, ROSMessageType>::value, void
+    std::is_same<MessageT, ROSMessageType>::value
   >
   add_shared_msg_to_buffers(
     std::shared_ptr<const MessageT> message,
@@ -576,7 +579,7 @@ private:
   typename
   std::enable_if_t<
     rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
-    std::is_same<T, PublishedType>::value, std::shared_ptr<ROSMessageType>
+    std::is_same<T, PublishedType>::value
   >
   add_blah_shared_msg_to_buffers(
     std::shared_ptr<const T> message,
@@ -614,8 +617,6 @@ private:
         subscriptions_.erase(id);
       }
     }
-
-    return shared_ros_msg;
   }
 
   template<
@@ -623,9 +624,10 @@ private:
     typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>,
     typename ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type>
+  typename
   std::enable_if_t<
     rosidl_generator_traits::is_message<MessageT>::value &&
-    std::is_same<MessageT, ROSMessageType>::value, void
+    std::is_same<MessageT, ROSMessageType>::value
   >
   add_owned_msg_to_buffers(
     std::unique_ptr<MessageT, Deleter> message,
@@ -685,7 +687,7 @@ private:
   typename
   std::enable_if_t<
     rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
-    std::is_same<T, PublishedType>::value, void
+    std::is_same<T, PublishedType>::value
   >
   add_blah_owned_msg_to_buffers(
     std::unique_ptr<T> message,
