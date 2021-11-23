@@ -173,6 +173,12 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 }
 
 bool
+Clock::sleep_for(Duration rel_time, Context::SharedPtr context)
+{
+  return sleep_until(now() + rel_time, context);
+}
+
+bool
 Clock::ros_time_is_active()
 {
   if (!rcl_clock_valid(&impl_->rcl_clock_)) {

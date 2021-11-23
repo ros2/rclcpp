@@ -104,6 +104,30 @@ public:
     Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
+   * Sleep for a specified Duration.
+   *
+   * Equivalent to
+   *
+   * ```cpp
+   * clock->sleep_until(clock->now() + rel_time, context)
+   * ```
+   *
+   * The function will return immediately if `rel_time` is zero or negative.
+   *
+   * \param rel_time the length of time to sleep for.
+   * \param context the rclcpp context the clock should use to check that ROS is still initialized.
+   * \return true when the end time is reached
+   * \return false if time cannot be reached reliably, for example from shutdown or a change
+   *    of time source.
+   * \throws std::runtime_error if the context is invalid
+   */
+  RCLCPP_PUBLIC
+  bool
+  sleep_for(
+    Duration rel_time,
+    Context::SharedPtr context = contexts::get_global_default_context());
+
+  /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
    *
    * \return true if the clock is active
