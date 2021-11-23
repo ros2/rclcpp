@@ -235,13 +235,13 @@ LifecycleNode::has_parameter(const std::string & name) const
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::set_parameter(const rclcpp::Parameter & parameter)
 {
-  return this->set_parameters_atomically({parameter}, false);
+  return this->set_parameters_atomically({parameter});
 }
 
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::force_set_parameter(const rclcpp::Parameter & parameter)
 {
-  return this->set_parameters_atomically({parameter}, true);
+  return this->force_set_parameters_atomically({parameter});
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
