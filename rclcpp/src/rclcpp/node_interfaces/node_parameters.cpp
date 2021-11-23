@@ -296,20 +296,28 @@ __set_parameters_atomically_common(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
   CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback,
-  bool allow_undeclared = false)
+  bool allow_undeclared = false,
+  bool force = false)
 {
-  // Check if the value being set complies with the descriptor.
-  rcl_interfaces::msg::SetParametersResult result = __check_parameters(
-    parameter_infos, parameters, allow_undeclared);
-  if (!result.successful) {
-    return result;
+  rcl_interfaces::msg::SetParametersResult result;
+  if (force) {
+    // If the force flag is set, we skip checking descriptor and user callbacks
+    result.successful = true;
+  } else {
+    // Check if the value being set complies with the descriptor.
+    result = __check_parameters(
+      parameterrcl_interfaces_infos, parameters, allow_undeclared, force);
+    if (!result.successful) {
+      return result;
+    }
+    // Call the user callback to see if the new value(s) are allowed.
+    result =
+      __call_on_parameters_set_callbacks(parameters, callback_container, callback);
+    if (!result.successful) {
+      return result;
+    }
   }
-  // Call the user callback to see if the new value(s) are allowed.
-  result =
-    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
-  if (!result.successful) {
-    return result;
-  }
+
   // If accepted, actually set the values.
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
@@ -731,7 +739,10 @@ NodeParameters::set_parameters_atomically(
     // These callbacks are called once. When a callback returns an unsuccessful result,
     // the remaining aren't called.
     on_parameters_set_callback_,
-    allow_undeclared_);  // allow undeclared
+    // allow undeclared
+    allow_undeclared_,
+    // ignore constraints and force set the new value
+    force);
 
   // If not successful, then stop here.
   if (!result.successful) {
