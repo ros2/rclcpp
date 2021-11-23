@@ -306,7 +306,7 @@ __set_parameters_atomically_common(
   } else {
     // Check if the value being set complies with the descriptor.
     result = __check_parameters(
-      parameterrcl_interfaces_infos, parameters, allow_undeclared, force);
+      parameter_infos, parameters, allow_undeclared);
     if (!result.successful) {
       return result;
     }
