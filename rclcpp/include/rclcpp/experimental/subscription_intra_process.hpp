@@ -42,24 +42,23 @@ namespace experimental
 {
 
 template<
-  typename MessageT,
-  typename BufferMessageT,
-  typename BufferMessageAlloc = std::allocator<void>,
-  typename BufferMessageDeleter = std::default_delete<MessageT>,
-  typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>,
-  typename CallbackMessageT = MessageT>
+/// MessageT::custom_type if MessageT is a TypeAdapter,
+/// otherwise just MessageT.
+  typename SubscribedType,
+  typename SubscribedTypeAlloc = std::allocator<void>,
+  typename SubscribedTypeDeleter = std::default_delete<SubscribedType>
+  >
 class SubscriptionIntraProcess
   : public SubscriptionIntraProcessBuffer<
-    BufferMessageT,
-    BufferMessageAlloc,
-    BufferMessageDeleter
-  >
+      SubscribedType,
+      SubscribedTypeAlloc,
+      SubscribedTypeDeleter
+    >
 {
   using SubscriptionIntraProcessBufferT = SubscriptionIntraProcessBuffer<
-    BufferMessageT,
-    BufferMessageAlloc,
-    BufferMessageDeleter
+  SubscribedType,
+  SubscribedTypeAlloc,
+  SubscribedTypeDeleter
   >;
 
 public:
@@ -72,15 +71,14 @@ public:
   using BufferUniquePtr = typename SubscriptionIntraProcessBufferT::BufferUniquePtr;
 
   SubscriptionIntraProcess(
-    AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
-    std::shared_ptr<Alloc> allocator,
-    std::shared_ptr<BufferMessageAlloc> buffer_allocator,
+    AnySubscriptionCallback<SubscribedType, SubscribedTypeAlloc> callback,
+    std::shared_ptr<SubscribedTypeAlloc> allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : SubscriptionIntraProcessBuffer<BufferMessageT, BufferMessageAlloc, BufferMessageDeleter>(
-      buffer_allocator,
+  : SubscriptionIntraProcessBuffer<SubscribedType, SubscribedTypeAlloc, SubscribedTypeDeleter>(
+      allocator,
       context,
       topic_name,
       qos_profile,
@@ -121,7 +119,7 @@ public:
 
   void execute(std::shared_ptr<void> & data)
   {
-    execute_impl<MessageT>(data);
+    execute_impl<SubscribedType>(data);
   }
 
 protected:
@@ -158,7 +156,7 @@ protected:
     shared_ptr.reset();
   }
 
-  AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
+  AnySubscriptionCallback<SubscribedType, SubscribedTypeAlloc> any_callback_;
 };
 
 }  // namespace experimental

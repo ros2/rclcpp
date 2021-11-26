@@ -201,7 +201,6 @@ public:
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
         callback,
-        std::make_shared<AllocatorT>(*options.get_allocator()),
         std::make_shared<SubscribedTypeAllocator>(*options.get_allocator()),
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
@@ -407,13 +406,9 @@ private:
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 
   using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-    ROSMessageType,
     SubscribedType,
     SubscribedTypeAllocator,
-    SubscribedTypeDeleter,
-    AllocatorT,
-    ROSMessageTypeDeleter,
-    MessageT>;
+    SubscribedTypeDeleter>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 
 };
