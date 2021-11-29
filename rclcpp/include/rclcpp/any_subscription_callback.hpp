@@ -677,10 +677,8 @@ public:
 
         // conditions for custom type
         if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
-//          auto local_message = convert_ros_message_to_custom_type_unique_ptr(*message);
           callback(*message);
         } else if constexpr (is_ta && std::is_same_v<T, ConstRefWithInfoCallback>) {  // NOLINT
-  //        auto local_message = convert_ros_message_to_custom_type_unique_ptr(*message);
           callback(*message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
@@ -688,7 +686,6 @@ public:
             std::is_same_v<T, SharedPtrCallback>
         ))
         {
-          //callback(convert_ros_message_to_custom_type_unique_ptr(*message));
           callback(message);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
@@ -696,7 +693,6 @@ public:
             std::is_same_v<T, SharedPtrWithInfoCallback>
         ))
         {
-          //callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
           callback(message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
@@ -704,7 +700,6 @@ public:
             std::is_same_v<T, ConstRefSharedConstPtrCallback>
         ))
         {
-          //callback(convert_ros_message_to_custom_type_unique_ptr(*message));
           callback(message);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
@@ -712,7 +707,6 @@ public:
             std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>
         ))
         {
-//          callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
           callback(message, message_info);
         }
         // conditions for ros message type

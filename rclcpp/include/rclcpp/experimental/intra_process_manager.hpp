@@ -379,9 +379,9 @@ private:
 
             using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
 
-            auto ros_message_subscription = std::dynamic_pointer_cast<
-              rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
-              >(subscription_base);
+            // auto ros_message_subscription = std::dynamic_pointer_cast<
+            //   rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
+            //   >(subscription_base);
 
             if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
               ROSMessageType ros_msg;
@@ -446,10 +446,6 @@ private:
           } else {
 
             using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
-
-            auto ros_message_subscription = std::dynamic_pointer_cast<
-              rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
-              >(subscription_base);
 
             if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
               using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;

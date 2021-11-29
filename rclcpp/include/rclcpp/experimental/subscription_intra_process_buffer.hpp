@@ -102,54 +102,37 @@ public:
     return buffer_->has_data();
   }
 
-  // template<typename T>
-  // typename std::enable_if_t<
-  //  std::is_same<T, ROSMessageType>::value &&
-  //  std::is_same<T, SubscribedType>::value
-  // >
   void
   provide_intra_process_message(ConstMessageSharedPtr message)
   {
-    buffer_->add_shared(std::move(message));
-    trigger_guard_condition();
+
+    if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
+      buffer_->add_shared(std::move(message));
+      trigger_guard_condition();
+    } else {
+      // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
+      // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr, *message);
+      // buffer_->add_shared(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
+      // trigger_guard_condition();
+    }
   }
 
-  // template<typename T>
-  // typename std::enable_if_t<
-  //  std::is_same<T, ROSMessageType>::value &&
-  //  std::is_same<T, SubscribedType>::value
-  // >
   void
   provide_intra_process_message(MessageUniquePtr message)
   {
-    buffer_->add_unique(std::move(message));
-    trigger_guard_condition();
-  }
 
-  // template<typename T>
-  // typename std::enable_if_t<
-  //  std::is_same<T, ROSMessageType>::value &&
-  //  !std::is_same<T, SubscribedType>::value
-  // >
-  // provide_intra_process_message(std::shared_ptr<const T> message)
-  // {
-  //   buffer_->add_shared(std::move(message));
-  //   trigger_guard_condition();
-  // }
-  //
-  // template<typename T>
-  // typename std::enable_if_t<
-  //  std::is_same<T, ROSMessageType>::value &&
-  //  !std::is_same<T, SubscribedType>::value
-  // >
-  // provide_intra_process_message(std::unique_ptr<T, ROSMessageTypeDeleter> message)
-  // {
-  //   void();
-      // auto unique_ros_msg = this->create_ros_message_unique_ptr();
-      // rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, *unique_ros_msg);
-      // buffer_->add_unique(std::move(msg));
+    if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
+      buffer_->add_unique(std::move(message));
+      trigger_guard_condition();
+    } else {
+      // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
+      // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
+      // rclcpp::TypeAdapter<MessageT>::convert_to_custom(*message, *ptr);
+      // buffer_->add_unique(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
       // trigger_guard_condition();
-//  }
+    }
+
+  }
 
   void
   provide_intra_process_data(ConstDataSharedPtr message)
