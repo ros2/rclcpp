@@ -25,6 +25,7 @@
 
 #include "rcl/error_handling.h"
 
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
@@ -41,9 +42,10 @@ public:
 
   RCLCPP_PUBLIC
   SubscriptionIntraProcessBase(
+    rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile)
-  : topic_name_(topic_name), qos_profile_(qos_profile)
+  : gc_(context), topic_name_(topic_name), qos_profile_(qos_profile)
   {}
 
   virtual ~SubscriptionIntraProcessBase() = default;
@@ -53,7 +55,7 @@ public:
   get_number_of_ready_guard_conditions() {return 1;}
 
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set);
 
   virtual bool
@@ -79,7 +81,7 @@ public:
 
 protected:
   std::recursive_mutex reentrant_mutex_;
-  rcl_guard_condition_t gc_;
+  rclcpp::GuardCondition gc_;
 
 private:
   virtual void

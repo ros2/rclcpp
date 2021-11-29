@@ -41,6 +41,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/clock.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
+  src/rclcpp/detail/add_guard_condition_to_rcl_wait_set.cpp
   src/rclcpp/detail/resolve_parameter_overrides.cpp
   src/rclcpp/detail/rmw_implementation_specific_payload.cpp
   src/rclcpp/detail/rmw_implementation_specific_publisher_payload.cpp

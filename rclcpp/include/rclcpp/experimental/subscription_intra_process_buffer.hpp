@@ -67,36 +67,13 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : SubscriptionIntraProcessBase(topic_name, qos_profile)
+  : SubscriptionIntraProcessBase(context, topic_name, qos_profile)
   {
     // Create the intra-process buffer.
     buffer_ = rclcpp::experimental::create_intra_process_buffer<MessageT, Alloc, Deleter>(
       buffer_type,
       qos_profile,
       allocator);
-
-    // Create the guard condition.
-    rcl_guard_condition_options_t guard_condition_options =
-      rcl_guard_condition_get_default_options();
-
-    gc_ = rcl_get_zero_initialized_guard_condition();
-    rcl_ret_t ret = rcl_guard_condition_init(
-      &gc_, context->get_rcl_context().get(), guard_condition_options);
-
-    if (RCL_RET_OK != ret) {
-      throw std::runtime_error(
-              "SubscriptionIntraProcessBuffer init error initializing guard condition");
-    }
-  }
-
-  virtual ~SubscriptionIntraProcessBuffer()
-  {
-    if (rcl_guard_condition_fini(&gc_) != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "Failed to destroy guard condition: %s",
-        rcutils_get_error_string().str);
-    }
   }
 
   bool
@@ -130,8 +107,7 @@ protected:
   void
   trigger_guard_condition()
   {
-    rcl_ret_t ret = rcl_trigger_guard_condition(&gc_);
-    (void)ret;
+    gc_.trigger();
   }
 
   BufferUniquePtr buffer_;

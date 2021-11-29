@@ -23,6 +23,7 @@
 
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 
 using rclcpp::executors::StaticExecutorEntitiesCollector;
 
@@ -108,7 +109,8 @@ StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
   std::lock_guard<std::mutex> guard{new_nodes_mutex_};
   for (const auto & weak_node : new_nodes_) {
     if (auto node_ptr = weak_node.lock()) {
-      weak_nodes_to_guard_conditions_[node_ptr] = node_ptr->get_notify_guard_condition();
+      const auto & gc = node_ptr->get_notify_guard_condition();
+      weak_nodes_to_guard_conditions_[node_ptr] = &gc;
     }
   }
   new_nodes_.clear();
@@ -265,18 +267,14 @@ StaticExecutorEntitiesCollector::refresh_wait_set(std::chrono::nanoseconds timeo
   }
 }
 
-bool
+void
 StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   // Add waitable guard conditions (one for each registered node) into the wait set.
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & gc = pair.second;
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, gc, NULL);
-    if (ret != RCL_RET_OK) {
-      throw std::runtime_error("Executor waitable: couldn't add guard condition to wait set");
-    }
+    detail::add_guard_condition_to_rcl_wait_set(*wait_set, *gc);
   }
-  return true;
 }
 
 size_t StaticExecutorEntitiesCollector::get_number_of_ready_guard_conditions()
@@ -441,8 +439,9 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
       auto found_guard_condition = std::find_if(
         weak_nodes_to_guard_conditions_.begin(), weak_nodes_to_guard_conditions_.end(),
         [&](std::pair<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-        const rcl_guard_condition_t *> pair) -> bool {
-          return pair.second == p_wait_set->guard_conditions[i];
+        const GuardCondition *> pair) -> bool {
+          const rcl_guard_condition_t & rcl_gc = pair.second->get_rcl_guard_condition();
+          return &rcl_gc == p_wait_set->guard_conditions[i];
         });
       if (found_guard_condition != weak_nodes_to_guard_conditions_.end()) {
         return true;

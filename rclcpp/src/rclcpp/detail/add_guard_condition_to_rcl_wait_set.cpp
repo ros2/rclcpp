@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2021 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
+#include "rclcpp/exceptions.hpp"
 
-using rclcpp::experimental::SubscriptionIntraProcessBase;
+namespace rclcpp
+{
+namespace detail
+{
 
 void
-SubscriptionIntraProcessBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+add_guard_condition_to_rcl_wait_set(
+  rcl_wait_set_t & wait_set,
+  const rclcpp::GuardCondition & guard_condition)
 {
-  detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
+  const auto & gc = guard_condition.get_rcl_guard_condition();
+
+  rcl_ret_t ret = rcl_wait_set_add_guard_condition(&wait_set, &gc, NULL);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to add guard condition to wait set");
+  }
 }
 
-const char *
-SubscriptionIntraProcessBase::get_topic_name() const
-{
-  return topic_name_.c_str();
-}
-
-rclcpp::QoS
-SubscriptionIntraProcessBase::get_actual_qos() const
-{
-  return qos_profile_;
-}
+}  // namespace detail
+}  // namespace rclcpp

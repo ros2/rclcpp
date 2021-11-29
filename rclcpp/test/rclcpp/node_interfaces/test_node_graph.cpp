@@ -556,9 +556,9 @@ TEST_F(TestNodeGraph, notify_graph_change_rcl_error)
 {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
-  EXPECT_THROW(
+  RCLCPP_EXPECT_THROW_EQ(
     node()->get_node_graph_interface()->notify_graph_change(),
-    rclcpp::exceptions::RCLError);
+    std::runtime_error("failed to notify wait set on graph change: error not set"));
 }
 
 TEST_F(TestNodeGraph, get_info_by_topic)
