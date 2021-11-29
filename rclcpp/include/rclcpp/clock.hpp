@@ -88,7 +88,7 @@ public:
    *     false. There is not a consistent choice of sleeping time when the time source changes,
    *     so this is up to the caller to call again if needed.
    *
-   * \warning When using gcc < 10 or gcc >= 10 and pthreads lacks the function
+   * \warning When using gcc < 10 or when using gcc >= 10 and pthreads lacks the function
    *    `pthread_cond_clockwait`, steady clocks may sleep using the system clock.
    *    If so, steady clock sleep times can be affected by system clock time jumps.
    *    Depending on the steady clock's epoch and resolution in comparison to the system clock's,
