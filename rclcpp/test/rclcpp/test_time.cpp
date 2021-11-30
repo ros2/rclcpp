@@ -487,7 +487,7 @@ TEST_F(TestClockSleep, bad_clock_type) {
     std::runtime_error("until's clock type does not match this clock's type"));
 }
 
-TEST_F(TestClockSleep, invalid_context) {
+TEST_F(TestClockSleep, sleep_until_invalid_context) {
   rclcpp::Clock clock(RCL_SYSTEM_TIME);
   auto until = clock.now();
 
@@ -508,7 +508,7 @@ TEST_F(TestClockSleep, invalid_context) {
     std::runtime_error("context cannot be slept with because it's invalid"));
 }
 
-TEST_F(TestClockSleep, non_global_context) {
+TEST_F(TestClockSleep, sleep_until_non_global_context) {
   rclcpp::Clock clock(RCL_SYSTEM_TIME);
   auto until = clock.now() + rclcpp::Duration(0, 1);
 
@@ -665,6 +665,185 @@ TEST_F(TestClockSleep, sleep_until_basic_ros) {
   // Jump time to the end
   ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock, end_time));
   ASSERT_EQ(until, clock.now());
+
+  sleep_thread.join();
+  EXPECT_TRUE(sleep_succeeded);
+}
+
+TEST_F(TestClockSleep, sleep_for_invalid_context) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto rel_time = rclcpp::Duration(1, 0u);
+
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_for(rel_time, nullptr),
+    std::runtime_error("context cannot be slept with because it's invalid"));
+
+  auto uninitialized_context = std::make_shared<rclcpp::Context>();
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_for(rel_time, uninitialized_context),
+    std::runtime_error("context cannot be slept with because it's invalid"));
+
+  auto shutdown_context = std::make_shared<rclcpp::Context>();
+  shutdown_context->init(0, nullptr);
+  shutdown_context->shutdown("i am a teapot");
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_for(rel_time, shutdown_context),
+    std::runtime_error("context cannot be slept with because it's invalid"));
+}
+
+TEST_F(TestClockSleep, sleep_for_non_global_context) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto rel_time = rclcpp::Duration(0, 1);
+
+  auto non_global_context = std::make_shared<rclcpp::Context>();
+  non_global_context->init(0, nullptr);
+  ASSERT_TRUE(clock.sleep_for(rel_time, non_global_context));
+}
+
+TEST_F(TestClockSleep, sleep_for_basic_system) {
+  const auto milliseconds = 300;
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto rel_time = rclcpp::Duration(0, RCUTILS_MS_TO_NS(milliseconds));
+
+  auto start = std::chrono::system_clock::now();
+  ASSERT_TRUE(clock.sleep_for(rel_time));
+  auto end = std::chrono::system_clock::now();
+
+  EXPECT_GE(end - start, std::chrono::milliseconds(milliseconds));
+}
+
+TEST_F(TestClockSleep, sleep_for_basic_steady) {
+  const auto milliseconds = 300;
+  rclcpp::Clock clock(RCL_STEADY_TIME);
+  auto rel_time = rclcpp::Duration(0, RCUTILS_MS_TO_NS(milliseconds));
+
+  auto steady_start = std::chrono::steady_clock::now();
+  ASSERT_TRUE(clock.sleep_for(rel_time));
+  auto steady_end = std::chrono::steady_clock::now();
+
+  EXPECT_GE(steady_end - steady_start, std::chrono::milliseconds(milliseconds));
+}
+
+TEST_F(TestClockSleep, sleep_for_steady_past_returns_immediately) {
+  rclcpp::Clock clock(RCL_STEADY_TIME);
+  auto rel_time = rclcpp::Duration(-1000, 0);
+  // This should return immediately
+  ASSERT_TRUE(clock.sleep_for(rel_time));
+}
+
+TEST_F(TestClockSleep, sleep_for_system_past_returns_immediately) {
+  rclcpp::Clock clock(RCL_SYSTEM_TIME);
+  auto rel_time = rclcpp::Duration(-1000, 0);
+  // This should return immediately
+  ASSERT_TRUE(clock.sleep_for(rel_time));
+}
+
+TEST_F(TestClockSleep, sleep_for_ros_time_enable_interrupt) {
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  rclcpp::TimeSource time_source;
+  time_source.attachNode(node);
+  time_source.attachClock(clock);
+
+  // 5 second timeout, but it should be interrupted right away
+  const auto rel_time = rclcpp::Duration(5, 0);
+
+  // Try sleeping with ROS time off, then turn it on to interrupt
+  bool sleep_succeeded = true;
+  auto sleep_thread = std::thread(
+    [clock, rel_time, &sleep_succeeded]() {
+      sleep_succeeded = clock->sleep_for(rel_time);
+    });
+  // yield execution long enough to let the sleep thread get to waiting on the condition variable
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  auto set_parameters_results = param_client->set_parameters(
+    {rclcpp::Parameter("use_sim_time", true)});
+  for (auto & result : set_parameters_results) {
+    ASSERT_TRUE(result.successful);
+  }
+  sleep_thread.join();
+  EXPECT_FALSE(sleep_succeeded);
+}
+
+TEST_F(TestClockSleep, sleep_for_ros_time_disable_interrupt) {
+  param_client->set_parameters({rclcpp::Parameter("use_sim_time", true)});
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  rclcpp::TimeSource time_source;
+  time_source.attachNode(node);
+  time_source.attachClock(clock);
+
+  // /clock shouldn't be publishing, shouldn't be possible to reach timeout
+  const auto rel_time = rclcpp::Duration(600, 0);
+
+  // Try sleeping with ROS time off, then turn it on to interrupt
+  bool sleep_succeeded = true;
+  auto sleep_thread = std::thread(
+    [clock, rel_time, &sleep_succeeded]() {
+      sleep_succeeded = clock->sleep_for(rel_time);
+    });
+  // yield execution long enough to let the sleep thread get to waiting on the condition variable
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  auto set_parameters_results = param_client->set_parameters(
+    {rclcpp::Parameter("use_sim_time", false)});
+  for (auto & result : set_parameters_results) {
+    ASSERT_TRUE(result.successful);
+  }
+  sleep_thread.join();
+  EXPECT_FALSE(sleep_succeeded);
+}
+
+TEST_F(TestClockSleep, sleep_for_shutdown_interrupt) {
+  param_client->set_parameters({rclcpp::Parameter("use_sim_time", true)});
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  rclcpp::TimeSource time_source;
+  time_source.attachNode(node);
+  time_source.attachClock(clock);
+
+  // the timeout doesn't matter here - no /clock is being published, so it should never wake
+  const auto rel_time = rclcpp::Duration(600, 0);
+
+  bool sleep_succeeded = true;
+  auto sleep_thread = std::thread(
+    [clock, rel_time, &sleep_succeeded]() {
+      sleep_succeeded = clock->sleep_for(rel_time);
+    });
+  // yield execution long enough to let the sleep thread get to waiting on the condition variable
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  rclcpp::shutdown();
+  sleep_thread.join();
+  EXPECT_FALSE(sleep_succeeded);
+}
+
+TEST_F(TestClockSleep, sleep_for_basic_ros) {
+  rclcpp::Clock clock(RCL_ROS_TIME);
+  rcl_clock_t * rcl_clock = clock.get_clock_handle();
+
+  ASSERT_EQ(RCL_ROS_TIME, clock.get_clock_type());
+
+  // Not zero, because 0 means time not initialized
+  const rcl_time_point_value_t start_time = 1337;
+  const rcl_time_point_value_t end_time = start_time + 1;
+
+  // Initialize time
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(rcl_clock));
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock, start_time));
+
+  const auto rel_time = rclcpp::Duration(0, 1u);
+
+  bool sleep_succeeded = false;
+  auto sleep_thread = std::thread(
+    [&clock, rel_time, &sleep_succeeded]() {
+      sleep_succeeded = clock.sleep_for(rel_time);
+    });
+
+  // yield execution long enough to let the sleep thread get to waiting on the condition variable
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+  // False because still sleeping
+  EXPECT_FALSE(sleep_succeeded);
+
+  // Jump time to the end
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock, end_time));
+  ASSERT_EQ(end_time, clock.now().nanoseconds());
 
   sleep_thread.join();
   EXPECT_TRUE(sleep_succeeded);
