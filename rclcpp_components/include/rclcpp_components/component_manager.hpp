@@ -140,6 +140,22 @@ protected:
   virtual rclcpp::NodeOptions
   create_node_options(const std::shared_ptr<LoadNode::Request> request);
 
+  /// Add component node to executor model, it's invoked in on_load_node()
+  /**
+   * \param node_id  node_id of loaded component node in node_wrappers_
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  add_node_to_executor(uint64_t node_id);
+
+  /// Remove component node from executor model, it's invoked in on_unload_node()
+  /**
+   * \param node_id  node_id of loaded component node in node_wrappers_
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  remove_node_from_executor(uint64_t node_id);
+
   /// Service callback to load a new node in the component
   /**
    * This function allows to add parameters, remap rules, a specific node, name a namespace
@@ -231,7 +247,7 @@ protected:
     on_list_nodes(request_header, request, response);
   }
 
-private:
+protected:
   std::weak_ptr<rclcpp::Executor> executor_;
 
   uint64_t unique_id_ {1};
