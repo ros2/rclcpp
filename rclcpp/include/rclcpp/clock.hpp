@@ -88,6 +88,16 @@ public:
    *     false. There is not a consistent choice of sleeping time when the time source changes,
    *     so this is up to the caller to call again if needed.
    *
+   * \warning When using gcc < 10 or when using gcc >= 10 and pthreads lacks the function
+   *    `pthread_cond_clockwait`, steady clocks may sleep using the system clock.
+   *    If so, steady clock sleep times can be affected by system clock time jumps.
+   *    Depending on the steady clock's epoch and resolution in comparison to the system clock's,
+   *    an overflow when converting steady clock durations to system clock times may cause
+   *    undefined behavior.
+   *    For more info see these issues:
+   *    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=41861
+   *    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58931
+   *
    * \param until absolute time according to current clock type to sleep until.
    * \param context the rclcpp context the clock should use to check that ROS is still initialized.
    * \return true immediately if `until` is in the past
