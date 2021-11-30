@@ -207,26 +207,26 @@ public:
 
   /// Wait until all published message data is acknowledged or until the specified timeout elapses.
   /**
-   * This function waits until all published message data were acknowledged by all subscribers or
-   * timeout.
+   * This method waits until all published message data were acknowledged by all matching
+   * subscribptions or the given timeout elapses.
    *
-   * timeout must be less than std::chrono::nanoseconds::max().
-   * If the timeout is negative then this function will block indefinitely until all published
+   * If the timeout is negative then this method will block indefinitely until all published
    * message data were acknowledged.
-   * If the timeout is 0 then this function will be non-blocking; checking all published message
+   * If the timeout is 0 then this method will be non-blocking; checking all published message
    * data were acknowledged (If acknowledged, return true. Otherwise, return false),
    * but not waiting.
-   * If the timeout is greater than 0 then this function will return after that period of time has
+   * If the timeout is greater than 0 then this method will return after that period of time has
    * elapsed (return false) or all published message data were acknowledged (return true).
    *
-   * This function only waits for acknowledgments if the publisher's QOS profile is RELIABLE.
-   * Otherwise this function will immediately return `true`.
+   * This method only waits for acknowledgments if the publisher's QoS profile is RELIABLE.
+   * Otherwise this method will immediately return `true`.
    *
-   * \param[in] timeout the duration to wait for all published message data were acknowledged.
-   * \return `true` if all published message data were acknowledged before timeout, otherwise
-   *   `false`.
+   * \param[in] timeout the duration to wait for all published message data to be acknowledged.
+   * \return `true` if all published message data were acknowledged before the given timeout
+   *   elapsed, otherwise `false`.
    * \throws rclcpp::exceptions::RCLError if middleware doesn't support or internal error occurs
-   * \throws std::invalid_argument if timeout is greater than nanoseconds::max()
+   * \throws std::invalid_argument if timeout is greater than std::chrono::nanoseconds::max() or
+   *   less than std::chrono::nanoseconds::min()
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli>
   bool
