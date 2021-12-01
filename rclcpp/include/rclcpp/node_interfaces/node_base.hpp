@@ -34,7 +34,7 @@ namespace node_interfaces
 {
 
 /// Implementation of the NodeBase part of the Node API.
-class NodeBase : public NodeBaseInterface
+class NodeBase : public NodeBaseInterface, public std::enable_shared_from_this<NodeBase>
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBase)
