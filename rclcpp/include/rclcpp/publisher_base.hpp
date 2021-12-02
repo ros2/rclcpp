@@ -205,18 +205,17 @@ public:
   std::vector<rclcpp::NetworkFlowEndpoint>
   get_network_flow_endpoints() const;
 
-  /// Wait until all published message data is acknowledged or until the specified timeout elapses.
+  /// Wait until all published messages are acknowledged or until the specified timeout elapses.
   /**
-   * This method waits until all published message data were acknowledged by all matching
-   * subscribptions or the given timeout elapses.
+   * This method waits until all published messages are acknowledged by all matching
+   * subscriptions or the given timeout elapses.
    *
    * If the timeout is negative then this method will block indefinitely until all published
-   * message data were acknowledged.
-   * If the timeout is 0 then this method will be non-blocking; checking all published message
-   * data were acknowledged (If acknowledged, return true. Otherwise, return false),
-   * but not waiting.
-   * If the timeout is greater than 0 then this method will return after that period of time has
-   * elapsed (return false) or all published message data were acknowledged (return true).
+   * message data are acknowledged.
+   * If the timeout is zero then this method will not block, it will check if all published
+   * messages were acknowledged and return immediately.
+   * If the timeout is greater than zero, this method will wait until all published messages are
+   * acknowledged or the timeout elapses.
    *
    * This method only waits for acknowledgments if the publisher's QoS profile is RELIABLE.
    * Otherwise this method will immediately return `true`.
