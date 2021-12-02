@@ -76,20 +76,20 @@ public:
 
   using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     SubscribedType,
-    SubscribedTypeAllocator,
+    Alloc,
     SubscribedTypeDeleter
     >::UniquePtr;
 
   SubscriptionIntraProcessBuffer(
-    std::shared_ptr<SubscribedTypeAllocator> allocator,
+    std::shared_ptr<Alloc> allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : ROSMessageIntraProcessBuffer<ROSMessageT, ROSMessageTypeAllocator, ROSMessageTypeDeleter>(context, topic_name, qos_profile)
+  : ROSMessageIntraProcessBuffer<ROSMessageT, Alloc, ROSMessageTypeDeleter>(context, topic_name, qos_profile)
   {
     // Create the intra-process buffer.
-    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, SubscribedTypeAllocator, SubscribedTypeDeleter>(
+    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc, SubscribedTypeDeleter>(
       buffer_type,
       qos_profile,
       allocator);
