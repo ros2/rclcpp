@@ -211,17 +211,17 @@ public:
    * subscriptions or the given timeout elapses.
    *
    * If the timeout is negative then this method will block indefinitely until all published
-   * message data are acknowledged.
+   * messages are acknowledged.
    * If the timeout is zero then this method will not block, it will check if all published
-   * messages were acknowledged and return immediately.
+   * messages are acknowledged and return immediately.
    * If the timeout is greater than zero, this method will wait until all published messages are
    * acknowledged or the timeout elapses.
    *
    * This method only waits for acknowledgments if the publisher's QoS profile is RELIABLE.
    * Otherwise this method will immediately return `true`.
    *
-   * \param[in] timeout the duration to wait for all published message data to be acknowledged.
-   * \return `true` if all published message data were acknowledged before the given timeout
+   * \param[in] timeout the duration to wait for all published messages to be acknowledged.
+   * \return `true` if all published messages were acknowledged before the given timeout
    *   elapsed, otherwise `false`.
    * \throws rclcpp::exceptions::RCLError if middleware doesn't support or internal error occurs
    * \throws std::invalid_argument if timeout is greater than std::chrono::nanoseconds::max() or
