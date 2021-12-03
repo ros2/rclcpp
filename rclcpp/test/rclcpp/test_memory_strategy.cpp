@@ -319,6 +319,7 @@ TEST_F(TestMemoryStrategy, get_node_by_group) {
 TEST_F(TestMemoryStrategy, get_group_by_subscription) {
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::SubscriptionBase::SharedPtr subscription = nullptr;
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
     node->for_each_callback_group(
@@ -337,12 +338,15 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
       auto non_persistant_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
-      auto callback_group =
+      callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
       auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
       const rclcpp::QoS qos(10);
 
       rclcpp::SubscriptionOptions subscription_options;
+
+      // This callback group is held as a shared_ptr in subscription_options, which means it
+      // stays alive as long as subscription does.
       subscription_options.callback_group = callback_group;
 
       subscription = node->create_subscription<
@@ -358,11 +362,12 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
         memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
-      nullptr,
+      callback_group,
       memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
   }  // Node goes out of scope
+  // callback_group and NodeBase(SubscriptionBase->rcl_node_t->NodeBase) is still alive.
   EXPECT_EQ(
-    nullptr,
+    callback_group,
     memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
 }
 

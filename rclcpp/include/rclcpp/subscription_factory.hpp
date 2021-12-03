@@ -88,11 +88,7 @@ create_subscription_factory(
   subscription_topic_stats = nullptr
 )
 {
-  rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_copy = options;
-  // reset callback group as the Subscription is unnecessary to hold it
-  options_copy.callback_group.reset();
-
-  auto allocator = options_copy.get_allocator();
+  auto allocator = options.get_allocator();
 
   using rclcpp::AnySubscriptionCallback;
   AnySubscriptionCallback<MessageT, AllocatorT> any_subscription_callback(*allocator);
@@ -100,8 +96,7 @@ create_subscription_factory(
 
   SubscriptionFactory factory {
     // factory function that creates a MessageT specific SubscriptionT
-    [options = std::move(options_copy), msg_mem_strat, any_subscription_callback,
-      subscription_topic_stats](
+    [options, msg_mem_strat, any_subscription_callback, subscription_topic_stats](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
       const rclcpp::QoS & qos
