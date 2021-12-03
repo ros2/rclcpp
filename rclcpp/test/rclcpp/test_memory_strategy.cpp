@@ -365,7 +365,7 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
       callback_group,
       memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
   }  // Node goes out of scope
-  // callback_group and NodeBase(SubscriptionBase->rcl_node_t->NodeBase) is still alive.
+  // NodeBase(SubscriptionBase->rcl_node_t->NodeBase) is still alive.
   EXPECT_EQ(
     callback_group,
     memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
