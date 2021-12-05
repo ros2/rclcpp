@@ -34,6 +34,7 @@
 #include "rclcpp/type_support_decl.hpp"
 
 #include "lifecycle_publisher.hpp"
+#include "lifecycle_service.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -119,16 +120,24 @@ LifecycleNode::create_client(
 }
 
 template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
+typename rclcpp_lifecycle::LifecycleService<ServiceT>::SharedPtr
 LifecycleNode::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  return rclcpp::create_service<ServiceT, CallbackT>(
-    node_base_, node_services_,
-    service_name, std::forward<CallbackT>(callback), qos_profile, group);
+  rclcpp::AnyServiceCallback<ServiceT> any_service_callback;
+  any_service_callback.set(std::forward<CallbackT>(callback));
+
+  rcl_service_options_t service_options = rcl_service_get_default_options();
+  service_options.qos = qos_profile;
+
+  auto service = LifecycleService<ServiceT>::make_shared(
+    node_base_->get_shared_rcl_node_handle(), service_name, any_service_callback, service_options);
+  auto serv_base_ptr = std::dynamic_pointer_cast<rclcpp::ServiceBase>(service);
+  node_services_->add_service(serv_base_ptr, group);
+  return service;
 }
 
 template<typename AllocatorT>

@@ -15,6 +15,7 @@
 #ifndef RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -86,6 +87,7 @@ public:
   {
     subscription_handles_.clear();
     service_handles_.clear();
+    service_map_.clear();
     client_handles_.clear();
     timer_handles_.clear();
     waitable_handles_.clear();
@@ -106,6 +108,7 @@ public:
     }
     for (size_t i = 0; i < service_handles_.size(); ++i) {
       if (!wait_set->services[i]) {
+        service_map_.erase(service_handles_[i]);
         service_handles_[i].reset();
       }
     }
@@ -171,7 +174,9 @@ public:
         });
       group->find_service_ptrs_if(
         [this](const rclcpp::ServiceBase::SharedPtr & service) {
-          service_handles_.push_back(service->get_service_handle());
+          auto service_handle = service->get_service_handle();
+          service_handles_.push_back(service_handle);
+          service_map_[service_handle] = service;
           return false;
         });
       group->find_client_ptrs_if(
@@ -222,11 +227,9 @@ public:
       }
     }
 
-    for (auto service : service_handles_) {
-      if (rcl_wait_set_add_service(wait_set, service.get(), NULL) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add service to wait set: %s", rcl_get_error_string().str);
+    for (auto service_element : service_handles_) {
+      auto service = service_map_[service_element].lock();
+      if (service == nullptr || service->add_to_wait_set(wait_set) == false) {
         return false;
       }
     }
@@ -299,6 +302,7 @@ public:
         if (!group) {
           // Group was not found, meaning the service is not valid...
           // Remove it from the ready list and continue looking
+          service_map_.erase(*it);
           it = service_handles_.erase(it);
           continue;
         }
@@ -312,10 +316,12 @@ public:
         any_exec.service = service;
         any_exec.callback_group = group;
         any_exec.node_base = get_node_by_group(group, weak_groups_to_nodes);
+        service_map_.erase(*it);
         service_handles_.erase(it);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
+      service_map_.erase(*it);
       it = service_handles_.erase(it);
     }
   }
@@ -506,6 +512,8 @@ private:
   VectorRebind<std::shared_ptr<const rcl_client_t>> client_handles_;
   VectorRebind<std::shared_ptr<const rcl_timer_t>> timer_handles_;
   VectorRebind<std::shared_ptr<Waitable>> waitable_handles_;
+
+  std::map<std::shared_ptr<const rcl_service_t>, rclcpp::ServiceBase::WeakPtr> service_map_;
 
   std::shared_ptr<VoidAlloc> allocator_;
 };
