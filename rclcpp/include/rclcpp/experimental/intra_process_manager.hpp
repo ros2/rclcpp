@@ -427,11 +427,17 @@ private:
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
       auto subscription_base = subscription_it->second.lock();
+      std::cout << "Subscription Base?" << std::endl;
       if (subscription_base) {
+
+        std::cout << "Typed Subscription" << std::endl;
+
         auto subscription = std::dynamic_pointer_cast<
           rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>
           >(subscription_base);
         if (nullptr == subscription) {
+
+        std::cout << "ROSMessage Subscription" << std::endl;
 
           auto ros_message_subscription = std::dynamic_pointer_cast<
             rclcpp::experimental::ROSMessageIntraProcessBuffer<MessageT, Alloc, Deleter>
@@ -444,6 +450,8 @@ private:
                     "can happen when the publisher and subscription use different "
                     "allocator types, which is not supported");
           } else {
+
+            std::cout << "ROSMessage TypeAdapted Subscription" << std::endl;
 
             using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
 
@@ -474,7 +482,7 @@ private:
 
           }
         } else {
-
+          std::cout << "Typed Subscription" << std::endl;
           if (std::next(it) == subscription_ids.end()) {
             // If this is the last subscription, give up ownership
             subscription->provide_intra_process_data(std::move(message));
@@ -491,6 +499,7 @@ private:
         }
 
       } else {
+        std::cout << "Erasing subscription" << std::endl;
         subscriptions_.erase(subscription_it);
       }
     }
