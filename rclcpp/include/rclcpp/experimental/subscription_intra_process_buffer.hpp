@@ -18,10 +18,11 @@
 #include <rmw/rmw.h>
 
 #include <functional>
+#include <iostream> //TODO remove
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
+#include <stdexcept>
 #include <utility>
 
 #include "rcl/error_handling.h"
@@ -106,6 +107,8 @@ public:
   provide_intra_process_message(ConstMessageSharedPtr message)
   {
 
+    std::cout << "--------------Provide Intra Process Message (ConstMessageSharedPtr)" << std::endl;
+
     if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
       buffer_->add_shared(std::move(message));
       trigger_guard_condition();
@@ -120,7 +123,7 @@ public:
   void
   provide_intra_process_message(MessageUniquePtr message)
   {
-
+    std::cout << "--------------Provide Intra Process Message (MessageUniquePtr)" << std::endl;
     if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
       buffer_->add_unique(std::move(message));
       trigger_guard_condition();
@@ -137,6 +140,7 @@ public:
   void
   provide_intra_process_data(ConstDataSharedPtr message)
   {
+    std::cout << "--------------Provide Intra Process DATA (ConstDataSharedPtr)" << std::endl;
     buffer_->add_shared(std::move(message));
     trigger_guard_condition();
   }
@@ -144,6 +148,7 @@ public:
   void
   provide_intra_process_data(DataUniquePtr message)
   {
+    std::cout << "--------------Provide Intra Process DATA (DataUniquePtr)" << std::endl;
     buffer_->add_unique(std::move(message));
     trigger_guard_condition();
   }
