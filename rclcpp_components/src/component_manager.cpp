@@ -49,8 +49,6 @@ ComponentManager::ComponentManager(
 
   {
     rcl_interfaces::msg::ParameterDescriptor desc{};
-    desc.name = "thread_num";
-    desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     desc.description = "Number of thread";
     rcl_interfaces::msg::IntegerRange range{};
     range.from_value = 1;
@@ -58,7 +56,7 @@ ComponentManager::ComponentManager(
     desc.integer_range.push_back(range);
     desc.read_only = true;
     this->declare_parameter(
-      desc.name, static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
+      "thread_num", static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
   }
 }
 
