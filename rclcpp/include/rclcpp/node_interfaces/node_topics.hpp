@@ -20,12 +20,16 @@
 #include "rcl/publisher.h"
 #include "rcl/subscription.h"
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
-#include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_base.hpp"
 #include "rclcpp/publisher_factory.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

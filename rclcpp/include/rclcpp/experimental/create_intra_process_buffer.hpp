@@ -16,10 +16,8 @@
 #define RCLCPP__EXPERIMENTAL__CREATE_INTRA_PROCESS_BUFFER_HPP_
 
 #include <memory>
-#include <type_traits>
+#include <stdexcept>
 #include <utility>
-
-#include "rcl/subscription.h"
 
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/buffers/ring_buffer_implementation.hpp"
