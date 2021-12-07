@@ -212,14 +212,14 @@ TEST_F(TestComponentManager, components_api)
   }
 
   {
-    // use_global_arguments
+    // forward_global_arguments
     auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
     request->node_name = "test_component_global_arguments";
-    rclcpp::Parameter use_global_arguments("use_global_arguments",
+    rclcpp::Parameter forward_global_arguments("forward_global_arguments",
       rclcpp::ParameterValue(true));
-    request->extra_arguments.push_back(use_global_arguments.to_parameter_msg());
+    request->extra_arguments.push_back(forward_global_arguments.to_parameter_msg());
 
     auto future = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
@@ -227,21 +227,20 @@ TEST_F(TestComponentManager, components_api)
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
     EXPECT_EQ(result->error_message, "");
-    std::cout << result->full_node_name << std::endl;
     EXPECT_EQ(result->full_node_name, "/test_component_global_arguments");
     EXPECT_EQ(result->unique_id, 7u);
   }
 
   {
-    // use_global_arguments is not a bool type parameter
+    // forward_global_arguments is not a bool type parameter
     auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
     request->node_name = "test_component_global_arguments_str";
 
-    rclcpp::Parameter use_global_arguments("use_global_arguments",
+    rclcpp::Parameter forward_global_arguments("forward_global_arguments",
       rclcpp::ParameterValue("hello"));
-    request->extra_arguments.push_back(use_global_arguments.to_parameter_msg());
+    request->extra_arguments.push_back(forward_global_arguments.to_parameter_msg());
 
     auto future = composition_client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
@@ -250,7 +249,7 @@ TEST_F(TestComponentManager, components_api)
     EXPECT_EQ(result->success, false);
     EXPECT_EQ(
       result->error_message,
-      "Extra component argument 'use_global_arguments' must be a boolean");
+      "Extra component argument 'forward_global_arguments' must be a boolean");
     EXPECT_EQ(result->full_node_name, "");
     EXPECT_EQ(result->unique_id, 0u);
   }
