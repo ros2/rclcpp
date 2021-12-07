@@ -99,7 +99,8 @@ public:
    */
   RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
-    std::weak_ptr<rclcpp::Executor> executor,
+    std::weak_ptr<rclcpp::Executor> executor =
+    std::weak_ptr<rclcpp::executors::MultiThreadedExecutor>(),
     std::string node_name = "ComponentManager",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
     .start_parameter_services(false)
