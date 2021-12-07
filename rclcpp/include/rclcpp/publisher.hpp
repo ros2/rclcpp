@@ -340,7 +340,7 @@ public:
 
     if (inter_process_publish_needed) {
       auto shared_msg = this->do_intra_process_publish_and_return_shared<T>(std::move(msg));
-      // this->do_inter_process_publish(*shared_msg);
+      this->do_inter_process_publish(*shared_msg);
     } else {
       this->do_intra_process_publish(std::move(msg));
     }
@@ -568,6 +568,9 @@ protected:
       std::move(msg),
       published_type_allocator_);
 
+    // TODO(clalancette): We are doing the conversion at least twice; inside of
+    // IntraProcessManager::do_intra_process_publish_and_return_shared(), and here.
+    // We should just do it in the IntraProcessManager and return it here.
     auto unique_ros_msg = this->create_ros_message_unique_ptr();
     rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
 
