@@ -41,6 +41,7 @@ public:
   using pre_callback_t = std::function<void ()>;
   using post_callback_t = std::function<void (const rcl_time_jump_t &)>;
 
+  RCLCPP_PUBLIC
   JumpHandler(
     pre_callback_t pre_callback,
     post_callback_t post_callback,
