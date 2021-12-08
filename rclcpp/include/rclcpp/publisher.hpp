@@ -520,11 +520,7 @@ protected:
 
 
   template<typename T>
-  typename
-  std::enable_if_t<
-    rosidl_generator_traits::is_message<T>::value &&
-    std::is_same<T, ROSMessageType>::value, std::shared_ptr<const ROSMessageType>
-  >
+  std::shared_ptr<const ROSMessageType>
   do_intra_process_publish_and_return_shared(
     std::unique_ptr<PublishedType, PublishedTypeDeleter> msg)
   {
@@ -537,44 +533,13 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    return ipm->template do_intra_process_publish_and_return_shared<PublishedType,
-             AllocatorT>(
+    return ipm->template do_intra_process_publish_and_return_shared<MessageT, T, PublishedType,
+             ROSMessageType, AllocatorT, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator, ROSMessageTypeDeleter>(
       intra_process_publisher_id_,
       std::move(msg),
-      published_type_allocator_);
-  }
-
-  template<typename T>
-  typename
-  std::enable_if_t<
-    rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
-    std::is_same<T, PublishedType>::value, std::shared_ptr<const ROSMessageType>
-  >
-  do_intra_process_publish_and_return_shared(
-    std::unique_ptr<PublishedType, PublishedTypeDeleter> msg)
-  {
-    auto ipm = weak_ipm_.lock();
-    if (!ipm) {
-      throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
-    }
-    if (!msg) {
-      throw std::runtime_error("cannot publish msg which is a null pointer");
-    }
-
-    ipm->template do_intra_process_publish_and_return_shared<PublishedType,
-             AllocatorT>(
-      intra_process_publisher_id_,
-      std::move(msg),
-      published_type_allocator_);
-
-    // TODO(clalancette): We are doing the conversion at least twice; inside of
-    // IntraProcessManager::do_intra_process_publish_and_return_shared(), and here.
-    // We should just do it in the IntraProcessManager and return it here.
-    auto unique_ros_msg = this->create_ros_message_unique_ptr();
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *unique_ros_msg);
-
-    return unique_ros_msg;
+      published_type_allocator_,
+      ros_message_type_allocator_,
+      ros_message_type_deleter_);
   }
 
   /// Return a new unique_ptr using the ROSMessageType of the publisher.
