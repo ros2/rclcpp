@@ -22,7 +22,6 @@
 #include "composition_interfaces/srv/list_nodes.hpp"
 
 #include "rclcpp_components/component_manager.hpp"
-#include "rclcpp_components/component_manager_isolated.hpp"
 
 using namespace std::chrono_literals;
 
@@ -37,18 +36,11 @@ protected:
 
 // TODO(hidmic): split up tests once Node bring up/tear down races
 //               are solved https://github.com/ros2/rclcpp/issues/863
-void test_components_api(bool use_dedicated_executor)
+TEST_F(TestComponentManager, components_api)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   auto node = rclcpp::Node::make_shared("test_component_manager");
-  std::shared_ptr<rclcpp_components::ComponentManager> manager;
-  if (use_dedicated_executor) {
-    using ComponentManagerIsolated =
-      rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>;
-    manager = std::make_shared<ComponentManagerIsolated>(exec);
-  } else {
-    manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
-  }
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
 
   exec->add_node(manager);
   exec->add_node(node);
@@ -327,17 +319,5 @@ void test_components_api(bool use_dedicated_executor)
       EXPECT_EQ(result_unique_ids[3], 5u);
       EXPECT_EQ(result_unique_ids[4], 6u);
     }
-  }
-}
-
-TEST_F(TestComponentManager, components_api)
-{
-  {
-    SCOPED_TRACE("ComponentManager");
-    test_components_api(false);
-  }
-  {
-    SCOPED_TRACE("ComponentManagerIsolated");
-    test_components_api(true);
   }
 }

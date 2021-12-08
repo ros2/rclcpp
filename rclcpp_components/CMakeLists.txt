@@ -61,20 +61,9 @@ ament_target_dependencies(component_container_mt
   "rclcpp"
 )
 
-add_executable(
-  component_container_isolated
-  src/component_container_isolated.cpp
-)
-target_link_libraries(component_container_isolated component_manager)
-ament_target_dependencies(component_container_isolated
-  "rclcpp"
-)
-
-
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(component_container "stdc++fs")
   target_link_libraries(component_container_mt "stdc++fs")
-  target_link_libraries(component_container_isolated "stdc++fs")
 endif()
 
 if(BUILD_TESTING)
@@ -146,7 +135,7 @@ install(
 
 # Install executables
 install(
-  TARGETS component_container component_container_mt component_container_isolated
+  TARGETS component_container component_container_mt
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 

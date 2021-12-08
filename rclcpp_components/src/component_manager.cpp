@@ -167,22 +167,6 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
 }
 
 void
-ComponentManager::add_node_to_executor(uint64_t node_id)
-{
-  if (auto exec = executor_.lock()) {
-    exec->add_node(node_wrappers_[node_id].get_node_base_interface(), true);
-  }
-}
-
-void
-ComponentManager::remove_node_from_executor(uint64_t node_id)
-{
-  if (auto exec = executor_.lock()) {
-    exec->remove_node(node_wrappers_[node_id].get_node_base_interface());
-  }
-}
-
-void
 ComponentManager::on_load_node(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<LoadNode::Request> request,
@@ -230,9 +214,10 @@ ComponentManager::on_load_node(
         throw ComponentManagerException("Component constructor threw an exception");
       }
 
-      add_node_to_executor(node_id);
-
       auto node = node_wrappers_[node_id].get_node_base_interface();
+      if (auto exec = executor_.lock()) {
+        exec->add_node(node, true);
+      }
       response->full_node_name = node->get_fully_qualified_name();
       response->unique_id = node_id;
       response->success = true;
@@ -268,7 +253,9 @@ ComponentManager::on_unload_node(
     response->error_message = ss.str();
     RCLCPP_WARN(get_logger(), "%s", ss.str().c_str());
   } else {
-    remove_node_from_executor(request->unique_id);
+    if (auto exec = executor_.lock()) {
+      exec->remove_node(wrapper->second.get_node_base_interface());
+    }
     node_wrappers_.erase(wrapper);
     response->success = true;
   }
