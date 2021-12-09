@@ -19,7 +19,6 @@
 #include <string>
 
 #include "rclcpp/any_service_callback.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp/service.hpp"
 
 namespace rclcpp_lifecycle
@@ -58,17 +57,17 @@ public:
    * rclcpp::create_service().
    *
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of
-   * the setup. \param[in] service_name Name of the topic to publish to.
+   *   the setup.
+   * \param[in] service_name Name of the topic to publish to.
    * \param[in] any_callback User defined callback to call when a client request
-   * is received. \param[in] service_options options for the subscription.
+   *   is received.
+   * \param[in] service_options options for the subscription.
    */
   LifecycleService(
     std::shared_ptr<rcl_node_t> node_handle, const std::string & service_name,
     rclcpp::AnyServiceCallback<ServiceT> any_callback, rcl_service_options_t & service_options)
   : rclcpp::Service<ServiceT>(node_handle, service_name, any_callback, service_options),
-    enabled_(false),
-    should_log_(true),
-    logger_(rclcpp::get_logger("LifecycleService"))
+    enabled_(false)
   {
   }
 
@@ -79,17 +78,15 @@ public:
    * rclcpp::create_service().
    *
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of
-   * the setup. \param[in] service_handle service handle. \param[in]
-   * any_callback User defined callback to call when a client request is
-   * received.
+   *   the setup.
+   * \param[in] service_handle service handle.
+   * \param[in] any_callback User defined callback to call when a client request is
+   *   received.
    */
   LifecycleService(
     std::shared_ptr<rcl_node_t> node_handle, std::shared_ptr<rcl_service_t> service_handle,
     rclcpp::AnyServiceCallback<ServiceT> any_callback)
-  : rclcpp::Service<ServiceT>(node_handle, service_handle, any_callback),
-    enabled_(false),
-    should_log_(true),
-    logger_(rclcpp::get_logger("LifecycleService"))
+  : rclcpp::Service<ServiceT>(node_handle, service_handle, any_callback), enabled_(false)
   {
   }
 
@@ -100,17 +97,15 @@ public:
    * rclcpp::create_service().
    *
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of
-   * the setup. \param[in] service_handle service handle. \param[in]
-   * any_callback User defined callback to call when a client request is
-   * received.
+   *   the setup.
+   * \param[in] service_handle service handle.
+   * \param[in] any_callback User defined callback to call when a client request is
+   *   received.
    */
   LifecycleService(
     std::shared_ptr<rcl_node_t> node_handle, rcl_service_t * service_handle,
     rclcpp::AnyServiceCallback<ServiceT> any_callback)
-  : rclcpp::Service<ServiceT>(node_handle, service_handle, any_callback),
-    enabled_(false),
-    should_log_(true),
-    logger_(rclcpp::get_logger("LifecycleService"))
+  : rclcpp::Service<ServiceT>(node_handle, service_handle, any_callback), enabled_(false)
   {
   }
 
@@ -127,7 +122,6 @@ public:
   bool add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     if (!enabled_) {
-      log_service_not_enabled();
       return true;
     }
 
@@ -136,36 +130,12 @@ public:
 
   void on_activate() override {enabled_ = true;}
 
-  void on_deactivate() override
-  {
-    enabled_ = false;
-    should_log_ = true;
-  }
+  void on_deactivate() override {enabled_ = false;}
 
   bool is_activated() override {return enabled_;}
 
 private:
-  void log_service_not_enabled()
-  {
-    // Nothing to do if we are not meant to log
-    if (!should_log_) {
-      return;
-    }
-
-    // Log the message
-    RCLCPP_WARN(
-      logger_,
-      "Trying to wait for the service '%s', but the service "
-      "is not activated",
-      this->get_service_name());
-
-    // We stop logging until the flag gets enabled again
-    should_log_ = false;
-  }
-
   bool enabled_ = false;
-  bool should_log_ = true;
-  rclcpp::Logger logger_;
 };
 
 }  // namespace rclcpp_lifecycle
