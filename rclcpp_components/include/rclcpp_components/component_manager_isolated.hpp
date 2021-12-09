@@ -59,7 +59,6 @@ protected:
   /**
    * \param node_id  node_id of loaded component node in node_wrappers_
    */
-  RCLCPP_COMPONENTS_PUBLIC
   void
   add_node_to_executor(uint64_t node_id) override
   {
@@ -77,7 +76,6 @@ protected:
   /**
    * \param node_id  node_id of loaded component node in node_wrappers_
    */
-  RCLCPP_COMPONENTS_PUBLIC
   void
   remove_node_from_executor(uint64_t node_id) override
   {
