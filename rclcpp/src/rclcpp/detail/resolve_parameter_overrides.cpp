@@ -16,9 +16,11 @@
 
 #include <string>
 #include <map>
+#include <regex>
 #include <vector>
 
 #include "rcl_yaml_param_parser/parser.h"
+#include "rcpputils/find_and_replace.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/parameter_map.hpp"
@@ -51,18 +53,28 @@ rclcpp::detail::resolve_parameter_overrides(
         [params]() {
           rcl_yaml_node_struct_fini(params);
         });
+      // TODO(iuhilnehc-ynos) use map instead of unordered_map for ParameterMap
+      // to set param with contents of parameter file by order
       rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
 
-      // Enforce wildcard matching precedence
-      // TODO(cottsay) implement further wildcard matching
-      const std::array<std::string, 2> node_matching_names{"/**", node_fqn};
-      for (const auto & node_name : node_matching_names) {
-        if (initial_map.count(node_name) > 0) {
-          // Combine parameter yaml files, overwriting values in older ones
-          for (const rclcpp::Parameter & param : initial_map.at(node_name)) {
+      for (auto & item : initial_map) {
+        if (item.first == node_fqn) {
+          continue;
+        }
+        // Update the regular expression ["/*" -> "(/\\w+)" and "/**" -> "(/\\w+)*"]
+        std::string regex = rcpputils::find_and_replace(item.first, "/*", "(/\\w+)");
+        if (std::regex_match(node_fqn, std::regex(regex))) {
+          for (const rclcpp::Parameter & param : item.second) {
             result[param.get_name()] =
               rclcpp::ParameterValue(param.get_value_message());
           }
+        }
+      }
+      if (initial_map.count(node_fqn) > 0) {
+        // Combine parameter yaml files, overwriting values in older ones
+        for (const rclcpp::Parameter & param : initial_map.at(node_fqn)) {
+          result[param.get_name()] =
+            rclcpp::ParameterValue(param.get_value_message());
         }
       }
     }
