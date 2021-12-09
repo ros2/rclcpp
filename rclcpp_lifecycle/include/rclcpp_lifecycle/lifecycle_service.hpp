@@ -122,6 +122,8 @@ public:
   bool add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     if (!enabled_) {
+      // The memory strategy only expects false in case of "failure",
+      // so it returns true even if no service is added.
       return true;
     }
 

@@ -15,7 +15,6 @@
 #ifndef RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 
-#include <map>
 #include <memory>
 #include <vector>
 
@@ -224,7 +223,7 @@ public:
     }
 
     for (auto service : service_handles_) {
-      if (service->add_to_wait_set(wait_set) == false) {
+      if (!service->add_to_wait_set(wait_set)) {
         return false;
       }
     }
