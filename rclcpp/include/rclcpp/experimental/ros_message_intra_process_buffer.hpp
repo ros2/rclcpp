@@ -15,16 +15,13 @@
 #ifndef RCLCPP__EXPERIMENTAL__ROS_MESSAGE_INTRA_PROCESS_BUFFER_HPP_
 #define RCLCPP__EXPERIMENTAL__ROS_MESSAGE_INTRA_PROCESS_BUFFER_HPP_
 
-#include <functional>
-#include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <utility>
 
 #include "rcl/error_handling.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/context.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "tracetools/tracetools.h"
 
@@ -36,15 +33,19 @@ namespace experimental
 template<
   typename RosMessageT,
   typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<RosMessageT>
+  typename Deleter = std::default_delete<void>
 >
 class ROSMessageIntraProcessBuffer : public SubscriptionIntraProcessBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ROSMessageIntraProcessBuffer)
 
+  using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<RosMessageT, Alloc>;
+  using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
+  using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, RosMessageT>;
+
   using ConstMessageSharedPtr = std::shared_ptr<const RosMessageT>;
-  using MessageUniquePtr = std::unique_ptr<RosMessageT, Deleter>;
+  using MessageUniquePtr = std::unique_ptr<RosMessageT, ROSMessageTypeDeleter>;
 
   ROSMessageIntraProcessBuffer(
     rclcpp::Context::SharedPtr context,

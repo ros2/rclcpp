@@ -276,7 +276,7 @@ public:
 
   /// Take the next message from the inter-process subscription.
   /**
-   * This verison takes a SubscribedType which is different frmo the
+   * This version takes a SubscribedType which is different from the
    * ROSMessageType when a rclcpp::TypeAdapter is in used.
    *
    * \sa take(ROSMessageType &, rclcpp::MessageInfo &)

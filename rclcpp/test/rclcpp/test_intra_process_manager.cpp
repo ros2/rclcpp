@@ -246,6 +246,18 @@ public:
     buffer->add(std::move(msg));
   }
 
+  void
+  provide_intra_process_data(std::shared_ptr<const MessageT> msg)
+  {
+    buffer->add(msg);
+  }
+
+  void
+  provide_intra_process_data(std::unique_ptr<MessageT> msg)
+  {
+    buffer->add(std::move(msg));
+  }
+
   std::uintptr_t
   pop()
   {

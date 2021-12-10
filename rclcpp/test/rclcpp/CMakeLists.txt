@@ -63,13 +63,13 @@ if(TARGET test_any_service_callback)
   )
   target_link_libraries(test_any_service_callback ${PROJECT_NAME})
 endif()
-# ament_add_gtest(test_any_subscription_callback test_any_subscription_callback.cpp)
-# if(TARGET test_any_subscription_callback)
-#   ament_target_dependencies(test_any_subscription_callback
-#     "test_msgs"
-#   )
-#   target_link_libraries(test_any_subscription_callback ${PROJECT_NAME})
-# endif()
+ament_add_gtest(test_any_subscription_callback test_any_subscription_callback.cpp)
+if(TARGET test_any_subscription_callback)
+  ament_target_dependencies(test_any_subscription_callback
+    "test_msgs"
+  )
+  target_link_libraries(test_any_subscription_callback ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_client test_client.cpp)
 if(TARGET test_client)
   ament_target_dependencies(test_client
@@ -135,24 +135,24 @@ ament_add_gtest(
 if(TARGET test_future_return_code)
   target_link_libraries(test_future_return_code ${PROJECT_NAME})
 endif()
-# ament_add_gmock(test_intra_process_manager test_intra_process_manager.cpp)
-# if(TARGET test_intra_process_manager)
-#   ament_target_dependencies(test_intra_process_manager
-#     "rcl"
-#     "rcl_interfaces"
-#     "rmw"
-#     "rosidl_runtime_cpp"
-#     "rosidl_typesupport_cpp"
-#   )
-#   target_link_libraries(test_intra_process_manager ${PROJECT_NAME})
-# endif()
-# ament_add_gmock(test_intra_process_manager_with_allocators test_intra_process_manager_with_allocators.cpp)
-# if(TARGET test_intra_process_manager_with_allocators)
-#   ament_target_dependencies(test_intra_process_manager_with_allocators
-#     "test_msgs"
-#   )
-#   target_link_libraries(test_intra_process_manager_with_allocators ${PROJECT_NAME})
-# endif()
+ament_add_gmock(test_intra_process_manager test_intra_process_manager.cpp)
+if(TARGET test_intra_process_manager)
+  ament_target_dependencies(test_intra_process_manager
+    "rcl"
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+  )
+  target_link_libraries(test_intra_process_manager ${PROJECT_NAME})
+endif()
+ament_add_gmock(test_intra_process_manager_with_allocators test_intra_process_manager_with_allocators.cpp)
+if(TARGET test_intra_process_manager_with_allocators)
+  ament_target_dependencies(test_intra_process_manager_with_allocators
+    "test_msgs"
+  )
+  target_link_libraries(test_intra_process_manager_with_allocators ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_ring_buffer_implementation test_ring_buffer_implementation.cpp)
 if(TARGET test_ring_buffer_implementation)
   ament_target_dependencies(test_ring_buffer_implementation

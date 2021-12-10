@@ -32,14 +32,15 @@
 #include <typeinfo>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
-#include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
+#include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/experimental/subscription_intra_process_buffer.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/publisher_base.hpp"
+#include "rclcpp/type_adapter.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -178,24 +179,16 @@ public:
    */
   template<
     typename MessageT,
-    typename PublishedType,
-    typename ROSMessageType,
-    typename Alloc,
-    typename Deleter,
-    typename ROSMessageTypeAllocatorTraits,
-    typename ROSMessageTypeAllocator,
-    typename ROSMessageTypeDeleter,
-    typename PublishedTypeAllocator
-  >
+    typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
   void
   do_intra_process_publish(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<PublishedType, Deleter> message,
-    PublishedTypeAllocator & published_type_allocator,
-    ROSMessageTypeAllocator & ros_message_type_allocator,
-    ROSMessageTypeDeleter & ros_message_type_deleter)
+    std::unique_ptr<MessageT, Deleter> message,
+    typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator)
   {
-    std::cout << "do_intra_process_publish --- " << std::endl;
+    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+    using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -211,219 +204,89 @@ public:
 
     if (sub_ids.take_ownership_subscriptions.empty()) {
       // None of the buffers require ownership, so we promote the pointer
-      std::shared_ptr<PublishedType> msg = std::move(message);
+      std::shared_ptr<MessageT> msg = std::move(message);
 
-      this->template add_shared_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-        Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator>(
-        msg,
-        sub_ids.take_shared_subscriptions,
-        ros_message_type_allocator);
+      this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
+        msg, sub_ids.take_shared_subscriptions);
+    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
+      sub_ids.take_shared_subscriptions.size() <= 1)
+    {
+      // Merge the two vector of ids into a unique one
+      std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
+      concatenated_vector.insert(
+        concatenated_vector.end(),
+        sub_ids.take_ownership_subscriptions.begin(),
+        sub_ids.take_ownership_subscriptions.end());
+
+      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+        std::move(message),
+        concatenated_vector,
+        allocator);
+    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
+      sub_ids.take_shared_subscriptions.size() > 1)
+    {
+      // Construct a new shared pointer from the message
+      // for the buffers that do not require ownership
+      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(allocator, *message);
+
+      this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
+        shared_msg, sub_ids.take_shared_subscriptions);
+      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+        std::move(message), sub_ids.take_ownership_subscriptions, allocator);
+    }
+  }
+
+  template<
+    typename MessageT,
+    typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
+  std::shared_ptr<const MessageT>
+  do_intra_process_publish_and_return_shared(
+    uint64_t intra_process_publisher_id,
+    std::unique_ptr<MessageT, Deleter> message,
+    typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator)
+  {
+    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+    using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
+
+    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+
+    auto publisher_it = pub_to_subs_.find(intra_process_publisher_id);
+    if (publisher_it == pub_to_subs_.end()) {
+      // Publisher is either invalid or no longer exists.
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Calling do_intra_process_publish for invalid or no longer existing publisher id");
+      return nullptr;
+    }
+    const auto & sub_ids = publisher_it->second;
+
+    if (sub_ids.take_ownership_subscriptions.empty()) {
+      // If there are no owning, just convert to shared.
+      std::shared_ptr<MessageT> shared_msg = std::move(message);
+      if (!sub_ids.take_shared_subscriptions.empty()) {
+        this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
+          shared_msg, sub_ids.take_shared_subscriptions);
+      }
+      return shared_msg;
     } else {
-      if (sub_ids.take_shared_subscriptions.size() <= 1) {
-        // There is at maximum 1 buffer that does not require ownership.
-        // So this case is equivalent to all the buffers requiring ownership
+      // Construct a new shared pointer from the message for the buffers that
+      // do not require ownership and to return.
+      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(allocator, *message);
 
-        std::cout << " to all the buffers requiring ownership --- " << std::endl;
-
-        std::cout << "message has type : " << typeid(message).name() << std::endl;
-
-        // Merge the two vector of ids into a unique one
-        std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
-        concatenated_vector.insert(
-          concatenated_vector.end(),
-          sub_ids.take_ownership_subscriptions.begin(),
-          sub_ids.take_ownership_subscriptions.end());
-
-        this->template add_owned_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator, ROSMessageTypeDeleter,
-          PublishedTypeAllocator>(
-          std::move(message),
-          concatenated_vector,
-          published_type_allocator,
-          ros_message_type_allocator,
-          ros_message_type_deleter);
-      } else {
-        // Construct a new shared pointer from the message
-        // for the buffers that do not require ownership
-        auto shared_msg = std::allocate_shared<PublishedType, PublishedTypeAllocator>(
-          published_type_allocator,
-          *message);
-
-        this->template add_shared_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator>(
+      if (!sub_ids.take_shared_subscriptions.empty()) {
+        this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter>(
           shared_msg,
-          sub_ids.take_shared_subscriptions,
-          ros_message_type_allocator);
-        this->template add_owned_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator, ROSMessageTypeDeleter,
-          PublishedTypeAllocator>(
+          sub_ids.take_shared_subscriptions);
+      }
+      if (!sub_ids.take_ownership_subscriptions.empty()) {
+        this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
           std::move(message),
           sub_ids.take_ownership_subscriptions,
-          published_type_allocator,
-          ros_message_type_allocator,
-          ros_message_type_deleter);
-      }
-    }
-  }
-
-  template<
-    typename MessageT,
-    typename T,
-    typename PublishedType,
-    typename ROSMessageType,
-    typename Alloc,
-    typename Deleter,
-    typename ROSMessageTypeAllocatorTraits,
-    typename ROSMessageTypeAllocator,
-    typename ROSMessageTypeDeleter,
-    typename PublishedTypeAllocator
-  >
-  typename
-  std::enable_if_t<
-    rosidl_generator_traits::is_message<T>::value &&
-    std::is_same<T, ROSMessageType>::value, std::shared_ptr<const ROSMessageType>
-  >
-  do_intra_process_publish_and_return_shared(
-    uint64_t intra_process_publisher_id,
-    std::unique_ptr<PublishedType, Deleter> message,
-    PublishedTypeAllocator & published_type_allocator,
-    ROSMessageTypeAllocator & ros_message_type_allocator,
-    ROSMessageTypeDeleter & ros_message_type_deleter)
-  {
-    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
-
-    auto publisher_it = pub_to_subs_.find(intra_process_publisher_id);
-    if (publisher_it == pub_to_subs_.end()) {
-      // Publisher is either invalid or no longer exists.
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling do_intra_process_publish for invalid or no longer existing publisher id");
-      return nullptr;
-    }
-    const auto & sub_ids = publisher_it->second;
-
-    if (sub_ids.take_ownership_subscriptions.empty()) {
-      // If there are no owning, just convert to shared.
-      std::shared_ptr<PublishedType> shared_msg = std::move(message);
-      if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator>(
-          shared_msg,
-          sub_ids.take_shared_subscriptions,
-          ros_message_type_allocator);
+          allocator);
       }
       return shared_msg;
-    } else {
-      // Construct a new shared pointer from the message for the buffers that
-      // do not require ownership and to return.
-      auto shared_msg = std::allocate_shared<PublishedType, PublishedTypeAllocator>(
-        published_type_allocator,
-        *message);
-
-      if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator>(
-          shared_msg,
-          sub_ids.take_shared_subscriptions,
-          ros_message_type_allocator);
-      }
-
-      this->template add_owned_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-        Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator, ROSMessageTypeDeleter,
-        PublishedTypeAllocator>(
-        std::move(message),
-        sub_ids.take_ownership_subscriptions,
-        published_type_allocator,
-        ros_message_type_allocator,
-        ros_message_type_deleter);
-
-      return shared_msg;
     }
-  }
-
-  template<
-    typename MessageT,
-    typename T,
-    typename PublishedType,
-    typename ROSMessageType,
-    typename Alloc,
-    typename Deleter,
-    typename ROSMessageTypeAllocatorTraits,
-    typename ROSMessageTypeAllocator,
-    typename ROSMessageTypeDeleter,
-    typename PublishedTypeAllocator
-  >
-  typename
-  std::enable_if_t<
-    rclcpp::TypeAdapter<MessageT>::is_specialized::value &&
-    std::is_same<T, PublishedType>::value, std::shared_ptr<const ROSMessageType>
-  >
-  do_intra_process_publish_and_return_shared(
-    uint64_t intra_process_publisher_id,
-    std::unique_ptr<PublishedType, Deleter> message,
-    PublishedTypeAllocator & published_type_allocator,
-    ROSMessageTypeAllocator & ros_message_type_allocator,
-    ROSMessageTypeDeleter & ros_message_type_deleter)
-  {
-    auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator, 1);
-    ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator, ptr);
-    auto unique_ros_msg = std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(
-      ptr,
-      ros_message_type_deleter);
-    rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*message, *unique_ros_msg);
-
-    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
-
-    auto publisher_it = pub_to_subs_.find(intra_process_publisher_id);
-    if (publisher_it == pub_to_subs_.end()) {
-      // Publisher is either invalid or no longer exists.
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling do_intra_process_publish for invalid or no longer existing publisher id");
-      return nullptr;
-    }
-    const auto & sub_ids = publisher_it->second;
-
-    if (sub_ids.take_ownership_subscriptions.empty()) {
-      // If there are no owning, just convert to shared.
-      std::shared_ptr<PublishedType> shared_msg = std::move(message);
-      if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator>(
-          shared_msg,
-          sub_ids.take_shared_subscriptions,
-          ros_message_type_allocator);
-      }
-    } else {
-      // Construct a new shared pointer from the message for the buffers that
-      // do not require ownership and to return.
-      auto shared_msg = std::allocate_shared<PublishedType, PublishedTypeAllocator>(
-        published_type_allocator,
-        *message);
-
-      if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-          Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator>(
-          shared_msg,
-          sub_ids.take_shared_subscriptions,
-          ros_message_type_allocator);
-      }
-
-      this->template add_owned_msg_to_buffers<MessageT, PublishedType, ROSMessageType, Alloc,
-        Deleter, ROSMessageTypeAllocatorTraits, ROSMessageTypeAllocator, ROSMessageTypeDeleter,
-        PublishedTypeAllocator>(
-        std::move(message),
-        sub_ids.take_ownership_subscriptions,
-        published_type_allocator,
-        ros_message_type_allocator,
-        ros_message_type_deleter);
-    }
-
-    // TODO(clalancette): depending on how the publisher and subscriber are setup, we may end
-    // up doing a conversion more than once; in this function and down in
-    // add_{shared,owned}_msg_to_buffers().  We should probably push this down further to avoid
-    // that double conversion.
-    return unique_ros_msg;
   }
 
   /// Return true if the given rmw_gid_t matches any stored Publishers.
@@ -473,19 +336,16 @@ private:
 
   template<
     typename MessageT,
-    typename PublishedType,
-    typename ROSMessageType,
     typename Alloc,
-    typename Deleter,
-    typename ROSMessageTypeAllocatorTraits,
-    typename ROSMessageTypeAllocator
-  >
+    typename Deleter>
   void
   add_shared_msg_to_buffers(
-    std::shared_ptr<const PublishedType> message,
-    std::vector<uint64_t> subscription_ids,
-    ROSMessageTypeAllocator & ros_message_type_allocator)
+    std::shared_ptr<const MessageT> message,
+    std::vector<uint64_t> subscription_ids)
   {
+    using PublishedType = typename rclcpp::TypeAdapter<MessageT>::custom_type;
+    using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
+
     for (auto id : subscription_ids) {
       auto subscription_it = subscriptions_.find(id);
       if (subscription_it == subscriptions_.end()) {
@@ -494,8 +354,8 @@ private:
       auto subscription_base = subscription_it->second.lock();
       if (subscription_base) {
         auto subscription = std::dynamic_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, PublishedType, Alloc,
-          Deleter>>(subscription_base);
+          rclcpp::experimental::SubscriptionIntraProcessBuffer<PublishedType, Alloc, Deleter>
+          >(subscription_base);
         if (nullptr == subscription) {
           auto ros_message_subscription = std::dynamic_pointer_cast<
             rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
@@ -504,15 +364,13 @@ private:
           if (nullptr == ros_message_subscription) {
             throw std::runtime_error(
                     "failed to dynamic cast SubscriptionIntraProcessBase to "
-                    "SubscriptionIntraProcessBuffer, which "
+                    "SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>, which "
                     "can happen when the publisher and subscription use different "
                     "allocator types, which is not supported");
           } else {
             if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
-              auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator, 1);
-              ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator, ptr);
-              auto ros_msg = std::shared_ptr<ROSMessageType>(ptr);
-              rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*message, *ros_msg);
+              ROSMessageType ros_msg;
+              rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*message, ros_msg);
               ros_message_subscription->provide_intra_process_message(ros_msg);
             } else {
               ros_message_subscription->provide_intra_process_message(message);
@@ -529,29 +387,18 @@ private:
 
   template<
     typename MessageT,
-    typename PublishedType,
-    typename ROSMessageType,
-    typename Alloc,
-    typename Deleter,
-    typename ROSMessageTypeAllocatorTraits,
-    typename ROSMessageTypeAllocator,
-    typename ROSMessageTypeDeleter,
-    typename PublishedTypeAllocator
-  >
+    typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
   void
   add_owned_msg_to_buffers(
-    std::unique_ptr<PublishedType, Deleter> message,
+    std::unique_ptr<MessageT, Deleter> message,
     std::vector<uint64_t> subscription_ids,
-    PublishedTypeAllocator & published_type_allocator,
-    ROSMessageTypeAllocator & ros_message_type_allocator,
-    ROSMessageTypeDeleter & ros_message_type_deleter)
+    typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator)
   {
-    std::cout << "add owned msg to buffers" << std::endl;
-
-    std::cout << "message has type : " << typeid(message).name() << std::endl;
-
-    using MessageAllocTraits = allocator::AllocRebind<PublishedType, Alloc>;
-    using MessageUniquePtr = std::unique_ptr<PublishedType, Deleter>;
+    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+    using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
+    using PublishedType = typename rclcpp::TypeAdapter<MessageT>::custom_type;
+    using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
 
     for (auto it = subscription_ids.begin(); it != subscription_ids.end(); it++) {
       auto subscription_it = subscriptions_.find(*it);
@@ -559,16 +406,11 @@ private:
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
       }
       auto subscription_base = subscription_it->second.lock();
-      std::cout << "Subscription Base?" << std::endl;
       if (subscription_base) {
-        std::cout << "Typed Subscription" << std::endl;
-
         auto subscription = std::dynamic_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcessBuffer<MessageT, PublishedType, Alloc,
-          Deleter>>(subscription_base);
+          rclcpp::experimental::SubscriptionIntraProcessBuffer<PublishedType, Alloc, Deleter>
+          >(subscription_base);
         if (nullptr == subscription) {
-          std::cout << "ROSMessage Subscription" << std::endl;
-
           auto ros_message_subscription = std::dynamic_pointer_cast<
             rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
             >(subscription_base);
@@ -576,31 +418,28 @@ private:
           if (nullptr == ros_message_subscription) {
             throw std::runtime_error(
                     "failed to dynamic cast SubscriptionIntraProcessBase to "
-                    "SubscriptionIntraProcessBuffer, which "
+                    "SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>, which "
                     "can happen when the publisher and subscription use different "
                     "allocator types, which is not supported");
           } else {
-            std::cout << "ROSMessage TypeAdapted Subscription" << std::endl;
-
             if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
-              auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator, 1);
-              ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator, ptr);
-              auto ros_msg = std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(
-                ptr,
-                ros_message_type_deleter);
-              rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*message, *ros_msg);
+              using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;
+              auto ptr = ROSMessageTypeAllocatorTraits::allocate(allocator, 1);
+              ROSMessageTypeAllocatorTraits::construct(allocator, ptr);
+              Deleter deleter = message.get_deleter();
+              auto ros_msg = std::unique_ptr<ROSMessageType, Deleter>(ptr, deleter);
+              rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(message, ros_msg);
               ros_message_subscription->provide_intra_process_message(std::move(ros_msg));
             } else {
               if (std::next(it) == subscription_ids.end()) {
                 // If this is the last subscription, give up ownership
-
                 ros_message_subscription->provide_intra_process_message(std::move(message));
               } else {
                 // Copy the message since we have additional subscriptions to serve
                 MessageUniquePtr copy_message;
                 Deleter deleter = message.get_deleter();
-                auto ptr = MessageAllocTraits::allocate(published_type_allocator, 1);
-                MessageAllocTraits::construct(published_type_allocator, ptr, *message);
+                auto ptr = MessageAllocTraits::allocate(allocator, 1);
+                MessageAllocTraits::construct(allocator, ptr, *message);
                 copy_message = MessageUniquePtr(ptr, deleter);
 
                 ros_message_subscription->provide_intra_process_message(std::move(copy_message));
@@ -608,7 +447,6 @@ private:
             }
           }
         } else {
-          std::cout << "Typed Subscription" << std::endl;
           if (std::next(it) == subscription_ids.end()) {
             // If this is the last subscription, give up ownership
             subscription->provide_intra_process_data(std::move(message));
@@ -616,15 +454,14 @@ private:
             // Copy the message since we have additional subscriptions to serve
             MessageUniquePtr copy_message;
             Deleter deleter = message.get_deleter();
-            auto ptr = MessageAllocTraits::allocate(published_type_allocator, 1);
-            MessageAllocTraits::construct(published_type_allocator, ptr, *message);
+            auto ptr = MessageAllocTraits::allocate(allocator, 1);
+            MessageAllocTraits::construct(allocator, ptr, *message);
             copy_message = MessageUniquePtr(ptr, deleter);
 
             subscription->provide_intra_process_data(std::move(copy_message));
           }
         }
       } else {
-        std::cout << "Erasing subscription" << std::endl;
         subscriptions_.erase(subscription_it);
       }
     }

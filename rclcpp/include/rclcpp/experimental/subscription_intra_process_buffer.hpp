@@ -18,7 +18,6 @@
 #include <rmw/rmw.h>
 
 #include <functional>
-#include <iostream> //TODO remove
 #include <map>
 #include <memory>
 #include <string>
@@ -43,7 +42,6 @@ namespace experimental
 {
 
 template<
-  typename MessageT,
   typename SubscribedType,
   typename Alloc = std::allocator<void>,
   typename Deleter = std::default_delete<SubscribedType>,
@@ -69,7 +67,7 @@ public:
   using MessageUniquePtr = std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>;
 
   using ConstDataSharedPtr = std::shared_ptr<const SubscribedType>;
-  using DataUniquePtr = std::unique_ptr<SubscribedType, SubscribedTypeDeleter>;
+  using SubscribedTypeUniquePtr = std::unique_ptr<SubscribedType, SubscribedTypeDeleter>;
 
   using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     SubscribedType,
@@ -83,9 +81,12 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, ROSMessageTypeDeleter>(context, topic_name,
-      qos_profile)
+  : ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>(context, topic_name,
+      qos_profile),
+    subscribed_type_allocator_(*allocator)
   {
+    allocator::set_allocator_for_deleter(&subscribed_type_deleter_, &subscribed_type_allocator_);
+
     // Create the intra-process buffer.
     buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc,
         SubscribedTypeDeleter>(
@@ -101,52 +102,55 @@ public:
     return buffer_->has_data();
   }
 
+  SubscribedTypeUniquePtr
+  convert_ros_message_to_subscribed_type_unique_ptr(const ROSMessageType & msg)
+  {
+    if constexpr (!std::is_same<SubscribedType, ROSMessageType>::value) {
+      auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
+      SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
+      rclcpp::TypeAdapter<SubscribedType, ROSMessageType>::convert_to_custom(msg, *ptr);
+      return SubscribedTypeUniquePtr(ptr, subscribed_type_deleter_);
+    } else {
+      throw std::runtime_error(
+              "convert_ros_message_to_subscribed_type_unique_ptr "
+              "unexpectedly called without TypeAdapter");
+    }
+  }
+
   void
   provide_intra_process_message(ConstMessageSharedPtr message)
   {
-    std::cout << "--------------Provide Intra Process Message (ConstMessageSharedPtr)" << std::endl;
-
-    if constexpr (!rclcpp::TypeAdapter<SubscribedType>::is_specialized::value) {
+    if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
       buffer_->add_shared(std::move(message));
       trigger_guard_condition();
     } else {
-      // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
-      // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr, *message);
-      // buffer_->add_shared(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(
-      //   ptr, subscribed_type_deleter_));
-      // trigger_guard_condition();
+      buffer_->add_shared(convert_ros_message_to_subscribed_type_unique_ptr(*message));
+      trigger_guard_condition();
     }
   }
 
   void
   provide_intra_process_message(MessageUniquePtr message)
   {
-    std::cout << "--------------Provide Intra Process Message (MessageUniquePtr)" << std::endl;
-    if constexpr (!rclcpp::TypeAdapter<SubscribedType>::is_specialized::value) {
+    if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
       buffer_->add_unique(std::move(message));
       trigger_guard_condition();
     } else {
-      // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
-      // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
-      // rclcpp::TypeAdapter<SubscribedType>::convert_to_custom(*message, *ptr);
-      // buffer_->add_unique(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(
-      //   ptr, subscribed_type_deleter_));
-      // trigger_guard_condition();
+      buffer_->add_unique(convert_ros_message_to_subscribed_type_unique_ptr(*message));
+      trigger_guard_condition();
     }
   }
 
   void
   provide_intra_process_data(ConstDataSharedPtr message)
   {
-    std::cout << "--------------Provide Intra Process DATA (ConstDataSharedPtr)" << std::endl;
     buffer_->add_shared(std::move(message));
     trigger_guard_condition();
   }
 
   void
-  provide_intra_process_data(DataUniquePtr message)
+  provide_intra_process_data(SubscribedTypeUniquePtr message)
   {
-    std::cout << "--------------Provide Intra Process DATA (DataUniquePtr)" << std::endl;
     buffer_->add_unique(std::move(message));
     trigger_guard_condition();
   }
@@ -165,6 +169,8 @@ protected:
   }
 
   BufferUniquePtr buffer_;
+  SubscribedTypeAllocator subscribed_type_allocator_;
+  SubscribedTypeDeleter subscribed_type_deleter_;
 };
 
 }  // namespace experimental
