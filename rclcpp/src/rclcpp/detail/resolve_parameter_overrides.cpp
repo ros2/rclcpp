@@ -53,14 +53,9 @@ rclcpp::detail::resolve_parameter_overrides(
         [params]() {
           rcl_yaml_node_struct_fini(params);
         });
-      // TODO(iuhilnehc-ynos) use map instead of unordered_map for ParameterMap
-      // to set param with contents of parameter file by order
       rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
 
       for (auto & item : initial_map) {
-        if (item.first == node_fqn) {
-          continue;
-        }
         // Update the regular expression ["/*" -> "(/\\w+)" and "/**" -> "(/\\w+)*"]
         std::string regex = rcpputils::find_and_replace(item.first, "/*", "(/\\w+)");
         if (std::regex_match(node_fqn, std::regex(regex))) {
@@ -68,13 +63,6 @@ rclcpp::detail::resolve_parameter_overrides(
             result[param.get_name()] =
               rclcpp::ParameterValue(param.get_value_message());
           }
-        }
-      }
-      if (initial_map.count(node_fqn) > 0) {
-        // Combine parameter yaml files, overwriting values in older ones
-        for (const rclcpp::Parameter & param : initial_map.at(node_fqn)) {
-          result[param.get_name()] =
-            rclcpp::ParameterValue(param.get_value_message());
         }
       }
     }

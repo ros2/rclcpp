@@ -19,7 +19,7 @@
 #include <rcl_yaml_param_parser/types.h>
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
@@ -31,7 +31,7 @@ namespace rclcpp
 {
 
 /// A map of fully qualified node names to a list of parameters
-using ParameterMap = std::unordered_map<std::string, std::vector<Parameter>>;
+using ParameterMap = std::map<std::string, std::vector<Parameter>>;
 
 /// Convert parameters from rcl_yaml_param_parser into C++ class instances.
 /// \param[in] c_params C structures containing parameters for multiple nodes.
