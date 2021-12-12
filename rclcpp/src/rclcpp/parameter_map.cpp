@@ -69,7 +69,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
 
     const rcl_node_params_descriptors_t * const c_param_descriptors_node =
       &(c_params->descriptors[n]);
-    for (size_t p = 0; p < c_param_descriptors_node->num_params; ++p) {
+    for (size_t p = 0; p < c_param_descriptors_node->num_descriptors; ++p) {
       const char * const c_param_name = c_param_descriptors_node->parameter_names[p];
       if (NULL == c_param_name) {
         std::string message(
@@ -78,7 +78,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
       }
       const rcl_param_descriptor_t * const c_param_descriptor =
         &(c_param_descriptors_node->parameter_descriptors[p]);
-      params[c_param_name].descriptor = parameter_descriptor_from(c_param_descriptor);
+      params[c_param_name].descriptor = parameter_descriptor_from(c_param_name, c_param_descriptor);
     }
   }
   return parameters;
@@ -144,15 +144,17 @@ rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
 }
 
 ParameterDescriptor
-rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_descriptor)
+rclcpp::parameter_descriptor_from(
+  const char * const name,
+  const rcl_param_descriptor_t * const c_param_descriptor)
 {
   if (NULL == c_param_descriptor) {
     throw InvalidParameterValueException("Passed argument is NULL");
   }
   ParameterDescriptor p;
 
-  if (c_param_descriptor->name) {
-    p.name = std::string(c_param_descriptor->name);
+  if (name) {
+    p.name = std::string(name);
   }
   if (c_param_descriptor->type) {
     p.type = *(c_param_descriptor->type);
@@ -165,6 +167,10 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
   }
   if (c_param_descriptor->read_only) {
     p.read_only = *(c_param_descriptor->read_only);
+  }
+
+  if (c_param_descriptor->dynamic_typing) {
+    p.dynamic_typing = *(c_param_descriptor->dynamic_typing);
   }
 
   if (c_param_descriptor->min_value_int || c_param_descriptor->max_value_int ||
@@ -191,7 +197,7 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
       i.step = *(c_param_descriptor->step_int);
     }
     p.integer_range.push_back(i);
-  } else if (
+  } else if ( // NOLINT
     c_param_descriptor->min_value_double ||
     c_param_descriptor->max_value_double ||
     c_param_descriptor->step_double)

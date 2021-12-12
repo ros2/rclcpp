@@ -104,10 +104,13 @@ NodeParameters::NodeParameters(
   if (automatically_declare_parameters_from_overrides) {
     for (const auto & pair : this->get_parameter_overrides()) {
       if (!this->has_parameter(pair.first)) {
+        rcl_interfaces::msg::ParameterDescriptor descriptor;
+        descriptor = pair.second.descriptor;
+        descriptor.dynamic_typing = true;
         this->declare_parameter(
           pair.first,
           pair.second.value,
-          pair.second.descriptor,
+          descriptor,
           true);
       }
     }
@@ -350,23 +353,11 @@ __declare_parameter_common(
   // If descriptor override only, don't override parameter value
 
   if (!ignore_override && overrides_it != overrides.end()) {
-    auto has_parameter_override = false;
-    auto has_descriptor_override = false;
-
     if (overrides_it->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      has_parameter_override = true;
+      initial_value = &overrides_it->second.value;
     }
     if (overrides_it->second.descriptor.name != "") {
-      has_descriptor_override = true;
-    }
-
-    if (has_parameter_override && has_descriptor_override) {
-      initial_value = &overrides_it->second.value;
-      parameter_infos.at(name).descriptor = overrides_it->second.descriptor;
-    } else if (has_parameter_override) {
-      initial_value = &overrides_it->second.value;
-    } else if (has_descriptor_override) {
-      parameter_infos.at(name).descriptor = overrides_it->second.descriptor;
+      parameter_infos[name].descriptor = overrides_it->second.descriptor;
     }
   }
 
