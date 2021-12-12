@@ -230,6 +230,31 @@ public:
     typename AllocatorT = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
     typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType>
+  [[deprecated("use another overloaded method create_subscription instead")]]
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat
+  );
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] callback The user-defined callback function.
+   * \param[in] qos The quality of service for this subscription.
+   * \param[in] options The subscription options for this subscription.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
+    typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -237,6 +262,7 @@ public:
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
     create_default_subscription_options<AllocatorT>(),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
     typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
       MessageMemoryStrategyT::create_default()
     )

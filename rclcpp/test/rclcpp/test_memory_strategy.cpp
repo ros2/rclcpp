@@ -343,11 +343,9 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
       const rclcpp::QoS qos(10);
 
       rclcpp::SubscriptionOptions subscription_options;
-      subscription_options.callback_group = callback_group;
-
       subscription = node->create_subscription<
         test_msgs::msg::Empty, decltype(subscription_callback)>(
-        "topic", qos, std::move(subscription_callback), subscription_options);
+        "topic", qos, std::move(subscription_callback), subscription_options, callback_group);
       weak_groups_to_nodes.insert(
         std::pair<rclcpp::CallbackGroup::WeakPtr,
         rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(

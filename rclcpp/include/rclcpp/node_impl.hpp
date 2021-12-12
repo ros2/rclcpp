@@ -102,6 +102,32 @@ Node::create_subscription(
     qos,
     std::forward<CallbackT>(callback),
     options,
+    options.callback_group,
+    msg_mem_strat);
+}
+
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename SubscriptionT,
+  typename MessageMemoryStrategyT>
+std::shared_ptr<SubscriptionT>
+Node::create_subscription(
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
+{
+  return rclcpp::create_subscription<MessageT>(
+    *this,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    group,
     msg_mem_strat);
 }
 
@@ -177,7 +203,8 @@ Node::create_generic_subscription(
   const std::string & topic_type,
   const rclcpp::QoS & qos,
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_generic_subscription(
     node_topics_,
@@ -185,7 +212,8 @@ Node::create_generic_subscription(
     topic_type,
     qos,
     std::move(callback),
-    options
+    options,
+    group
   );
 }
 

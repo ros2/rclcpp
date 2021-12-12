@@ -79,6 +79,32 @@ LifecycleNode::create_subscription(
     qos,
     std::forward<CallbackT>(callback),
     options,
+    options.callback_group,
+    msg_mem_strat);
+}
+
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename SubscriptionT,
+  typename MessageMemoryStrategyT>
+std::shared_ptr<SubscriptionT>
+LifecycleNode::create_subscription(
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
+{
+  return rclcpp::create_subscription<MessageT>(
+    *this,
+    topic_name,
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    group,
     msg_mem_strat);
 }
 

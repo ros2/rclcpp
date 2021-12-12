@@ -373,7 +373,6 @@ private:
         rclcpp::CallbackGroupType::MutuallyExclusive,
         false
       );
-      options.callback_group = clock_callback_group_;
       rclcpp::ExecutorOptions exec_options;
       exec_options.context = node_base_->get_context();
       clock_executor_ =
@@ -402,7 +401,8 @@ private:
           clock_cb(msg);
         }
       },
-      options
+      options,
+      clock_callback_group_
     );
   }
 
@@ -417,6 +417,7 @@ private:
       clock_executor_->remove_callback_group(clock_callback_group_);
     }
     clock_subscription_.reset();
+    clock_callback_group_.reset();
   }
 
   // Parameter Event subscription

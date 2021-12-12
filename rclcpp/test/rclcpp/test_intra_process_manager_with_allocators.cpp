@@ -206,6 +206,7 @@ do_custom_allocator_test(
     10,
     std::forward<decltype(callback)>(callback),
     subscription_options,
+    nullptr,
     msg_mem_strat);
 
   // executor memory strategy

@@ -136,12 +136,11 @@ protected:
       node_with_subscription->create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    subscription_options.callback_group = callback_group;
     callback_groups_.push_back(callback_group);
 
     auto subscription = node_with_subscription->create_subscription<
       test_msgs::msg::Empty, decltype(subscription_callback)>(
-      "topic", qos, std::move(subscription_callback), subscription_options);
+      "topic", qos, std::move(subscription_callback), subscription_options, callback_group);
     subscriptions_.push_back(subscription);
 
     return node_with_subscription;
@@ -753,14 +752,12 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_subscription_out_of_scope) {
       node->create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    subscription_options.callback_group = callback_group;
-
     auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
     const rclcpp::QoS qos(10);
 
     auto subscription = node->create_subscription<
       test_msgs::msg::Empty, decltype(subscription_callback)>(
-      "topic", qos, std::move(subscription_callback), subscription_options);
+      "topic", qos, std::move(subscription_callback), subscription_options, callback_group);
 
     node->for_each_callback_group(
       [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)

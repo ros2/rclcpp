@@ -54,7 +54,8 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-  )
+  ),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr
 )
 {
   auto ts_lib = rclcpp::get_typesupport_library(
@@ -69,7 +70,7 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
     callback,
     options);
 
-  topics_interface->add_subscription(subscription, options.callback_group);
+  topics_interface->add_subscription(subscription, group);
 
   return subscription;
 }

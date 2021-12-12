@@ -215,6 +215,33 @@ public:
     typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
     typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType
   >
+  [[deprecated("use another overloaded method create_subscription instead")]]
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat
+  );
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] qos QoS profile for Subcription.
+   * \param[in] callback The user-defined callback function to receive a message
+   * \param[in] options Additional options for the creation of the Subscription.
+   * \param[in] group Callback group to execute this subscription's callback.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
+    typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType
+  >
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -222,6 +249,7 @@ public:
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
     SubscriptionOptionsWithAllocator<AllocatorT>(),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
     typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
       MessageMemoryStrategyT::create_default()
     )
@@ -303,6 +331,7 @@ public:
    * \param[in] qos %QoS settings
    * \param[in] callback Callback for new messages of serialized form
    * \param[in] options %Subscription options.
+   * \param[in] group Callback group to execute this subscription's callback.
    * Not all subscription options are currently respected, the only relevant options for this
  * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
  * `%callback_group`.
@@ -316,7 +345,8 @@ public:
     std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-    )
+    ),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr
   );
 
   /// Declare and initialize a parameter, return the effective value.

@@ -35,6 +35,13 @@
 namespace rclcpp
 {
 
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 /// Non-template base class for subscription options.
 struct SubscriptionOptionsBase
 {
@@ -53,7 +60,7 @@ struct SubscriptionOptionsBase
     RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
 
   /// The callback group for this subscription. NULL to use the default callback group.
-  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
+  [[deprecated]] rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
 
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
@@ -85,6 +92,11 @@ struct SubscriptionOptionsBase
 
   ContentFilterOptions content_filter_options;
 };
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
 
 /// Structure containing optional configuration for Subscriptions.
 template<typename Allocator>

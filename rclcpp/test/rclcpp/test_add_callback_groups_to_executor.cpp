@@ -99,9 +99,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups) {
   auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
-  options.callback_group = cb_grp2;
   auto subscription =
-    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options, cb_grp2);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 2u);
   ASSERT_EQ(executor.get_manually_added_callback_groups().size(), 2u);
@@ -142,9 +141,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
   auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
-  options.callback_group = cb_grp2;
   auto subscription =
-    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options, cb_grp2);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
 
   executor.remove_callback_group(cb_grp);
@@ -225,9 +223,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
   auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
-  options.callback_group = cb_grp2;
   auto subscription =
-    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options, cb_grp2);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 2u);
 
@@ -259,9 +256,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_e
   auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
-  options.callback_group = cb_grp2;
   auto subscription =
-    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options, cb_grp2);
   sub_executor.add_callback_group(cb_grp2, node->get_node_base_interface());
   ASSERT_EQ(sub_executor.get_all_callback_groups().size(), 1u);
   ASSERT_EQ(timer_executor.get_all_callback_groups().size(), 1u);
