@@ -46,6 +46,18 @@ ComponentManager::ComponentManager(
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor desc{};
+    desc.description = "Number of thread";
+    rcl_interfaces::msg::IntegerRange range{};
+    range.from_value = 1;
+    range.to_value = std::thread::hardware_concurrency();
+    desc.integer_range.push_back(range);
+    desc.read_only = true;
+    this->declare_parameter(
+      "thread_num", static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
+  }
 }
 
 ComponentManager::~ComponentManager()
@@ -164,6 +176,12 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
   }
 
   return options;
+}
+
+void
+ComponentManager::set_executor(const std::weak_ptr<rclcpp::Executor> executor)
+{
+  executor_ = executor;
 }
 
 void
