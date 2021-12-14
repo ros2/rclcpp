@@ -408,8 +408,10 @@ private:
   using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
     MessageT,
     SubscribedType,
-    AllocatorT,
-    SubscribedTypeDeleter>;
+    SubscribedTypeAllocator,
+    SubscribedTypeDeleter,
+    ROSMessageT,
+    AllocatorT>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 };
 

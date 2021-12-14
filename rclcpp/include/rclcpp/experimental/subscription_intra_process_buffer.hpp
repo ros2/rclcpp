@@ -43,14 +43,16 @@ namespace experimental
 
 template<
   typename SubscribedType,
-  typename Alloc = std::allocator<void>,
+  typename Alloc = std::allocator<SubscribedType>,
   typename Deleter = std::default_delete<SubscribedType>,
   /// MessageT::ros_message_type if MessageT is a TypeAdapter,
   /// otherwise just MessageT.
-  typename ROSMessageType = typename rclcpp::TypeAdapter<SubscribedType>::ros_message_type
+  typename ROSMessageType = SubscribedType
 >
-class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageType, Alloc,
-    Deleter>
+class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageType,
+    typename allocator::AllocRebind<ROSMessageType, Alloc>::allocator_type,
+    allocator::Deleter<typename allocator::AllocRebind<ROSMessageType, Alloc>::allocator_type,
+    ROSMessageType>>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
@@ -81,8 +83,8 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>(context, topic_name,
-      qos_profile),
+  : ROSMessageIntraProcessBuffer<ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter>(
+      context, topic_name, qos_profile),
     subscribed_type_allocator_(*allocator)
   {
     allocator::set_allocator_for_deleter(&subscribed_type_deleter_, &subscribed_type_allocator_);
@@ -92,7 +94,7 @@ public:
         SubscribedTypeDeleter>(
       buffer_type,
       qos_profile,
-      allocator);
+      std::make_shared<Alloc>(subscribed_type_allocator_));
   }
 
   bool

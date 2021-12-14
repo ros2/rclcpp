@@ -222,7 +222,9 @@ public:
 template<
   typename MessageT,
   typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>>
+  typename Deleter = std::default_delete<MessageT>,
+  typename ROSMessageType = MessageT
+>
 class SubscriptionIntraProcessBuffer : public SubscriptionIntraProcessBase
 {
 public:
@@ -279,7 +281,7 @@ public:
 
 template<
   typename MessageT,
-  typename Alloc = std::allocator<void>,
+  typename Alloc = std::allocator<MessageT>,
   typename Deleter = std::default_delete<MessageT>>
 class SubscriptionIntraProcess : public SubscriptionIntraProcessBuffer<
     MessageT,
@@ -340,7 +342,7 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
     throw std::runtime_error("cannot publish msg which is a null pointer");
   }
 
-  ipm->template do_intra_process_publish<T, Alloc>(
+  ipm->template do_intra_process_publish<T, T, Alloc>(
     intra_process_publisher_id_,
     std::move(msg),
     *message_allocator_);
