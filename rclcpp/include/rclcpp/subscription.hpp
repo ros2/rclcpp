@@ -146,19 +146,19 @@ public:
     options_(options),
     message_memory_strategy_(message_memory_strategy)
   {
-    if (options.event_callbacks.deadline_callback) {
+    if (options_.event_callbacks.deadline_callback) {
       this->add_event_handler(
-        options.event_callbacks.deadline_callback,
+        options_.event_callbacks.deadline_callback,
         RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
     }
-    if (options.event_callbacks.liveliness_callback) {
+    if (options_.event_callbacks.liveliness_callback) {
       this->add_event_handler(
-        options.event_callbacks.liveliness_callback,
+        options_.event_callbacks.liveliness_callback,
         RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
     }
-    if (options.event_callbacks.incompatible_qos_callback) {
+    if (options_.event_callbacks.incompatible_qos_callback) {
       this->add_event_handler(
-        options.event_callbacks.incompatible_qos_callback,
+        options_.event_callbacks.incompatible_qos_callback,
         RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
     } else if (options_.use_default_callbacks) {
       // Register default callback when not specified
@@ -172,14 +172,14 @@ public:
         // pass
       }
     }
-    if (options.event_callbacks.message_lost_callback) {
+    if (options_.event_callbacks.message_lost_callback) {
       this->add_event_handler(
-        options.event_callbacks.message_lost_callback,
+        options_.event_callbacks.message_lost_callback,
         RCL_SUBSCRIPTION_MESSAGE_LOST);
     }
 
     // Setup intra process publishing if requested.
-    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
+    if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       using rclcpp::detail::resolve_intra_process_buffer_type;
 
       // Check if the QoS is compatible with intra-process.
@@ -201,11 +201,11 @@ public:
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
         callback,
-        options.get_allocator(),
+        options_.get_allocator(),
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
-        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback));
+        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
       TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
