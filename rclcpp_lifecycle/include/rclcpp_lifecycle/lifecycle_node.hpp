@@ -330,7 +330,8 @@ public:
     std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-    )
+    ),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr
   );
 
   /// Declare and initialize a parameter, return the effective value.

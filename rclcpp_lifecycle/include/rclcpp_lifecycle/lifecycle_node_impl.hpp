@@ -185,7 +185,8 @@ LifecycleNode::create_generic_subscription(
   const std::string & topic_type,
   const rclcpp::QoS & qos,
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_generic_subscription(
     node_topics_,
@@ -195,7 +196,8 @@ LifecycleNode::create_generic_subscription(
     topic_type,
     qos,
     std::move(callback),
-    options
+    options,
+    group
   );
 }
 

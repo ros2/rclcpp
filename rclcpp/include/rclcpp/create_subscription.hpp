@@ -135,6 +135,23 @@ create_subscription(
     qos;
 
   auto sub = node_topics_interface->create_subscription(topic_name, factory, actual_qos);
+
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  if (group == nullptr) {
+    group = options.callback_group;
+  }
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
+
   node_topics_interface->add_subscription(sub, group);
 
   return std::dynamic_pointer_cast<SubscriptionT>(sub);

@@ -70,6 +70,22 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
     callback,
     options);
 
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  if (group == nullptr) {
+    group = options.callback_group;
+  }
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
+
   topics_interface->add_subscription(subscription, group);
 
   return subscription;
