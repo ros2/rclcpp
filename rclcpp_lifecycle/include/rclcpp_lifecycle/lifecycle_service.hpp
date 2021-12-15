@@ -50,66 +50,7 @@ class LifecycleService : public LifecycleServiceInterface, public rclcpp::Servic
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(LifecycleService)
 
-  /// Default constructor.
-  /**
-   * The constructor for a LifecycleService is almost never called directly.
-   * Instead, services should be instantiated through the function
-   * rclcpp::create_service().
-   *
-   * \param[in] node_handle NodeBaseInterface pointer that is used in part of
-   *   the setup.
-   * \param[in] service_name Name of the topic to publish to.
-   * \param[in] any_callback User defined callback to call when a client request
-   *   is received.
-   * \param[in] service_options options for the subscription.
-   */
-  LifecycleService(
-    std::shared_ptr<rcl_node_t> node_handle, const std::string & service_name,
-    rclcpp::AnyServiceCallback<ServiceT> any_callback, rcl_service_options_t & service_options)
-  : rclcpp::Service<ServiceT>(node_handle, service_name, any_callback, service_options),
-    enabled_(false)
-  {
-  }
-
-  /// Default constructor.
-  /**
-   * The constructor for a LifecycleService is almost never called directly.
-   * Instead, services should be instantiated through the function
-   * rclcpp::create_service().
-   *
-   * \param[in] node_handle NodeBaseInterface pointer that is used in part of
-   *   the setup.
-   * \param[in] service_handle service handle.
-   * \param[in] any_callback User defined callback to call when a client request is
-   *   received.
-   */
-  LifecycleService(
-    std::shared_ptr<rcl_node_t> node_handle, std::shared_ptr<rcl_service_t> service_handle,
-    rclcpp::AnyServiceCallback<ServiceT> any_callback)
-  : rclcpp::Service<ServiceT>(node_handle, service_handle, any_callback), enabled_(false)
-  {
-  }
-
-  /// Default constructor.
-  /**
-   * The constructor for a LifecycleService is almost never called directly.
-   * Instead, services should be instantiated through the function
-   * rclcpp::create_service().
-   *
-   * \param[in] node_handle NodeBaseInterface pointer that is used in part of
-   *   the setup.
-   * \param[in] service_handle service handle.
-   * \param[in] any_callback User defined callback to call when a client request is
-   *   received.
-   */
-  LifecycleService(
-    std::shared_ptr<rcl_node_t> node_handle, rcl_service_t * service_handle,
-    rclcpp::AnyServiceCallback<ServiceT> any_callback)
-  : rclcpp::Service<ServiceT>(node_handle, service_handle, any_callback), enabled_(false)
-  {
-  }
-
-  LifecycleService() = delete;
+  using rclcpp::Service<ServiceT>::Service;
 
   virtual ~LifecycleService() {}
 
