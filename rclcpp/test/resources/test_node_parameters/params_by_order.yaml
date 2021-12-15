@@ -1,0 +1,17 @@
+# stored in the ordered map (less<string>) by '*' < '/' < alpha('lower_case' > 'upper_case')
+/**:
+  node:
+    ros__parameters:
+      a_value: "first"
+      foo: "foo"
+
+/ns:
+  node:
+    ros__parameters:
+      a_value: "win"
+      bar: "bar"
+
+/*:
+  node:
+    ros__parameters:
+      a_value: "second"

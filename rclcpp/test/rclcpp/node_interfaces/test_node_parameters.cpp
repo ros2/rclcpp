@@ -268,3 +268,66 @@ TEST_F(TestNodeParameters, wildcard_no_namespace)
   // "/*" match exactly one token, not expect to get `namespace_wild_one_star`
   EXPECT_EQ(parameter_overrides.count("namespace_wild_one_star"), 0u);
 }
+
+TEST_F(TestNodeParameters, params_by_order)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "params_by_order.yaml").string()
+  });
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns", opts);
+
+  auto * node_parameters =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters);
+
+  const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+  EXPECT_EQ(3u, parameter_overrides.size());
+  EXPECT_EQ(parameter_overrides.at("a_value").get<std::string>(), "win");
+  EXPECT_EQ(parameter_overrides.at("foo").get<std::string>(), "foo");
+  EXPECT_EQ(parameter_overrides.at("bar").get<std::string>(), "bar");
+}
+
+TEST_F(TestNodeParameters, complicated_wildcards)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "complicated_wildcards.yaml").string()
+  });
+
+  {
+    // regex matched: /**/foo/*/bar
+    std::shared_ptr<rclcpp::Node> node =
+      std::make_shared<rclcpp::Node>("node", "/a/b/c/foo/d/bar", opts);
+
+    auto * node_parameters =
+      dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+      node->get_node_parameters_interface().get());
+    ASSERT_NE(nullptr, node_parameters);
+
+    const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+    EXPECT_EQ(2u, parameter_overrides.size());
+    EXPECT_EQ(parameter_overrides.at("foo").get<std::string>(), "foo");
+    EXPECT_EQ(parameter_overrides.at("bar").get<std::string>(), "bar");
+  }
+
+  {
+    // regex not matched: /**/foo/*/bar
+    std::shared_ptr<rclcpp::Node> node =
+      std::make_shared<rclcpp::Node>("node", "/a/b/c/foo/bar", opts);
+
+    auto * node_parameters =
+      dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+      node->get_node_parameters_interface().get());
+    ASSERT_NE(nullptr, node_parameters);
+
+    const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+    EXPECT_EQ(0u, parameter_overrides.size());
+  }
+}
