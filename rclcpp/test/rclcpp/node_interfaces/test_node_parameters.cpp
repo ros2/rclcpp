@@ -214,7 +214,7 @@ TEST_F(TestNodeParameters, wildcard_with_namespace)
     "--params-file", (test_resources_path / "wildcards.yaml").string()
   });
 
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns", opts);
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node2", "ns", opts);
 
   auto * node_parameters =
     dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
@@ -248,7 +248,7 @@ TEST_F(TestNodeParameters, wildcard_no_namespace)
     "--params-file", (test_resources_path / "wildcards.yaml").string()
   });
 
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", opts);
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node2", opts);
 
   auto * node_parameters =
     dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
@@ -278,7 +278,7 @@ TEST_F(TestNodeParameters, params_by_order)
     "--params-file", (test_resources_path / "params_by_order.yaml").string()
   });
 
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns", opts);
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node2", "ns", opts);
 
   auto * node_parameters =
     dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
@@ -287,7 +287,7 @@ TEST_F(TestNodeParameters, params_by_order)
 
   const auto & parameter_overrides = node_parameters->get_parameter_overrides();
   EXPECT_EQ(3u, parameter_overrides.size());
-  EXPECT_EQ(parameter_overrides.at("a_value").get<std::string>(), "win");
+  EXPECT_EQ(parameter_overrides.at("a_value").get<std::string>(), "last_one_win");
   EXPECT_EQ(parameter_overrides.at("foo").get<std::string>(), "foo");
   EXPECT_EQ(parameter_overrides.at("bar").get<std::string>(), "bar");
 }
@@ -304,7 +304,7 @@ TEST_F(TestNodeParameters, complicated_wildcards)
   {
     // regex matched: /**/foo/*/bar
     std::shared_ptr<rclcpp::Node> node =
-      std::make_shared<rclcpp::Node>("node", "/a/b/c/foo/d/bar", opts);
+      std::make_shared<rclcpp::Node>("node2", "/a/b/c/foo/d/bar", opts);
 
     auto * node_parameters =
       dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
@@ -320,7 +320,7 @@ TEST_F(TestNodeParameters, complicated_wildcards)
   {
     // regex not matched: /**/foo/*/bar
     std::shared_ptr<rclcpp::Node> node =
-      std::make_shared<rclcpp::Node>("node", "/a/b/c/foo/bar", opts);
+      std::make_shared<rclcpp::Node>("node2", "/a/b/c/foo/bar", opts);
 
     auto * node_parameters =
       dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(

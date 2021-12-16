@@ -1,4 +1,3 @@
-# stored in the ordered map (less<string>) by '*' < '/' < alpha('lower_case' > 'upper_case')
 /**:
   node:
     ros__parameters:
@@ -8,10 +7,10 @@
 /ns:
   node:
     ros__parameters:
-      a_value: "win"
+      a_value: "second"
       bar: "bar"
 
 /*:
   node:
     ros__parameters:
-      a_value: "second"
+      a_value: "last_one_win"
