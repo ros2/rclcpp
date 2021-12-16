@@ -2702,8 +2702,7 @@ TEST_F(TestNode, declare_parameter_allowed_array_types_function_templates) {
     auto name7 = "parameter"_unq;
 
     node->declare_parameter<std::vector<uint8_t>>(name1, std::vector<uint8_t>{3, 4, 5, 7, 9});
-    std::vector<bool> bool_arr = {false, true};
-    node->declare_parameter<std::vector<bool>>(name2, bool_arr);
+    node->declare_parameter<std::vector<bool>>(name2, std::vector<bool>{false, true});
     node->declare_parameter<std::vector<int>>(name3, std::vector<int>{1234, 2345});
     node->declare_parameter<std::vector<int64_t>>(name4, std::vector<int64_t>{12340, 9876});
     node->declare_parameter<std::vector<float>>(
