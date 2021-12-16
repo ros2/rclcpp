@@ -35,6 +35,8 @@ using ParameterMap = std::unordered_map<std::string, std::vector<Parameter>>;
 
 /// Convert parameters from rcl_yaml_param_parser into C++ class instances.
 /// \param[in] c_params C structures containing parameters for multiple nodes.
+/// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
+///   If it's not nullptr, return the relative node parameters belonging to this node_fqn.
 /// \returns a map where the keys are fully qualified node names and values a list of parameters.
 /// \throws InvalidParametersException if the `rcl_params_t` is inconsistent or invalid.
 RCLCPP_PUBLIC
