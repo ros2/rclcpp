@@ -1,5 +1,5 @@
 /**/foo/*/bar:
-  node:
+  node2:
     ros__parameters:
       foo: "foo"
       bar: "bar"

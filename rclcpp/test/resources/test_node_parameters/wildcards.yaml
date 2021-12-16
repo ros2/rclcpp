@@ -3,16 +3,16 @@
     full_wild: "full_wild"
 
 /**:
-  node:
+  node2:
     ros__parameters:
       namespace_wild: "namespace_wild"
 
-/**/node:
+/**/node2:
   ros__parameters:
     namespace_wild_another: "namespace_wild_another"
 
 /*:
-  node:
+  node2:
     ros__parameters:
       namespace_wild_one_star: "namespace_wild_one_star"
 
@@ -26,7 +26,7 @@ ns:
     node_wild_in_ns_another: "node_wild_in_ns_another"
 
 ns:
-  node:
+  node2:
     ros__parameters:
       explicit_in_ns: "explicit_in_ns"
 
@@ -34,7 +34,7 @@ ns:
   ros__parameters:
     node_wild_no_ns: "node_wild_no_ns"
 
-node:
+node2:
   ros__parameters:
     explicit_no_ns: "explicit_no_ns"
 
@@ -48,7 +48,7 @@ ns:
     should_not_appear: "incorrect_node_name"
 
 nsX:
-  node:
+  node2:
     ros__parameters:
       should_not_appear: "incorrect_namespace"
 
