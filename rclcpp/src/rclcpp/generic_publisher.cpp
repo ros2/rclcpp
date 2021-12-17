@@ -31,4 +31,47 @@ void GenericPublisher::publish(const rclcpp::SerializedMessage & message)
   }
 }
 
+void GenericPublisher::publish_loaned_msg(const rclcpp::SerializedMessage & message)
+{
+  if (this->can_loan_messages()) {
+    auto loaned_message = borrow_loaned_message();
+    deserialize_message(message.get_rcl_serialized_message(), loaned_message);
+    publish_loaned_message(loaned_message);
+  } else {
+    throw std::runtime_error("failed to loan messages");
+  }
+}
+
+void * GenericPublisher::borrow_loaned_message()
+{
+  void * loaned_message = nullptr;
+  auto return_code = rcl_borrow_loaned_message(
+    get_publisher_handle().get(), type_support_, &loaned_message);
+
+  if (return_code != RMW_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(return_code, "failed to borrow loaned msg");
+  }
+  return loaned_message;
+}
+
+void GenericPublisher::deserialize_message(
+  const rmw_serialized_message_t & serialized_message,
+  void * deserialized_msg)
+{
+  auto return_code = rmw_deserialize(&serialized_message, type_support_, deserialized_msg);
+  if (return_code != RMW_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(return_code, "failed to deserialize msg");
+  }
+}
+
+void GenericPublisher::publish_loaned_message(void * loaned_message)
+{
+  auto return_code = rcl_publish_loaned_message(
+    get_publisher_handle().get(), loaned_message, NULL);
+
+  if (return_code != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(return_code, "failed to publish loaned message");
+  }
+}
+
 }  // namespace rclcpp
