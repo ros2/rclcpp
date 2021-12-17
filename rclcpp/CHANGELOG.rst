@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+14.0.0 (2021-12-17)
+-------------------
 * Fixes for uncrustify 0.72 (`#1844 <https://github.com/ros2/rclcpp/issues/1844>`_)
 * use private member to keep the all reference underneath. (`#1845 <https://github.com/ros2/rclcpp/issues/1845>`_)
 * Make node base sharable (`#1832 <https://github.com/ros2/rclcpp/issues/1832>`_)

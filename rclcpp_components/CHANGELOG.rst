@@ -2,8 +2,8 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+14.0.0 (2021-12-17)
+-------------------
 * Add parameter to configure number of thread (`#1708 <https://github.com/ros2/rclcpp/issues/1708>`_)
 * remove RCLCPP_COMPONENTS_PUBLIC in class ComponentManagerIsolated (`#1843 <https://github.com/ros2/rclcpp/issues/1843>`_)
 * create component_container_isolated (`#1781 <https://github.com/ros2/rclcpp/issues/1781>`_)
