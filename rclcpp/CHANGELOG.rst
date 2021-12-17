@@ -2,6 +2,28 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixes for uncrustify 0.72 (`#1844 <https://github.com/ros2/rclcpp/issues/1844>`_)
+* use private member to keep the all reference underneath. (`#1845 <https://github.com/ros2/rclcpp/issues/1845>`_)
+* Make node base sharable (`#1832 <https://github.com/ros2/rclcpp/issues/1832>`_)
+* Add Clock::sleep_for() (`#1828 <https://github.com/ros2/rclcpp/issues/1828>`_)
+* Synchronize rcl and std::chrono steady clocks in Clock::sleep_until (`#1830 <https://github.com/ros2/rclcpp/issues/1830>`_)
+* Use rclcpp::guard_condition (`#1612 <https://github.com/ros2/rclcpp/issues/1612>`_)
+* Call CMake function to generate version header (`#1805 <https://github.com/ros2/rclcpp/issues/1805>`_)
+* Use parantheses around logging macro parameter (`#1820 <https://github.com/ros2/rclcpp/issues/1820>`_)
+* Remove author by request (`#1818 <https://github.com/ros2/rclcpp/issues/1818>`_)
+* Update maintainers (`#1817 <https://github.com/ros2/rclcpp/issues/1817>`_)
+* min_forward & min_backward thresholds must not be disabled (`#1815 <https://github.com/ros2/rclcpp/issues/1815>`_)
+* Re-add Clock::sleep_until (`#1814 <https://github.com/ros2/rclcpp/issues/1814>`_)
+* Fix lifetime of context so it remains alive while its dependent node handles are still in use (`#1754 <https://github.com/ros2/rclcpp/issues/1754>`_)
+* Add the interface for pre-shutdown callback (`#1714 <https://github.com/ros2/rclcpp/issues/1714>`_)
+* Take message ownership from moved LoanedMessage (`#1808 <https://github.com/ros2/rclcpp/issues/1808>`_)
+* Suppress clang dead-store warnings in the benchmarks. (`#1802 <https://github.com/ros2/rclcpp/issues/1802>`_)
+* Wait for publisher and subscription to match (`#1777 <https://github.com/ros2/rclcpp/issues/1777>`_)
+* Fix unused QoS profile for clock subscription and make ClockQoS the default (`#1801 <https://github.com/ros2/rclcpp/issues/1801>`_)
+* Contributors: Abrar Rahman Protyasha, Barry Xu, Chen Lihui, Chris Lalancette, Grey, Jacob Perron, Nikolai Morin, Shane Loretz, Tomoya Fujita, mauropasse
+
 13.1.0 (2021-10-18)
 -------------------
 * Fix dangerous std::bind capture in TimeSource implementation. (`#1768 <https://github.com/ros2/rclcpp/issues/1768>`_)

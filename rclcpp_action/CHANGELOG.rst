@@ -3,6 +3,15 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Fixes for uncrustify 0.72 (`#1844 <https://github.com/ros2/rclcpp/issues/1844>`_)
+* Use rclcpp::guard_condition (`#1612 <https://github.com/ros2/rclcpp/issues/1612>`_)
+* Remove author by request (`#1818 <https://github.com/ros2/rclcpp/issues/1818>`_)
+* Update maintainers (`#1817 <https://github.com/ros2/rclcpp/issues/1817>`_)
+* Suppress clang dead-store warnings in the benchmarks. (`#1802 <https://github.com/ros2/rclcpp/issues/1802>`_)
+* Contributors: Chris Lalancette, Jacob Perron, mauropasse
+
 13.1.0 (2021-10-18)
 -------------------
 * Deprecate the `void shared_ptr<MessageT>` subscription callback signatures (`#1713 <https://github.com/ros2/rclcpp/issues/1713>`_)
