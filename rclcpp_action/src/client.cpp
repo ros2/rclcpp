@@ -44,7 +44,7 @@ public:
   : node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
     logger(node_logging->get_logger().get_child("rclcpp_action")),
-    random_bytes_generator(std::random_device{} ())
+    random_bytes_generator(std::random_device{}())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
     client_handle = std::shared_ptr<rcl_action_client_t>(
