@@ -15,6 +15,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
 # Need the target name to depend on generated interface libraries
 rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_test_msgs" "rosidl_typesupport_cpp")
 
+set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
+if(WIN32)
+  set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
+endif()
+
 ament_add_gtest(test_subscription_publisher_with_same_type_adapter test_subscription_publisher_with_same_type_adapter.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
 )
