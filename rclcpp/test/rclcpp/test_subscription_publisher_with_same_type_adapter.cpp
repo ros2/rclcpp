@@ -143,14 +143,11 @@ TEST_F(
   const std::string message_data = "Message Data";
   const std::string topic_name = "topic_name";
 
-
   auto node = rclcpp::Node::make_shared(
     "test_intra_process",
     rclcpp::NodeOptions().use_intra_process_comms(true));
 
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 1);
-
-
 
   {
     { // std::unique_ptr<std::string>

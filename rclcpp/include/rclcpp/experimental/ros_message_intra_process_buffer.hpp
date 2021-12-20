@@ -61,7 +61,6 @@ public:
 
   virtual void
   provide_intra_process_message(MessageUniquePtr message) = 0;
-
 };
 
 }  // namespace experimental

@@ -411,7 +411,6 @@ private:
     AllocatorT,
     SubscribedTypeDeleter>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
-
 };
 
 }  // namespace rclcpp

@@ -51,7 +51,8 @@ template<
   /// otherwise just MessageT.
   typename ROSMessageType = typename rclcpp::TypeAdapter<SubscribedType>::ros_message_type
 >
-class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
+class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageType, Alloc,
+    Deleter>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
@@ -82,10 +83,12 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, ROSMessageTypeDeleter>(context, topic_name, qos_profile)
+  : ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, ROSMessageTypeDeleter>(context, topic_name,
+      qos_profile)
   {
     // Create the intra-process buffer.
-    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc, SubscribedTypeDeleter>(
+    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc,
+        SubscribedTypeDeleter>(
       buffer_type,
       qos_profile,
       allocator);
@@ -101,7 +104,6 @@ public:
   void
   provide_intra_process_message(ConstMessageSharedPtr message)
   {
-
     std::cout << "--------------Provide Intra Process Message (ConstMessageSharedPtr)" << std::endl;
 
     if constexpr (!rclcpp::TypeAdapter<SubscribedType>::is_specialized::value) {
@@ -110,7 +112,8 @@ public:
     } else {
       // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
       // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr, *message);
-      // buffer_->add_shared(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
+      // buffer_->add_shared(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(
+      //   ptr, subscribed_type_deleter_));
       // trigger_guard_condition();
     }
   }
@@ -126,10 +129,10 @@ public:
       // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
       // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
       // rclcpp::TypeAdapter<SubscribedType>::convert_to_custom(*message, *ptr);
-      // buffer_->add_unique(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
+      // buffer_->add_unique(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(
+      //   ptr, subscribed_type_deleter_));
       // trigger_guard_condition();
     }
-
   }
 
   void
