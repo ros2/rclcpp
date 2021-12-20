@@ -42,24 +42,24 @@ namespace experimental
 {
 
 template<
-/// MessageT::custom_type if MessageT is a TypeAdapter,
-/// otherwise just MessageT.
+  typename MessageT,
   typename SubscribedType,
   typename SubscribedTypeAlloc = std::allocator<void>,
-  typename SubscribedTypeDeleter = std::default_delete<SubscribedType>,
-  typename CallbackMessageT = SubscribedType
+  typename SubscribedTypeDeleter = std::default_delete<SubscribedType>
   >
 class SubscriptionIntraProcess
   : public SubscriptionIntraProcessBuffer<
+      MessageT,
       SubscribedType,
       SubscribedTypeAlloc,
       SubscribedTypeDeleter
     >
 {
   using SubscriptionIntraProcessBufferT = SubscriptionIntraProcessBuffer<
-  SubscribedType,
-  SubscribedTypeAlloc,
-  SubscribedTypeDeleter
+    MessageT,
+    SubscribedType,
+    SubscribedTypeAlloc,
+    SubscribedTypeDeleter
   >;
 
 public:
@@ -72,13 +72,13 @@ public:
   using BufferUniquePtr = typename SubscriptionIntraProcessBufferT::BufferUniquePtr;
 
   SubscriptionIntraProcess(
-    AnySubscriptionCallback<CallbackMessageT, SubscribedTypeAlloc> callback,
+    AnySubscriptionCallback<MessageT, SubscribedTypeAlloc> callback,
     std::shared_ptr<SubscribedTypeAlloc> allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : SubscriptionIntraProcessBuffer<SubscribedType, SubscribedTypeAlloc, SubscribedTypeDeleter>(
+  : SubscriptionIntraProcessBuffer<MessageT, SubscribedType, SubscribedTypeAlloc, SubscribedTypeDeleter>(
       allocator,
       context,
       topic_name,
@@ -101,7 +101,7 @@ public:
   virtual ~SubscriptionIntraProcess() = default;
 
   std::shared_ptr<void>
-  take_data()
+  take_data() override
   {
     ConstMessageSharedPtr shared_msg;
     MessageUniquePtr unique_msg;
@@ -118,7 +118,7 @@ public:
     );
   }
 
-  void execute(std::shared_ptr<void> & data)
+  void execute(std::shared_ptr<void> & data) override
   {
     execute_impl<SubscribedType>(data);
   }
@@ -157,7 +157,7 @@ protected:
     shared_ptr.reset();
   }
 
-  AnySubscriptionCallback<CallbackMessageT, SubscribedTypeAlloc> any_callback_;
+  AnySubscriptionCallback<MessageT, SubscribedTypeAlloc> any_callback_;
 };
 
 }  // namespace experimental

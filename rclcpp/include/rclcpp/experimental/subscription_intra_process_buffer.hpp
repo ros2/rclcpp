@@ -44,22 +44,17 @@ namespace experimental
 
 template<
   typename MessageT,
+  typename SubscribedType,
   typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>,
-  /// MessageT::custom_type if MessageT is a TypeAdapter,
-  /// otherwise just MessageT.
-  typename SubscribedT = typename rclcpp::TypeAdapter<MessageT>::custom_type,
+  typename Deleter = std::default_delete<SubscribedType>,
   /// MessageT::ros_message_type if MessageT is a TypeAdapter,
   /// otherwise just MessageT.
-  typename ROSMessageT = typename rclcpp::TypeAdapter<MessageT>::ros_message_type
+  typename ROSMessageType = typename rclcpp::TypeAdapter<SubscribedType>::ros_message_type
 >
-class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageT, Alloc, Deleter>
+class SubscriptionIntraProcessBuffer : public ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
-
-  using SubscribedType = SubscribedT;
-  using ROSMessageType = ROSMessageT;
 
   using SubscribedTypeAllocatorTraits = allocator::AllocRebind<SubscribedType, Alloc>;
   using SubscribedTypeAllocator = typename SubscribedTypeAllocatorTraits::allocator_type;
@@ -87,7 +82,7 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type)
-  : ROSMessageIntraProcessBuffer<ROSMessageT, Alloc, ROSMessageTypeDeleter>(context, topic_name, qos_profile)
+  : ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, ROSMessageTypeDeleter>(context, topic_name, qos_profile)
   {
     // Create the intra-process buffer.
     buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc, SubscribedTypeDeleter>(
@@ -97,7 +92,7 @@ public:
   }
 
   bool
-  is_ready(rcl_wait_set_t * wait_set)
+  is_ready(rcl_wait_set_t * wait_set) override
   {
     (void) wait_set;
     return buffer_->has_data();
@@ -109,7 +104,7 @@ public:
 
     std::cout << "--------------Provide Intra Process Message (ConstMessageSharedPtr)" << std::endl;
 
-    if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
+    if constexpr (!rclcpp::TypeAdapter<SubscribedType>::is_specialized::value) {
       buffer_->add_shared(std::move(message));
       trigger_guard_condition();
     } else {
@@ -124,13 +119,13 @@ public:
   provide_intra_process_message(MessageUniquePtr message)
   {
     std::cout << "--------------Provide Intra Process Message (MessageUniquePtr)" << std::endl;
-    if constexpr (!rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
+    if constexpr (!rclcpp::TypeAdapter<SubscribedType>::is_specialized::value) {
       buffer_->add_unique(std::move(message));
       trigger_guard_condition();
     } else {
       // auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
       // SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
-      // rclcpp::TypeAdapter<MessageT>::convert_to_custom(*message, *ptr);
+      // rclcpp::TypeAdapter<SubscribedType>::convert_to_custom(*message, *ptr);
       // buffer_->add_unique(std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_));
       // trigger_guard_condition();
     }
@@ -154,14 +149,14 @@ public:
   }
 
   bool
-  use_take_shared_method() const
+  use_take_shared_method() const override
   {
     return buffer_->use_take_shared_method();
   }
 
 protected:
   void
-  trigger_guard_condition()
+  trigger_guard_condition() override
   {
     this->gc_.trigger();
   }

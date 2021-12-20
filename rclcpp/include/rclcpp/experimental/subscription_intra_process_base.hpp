@@ -52,21 +52,11 @@ public:
 
   RCLCPP_PUBLIC
   size_t
-  get_number_of_ready_guard_conditions() {return 1;}
+  get_number_of_ready_guard_conditions() override {return 1;}
 
   RCLCPP_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set);
-
-  virtual bool
-  is_ready(rcl_wait_set_t * wait_set) = 0;
-
-  virtual
-  std::shared_ptr<void>
-  take_data() = 0;
-
-  virtual void
-  execute(std::shared_ptr<void> & data) = 0;
+  add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   virtual bool
   use_take_shared_method() const = 0;
@@ -83,10 +73,10 @@ protected:
   std::recursive_mutex reentrant_mutex_;
   rclcpp::GuardCondition gc_;
 
-private:
   virtual void
   trigger_guard_condition() = 0;
 
+private:
   std::string topic_name_;
   QoS qos_profile_;
 };
