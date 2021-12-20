@@ -19,6 +19,7 @@
 
 #include <cstdio>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/parameter_map.hpp"
@@ -351,5 +352,134 @@ TEST(Test_parameter_map_from, string_array_param_value)
 
   EXPECT_EQ(RCUTILS_RET_OK, rcutils_string_array_fini(&c_string_array));
   c_params->params[0].parameter_values[0].string_array_value = NULL;
+  rcl_yaml_node_struct_fini(c_params);
+}
+
+TEST(Test_parameter_map_from, one_node_one_param_by_node_fqn)
+{
+  rcl_params_t * c_params = make_params({"foo"});
+  make_node_params(c_params, 0, {"string_param"});
+
+  std::string hello_world = "hello world";
+  char * c_hello_world = new char[hello_world.length() + 1];
+  std::snprintf(c_hello_world, hello_world.size() + 1, "%s", hello_world.c_str());
+  c_params->params[0].parameter_values[0].string_value = c_hello_world;
+
+  rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params, "/foo");
+  const std::vector<rclcpp::Parameter> & params = map.at("/foo");
+  EXPECT_STREQ("string_param", params.at(0).get_name().c_str());
+  EXPECT_STREQ(hello_world.c_str(), params.at(0).get_value<std::string>().c_str());
+
+  c_params->params[0].parameter_values[0].string_value = NULL;
+  delete[] c_hello_world;
+  rcl_yaml_node_struct_fini(c_params);
+}
+
+TEST(Test_parameter_map_from, multi_nodes_same_param_name_by_node_fqn)
+{
+  std::vector<std::string> node_names_keys = {
+    "/**",              // index: 0
+    "/*",               // index: 1
+    "/**/node",         // index: 2
+    "/*/node",          // index: 3
+    "/ns/node"          // index: 4
+  };
+
+  rcl_params_t * c_params = make_params(node_names_keys);
+
+  std::vector<char *> param_values;
+  for (size_t i = 0; i < node_names_keys.size(); ++i) {
+    make_node_params(c_params, i, {"string_param"});
+    std::string hello_world = "hello world" + std::to_string(i);
+    char * c_hello_world = new char[hello_world.length() + 1];
+    std::snprintf(c_hello_world, hello_world.size() + 1, "%s", hello_world.c_str());
+    c_params->params[i].parameter_values[0].string_value = c_hello_world;
+    param_values.push_back(c_hello_world);
+  }
+
+  std::unordered_map<std::string, std::vector<size_t>> node_fqn_expected = {
+    {"/ns/foo/another_node", {0}},
+    {"/another", {0, 1}},
+    {"/node", {0, 1, 2}},
+    {"/another_ns/node", {0, 2, 3}},
+    {"/ns/node", {0, 2, 3, 4}},
+  };
+
+  for (auto & kv : node_fqn_expected) {
+    rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params, kv.first.c_str());
+    const std::vector<rclcpp::Parameter> & params = map.at(kv.first);
+
+    EXPECT_EQ(kv.second.size(), params.size());
+    for (size_t i = 0; i < params.size(); ++i) {
+      std::string param_value = "hello world" + std::to_string(kv.second[i]);
+      EXPECT_STREQ("string_param", params.at(i).get_name().c_str());
+      EXPECT_STREQ(param_value.c_str(), params.at(i).get_value<std::string>().c_str());
+    }
+  }
+
+  for (size_t i = 0; i < node_names_keys.size(); ++i) {
+    c_params->params[i].parameter_values[0].string_value = NULL;
+  }
+  for (auto c_hello_world : param_values) {
+    delete[] c_hello_world;
+  }
+  rcl_yaml_node_struct_fini(c_params);
+}
+
+TEST(Test_parameter_map_from, multi_nodes_diff_param_name_by_node_fqn)
+{
+  std::vector<std::string> node_names_keys = {
+    "/**",              // index: 0
+    "/*",               // index: 1
+    "/**/node",         // index: 2
+    "/*/node",          // index: 3
+    "/ns/**",           // index: 4
+    "/ns/*",            // index: 5
+    "/ns/**/node",      // index: 6
+    "/ns/*/node",       // index: 7
+    "/ns/**/a/*/node",  // index: 8
+    "/ns/node"          // index: 9
+  };
+
+  rcl_params_t * c_params = make_params(node_names_keys);
+
+  for (size_t i = 0; i < node_names_keys.size(); ++i) {
+    std::string param_name = "string_param" + std::to_string(i);
+    make_node_params(c_params, i, {param_name});
+  }
+
+  std::string hello_world = "hello world";
+  char * c_hello_world = new char[hello_world.length() + 1];
+  std::snprintf(c_hello_world, hello_world.size() + 1, "%s", hello_world.c_str());
+
+  for (size_t i = 0; i < node_names_keys.size(); ++i) {
+    c_params->params[i].parameter_values[0].string_value = c_hello_world;
+  }
+
+  std::unordered_map<std::string, std::vector<size_t>> node_fqn_expected = {
+    {"/ns/node", {0, 2, 3, 4, 5, 6, 9}},
+    {"/node", {0, 1, 2}},
+    {"/ns/foo/node", {0, 2, 4, 6, 7}},
+    {"/ns/foo/a/node", {0, 2, 4, 6}},
+    {"/ns/foo/a/bar/node", {0, 2, 4, 6, 8}},
+    {"/ns/a/bar/node", {0, 2, 4, 6, 8}},
+    {"/ns/foo/zoo/a/bar/node", {0, 2, 4, 6, 8}},
+  };
+
+  for (auto & kv : node_fqn_expected) {
+    rclcpp::ParameterMap map = rclcpp::parameter_map_from(c_params, kv.first.c_str());
+    const std::vector<rclcpp::Parameter> & params = map.at(kv.first);
+    EXPECT_EQ(kv.second.size(), params.size());
+    for (size_t i = 0; i < params.size(); ++i) {
+      std::string param_name = "string_param" + std::to_string(kv.second[i]);
+      EXPECT_STREQ(param_name.c_str(), params.at(i).get_name().c_str());
+      EXPECT_STREQ(hello_world.c_str(), params.at(i).get_value<std::string>().c_str());
+    }
+  }
+
+  for (size_t i = 0; i < node_names_keys.size(); ++i) {
+    c_params->params[i].parameter_values[0].string_value = NULL;
+  }
+  delete[] c_hello_world;
   rcl_yaml_node_struct_fini(c_params);
 }
