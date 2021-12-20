@@ -19,13 +19,9 @@
 
 #include <shared_mutex>
 
-#include <algorithm>
-#include <atomic>
-#include <cstdint>
-#include <exception>
-#include <map>
+#include <iterator>
 #include <memory>
-#include <string>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
