@@ -379,10 +379,6 @@ private:
 
             using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
 
-            // auto ros_message_subscription = std::dynamic_pointer_cast<
-            //   rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType, Alloc, Deleter>
-            //   >(subscription_base);
-
             if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
               ROSMessageType ros_msg;
               rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(message, ros_msg);
