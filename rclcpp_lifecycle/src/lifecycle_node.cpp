@@ -236,14 +236,14 @@ std::vector<rcl_interfaces::msg::SetParametersResult>
 LifecycleNode::set_parameters(
   const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->set_parameters(parameters, false);
+  return node_parameters_->set_parameters(parameters);
 }
 
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::set_parameters_atomically(
   const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->set_parameters_atomically(parameters, false);
+  return node_parameters_->set_parameters_atomically(parameters);
 }
 
 std::vector<rclcpp::Parameter>

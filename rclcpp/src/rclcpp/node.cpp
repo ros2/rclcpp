@@ -377,13 +377,13 @@ Node::set_parameter(const rclcpp::Parameter & parameter)
 std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->set_parameters(parameters, false);
+  return node_parameters_->set_parameters(parameters);
 }
 
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
-  return node_parameters_->set_parameters_atomically(parameters, false);
+  return node_parameters_->set_parameters_atomically(parameters);
 }
 
 rclcpp::Parameter
