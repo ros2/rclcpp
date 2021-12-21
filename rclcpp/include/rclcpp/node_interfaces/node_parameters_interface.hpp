@@ -128,7 +128,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters, bool force) = 0;
+  set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Set one or more parameters, all at once.
   /**
@@ -137,7 +137,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters, bool force) = 0;
+  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
   /*

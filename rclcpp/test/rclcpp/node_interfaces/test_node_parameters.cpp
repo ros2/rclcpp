@@ -153,7 +153,7 @@ TEST_F(TestNodeParameters, set_parameters) {
     rclcpp::Parameter("bool_parameter", true),
     rclcpp::Parameter("read_only_parameter", 42),
   };
-  auto result = node_parameters->set_parameters(parameters, false);
+  auto result = node_parameters->set_parameters(parameters);
   ASSERT_EQ(parameters.size(), result.size());
   EXPECT_TRUE(result[0].successful);
   EXPECT_FALSE(result[1].successful);
@@ -161,18 +161,11 @@ TEST_F(TestNodeParameters, set_parameters) {
     "parameter 'read_only_parameter' cannot be set because it is read-only",
     result[1].reason.c_str());
 
-  result = node_parameters->set_parameters({rclcpp::Parameter("read_only_parameter", 55)}, true);
-  ASSERT_EQ(1u, result.size());
-  EXPECT_TRUE(result[0].successful);
-
   RCLCPP_EXPECT_THROW_EQ(
-    node_parameters->set_parameters({rclcpp::Parameter("", true)}, false),
+    node_parameters->set_parameters({rclcpp::Parameter("", true)}),
     rclcpp::exceptions::InvalidParametersException("parameter name must not be empty"));
 
-  result = node_parameters->set_parameters(
-    {rclcpp::Parameter(
-        "undeclared_parameter",
-        3.14159)}, false);
+  result = node_parameters->set_parameters({rclcpp::Parameter("undeclared_parameter", 3.14159)});
   ASSERT_EQ(1u, result.size());
   EXPECT_TRUE(result[0].successful);
 }
@@ -252,7 +245,7 @@ TEST_F(TestNodeParameters, add_remove_parameters_callback) {
     };
 
   auto handle = node_parameters->add_on_set_parameters_callback(callback);
-  auto result = node_parameters->set_parameters(parameters, false);
+  auto result = node_parameters->set_parameters(parameters);
   ASSERT_EQ(1u, result.size());
   EXPECT_FALSE(result[0].successful);
   EXPECT_EQ(reason, result[0].reason);

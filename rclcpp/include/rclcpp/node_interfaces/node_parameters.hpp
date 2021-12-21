@@ -151,14 +151,12 @@ public:
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(
-    const std::vector<rclcpp::Parameter> & parameters,
-    bool force) override;
+    const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-    const std::vector<rclcpp::Parameter> & parameters,
-    bool force) override;
+    const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>

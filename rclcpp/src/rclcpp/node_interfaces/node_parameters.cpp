@@ -296,28 +296,20 @@ __set_parameters_atomically_common(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
   CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback,
-  bool allow_undeclared = false,
-  bool force = false)
+  bool allow_undeclared = false)
 {
-  rcl_interfaces::msg::SetParametersResult result;
-  if (force) {
-    // If the force flag is set, we skip checking descriptor and user callbacks
-    result.successful = true;
-  } else {
-    // Check if the value being set complies with the descriptor.
-    result = __check_parameters(
-      parameter_infos, parameters, allow_undeclared);
-    if (!result.successful) {
-      return result;
-    }
-    // Call the user callback to see if the new value(s) are allowed.
-    result =
-      __call_on_parameters_set_callbacks(parameters, callback_container, callback);
-    if (!result.successful) {
-      return result;
-    }
+  // Check if the value being set complies with the descriptor.
+  rcl_interfaces::msg::SetParametersResult result = __check_parameters(
+    parameter_infos, parameters, allow_undeclared);
+  if (!result.successful) {
+    return result;
   }
-
+  // Call the user callback to see if the new value(s) are allowed.
+  result =
+    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
+  if (!result.successful) {
+    return result;
+  }
   // If accepted, actually set the values.
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
@@ -576,14 +568,13 @@ NodeParameters::has_parameter(const std::string & name) const
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 NodeParameters::set_parameters(
-  const std::vector<rclcpp::Parameter> & parameters,
-  bool force)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
   results.reserve(parameters.size());
 
   for (const auto & p : parameters) {
-    auto result = set_parameters_atomically({{p}}, force);
+    auto result = set_parameters_atomically({{p}});
     results.push_back(result);
   }
 
@@ -604,8 +595,7 @@ __find_parameter_by_name(
 
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(
-  const std::vector<rclcpp::Parameter> & parameters,
-  bool force)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -644,7 +634,7 @@ NodeParameters::set_parameters_atomically(
     }
 
     // Check to see if it is read-only.
-    if (parameter_info->second.descriptor.read_only && !force) {
+    if (parameter_info->second.descriptor.read_only) {
       result.successful = false;
       result.reason = "parameter '" + name + "' cannot be set because it is read-only";
       return result;
@@ -718,7 +708,7 @@ NodeParameters::set_parameters_atomically(
     if (rclcpp::PARAMETER_NOT_SET == parameter.get_type()) {
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
-        if (!it->second.descriptor.dynamic_typing && !force) {
+        if (!it->second.descriptor.dynamic_typing) {
           result.reason = "cannot undeclare a statically typed parameter";
           result.successful = false;
           return result;
@@ -740,9 +730,7 @@ NodeParameters::set_parameters_atomically(
     // the remaining aren't called.
     on_parameters_set_callback_,
     // allow undeclared
-    allow_undeclared_,
-    // ignore constraints and force set the new value
-    force);
+    allow_undeclared_);
 
   // If not successful, then stop here.
   if (!result.successful) {
