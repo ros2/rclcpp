@@ -403,15 +403,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   void
-  undeclare_parameter(const std::string & name);
-
-  /// Undeclare a previously declared parameter ignoring "read_only" and "dynamic_typing" flags.
-  /**
-   * \sa rclcpp::Node::undeclare_parameter
-   */
-  RCLCPP_LIFECYCLE_PUBLIC
-  void
-  force_undeclare_parameter(const std::string & name);
+  undeclare_parameter(const std::string & name, bool force = false);
 
   /// Return true if a given parameter is declared.
   /**

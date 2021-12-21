@@ -917,7 +917,7 @@ TEST_F(TestNode, undeclare_parameter) {
     descriptor.dynamic_typing = true;
     node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
-    node->undeclare_parameter(name);
+    node->undeclare_parameter(name, false);
     EXPECT_FALSE(node->has_parameter(name));
   }
   {
@@ -925,7 +925,7 @@ TEST_F(TestNode, undeclare_parameter) {
     auto name = "parameter"_unq;
     EXPECT_FALSE(node->has_parameter(name));
     EXPECT_THROW(
-      {node->undeclare_parameter(name);},
+      {node->undeclare_parameter(name, false);},
       rclcpp::exceptions::ParameterNotDeclaredException);
   }
   {
@@ -934,7 +934,7 @@ TEST_F(TestNode, undeclare_parameter) {
     node->declare_parameter(name, 42);
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_THROW(
-      {node->undeclare_parameter(name);},
+      {node->undeclare_parameter(name, false);},
       rclcpp::exceptions::InvalidParameterTypeException);
     EXPECT_TRUE(node->has_parameter(name));
   }
@@ -943,7 +943,7 @@ TEST_F(TestNode, undeclare_parameter) {
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
     EXPECT_TRUE(node->has_parameter(name));
-    EXPECT_NO_THROW(node->force_undeclare_parameter(name));
+    EXPECT_NO_THROW(node->undeclare_parameter(name, true));
     EXPECT_FALSE(node->has_parameter(name));
   }
   {
@@ -954,7 +954,7 @@ TEST_F(TestNode, undeclare_parameter) {
     node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     EXPECT_THROW(
-      {node->undeclare_parameter(name);},
+      {node->undeclare_parameter(name, false);},
       rclcpp::exceptions::ParameterImmutableException);
     EXPECT_TRUE(node->has_parameter(name));
   }
@@ -965,7 +965,7 @@ TEST_F(TestNode, undeclare_parameter) {
     descriptor.read_only = true;
     node->declare_parameter(name, 42, descriptor);
     EXPECT_TRUE(node->has_parameter(name));
-    EXPECT_NO_THROW(node->force_undeclare_parameter(name));
+    EXPECT_NO_THROW(node->undeclare_parameter(name, true));
     EXPECT_FALSE(node->has_parameter(name));
   }
 }
@@ -979,7 +979,7 @@ TEST_F(TestNode, has_parameter) {
   descriptor.dynamic_typing = true;
   node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);
   EXPECT_TRUE(node->has_parameter(name));
-  node->undeclare_parameter(name);
+  node->undeclare_parameter(name, false);
   EXPECT_FALSE(node->has_parameter(name));
 }
 
@@ -992,7 +992,7 @@ TEST_F(TestNode, list_parameters) {
   descriptor.dynamic_typing = true;
   node->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);
   EXPECT_EQ(1u + before_size, node->list_parameters({}, 1u).names.size());
-  node->undeclare_parameter(name);
+  node->undeclare_parameter(name, false);
   EXPECT_EQ(before_size, node->list_parameters({}, 1u).names.size());
 }
 

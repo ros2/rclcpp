@@ -215,15 +215,9 @@ LifecycleNode::declare_parameter(
 }
 
 void
-LifecycleNode::undeclare_parameter(const std::string & name)
+LifecycleNode::undeclare_parameter(const std::string & name, bool force)
 {
-  this->node_parameters_->undeclare_parameter(name, false);
-}
-
-void
-LifecycleNode::force_undeclare_parameter(const std::string & name)
-{
-  this->node_parameters_->undeclare_parameter(name, true);
+  this->node_parameters_->undeclare_parameter(name, force);
 }
 
 bool

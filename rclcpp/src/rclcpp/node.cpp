@@ -357,15 +357,9 @@ Node::declare_parameter(
 }
 
 void
-Node::undeclare_parameter(const std::string & name)
+Node::undeclare_parameter(const std::string & name, bool force)
 {
-  this->node_parameters_->undeclare_parameter(name, false);
-}
-
-void
-Node::force_undeclare_parameter(const std::string & name)
-{
-  this->node_parameters_->undeclare_parameter(name, true);
+  this->node_parameters_->undeclare_parameter(name, force);
 }
 
 bool

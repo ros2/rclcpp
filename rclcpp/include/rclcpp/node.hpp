@@ -519,22 +519,15 @@ public:
    * add_on_set_parameters_callback to be called.
    *
    * \param[in] name The name of the parameter to be undeclared.
+   * \param[in] force Whether to ignore immutable parameter constraints.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
    *   has not been declared.
    * \throws rclcpp::exceptions::ParameterImmutableException if the parameter
-   *   was create as read_only (immutable).
+   *   was create as read_only (immutable) and the force flag was false.
    */
   RCLCPP_PUBLIC
   void
-  undeclare_parameter(const std::string & name);
-
-  /// Undeclare a previously declared parameter ignoring "read_only" and "dynamic_typing" flags.
-  /**
-   * \sa rclcpp::Node::undeclare_parameter
-   */
-  RCLCPP_PUBLIC
-  void
-  force_undeclare_parameter(const std::string & name);
+  undeclare_parameter(const std::string & name, bool force = false);
 
   /// Return true if a given parameter is declared.
   /**
