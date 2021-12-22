@@ -137,7 +137,8 @@ public:
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters) = 0;
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
   /*
