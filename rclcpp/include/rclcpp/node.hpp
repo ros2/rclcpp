@@ -201,6 +201,8 @@ public:
 
   /// Create and return a Subscription.
   /**
+   * \deprecated use another overloaded method create_subscription instead.
+   *
    * \param[in] topic_name The topic to subscribe on.
    * \param[in] qos QoS profile for Subcription.
    * \param[in] callback The user-defined callback function to receive a message

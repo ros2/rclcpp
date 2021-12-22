@@ -217,6 +217,8 @@ public:
 
   /// Create and return a Subscription.
   /**
+   * \deprecated use another overloaded method create_subscription instead.
+   *
    * \param[in] topic_name The topic to subscribe on.
    * \param[in] callback The user-defined callback function.
    * \param[in] qos The quality of service for this subscription.
@@ -245,6 +247,7 @@ public:
    * \param[in] callback The user-defined callback function.
    * \param[in] qos The quality of service for this subscription.
    * \param[in] options The subscription options for this subscription.
+   * \param[in] group Callback group to execute this subscription's callback.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
    * \return Shared pointer to the created subscription.
    */
