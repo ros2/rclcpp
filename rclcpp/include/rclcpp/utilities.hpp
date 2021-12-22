@@ -65,7 +65,10 @@ enum class SignalHandlerOptions
  *
  * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  *
- * \param signal_handler_options option to indicate which signal handlers should be installed.
+ * \param[in] argc number of command-line arguments to parse.
+ * \param[in] argv array of command-line arguments to parse.
+ * \param[in] init_options initialization options to apply.
+ * \param[in] signal_handler_options option to indicate which signal handlers should be installed.
  */
 RCLCPP_PUBLIC
 void
@@ -87,7 +90,7 @@ init(
  *
  * This function is thread-safe.
  *
- * \param signal_handler_options option to indicate which signal handlers should be installed.
+ * \param[in] signal_handler_options option to indicate which signal handlers should be installed.
  * \return true if signal handler was installed by this function, false if already installed.
  */
 RCLCPP_PUBLIC
