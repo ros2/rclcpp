@@ -331,12 +331,12 @@ public:
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
-      auto shared_msg = this->do_intra_process_publish_and_return_shared(std::move(msg));
+      ROSMessageType ros_msg;
       // TODO(clalancette): This is unnecessarily doing an additional conversion
       // that may have already been done in do_intra_process_publish_and_return_shared().
       // We should just reuse that effort.
-      ROSMessageType ros_msg;
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, ros_msg);
+      this->do_intra_process_publish(std::move(msg));
       this->do_inter_process_publish(ros_msg);
     } else {
       this->do_intra_process_publish(std::move(msg));
@@ -533,27 +533,6 @@ protected:
       intra_process_publisher_id_,
       std::move(msg),
       ros_message_type_allocator_);
-  }
-
-
-  std::shared_ptr<const PublishedType>
-  do_intra_process_publish_and_return_shared(
-    std::unique_ptr<PublishedType, PublishedTypeDeleter> msg)
-  {
-    auto ipm = weak_ipm_.lock();
-    if (!ipm) {
-      throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
-    }
-    if (!msg) {
-      throw std::runtime_error("cannot publish msg which is a null pointer");
-    }
-
-    return ipm->template do_intra_process_publish_and_return_shared<PublishedType,
-             ROSMessageType, AllocatorT>(
-      intra_process_publisher_id_,
-      std::move(msg),
-      published_type_allocator_);
   }
 
   std::shared_ptr<const ROSMessageType>
