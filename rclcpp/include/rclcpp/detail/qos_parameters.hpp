@@ -119,7 +119,7 @@ declare_parameter_or_get(
  */
 template<typename NodeT, typename EntityQosParametersTraits>
 rclcpp::QoS
-declare_qos_parameters(
+  declare_qos_parameters(
   const ::rclcpp::QosOverridingOptions & options,
   NodeT & node,
   const std::string & topic_name,

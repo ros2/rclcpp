@@ -109,7 +109,7 @@ public:
   : std::runtime_error(msg) {}
 };
 
-typedef void (*reset_error_function_t)();
+typedef void (* reset_error_function_t)();
 
 /// Throw a C++ std::exception which was created based on an rcl error.
 /**
