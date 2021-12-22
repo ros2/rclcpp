@@ -191,7 +191,6 @@ template<
   typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
   typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType,
   typename NodeT>
-[[deprecated("use another overloaded method create_subscription instead")]]
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
   NodeT & node,
@@ -273,14 +272,13 @@ template<
   typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
   typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType>
 typename std::shared_ptr<SubscriptionT>
-[[deprecated("use another overloaded method create_subscription instead")]]
 create_subscription(
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>&options,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat
 )
 {

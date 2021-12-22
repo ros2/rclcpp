@@ -215,7 +215,6 @@ public:
     typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
     typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType
   >
-  [[deprecated("use another overloaded method create_subscription instead")]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,

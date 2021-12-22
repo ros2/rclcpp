@@ -60,7 +60,8 @@ struct SubscriptionOptionsBase
     RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
 
   /// The callback group for this subscription. NULL to use the default callback group.
-  [[deprecated]] rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
+  [[deprecated("use create_subscription with a dedicated callback_group instead")]]
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
 
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
