@@ -38,8 +38,6 @@ template<
 class ROSMessageIntraProcessBuffer : public SubscriptionIntraProcessBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(ROSMessageIntraProcessBuffer)
-
   using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<RosMessageT, Alloc>;
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, RosMessageT>;

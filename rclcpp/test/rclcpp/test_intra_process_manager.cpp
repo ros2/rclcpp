@@ -22,6 +22,7 @@
 
 #define RCLCPP_BUILDING_LIBRARY 1
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rmw/types.h"
@@ -194,9 +195,14 @@ class SubscriptionIntraProcessBase
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
-  explicit SubscriptionIntraProcessBase(rclcpp::QoS qos = rclcpp::QoS(10))
-  : qos_profile(qos), topic_name("topic")
-  {}
+  explicit SubscriptionIntraProcessBase(
+    rclcpp::Context::SharedPtr context,
+    const std::string & topic = "topic",
+    rclcpp::QoS qos = rclcpp::QoS(10))
+  : qos_profile(qos), topic_name(topic)
+  {
+    (void)context;
+  }
 
   virtual ~SubscriptionIntraProcessBase() {}
 
@@ -212,11 +218,11 @@ public:
   const char *
   get_topic_name()
   {
-    return topic_name;
+    return topic_name.c_str();
   }
 
   rclcpp::QoS qos_profile;
-  const char * topic_name;
+  std::string topic_name;
 };
 
 template<
@@ -231,7 +237,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
 
   explicit SubscriptionIntraProcessBuffer(rclcpp::QoS qos)
-  : SubscriptionIntraProcessBase(qos), take_shared_method(false)
+  : SubscriptionIntraProcessBase(nullptr, "topic", qos), take_shared_method(false)
   {
     buffer = std::make_unique<rclcpp::experimental::buffers::mock::IntraProcessBuffer<MessageT>>();
   }

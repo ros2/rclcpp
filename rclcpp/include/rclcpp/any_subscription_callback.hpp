@@ -817,6 +817,11 @@ public:
     // Dispatch.
     std::visit(
       [&message, &message_info, this](auto && callback) {
+        // clang complains that 'this' lambda capture is unused, which is true
+        // in *some* specializations of this template, but not others.  Just
+        // quiet it down.
+        (void)this;
+
         using T = std::decay_t<decltype(callback)>;
         static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
 
