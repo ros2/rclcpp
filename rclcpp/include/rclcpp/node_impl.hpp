@@ -227,7 +227,7 @@ Node::declare_parameter(
       parameter_descriptor,
       ignore_override
     ).get<ParameterT>();
-  } catch (const ParameterTypeException & ex) {
+  } catch (const ParameterTypeException &) {
     throw exceptions::UninitializedStaticallyTypedParameterException(name);
   }
 }
