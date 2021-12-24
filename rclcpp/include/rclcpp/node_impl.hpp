@@ -220,12 +220,16 @@ Node::declare_parameter(
   // get advantage of parameter value template magic to get
   // the correct rclcpp::ParameterType from ParameterT
   rclcpp::ParameterValue value{ParameterT{}};
-  return this->declare_parameter(
-    name,
-    value.get_type(),
-    parameter_descriptor,
-    ignore_override
-  ).get<ParameterT>();
+  try {
+    return this->declare_parameter(
+      name,
+      value.get_type(),
+      parameter_descriptor,
+      ignore_override
+    ).get<ParameterT>();
+  } catch (const ParameterTypeException &) {
+    throw exceptions::UninitializedStaticallyTypedParameterException(name);
+  }
 }
 
 template<typename ParameterT>

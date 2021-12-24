@@ -716,6 +716,12 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
       rclcpp::exceptions::InvalidParameterTypeException);
   }
   {
+    // statically typed parameter must be initialized
+    EXPECT_THROW(
+      {node->declare_parameter<std::string>("static_and_uninitialized");},
+      rclcpp::exceptions::UninitializedStaticallyTypedParameterException);
+  }
+  {
     // cannot pass an expected type and a descriptor with dynamic_typing=True
     rcl_interfaces::msg::ParameterDescriptor descriptor{};
     descriptor.dynamic_typing = true;
