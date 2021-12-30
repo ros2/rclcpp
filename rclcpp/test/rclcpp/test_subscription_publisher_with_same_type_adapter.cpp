@@ -115,7 +115,7 @@ TEST_F(
       [message_data, &is_received](
       const std::string & msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), msg.c_str());
+        EXPECT_STREQ(message_data.c_str(), msg.c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -133,8 +133,8 @@ TEST_F(
       [message_data, &is_received](
       const std::string & msg, const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), msg.c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), msg.c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -153,7 +153,7 @@ TEST_F(
       [message_data, &is_received](
       std::unique_ptr<std::string> msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -172,8 +172,8 @@ TEST_F(
       std::unique_ptr<std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -192,7 +192,7 @@ TEST_F(
       [message_data, &is_received](
       std::shared_ptr<std::string> msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -211,8 +211,8 @@ TEST_F(
       std::shared_ptr<std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -231,7 +231,7 @@ TEST_F(
       [message_data, &is_received](
       std::shared_ptr<const std::string> msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -250,8 +250,8 @@ TEST_F(
       std::shared_ptr<const std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -270,7 +270,7 @@ TEST_F(
       [message_data, &is_received](
       const std::shared_ptr<const std::string> & msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -290,8 +290,8 @@ TEST_F(
       const std::shared_ptr<const std::string> & msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -325,7 +325,7 @@ TEST_F(
       [message_data, &is_received](
       const std::string & msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), msg.c_str());
+        EXPECT_STREQ(message_data.c_str(), msg.c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -343,8 +343,8 @@ TEST_F(
       [message_data, &is_received](
       const std::string & msg, const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), msg.c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), msg.c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -363,7 +363,7 @@ TEST_F(
       [message_data, &is_received](
       std::unique_ptr<std::string> msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -382,8 +382,8 @@ TEST_F(
       std::unique_ptr<std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -402,7 +402,7 @@ TEST_F(
       [message_data, &is_received](
       std::shared_ptr<std::string> msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -421,8 +421,8 @@ TEST_F(
       std::shared_ptr<std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -441,7 +441,7 @@ TEST_F(
       [message_data, &is_received](
       std::shared_ptr<const std::string> msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -461,8 +461,8 @@ TEST_F(
       std::shared_ptr<const std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -481,7 +481,7 @@ TEST_F(
       [message_data, &is_received](
       const std::shared_ptr<const std::string> & msg) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
@@ -501,8 +501,8 @@ TEST_F(
       const std::shared_ptr<const std::string> & msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
-        ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
-        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+        EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
+        EXPECT_TRUE(message_info.get_rmw_message_info().from_intra_process);
       };
     auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
 
