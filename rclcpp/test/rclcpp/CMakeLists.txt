@@ -405,16 +405,10 @@ ament_add_gtest(test_subscription_publisher_with_same_type_adapter test_subscrip
 )
 if(TARGET test_subscription_publisher_with_same_type_adapter)
   ament_target_dependencies(test_subscription_publisher_with_same_type_adapter
-    "rcutils"
-    "rcl_interfaces"
-    "rmw"
-    "rosidl_runtime_cpp"
-    "rosidl_typesupport_cpp"
-    "test_msgs"
+    "statistics_msgs"
   )
   target_link_libraries(test_subscription_publisher_with_same_type_adapter
     ${PROJECT_NAME}
-    mimick
     ${cpp_typesupport_target})
 endif()
 
