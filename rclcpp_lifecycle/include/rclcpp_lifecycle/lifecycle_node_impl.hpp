@@ -46,14 +46,16 @@ std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>>
 LifecycleNode::create_publisher(
   const std::string & topic_name,
   const rclcpp::QoS & qos,
-  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>;
   return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
     *this,
     topic_name,
     qos,
-    options);
+    options,
+    group);
 }
 
 // TODO(karsten1987): Create LifecycleSubscriber
@@ -137,7 +139,8 @@ LifecycleNode::create_generic_publisher(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
-  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_generic_publisher(
     node_topics_,
@@ -146,7 +149,8 @@ LifecycleNode::create_generic_publisher(
     topic_name,
     topic_type,
     qos,
-    options
+    options,
+    group
   );
 }
 

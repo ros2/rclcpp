@@ -63,7 +63,7 @@ public:
    * \param callback Callback for new messages of serialized form
    * \param options %Publisher options.
    * Not all publisher options are currently respected, the only relevant options for this
-   * publisher are `event_callbacks`, `use_default_callbacks`, and `%callback_group`.
+   * publisher are `event_callbacks` and `use_default_callbacks`.
    */
   template<typename AllocatorT = std::allocator<void>>
   GenericPublisher(

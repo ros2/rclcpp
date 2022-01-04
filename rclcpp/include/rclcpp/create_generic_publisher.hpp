@@ -39,7 +39,8 @@ namespace rclcpp
  * \param qos %QoS settings
  * \param options %Publisher options.
  * Not all publisher options are currently respected, the only relevant options for this
- * publisher are `event_callbacks`, `use_default_callbacks`, and `%callback_group`.
+ * publisher are `event_callbacks` and `use_default_callbacks`.
+ * \param group Callback group to execute this publisher's callback(e.g. QoS Events).
  */
 template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericPublisher> create_generic_publisher(
@@ -49,7 +50,8 @@ std::shared_ptr<GenericPublisher> create_generic_publisher(
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-  )
+  ),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr
 )
 {
   auto ts_lib = rclcpp::get_typesupport_library(topic_type, "rosidl_typesupport_cpp");
@@ -60,7 +62,24 @@ std::shared_ptr<GenericPublisher> create_generic_publisher(
     topic_type,
     qos,
     options);
-  topics_interface->add_publisher(pub, options.callback_group);
+
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  if (group == nullptr) {
+    group = options.callback_group;
+  }
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
+
+  topics_interface->add_publisher(pub, group);
   return pub;
 }
 

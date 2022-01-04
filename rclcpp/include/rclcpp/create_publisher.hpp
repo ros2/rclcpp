@@ -50,7 +50,8 @@ create_publisher(
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-  )
+  ),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr
 )
 {
   auto node_topics_interface = rclcpp::node_interfaces::get_node_topics_interface(node_topics);
@@ -68,8 +69,23 @@ create_publisher(
     actual_qos
   );
 
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  if (group == nullptr) {
+    group = options.callback_group;
+  }
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
   // Add the publisher to the node topics interface.
-  node_topics_interface->add_publisher(pub, options.callback_group);
+  node_topics_interface->add_publisher(pub, group);
 
   return std::dynamic_pointer_cast<PublisherT>(pub);
 }
@@ -97,11 +113,12 @@ create_publisher(
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-  )
+  ),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr
 )
 {
   return detail::create_publisher<MessageT, AllocatorT, PublisherT>(
-    node, node, topic_name, qos, options);
+    node, node, topic_name, qos, options, group);
 }
 
 /// Create and return a publisher of the given MessageT type.
@@ -117,11 +134,12 @@ create_publisher(
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-  )
+  ),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr
 )
 {
   return detail::create_publisher<MessageT, AllocatorT, PublisherT>(
-    node_parameters, node_topics, topic_name, qos, options);
+    node_parameters, node_topics, topic_name, qos, options, group);
 }
 
 }  // namespace rclcpp

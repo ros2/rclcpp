@@ -73,13 +73,15 @@ std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name,
   const rclcpp::QoS & qos,
-  const PublisherOptionsWithAllocator<AllocatorT> & options)
+  const PublisherOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
     *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos,
-    options);
+    options,
+    group);
 }
 
 template<
@@ -159,14 +161,16 @@ Node::create_generic_publisher(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
-  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_generic_publisher(
     node_topics_,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     topic_type,
     qos,
-    options
+    options,
+    group
   );
 }
 

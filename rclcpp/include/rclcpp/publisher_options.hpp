@@ -34,6 +34,13 @@ namespace rclcpp
 
 class CallbackGroup;
 
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 /// Non-templated part of PublisherOptionsWithAllocator<Allocator>.
 struct PublisherOptionsBase
 {
@@ -52,6 +59,7 @@ struct PublisherOptionsBase
     RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
 
   /// Callback group in which the waitable items from the publisher should be placed.
+  [[deprecated("use create_publisher with a dedicated callback_group instead")]]
   std::shared_ptr<rclcpp::CallbackGroup> callback_group;
 
   /// Optional RMW implementation specific payload to be used during creation of the publisher.
@@ -60,6 +68,11 @@ struct PublisherOptionsBase
 
   QosOverridingOptions qos_overriding_options;
 };
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
 
 /// Structure containing optional configuration for Publishers.
 template<typename Allocator>

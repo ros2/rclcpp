@@ -185,6 +185,7 @@ public:
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos The Quality of Service settings for the publisher.
    * \param[in] options Additional options for the created Publisher.
+   * \param[in] group Callback group to execute this publisher's callback(e.g. QoS Events).
    * \return Shared pointer to the created publisher.
    */
   template<
@@ -196,7 +197,8 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos,
     const PublisherOptionsWithAllocator<AllocatorT> & options =
-    PublisherOptionsWithAllocator<AllocatorT>()
+    PublisherOptionsWithAllocator<AllocatorT>(),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr
   );
 
   /// Create and return a Subscription.
@@ -278,9 +280,10 @@ public:
    * \param[in] topic_name Topic name
    * \param[in] topic_type Topic type
    * \param[in] qos %QoS settings
-   * \param options %Publisher options.
+   * \param[in] options %Publisher options.
    * Not all publisher options are currently respected, the only relevant options for this
-   * publisher are `event_callbacks`, `use_default_callbacks`, and `%callback_group`.
+   * publisher are `event_callbacks` and `use_default_callbacks`.
+   * \param[in] group Callback group to execute this publisher's callback(e.g. QoS Events).
    * \return Shared pointer to the created generic publisher.
    */
   template<typename AllocatorT = std::allocator<void>>
@@ -290,7 +293,8 @@ public:
     const rclcpp::QoS & qos,
     const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-    )
+    ),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr
   );
 
   /// Create and return a GenericSubscription.
