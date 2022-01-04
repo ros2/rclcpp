@@ -332,10 +332,9 @@ public:
    * \param[in] qos %QoS settings
    * \param[in] callback Callback for new messages of serialized form
    * \param[in] options %Subscription options.
-   * \param[in] group Callback group to execute this subscription's callback.
    * Not all subscription options are currently respected, the only relevant options for this
- * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
- * `%callback_group`.
+   * subscription are `event_callbacks`, `use_default_callbacks` and `ignore_local_publications`.
+   * \param[in] group Callback group to execute this subscription's callback.
    * \return Shared pointer to the created generic subscription.
    */
   template<typename AllocatorT = std::allocator<void>>
