@@ -486,7 +486,7 @@ public:
       return std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, ros_message_type_deleter_);
     } else {
       static_assert(
-        !sizeof(MessageT*),
+        !sizeof(MessageT *),
         "convert_custom_type_to_ros_message_unique_ptr() "
         "unexpectedly called without specialized TypeAdapter");
     }
