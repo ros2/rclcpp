@@ -180,7 +180,7 @@ public:
   template<
     typename MessageT,
     typename ROSMessageType,
-    typename Alloc = std::allocator<void>,
+    typename Alloc,
     typename Deleter = std::default_delete<MessageT>
   >
   void
@@ -214,6 +214,8 @@ public:
       sub_ids.take_shared_subscriptions.size() <= 1)
     {
       // There is at maximum 1 buffer that does not require ownership.
+      // So this case is equivalent to all the buffers requiring ownership
+
       // Merge the two vector of ids into a unique one
       std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
       concatenated_vector.insert(
@@ -241,7 +243,7 @@ public:
   template<
     typename MessageT,
     typename ROSMessageType,
-    typename Alloc = std::allocator<void>,
+    typename Alloc,
     typename Deleter = std::default_delete<MessageT>
   >
   std::shared_ptr<const MessageT>
@@ -415,9 +417,9 @@ private:
 
   template<
     typename MessageT,
-    typename Alloc = std::allocator<void>,
-    typename Deleter = std::default_delete<MessageT>,
-    typename ROSMessageType = MessageT>
+    typename Alloc,
+    typename Deleter,
+    typename ROSMessageType>
   void
   add_owned_msg_to_buffers(
     std::unique_ptr<MessageT, Deleter> message,
@@ -457,13 +459,11 @@ private:
           subscription->provide_intra_process_data(std::move(message));
         } else {
           // Copy the message since we have additional subscriptions to serve
-          MessageUniquePtr copy_message;
           Deleter deleter = message.get_deleter();
           auto ptr = MessageAllocTraits::allocate(allocator, 1);
           MessageAllocTraits::construct(allocator, ptr, *message);
-          copy_message = MessageUniquePtr(ptr, deleter);
 
-          subscription->provide_intra_process_data(std::move(copy_message));
+          subscription->provide_intra_process_data(std::move(MessageUniquePtr(ptr, deleter)));
         }
 
         continue;
@@ -498,14 +498,13 @@ private:
             ros_message_subscription->provide_intra_process_message(std::move(message));
           } else {
             // Copy the message since we have additional subscriptions to serve
-            MessageUniquePtr copy_message;
             Deleter deleter = message.get_deleter();
             allocator::set_allocator_for_deleter(&deleter, &allocator);
             auto ptr = MessageAllocTraits::allocate(allocator, 1);
             MessageAllocTraits::construct(allocator, ptr, *message);
-            copy_message = MessageUniquePtr(ptr, deleter);
 
-            ros_message_subscription->provide_intra_process_message(std::move(copy_message));
+            ros_message_subscription->provide_intra_process_message(
+              std::move(MessageUniquePtr(ptr, deleter)));
           }
         }
       }
