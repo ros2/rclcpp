@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+14.1.0 (2022-01-05)
+-------------------
 * Use UninitializedStaticallyTypedParameterException (`#1689 <https://github.com/ros2/rclcpp/issues/1689>`_)
 * Add wait_for_all_acked support (`#1662 <https://github.com/ros2/rclcpp/issues/1662>`_)
 * Add tests for function templates of declare_parameter (`#1747 <https://github.com/ros2/rclcpp/issues/1747>`_)
