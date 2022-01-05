@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use UninitializedStaticallyTypedParameterException (`#1689 <https://github.com/ros2/rclcpp/issues/1689>`_)
+* Add wait_for_all_acked support (`#1662 <https://github.com/ros2/rclcpp/issues/1662>`_)
+* Add tests for function templates of declare_parameter (`#1747 <https://github.com/ros2/rclcpp/issues/1747>`_)
+* Contributors: Barry Xu, Bi0T1N, M. Mostafa Farzan
+
 14.0.0 (2021-12-17)
 -------------------
 * Fixes for uncrustify 0.72 (`#1844 <https://github.com/ros2/rclcpp/issues/1844>`_)

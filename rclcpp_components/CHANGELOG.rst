@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 14.0.0 (2021-12-17)
 -------------------
 * Add parameter to configure number of thread (`#1708 <https://github.com/ros2/rclcpp/issues/1708>`_)

@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 14.0.0 (2021-12-17)
 -------------------
 * Remove author by request (`#1818 <https://github.com/ros2/rclcpp/issues/1818>`_)
