@@ -35,7 +35,7 @@ template<
   typename Alloc = std::allocator<void>,
   typename Deleter = std::default_delete<void>
 >
-class ROSMessageIntraProcessBuffer : public SubscriptionIntraProcessBase
+class SubscriptionROSMsgIntraProcessBuffer : public SubscriptionIntraProcessBase
 {
 public:
   using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<RosMessageT, Alloc>;
@@ -45,14 +45,14 @@ public:
   using ConstMessageSharedPtr = std::shared_ptr<const RosMessageT>;
   using MessageUniquePtr = std::unique_ptr<RosMessageT, ROSMessageTypeDeleter>;
 
-  ROSMessageIntraProcessBuffer(
+  SubscriptionROSMsgIntraProcessBuffer(
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile)
   : SubscriptionIntraProcessBase(context, topic_name, qos_profile)
   {}
 
-  virtual ~ROSMessageIntraProcessBuffer()
+  virtual ~SubscriptionROSMsgIntraProcessBuffer()
   {}
 
   virtual void

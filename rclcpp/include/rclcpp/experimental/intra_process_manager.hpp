@@ -380,14 +380,14 @@ private:
       }
 
       auto ros_message_subscription = std::dynamic_pointer_cast<
-        rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType,
+        rclcpp::experimental::SubscriptionROSMsgIntraProcessBuffer<ROSMessageType,
         ROSMessageTypeAllocator, ROSMessageTypeDeleter>
         >(subscription_base);
       if (nullptr == ros_message_subscription) {
         throw std::runtime_error(
                 "failed to dynamic cast SubscriptionIntraProcessBase to "
                 "SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>, or to "
-                "ROSMessageIntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
+                "SubscriptionROSMsgIntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
                 "ROSMessageTypeDeleter> which can happen when the publisher and "
                 "subscription use different allocator types, which is not supported");
       }
@@ -470,14 +470,14 @@ private:
       }
 
       auto ros_message_subscription = std::dynamic_pointer_cast<
-        rclcpp::experimental::ROSMessageIntraProcessBuffer<ROSMessageType,
+        rclcpp::experimental::SubscriptionROSMsgIntraProcessBuffer<ROSMessageType,
         ROSMessageTypeAllocator, ROSMessageTypeDeleter>
         >(subscription_base);
       if (nullptr == ros_message_subscription) {
         throw std::runtime_error(
                 "failed to dynamic cast SubscriptionIntraProcessBase to "
                 "SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>, or to "
-                "ROSMessageIntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
+                "SubscriptionROSMsgIntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
                 "ROSMessageTypeDeleter> which can happen when the publisher and "
                 "subscription use different allocator types, which is not supported");
       }
