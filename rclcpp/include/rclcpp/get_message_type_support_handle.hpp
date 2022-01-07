@@ -28,7 +28,17 @@
 namespace rclcpp
 {
 
-/// Specialization for when MessageT is an actual ROS message type.
+#ifdef DOXYGEN_ONLY
+
+/// Returns the message type support for the given `MessageT` type.
+/**
+ * \tparam MessageT an actual ROS message type or an adapted type using `rclcpp::TypeAdapter`
+ */
+template<typename MessageT>
+constexpr const rosidl_message_type_support_t & get_message_type_support_handle();
+
+#else
+
 template<typename MessageT>
 constexpr
 typename std::enable_if_t<
@@ -44,7 +54,6 @@ get_message_type_support_handle()
   return *handle;
 }
 
-/// Specialization for when MessageT is an adapted type using rclcpp::TypeAdapter.
 template<typename AdaptedType>
 constexpr
 typename std::enable_if_t<
@@ -63,12 +72,9 @@ get_message_type_support_handle()
   return *handle;
 }
 
-/// Specialization for when MessageT is not a ROS message nor an adapted type.
-/**
- * This specialization is a pass through runtime check, which allows a better
- * static_assert to catch this issue further down the line.
- * This should never get to be called in practice, and is purely defensive.
- */
+// This specialization is a pass through runtime check, which allows a better
+// static_assert to catch this issue further down the line.
+// This should never get to be called in practice, and is purely defensive.
 template<
   typename AdaptedType
 >
@@ -84,6 +90,8 @@ get_message_type_support_handle()
           "this specialization of rclcpp::get_message_type_support_handle() "
           "should never be called");
 }
+
+#endif
 
 }  // namespace rclcpp
 

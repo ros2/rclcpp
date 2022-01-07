@@ -357,6 +357,8 @@ public:
   /// Return the topic endpoint information about publishers on a given topic.
   /**
    * \param[in] topic_name the actual topic name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `topic_name` needs to be a valid middleware topic name,
+   *   otherwise it should be a valid ROS topic name.
    * \sa rclcpp::Node::get_publishers_info_by_topic
    */
   RCLCPP_PUBLIC
@@ -367,6 +369,8 @@ public:
   /// Return the topic endpoint information about subscriptions on a given topic.
   /**
    * \param[in] topic_name the actual topic name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `topic_name` needs to be a valid middleware topic name,
+   *   otherwise it should be a valid ROS topic name.
    * \sa rclcpp::Node::get_subscriptions_info_by_topic
    */
   RCLCPP_PUBLIC

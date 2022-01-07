@@ -40,6 +40,8 @@ public:
    *   Defaults to using the global default context singleton.
    *   Shared ownership of the context is held with the guard condition until
    *   destruction.
+   * \param[in] guard_condition_options Optional guard condition options to be used.
+   *   Defaults to using the default guard condition options.
    * \throws std::invalid_argument if the context is nullptr.
    * \throws rclcpp::exceptions::RCLError based exceptions when underlying
    *   rcl functions fail.

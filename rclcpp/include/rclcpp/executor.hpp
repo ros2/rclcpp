@@ -455,6 +455,7 @@ protected:
   /// Return true if the node has been added to this executor.
   /**
    * \param[in] node_ptr a shared pointer that points to a node base interface
+   * \param[in] weak_groups_to_nodes map to nodes to lookup
    * \return true if the node is associated with the executor, otherwise false
    */
   RCLCPP_PUBLIC

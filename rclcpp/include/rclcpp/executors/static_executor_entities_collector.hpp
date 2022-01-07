@@ -299,7 +299,8 @@ private:
 
   /// Return true if the node belongs to the collector
   /**
-   * \param[in] group_ptr a node base interface shared pointer
+   * \param[in] node_ptr a node base interface shared pointer
+   * \param[in] weak_groups_to_nodes map to nodes to lookup
    * \return boolean whether a node belongs the collector
    */
   bool

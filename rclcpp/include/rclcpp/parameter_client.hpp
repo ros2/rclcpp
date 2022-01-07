@@ -185,7 +185,7 @@ public:
   /**
    * This function filters the parameters to be set based on the node name.
    *
-   * \param yaml_filename the full name of the yaml file
+   * \param parameter_map named parameters to be loaded
    * \return the future of the set_parameter service used to load the parameters
    * \throw InvalidParametersException if there is no parameter to set
    */
