@@ -276,7 +276,7 @@ public:
 
   /// Take the next message from the inter-process subscription.
   /**
-   * This verison takes a SubscribedType which is different frmo the
+   * This version takes a SubscribedType which is different from the
    * ROSMessageType when a rclcpp::TypeAdapter is in used.
    *
    * \sa take(ROSMessageType &, rclcpp::MessageInfo &)
@@ -406,10 +406,12 @@ private:
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 
   using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-    ROSMessageType,
-    AllocatorT,
-    ROSMessageTypeDeleter,
-    MessageT>;
+    MessageT,
+    SubscribedType,
+    SubscribedTypeAllocator,
+    SubscribedTypeDeleter,
+    ROSMessageT,
+    AllocatorT>;
   std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 };
 

@@ -172,8 +172,18 @@ TEST_F(TestPublisher, conversion_exception_is_passed_up) {
   for (auto is_intra_process : {true, false}) {
     rclcpp::NodeOptions options;
     options.use_intra_process_comms(is_intra_process);
+
+    auto callback =
+      [](const rclcpp::msg::String::ConstSharedPtr msg) -> void
+      {
+        (void)msg;
+      };
+
     initialize(options);
     auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
+    // A subscription is created to ensure the existence of a buffer in the intra proccess
+    // manager which will trigger the faulty conversion.
+    auto sub = node->create_subscription<rclcpp::msg::String>("topic_name", 1, callback);
     EXPECT_THROW(pub->publish(1), std::runtime_error);
   }
 }

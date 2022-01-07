@@ -400,6 +400,18 @@ if(TARGET test_subscription_with_type_adapter)
     ${cpp_typesupport_target})
 endif()
 
+ament_add_gtest(test_subscription_publisher_with_same_type_adapter test_subscription_publisher_with_same_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_subscription_publisher_with_same_type_adapter)
+  ament_target_dependencies(test_subscription_publisher_with_same_type_adapter
+    "statistics_msgs"
+  )
+  target_link_libraries(test_subscription_publisher_with_same_type_adapter
+    ${PROJECT_NAME}
+    ${cpp_typesupport_target})
+endif()
+
 ament_add_gtest(test_publisher_subscription_count_api test_publisher_subscription_count_api.cpp)
 if(TARGET test_publisher_subscription_count_api)
   ament_target_dependencies(test_publisher_subscription_count_api
