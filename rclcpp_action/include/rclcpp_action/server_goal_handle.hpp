@@ -22,7 +22,7 @@
 #include "rcl_action/types.h"
 #include "rcl_action/goal_handle.h"
 
-#include <action_msgs/msg/goal_status.hpp>
+#include "action_msgs/msg/goal_status.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/types.hpp"
