@@ -220,7 +220,7 @@ TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
     {
       publisher->publish_loaned_msg(
         serialize_message<int64_t, test_msgs::msg::BasicTypes>(test_messages[0]));
-    }, std::runtime_error);
+    }, rclcpp::exceptions::RCLError);
   }
 }
 

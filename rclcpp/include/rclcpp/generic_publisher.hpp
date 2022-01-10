@@ -133,7 +133,12 @@ public:
   RCLCPP_PUBLIC
   void publish(const rclcpp::SerializedMessage & message);
 
-  /// Publish a rclcpp::SerializedMessage via loaned message.
+  /**
+   * Publish a rclcpp::SerializedMessage via loaned message after de-serialization.
+   *
+   * \param message a serialized message
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can show
+   */
   void publish_loaned_msg(const rclcpp::SerializedMessage & message);
 
 private:

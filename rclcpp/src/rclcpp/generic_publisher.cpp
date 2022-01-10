@@ -33,13 +33,9 @@ void GenericPublisher::publish(const rclcpp::SerializedMessage & message)
 
 void GenericPublisher::publish_loaned_msg(const rclcpp::SerializedMessage & message)
 {
-  if (this->can_loan_messages()) {
-    auto loaned_message = borrow_loaned_message();
-    deserialize_message(message.get_rcl_serialized_message(), loaned_message);
-    publish_loaned_message(loaned_message);
-  } else {
-    throw std::runtime_error("failed to loan messages");
-  }
+  auto loaned_message = borrow_loaned_message();
+  deserialize_message(message.get_rcl_serialized_message(), loaned_message);
+  publish_loaned_message(loaned_message);
 }
 
 void * GenericPublisher::borrow_loaned_message()
@@ -49,7 +45,13 @@ void * GenericPublisher::borrow_loaned_message()
     get_publisher_handle().get(), type_support_, &loaned_message);
 
   if (return_code != RMW_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(return_code, "failed to borrow loaned msg");
+    if (return_code == RCL_RET_UNSUPPORTED) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        return_code,
+        "current middleware cannot support loan messages");
+    } else {
+      rclcpp::exceptions::throw_from_rcl_error(return_code, "failed to borrow loaned msg");
+    }
   }
   return loaned_message;
 }
