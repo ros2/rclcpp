@@ -141,8 +141,8 @@ def get_rclcpp_suffix_from_features(features):
     }; \
 @[ end if] \
 @[ if 'stream' in feature_combination]@
-    std::stringstream ss; \
-    ss << @(stream_arg); \
+    std::stringstream rclcpp_stream_ss_; \
+    rclcpp_stream_ss_ << @(stream_arg); \
 @[ end if]@
     RCUTILS_LOG_@(severity)@(get_suffix_from_features(feature_combination))_NAMED( \
 @{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
@@ -153,7 +153,7 @@ def get_rclcpp_suffix_from_features(features):
 @[ if 'stream' not in feature_combination]@
       __VA_ARGS__); \
 @[ else]@
-      "%s", ss.str().c_str()); \
+      "%s", rclcpp_stream_ss_.str().c_str()); \
 @[ end if]@
   } while (0)
 
