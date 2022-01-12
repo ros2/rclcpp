@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "./resolve_parameter_overrides.hpp"
+#include "resolve_parameter_overrides.hpp"
 
 #include <string>
 #include <map>

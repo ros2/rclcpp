@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rclcpp/exceptions.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <test_msgs/action/fibonacci.hpp>
-
-#include <gtest/gtest.h>
-
 #include <memory>
 #include <vector>
 
+#include "gtest/gtest.h"
+
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "test_msgs/action/fibonacci.hpp"
+
 #include "action_msgs/msg/goal_info.h"
 #include "rclcpp_action/server_goal_handle.hpp"
-#include "./mocking_utils/patch.hpp"
+#include "mocking_utils/patch.hpp"
 
 class FibonacciServerGoalHandle
   : public rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>
