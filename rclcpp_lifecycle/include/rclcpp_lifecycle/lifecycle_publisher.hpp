@@ -88,6 +88,13 @@ public:
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  void
+  on_activate() override
+  {
+    SimpleManagedEntity::on_activate();
+    should_log_ = true;
+  }
+
 private:
   /// LifecyclePublisher log helper function
   /**
