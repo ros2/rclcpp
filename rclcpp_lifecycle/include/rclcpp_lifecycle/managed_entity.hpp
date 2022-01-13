@@ -39,7 +39,7 @@ public:
   bool is_activated() const;
 
 private:
-  std::atomic<bool> enabled_ = false;
+  std::atomic<bool> activated_ = false;
 };
 
 }  // namespace rclcpp_lifecycle

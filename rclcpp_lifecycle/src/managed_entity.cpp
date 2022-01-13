@@ -19,17 +19,17 @@ namespace rclcpp_lifecycle
 
 void SimpleManagedEntity::on_activate()
 {
-  enabled_.store(true);
+  activated_.store(true);
 }
 
 void SimpleManagedEntity::on_deactivate()
 {
-  enabled_.store(false);
+  activated_.store(false);
 }
 
 bool SimpleManagedEntity::is_activated() const
 {
-  return enabled_.load();
+  return activated_.load();
 }
 
 }  // namespace rclcpp_lifecycle
