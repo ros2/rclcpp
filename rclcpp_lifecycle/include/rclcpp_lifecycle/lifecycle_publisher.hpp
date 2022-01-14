@@ -19,35 +19,20 @@
 #include <string>
 #include <utility>
 
+#include "rclcpp/logging.hpp"
 #include "rclcpp/publisher.hpp"
 
-#include "rclcpp/logging.hpp"
+#include "rclcpp_lifecycle/managed_entity.hpp"
+
 
 namespace rclcpp_lifecycle
 {
-/// base class with only
-/**
- * pure virtual functions. A managed
- * node can then deactivate or activate
- * the publishing.
- * It is more a convenient interface class
- * than a necessary base class.
- */
-class LifecyclePublisherInterface
-{
-public:
-  virtual ~LifecyclePublisherInterface() {}
-  virtual void on_activate() = 0;
-  virtual void on_deactivate() = 0;
-  virtual bool is_activated() = 0;
-};
-
 /// brief child class of rclcpp Publisher class.
 /**
  * Overrides all publisher functions to check for enabled/disabled state.
  */
 template<typename MessageT, typename Alloc = std::allocator<void>>
-class LifecyclePublisher : public LifecyclePublisherInterface,
+class LifecyclePublisher : public SimpleManagedEntity,
   public rclcpp::Publisher<MessageT, Alloc>
 {
 public:
@@ -64,7 +49,6 @@ public:
     const rclcpp::QoS & qos,
     const rclcpp::PublisherOptionsWithAllocator<Alloc> & options)
   : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options),
-    enabled_(false),
     should_log_(true),
     logger_(rclcpp::get_logger("LifecyclePublisher"))
   {
@@ -81,7 +65,7 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
-    if (!enabled_) {
+    if (!this->is_activated()) {
       log_publisher_not_enabled();
       return;
     }
@@ -97,30 +81,18 @@ public:
   virtual void
   publish(const MessageT & msg)
   {
-    if (!enabled_) {
+    if (!this->is_activated()) {
       log_publisher_not_enabled();
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  virtual void
-  on_activate()
+  void
+  on_activate() override
   {
-    enabled_ = true;
-  }
-
-  virtual void
-  on_deactivate()
-  {
-    enabled_ = false;
+    SimpleManagedEntity::on_activate();
     should_log_ = true;
-  }
-
-  virtual bool
-  is_activated()
-  {
-    return enabled_;
   }
 
 private:
@@ -146,7 +118,6 @@ private:
     should_log_ = false;
   }
 
-  bool enabled_ = false;
   bool should_log_ = true;
   rclcpp::Logger logger_;
 };

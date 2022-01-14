@@ -46,7 +46,7 @@ public:
     publisher_ =
       std::make_shared<rclcpp_lifecycle::LifecyclePublisher<test_msgs::msg::Empty>>(
       get_node_base_interface().get(), std::string("topic"), rclcpp::QoS(10), options);
-    add_publisher_handle(publisher_);
+    add_managed_entity(publisher_);
 
     // For coverage this is being added here
     auto timer = create_wall_timer(std::chrono::seconds(1), []() {});

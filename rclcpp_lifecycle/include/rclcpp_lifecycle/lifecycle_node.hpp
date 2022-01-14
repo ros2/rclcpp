@@ -968,10 +968,18 @@ public:
   bool
   register_on_error(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
+  RCLCPP_LIFECYCLE_PUBLIC
+  CallbackReturn
+  on_activate(const State & previous_state) override;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  CallbackReturn
+  on_deactivate(const State & previous_state) override;
+
 protected:
   RCLCPP_LIFECYCLE_PUBLIC
   void
-  add_publisher_handle(std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub);
+  add_managed_entity(std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface> managed_entity);
 
   RCLCPP_LIFECYCLE_PUBLIC
   void
