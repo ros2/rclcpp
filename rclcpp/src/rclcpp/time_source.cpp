@@ -33,7 +33,7 @@
 namespace rclcpp
 {
 
-class TimeSource::ClocksState : public std::enable_shared_from_this<ClocksState>
+class ClocksState final
 {
 public:
   ClocksState()
@@ -182,12 +182,11 @@ private:
   std::shared_ptr<const rosgraph_msgs::msg::Clock> last_msg_set_;
 };
 
-class TimeSource::NodeState : public std::enable_shared_from_this<NodeState>
+class TimeSource::NodeState final : public std::enable_shared_from_this<NodeState>
 {
 public:
-  NodeState(std::weak_ptr<ClocksState> clocks_state, const rclcpp::QoS & qos, bool use_clock_thread)
-  : clocks_state_(std::move(clocks_state)),
-    use_clock_thread_(use_clock_thread),
+  NodeState(const rclcpp::QoS & qos, bool use_clock_thread)
+  : use_clock_thread_(use_clock_thread),
     logger_(rclcpp::get_logger("rclcpp")),
     qos_(qos)
   {
@@ -257,12 +256,8 @@ public:
     if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
       if (use_sim_time_param.get<bool>()) {
         parameter_state_ = SET_TRUE;
-        // There should be no way to call this attachNode when the clocks_state_ pointer is not
-        // valid because it means the TimeSource is being destroyed
-        if (auto clocks_state_ptr = clocks_state_.lock()) {
-          clocks_state_ptr->enable_ros_time();
-          create_clock_sub();
-        }
+        clocks_state_.enable_ros_time();
+        create_clock_sub();
       }
     } else {
       RCLCPP_ERROR(
@@ -287,11 +282,7 @@ public:
   // Detach the attached node
   void detachNode()
   {
-    // There should be no way to call detachNode when the clocks_state_ pointer is not valid
-    // because it means the TimeSource is being destroyed
-    if (auto clocks_state_ptr = clocks_state_.lock()) {
-      clocks_state_ptr->disable_ros_time();
-    }
+    clocks_state_.disable_ros_time();
     destroy_clock_sub();
     parameter_subscription_.reset();
     node_base_.reset();
@@ -303,8 +294,18 @@ public:
     node_parameters_.reset();
   }
 
+  void attachClock(std::shared_ptr<rclcpp::Clock> clock)
+  {
+    clocks_state_.attachClock(std::move(clock));
+  }
+
+  void detachClock(std::shared_ptr<rclcpp::Clock> clock)
+  {
+    clocks_state_.detachClock(std::move(clock));
+  }
+
 private:
-  std::weak_ptr<ClocksState> clocks_state_;
+  ClocksState clocks_state_;
 
   // Dedicated thread for clock subscription.
   bool use_clock_thread_;
@@ -338,21 +339,15 @@ private:
   // The clock callback itself
   void clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
   {
-    auto clocks_state_ptr = clocks_state_.lock();
-    if (!clocks_state_ptr) {
-      // The clock_state_ pointer is no longer valid, implying that the TimeSource object is being
-      // destroyed, so do nothing
-      return;
-    }
-    if (!clocks_state_ptr->is_ros_time_active() && SET_TRUE == this->parameter_state_) {
-      clocks_state_ptr->enable_ros_time();
+    if (!clocks_state_.is_ros_time_active() && SET_TRUE == this->parameter_state_) {
+      clocks_state_.enable_ros_time();
     }
     // Cache the last message in case a new clock is attached.
-    clocks_state_ptr->cache_last_msg(msg);
+    clocks_state_.cache_last_msg(msg);
     auto time_msg = std::make_shared<builtin_interfaces::msg::Time>(msg->clock);
 
     if (SET_TRUE == this->parameter_state_) {
-      clocks_state_ptr->set_all_clocks(time_msg, true);
+      clocks_state_.set_all_clocks(time_msg, true);
     }
   }
 
@@ -434,12 +429,6 @@ private:
   // Callback for parameter updates
   void on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
   {
-    auto clocks_state_ptr = clocks_state_.lock();
-    if (!clocks_state_ptr) {
-      // The clock_state_ pointer is no longer valid, implying that the TimeSource object is being
-      // destroyed, so do nothing
-      return;
-    }
     // Filter out events on 'use_sim_time' parameter instances in other nodes.
     if (event->node != node_base_->get_fully_qualified_name()) {
       return;
@@ -455,11 +444,11 @@ private:
       }
       if (it.second->value.bool_value) {
         parameter_state_ = SET_TRUE;
-        clocks_state_ptr->enable_ros_time();
+        clocks_state_.enable_ros_time();
         create_clock_sub();
       } else {
         parameter_state_ = SET_FALSE;
-        clocks_state_ptr->disable_ros_time();
+        clocks_state_.disable_ros_time();
         destroy_clock_sub();
       }
     }
@@ -493,8 +482,7 @@ TimeSource::TimeSource(
 : constructed_use_clock_thread_(use_clock_thread),
   constructed_qos_(qos)
 {
-  clocks_state_ = std::make_shared<ClocksState>();
-  node_state_ = std::make_shared<NodeState>(clocks_state_->weak_from_this(), qos, use_clock_thread);
+  node_state_ = std::make_shared<NodeState>(qos, use_clock_thread);
 }
 
 void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
@@ -533,19 +521,18 @@ void TimeSource::detachNode()
 {
   node_state_.reset();
   node_state_ = std::make_shared<NodeState>(
-    clocks_state_->weak_from_this(),
     constructed_qos_,
     constructed_use_clock_thread_);
 }
 
 void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
 {
-  clocks_state_->attachClock(std::move(clock));
+  node_state_->attachClock(std::move(clock));
 }
 
 void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 {
-  clocks_state_->detachClock(std::move(clock));
+  node_state_->attachClock(std::move(clock));
 }
 
 bool TimeSource::get_use_clock_thread()
