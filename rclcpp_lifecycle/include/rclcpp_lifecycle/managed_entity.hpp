@@ -17,6 +17,8 @@
 
 #include <atomic>
 
+#include "rclcpp_lifecycle/visibility_control.h"
+
 namespace rclcpp_lifecycle
 {
 
@@ -24,19 +26,39 @@ namespace rclcpp_lifecycle
 class ManagedEntityInterface
 {
 public:
-  virtual ~ManagedEntityInterface() {}
-  virtual void on_activate() = 0;
-  virtual void on_deactivate() = 0;
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual
+  ~ManagedEntityInterface() {}
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual
+  void
+  on_activate() = 0;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual
+  void
+  on_deactivate() = 0;
 };
 
 /// A simple implementation of `ManagedEntityInterface`, which toogles a flag.
 class SimpleManagedEntity : public ManagedEntityInterface
 {
 public:
+  RCLCPP_LIFECYCLE_PUBLIC
   ~SimpleManagedEntity() override = default;
-  void on_activate() override;
-  void on_deactivate() override;
-  bool is_activated() const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  on_activate() override;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  on_deactivate() override;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  is_activated() const;
 
 private:
   std::atomic<bool> activated_ = false;
