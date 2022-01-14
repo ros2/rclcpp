@@ -182,7 +182,7 @@ private:
   std::shared_ptr<const rosgraph_msgs::msg::Clock> last_msg_set_;
 };
 
-class TimeSource::NodeState final : public std::enable_shared_from_this<NodeState>
+class TimeSource::NodeState final
 {
 public:
   NodeState(const rclcpp::QoS & qos, bool use_clock_thread)
@@ -269,12 +269,11 @@ public:
     // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
     parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
       node_topics_,
-      [state = std::weak_ptr<NodeState>(this->shared_from_this())](
-        std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event) {
-        if (auto state_ptr = state.lock()) {
-          state_ptr->on_parameter_event(event);
+      [this](std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event) {
+        if (node_base_ != nullptr) {
+          this->on_parameter_event(event);
         }
-        // Do nothing if the pointer could not be locked because it means the TimeSource is now
+        // Do nothing if node_base_ is nullptr because it means the TimeSource is now
         // without an attached node
       });
   }
@@ -312,13 +311,13 @@ private:
   std::thread clock_executor_thread_;
 
   // Preserve the node reference
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
-  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
-  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_{nullptr};
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_{nullptr};
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_{nullptr};
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_{nullptr};
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_{nullptr};
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_{nullptr};
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_{nullptr};
 
   // Store (and update on node attach) logger for logging.
   Logger logger_;
@@ -394,13 +393,12 @@ private:
       node_topics_,
       "/clock",
       qos_,
-      [state = std::weak_ptr<NodeState>(this->shared_from_this())](
-        std::shared_ptr<const rosgraph_msgs::msg::Clock> msg) {
-        if (auto state_ptr = state.lock()) {
-          state_ptr->clock_cb(msg);
+      [this](std::shared_ptr<const rosgraph_msgs::msg::Clock> msg) {
+        // We are using node_base_ as an indication if there is a node attached.
+        // Only call the clock_cb if that is the case.
+        if (node_base_ != nullptr) {
+          clock_cb(msg);
         }
-        // Do nothing if the pointer could not be locked because it means the TimeSource is now
-        // without an attached node
       },
       options
     );
