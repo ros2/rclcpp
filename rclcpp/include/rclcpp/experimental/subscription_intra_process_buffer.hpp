@@ -15,26 +15,21 @@
 #ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BUFFER_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BUFFER_HPP_
 
-#include <rmw/rmw.h>
-
-#include <functional>
-#include <map>
 #include <memory>
 #include <string>
 #include <stdexcept>
 #include <utility>
 
 #include "rcl/error_handling.h"
+#include "rcl/guard_condition.h"
+#include "rcl/wait.h"
 
-#include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
-#include "rclcpp/waitable.hpp"
-#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
