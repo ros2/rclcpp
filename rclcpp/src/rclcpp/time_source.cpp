@@ -327,9 +327,7 @@ private:
   rclcpp::QoS qos_;
 
   // The subscription for the clock callback
-  using MessageT = rosgraph_msgs::msg::Clock;
-  using Alloc = std::allocator<void>;
-  using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
+  using SubscriptionT = rclcpp::Subscription<rosgraph_msgs::msg::Clock>;
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
@@ -422,8 +420,7 @@ private:
   }
 
   // Parameter Event subscription
-  using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
-  using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
+  using ParamSubscriptionT = rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>;
   std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
 
   // Callback for parameter updates
@@ -457,7 +454,7 @@ private:
       {rclcpp::ParameterEventsFilter::EventType::DELETED});
     for (auto & it : deleted.get_events()) {
       (void) it;  // if there is a match it's already matched, don't bother reading it.
-      // If the parameter is deleted mark it as unset but dont' change state.
+      // If the parameter is deleted mark it as unset but don't change state.
       parameter_state_ = UNSET;
     }
   }
