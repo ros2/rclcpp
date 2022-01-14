@@ -591,6 +591,8 @@ bool TimeSource::clock_thread_is_joinable()
 
 TimeSource::~TimeSource()
 {
+  // Make sure clock subscriber thread is terminated at this time
+  node_state_->detachNode();
 }
 
 }  // namespace rclcpp
