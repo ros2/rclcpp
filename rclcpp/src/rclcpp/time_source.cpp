@@ -250,8 +250,7 @@ public:
     if (!node_parameters_->has_parameter(use_sim_time_name)) {
       use_sim_time_param = node_parameters_->declare_parameter(
         use_sim_time_name,
-        rclcpp::ParameterValue(false),
-        rcl_interfaces::msg::ParameterDescriptor());
+        rclcpp::ParameterValue(false));
     } else {
       use_sim_time_param = node_parameters_->get_parameter(use_sim_time_name).get_parameter_value();
     }
@@ -269,6 +268,7 @@ public:
       RCLCPP_ERROR(
         logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
         rclcpp::to_string(use_sim_time_param.get_type()).c_str());
+      throw std::invalid_argument("Invalid type for parameter 'use_sim_time', should be 'bool'");
     }
     sim_time_cb_handler_ = node_parameters_->add_on_set_parameters_callback(
       [use_sim_time_name](const std::vector<rclcpp::Parameter> & parameters) {
@@ -505,11 +505,8 @@ TimeSource::TimeSource(
   std::shared_ptr<rclcpp::Node> node,
   const rclcpp::QoS & qos,
   bool use_clock_thread)
-: constructed_use_clock_thread_(use_clock_thread),
-  constructed_qos_(qos)
+: TimeSource(qos, use_clock_thread)
 {
-  clocks_state_ = std::make_shared<ClocksState>();
-  node_state_ = std::make_shared<NodeState>(clocks_state_->weak_from_this(), qos, use_clock_thread);
   attachNode(node);
 }
 
