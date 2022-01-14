@@ -23,6 +23,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/wait_for_message.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
@@ -30,7 +31,14 @@
 #include "test_msgs/msg/basic_types.hpp"
 #include "test_msgs/msg/empty.hpp"
 
-class TestCftSubscription : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestContentFilterSubscription, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   static void SetUpTestCase()
@@ -45,15 +53,17 @@ public:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::Node>("test_cft_subscription", "/ns");
+    node = std::make_shared<rclcpp::Node>("test_content_filter_node", "/ns");
+    context = node->get_node_options().context();
+    qos.reliable().transient_local();
 
     auto options = rclcpp::SubscriptionOptions();
-    options.content_filter_options.filter_expression = "int32_value = %0";
-    options.content_filter_options.expression_parameters = {"10"};
+    options.content_filter_options.filter_expression = filter_expression_init;
+    options.content_filter_options.expression_parameters = expression_parameters_1;
 
     auto callback = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
     sub = node->create_subscription<test_msgs::msg::BasicTypes>(
-      "topic", 10, callback, options);
+      "content_filter_topic", qos, callback, options);
   }
 
   void TearDown()
@@ -62,12 +72,49 @@ public:
     node.reset();
   }
 
+  template<typename Condition, typename Duration>
+  bool wait_for(const Condition & condition, const Duration & timeout)
+  {
+    using clock = std::chrono::system_clock;
+    auto start = clock::now();
+    while (!condition()) {
+      if ((clock::now() - start) > timeout) {
+        return false;
+      }
+      rclcpp::spin_some(node);
+    }
+    return true;
+  }
+
 protected:
   rclcpp::Node::SharedPtr node;
+  rclcpp::Context::SharedPtr context;
+  rclcpp::QoS qos{rclcpp::KeepLast{10}};
   rclcpp::Subscription<test_msgs::msg::BasicTypes>::SharedPtr sub;
+
+  std::string filter_expression_init = "int32_value = %0";
+  std::vector<std::string> expression_parameters_1 = {"3"};
+  std::vector<std::string> expression_parameters_2 = {"4"};
 };
 
-TEST_F(TestCftSubscription, is_cft_enabled) {
+bool operator==(const test_msgs::msg::BasicTypes & m1, const test_msgs::msg::BasicTypes & m2)
+{
+  return m1.bool_value == m2.bool_value &&
+         m1.byte_value == m2.byte_value &&
+         m1.char_value == m2.char_value &&
+         m1.float32_value == m2.float32_value &&
+         m1.float64_value == m2.float64_value &&
+         m1.int8_value == m2.int8_value &&
+         m1.uint8_value == m2.uint8_value &&
+         m1.int16_value == m2.int16_value &&
+         m1.uint16_value == m2.uint16_value &&
+         m1.int32_value == m2.int32_value &&
+         m1.uint32_value == m2.uint32_value &&
+         m1.int64_value == m2.int64_value &&
+         m1.uint64_value == m2.uint64_value;
+}
+
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), is_cft_enabled) {
   {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_subscription_is_cft_enabled, false);
@@ -81,7 +128,7 @@ TEST_F(TestCftSubscription, is_cft_enabled) {
   }
 }
 
-TEST_F(TestCftSubscription, get_content_filter_error) {
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), get_content_filter_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_subscription_get_content_filter, RCL_RET_ERROR);
 
@@ -92,7 +139,7 @@ TEST_F(TestCftSubscription, get_content_filter_error) {
     rclcpp::exceptions::RCLError);
 }
 
-TEST_F(TestCftSubscription, set_content_filter_error) {
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), set_content_filter_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_subscription_set_content_filter, RCL_RET_ERROR);
 
@@ -101,4 +148,162 @@ TEST_F(TestCftSubscription, set_content_filter_error) {
   EXPECT_THROW(
     sub->set_content_filter(filter_expression, {expression_parameter}),
     rclcpp::exceptions::RCLError);
+}
+
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), get_content_filter) {
+  std::string filter_expression;
+  std::vector<std::string> expression_parameters;
+
+  if (sub->is_cft_enabled()) {
+    EXPECT_NO_THROW(
+      sub->get_content_filter(filter_expression, expression_parameters));
+
+    EXPECT_EQ(filter_expression, filter_expression_init);
+    EXPECT_EQ(expression_parameters, expression_parameters_1);
+  } else {
+    EXPECT_THROW(
+      sub->get_content_filter(filter_expression, expression_parameters),
+      rclcpp::exceptions::RCLError);
+  }
+}
+
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), set_content_filter) {
+  if (sub->is_cft_enabled()) {
+    EXPECT_NO_THROW(
+      sub->set_content_filter(filter_expression_init, expression_parameters_2));
+  } else {
+    EXPECT_THROW(
+      sub->set_content_filter(filter_expression_init, expression_parameters_2),
+      rclcpp::exceptions::RCLError);
+  }
+}
+
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_filter_get_begin) {
+  using namespace std::chrono_literals;
+  {
+    test_msgs::msg::BasicTypes msg;
+    rclcpp::MessageInfo msg_info;
+    EXPECT_FALSE(sub->take(msg, msg_info));
+  }
+  {
+    rclcpp::PublisherOptions po;
+    auto pub = node->create_publisher<test_msgs::msg::BasicTypes>("content_filter_topic", qos, po);
+
+    auto connected = [pub, sub = this->sub]() -> bool {
+        return pub->get_subscription_count() && sub->get_publisher_count();
+      };
+    ASSERT_TRUE(wait_for(connected, 5s));
+
+    test_msgs::msg::BasicTypes original_message;
+    original_message.int32_value = 3;
+    pub->publish(original_message);
+
+    test_msgs::msg::BasicTypes output_message;
+    bool receive = wait_for_message(output_message, sub, context, 5s);
+    EXPECT_TRUE(receive);
+    EXPECT_EQ(original_message, output_message);
+
+    if (sub->is_cft_enabled()) {
+      EXPECT_NO_THROW(
+        sub->set_content_filter(filter_expression_init, expression_parameters_2));
+
+      test_msgs::msg::BasicTypes original_message;
+      original_message.int32_value = 3;
+      pub->publish(original_message);
+
+      test_msgs::msg::BasicTypes output_message;
+      bool receive = wait_for_message(output_message, sub, context, 5s);
+      EXPECT_FALSE(receive);
+    }
+  }
+}
+
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_filter_get_later) {
+  using namespace std::chrono_literals;
+  {
+    test_msgs::msg::BasicTypes msg;
+    rclcpp::MessageInfo msg_info;
+    EXPECT_FALSE(sub->take(msg, msg_info));
+  }
+  {
+    rclcpp::PublisherOptions po;
+    auto pub = node->create_publisher<test_msgs::msg::BasicTypes>("content_filter_topic", qos, po);
+
+    auto connected = [pub, sub = this->sub]() -> bool {
+        return pub->get_subscription_count() && sub->get_publisher_count();
+      };
+    ASSERT_TRUE(wait_for(connected, 5s));
+
+    test_msgs::msg::BasicTypes original_message;
+    original_message.int32_value = 4;
+    pub->publish(original_message);
+
+    test_msgs::msg::BasicTypes output_message;
+    bool receive = wait_for_message(output_message, sub, context, 5s);
+    if (sub->is_cft_enabled()) {
+      EXPECT_FALSE(receive);
+    } else {
+      EXPECT_TRUE(receive);
+      EXPECT_EQ(original_message, output_message);
+    }
+
+    if (sub->is_cft_enabled()) {
+      EXPECT_NO_THROW(
+        sub->set_content_filter(filter_expression_init, expression_parameters_2));
+
+      test_msgs::msg::BasicTypes original_message;
+      original_message.int32_value = 4;
+      pub->publish(original_message);
+
+      test_msgs::msg::BasicTypes output_message;
+      bool receive = wait_for_message(output_message, sub, context, 5s);
+      EXPECT_TRUE(receive);
+      EXPECT_EQ(original_message, output_message);
+    }
+  }
+}
+
+TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_filter_reset) {
+  using namespace std::chrono_literals;
+  {
+    test_msgs::msg::BasicTypes msg;
+    rclcpp::MessageInfo msg_info;
+    EXPECT_FALSE(sub->take(msg, msg_info));
+  }
+  {
+    rclcpp::PublisherOptions po;
+    auto pub = node->create_publisher<test_msgs::msg::BasicTypes>("content_filter_topic", qos, po);
+
+    auto connected = [pub, sub = this->sub]() -> bool {
+        return pub->get_subscription_count() && sub->get_publisher_count();
+      };
+    ASSERT_TRUE(wait_for(connected, 5s));
+
+    test_msgs::msg::BasicTypes original_message;
+    original_message.int32_value = 4;
+    pub->publish(original_message);
+
+    test_msgs::msg::BasicTypes output_message;
+    bool receive = wait_for_message(output_message, sub, context, 5s);
+    if (sub->is_cft_enabled()) {
+      EXPECT_FALSE(receive);
+    } else {
+      EXPECT_TRUE(receive);
+      EXPECT_EQ(original_message, output_message);
+    }
+
+    if (sub->is_cft_enabled()) {
+      EXPECT_NO_THROW(
+        sub->set_content_filter(""));
+
+      test_msgs::msg::BasicTypes original_message;
+      original_message.int32_value = 4;
+      pub->publish(original_message);
+
+      test_msgs::msg::BasicTypes output_message;
+      bool receive = wait_for_message(output_message, sub, context, 5s);
+      EXPECT_TRUE(receive);
+      EXPECT_EQ(original_message, output_message);
+    }
+  }
 }
