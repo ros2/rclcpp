@@ -270,22 +270,6 @@ public:
         rclcpp::to_string(use_sim_time_param.get_type()).c_str());
       throw std::invalid_argument("Invalid type for parameter 'use_sim_time', should be 'bool'");
     }
-    sim_time_cb_handler_ = node_parameters_->add_on_set_parameters_callback(
-      [use_sim_time_name](const std::vector<rclcpp::Parameter> & parameters) {
-        rcl_interfaces::msg::SetParametersResult result;
-        result.successful = true;
-        for (const auto & parameter : parameters) {
-          if (
-            parameter.get_name() == use_sim_time_name &&
-            parameter.get_type() != rclcpp::PARAMETER_BOOL)
-          {
-            result.successful = false;
-            result.reason = "'" + use_sim_time_name + "' must be a bool";
-            break;
-          }
-        }
-        return result;
-      });
 
     // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
     parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
@@ -316,10 +300,6 @@ public:
     node_services_.reset();
     node_logging_.reset();
     node_clock_.reset();
-    if (sim_time_cb_handler_ && node_parameters_) {
-      node_parameters_->remove_on_set_parameters_callback(sim_time_cb_handler_.get());
-    }
-    sim_time_cb_handler_.reset();
     node_parameters_.reset();
   }
 
@@ -496,9 +476,6 @@ private:
   // An enum to hold the parameter state
   enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
   UseSimTimeParameterState parameter_state_;
-
-  // A handler for the use_sim_time parameter callback.
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler_{nullptr};
 };
 
 TimeSource::TimeSource(
