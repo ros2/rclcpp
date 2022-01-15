@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+15.0.0 (2022-01-14)
+-------------------
+* Add rclcpp_components::component (`#1855 <https://github.com/ros2/rclcpp/issues/1855>`_)
+* Contributors: Shane Loretz
+
 14.1.0 (2022-01-05)
 -------------------
 

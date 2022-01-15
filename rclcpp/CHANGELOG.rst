@@ -2,6 +2,16 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+15.0.0 (2022-01-14)
+-------------------
+* Cleanup the TypeAdapt tests (`#1858 <https://github.com/ros2/rclcpp/issues/1858>`_)
+* Cleanup includes (`#1857 <https://github.com/ros2/rclcpp/issues/1857>`_)
+* Fix include order and relative paths for cpplint (`#1859 <https://github.com/ros2/rclcpp/issues/1859>`_)
+* Rename stringstream in macros to a more unique name (`#1862 <https://github.com/ros2/rclcpp/issues/1862>`_)
+* Add non transform capabilities for intra-process (`#1849 <https://github.com/ros2/rclcpp/issues/1849>`_)
+* Fix rclcpp documentation build (`#1779 <https://github.com/ros2/rclcpp/issues/1779>`_)
+* Contributors: Chris Lalancette, Doug Smith, Gonzo, Jacob Perron, Michel Hidalgo
+
 14.1.0 (2022-01-05)
 -------------------
 * Use UninitializedStaticallyTypedParameterException (`#1689 <https://github.com/ros2/rclcpp/issues/1689>`_)
