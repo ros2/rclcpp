@@ -126,10 +126,19 @@ void TimeSource::attachNode(
       return result;
     });
 
+  const rclcpp::QoS qos = (
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))
+  );
+  rclcpp::SubscriptionOptions options;
+  options.content_filter_options.filter_expression =
+    std::string("node = '") + node_base_->get_fully_qualified_name() + "'";
+
   // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
     node_topics_,
-    std::bind(&TimeSource::on_parameter_event, this, std::placeholders::_1));
+    std::bind(&TimeSource::on_parameter_event, this, std::placeholders::_1),
+    qos,
+    options);
 }
 
 void TimeSource::detachNode()
@@ -299,6 +308,11 @@ void TimeSource::on_parameter_event(
 {
   // Filter out events on 'use_sim_time' parameter instances in other nodes.
   if (event->node != node_base_->get_fully_qualified_name()) {
+    if (parameter_subscription_->is_cft_enabled()) {
+      RCLCPP_ERROR(
+        logger_, "this node '%s' should not get parameter event of another node '%s'",
+        node_base_->get_fully_qualified_name(), event->node.c_str());
+    }
     return;
   }
   // Filter for only 'use_sim_time' being added or changed.
