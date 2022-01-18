@@ -281,8 +281,10 @@ public:
   // Detach the attached node
   void detachNode()
   {
-    clocks_state_.disable_ros_time();
+    // destroy_clock_sub() *must* be first here, to ensure that the executor
+    // can't possibly call any of the callbacks as we are cleaning up.
     destroy_clock_sub();
+    clocks_state_.disable_ros_time();
     parameter_subscription_.reset();
     node_base_.reset();
     node_topics_.reset();
