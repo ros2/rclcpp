@@ -445,8 +445,8 @@ private:
         create_clock_sub();
       } else {
         parameter_state_ = SET_FALSE;
-        clocks_state_.disable_ros_time();
         destroy_clock_sub();
+        clocks_state_.disable_ros_time();
       }
     }
     // Handle the case that use_sim_time was deleted.
@@ -529,7 +529,7 @@ void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
 
 void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 {
-  node_state_->attachClock(std::move(clock));
+  node_state_->detachClock(std::move(clock));
 }
 
 bool TimeSource::get_use_clock_thread()
