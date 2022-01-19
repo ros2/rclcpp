@@ -172,6 +172,18 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
                 "Extra component argument 'use_intra_process_comms' must be a boolean");
       }
       options.use_intra_process_comms(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "forward_global_arguments") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+                "Extra component argument 'forward_global_arguments' must be a boolean");
+      }
+      options.use_global_arguments(extra_argument.get_value<bool>());
+      if (extra_argument.get_value<bool>()) {
+        RCLCPP_WARN(
+          get_logger(), "forward_global_arguments is true by default in nodes, but is not "
+          "recommended in a component manager. If true, this will cause this node's behavior "
+          "to be influenced by global arguments, not only those targeted at this node.");
+      }
     }
   }
 
