@@ -261,7 +261,7 @@ TEST(TimeSource, invalid_sim_time_parameter_override)
   options.append_parameter_override("use_sim_time", "not boolean");
 
   RCLCPP_EXPECT_THROW_EQ(
-    std::make_shared<rclcpp::Node>("my_node", options),
+    rclcpp::Node("my_node", options),
     std::invalid_argument("Invalid type for parameter 'use_sim_time', should be 'bool'"));
 
   rclcpp::shutdown();
