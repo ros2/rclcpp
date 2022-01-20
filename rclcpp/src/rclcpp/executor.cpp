@@ -913,7 +913,7 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
   return success;
 }
 
-// Returns true iff the weak_groups_to_nodes map has node_ptr as the value in any of its entry.
+// Returns true if the weak_groups_to_nodes map has node_ptr as the value in any of its entry.
 bool
 Executor::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,

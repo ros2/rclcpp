@@ -452,7 +452,7 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
   return false;
 }
 
-// Returns true iff the weak_groups_to_nodes map has node_ptr as the value in any of its entry.
+// Returns true if the weak_groups_to_nodes map has node_ptr as the value in any of its entry.
 bool
 StaticExecutorEntitiesCollector::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
