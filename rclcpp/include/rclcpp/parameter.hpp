@@ -164,12 +164,12 @@ public:
   const std::vector<uint8_t> &
   as_byte_array() const;
 
-  /// Get value of parameter as bool array (vector<bool>).
+  /// Get value of parameter as bool array (rosidl_runtime_cpp::Vector<bool>).
   /**
    * \throws rclcpp::ParameterTypeException if the type doesn't match
    */
   RCLCPP_PUBLIC
-  const std::vector<bool> &
+  const rosidl_runtime_cpp::Vector<bool> &
   as_bool_array() const;
 
   /// Get value of parameter as integer array (vector<int64_t>).

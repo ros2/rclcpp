@@ -201,7 +201,7 @@ public:
   template<ParameterType type>
   constexpr
   typename std::enable_if<
-    type == ParameterType::PARAMETER_BOOL_ARRAY, const std::vector<bool> &>::type
+    type == ParameterType::PARAMETER_BOOL_ARRAY, const rosidl_runtime_cpp::Vector<bool> &>::type
   get() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY) {
@@ -295,7 +295,7 @@ public:
   constexpr
   typename std::enable_if<
     std::is_convertible<
-      type, const std::vector<bool> &>::value, const std::vector<bool> &>::type
+      type, std::vector<bool>>::value, const rosidl_runtime_cpp::Vector<bool> &>::type
   get() const
   {
     return get<ParameterType::PARAMETER_BOOL_ARRAY>();

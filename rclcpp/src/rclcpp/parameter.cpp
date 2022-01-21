@@ -117,7 +117,7 @@ Parameter::as_byte_array() const
   return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
 }
 
-const std::vector<bool> &
+const rosidl_runtime_cpp::Vector<bool> &
 Parameter::as_bool_array() const
 {
   return get_value<ParameterType::PARAMETER_BOOL_ARRAY>();
