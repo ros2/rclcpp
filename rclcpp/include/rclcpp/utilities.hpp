@@ -65,13 +65,16 @@ enum class SignalHandlerOptions
  *
  * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  *
- * \param signal_handler_options option to indicate which signal handlers should be installed.
+ * \param[in] argc number of command-line arguments to parse.
+ * \param[in] argv array of command-line arguments to parse.
+ * \param[in] init_options initialization options to apply.
+ * \param[in] signal_handler_options option to indicate which signal handlers should be installed.
  */
 RCLCPP_PUBLIC
 void
 init(
   int argc,
-  char const * const argv[],
+  char const * const * argv,
   const InitOptions & init_options = InitOptions(),
   SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
 
@@ -87,7 +90,7 @@ init(
  *
  * This function is thread-safe.
  *
- * \param signal_handler_options option to indicate which signal handlers should be installed.
+ * \param[in] signal_handler_options option to indicate which signal handlers should be installed.
  * \return true if signal handler was installed by this function, false if already installed.
  */
 RCLCPP_PUBLIC
@@ -136,7 +139,7 @@ RCLCPP_PUBLIC
 std::vector<std::string>
 init_and_remove_ros_arguments(
   int argc,
-  char const * const argv[],
+  char const * const * argv,
   const InitOptions & init_options = InitOptions());
 
 /// Remove ROS-specific arguments from argument vector.
@@ -154,7 +157,7 @@ init_and_remove_ros_arguments(
  */
 RCLCPP_PUBLIC
 std::vector<std::string>
-remove_ros_arguments(int argc, char const * const argv[]);
+remove_ros_arguments(int argc, char const * const * argv);
 
 /// Check rclcpp's status.
 /**

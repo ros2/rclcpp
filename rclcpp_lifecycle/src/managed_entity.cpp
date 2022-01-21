@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2022 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,29 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__DETAIL__UTILITIES_HPP_
-#define RCLCPP__DETAIL__UTILITIES_HPP_
+#include "rclcpp_lifecycle/managed_entity.hpp"
 
-#include "rclcpp/detail/utilities.hpp"
-
-#include <string>
-#include <vector>
-
-#include "rcl/allocator.h"
-#include "rcl/arguments.h"
-
-namespace rclcpp
-{
-namespace detail
+namespace rclcpp_lifecycle
 {
 
-std::vector<std::string>
-get_unparsed_ros_arguments(
-  int argc, char const * const * argv,
-  rcl_arguments_t * arguments,
-  rcl_allocator_t allocator);
+void SimpleManagedEntity::on_activate()
+{
+  activated_.store(true);
+}
 
-}  // namespace detail
-}  // namespace rclcpp
+void SimpleManagedEntity::on_deactivate()
+{
+  activated_.store(false);
+}
 
-#endif  // RCLCPP__DETAIL__UTILITIES_HPP_
+bool SimpleManagedEntity::is_activated() const
+{
+  return activated_.load();
+}
+
+}  // namespace rclcpp_lifecycle

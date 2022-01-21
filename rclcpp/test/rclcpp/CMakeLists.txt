@@ -368,17 +368,8 @@ ament_add_gtest(test_publisher_with_type_adapter test_publisher_with_type_adapte
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
 )
 if(TARGET test_publisher_with_type_adapter)
-  ament_target_dependencies(test_publisher_with_type_adapter
-    "rcutils"
-    "rcl_interfaces"
-    "rmw"
-    "rosidl_runtime_cpp"
-    "rosidl_typesupport_cpp"
-    "test_msgs"
-  )
   target_link_libraries(test_publisher_with_type_adapter
     ${PROJECT_NAME}
-    mimick
     ${cpp_typesupport_target})
 endif()
 
@@ -386,17 +377,20 @@ ament_add_gtest(test_subscription_with_type_adapter test_subscription_with_type_
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
 )
 if(TARGET test_subscription_with_type_adapter)
-  ament_target_dependencies(test_subscription_with_type_adapter
-    "rcutils"
-    "rcl_interfaces"
-    "rmw"
-    "rosidl_runtime_cpp"
-    "rosidl_typesupport_cpp"
-    "test_msgs"
-  )
   target_link_libraries(test_subscription_with_type_adapter
     ${PROJECT_NAME}
-    mimick
+    ${cpp_typesupport_target})
+endif()
+
+ament_add_gtest(test_subscription_publisher_with_same_type_adapter test_subscription_publisher_with_same_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_subscription_publisher_with_same_type_adapter)
+  ament_target_dependencies(test_subscription_publisher_with_same_type_adapter
+    "statistics_msgs"
+  )
+  target_link_libraries(test_subscription_publisher_with_same_type_adapter
+    ${PROJECT_NAME}
     ${cpp_typesupport_target})
 endif()
 

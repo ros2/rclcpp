@@ -22,6 +22,7 @@
 
 #define RCLCPP_BUILDING_LIBRARY 1
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rmw/types.h"
@@ -194,9 +195,14 @@ class SubscriptionIntraProcessBase
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
-  explicit SubscriptionIntraProcessBase(rclcpp::QoS qos = rclcpp::QoS(10))
-  : qos_profile(qos), topic_name("topic")
-  {}
+  explicit SubscriptionIntraProcessBase(
+    rclcpp::Context::SharedPtr context,
+    const std::string & topic = "topic",
+    rclcpp::QoS qos = rclcpp::QoS(10))
+  : qos_profile(qos), topic_name(topic)
+  {
+    (void)context;
+  }
 
   virtual ~SubscriptionIntraProcessBase() {}
 
@@ -212,24 +218,26 @@ public:
   const char *
   get_topic_name()
   {
-    return topic_name;
+    return topic_name.c_str();
   }
 
   rclcpp::QoS qos_profile;
-  const char * topic_name;
+  std::string topic_name;
 };
 
 template<
   typename MessageT,
   typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>>
+  typename Deleter = std::default_delete<MessageT>,
+  typename ROSMessageType = MessageT
+>
 class SubscriptionIntraProcessBuffer : public SubscriptionIntraProcessBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
 
   explicit SubscriptionIntraProcessBuffer(rclcpp::QoS qos)
-  : SubscriptionIntraProcessBase(qos), take_shared_method(false)
+  : SubscriptionIntraProcessBase(nullptr, "topic", qos), take_shared_method(false)
   {
     buffer = std::make_unique<rclcpp::experimental::buffers::mock::IntraProcessBuffer<MessageT>>();
   }
@@ -242,6 +250,18 @@ public:
 
   void
   provide_intra_process_message(std::unique_ptr<MessageT> msg)
+  {
+    buffer->add(std::move(msg));
+  }
+
+  void
+  provide_intra_process_data(std::shared_ptr<const MessageT> msg)
+  {
+    buffer->add(msg);
+  }
+
+  void
+  provide_intra_process_data(std::unique_ptr<MessageT> msg)
   {
     buffer->add(std::move(msg));
   }
@@ -267,7 +287,7 @@ public:
 
 template<
   typename MessageT,
-  typename Alloc = std::allocator<void>,
+  typename Alloc = std::allocator<MessageT>,
   typename Deleter = std::default_delete<MessageT>>
 class SubscriptionIntraProcess : public SubscriptionIntraProcessBuffer<
     MessageT,
@@ -301,7 +321,7 @@ public:
 #define SubscriptionIntraProcessBase mock::SubscriptionIntraProcessBase
 #define SubscriptionIntraProcessBuffer mock::SubscriptionIntraProcessBuffer
 #define SubscriptionIntraProcess mock::SubscriptionIntraProcess
-#include "../src/rclcpp/intra_process_manager.cpp"
+#include "../src/rclcpp/intra_process_manager.cpp"  // NOLINT
 #undef Publisher
 #undef PublisherBase
 #undef IntraProcessBuffer
@@ -328,7 +348,7 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
     throw std::runtime_error("cannot publish msg which is a null pointer");
   }
 
-  ipm->template do_intra_process_publish<T, Alloc>(
+  ipm->template do_intra_process_publish<T, T, Alloc>(
     intra_process_publisher_id_,
     std::move(msg),
     *message_allocator_);

@@ -192,7 +192,7 @@ __delete_context(rcl_context_t * context)
 void
 Context::init(
   int argc,
-  char const * const argv[],
+  char const * const * argv,
   const rclcpp::InitOptions & init_options)
 {
   std::lock_guard<std::recursive_mutex> init_lock(init_mutex_);

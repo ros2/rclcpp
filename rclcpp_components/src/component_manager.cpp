@@ -46,6 +46,18 @@ ComponentManager::ComponentManager(
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor desc{};
+    desc.description = "Number of thread";
+    rcl_interfaces::msg::IntegerRange range{};
+    range.from_value = 1;
+    range.to_value = std::thread::hardware_concurrency();
+    desc.integer_range.push_back(range);
+    desc.read_only = true;
+    this->declare_parameter(
+      "thread_num", static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
+  }
 }
 
 ComponentManager::~ComponentManager()
@@ -160,10 +172,28 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
                 "Extra component argument 'use_intra_process_comms' must be a boolean");
       }
       options.use_intra_process_comms(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "forward_global_arguments") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+                "Extra component argument 'forward_global_arguments' must be a boolean");
+      }
+      options.use_global_arguments(extra_argument.get_value<bool>());
+      if (extra_argument.get_value<bool>()) {
+        RCLCPP_WARN(
+          get_logger(), "forward_global_arguments is true by default in nodes, but is not "
+          "recommended in a component manager. If true, this will cause this node's behavior "
+          "to be influenced by global arguments, not only those targeted at this node.");
+      }
     }
   }
 
   return options;
+}
+
+void
+ComponentManager::set_executor(const std::weak_ptr<rclcpp::Executor> executor)
+{
+  executor_ = executor;
 }
 
 void

@@ -38,6 +38,7 @@ namespace detail
  *
  * This issue, with the lambda's, can be demonstrated with this minimal program:
  *
+ * \code{.cpp}
  *   #include <functional>
  *   #include <memory>
  *
@@ -52,6 +53,7 @@ namespace detail
  *     std::function<void (std::shared_ptr<int>)> cb = [](std::shared_ptr<int>){};
  *     f(cb);
  *   }
+ * \endcode
  *
  * If this program ever starts working in a future version of C++, this class
  * may become redundant.

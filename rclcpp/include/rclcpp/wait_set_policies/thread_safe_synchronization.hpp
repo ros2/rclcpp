@@ -216,7 +216,7 @@ protected:
     std::shared_ptr<rclcpp::Waitable> && waitable,
     std::shared_ptr<void> && associated_entity,
     std::function<
-      void(std::shared_ptr<rclcpp::Waitable>&&, std::shared_ptr<void>&&)
+      void(std::shared_ptr<rclcpp::Waitable>&&, std::shared_ptr<void> &&)
     > add_waitable_function)
   {
     using rclcpp::wait_set_policies::detail::WritePreferringReadWriteLock;

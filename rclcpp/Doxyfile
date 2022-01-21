@@ -21,7 +21,16 @@ GENERATE_LATEX         = NO
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
-PREDEFINED             = RCLCPP_PUBLIC=
+PREDEFINED             += DOXYGEN_ONLY
+PREDEFINED             += RCLCPP_LOCAL=
+PREDEFINED             += RCLCPP_PUBLIC=
+PREDEFINED             += RCLCPP_PUBLIC_TYPE=
+PREDEFINED             += RCUTILS_WARN_UNUSED=
+PREDEFINED             += RCPPUTILS_TSA_GUARDED_BY(x)=
+PREDEFINED             += RCPPUTILS_TSA_PT_GUARDED_BY(x)=
+PREDEFINED             += RCPPUTILS_TSA_REQUIRES(x)=
+
+DOT_GRAPH_MAX_NODES    = 101
 
 # Tag files that do not exist will produce a warning and cross-project linking will not work.
 TAGFILES += "../../../../doxygen_tag_files/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/"

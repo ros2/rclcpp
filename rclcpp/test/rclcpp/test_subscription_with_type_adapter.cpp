@@ -16,30 +16,14 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
-#include <utility>
-#include <vector>
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "../mocking_utils/patch.hpp"
-#include "../utils/rclcpp_gtest_macros.hpp"
-
-#include "test_msgs/msg/empty.hpp"
 #include "rclcpp/msg/string.hpp"
-
-
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
 
 
 using namespace std::chrono_literals;
@@ -49,30 +33,6 @@ static const std::chrono::milliseconds g_sleep_per_loop(10);
 
 
 class TestSubscription : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    if (!rclcpp::ok()) {
-      rclcpp::init(0, nullptr);
-    }
-  }
-
-protected:
-  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
-  {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
-  }
-
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  rclcpp::Node::SharedPtr node;
-};
-
-class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   static void SetUpTestCase()
@@ -148,7 +108,7 @@ bool wait_for_match(
  * Testing publisher creation signatures with a type adapter.
  */
 TEST_F(TestSubscription, various_creation_signatures) {
-  initialize();
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", rclcpp::NodeOptions());
   {
     using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
     auto sub =
@@ -167,7 +127,7 @@ TEST_F(TestSubscription, various_creation_signatures) {
  * Testing that subscriber receives type adapted types and ROS message types with intra proccess communications.
  */
 TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  TestSubscription,
   check_type_adapted_messages_are_received_by_intra_process_subscription) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
@@ -386,7 +346,7 @@ TEST_F(
  * Testing that subscriber receives type adapted types and ROS message types with inter proccess communications.
  */
 TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  TestSubscription,
   check_type_adapted_messages_are_received_by_inter_process_subscription) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";

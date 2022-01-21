@@ -49,11 +49,13 @@ LifecycleNode::create_publisher(
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
 {
   using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>;
-  return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+  auto pub = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
     *this,
     topic_name,
     qos,
     options);
+  this->add_managed_entity(pub);
+  return pub;
 }
 
 // TODO(karsten1987): Create LifecycleSubscriber

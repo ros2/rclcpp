@@ -716,6 +716,12 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
       rclcpp::exceptions::InvalidParameterTypeException);
   }
   {
+    // statically typed parameter must be initialized
+    EXPECT_THROW(
+      {node->declare_parameter<std::string>("static_and_uninitialized");},
+      rclcpp::exceptions::UninitializedStaticallyTypedParameterException);
+  }
+  {
     // cannot pass an expected type and a descriptor with dynamic_typing=True
     rcl_interfaces::msg::ParameterDescriptor descriptor{};
     descriptor.dynamic_typing = true;
@@ -2611,6 +2617,163 @@ TEST_F(TestNode, declare_parameter_with_vector) {
       {name4, std::vector<double>{3.0, bigger_than_float}},
     };
     EXPECT_EQ(node->get_parameters({name1, name2, name3, name4}), expected);
+  }
+}
+
+// test non-array data types for declare parameter function templates that are explicitly defined
+TEST_F(TestNode, declare_parameter_allowed_simple_types_function_templates) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_allowed_simple_types_function_templates"_unq);
+  {
+    // declare parameter and then get types to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+    auto name5 = "parameter"_unq;
+    auto name6 = "parameter"_unq;
+    auto name7 = "parameter"_unq;
+
+    node->declare_parameter<bool>(name1, false);
+    node->declare_parameter<int>(name2, 1234);
+    node->declare_parameter<int64_t>(name3, 12340);
+    node->declare_parameter<float>(name4, static_cast<float>(12.34));
+    node->declare_parameter<double>(name5, 12.34);  // called float64 in ros2 design parameters page
+    node->declare_parameter<std::string>(name6, "test string");
+    auto str = "test param";
+    node->declare_parameter<const char *>(name7, str);
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+    EXPECT_TRUE(node->has_parameter(name4));
+    EXPECT_TRUE(node->has_parameter(name5));
+    EXPECT_TRUE(node->has_parameter(name6));
+    EXPECT_TRUE(node->has_parameter(name7));
+
+    auto results = node->get_parameter_types({name1, name2, name3, name4, name5, name6, name7});
+    EXPECT_EQ(results.size(), 7u);
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_BOOL);
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_EQ(results[3], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
+    EXPECT_EQ(results[4], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
+    EXPECT_EQ(results[5], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_EQ(results[6], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+  }
+  {
+    // declare parameter and then get values to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+    auto name5 = "parameter"_unq;
+    auto name6 = "parameter"_unq;
+    auto name7 = "parameter"_unq;
+
+    node->declare_parameter<bool>(name1, false);
+    node->declare_parameter<int>(name2, 4321);
+    node->declare_parameter<int64_t>(name3, 43210);
+    node->declare_parameter<float>(name4, static_cast<float>(43.21));
+    node->declare_parameter<double>(name5, 12.34);  // called float64 in ros2 design parameters page
+    node->declare_parameter<std::string>(name6, "test string");
+    auto str = "test param";
+    node->declare_parameter<const char *>(name7, str);
+
+    std::vector<rclcpp::Parameter> expected = {
+      {name1, false},
+      {name2, 4321},
+      {name3, 43210},
+      {name4, static_cast<float>(43.21)},
+      {name5, 12.34},
+      {name6, "test string"},
+      {name7, str}
+    };
+    EXPECT_EQ(node->get_parameters({name1, name2, name3, name4, name5, name6, name7}), expected);
+  }
+}
+
+// test array data types for declare parameter function templates that are explicitly defined
+TEST_F(TestNode, declare_parameter_allowed_array_types_function_templates) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_declare_parameter_allowed_array_types_function_templates"_unq);
+  {
+    // declare parameter and then get types to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+    auto name5 = "parameter"_unq;
+    auto name6 = "parameter"_unq;
+    auto name7 = "parameter"_unq;
+
+    node->declare_parameter<std::vector<uint8_t>>(name1, std::vector<uint8_t>{3, 4, 5, 7, 9});
+    node->declare_parameter<std::vector<bool>>(name2, std::vector<bool>{false, true});
+    node->declare_parameter<std::vector<int>>(name3, std::vector<int>{1234, 2345});
+    node->declare_parameter<std::vector<int64_t>>(name4, std::vector<int64_t>{12340, 9876});
+    node->declare_parameter<std::vector<float>>(
+      name5, std::vector<float>{static_cast<float>(12.34),
+        static_cast<float>(98.78)});
+    node->declare_parameter<std::vector<double>>(
+      name6,
+      std::vector<double>{12.34, 55.66});  // called float64 in ros2 design parameters page
+    node->declare_parameter<std::vector<std::string>>(
+      name7, std::vector<std::string>{"test string",
+        "another test str"});
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+    EXPECT_TRUE(node->has_parameter(name4));
+    EXPECT_TRUE(node->has_parameter(name5));
+    EXPECT_TRUE(node->has_parameter(name6));
+    EXPECT_TRUE(node->has_parameter(name7));
+
+    auto results = node->get_parameter_types({name1, name2, name3, name4, name5, name6, name7});
+    EXPECT_EQ(results.size(), 7u);
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY);
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY);
+    EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(results[3], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(results[4], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(results[5], rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(results[6], rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY);
+  }
+  {
+    // declare parameter and then get values to check
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    auto name4 = "parameter"_unq;
+    auto name5 = "parameter"_unq;
+    auto name6 = "parameter"_unq;
+    auto name7 = "parameter"_unq;
+
+    std::vector<uint8_t> byte_arr = {0xD, 0xE, 0xA, 0xD};
+    node->declare_parameter<std::vector<uint8_t>>(name1, byte_arr);
+    node->declare_parameter<std::vector<bool>>(name2, std::vector<bool>{true, false, true});
+    node->declare_parameter<std::vector<int>>(name3, std::vector<int>{22, 33, 55, 77});
+    node->declare_parameter<std::vector<int64_t>>(name4, std::vector<int64_t>{456, 765});
+    node->declare_parameter<std::vector<float>>(
+      name5, std::vector<float>{static_cast<float>(99.11),
+        static_cast<float>(11.99)});
+    node->declare_parameter<std::vector<double>>(
+      name6,
+      std::vector<double>{12.21, 55.55, 98.89});  // called float64 in ros2 design parameters page
+    node->declare_parameter<std::vector<std::string>>(
+      name7, std::vector<std::string>{"ros2",
+        "colcon", "ignition"});
+
+    std::vector<rclcpp::Parameter> expected = {
+      {name1, std::vector<uint8_t>{0xD, 0xE, 0xA, 0xD}},
+      {name2, std::vector<bool>{true, false, true}},
+      {name3, std::vector<int>{22, 33, 55, 77}},
+      {name4, std::vector<int64_t>{456, 765}},
+      {name5, std::vector<float>{static_cast<float>(99.11), static_cast<float>(11.99)}},
+      {name6, std::vector<double>{12.21, 55.55, 98.89}},
+      {name7, std::vector<std::string>{"ros2", "colcon", "ignition"}}
+    };
+    EXPECT_EQ(node->get_parameters({name1, name2, name3, name4, name5, name6, name7}), expected);
   }
 }
 

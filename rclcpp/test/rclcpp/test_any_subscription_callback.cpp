@@ -25,6 +25,29 @@
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/msg/empty.h"
 
+// Type adapter to be used in tests.
+struct MyEmpty {};
+
+template<>
+struct rclcpp::TypeAdapter<MyEmpty, test_msgs::msg::Empty>
+{
+  using is_specialized = std::true_type;
+  using custom_type = MyEmpty;
+  using ros_message_type = test_msgs::msg::Empty;
+
+  static
+  void
+  convert_to_ros_message(const custom_type &, ros_message_type &)
+  {}
+
+  static
+  void
+  convert_to_custom(const ros_message_type &, custom_type &)
+  {}
+};
+
+using MyTA = rclcpp::TypeAdapter<MyEmpty, test_msgs::msg::Empty>;
+
 class TestAnySubscriptionCallback : public ::testing::Test
 {
 public:
@@ -40,6 +63,24 @@ public:
 protected:
   rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> any_subscription_callback_;
   std::shared_ptr<test_msgs::msg::Empty> msg_shared_ptr_{std::make_shared<test_msgs::msg::Empty>()};
+  rclcpp::MessageInfo message_info_;
+};
+
+class TestAnySubscriptionCallbackTA : public ::testing::Test
+{
+public:
+  TestAnySubscriptionCallbackTA() {}
+
+  static
+  std::unique_ptr<MyEmpty>
+  get_unique_ptr_msg()
+  {
+    return std::make_unique<MyEmpty>();
+  }
+
+protected:
+  rclcpp::AnySubscriptionCallback<MyEmpty> any_subscription_callback_;
+  std::shared_ptr<MyEmpty> msg_shared_ptr_{std::make_shared<MyEmpty>()};
   rclcpp::MessageInfo message_info_;
 };
 
@@ -96,29 +137,6 @@ TEST_F(TestAnySubscriptionCallback, unset_dispatch_throw) {
 //
 // Parameterized test to test across all callback types and dispatch types.
 //
-
-// Type adapter to be used in tests.
-struct MyEmpty {};
-
-template<>
-struct rclcpp::TypeAdapter<MyEmpty, test_msgs::msg::Empty>
-{
-  using is_specialized = std::true_type;
-  using custom_type = MyEmpty;
-  using ros_message_type = test_msgs::msg::Empty;
-
-  static
-  void
-  convert_to_ros_message(const custom_type &, ros_message_type &)
-  {}
-
-  static
-  void
-  convert_to_custom(const ros_message_type &, custom_type &)
-  {}
-};
-
-using MyTA = rclcpp::TypeAdapter<MyEmpty, test_msgs::msg::Empty>;
 
 template<typename MessageT>
 class InstanceContextImpl
@@ -177,7 +195,7 @@ class DispatchTests
 {};
 
 class DispatchTestsWithTA
-  : public TestAnySubscriptionCallback,
+  : public TestAnySubscriptionCallbackTA,
   public ::testing::WithParamInterface<InstanceContext<MyTA>>
 {};
 
@@ -193,27 +211,35 @@ format_parameter_with_ta(const ::testing::TestParamInfo<DispatchTestsWithTA::Par
   return info.param.name;
 }
 
-#define PARAMETERIZED_TESTS(DispatchTests_name) \
-  /* Testing dispatch with shared_ptr<MessageT> as input */ \
-  TEST_P(DispatchTests_name, test_inter_shared_dispatch) { \
-    auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
-    any_subscription_callback_to_test.dispatch(msg_shared_ptr_, message_info_); \
-  } \
- \
-  /* Testing dispatch with shared_ptr<const MessageT> as input */ \
-  TEST_P(DispatchTests_name, test_intra_shared_dispatch) { \
-    auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
-    any_subscription_callback_to_test.dispatch_intra_process(msg_shared_ptr_, message_info_); \
-  } \
- \
-  /* Testing dispatch with unique_ptr<MessageT> as input */ \
-  TEST_P(DispatchTests_name, test_intra_unique_dispatch) { \
-    auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test(); \
-    any_subscription_callback_to_test.dispatch_intra_process(get_unique_ptr_msg(), message_info_); \
-  }
+/* Testing dispatch with shared_ptr<MessageT> as input */
+TEST_P(DispatchTests, test_inter_shared_dispatch) {
+  auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test();
+  any_subscription_callback_to_test.dispatch(msg_shared_ptr_, message_info_);
+}
 
-PARAMETERIZED_TESTS(DispatchTests)
-PARAMETERIZED_TESTS(DispatchTestsWithTA)
+/* Testing dispatch with shared_ptr<const MessageT> as input */
+TEST_P(DispatchTests, test_intra_shared_dispatch) {
+  auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test();
+  any_subscription_callback_to_test.dispatch_intra_process(msg_shared_ptr_, message_info_);
+}
+
+/* Testing dispatch with unique_ptr<MessageT> as input */
+TEST_P(DispatchTests, test_intra_unique_dispatch) {
+  auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test();
+  any_subscription_callback_to_test.dispatch_intra_process(get_unique_ptr_msg(), message_info_);
+}
+
+/* Testing dispatch with shared_ptr<const MessageT> as input */
+TEST_P(DispatchTestsWithTA, test_intra_shared_dispatch) {
+  auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test();
+  any_subscription_callback_to_test.dispatch_intra_process(msg_shared_ptr_, message_info_);
+}
+
+/* Testing dispatch with unique_ptr<MessageT> as input */
+TEST_P(DispatchTestsWithTA, test_intra_unique_dispatch) {
+  auto any_subscription_callback_to_test = GetParam().get_any_subscription_callback_to_test();
+  any_subscription_callback_to_test.dispatch_intra_process(get_unique_ptr_msg(), message_info_);
+}
 
 // Generic classes for testing callbacks using std::bind to class methods.
 template<typename MessageT, typename ... CallbackArgs>

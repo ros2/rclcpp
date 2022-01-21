@@ -12,27 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-
-#include <rcl/allocator.h>
-#include <rcl/time.h>
-#include <rcl/types.h>
-
-#include <rcl_action/names.h>
-#include <rcl_action/default_qos.h>
-#include <rcl_action/wait.h>
-
-#include <rclcpp/clock.hpp>
-#include <rclcpp/exceptions.hpp>
-#include <rclcpp/executors.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp/service.hpp>
-#include <rclcpp/time.hpp>
-
-#include <test_msgs/action/fibonacci.hpp>
-
 #include <future>
 #include <map>
 #include <memory>
@@ -41,13 +20,34 @@
 #include <thread>
 #include <chrono>
 
+#include "gtest/gtest.h"
+
+#include "rcl/allocator.h"
+#include "rcl/time.h"
+#include "rcl/types.h"
+
+#include "rcl_action/names.h"
+#include "rcl_action/default_qos.h"
+#include "rcl_action/wait.h"
+
+#include "rclcpp/clock.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/time.hpp"
+
+#include "test_msgs/action/fibonacci.hpp"
+
 #include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/create_client.hpp"
 #include "rclcpp_action/client.hpp"
 #include "rclcpp_action/qos.hpp"
 #include "rclcpp_action/types.hpp"
 
-#include "./mocking_utils/patch.hpp"
+#include "mocking_utils/patch.hpp"
 
 using namespace std::chrono_literals;
 
