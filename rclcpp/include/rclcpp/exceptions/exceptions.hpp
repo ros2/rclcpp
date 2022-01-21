@@ -282,6 +282,34 @@ class ParameterModifiedInCallbackException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
+/// Thrown when an uninitialized parameter is accessed.
+class ParameterUninitializedException : public std::runtime_error
+{
+public:
+  /// Construct an instance.
+  /**
+   * \param[in] name the name of the parameter.
+   * \param[in] message custom exception message.
+   */
+  explicit ParameterUninitializedException(const std::string & name)
+  : std::runtime_error("parameter '" + name + "' is not initialized")
+  {}
+};
+
+/// Thrown if the QoS overrides provided aren't valid.
+class InvalidQosOverridesException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
+/// Thrown if a QoS compatibility check fails.
+class QoSCheckCompatibleException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
 }  // namespace exceptions
 }  // namespace rclcpp
 

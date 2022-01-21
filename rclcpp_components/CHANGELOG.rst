@@ -2,6 +2,88 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+13.1.0 (2021-10-18)
+-------------------
+
+13.0.0 (2021-08-23)
+-------------------
+* Update client API to be able to remove pending requests. (`#1734 <https://github.com/ros2/rclcpp/issues/1734>`_)
+* Contributors: Ivan Santiago Paunovic
+
+12.0.0 (2021-07-26)
+-------------------
+
+11.2.0 (2021-07-21)
+-------------------
+* Deprecate method names that use CamelCase in rclcpp_components. (`#1716 <https://github.com/ros2/rclcpp/issues/1716>`_)
+* Contributors: Rebecca Butler
+
+11.1.0 (2021-07-13)
+-------------------
+* Added a hook to generate node options in ComponentManager (`#1702 <https://github.com/ros2/rclcpp/issues/1702>`_)
+* Contributors: Rebecca Butler
+
+11.0.0 (2021-05-18)
+-------------------
+
+10.0.0 (2021-05-11)
+-------------------
+
+9.0.2 (2021-04-14)
+------------------
+
+9.0.1 (2021-04-12)
+------------------
+
+9.0.0 (2021-04-06)
+------------------
+* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1615 <https://github.com/ros2/rclcpp/issues/1615>`_)
+* Contributors: shonigmann
+
+8.2.0 (2021-03-31)
+------------------
+
+8.1.0 (2021-03-25)
+------------------
+
+8.0.0 (2021-03-23)
+------------------
+
+7.0.1 (2021-03-22)
+------------------
+
+7.0.0 (2021-03-18)
+------------------
+
+6.3.1 (2021-02-08)
+------------------
+
+6.3.0 (2021-01-25)
+------------------
+
+6.2.0 (2021-01-08)
+------------------
+* Use std compliant non-method std::filesystem::exists function (`#1502 <https://github.com/ros2/rclcpp/issues/1502>`_)
+* Fix string literal warnings (`#1442 <https://github.com/ros2/rclcpp/issues/1442>`_)
+* Contributors: Audrow Nash, Josh Langsfeld
+
+6.1.0 (2020-12-10)
+------------------
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Add benchmarks for components (`#1476 <https://github.com/ros2/rclcpp/issues/1476>`_)
+* Contributors: Scott K Logan, Stephen Brawner
+
+6.0.0 (2020-11-18)
+------------------
+* Bump rclcpp packages to Quality Level 2 (`#1445 <https://github.com/ros2/rclcpp/issues/1445>`_)
+* Contributors: Louise Poubel
+
+5.1.0 (2020-11-02)
+------------------
+* Update maintainers (`#1384 <https://github.com/ros2/rclcpp/issues/1384>`_)
+* ComponentManager: switch off parameter services and event publisher (`#1333 <https://github.com/ros2/rclcpp/issues/1333>`_)
+* Contributors: Ivan Santiago Paunovic, Martijn Buijs
+
 5.0.0 (2020-09-18)
 ------------------
 

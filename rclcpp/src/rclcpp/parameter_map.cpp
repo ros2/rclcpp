@@ -126,3 +126,15 @@ rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
 
   throw InvalidParameterValueException("No parameter value set");
 }
+
+ParameterMap
+rclcpp::parameter_map_from_yaml_file(const std::string & yaml_filename)
+{
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcl_params_t * rcl_parameters = rcl_yaml_node_struct_init(allocator);
+  const char * path = yaml_filename.c_str();
+  if (!rcl_parse_yaml_file(path, rcl_parameters)) {
+    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_ERROR);
+  }
+  return rclcpp::parameter_map_from(rcl_parameters);
+}

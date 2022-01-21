@@ -37,6 +37,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "./mocking_utils/patch.hpp"
 
 using namespace std::chrono_literals;
@@ -51,10 +53,6 @@ constexpr char const * node_get_available_transitions_topic =
 constexpr char const * node_get_transition_graph_topic =
   "/lc_talker/get_transition_graph";
 const lifecycle_msgs::msg::State unknown_state = lifecycle_msgs::msg::State();
-
-// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
-// that this test can complete fully, or adjust the timeout as necessary.
-// See https://github.com/ros2/rmw_connext/issues/325 for resolution
 
 class EmptyLifecycleNode : public rclcpp_lifecycle::LifecycleNode
 {
@@ -100,8 +98,9 @@ public:
       return unknown_state;
     }
 
-    if (future_result.get()) {
-      return future_result.get()->current_state;
+    auto result = future_result.get();
+    if (result) {
+      return result->current_state;
     } else {
       return unknown_state;
     }
@@ -142,9 +141,9 @@ public:
     if (future_status != std::future_status::ready) {
       return std::vector<lifecycle_msgs::msg::State>();
     }
-
-    if (future_result.get()) {
-      return future_result.get()->available_states;
+    auto result = future_result.get();
+    if (result) {
+      return result->available_states;
     }
 
     return std::vector<lifecycle_msgs::msg::State>();
@@ -166,8 +165,9 @@ public:
       return std::vector<lifecycle_msgs::msg::TransitionDescription>();
     }
 
-    if (future_result.get()) {
-      return future_result.get()->available_transitions;
+    auto result = future_result.get();
+    if (result) {
+      return result->available_transitions;
     }
 
     return std::vector<lifecycle_msgs::msg::TransitionDescription>();
@@ -189,8 +189,9 @@ public:
       return std::vector<lifecycle_msgs::msg::TransitionDescription>();
     }
 
-    if (future_result.get()) {
-      return future_result.get()->available_transitions;
+    auto result = future_result.get();
+    if (result) {
+      return result->available_transitions;
     }
 
     return std::vector<lifecycle_msgs::msg::TransitionDescription>();
@@ -399,7 +400,8 @@ TEST_F(TestLifecycleServiceClient, declare_parameter_with_no_initial_values)
     };
 
   auto handler = node1->add_on_set_parameters_callback(on_set_parameters);
-  RCLCPP_SCOPE_EXIT({node1->remove_on_set_parameters_callback(handler.get());});    // always reset
+  RCPPUTILS_SCOPE_EXIT(
+    {node1->remove_on_set_parameters_callback(handler.get());});  // always reset
 }
 
 TEST_F(TestLifecycleServiceClient, wait_for_graph_change)

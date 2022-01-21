@@ -22,6 +22,7 @@
 #include "composition_interfaces/srv/list_nodes.hpp"
 
 #include "rclcpp_components/component_manager.hpp"
+#include "rclcpp_components/component_manager_isolated.hpp"
 
 using namespace std::chrono_literals;
 
@@ -36,19 +37,26 @@ protected:
 
 // TODO(hidmic): split up tests once Node bring up/tear down races
 //               are solved https://github.com/ros2/rclcpp/issues/863
-TEST_F(TestComponentManager, components_api)
+void test_components_api(bool use_dedicated_executor)
 {
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   auto node = rclcpp::Node::make_shared("test_component_manager");
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  std::shared_ptr<rclcpp_components::ComponentManager> manager;
+  if (use_dedicated_executor) {
+    using ComponentManagerIsolated =
+      rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>;
+    manager = std::make_shared<ComponentManagerIsolated>(exec);
+  } else {
+    manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  }
 
   exec->add_node(manager);
   exec->add_node(node);
 
-  auto client = node->create_client<composition_interfaces::srv::LoadNode>(
+  auto composition_client = node->create_client<composition_interfaces::srv::LoadNode>(
     "/ComponentManager/_container/load_node");
 
-  if (!client->wait_for_service(20s)) {
+  if (!composition_client->wait_for_service(20s)) {
     ASSERT_TRUE(false) << "service not available after waiting";
   }
 
@@ -57,13 +65,14 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, true);
-    EXPECT_EQ(result.get()->error_message, "");
-    EXPECT_EQ(result.get()->full_node_name, "/test_component_foo");
-    EXPECT_EQ(result.get()->unique_id, 1u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    EXPECT_EQ(result->full_node_name, "/test_component_foo");
+    EXPECT_EQ(result->unique_id, 1u);
   }
 
   {
@@ -71,13 +80,14 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentBar";
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, true);
-    EXPECT_EQ(result.get()->error_message, "");
-    EXPECT_EQ(result.get()->full_node_name, "/test_component_bar");
-    EXPECT_EQ(result.get()->unique_id, 2u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    EXPECT_EQ(result->full_node_name, "/test_component_bar");
+    EXPECT_EQ(result->unique_id, 2u);
   }
 
   // Test remapping the node name
@@ -87,13 +97,14 @@ TEST_F(TestComponentManager, components_api)
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
     request->node_name = "test_component_baz";
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, true);
-    EXPECT_EQ(result.get()->error_message, "");
-    EXPECT_EQ(result.get()->full_node_name, "/test_component_baz");
-    EXPECT_EQ(result.get()->unique_id, 3u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    EXPECT_EQ(result->full_node_name, "/test_component_baz");
+    EXPECT_EQ(result->unique_id, 3u);
   }
 
   // Test remapping the node namespace
@@ -104,13 +115,14 @@ TEST_F(TestComponentManager, components_api)
     request->node_namespace = "/ns";
     request->node_name = "test_component_bing";
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, true);
-    EXPECT_EQ(result.get()->error_message, "");
-    EXPECT_EQ(result.get()->full_node_name, "/ns/test_component_bing");
-    EXPECT_EQ(result.get()->unique_id, 4u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    EXPECT_EQ(result->full_node_name, "/ns/test_component_bing");
+    EXPECT_EQ(result->unique_id, 4u);
   }
 
   {
@@ -119,13 +131,14 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponent";
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, false);
-    EXPECT_EQ(result.get()->error_message, "Failed to find class with the requested plugin name.");
-    EXPECT_EQ(result.get()->full_node_name, "");
-    EXPECT_EQ(result.get()->unique_id, 0u);
+    auto result = future.get();
+    EXPECT_EQ(result->success, false);
+    EXPECT_EQ(result->error_message, "Failed to find class with the requested plugin name.");
+    EXPECT_EQ(result->full_node_name, "");
+    EXPECT_EQ(result->unique_id, 0u);
   }
 
   {
@@ -134,13 +147,14 @@ TEST_F(TestComponentManager, components_api)
     request->package_name = "rclcpp_components_foo";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, false);
-    EXPECT_EQ(result.get()->error_message, "Could not find requested resource in ament index");
-    EXPECT_EQ(result.get()->full_node_name, "");
-    EXPECT_EQ(result.get()->unique_id, 0u);
+    auto result = future.get();
+    EXPECT_EQ(result->success, false);
+    EXPECT_EQ(result->error_message, "Could not find requested resource in ament index");
+    EXPECT_EQ(result->full_node_name, "");
+    EXPECT_EQ(result->unique_id, 0u);
   }
 
   {
@@ -151,13 +165,14 @@ TEST_F(TestComponentManager, components_api)
     request->node_name = "test_component_remap";
     request->remap_rules.push_back("alice:=bob");
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, true);
-    EXPECT_EQ(result.get()->error_message, "");
-    EXPECT_EQ(result.get()->full_node_name, "/test_component_remap");
-    EXPECT_EQ(result.get()->unique_id, 5u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    EXPECT_EQ(result->full_node_name, "/test_component_remap");
+    EXPECT_EQ(result->unique_id, 5u);
   }
 
   {
@@ -170,14 +185,15 @@ TEST_F(TestComponentManager, components_api)
       rclcpp::ParameterValue(true));
     request->extra_arguments.push_back(use_intraprocess_comms.to_parameter_msg());
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, true);
-    EXPECT_EQ(result.get()->error_message, "");
-    std::cout << result.get()->full_node_name << std::endl;
-    EXPECT_EQ(result.get()->full_node_name, "/test_component_intra_process");
-    EXPECT_EQ(result.get()->unique_id, 6u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    std::cout << result->full_node_name << std::endl;
+    EXPECT_EQ(result->full_node_name, "/test_component_intra_process");
+    EXPECT_EQ(result->unique_id, 6u);
   }
 
   {
@@ -191,15 +207,16 @@ TEST_F(TestComponentManager, components_api)
       rclcpp::ParameterValue("hello"));
     request->extra_arguments.push_back(use_intraprocess_comms.to_parameter_msg());
 
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+    auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, false);
+    EXPECT_EQ(result->success, false);
     EXPECT_EQ(
-      result.get()->error_message,
+      result->error_message,
       "Extra component argument 'use_intra_process_comms' must be a boolean");
-    EXPECT_EQ(result.get()->full_node_name, "");
-    EXPECT_EQ(result.get()->unique_id, 0u);
+    EXPECT_EQ(result->full_node_name, "");
+    EXPECT_EQ(result->unique_id, 0u);
   }
 
   auto node_names = node->get_node_names();
@@ -223,26 +240,27 @@ TEST_F(TestComponentManager, components_api)
 
     {
       auto request = std::make_shared<composition_interfaces::srv::ListNodes::Request>();
-      auto result = client->async_send_request(request);
-      auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+      auto future = client->async_send_request(request);
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-      auto node_names = result.get()->full_node_names;
-      auto unique_ids = result.get()->unique_ids;
+      auto result = future.get();
+      auto result_node_names = result->full_node_names;
+      auto result_unique_ids = result->unique_ids;
 
-      EXPECT_EQ(node_names.size(), 6u);
-      EXPECT_EQ(node_names[0], "/test_component_foo");
-      EXPECT_EQ(node_names[1], "/test_component_bar");
-      EXPECT_EQ(node_names[2], "/test_component_baz");
-      EXPECT_EQ(node_names[3], "/ns/test_component_bing");
-      EXPECT_EQ(node_names[4], "/test_component_remap");
-      EXPECT_EQ(node_names[5], "/test_component_intra_process");
-      EXPECT_EQ(unique_ids.size(), 6u);
-      EXPECT_EQ(unique_ids[0], 1u);
-      EXPECT_EQ(unique_ids[1], 2u);
-      EXPECT_EQ(unique_ids[2], 3u);
-      EXPECT_EQ(unique_ids[3], 4u);
-      EXPECT_EQ(unique_ids[4], 5u);
-      EXPECT_EQ(unique_ids[5], 6u);
+      EXPECT_EQ(result_node_names.size(), 6u);
+      EXPECT_EQ(result_node_names[0], "/test_component_foo");
+      EXPECT_EQ(result_node_names[1], "/test_component_bar");
+      EXPECT_EQ(result_node_names[2], "/test_component_baz");
+      EXPECT_EQ(result_node_names[3], "/ns/test_component_bing");
+      EXPECT_EQ(result_node_names[4], "/test_component_remap");
+      EXPECT_EQ(result_node_names[5], "/test_component_intra_process");
+      EXPECT_EQ(result_unique_ids.size(), 6u);
+      EXPECT_EQ(result_unique_ids[0], 1u);
+      EXPECT_EQ(result_unique_ids[1], 2u);
+      EXPECT_EQ(result_unique_ids[2], 3u);
+      EXPECT_EQ(result_unique_ids[3], 4u);
+      EXPECT_EQ(result_unique_ids[4], 5u);
+      EXPECT_EQ(result_unique_ids[5], 6u);
     }
   }
 
@@ -258,22 +276,24 @@ TEST_F(TestComponentManager, components_api)
       auto request = std::make_shared<composition_interfaces::srv::UnloadNode::Request>();
       request->unique_id = 1;
 
-      auto result = client->async_send_request(request);
-      auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+      auto future = client->async_send_request(request);
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+      auto result = future.get();
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-      EXPECT_EQ(result.get()->success, true);
-      EXPECT_EQ(result.get()->error_message, "");
+      EXPECT_EQ(result->success, true);
+      EXPECT_EQ(result->error_message, "");
     }
 
     {
       auto request = std::make_shared<composition_interfaces::srv::UnloadNode::Request>();
       request->unique_id = 1;
 
-      auto result = client->async_send_request(request);
-      auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+      auto future = client->async_send_request(request);
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
+      auto result = future.get();
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-      EXPECT_EQ(result.get()->success, false);
-      EXPECT_EQ(result.get()->error_message, "No node found with unique_id: 1");
+      EXPECT_EQ(result->success, false);
+      EXPECT_EQ(result->error_message, "No node found with unique_id: 1");
     }
   }
 
@@ -287,24 +307,37 @@ TEST_F(TestComponentManager, components_api)
 
     {
       auto request = std::make_shared<composition_interfaces::srv::ListNodes::Request>();
-      auto result = client->async_send_request(request);
-      auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
+      auto future = client->async_send_request(request);
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-      auto node_names = result.get()->full_node_names;
-      auto unique_ids = result.get()->unique_ids;
+      auto result = future.get();
+      auto result_node_names = result->full_node_names;
+      auto result_unique_ids = result->unique_ids;
 
-      EXPECT_EQ(node_names.size(), 5u);
-      EXPECT_EQ(node_names[0], "/test_component_bar");
-      EXPECT_EQ(node_names[1], "/test_component_baz");
-      EXPECT_EQ(node_names[2], "/ns/test_component_bing");
-      EXPECT_EQ(node_names[3], "/test_component_remap");
-      EXPECT_EQ(node_names[4], "/test_component_intra_process");
-      EXPECT_EQ(unique_ids.size(), 5u);
-      EXPECT_EQ(unique_ids[0], 2u);
-      EXPECT_EQ(unique_ids[1], 3u);
-      EXPECT_EQ(unique_ids[2], 4u);
-      EXPECT_EQ(unique_ids[3], 5u);
-      EXPECT_EQ(unique_ids[4], 6u);
+      EXPECT_EQ(result_node_names.size(), 5u);
+      EXPECT_EQ(result_node_names[0], "/test_component_bar");
+      EXPECT_EQ(result_node_names[1], "/test_component_baz");
+      EXPECT_EQ(result_node_names[2], "/ns/test_component_bing");
+      EXPECT_EQ(result_node_names[3], "/test_component_remap");
+      EXPECT_EQ(result_node_names[4], "/test_component_intra_process");
+      EXPECT_EQ(result_unique_ids.size(), 5u);
+      EXPECT_EQ(result_unique_ids[0], 2u);
+      EXPECT_EQ(result_unique_ids[1], 3u);
+      EXPECT_EQ(result_unique_ids[2], 4u);
+      EXPECT_EQ(result_unique_ids[3], 5u);
+      EXPECT_EQ(result_unique_ids[4], 6u);
     }
+  }
+}
+
+TEST_F(TestComponentManager, components_api)
+{
+  {
+    SCOPED_TRACE("ComponentManager");
+    test_components_api(false);
+  }
+  {
+    SCOPED_TRACE("ComponentManagerIsolated");
+    test_components_api(true);
   }
 }

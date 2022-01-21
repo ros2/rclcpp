@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -79,6 +80,64 @@ public:
   now();
 
   /**
+   * Sleep until a specified Time, according to clock type.
+   *
+   * Notes for RCL_ROS_TIME clock type:
+   *   - Can sleep forever if ros time is active and received clock never reaches `until`
+   *   - If ROS time enabled state changes during the sleep, this method will immediately return
+   *     false. There is not a consistent choice of sleeping time when the time source changes,
+   *     so this is up to the caller to call again if needed.
+   *
+   * \warning When using gcc < 10 or when using gcc >= 10 and pthreads lacks the function
+   *    `pthread_cond_clockwait`, steady clocks may sleep using the system clock.
+   *    If so, steady clock sleep times can be affected by system clock time jumps.
+   *    Depending on the steady clock's epoch and resolution in comparison to the system clock's,
+   *    an overflow when converting steady clock durations to system clock times may cause
+   *    undefined behavior.
+   *    For more info see these issues:
+   *    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=41861
+   *    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58931
+   *
+   * \param until absolute time according to current clock type to sleep until.
+   * \param context the rclcpp context the clock should use to check that ROS is still initialized.
+   * \return true immediately if `until` is in the past
+   * \return true when the time `until` is reached
+   * \return false if time cannot be reached reliably, for example from shutdown or a change
+   *    of time source.
+   * \throws std::runtime_error if the context is invalid
+   * \throws std::runtime_error if `until` has a different clock type from this clock
+   */
+  RCLCPP_PUBLIC
+  bool
+  sleep_until(
+    Time until,
+    Context::SharedPtr context = contexts::get_global_default_context());
+
+  /**
+   * Sleep for a specified Duration.
+   *
+   * Equivalent to
+   *
+   * ```cpp
+   * clock->sleep_until(clock->now() + rel_time, context)
+   * ```
+   *
+   * The function will return immediately if `rel_time` is zero or negative.
+   *
+   * \param rel_time the length of time to sleep for.
+   * \param context the rclcpp context the clock should use to check that ROS is still initialized.
+   * \return true when the end time is reached
+   * \return false if time cannot be reached reliably, for example from shutdown or a change
+   *    of time source.
+   * \throws std::runtime_error if the context is invalid
+   */
+  RCLCPP_PUBLIC
+  bool
+  sleep_for(
+    Duration rel_time,
+    Context::SharedPtr context = contexts::get_global_default_context());
+
+  /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
    *
    * \return true if the clock is active
@@ -136,7 +195,7 @@ private:
   RCLCPP_PUBLIC
   static void
   on_time_jump(
-    const struct rcl_time_jump_t * time_jump,
+    const rcl_time_jump_t * time_jump,
     bool before_jump,
     void * user_data);
 

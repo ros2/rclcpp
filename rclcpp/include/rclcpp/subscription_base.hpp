@@ -31,6 +31,7 @@
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_info.hpp"
+#include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/serialized_message.hpp"
@@ -61,8 +62,11 @@ class SubscriptionBase : public std::enable_shared_from_this<SubscriptionBase>
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
 
-  /// Default constructor.
+  /// Constructor.
   /**
+   * This accepts rcl_subscription_options_t instead of rclcpp::SubscriptionOptions because
+   * rclcpp::SubscriptionOptions::to_rcl_subscription_options depends on the message type.
+   *
    * \param[in] node_base NodeBaseInterface pointer used in parts of the setup.
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
@@ -77,7 +81,7 @@ public:
     const rcl_subscription_options_t & subscription_options,
     bool is_serialized = false);
 
-  /// Default destructor.
+  /// Destructor.
   RCLCPP_PUBLIC
   virtual ~SubscriptionBase();
 
@@ -103,7 +107,7 @@ public:
   /// Get the actual QoS settings, after the defaults have been determined.
   /**
    * The actual configuration applied when using RMW_QOS_POLICY_*_SYSTEM_DEFAULT
-   * can only be resolved after the creation of the publisher, and it
+   * can only be resolved after the creation of the subscription, and it
    * depends on the underlying rmw implementation.
    * If the underlying setting in use can't be represented in ROS terms,
    * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
@@ -178,6 +182,13 @@ public:
   virtual
   void
   handle_message(std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  handle_serialized_message(
+    const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
+    const rclcpp::MessageInfo & message_info) = 0;
 
   RCLCPP_PUBLIC
   virtual
@@ -262,6 +273,15 @@ public:
   RCLCPP_PUBLIC
   bool
   exchange_in_use_by_wait_set_state(void * pointer_to_subscription_part, bool in_use_state);
+
+  /// Get network flow endpoints
+  /**
+   * Describes network flow endpoints that this subscription is receiving messages on
+   * \return vector of NetworkFlowEndpoint
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::NetworkFlowEndpoint>
+  get_network_flow_endpoints() const;
 
 protected:
   template<typename EventCallbackT>

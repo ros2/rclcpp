@@ -86,6 +86,12 @@ public:
   virtual
   rclcpp::node_interfaces::NodeTimersInterface *
   get_node_timers_interface() const = 0;
+
+  /// Get a remapped and expanded topic name given an input name.
+  RCLCPP_PUBLIC
+  virtual
+  std::string
+  resolve_topic_name(const std::string & name, bool only_expand = false) const = 0;
 };
 
 }  // namespace node_interfaces

@@ -15,6 +15,8 @@
 #ifndef RCLCPP__PARAMETER_CLIENT_HPP_
 #define RCLCPP__PARAMETER_CLIENT_HPP_
 
+#include <functional>
+#include <future>
 #include <memory>
 #include <string>
 #include <utility>
@@ -29,11 +31,14 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
+#include "rcl_yaml_param_parser/parser.h"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_map.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/rmw.h"
@@ -121,6 +126,14 @@ public:
     > callback = nullptr);
 
   RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>
+  describe_parameters(
+    const std::vector<std::string> & names,
+    std::function<
+      void(std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>)
+    > callback = nullptr);
+
+  RCLCPP_PUBLIC
   std::shared_future<std::vector<rclcpp::ParameterType>>
   get_parameter_types(
     const std::vector<std::string> & names,
@@ -143,6 +156,42 @@ public:
     std::function<
       void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
     > callback = nullptr);
+
+  /// Delete several parameters at once.
+  /**
+   * This function behaves like command-line tool `ros2 param delete` would.
+   *
+   * \param parameters_names vector of parameters names
+   * \return the future of the set_parameter service used to delete the parameters
+   */
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  delete_parameters(
+    const std::vector<std::string> & parameters_names);
+
+  /// Load parameters from yaml file.
+  /**
+   * This function behaves like command-line tool `ros2 param load` would.
+   *
+   * \param yaml_filename the full name of the yaml file
+   * \return the future of the set_parameter service used to load the parameters
+   */
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  load_parameters(
+    const std::string & yaml_filename);
+
+  /// Load parameters from parameter map.
+  /**
+   * This function filters the parameters to be set based on the node name.
+   *
+   * \param yaml_filename the full name of the yaml file
+   * \return the future of the set_parameter service used to load the parameters
+   * \throw InvalidParametersException if there is no parameter to set
+   */
+  RCLCPP_PUBLIC
+  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  load_parameters(const rclcpp::ParameterMap & parameter_map);
 
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
@@ -332,9 +381,17 @@ public:
       qos_profile);
   }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & parameter_names);
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return get_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   RCLCPP_PUBLIC
   bool
@@ -378,23 +435,107 @@ public:
     );
   }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return describe_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rclcpp::ParameterType>
-  get_parameter_types(const std::vector<std::string> & parameter_names);
+  get_parameter_types(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return get_parameter_types(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return set_parameters(
+      parameters,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
-  RCLCPP_PUBLIC
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return set_parameters_atomically(
+      parameters,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
-  RCLCPP_PUBLIC
+  /// Delete several parameters at once.
+  /**
+   * This function behaves like command-line tool `ros2 param delete` would.
+   *
+   * \param parameters_names vector of parameters names
+   * \param timeout for the spin used to make it synchronous
+   * \return the future of the set_parameter service used to delete the parameters
+   */
+  template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  delete_parameters(
+    const std::vector<std::string> & parameters_names,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return delete_parameters(
+      parameters_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+  /// Load parameters from yaml file.
+  /**
+   * This function behaves like command-line tool `ros2 param load` would.
+   *
+   * \param yaml_filename the full name of the yaml file
+   * \param timeout for the spin used to make it synchronous
+   * \return the future of the set_parameter service used to load the parameters
+   */
+  template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(
+    const std::string & yaml_filename,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return load_parameters(
+      yaml_filename,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   rcl_interfaces::msg::ListParametersResult
   list_parameters(
     const std::vector<std::string> & parameter_prefixes,
-    uint64_t depth);
+    uint64_t depth,
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
+  {
+    return list_parameters(
+      parameter_prefixes,
+      depth,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   template<typename CallbackT>
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
@@ -436,6 +577,56 @@ public:
   {
     return async_parameters_client_->wait_for_service(timeout);
   }
+
+protected:
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::Parameter>
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterType>
+  get_parameter_types(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  delete_parameters(
+    const std::vector<std::string> & parameters_names,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(
+    const std::string & yaml_filename,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::ListParametersResult
+  list_parameters(
+    const std::vector<std::string> & parameter_prefixes,
+    uint64_t depth,
+    std::chrono::nanoseconds timeout);
 
 private:
   rclcpp::Executor::SharedPtr executor_;

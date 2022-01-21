@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <utility>
 
 #include "rcl/init.h"
@@ -291,7 +292,7 @@ Context::get_domain_id() const
 }
 
 std::string
-Context::shutdown_reason()
+Context::shutdown_reason() const
 {
   std::lock_guard<std::recursive_mutex> lock(init_mutex_);
   return shutdown_reason_;
@@ -307,6 +308,15 @@ Context::shutdown(const std::string & reason)
     // if it is not valid, then it cannot be shutdown
     return false;
   }
+
+  // call each pre-shutdown callback
+  {
+    std::lock_guard<std::mutex> lock{pre_shutdown_callbacks_mutex_};
+    for (const auto & callback : pre_shutdown_callbacks_) {
+      (*callback)();
+    }
+  }
+
   // rcl shutdown
   rcl_ret_t ret = rcl_shutdown(rcl_context_.get());
   if (RCL_RET_OK != ret) {
@@ -315,12 +325,15 @@ Context::shutdown(const std::string & reason)
   // set shutdown reason
   shutdown_reason_ = reason;
   // call each shutdown callback
-  for (const auto & callback : on_shutdown_callbacks_) {
-    callback();
+  {
+    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+    for (const auto & callback : on_shutdown_callbacks_) {
+      (*callback)();
+    }
   }
+
   // interrupt all blocking sleep_for() and all blocking executors or wait sets
   this->interrupt_all_sleep_for();
-  this->interrupt_all_wait_sets();
   // remove self from the global contexts
   weak_contexts_->remove_context(this);
   // shutdown logger
@@ -345,20 +358,130 @@ Context::shutdown(const std::string & reason)
 rclcpp::Context::OnShutdownCallback
 Context::on_shutdown(OnShutdownCallback callback)
 {
-  on_shutdown_callbacks_.push_back(callback);
+  add_on_shutdown_callback(callback);
   return callback;
 }
 
-const std::vector<rclcpp::Context::OnShutdownCallback> &
-Context::get_on_shutdown_callbacks() const
+rclcpp::OnShutdownCallbackHandle
+Context::add_on_shutdown_callback(OnShutdownCallback callback)
 {
-  return on_shutdown_callbacks_;
+  return add_shutdown_callback(ShutdownType::on_shutdown, callback);
 }
 
-std::vector<rclcpp::Context::OnShutdownCallback> &
-Context::get_on_shutdown_callbacks()
+bool
+Context::remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_handle)
 {
-  return on_shutdown_callbacks_;
+  return remove_shutdown_callback(ShutdownType::on_shutdown, callback_handle);
+}
+
+rclcpp::PreShutdownCallbackHandle
+Context::add_pre_shutdown_callback(PreShutdownCallback callback)
+{
+  return add_shutdown_callback(ShutdownType::pre_shutdown, callback);
+}
+
+bool
+Context::remove_pre_shutdown_callback(
+  const PreShutdownCallbackHandle & callback_handle)
+{
+  return remove_shutdown_callback(ShutdownType::pre_shutdown, callback_handle);
+}
+
+rclcpp::ShutdownCallbackHandle
+Context::add_shutdown_callback(
+  ShutdownType shutdown_type,
+  ShutdownCallback callback)
+{
+  auto callback_shared_ptr =
+    std::make_shared<ShutdownCallbackHandle::ShutdownCallbackType>(callback);
+
+  switch (shutdown_type) {
+    case ShutdownType::pre_shutdown:
+      {
+        std::lock_guard<std::mutex> lock(pre_shutdown_callbacks_mutex_);
+        pre_shutdown_callbacks_.emplace(callback_shared_ptr);
+      }
+      break;
+    case ShutdownType::on_shutdown:
+      {
+        std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+        on_shutdown_callbacks_.emplace(callback_shared_ptr);
+      }
+      break;
+  }
+
+  ShutdownCallbackHandle callback_handle;
+  callback_handle.callback = callback_shared_ptr;
+  return callback_handle;
+}
+
+bool
+Context::remove_shutdown_callback(
+  ShutdownType shutdown_type,
+  const ShutdownCallbackHandle & callback_handle)
+{
+  std::mutex * mutex_ptr = nullptr;
+  std::unordered_set<
+    std::shared_ptr<ShutdownCallbackHandle::ShutdownCallbackType>> * callback_list_ptr;
+
+  switch (shutdown_type) {
+    case ShutdownType::pre_shutdown:
+      mutex_ptr = &pre_shutdown_callbacks_mutex_;
+      callback_list_ptr = &pre_shutdown_callbacks_;
+      break;
+    case ShutdownType::on_shutdown:
+      mutex_ptr = &on_shutdown_callbacks_mutex_;
+      callback_list_ptr = &on_shutdown_callbacks_;
+      break;
+  }
+
+  std::lock_guard<std::mutex> lock(*mutex_ptr);
+  auto callback_shared_ptr = callback_handle.callback.lock();
+  if (callback_shared_ptr == nullptr) {
+    return false;
+  }
+  return callback_list_ptr->erase(callback_shared_ptr) == 1;
+}
+
+std::vector<rclcpp::Context::OnShutdownCallback>
+Context::get_on_shutdown_callbacks() const
+{
+  return get_shutdown_callback(ShutdownType::on_shutdown);
+}
+
+std::vector<rclcpp::Context::PreShutdownCallback>
+Context::get_pre_shutdown_callbacks() const
+{
+  return get_shutdown_callback(ShutdownType::pre_shutdown);
+}
+
+std::vector<rclcpp::Context::ShutdownCallback>
+Context::get_shutdown_callback(ShutdownType shutdown_type) const
+{
+  std::mutex * mutex_ptr = nullptr;
+  const std::unordered_set<
+    std::shared_ptr<ShutdownCallbackHandle::ShutdownCallbackType>> * callback_list_ptr;
+
+  switch (shutdown_type) {
+    case ShutdownType::pre_shutdown:
+      mutex_ptr = &pre_shutdown_callbacks_mutex_;
+      callback_list_ptr = &pre_shutdown_callbacks_;
+      break;
+    case ShutdownType::on_shutdown:
+      mutex_ptr = &on_shutdown_callbacks_mutex_;
+      callback_list_ptr = &on_shutdown_callbacks_;
+      break;
+  }
+
+  std::vector<rclcpp::Context::ShutdownCallback> callbacks;
+  {
+    std::lock_guard<std::mutex> lock(*mutex_ptr);
+    for (auto & iter : *callback_list_ptr) {
+      callbacks.emplace_back(*iter);
+    }
+  }
+
+  return callbacks;
 }
 
 std::shared_ptr<rcl_context_t>
@@ -371,16 +494,15 @@ bool
 Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
   std::chrono::nanoseconds time_left = nanoseconds;
-  {
-    std::unique_lock<std::mutex> lock(interrupt_mutex_);
-    auto start = std::chrono::steady_clock::now();
-    // this will release the lock while waiting
-    interrupt_condition_variable_.wait_for(lock, nanoseconds);
-    time_left -= std::chrono::steady_clock::now() - start;
-  }
-  if (time_left > std::chrono::nanoseconds::zero() && this->is_valid()) {
-    return sleep_for(time_left);
-  }
+  do {
+    {
+      std::unique_lock<std::mutex> lock(interrupt_mutex_);
+      auto start = std::chrono::steady_clock::now();
+      // this will release the lock while waiting
+      interrupt_condition_variable_.wait_for(lock, nanoseconds);
+      time_left -= std::chrono::steady_clock::now() - start;
+    }
+  } while (time_left > std::chrono::nanoseconds::zero() && this->is_valid());
   // Return true if the timeout elapsed successfully, otherwise false.
   return this->is_valid();
 }
@@ -389,75 +511,6 @@ void
 Context::interrupt_all_sleep_for()
 {
   interrupt_condition_variable_.notify_all();
-}
-
-rcl_guard_condition_t *
-Context::get_interrupt_guard_condition(rcl_wait_set_t * wait_set)
-{
-  std::lock_guard<std::mutex> lock(interrupt_guard_cond_handles_mutex_);
-  auto kv = interrupt_guard_cond_handles_.find(wait_set);
-  if (kv != interrupt_guard_cond_handles_.end()) {
-    return &kv->second;
-  } else {
-    rcl_guard_condition_t handle = rcl_get_zero_initialized_guard_condition();
-    rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
-    auto ret = rcl_guard_condition_init(&handle, this->get_rcl_context().get(), options);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize guard condition");
-    }
-    interrupt_guard_cond_handles_.emplace(wait_set, handle);
-    return &interrupt_guard_cond_handles_[wait_set];
-  }
-}
-
-void
-Context::release_interrupt_guard_condition(rcl_wait_set_t * wait_set)
-{
-  std::lock_guard<std::mutex> lock(interrupt_guard_cond_handles_mutex_);
-  auto kv = interrupt_guard_cond_handles_.find(wait_set);
-  if (kv != interrupt_guard_cond_handles_.end()) {
-    rcl_ret_t ret = rcl_guard_condition_fini(&kv->second);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to destroy sigint guard condition");
-    }
-    interrupt_guard_cond_handles_.erase(kv);
-  } else {
-    throw std::runtime_error("Tried to release sigint guard condition for nonexistent wait set");
-  }
-}
-
-void
-Context::release_interrupt_guard_condition(
-  rcl_wait_set_t * wait_set,
-  const std::nothrow_t &) noexcept
-{
-  try {
-    this->release_interrupt_guard_condition(wait_set);
-  } catch (const std::exception & exc) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"),
-      "caught %s exception when releasing interrupt guard condition: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
-  } catch (...) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"),
-      "caught unknown exception when releasing interrupt guard condition");
-  }
-}
-
-void
-Context::interrupt_all_wait_sets()
-{
-  std::lock_guard<std::mutex> lock(interrupt_guard_cond_handles_mutex_);
-  for (auto & kv : interrupt_guard_cond_handles_) {
-    rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
-    if (status != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "failed to trigger guard condition in Context::interrupt_all_wait_sets(): %s",
-        rcl_get_error_string().str);
-    }
-  }
 }
 
 void

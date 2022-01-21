@@ -28,9 +28,19 @@
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  bool add_to_wait_set(rcl_wait_set_t *) override {return false;}
+  void add_to_wait_set(rcl_wait_set_t *) override {}
   bool is_ready(rcl_wait_set_t *) override {return false;}
-  void execute() override {}
+
+  std::shared_ptr<void>
+  take_data() override
+  {
+    return nullptr;
+  }
+
+  void execute(std::shared_ptr<void> & data) override
+  {
+    (void) data;
+  }
 };
 
 class TestNodeWaitables : public ::testing::Test
@@ -86,5 +96,5 @@ TEST_F(TestNodeWaitables, add_waitable_rcl_trigger_guard_condition_error)
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     node_waitables->add_waitable(waitable, callback_group),
-    std::runtime_error("Failed to notify wait set on waitable creation: error not set"));
+    std::runtime_error("failed to notify wait set on waitable creation: error not set"));
 }

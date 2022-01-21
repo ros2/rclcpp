@@ -24,7 +24,6 @@
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
-#include "rclcpp/scope_exit.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
@@ -61,6 +60,29 @@ TEST(TestUtilities, init_with_args) {
   rclcpp::shutdown();
 }
 
+TEST(TestUtilities, init_with_args_contains_ros) {
+  EXPECT_FALSE(rclcpp::signal_handlers_installed());
+  const char * const argv[] = {
+    "process_name",
+    "-d", "--ros-args",
+    "-r", "__ns:=/foo/bar",
+    "-r", "__ns:=/fiz/buz",
+    "--", "--foo=bar", "--baz"
+  };
+  int argc = sizeof(argv) / sizeof(const char *);
+  auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
+
+  ASSERT_EQ(4u, args.size());
+  ASSERT_EQ(std::string{"process_name"}, args[0]);
+  ASSERT_EQ(std::string{"-d"}, args[1]);
+  ASSERT_EQ(std::string{"--foo=bar"}, args[2]);
+  ASSERT_EQ(std::string{"--baz"}, args[3]);
+  EXPECT_TRUE(rclcpp::signal_handlers_installed());
+
+  EXPECT_TRUE(rclcpp::ok());
+  rclcpp::shutdown();
+}
+
 TEST(TestUtilities, multi_init) {
   auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
   auto context2 = std::make_shared<rclcpp::contexts::DefaultContext>();
@@ -89,10 +111,42 @@ TEST(TestUtilities, multi_init) {
   EXPECT_FALSE(rclcpp::ok(context2));
 }
 
+TEST(TestUtilities, test_pre_shutdown_callback_add_remove) {
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  context1->init(0, nullptr);
+
+  bool is_called1 = false;
+  bool is_called2 = false;
+  auto callback1 = [&is_called1]() {is_called1 = true;};
+  auto callback2 = [&is_called2]() {is_called2 = true;};
+
+  EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::PreShutdownCallbackHandle callback_handle1 =
+    context1->add_pre_shutdown_callback(callback1);
+  EXPECT_EQ(1u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::PreShutdownCallbackHandle callback_handle2 =
+    context1->add_pre_shutdown_callback(callback2);
+  EXPECT_EQ(2u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::PreShutdownCallbackHandle wrong_callback_handle;
+  EXPECT_FALSE(context1->remove_pre_shutdown_callback(wrong_callback_handle));
+
+  EXPECT_TRUE(context1->remove_pre_shutdown_callback(callback_handle1));
+  EXPECT_EQ(1u, context1->get_pre_shutdown_callbacks().size());
+
+  rclcpp::shutdown(context1);
+
+  EXPECT_FALSE(is_called1);
+  EXPECT_TRUE(is_called2);
+}
+
 TEST(TestUtilities, test_context_basic_access) {
   auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
   EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
   EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
   EXPECT_EQ(std::string{""}, context1->shutdown_reason());
 }
 
@@ -101,65 +155,13 @@ TEST(TestUtilities, test_context_basic_access_const_methods) {
 
   EXPECT_NE(nullptr, context1->get_init_options().get_rcl_init_options());
   EXPECT_EQ(0u, context1->get_on_shutdown_callbacks().size());
+  EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
 }
 
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, !=)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, >)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, <)
-
-TEST(TestUtilities, test_context_release_interrupt_guard_condition) {
-  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
-  context1->init(0, nullptr);
-  RCLCPP_SCOPE_EXIT(rclcpp::shutdown(context1););
-
-  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  rcl_ret_t ret = rcl_wait_set_init(
-    &wait_set, 0, 2, 0, 0, 0, 0, context1->get_rcl_context().get(),
-    rcl_get_default_allocator());
-  ASSERT_EQ(RCL_RET_OK, ret);
-
-  // Expected usage
-  rcl_guard_condition_t * interrupt_guard_condition =
-    context1->get_interrupt_guard_condition(&wait_set);
-  EXPECT_NE(nullptr, interrupt_guard_condition);
-  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
-
-  {
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp", rcl_guard_condition_init, RCL_RET_ERROR);
-    EXPECT_THROW(
-      {interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);},
-      rclcpp::exceptions::RCLError);
-  }
-
-  {
-    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
-    auto mock = mocking_utils::inject_on_return(
-      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
-    EXPECT_THROW(
-      {context1->release_interrupt_guard_condition(&wait_set);},
-      rclcpp::exceptions::RCLError);
-  }
-
-  {
-    interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
-    auto mock = mocking_utils::inject_on_return(
-      "lib:rclcpp", rcl_guard_condition_fini, RCL_RET_ERROR);
-    EXPECT_NO_THROW({context1->release_interrupt_guard_condition(&wait_set, std::nothrow);});
-  }
-
-  {
-    EXPECT_THROW(
-      context1->release_interrupt_guard_condition(nullptr),
-      std::runtime_error);
-  }
-
-  // Test it works after restore mocks
-  interrupt_guard_condition = context1->get_interrupt_guard_condition(&wait_set);
-  EXPECT_NE(nullptr, interrupt_guard_condition);
-  EXPECT_NO_THROW(context1->release_interrupt_guard_condition(&wait_set));
-}
 
 TEST(TestUtilities, test_context_init_shutdown_fails) {
   {

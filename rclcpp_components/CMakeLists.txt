@@ -7,7 +7,10 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
+  add_compile_options(
+    -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual
+    -Wformat=2 -Wconversion -Wshadow -Wsign-conversion -Wold-style-cast -Wcast-qual
+  )
 endif()
 
 find_package(ament_cmake_ros REQUIRED)
@@ -58,13 +61,28 @@ ament_target_dependencies(component_container_mt
   "rclcpp"
 )
 
+add_executable(
+  component_container_isolated
+  src/component_container_isolated.cpp
+)
+target_link_libraries(component_container_isolated component_manager)
+ament_target_dependencies(component_container_isolated
+  "rclcpp"
+)
+
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(component_container "stdc++fs")
   target_link_libraries(component_container_mt "stdc++fs")
+  target_link_libraries(component_container_isolated "stdc++fs")
 endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_google_benchmark REQUIRED)
+  find_package(benchmark REQUIRED)
+  # Give cppcheck hints about macro definitions coming from outside this package
+  get_target_property(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS benchmark::benchmark INTERFACE_INCLUDE_DIRECTORIES)
   ament_lint_auto_find_test_dependencies()
 
   set(components "")
@@ -109,6 +127,14 @@ if(BUILD_TESTING)
   if(TARGET test_component_manager_api)
     target_link_libraries(test_component_manager_api component_manager)
   endif()
+
+  ament_add_google_benchmark(benchmark_components
+    test/benchmark/benchmark_components.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET benchmark_components)
+    target_link_libraries(benchmark_components component_manager)
+  endif()
 endif()
 
 install(
@@ -120,7 +146,7 @@ install(
 
 # Install executables
 install(
-  TARGETS component_container component_container_mt
+  TARGETS component_container component_container_mt component_container_isolated
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 

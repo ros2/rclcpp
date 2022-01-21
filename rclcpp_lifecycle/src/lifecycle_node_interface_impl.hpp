@@ -64,9 +64,7 @@ public:
   ~LifecycleNodeInterfaceImpl()
   {
     rcl_node_t * node_handle = node_base_interface_->get_rcl_node_handle();
-    const rcl_node_options_t * node_options = rcl_node_get_options(node_handle);
-    auto ret = rcl_lifecycle_state_machine_fini(
-      &state_machine_, node_handle, &node_options->allocator);
+    auto ret = rcl_lifecycle_state_machine_fini(&state_machine_, node_handle);
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_FATAL_NAMED(
         "rclcpp_lifecycle",
@@ -75,12 +73,16 @@ public:
   }
 
   void
-  init()
+  init(bool enable_communication_interface = true)
   {
     rcl_node_t * node_handle = node_base_interface_->get_rcl_node_handle();
     const rcl_node_options_t * node_options =
       rcl_node_get_options(node_base_interface_->get_rcl_node_handle());
     state_machine_ = rcl_lifecycle_get_zero_initialized_state_machine();
+    auto state_machine_options = rcl_lifecycle_get_default_state_machine_options();
+    state_machine_options.enable_com_interface = enable_communication_interface;
+    state_machine_options.allocator = node_options->allocator;
+
     // The call to initialize the state machine takes
     // currently five different typesupports for all publishers/services
     // created within the RCL_LIFECYCLE structure.
@@ -96,94 +98,95 @@ public:
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableStatesSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
-      true,
-      &node_options->allocator);
+      &state_machine_options);
     if (ret != RCL_RET_OK) {
       throw std::runtime_error(
               std::string("Couldn't initialize state machine for node ") +
               node_base_interface_->get_name());
     }
 
-    {  // change_state
-      auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_change_state, this,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::AnyServiceCallback<ChangeStateSrv> any_cb;
-      any_cb.set(std::move(cb));
+    if (enable_communication_interface) {
+      { // change_state
+        auto cb = std::bind(
+          &LifecycleNodeInterfaceImpl::on_change_state, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        rclcpp::AnyServiceCallback<ChangeStateSrv> any_cb;
+        any_cb.set(std::move(cb));
 
-      srv_change_state_ = std::make_shared<rclcpp::Service<ChangeStateSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_change_state,
-        any_cb);
-      node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_change_state_),
-        nullptr);
-    }
+        srv_change_state_ = std::make_shared<rclcpp::Service<ChangeStateSrv>>(
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_change_state,
+          any_cb);
+        node_services_interface_->add_service(
+          std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_change_state_),
+          nullptr);
+      }
 
-    {  // get_state
-      auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_state, this,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::AnyServiceCallback<GetStateSrv> any_cb;
-      any_cb.set(std::move(cb));
+      { // get_state
+        auto cb = std::bind(
+          &LifecycleNodeInterfaceImpl::on_get_state, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        rclcpp::AnyServiceCallback<GetStateSrv> any_cb;
+        any_cb.set(std::move(cb));
 
-      srv_get_state_ = std::make_shared<rclcpp::Service<GetStateSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_state,
-        any_cb);
-      node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_state_),
-        nullptr);
-    }
+        srv_get_state_ = std::make_shared<rclcpp::Service<GetStateSrv>>(
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_get_state,
+          any_cb);
+        node_services_interface_->add_service(
+          std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_state_),
+          nullptr);
+      }
 
-    {  // get_available_states
-      auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_available_states, this,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
-      any_cb.set(std::move(cb));
+      { // get_available_states
+        auto cb = std::bind(
+          &LifecycleNodeInterfaceImpl::on_get_available_states, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        rclcpp::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
+        any_cb.set(std::move(cb));
 
-      srv_get_available_states_ = std::make_shared<rclcpp::Service<GetAvailableStatesSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_available_states,
-        any_cb);
-      node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_states_),
-        nullptr);
-    }
+        srv_get_available_states_ = std::make_shared<rclcpp::Service<GetAvailableStatesSrv>>(
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_get_available_states,
+          any_cb);
+        node_services_interface_->add_service(
+          std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_states_),
+          nullptr);
+      }
 
-    {  // get_available_transitions
-      auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_available_transitions, this,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
-      any_cb.set(std::move(cb));
+      { // get_available_transitions
+        auto cb = std::bind(
+          &LifecycleNodeInterfaceImpl::on_get_available_transitions, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
+        any_cb.set(std::move(cb));
 
-      srv_get_available_transitions_ =
-        std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_available_transitions,
-        any_cb);
-      node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_transitions_),
-        nullptr);
-    }
+        srv_get_available_transitions_ =
+          std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_get_available_transitions,
+          any_cb);
+        node_services_interface_->add_service(
+          std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_transitions_),
+          nullptr);
+      }
 
-    {  // get_transition_graph
-      auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_transition_graph, this,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
-      any_cb.set(std::move(cb));
+      { // get_transition_graph
+        auto cb = std::bind(
+          &LifecycleNodeInterfaceImpl::on_get_transition_graph, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
+        any_cb.set(std::move(cb));
 
-      srv_get_transition_graph_ =
-        std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_transition_graph,
-        any_cb);
-      node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_transition_graph_),
-        nullptr);
+        srv_get_transition_graph_ =
+          std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_get_transition_graph,
+          any_cb);
+        node_services_interface_->add_service(
+          std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_transition_graph_),
+          nullptr);
+      }
     }
   }
 
@@ -265,11 +268,13 @@ public:
       throw std::runtime_error(
               "Can't get available states. State machine is not initialized.");
     }
-    for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
-      lifecycle_msgs::msg::State state;
-      state.id = static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
-      state.label = static_cast<std::string>(state_machine_.transition_map.states[i].label);
-      resp->available_states.push_back(state);
+
+    resp->available_states.resize(state_machine_.transition_map.states_size);
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
+      resp->available_states[i].id =
+        static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
+      resp->available_states[i].label =
+        static_cast<std::string>(state_machine_.transition_map.states[i].label);
     }
   }
 
@@ -286,16 +291,17 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
-    for (uint8_t i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+    resp->available_transitions.resize(state_machine_.current_state->valid_transition_size);
+    for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+      lifecycle_msgs::msg::TransitionDescription & trans_desc = resp->available_transitions[i];
+
       auto rcl_transition = state_machine_.current_state->valid_transitions[i];
-      lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = static_cast<uint8_t>(rcl_transition.id);
       trans_desc.transition.label = rcl_transition.label;
       trans_desc.start_state.id = static_cast<uint8_t>(rcl_transition.start->id);
       trans_desc.start_state.label = rcl_transition.start->label;
       trans_desc.goal_state.id = static_cast<uint8_t>(rcl_transition.goal->id);
       trans_desc.goal_state.label = rcl_transition.goal->label;
-      resp->available_transitions.push_back(trans_desc);
     }
   }
 
@@ -312,16 +318,17 @@ public:
               "Can't get available transitions. State machine is not initialized.");
     }
 
-    for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+    resp->available_transitions.resize(state_machine_.transition_map.transitions_size);
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+      lifecycle_msgs::msg::TransitionDescription & trans_desc = resp->available_transitions[i];
+
       auto rcl_transition = state_machine_.transition_map.transitions[i];
-      lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = static_cast<uint8_t>(rcl_transition.id);
       trans_desc.transition.label = rcl_transition.label;
       trans_desc.start_state.id = static_cast<uint8_t>(rcl_transition.start->id);
       trans_desc.start_state.label = rcl_transition.start->label;
       trans_desc.goal_state.id = static_cast<uint8_t>(rcl_transition.goal->id);
       trans_desc.goal_state.label = rcl_transition.goal->label;
-      resp->available_transitions.push_back(trans_desc);
     }
   }
 
@@ -336,9 +343,10 @@ public:
   get_available_states()
   {
     std::vector<State> states;
-    for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
-      State state(&state_machine_.transition_map.states[i]);
-      states.push_back(state);
+    states.reserve(state_machine_.transition_map.states_size);
+
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
+      states.emplace_back(&state_machine_.transition_map.states[i]);
     }
     return states;
   }
@@ -347,11 +355,22 @@ public:
   get_available_transitions()
   {
     std::vector<Transition> transitions;
+    transitions.reserve(state_machine_.current_state->valid_transition_size);
 
-    for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
-      Transition transition(
-        &state_machine_.transition_map.transitions[i]);
-      transitions.push_back(transition);
+    for (unsigned int i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
+      transitions.emplace_back(&state_machine_.current_state->valid_transitions[i]);
+    }
+    return transitions;
+  }
+
+  std::vector<Transition>
+  get_transition_graph()
+  {
+    std::vector<Transition> transitions;
+    transitions.reserve(state_machine_.transition_map.transitions_size);
+
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+      transitions.emplace_back(&state_machine_.transition_map.transitions[i]);
     }
     return transitions;
   }

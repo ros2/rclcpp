@@ -42,6 +42,20 @@ std::string to_string(T value)
 
 namespace rclcpp
 {
+
+/// Option to indicate which signal handlers rclcpp should install.
+enum class SignalHandlerOptions
+{
+  /// Install both sigint and sigterm, this is the default behavior.
+  All,
+  /// Install only a sigint handler.
+  SigInt,
+  /// Install only a sigterm handler.
+  SigTerm,
+  /// Do not install any signal handler.
+  None,
+};
+
 /// Initialize communications via the rmw implementation and set up a global signal handler.
 /**
  * Initializes the global context which is accessible via the function
@@ -50,10 +64,16 @@ namespace rclcpp
  * rclcpp::install_signal_handlers().
  *
  * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
+ *
+ * \param signal_handler_options option to indicate which signal handlers should be installed.
  */
 RCLCPP_PUBLIC
 void
-init(int argc, char const * const argv[], const InitOptions & init_options = InitOptions());
+init(
+  int argc,
+  char const * const argv[],
+  const InitOptions & init_options = InitOptions(),
+  SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
 
 /// Install the global signal handler for rclcpp.
 /**
@@ -67,16 +87,25 @@ init(int argc, char const * const argv[], const InitOptions & init_options = Ini
  *
  * This function is thread-safe.
  *
+ * \param signal_handler_options option to indicate which signal handlers should be installed.
  * \return true if signal handler was installed by this function, false if already installed.
  */
 RCLCPP_PUBLIC
 bool
-install_signal_handlers();
+install_signal_handlers(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
 
 /// Return true if the signal handlers are installed, otherwise false.
 RCLCPP_PUBLIC
 bool
 signal_handlers_installed();
+
+/// Get the current signal handler options.
+/**
+ * If no signal handler is installed, SignalHandlerOptions::None is returned.
+ */
+RCLCPP_PUBLIC
+SignalHandlerOptions
+get_current_signal_handler_options();
 
 /// Uninstall the global signal handler for rclcpp.
 /**
@@ -142,21 +171,6 @@ remove_ros_arguments(int argc, char const * const argv[]);
 RCLCPP_PUBLIC
 bool
 ok(rclcpp::Context::SharedPtr context = nullptr);
-
-/// Return true if init() has already been called for the given context.
-/**
- * If nullptr is given for the context, then the global context is used, i.e.
- * the context initialized by rclcpp::init().
- *
- * Deprecated, as it is no longer different from rcl_ok().
- *
- * \param[in] context Optional check for initialization of this Context.
- * \return true if the context is initialized, and false otherwise
- */
-[[deprecated("use the function ok() instead, which has the same usage.")]]
-RCLCPP_PUBLIC
-bool
-is_initialized(rclcpp::Context::SharedPtr context = nullptr);
 
 /// Shutdown rclcpp context, invalidating it for derived entities.
 /**

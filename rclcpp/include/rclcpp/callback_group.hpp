@@ -85,8 +85,8 @@ public:
    * group, or after, is irrelevant; the callback group will be automatically
    * added to the executor in either case.
    *
-   * \param[in] group_type They type of the callback group.
-   * \param[in] automatically_add_to_executor_with_node a boolean which
+   * \param[in] group_type The type of the callback group.
+   * \param[in] automatically_add_to_executor_with_node A boolean that
    *   determines whether a callback group is automatically added to an executor
    *   with the node with which it is associated.
    */
@@ -222,13 +222,6 @@ private:
   }
 };
 
-namespace callback_group
-{
-
-using CallbackGroupType [[deprecated("use rclcpp::CallbackGroupType instead")]] = CallbackGroupType;
-using CallbackGroup [[deprecated("use rclcpp::CallbackGroup instead")]] = CallbackGroup;
-
-}  // namespace callback_group
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CALLBACK_GROUP_HPP_

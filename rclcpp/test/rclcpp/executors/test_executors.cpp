@@ -30,7 +30,9 @@
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "test_msgs/msg/empty.hpp"
@@ -62,7 +64,7 @@ public:
 
     const std::string topic_name = std::string("topic_") + test_name.str();
     publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, rclcpp::QoS(10));
-    auto callback = [this](test_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
+    auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
     subscription =
       node->create_subscription<test_msgs::msg::Empty>(
       topic_name, rclcpp::QoS(10), std::move(callback));
@@ -349,6 +351,167 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
   spinner.join();
 }
 
+class TestWaitable : public rclcpp::Waitable
+{
+public:
+  TestWaitable() = default;
+
+  void
+  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    rclcpp::detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
+  }
+
+  void trigger()
+  {
+    gc_.trigger();
+  }
+
+  bool
+  is_ready(rcl_wait_set_t * wait_set) override
+  {
+    (void)wait_set;
+    return true;
+  }
+
+  std::shared_ptr<void>
+  take_data() override
+  {
+    return nullptr;
+  }
+
+  void
+  execute(std::shared_ptr<void> & data) override
+  {
+    (void) data;
+    count_++;
+    std::this_thread::sleep_for(3ms);
+  }
+
+  size_t
+  get_number_of_ready_guard_conditions() override {return 1;}
+
+  size_t
+  get_count()
+  {
+    return count_;
+  }
+
+private:
+  size_t count_ = 0;
+  rclcpp::GuardCondition gc_;
+};
+
+TYPED_TEST(TestExecutors, spinAll) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  auto waitable_interfaces = this->node->get_node_waitables_interface();
+  auto my_waitable = std::make_shared<TestWaitable>();
+  waitable_interfaces->add_waitable(my_waitable, nullptr);
+  executor.add_node(this->node);
+
+  // Long timeout, but should not block test if spin_all works as expected as we cancel the
+  // executor.
+  bool spin_exited = false;
+  std::thread spinner([&spin_exited, &executor, this]() {
+      executor.spin_all(1s);
+      executor.remove_node(this->node, true);
+      spin_exited = true;
+    });
+
+  // Do some work until sufficient calls to the waitable occur
+  auto start = std::chrono::steady_clock::now();
+  while (
+    my_waitable->get_count() <= 1 &&
+    !spin_exited &&
+    (std::chrono::steady_clock::now() - start < 1s))
+  {
+    my_waitable->trigger();
+    this->publisher->publish(test_msgs::msg::Empty());
+    std::this_thread::sleep_for(1ms);
+  }
+
+  executor.cancel();
+  start = std::chrono::steady_clock::now();
+  while (!spin_exited && (std::chrono::steady_clock::now() - start) < 1s) {
+    std::this_thread::sleep_for(1ms);
+  }
+
+  EXPECT_LT(1u, my_waitable->get_count());
+  waitable_interfaces->remove_waitable(my_waitable, nullptr);
+  ASSERT_TRUE(spin_exited);
+  spinner.join();
+}
+
+TYPED_TEST(TestExecutors, spinSome) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  auto waitable_interfaces = this->node->get_node_waitables_interface();
+  auto my_waitable = std::make_shared<TestWaitable>();
+  waitable_interfaces->add_waitable(my_waitable, nullptr);
+  executor.add_node(this->node);
+
+  // Long timeout, doesn't block test from finishing because spin_some should exit after the
+  // first one completes.
+  bool spin_exited = false;
+  std::thread spinner([&spin_exited, &executor, this]() {
+      executor.spin_some(1s);
+      executor.remove_node(this->node, true);
+      spin_exited = true;
+    });
+
+  // Do some work until sufficient calls to the waitable occur, but keep going until either
+  // count becomes too large, spin exits, or the 1 second timeout completes.
+  auto start = std::chrono::steady_clock::now();
+  while (
+    my_waitable->get_count() <= 1 &&
+    !spin_exited &&
+    (std::chrono::steady_clock::now() - start < 1s))
+  {
+    my_waitable->trigger();
+    this->publisher->publish(test_msgs::msg::Empty());
+    std::this_thread::sleep_for(1ms);
+  }
+
+  EXPECT_EQ(1u, my_waitable->get_count());
+  waitable_interfaces->remove_waitable(my_waitable, nullptr);
+  EXPECT_TRUE(spin_exited);
+  // Cancel if it hasn't exited already.
+  executor.cancel();
+
+  spinner.join();
+}
+
+// Check spin_node_until_future_complete with node base pointer
+TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodeBasePtr) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
+
+  auto shared_future = future.share();
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, this->node->get_node_base_interface(), shared_future, 1s);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
+// Check spin_node_until_future_complete with node pointer
+TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodePtr) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
+
+  auto shared_future = future.share();
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
+    executor, this->node, shared_future, 1s);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
 // Check spin_until_future_complete can be properly interrupted.
 TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
   using ExecutorType = TypeParam;
@@ -390,179 +553,6 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
 
   EXPECT_TRUE(spin_exited);
   spinner.join();
-}
-
-class TestWaitable : public rclcpp::Waitable
-{
-public:
-  TestWaitable()
-  {
-    rcl_guard_condition_options_t guard_condition_options =
-      rcl_guard_condition_get_default_options();
-
-    gc_ = rcl_get_zero_initialized_guard_condition();
-    rcl_ret_t ret = rcl_guard_condition_init(
-      &gc_,
-      rclcpp::contexts::get_global_default_context()->get_rcl_context().get(),
-      guard_condition_options);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-  }
-
-  ~TestWaitable()
-  {
-    rcl_ret_t ret = rcl_guard_condition_fini(&gc_);
-    if (RCL_RET_OK != ret) {
-      fprintf(stderr, "failed to call rcl_guard_condition_fini\n");
-    }
-  }
-
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override
-  {
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, &gc_, NULL);
-    if (RCL_RET_OK != ret) {
-      return false;
-    }
-    ret = rcl_trigger_guard_condition(&gc_);
-    return RCL_RET_OK == ret;
-  }
-
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override
-  {
-    (void)wait_set;
-    return true;
-  }
-
-  void
-  execute() override
-  {
-    count_++;
-    std::this_thread::sleep_for(1ms);
-  }
-
-  size_t
-  get_number_of_ready_guard_conditions() override {return 1;}
-
-  size_t
-  get_count()
-  {
-    return count_;
-  }
-
-private:
-  size_t count_ = 0;
-  rcl_guard_condition_t gc_;
-};
-
-TYPED_TEST(TestExecutorsStable, spinAll) {
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  auto waitable_interfaces = this->node->get_node_waitables_interface();
-  auto my_waitable = std::make_shared<TestWaitable>();
-  waitable_interfaces->add_waitable(my_waitable, nullptr);
-  executor.add_node(this->node);
-
-  // Long timeout, but should not block test if spin_all works as expected as we cancel the
-  // executor.
-  bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
-      executor.spin_all(1s);
-      executor.remove_node(this->node, true);
-      spin_exited = true;
-    });
-
-  // Do some work until sufficient calls to the waitable occur
-  auto start = std::chrono::steady_clock::now();
-  while (
-    my_waitable->get_count() <= 1 &&
-    !spin_exited &&
-    (std::chrono::steady_clock::now() - start < 1s))
-  {
-    this->publisher->publish(test_msgs::msg::Empty());
-    std::this_thread::sleep_for(1ms);
-  }
-
-  executor.cancel();
-  start = std::chrono::steady_clock::now();
-  while (!spin_exited && (std::chrono::steady_clock::now() - start) < 1s) {
-    std::this_thread::sleep_for(1ms);
-  }
-
-  EXPECT_LT(1u, my_waitable->get_count());
-  waitable_interfaces->remove_waitable(my_waitable, nullptr);
-  ASSERT_TRUE(spin_exited);
-  spinner.join();
-}
-
-TYPED_TEST(TestExecutorsStable, spinSome) {
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  auto waitable_interfaces = this->node->get_node_waitables_interface();
-  auto my_waitable = std::make_shared<TestWaitable>();
-  waitable_interfaces->add_waitable(my_waitable, nullptr);
-  executor.add_node(this->node);
-
-  // Long timeout, doesn't block test from finishing because spin_some should exit after the
-  // first one completes.
-  bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
-      executor.spin_some(1s);
-      executor.remove_node(this->node, true);
-      spin_exited = true;
-    });
-
-  // Do some work until sufficient calls to the waitable occur, but keep going until either
-  // count becomes too large, spin exits, or the 1 second timeout completes.
-  auto start = std::chrono::steady_clock::now();
-  while (
-    my_waitable->get_count() <= 1 &&
-    !spin_exited &&
-    (std::chrono::steady_clock::now() - start < 1s))
-  {
-    this->publisher->publish(test_msgs::msg::Empty());
-    std::this_thread::sleep_for(1ms);
-  }
-
-  EXPECT_EQ(1u, my_waitable->get_count());
-  waitable_interfaces->remove_waitable(my_waitable, nullptr);
-  EXPECT_TRUE(spin_exited);
-  // Cancel if it hasn't exited already.
-  executor.cancel();
-
-  spinner.join();
-}
-
-// Check spin_node_until_future_complete with node base pointer
-TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodeBasePtr) {
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-
-  auto shared_future = future.share();
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
-    executor, this->node->get_node_base_interface(), shared_future, 1s);
-  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
-}
-
-// Check spin_node_until_future_complete with node pointer
-TYPED_TEST(TestExecutorsStable, testSpinNodeUntilFutureCompleteNodePtr) {
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-
-  auto shared_future = future.share();
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
-    executor, this->node, shared_future, 1s);
-  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 }
 
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)

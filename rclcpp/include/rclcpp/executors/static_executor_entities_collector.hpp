@@ -57,24 +57,36 @@ public:
   /**
    * \param p_wait_set A reference to the wait set to be used in the executor
    * \param memory_strategy Shared pointer to the memory strategy to set.
-   * \param executor_guard_condition executor's guard condition
    * \throws std::runtime_error if memory strategy is null
    */
   RCLCPP_PUBLIC
   void
   init(
     rcl_wait_set_t * p_wait_set,
-    rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-    rcl_guard_condition_t * executor_guard_condition);
+    rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
   /// Finalize StaticExecutorEntitiesCollector to clear resources
+  RCLCPP_PUBLIC
+  bool
+  is_init() {return initialized_;}
+
   RCLCPP_PUBLIC
   void
   fini();
 
+  /// Execute the waitable.
   RCLCPP_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
+
+  /// Take the data so that it can be consumed with `execute`.
+  /**
+   * For `StaticExecutorEntitiesCollector`, this always return `nullptr`.
+   * \sa rclcpp::Waitable::take_data()
+   */
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data() override;
 
   /// Function to add_handles_to_wait_set and wait for work and
   /**
@@ -90,7 +102,7 @@ public:
    * \throws std::runtime_error if it couldn't add guard condition to wait set
    */
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   RCLCPP_PUBLIC
@@ -316,7 +328,7 @@ private:
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
 
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rcl_guard_condition_t *,
+      const rclcpp::GuardCondition *,
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
@@ -324,11 +336,18 @@ private:
   /// List of weak nodes registered in the static executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
+  // Mutex to protect vector of new nodes.
+  std::mutex new_nodes_mutex_;
+  std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> new_nodes_;
+
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t * p_wait_set_ = nullptr;
 
   /// Executable list: timers, subscribers, clients, services and waitables
   rclcpp::experimental::ExecutableList exec_list_;
+
+  /// Bool to check if the entities collector has been initialized
+  bool initialized_ = false;
 };
 
 }  // namespace executors

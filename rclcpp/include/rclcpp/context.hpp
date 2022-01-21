@@ -23,6 +23,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -47,6 +48,20 @@ public:
 /// Forward declare WeakContextsWrapper
 class WeakContextsWrapper;
 
+class ShutdownCallbackHandle
+{
+  friend class Context;
+
+public:
+  using ShutdownCallbackType = std::function<void ()>;
+
+private:
+  std::weak_ptr<ShutdownCallbackType> callback;
+};
+
+using OnShutdownCallbackHandle = ShutdownCallbackHandle;
+using PreShutdownCallbackHandle = ShutdownCallbackHandle;
+
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
  * A context also represents the lifecycle between init and shutdown of rclcpp.
@@ -63,7 +78,7 @@ public:
    * Every context which is constructed is added to a global vector of contexts,
    * which is used by the signal handler to conditionally shutdown each context
    * on SIGINT.
-   * See the shutdown_on_sigint option in the InitOptions class.
+   * See the shutdown_on_signal option in the InitOptions class.
    */
   RCLCPP_PUBLIC
   Context();
@@ -80,8 +95,8 @@ public:
    *
    * Note that this function does not setup any signal handlers, so if you want
    * it to be shutdown by the signal handler, then you need to either install
-   * them manually with rclcpp::install_signal_handers() or use rclcpp::init().
-   * In addition to installing the signal handlers, the shutdown_on_sigint
+   * them manually with rclcpp::install_signal_handlers() or use rclcpp::init().
+   * In addition to installing the signal handlers, the shutdown_on_signal
    * of the InitOptions needs to be `true` for this context to be shutdown by
    * the signal handler, otherwise it will be passed over.
    *
@@ -150,7 +165,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::string
-  shutdown_reason();
+  shutdown_reason() const;
 
   /// Shutdown the context, making it uninitialized and therefore invalid for derived entities.
   /**
@@ -177,7 +192,7 @@ public:
   bool
   shutdown(const std::string & reason);
 
-  using OnShutdownCallback = std::function<void ()>;
+  using OnShutdownCallback = OnShutdownCallbackHandle::ShutdownCallbackType;
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
@@ -185,7 +200,7 @@ public:
    * to last step in shutdown().
    *
    * When shutdown occurs due to the signal handler, these callbacks are run
-   * asynchronoulsy in the dedicated singal handling thread.
+   * asynchronously in the dedicated singal handling thread.
    *
    * Also, shutdown() may be called from the destructor of this function.
    * Therefore, it is not safe to throw exceptions from these callbacks.
@@ -203,23 +218,82 @@ public:
   OnShutdownCallback
   on_shutdown(OnShutdownCallback callback);
 
-  /// Return the shutdown callbacks as const.
+  /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
-   * Using the returned reference is not thread-safe with calls that modify
-   * the list of "on shutdown" callbacks, i.e. on_shutdown().
+   * These callbacks will be called in the order they are added as the second
+   * to last step in shutdown().
+   *
+   * When shutdown occurs due to the signal handler, these callbacks are run
+   * asynchronously in the dedicated signal handling thread.
+   *
+   * Also, shutdown() may be called from the destructor of this function.
+   * Therefore, it is not safe to throw exceptions from these callbacks.
+   * Instead, log errors or use some other mechanism to indicate an error has
+   * occurred.
+   *
+   * On shutdown callbacks may be registered before init and after shutdown,
+   * and persist on repeated init's.
+   *
+   * \param[in] callback the on_shutdown callback to be registered
+   * \return the created callback handle
    */
   RCLCPP_PUBLIC
-  const std::vector<OnShutdownCallback> &
-  get_on_shutdown_callbacks() const;
+  virtual
+  OnShutdownCallbackHandle
+  add_on_shutdown_callback(OnShutdownCallback callback);
+
+  /// Remove an registered on_shutdown callbacks.
+  /**
+   * \param[in] callback_handle the on_shutdown callback handle to be removed.
+   * \return true if the callback is found and removed, otherwise false.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_handle);
+
+  using PreShutdownCallback = PreShutdownCallbackHandle::ShutdownCallbackType;
+
+  /// Add a pre_shutdown callback to be called before shutdown is called for this context.
+  /**
+   * These callbacks will be called in the order they are added.
+   *
+   * When shutdown occurs due to the signal handler, these callbacks are run
+   * asynchronously in the dedicated signal handling thread.
+   *
+   * \param[in] callback the pre_shutdown callback to be registered
+   * \return the created callback handle
+   */
+  RCLCPP_PUBLIC
+  virtual
+  PreShutdownCallbackHandle
+  add_pre_shutdown_callback(PreShutdownCallback callback);
+
+  /// Remove an registered pre_shutdown callback.
+  /**
+   * \param[in] callback_handle the pre_shutdown callback handle to be removed.
+   * \return true if the callback is found and removed, otherwise false.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  remove_pre_shutdown_callback(const PreShutdownCallbackHandle & callback_handle);
 
   /// Return the shutdown callbacks.
   /**
-   * Using the returned reference is not thread-safe with calls that modify
-   * the list of "on shutdown" callbacks, i.e. on_shutdown().
+   * Returned callbacks are a copy of the registered callbacks.
    */
   RCLCPP_PUBLIC
-  std::vector<OnShutdownCallback> &
-  get_on_shutdown_callbacks();
+  std::vector<OnShutdownCallback>
+  get_on_shutdown_callbacks() const;
+
+  /// Return the pre-shutdown callbacks.
+  /**
+   * Returned callbacks are a copy of the registered callbacks.
+   */
+  RCLCPP_PUBLIC
+  std::vector<PreShutdownCallback>
+  get_pre_shutdown_callbacks() const;
 
   /// Return the internal rcl context.
   RCLCPP_PUBLIC
@@ -232,7 +306,7 @@ public:
    *
    *   - this context is shutdown()
    *   - this context is destructed (resulting in shutdown)
-   *   - this context has shutdown_on_sigint=true and SIGINT occurs (resulting in shutdown)
+   *   - this context has shutdown_on_signal=true and SIGINT/SIGTERM occurs (resulting in shutdown)
    *   - interrupt_all_sleep_for() is called
    *
    * \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
@@ -247,67 +321,6 @@ public:
   virtual
   void
   interrupt_all_sleep_for();
-
-  /// Get a handle to the guard condition which is triggered when interrupted.
-  /**
-   * This guard condition is triggered any time interrupt_all_wait_sets() is
-   * called, which may be called by the user, or shutdown().
-   * And in turn, shutdown() may be called by the user, the destructor of this
-   * context, or the signal handler if installed and shutdown_on_sigint is true
-   * for this context.
-   *
-   * The first time that this function is called for a given wait set a new guard
-   * condition will be created and returned; thereafter the same guard condition
-   * will be returned for the same wait set.
-   * This mechanism is designed to ensure that the same guard condition is not
-   * reused across wait sets (e.g., when using multiple executors in the same
-   * process).
-   * This method will throw an exception if initialization of the guard
-   * condition fails.
-   *
-   * The returned guard condition needs to be released with the
-   * release_interrupt_guard_condition() method in order to reclaim resources.
-   *
-   * \param[in] wait_set Pointer to the rcl_wait_set_t that will be using the
-   *   resulting guard condition.
-   * \return Pointer to the guard condition.
-   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
-   */
-  RCLCPP_PUBLIC
-  rcl_guard_condition_t *
-  get_interrupt_guard_condition(rcl_wait_set_t * wait_set);
-
-  /// Release the previously allocated guard condition which is triggered when interrupted.
-  /**
-   * If you previously called get_interrupt_guard_condition() for a given wait
-   * set to get a interrupt guard condition, then you should call
-   * release_interrupt_guard_condition() when you're done, to free that
-   * condition.
-   * Will throw an exception if get_interrupt_guard_condition() wasn't
-   * previously called for the given wait set.
-   *
-   * After calling this, the pointer returned by get_interrupt_guard_condition()
-   * for the given wait_set is invalid.
-   *
-   * \param[in] wait_set Pointer to the rcl_wait_set_t that was using the
-   *   resulting guard condition.
-   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
-   * \throws std::runtime_error if a nonexistent wait set is trying to release sigint guard condition.
-   */
-  RCLCPP_PUBLIC
-  void
-  release_interrupt_guard_condition(rcl_wait_set_t * wait_set);
-
-  /// Nothrow version of release_interrupt_guard_condition(), logs to RCLCPP_ERROR instead.
-  RCLCPP_PUBLIC
-  void
-  release_interrupt_guard_condition(rcl_wait_set_t * wait_set, const std::nothrow_t &) noexcept;
-
-  /// Interrupt any blocking executors, or wait sets associated with this context.
-  RCLCPP_PUBLIC
-  virtual
-  void
-  interrupt_all_wait_sets();
 
   /// Return a singleton instance for the SubContext type, constructing one if necessary.
   template<typename SubContext, typename ... Args>
@@ -347,7 +360,7 @@ private:
 
   // This mutex is recursive so that the destructor can ensure atomicity
   // between is_initialized and shutdown.
-  std::recursive_mutex init_mutex_;
+  mutable std::recursive_mutex init_mutex_;
   std::shared_ptr<rcl_context_t> rcl_context_;
   rclcpp::InitOptions init_options_;
   std::string shutdown_reason_;
@@ -360,21 +373,42 @@ private:
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
 
-  std::vector<OnShutdownCallback> on_shutdown_callbacks_;
-  std::mutex on_shutdown_callbacks_mutex_;
+  std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
+  mutable std::mutex on_shutdown_callbacks_mutex_;
+
+  std::unordered_set<std::shared_ptr<PreShutdownCallback>> pre_shutdown_callbacks_;
+  mutable std::mutex pre_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
   std::condition_variable interrupt_condition_variable_;
   /// Mutex for protecting the global condition variable.
   std::mutex interrupt_mutex_;
 
-  /// Mutex to protect sigint_guard_cond_handles_.
-  std::mutex interrupt_guard_cond_handles_mutex_;
-  /// Guard conditions for interrupting of associated wait sets on interrupt_all_wait_sets().
-  std::unordered_map<rcl_wait_set_t *, rcl_guard_condition_t> interrupt_guard_cond_handles_;
-
   /// Keep shared ownership of global vector of weak contexts
   std::shared_ptr<WeakContextsWrapper> weak_contexts_;
+
+  enum class ShutdownType
+  {
+    pre_shutdown,
+    on_shutdown
+  };
+
+  using ShutdownCallback = ShutdownCallbackHandle::ShutdownCallbackType;
+
+  RCLCPP_LOCAL
+  ShutdownCallbackHandle
+  add_shutdown_callback(
+    ShutdownType shutdown_type,
+    ShutdownCallback callback);
+
+  RCLCPP_LOCAL
+  bool
+  remove_shutdown_callback(
+    ShutdownType shutdown_type,
+    const ShutdownCallbackHandle & callback_handle);
+
+  std::vector<rclcpp::Context::ShutdownCallback>
+  get_shutdown_callback(ShutdownType shutdown_type) const;
 };
 
 /// Return a copy of the list of context shared pointers.

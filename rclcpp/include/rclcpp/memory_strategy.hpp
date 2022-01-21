@@ -64,9 +64,11 @@ public:
   virtual void clear_handles() = 0;
   virtual void remove_null_handles(rcl_wait_set_t * wait_set) = 0;
 
-  virtual void add_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
+  virtual void
+  add_guard_condition(const rclcpp::GuardCondition & guard_condition) = 0;
 
-  virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
+  virtual void
+  remove_guard_condition(const rclcpp::GuardCondition * guard_condition) = 0;
 
   virtual void
   get_next_subscription(

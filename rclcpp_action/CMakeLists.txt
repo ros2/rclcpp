@@ -6,6 +6,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_action REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 
 # Default to C++14
@@ -13,7 +14,10 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
+  add_compile_options(
+    -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual
+    -Wformat=2 -Wconversion -Wshadow -Wsign-conversion -Wcast-qual
+  )
 endif()
 
 set(${PROJECT_NAME}_SRCS
@@ -36,6 +40,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
   "rcl_action"
   "rclcpp"
+  "rcpputils"
   "rosidl_runtime_c"
 )
 
@@ -74,6 +79,8 @@ if(BUILD_TESTING)
   set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
 
+  add_subdirectory(test/benchmark)
+
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   if(TARGET test_client)
     ament_target_dependencies(test_client
@@ -89,6 +96,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_server test/test_server.cpp TIMEOUT 180)
   if(TARGET test_server)
     ament_target_dependencies(test_server
+      "rcpputils"
       "rcutils"
       "test_msgs"
     )

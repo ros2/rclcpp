@@ -50,11 +50,14 @@ class TestWaitable : public rclcpp::Waitable
 public:
   TestWaitable()
   : is_ready_(false) {}
-  bool add_to_wait_set(rcl_wait_set_t *) override {return true;}
+  void add_to_wait_set(rcl_wait_set_t *) override {}
 
   bool is_ready(rcl_wait_set_t *) override {return is_ready_;}
 
-  void execute() override {}
+  std::shared_ptr<void> take_data() override {return nullptr;}
+
+  void
+  execute(std::shared_ptr<void> & data) override {(void)data;}
 
   void set_is_ready(bool value) {is_ready_ = value;}
 
@@ -64,7 +67,7 @@ private:
 
 TEST_F(TestStaticStorage, iterables_construct_destruct) {
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
-    "topic", 10, [](test_msgs::msg::Empty::SharedPtr) {});
+    "topic", 10, [](test_msgs::msg::Empty::ConstSharedPtr) {});
   // This is long, so it can stick around and be removed
   auto timer = node->create_wall_timer(std::chrono::seconds(100), []() {});
   auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
@@ -129,7 +132,7 @@ TEST_F(TestStaticStorage, fixed_storage_needs_pruning) {
 TEST_F(TestStaticStorage, wait_subscription) {
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
-    "topic", 10, [](test_msgs::msg::Empty::SharedPtr) {});
+    "topic", 10, [](test_msgs::msg::Empty::ConstSharedPtr) {});
   rclcpp::SubscriptionWaitSetMask mask{true, true, true};
   rclcpp::StaticWaitSet<1, 0, 0, 0, 0, 0> wait_set({{{subscription, mask}}});
 

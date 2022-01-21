@@ -37,7 +37,7 @@ Duration::Duration(int32_t seconds, uint32_t nanoseconds)
   rcl_duration_.nanoseconds += nanoseconds;
 }
 
-Duration::Duration(int64_t nanoseconds)
+Duration::Duration(rcl_duration_value_t nanoseconds)
 {
   rcl_duration_.nanoseconds = nanoseconds;
 }
@@ -67,13 +67,27 @@ Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
   constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
+  constexpr int32_t max_s = std::numeric_limits<int32_t>::max();
+  constexpr int32_t min_s = std::numeric_limits<int32_t>::min();
+  constexpr uint32_t max_ns = std::numeric_limits<uint32_t>::max();
   const auto result = std::div(rcl_duration_.nanoseconds, kDivisor);
   if (result.rem >= 0) {
-    msg_duration.sec = static_cast<std::int32_t>(result.quot);
-    msg_duration.nanosec = static_cast<std::uint32_t>(result.rem);
+    // saturate if we will overflow
+    if (result.quot > max_s) {
+      msg_duration.sec = max_s;
+      msg_duration.nanosec = max_ns;
+    } else {
+      msg_duration.sec = static_cast<int32_t>(result.quot);
+      msg_duration.nanosec = static_cast<uint32_t>(result.rem);
+    }
   } else {
-    msg_duration.sec = static_cast<std::int32_t>(result.quot - 1);
-    msg_duration.nanosec = static_cast<std::uint32_t>(kDivisor + result.rem);
+    if (result.quot <= min_s) {
+      msg_duration.sec = min_s;
+      msg_duration.nanosec = 0u;
+    } else {
+      msg_duration.sec = static_cast<int32_t>(result.quot - 1);
+      msg_duration.nanosec = static_cast<uint32_t>(kDivisor + result.rem);
+    }
   }
   return msg_duration;
 }
@@ -148,7 +162,7 @@ Duration::operator+(const rclcpp::Duration & rhs) const
     this->rcl_duration_.nanoseconds,
     rhs.rcl_duration_.nanoseconds,
     std::numeric_limits<rcl_duration_value_t>::max());
-  return Duration(
+  return Duration::from_nanoseconds(
     rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
 }
 
@@ -177,7 +191,7 @@ Duration::operator-(const rclcpp::Duration & rhs) const
     rhs.rcl_duration_.nanoseconds,
     std::numeric_limits<rcl_duration_value_t>::max());
 
-  return Duration(
+  return Duration::from_nanoseconds(
     rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
 }
 
@@ -208,7 +222,7 @@ Duration::operator*(double scale) const
     scale,
     std::numeric_limits<rcl_duration_value_t>::max());
   long double scale_ld = static_cast<long double>(scale);
-  return Duration(
+  return Duration::from_nanoseconds(
     static_cast<rcl_duration_value_t>(
       static_cast<long double>(rcl_duration_.nanoseconds) * scale_ld));
 }
@@ -238,18 +252,52 @@ Duration::to_rmw_time() const
     throw std::runtime_error("rmw_time_t cannot be negative");
   }
 
-  // reuse conversion logic from msg creation
-  builtin_interfaces::msg::Duration msg = *this;
+  // Purposefully avoid creating from builtin_interfaces::msg::Duration
+  // to avoid possible overflow converting from int64_t to int32_t, then back to uint64_t
   rmw_time_t result;
-  result.sec = static_cast<uint64_t>(msg.sec);
-  result.nsec = static_cast<uint64_t>(msg.nanosec);
+  constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
+  const auto div_result = std::div(rcl_duration_.nanoseconds, kDivisor);
+  result.sec = static_cast<uint64_t>(div_result.quot);
+  result.nsec = static_cast<uint64_t>(div_result.rem);
+
   return result;
+}
+
+Duration
+Duration::from_rmw_time(rmw_time_t duration)
+{
+  Duration ret;
+  constexpr rcl_duration_value_t limit_ns = std::numeric_limits<rcl_duration_value_t>::max();
+  constexpr rcl_duration_value_t limit_sec = RCL_NS_TO_S(limit_ns);
+  if (duration.sec > limit_sec || duration.nsec > limit_ns) {
+    // saturate if will overflow
+    ret.rcl_duration_.nanoseconds = limit_ns;
+    return ret;
+  }
+  uint64_t total_ns = RCL_S_TO_NS(duration.sec) + duration.nsec;
+  if (total_ns > limit_ns) {
+    // saturate if will overflow
+    ret.rcl_duration_.nanoseconds = limit_ns;
+    return ret;
+  }
+  ret.rcl_duration_.nanoseconds = static_cast<rcl_duration_value_t>(total_ns);
+  return ret;
 }
 
 Duration
 Duration::from_seconds(double seconds)
 {
-  return Duration(static_cast<int64_t>(RCL_S_TO_NS(seconds)));
+  Duration ret;
+  ret.rcl_duration_.nanoseconds = static_cast<int64_t>(RCL_S_TO_NS(seconds));
+  return ret;
+}
+
+Duration
+Duration::from_nanoseconds(rcl_duration_value_t nanoseconds)
+{
+  Duration ret;
+  ret.rcl_duration_.nanoseconds = nanoseconds;
+  return ret;
 }
 
 }  // namespace rclcpp

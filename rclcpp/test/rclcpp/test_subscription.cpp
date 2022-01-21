@@ -29,16 +29,12 @@
 
 #include "test_msgs/msg/empty.hpp"
 
-// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
-// that this test can complete fully, or adjust the timeout as necessary.
-// See https://github.com/ros2/rmw_connext/issues/325 for resolution
-
 using namespace std::chrono_literals;
 
 class TestSubscription : public ::testing::Test
 {
 public:
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -84,7 +80,7 @@ class TestSubscriptionInvalidIntraprocessQos
 class TestSubscriptionSub : public ::testing::Test
 {
 public:
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -117,7 +113,7 @@ public:
   {
   }
 
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -134,7 +130,7 @@ public:
 class SubscriptionClass
 {
 public:
-  void OnMessage(const test_msgs::msg::Empty::SharedPtr msg)
+  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
   {
     (void)msg;
   }
@@ -154,7 +150,7 @@ public:
 TEST_F(TestSubscription, construction_and_destruction) {
   initialize();
   using test_msgs::msg::Empty;
-  auto callback = [](const Empty::SharedPtr msg) {
+  auto callback = [](Empty::ConstSharedPtr msg) {
       (void)msg;
     };
   {
@@ -166,7 +162,7 @@ TEST_F(TestSubscription, construction_and_destruction) {
     // get_subscription_handle()
     const rclcpp::SubscriptionBase * const_sub = sub.get();
     EXPECT_NE(nullptr, const_sub->get_subscription_handle());
-    EXPECT_FALSE(sub->use_take_shared_method());
+    EXPECT_TRUE(sub->use_take_shared_method());
 
     EXPECT_NE(nullptr, sub->get_message_type_support_handle().typesupport_identifier);
     EXPECT_NE(nullptr, sub->get_message_type_support_handle().data);
@@ -186,7 +182,7 @@ TEST_F(TestSubscription, construction_and_destruction) {
  */
 TEST_F(TestSubscriptionSub, construction_and_destruction) {
   using test_msgs::msg::Empty;
-  auto callback = [](const Empty::SharedPtr msg) {
+  auto callback = [](Empty::ConstSharedPtr msg) {
       (void)msg;
     };
   {
@@ -220,7 +216,7 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
 TEST_F(TestSubscription, various_creation_signatures) {
   initialize();
   using test_msgs::msg::Empty;
-  auto cb = [](test_msgs::msg::Empty::SharedPtr) {};
+  auto cb = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   {
     auto sub = node->create_subscription<Empty>("topic", 1, cb);
     (void)sub;
@@ -510,3 +506,37 @@ INSTANTIATE_TEST_SUITE_P(
   TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
   ::testing::ValuesIn(invalid_qos_profiles()),
   ::testing::PrintToStringParamName());
+
+TEST_F(TestSubscription, get_network_flow_endpoints_errors) {
+  initialize();
+  const rclcpp::QoS subscription_qos(1);
+  auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr msg) {
+      (void)msg;
+    };
+  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+    "topic", subscription_qos, subscription_callback);
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_subscription_get_network_flow_endpoints, RCL_RET_ERROR);
+    auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      subscription->get_network_flow_endpoints(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_ERROR);
+    EXPECT_THROW(
+      subscription->get_network_flow_endpoints(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_subscription_get_network_flow_endpoints, RCL_RET_OK);
+    auto mock_network_flow_endpoint_array_fini = mocking_utils::patch_and_return(
+      "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_OK);
+    EXPECT_NO_THROW(subscription->get_network_flow_endpoints());
+  }
+}

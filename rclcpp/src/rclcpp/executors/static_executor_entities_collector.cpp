@@ -23,6 +23,7 @@
 
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 
 using rclcpp::executors::StaticExecutorEntitiesCollector;
 
@@ -61,8 +62,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
-  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy,
-  rcl_guard_condition_t * executor_guard_condition)
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
 {
   // Empty initialize executable list
   exec_list_ = rclcpp::experimental::ExecutableList();
@@ -74,10 +74,12 @@ StaticExecutorEntitiesCollector::init(
   }
   memory_strategy_ = memory_strategy;
 
-  // Add executor's guard condition
-  memory_strategy_->add_guard_condition(executor_guard_condition);
   // Get memory strategy and executable list. Prepare wait_set_
-  execute();
+  std::shared_ptr<void> shared_ptr;
+  execute(shared_ptr);
+
+  // The entities collector is now initialized
+  initialized_ = true;
 }
 
 void
@@ -87,15 +89,31 @@ StaticExecutorEntitiesCollector::fini()
   exec_list_.clear();
 }
 
-void
-StaticExecutorEntitiesCollector::execute()
+std::shared_ptr<void>
+StaticExecutorEntitiesCollector::take_data()
 {
+  return nullptr;
+}
+
+void
+StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
+{
+  (void) data;
   // Fill memory strategy with entities coming from weak_nodes_
   fill_memory_strategy();
   // Fill exec_list_ with entities coming from weak_nodes_ (same as memory strategy)
   fill_executable_list();
   // Resize the wait_set_ based on memory_strategy handles (rcl_wait_set_resize)
   prepare_wait_set();
+  // Add new nodes guard conditions to map
+  std::lock_guard<std::mutex> guard{new_nodes_mutex_};
+  for (const auto & weak_node : new_nodes_) {
+    if (auto node_ptr = weak_node.lock()) {
+      const auto & gc = node_ptr->get_notify_guard_condition();
+      weak_nodes_to_guard_conditions_[node_ptr] = &gc;
+    }
+  }
+  new_nodes_.clear();
 }
 
 void
@@ -155,7 +173,8 @@ StaticExecutorEntitiesCollector::fill_executable_list()
 }
 void
 StaticExecutorEntitiesCollector::fill_executable_list_from_map(
-  const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
@@ -248,23 +267,20 @@ StaticExecutorEntitiesCollector::refresh_wait_set(std::chrono::nanoseconds timeo
   }
 }
 
-bool
+void
 StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   // Add waitable guard conditions (one for each registered node) into the wait set.
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & gc = pair.second;
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, gc, NULL);
-    if (ret != RCL_RET_OK) {
-      throw std::runtime_error("Executor waitable: couldn't add guard condition to wait set");
-    }
+    detail::add_guard_condition_to_rcl_wait_set(*wait_set, *gc);
   }
-  return true;
 }
 
 size_t StaticExecutorEntitiesCollector::get_number_of_ready_guard_conditions()
 {
-  return weak_nodes_to_guard_conditions_.size();
+  std::lock_guard<std::mutex> guard{new_nodes_mutex_};
+  return weak_nodes_to_guard_conditions_.size() + new_nodes_.size();
 }
 
 bool
@@ -277,18 +293,20 @@ StaticExecutorEntitiesCollector::add_node(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
-  for (const auto & weak_group : node_ptr->get_callback_groups()) {
-    auto group_ptr = weak_group.lock();
-    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
-      group_ptr->automatically_add_to_executor_with_node())
+  node_ptr->for_each_callback_group(
+    [this, node_ptr, &is_new_node](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      is_new_node = (add_callback_group(
+      if (
+        !group_ptr->get_associated_with_executor_atomic().load() &&
+        group_ptr->automatically_add_to_executor_with_node())
+      {
+        is_new_node = (add_callback_group(
           group_ptr,
           node_ptr,
           weak_groups_to_nodes_associated_with_executor_) ||
         is_new_node);
-    }
-  }
+      }
+    });
   weak_nodes_.push_back(node_ptr);
   return is_new_node;
 }
@@ -297,7 +315,7 @@ bool
 StaticExecutorEntitiesCollector::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   // If the callback_group already has an executor
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
@@ -314,8 +332,8 @@ StaticExecutorEntitiesCollector::add_callback_group(
     throw std::runtime_error("Callback group was already added to executor.");
   }
   if (is_new_node) {
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
-    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
+    std::lock_guard<std::mutex> guard{new_nodes_mutex_};
+    new_nodes_.push_back(node_ptr);
     return true;
   }
   return false;
@@ -341,7 +359,7 @@ StaticExecutorEntitiesCollector::remove_callback_group(
 bool
 StaticExecutorEntitiesCollector::remove_callback_group_from_map(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
-  WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr;
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
@@ -421,8 +439,9 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
       auto found_guard_condition = std::find_if(
         weak_nodes_to_guard_conditions_.begin(), weak_nodes_to_guard_conditions_.end(),
         [&](std::pair<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-        const rcl_guard_condition_t *> pair) -> bool {
-          return pair.second == p_wait_set->guard_conditions[i];
+        const GuardCondition *> pair) -> bool {
+          const rcl_guard_condition_t & rcl_gc = pair.second->get_rcl_guard_condition();
+          return &rcl_gc == p_wait_set->guard_conditions[i];
         });
       if (found_guard_condition != weak_nodes_to_guard_conditions_.end()) {
         return true;
@@ -437,7 +456,8 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
 bool
 StaticExecutorEntitiesCollector::has_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const
+  const rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap &
+  weak_groups_to_nodes) const
 {
   return std::find_if(
     weak_groups_to_nodes.begin(),
@@ -454,13 +474,10 @@ StaticExecutorEntitiesCollector::add_callback_groups_from_nodes_associated_to_ex
   for (const auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
-      auto group_ptrs = node->get_callback_groups();
-      std::for_each(
-        group_ptrs.begin(), group_ptrs.end(),
-        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+      node->for_each_callback_group(
+        [this, node](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
         {
-          auto shared_group_ptr = group_ptr.lock();
-          if (shared_group_ptr && shared_group_ptr->automatically_add_to_executor_with_node() &&
+          if (shared_group_ptr->automatically_add_to_executor_with_node() &&
           !shared_group_ptr->get_associated_with_executor_atomic().load())
           {
             add_callback_group(

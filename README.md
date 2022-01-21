@@ -12,6 +12,6 @@ Visit the [rclcpp API documentation](http://docs.ros2.org/latest/api/rclcpp/) fo
 
 ### Examples
 
-The ROS 2 tutorials [Writing a simple publisher and subscriber](https://index.ros.org/doc/ros2/Tutorials/Writing-A-Simple-Cpp-Publisher-And-Subscriber/)
-and [Writing a simple service and client](https://index.ros.org/doc/ros2/Tutorials/Writing-A-Simple-Cpp-Service-And-Client/)
+The ROS 2 tutorials [Writing a simple publisher and subscriber](https://docs.ros.org/en/rolling/Tutorials/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html).
+and [Writing a simple service and client](https://docs.ros.org/en/rolling/Tutorials/Writing-A-Simple-Cpp-Service-And-Client.html)
 contain some examples of rclcpp APIs in use.

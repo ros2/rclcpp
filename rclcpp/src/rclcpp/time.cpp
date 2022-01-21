@@ -199,7 +199,7 @@ Time::operator-(const rclcpp::Time & rhs) const
     throw std::underflow_error("time subtraction leads to int64_t underflow");
   }
 
-  return Duration(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);
+  return Duration::from_nanoseconds(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);
 }
 
 Time

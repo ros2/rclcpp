@@ -117,6 +117,15 @@
  * - Allocator related items:
  *   - rclcpp/allocator/allocator_common.hpp
  *   - rclcpp/allocator/allocator_deleter.hpp
+ * - Generic publisher
+ *   - rclcpp::Node::create_generic_publisher()
+ *   - rclcpp::GenericPublisher
+ *   - rclcpp::GenericPublisher::publish()
+ *   - rclcpp/generic_publisher.hpp
+ * - Generic subscription
+ *   - rclcpp::Node::create_generic_subscription()
+ *   - rclcpp::GenericSubscription
+ *   - rclcpp/generic_subscription.hpp
  * - Memory management tools:
  *   - rclcpp/memory_strategies.hpp
  *   - rclcpp/memory_strategy.hpp
@@ -131,9 +140,9 @@
  *   - rclcpp/duration.hpp
  *   - rclcpp/function_traits.hpp
  *   - rclcpp/macros.hpp
- *   - rclcpp/scope_exit.hpp
  *   - rclcpp/time.hpp
  *   - rclcpp/utilities.hpp
+ *   - rclcpp/typesupport_helpers.hpp
  *   - rclcpp/visibility_control.hpp
  */
 
@@ -147,14 +156,15 @@
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_client.hpp"
+#include "rclcpp/parameter_event_handler.hpp"
+#include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_service.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/wait_set.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rclcpp/wait_set.hpp"
 
 #endif  // RCLCPP__RCLCPP_HPP_

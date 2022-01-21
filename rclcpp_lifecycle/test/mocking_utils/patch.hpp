@@ -234,6 +234,48 @@ struct PatchTraits<ID, ReturnT(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5)>
     mock_type, ReturnT, ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5);
 };
 
+/// Traits specialization for void(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5)
+/// free functions.
+/**
+ * Necessary for Mimick macros to adjust accordingly when the return
+ * type is `void`.
+ *
+ * \tparam ID Numerical identifier of the patch. Ought to be unique.
+ * \tparam ArgTx Argument types.
+ */
+template<size_t ID,
+  typename ArgT0, typename ArgT1,
+  typename ArgT2, typename ArgT3,
+  typename ArgT4, typename ArgT5>
+struct PatchTraits<ID, void(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5)>
+{
+  mmk_mock_define(
+    mock_type, void, ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5);
+};
+
+/// Traits specialization for
+/// ReturnT(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7, ArgT8)
+/// free functions.
+/**
+ * Necessary for Mimick macros to adjust accordingly when the return
+ * type is `void`.
+ *
+ * \tparam ID Numerical identifier of the patch. Ought to be unique.
+ * \tparam ArgTx Argument types.
+ */
+template<size_t ID, typename ReturnT,
+  typename ArgT0, typename ArgT1,
+  typename ArgT2, typename ArgT3,
+  typename ArgT4, typename ArgT5,
+  typename ArgT6, typename ArgT7,
+  typename ArgT8>
+struct PatchTraits<ID, ReturnT(
+    ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7, ArgT8)>
+{
+  mmk_mock_define(
+    mock_type, ReturnT, ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7, ArgT8);
+};
+
 /// Traits specialization for void(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7)
 /// free functions.
 /**
@@ -254,25 +296,6 @@ struct PatchTraits<ID, ReturnT(
 {
   mmk_mock_define(
     mock_type, ReturnT, ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5, ArgT6, ArgT7, ArgT8, ArgT9);
-};
-
-/// Traits specialization for void(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5)
-/// free functions.
-/**
- * Necessary for Mimick macros to adjust accordingly when the return
- * type is `void`.
- *
- * \tparam ID Numerical identifier of the patch. Ought to be unique.
- * \tparam ArgTx Argument types.
- */
-template<size_t ID,
-  typename ArgT0, typename ArgT1,
-  typename ArgT2, typename ArgT3,
-  typename ArgT4, typename ArgT5>
-struct PatchTraits<ID, void(ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5)>
-{
-  mmk_mock_define(
-    mock_type, void, ArgT0, ArgT1, ArgT2, ArgT3, ArgT4, ArgT5);
 };
 
 /// Generic trampoline to wrap generalized callables in plain functions.

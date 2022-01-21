@@ -25,6 +25,8 @@
 
 #include "rcl/error_handling.h"
 
+#include "rclcpp/guard_condition.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 
@@ -39,8 +41,11 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
   RCLCPP_PUBLIC
-  SubscriptionIntraProcessBase(const std::string & topic_name, rmw_qos_profile_t qos_profile)
-  : topic_name_(topic_name), qos_profile_(qos_profile)
+  SubscriptionIntraProcessBase(
+    rclcpp::Context::SharedPtr context,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos_profile)
+  : gc_(context), topic_name_(topic_name), qos_profile_(qos_profile)
   {}
 
   virtual ~SubscriptionIntraProcessBase() = default;
@@ -50,14 +55,18 @@ public:
   get_number_of_ready_guard_conditions() {return 1;}
 
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set);
 
   virtual bool
   is_ready(rcl_wait_set_t * wait_set) = 0;
 
+  virtual
+  std::shared_ptr<void>
+  take_data() = 0;
+
   virtual void
-  execute() = 0;
+  execute(std::shared_ptr<void> & data) = 0;
 
   virtual bool
   use_take_shared_method() const = 0;
@@ -67,19 +76,19 @@ public:
   get_topic_name() const;
 
   RCLCPP_PUBLIC
-  rmw_qos_profile_t
+  QoS
   get_actual_qos() const;
 
 protected:
   std::recursive_mutex reentrant_mutex_;
-  rcl_guard_condition_t gc_;
+  rclcpp::GuardCondition gc_;
 
 private:
   virtual void
   trigger_guard_condition() = 0;
 
   std::string topic_name_;
-  rmw_qos_profile_t qos_profile_;
+  QoS qos_profile_;
 };
 
 }  // namespace experimental

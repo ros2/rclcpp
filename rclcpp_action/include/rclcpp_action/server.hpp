@@ -109,7 +109,7 @@ public:
   /// Add all entities to a wait set.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// Return true if any entity belonging to the action server is ready to be executed.
@@ -118,11 +118,15 @@ public:
   bool
   is_ready(rcl_wait_set_t *) override;
 
+  RCLCPP_ACTION_PUBLIC
+  std::shared_ptr<void>
+  take_data() override;
+
   /// Act on entities in the wait set which are ready to be acted upon.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
 
   // End Waitables API
   // -----------------
@@ -229,19 +233,19 @@ private:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_goal_request_received();
+  execute_goal_request_received(std::shared_ptr<void> & data);
 
   /// Handle a request to cancel goals on the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_cancel_request_received();
+  execute_cancel_request_received(std::shared_ptr<void> & data);
 
   /// Handle a request to get the result of an action
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_result_request_received();
+  execute_result_request_received(std::shared_ptr<void> & data);
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
@@ -352,15 +356,26 @@ protected:
   CancelResponse
   call_handle_cancel_callback(const GoalUUID & uuid) override
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
+    {
+      std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+      auto element = goal_handles_.find(uuid);
+      if (element != goal_handles_.end()) {
+        goal_handle = element->second.lock();
+      }
+    }
+
     CancelResponse resp = CancelResponse::REJECT;
-    auto element = goal_handles_.find(uuid);
-    if (element != goal_handles_.end()) {
-      std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle = element->second.lock();
-      if (goal_handle) {
-        resp = handle_cancel_(goal_handle);
-        if (CancelResponse::ACCEPT == resp) {
+    if (goal_handle) {
+      resp = handle_cancel_(goal_handle);
+      if (CancelResponse::ACCEPT == resp) {
+        try {
           goal_handle->_cancel_goal();
+        } catch (const rclcpp::exceptions::RCLError & ex) {
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("rclcpp_action"),
+            "Failed to cancel goal in call_handle_cancel_callback: %s", ex.what());
+          return CancelResponse::REJECT;
         }
       }
     }
@@ -377,31 +392,31 @@ protected:
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
 
     std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state =
-      [weak_this](const GoalUUID & uuid, std::shared_ptr<void> result_message)
+      [weak_this](const GoalUUID & goal_uuid, std::shared_ptr<void> result_message)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
         // Send result message to anyone that asked
-        shared_this->publish_result(uuid, result_message);
+        shared_this->publish_result(goal_uuid, result_message);
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
         // notify base so it can recalculate the expired goal timer
         shared_this->notify_goal_terminal_state();
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
         std::lock_guard<std::mutex> lock(shared_this->goal_handles_mutex_);
-        shared_this->goal_handles_.erase(uuid);
+        shared_this->goal_handles_.erase(goal_uuid);
       };
 
     std::function<void(const GoalUUID &)> on_executing =
-      [weak_this](const GoalUUID & uuid)
+      [weak_this](const GoalUUID & goal_uuid)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
-        (void)uuid;
+        (void)goal_uuid;
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
       };

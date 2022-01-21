@@ -47,17 +47,20 @@ namespace rclcpp_lifecycle
 
 LifecycleNode::LifecycleNode(
   const std::string & node_name,
-  const rclcpp::NodeOptions & options)
+  const rclcpp::NodeOptions & options,
+  bool enable_communication_interface)
 : LifecycleNode(
     node_name,
     "",
-    options)
+    options,
+    enable_communication_interface)
 {}
 
 LifecycleNode::LifecycleNode(
   const std::string & node_name,
   const std::string & namespace_,
-  const rclcpp::NodeOptions & options)
+  const rclcpp::NodeOptions & options,
+  bool enable_communication_interface)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
       node_name,
       namespace_,
@@ -99,13 +102,14 @@ LifecycleNode::LifecycleNode(
       node_logging_,
       node_clock_,
       node_parameters_,
-      options.clock_qos()
+      options.clock_qos(),
+      options.use_clock_thread()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
   impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
 {
-  impl_->init();
+  impl_->init(enable_communication_interface);
 
   register_on_configure(
     std::bind(
@@ -128,7 +132,18 @@ LifecycleNode::LifecycleNode(
 }
 
 LifecycleNode::~LifecycleNode()
-{}
+{
+  // release sub-interfaces in an order that allows them to consult with node_base during tear-down
+  node_waitables_.reset();
+  node_time_source_.reset();
+  node_parameters_.reset();
+  node_clock_.reset();
+  node_services_.reset();
+  node_topics_.reset();
+  node_timers_.reset();
+  node_logging_.reset();
+  node_graph_.reset();
+}
 
 const char *
 LifecycleNode::get_name() const
@@ -150,18 +165,53 @@ LifecycleNode::get_logger() const
 
 rclcpp::CallbackGroup::SharedPtr
 LifecycleNode::create_callback_group(
-  rclcpp::CallbackGroupType group_type)
+  rclcpp::CallbackGroupType group_type,
+  bool automatically_add_to_executor_with_node)
 {
-  return node_base_->create_callback_group(group_type);
+  return node_base_->create_callback_group(group_type, automatically_add_to_executor_with_node);
 }
 
 const rclcpp::ParameterValue &
 LifecycleNode::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
-  return this->node_parameters_->declare_parameter(name, default_value, parameter_descriptor);
+  return this->node_parameters_->declare_parameter(
+    name, default_value, parameter_descriptor, ignore_override);
+}
+
+const rclcpp::ParameterValue &
+LifecycleNode::declare_parameter(const std::string & name)
+{
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  return this->node_parameters_->declare_parameter(name);
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
+}
+
+const rclcpp::ParameterValue &
+LifecycleNode::declare_parameter(
+  const std::string & name,
+  rclcpp::ParameterType type,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
+{
+  return this->node_parameters_->declare_parameter(
+    name,
+    type,
+    parameter_descriptor,
+    ignore_override);
 }
 
 void
@@ -315,10 +365,11 @@ LifecycleNode::get_subscriptions_info_by_topic(const std::string & topic_name, b
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-LifecycleNode::get_callback_groups() const
+void
+LifecycleNode::for_each_callback_group(
+  const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)
 {
-  return node_base_->get_callback_groups();
+  node_base_->for_each_callback_group(func);
 }
 
 rclcpp::Event::SharedPtr
@@ -484,6 +535,12 @@ std::vector<Transition>
 LifecycleNode::get_available_transitions()
 {
   return impl_->get_available_transitions();
+}
+
+std::vector<Transition>
+LifecycleNode::get_transition_graph()
+{
+  return impl_->get_transition_graph();
 }
 
 const State &

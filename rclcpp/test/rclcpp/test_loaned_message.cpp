@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <utility>
 
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -43,7 +44,42 @@ TEST_F(TestLoanedMessage, initialize) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
-  auto loaned_msg = rclcpp::LoanedMessage<MessageT>(pub.get(), pub->get_allocator());
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  auto pub_allocator = pub->get_allocator();
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  auto loaned_msg = rclcpp::LoanedMessage<MessageT>(pub.get(), pub_allocator);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
   ASSERT_TRUE(loaned_msg.is_valid());
   loaned_msg.get().float32_value = 42.0f;
   ASSERT_EQ(42.0f, loaned_msg.get().float32_value);
@@ -67,7 +103,7 @@ TEST_F(TestLoanedMessage, release) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
-  MessageT * msg = nullptr;
+  std::unique_ptr<MessageT, std::function<void(MessageT *)>> msg;
   {
     auto loaned_msg = pub->borrow_loaned_message();
     ASSERT_TRUE(loaned_msg.is_valid());
@@ -80,6 +116,15 @@ TEST_F(TestLoanedMessage, release) {
   }
 
   ASSERT_EQ(42.0f, msg->float64_value);
+
+  // Generally, the memory released from `LoanedMessage::release()` will be freed
+  // in deleter of unique_ptr or is managed in the middleware after calling
+  // `Publisher::do_loaned_message_publish` inside Publisher::publish().
+  if (pub->can_loan_messages()) {
+    ASSERT_EQ(
+      RCL_RET_OK,
+      rcl_return_loaned_message_from_publisher(pub->get_publisher_handle().get(), msg.get()));
+  }
 
   SUCCEED();
 }
@@ -130,4 +175,20 @@ TEST_F(TestLoanedMessage, construct_with_loaned_message_publisher) {
     // No exception, it just logs an error
     EXPECT_NO_THROW(loaned_message.reset());
   }
+}
+
+TEST_F(TestLoanedMessage, move_loaned_message) {
+  auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
+  auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
+
+  auto loaned_msg_to_move = pub->borrow_loaned_message();
+  // Force the move constructor to invoke
+  auto loaned_msg_moved_to = LoanedMessageT(std::move(loaned_msg_to_move));
+
+  ASSERT_TRUE(loaned_msg_moved_to.is_valid());
+  ASSERT_FALSE(loaned_msg_to_move.is_valid());
+
+  loaned_msg_moved_to.get().float32_value = 42.0f;
+  ASSERT_EQ(42.0f, loaned_msg_moved_to.get().float32_value);
+  SUCCEED();
 }

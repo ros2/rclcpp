@@ -24,6 +24,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -122,11 +123,19 @@ public:
   bool
   callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) = 0;
 
-  /// Return list of callback groups associated with this node.
+  using CallbackGroupFunction = std::function<void (rclcpp::CallbackGroup::SharedPtr)>;
+
+  /// Iterate over the stored callback groups, calling the given function on each valid one.
+  /**
+   * This method is called in a thread-safe way, and also makes sure to only call the given
+   * function on those items that are still valid.
+   *
+   * \param[in] func The callback function to call on each valid callback group.
+   */
   RCLCPP_PUBLIC
   virtual
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
-  get_callback_groups() const = 0;
+  void
+  for_each_callback_group(const CallbackGroupFunction & func) = 0;
 
   /// Return the atomic bool which is used to ensure only one executor is used.
   RCLCPP_PUBLIC
@@ -134,23 +143,16 @@ public:
   std::atomic_bool &
   get_associated_with_executor_atomic() = 0;
 
-  /// Return guard condition that should be notified when the internal node state changes.
+  /// Return a guard condition that should be notified when the internal node state changes.
   /**
    * For example, this should be notified when a publisher is added or removed.
    *
-   * \return the rcl_guard_condition_t if it is valid, else nullptr
+   * \return the GuardCondition if it is valid, else thow runtime error
    */
   RCLCPP_PUBLIC
   virtual
-  rcl_guard_condition_t *
+  rclcpp::GuardCondition &
   get_notify_guard_condition() = 0;
-
-  /// Acquire and return a scoped lock that protects the notify guard condition.
-  /** This should be used when triggering the notify guard condition. */
-  RCLCPP_PUBLIC
-  virtual
-  std::unique_lock<std::recursive_mutex>
-  acquire_notify_guard_condition_lock() const = 0;
 
   /// Return the default preference for using intra process communication.
   RCLCPP_PUBLIC
@@ -163,6 +165,13 @@ public:
   virtual
   bool
   get_enable_topic_statistics_default() const = 0;
+
+  /// Expand and remap a given topic or service name.
+  RCLCPP_PUBLIC
+  virtual
+  std::string
+  resolve_topic_or_service_name(
+    const std::string & name, bool is_service, bool only_expand = false) const = 0;
 };
 
 }  // namespace node_interfaces

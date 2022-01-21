@@ -2,6 +2,296 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+13.1.0 (2021-10-18)
+-------------------
+* Fix dangerous std::bind capture in TimeSource implementation. (`#1768 <https://github.com/ros2/rclcpp/issues/1768>`_)
+* Fix dangerous std::bind capture in ParameterEventHandler implementation. (`#1770 <https://github.com/ros2/rclcpp/issues/1770>`_)
+* Handle sigterm, in the same way sigint is being handled. (`#1771 <https://github.com/ros2/rclcpp/issues/1771>`_)
+* rclcpp::Node copy constructor: make copy of node_waitables\_ member. (`#1799 <https://github.com/ros2/rclcpp/issues/1799>`_)
+* Extend NodeGraph to match what rcl provides. (`#1484 <https://github.com/ros2/rclcpp/issues/1484>`_)
+* Context::sleep_for(): replace recursion with do-while to avoid potential stack-overflow. (`#1765 <https://github.com/ros2/rclcpp/issues/1765>`_)
+* extend_sub_namespace(): Verify string::empty() before calling string::front(). (`#1764 <https://github.com/ros2/rclcpp/issues/1764>`_)
+* Deprecate the `void shared_ptr<MessageT>` subscription callback signatures. (`#1713 <https://github.com/ros2/rclcpp/issues/1713>`_)
+* Contributors: Abrar Rahman Protyasha, Chris Lalancette, Emerson Knapp, Geoffrey Biggs, Ivan Santiago Paunovic, Jorge Perez, Tomoya Fujita, William Woodall, Yong-Hao Zou, livanov93
+
+13.0.0 (2021-08-23)
+-------------------
+* Remove can_be_nullptr assignment check for QNX case. (`#1752 <https://github.com/ros2/rclcpp/issues/1752>`_)
+* Update client API to be able to remove pending requests. (`#1734 <https://github.com/ros2/rclcpp/issues/1734>`_)
+* Fix: Allow to add a node while spinning in the StaticSingleThreadedExecutor. (`#1690 <https://github.com/ros2/rclcpp/issues/1690>`_)
+* Add tracing instrumentation for executor and message taking. (`#1738 <https://github.com/ros2/rclcpp/issues/1738>`_)
+* Fix: Reset timer trigger time before execute in StaticSingleThreadedExecutor. (`#1739 <https://github.com/ros2/rclcpp/issues/1739>`_)
+* Use FindPython3 and make python3 dependency explicit. (`#1745 <https://github.com/ros2/rclcpp/issues/1745>`_)
+* Use rosidl_get_typesupport_target(). (`#1729 <https://github.com/ros2/rclcpp/issues/1729>`_)
+* Fix returning invalid namespace if sub_namespace is empty. (`#1658 <https://github.com/ros2/rclcpp/issues/1658>`_)
+* Add free function to wait for a subscription message. (`#1705 <https://github.com/ros2/rclcpp/issues/1705>`_)
+* Use rcpputils/scope_exit.hpp and remove rclcpp/scope_exit.hpp. (`#1727 <https://github.com/ros2/rclcpp/issues/1727>`_)
+* Contributors: Ahmed Sobhy, Christophe Bedard, Ivan Santiago Paunovic, Karsten Knese, M. Hofstätter, Mauro Passerino, Shane Loretz, mauropasse
+
+12.0.0 (2021-07-26)
+-------------------
+* Remove unsafe get_callback_groups API.
+  Callers should change to using for_each_callback_group(), or
+  store the callback groups they need internally.
+* Add in callback_groups_for_each.
+  The main reason to add this method in is to make accesses to the
+  callback_groups\_ vector thread-safe.  By having a
+  callback_groups_for_each that accepts a std::function, we can
+  just have the callers give us the callback they are interested
+  in, and we can take care of the locking.
+  The rest of this fairly large PR is cleaning up all of the places
+  that use get_callback_groups() to instead use
+  callback_groups_for_each().
+* Use a different mechanism to avoid timers being scheduled multiple times by the MultiThreadedExecutor (`#1692 <https://github.com/ros2/rclcpp/issues/1692>`_)
+* Fix windows CI (`#1726 <https://github.com/ros2/rclcpp/issues/1726>`_)
+  Fix bug in AnyServiceCallback introduced in `#1709 <https://github.com/ros2/rclcpp/issues/1709>`_.
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic
+
+11.2.0 (2021-07-21)
+-------------------
+* Support to defer to send a response in services. (`#1709 <https://github.com/ros2/rclcpp/issues/1709>`_)
+  Signed-off-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+* Fix documentation bug. (`#1719 <https://github.com/ros2/rclcpp/issues/1719>`_)
+  Signed-off-by: William Woodall <william@osrfoundation.org>
+* Contributors: Ivan Santiago Paunovic, William Woodall
+
+11.1.0 (2021-07-13)
+-------------------
+* Removed left over ``is_initialized()`` implementation (`#1711 <https://github.com/ros2/rclcpp/issues/1711>`_)
+  Leftover from https://github.com/ros2/rclcpp/pull/1622
+* Fixed declare parameter methods for int and float vectors (`#1696 <https://github.com/ros2/rclcpp/issues/1696>`_)
+* Cleaned up implementation of the intra-process manager (`#1695 <https://github.com/ros2/rclcpp/issues/1695>`_)
+* Added the node name to an executor ``runtime_error`` (`#1686 <https://github.com/ros2/rclcpp/issues/1686>`_)
+* Fixed a typo "Attack" -> "Attach" (`#1687 <https://github.com/ros2/rclcpp/issues/1687>`_)
+* Removed use of std::allocator<>::rebind (`#1678 <https://github.com/ros2/rclcpp/issues/1678>`_)
+  rebind is deprecated in c++17 and removed in c++20
+* Contributors: Alberto Soragna, Chen Lihui, Chris Lalancette, Petter Nilsson, Steve Macenski, William Woodall
+
+11.0.0 (2021-05-18)
+-------------------
+* Allow declare uninitialized parameters (`#1673 <https://github.com/ros2/rclcpp/issues/1673>`_)
+* Fix syntax issue with gcc (`#1674 <https://github.com/ros2/rclcpp/issues/1674>`_)
+* [service] Don't use a weak_ptr to avoid leaking (`#1668 <https://github.com/ros2/rclcpp/issues/1668>`_)
+* Contributors: Ivan Santiago Paunovic, Jacob Perron, William Woodall
+
+10.0.0 (2021-05-11)
+-------------------
+* Fix doc typo (`#1663 <https://github.com/ros2/rclcpp/issues/1663>`_)
+* [rclcpp] Type Adaptation feature (`#1557 <https://github.com/ros2/rclcpp/issues/1557>`_)
+* Do not attempt to use void allocators for memory allocation. (`#1657 <https://github.com/ros2/rclcpp/issues/1657>`_)
+* Keep custom allocator in publisher and subscription options alive. (`#1647 <https://github.com/ros2/rclcpp/issues/1647>`_)
+* Fix get_publishers_subscriptions_info_by_topic test in test_node.cpp (`#1648 <https://github.com/ros2/rclcpp/issues/1648>`_)
+* Use OnShutdown callback handle instead of OnShutdown callback (`#1639 <https://github.com/ros2/rclcpp/issues/1639>`_)
+* use dynamic_pointer_cast to detect allocator mismatch in intra process manager (`#1643 <https://github.com/ros2/rclcpp/issues/1643>`_)
+* Increase cppcheck timeout to 500s (`#1634 <https://github.com/ros2/rclcpp/issues/1634>`_)
+* Clarify node parameters docs (`#1631 <https://github.com/ros2/rclcpp/issues/1631>`_)
+* Contributors: Audrow Nash, Barry Xu, Jacob Perron, Michel Hidalgo, Shane Loretz, William Woodall
+
+9.0.2 (2021-04-14)
+------------------
+* Avoid returning loan when none was obtained. (`#1629 <https://github.com/ros2/rclcpp/issues/1629>`_)
+* Use a different implementation of mutex two priorities (`#1628 <https://github.com/ros2/rclcpp/issues/1628>`_)
+* Do not test the value of the history policy when testing the get_publishers/subscriptions_info_by_topic() methods (`#1626 <https://github.com/ros2/rclcpp/issues/1626>`_)
+* Check first parameter type and range before calling the user validation callbacks (`#1627 <https://github.com/ros2/rclcpp/issues/1627>`_)
+* Contributors: Ivan Santiago Paunovic, Miguel Company
+
+9.0.1 (2021-04-12)
+------------------
+* Restore test exception for Connext (`#1625 <https://github.com/ros2/rclcpp/issues/1625>`_)
+* Fix race condition in TimeSource clock thread setup (`#1623 <https://github.com/ros2/rclcpp/issues/1623>`_)
+* Contributors: Andrea Sorbini, Michel Hidalgo
+
+9.0.0 (2021-04-06)
+------------------
+* remove deprecated code which was deprecated in foxy and should be removed in galactic (`#1622 <https://github.com/ros2/rclcpp/issues/1622>`_)
+* Change index.ros.org -> docs.ros.org. (`#1620 <https://github.com/ros2/rclcpp/issues/1620>`_)
+* Unique network flows (`#1496 <https://github.com/ros2/rclcpp/issues/1496>`_)
+* Add spin_some support to the StaticSingleThreadedExecutor (`#1338 <https://github.com/ros2/rclcpp/issues/1338>`_)
+* Add publishing instrumentation (`#1600 <https://github.com/ros2/rclcpp/issues/1600>`_)
+* Create load_parameters and delete_parameters methods (`#1596 <https://github.com/ros2/rclcpp/issues/1596>`_)
+* refactor AnySubscriptionCallback and add/deprecate callback signatures (`#1598 <https://github.com/ros2/rclcpp/issues/1598>`_)
+* Add generic publisher and generic subscription for serialized messages (`#1452 <https://github.com/ros2/rclcpp/issues/1452>`_)
+* use context from `node_base\_` for clock executor. (`#1617 <https://github.com/ros2/rclcpp/issues/1617>`_)
+* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#1615 <https://github.com/ros2/rclcpp/issues/1615>`_)
+* Contributors: Ananya Muddukrishna, BriceRenaudeau, Chris Lalancette, Christophe Bedard, Nikolai Morin, Tomoya Fujita, William Woodall, mauropasse, shonigmann
+
+8.2.0 (2021-03-31)
+------------------
+* Initialize integers in test_parameter_event_handler.cpp to avoid undefined behavior (`#1609 <https://github.com/ros2/rclcpp/issues/1609>`_)
+* Namespace tracetools C++ functions (`#1608 <https://github.com/ros2/rclcpp/issues/1608>`_)
+* Revert "Namespace tracetools C++ functions (`#1603 <https://github.com/ros2/rclcpp/issues/1603>`_)" (`#1607 <https://github.com/ros2/rclcpp/issues/1607>`_)
+* Namespace tracetools C++ functions (`#1603 <https://github.com/ros2/rclcpp/issues/1603>`_)
+* Clock subscription callback group spins in its own thread (`#1556 <https://github.com/ros2/rclcpp/issues/1556>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Ivan Santiago Paunovic, anaelle-sw
+
+8.1.0 (2021-03-25)
+------------------
+* Remove rmw_connext_cpp references. (`#1595 <https://github.com/ros2/rclcpp/issues/1595>`_)
+* Add API for checking QoS profile compatibility (`#1554 <https://github.com/ros2/rclcpp/issues/1554>`_)
+* Document misuse of parameters callback (`#1590 <https://github.com/ros2/rclcpp/issues/1590>`_)
+* use const auto & to iterate over parameters (`#1593 <https://github.com/ros2/rclcpp/issues/1593>`_)
+* Contributors: Chris Lalancette, Jacob Perron, Karsten Knese
+
+8.0.0 (2021-03-23)
+------------------
+* Guard against integer overflow in duration conversion (`#1584 <https://github.com/ros2/rclcpp/issues/1584>`_)
+* Contributors: Jacob Perron
+
+7.0.1 (2021-03-22)
+------------------
+* get_parameters service should return empty if undeclared parameters are allowed (`#1514 <https://github.com/ros2/rclcpp/issues/1514>`_)
+* Made 'Context::shutdown_reason' function a const function (`#1578 <https://github.com/ros2/rclcpp/issues/1578>`_)
+* Contributors: Tomoya Fujita, suab321321
+
+7.0.0 (2021-03-18)
+------------------
+* Document design decisions that were made for statically typed parameters (`#1568 <https://github.com/ros2/rclcpp/issues/1568>`_)
+* Fix doc typo in CallbackGroup constructor (`#1582 <https://github.com/ros2/rclcpp/issues/1582>`_)
+* Enable qos parameter overrides for the /parameter_events topic  (`#1532 <https://github.com/ros2/rclcpp/issues/1532>`_)
+* Add support for rmw_connextdds (`#1574 <https://github.com/ros2/rclcpp/issues/1574>`_)
+* Remove 'struct' from the rcl_time_jump_t. (`#1577 <https://github.com/ros2/rclcpp/issues/1577>`_)
+* Add tests for declaring statically typed parameters when undeclared parameters are allowed (`#1575 <https://github.com/ros2/rclcpp/issues/1575>`_)
+* Quiet clang memory leak warning on "DoNotOptimize". (`#1571 <https://github.com/ros2/rclcpp/issues/1571>`_)
+* Add ParameterEventsSubscriber class (`#829 <https://github.com/ros2/rclcpp/issues/829>`_)
+* When a parameter change is rejected, the parameters map shouldn't be updated. (`#1567 <https://github.com/ros2/rclcpp/pull/1567>`_)
+* Fix when to throw the NoParameterOverrideProvided exception. (`#1567 <https://github.com/ros2/rclcpp/pull/1567>`_)
+* Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_)
+* Fix benchmark test failure introduced in `#1522 <https://github.com/ros2/rclcpp/issues/1522>`_ (`#1564 <https://github.com/ros2/rclcpp/issues/1564>`_)
+* Fix documented example in create_publisher (`#1558 <https://github.com/ros2/rclcpp/issues/1558>`_)
+* Enforce static parameter types (`#1522 <https://github.com/ros2/rclcpp/issues/1522>`_)
+* Allow timers to keep up the intended rate in MultiThreadedExecutor (`#1516 <https://github.com/ros2/rclcpp/issues/1516>`_)
+* Fix UBSAN warnings in any_subscription_callback. (`#1551 <https://github.com/ros2/rclcpp/issues/1551>`_)
+* Fix runtime error: reference binding to null pointer of type (`#1547 <https://github.com/ros2/rclcpp/issues/1547>`_)
+* Contributors: Andrea Sorbini, Chris Lalancette, Colin MacKenzie, Ivan Santiago Paunovic, Jacob Perron, Steven! Ragnarök, bpwilcox, tomoya
+
+6.3.1 (2021-02-08)
+------------------
+* Reference test resources directly from source tree (`#1543 <https://github.com/ros2/rclcpp/issues/1543>`_)
+* clear statistics after window reset (`#1531 <https://github.com/ros2/rclcpp/issues/1531>`_) (`#1535 <https://github.com/ros2/rclcpp/issues/1535>`_)
+* Fix a minor string error in the topic_statistics test. (`#1541 <https://github.com/ros2/rclcpp/issues/1541>`_)
+* Avoid `Resource deadlock avoided` if use intra_process_comms (`#1530 <https://github.com/ros2/rclcpp/issues/1530>`_)
+* Avoid an object copy in parameter_value.cpp. (`#1538 <https://github.com/ros2/rclcpp/issues/1538>`_)
+* Assert that the publisher_list size is 1. (`#1537 <https://github.com/ros2/rclcpp/issues/1537>`_)
+* Don't access objects after they have been std::move (`#1536 <https://github.com/ros2/rclcpp/issues/1536>`_)
+* Update for checking correct variable (`#1534 <https://github.com/ros2/rclcpp/issues/1534>`_)
+* Destroy msg extracted from LoanedMessage. (`#1305 <https://github.com/ros2/rclcpp/issues/1305>`_)
+* Contributors: Chen Lihui, Chris Lalancette, Ivan Santiago Paunovic, Miaofei Mei, Scott K Logan, William Woodall, hsgwa
+
+6.3.0 (2021-01-25)
+------------------
+* Add instrumentation for linking a timer to a node (`#1500 <https://github.com/ros2/rclcpp/issues/1500>`_)
+* Fix error when using IPC with StaticSingleThreadExecutor (`#1520 <https://github.com/ros2/rclcpp/issues/1520>`_)
+* Change to using unique_ptrs for DummyExecutor. (`#1517 <https://github.com/ros2/rclcpp/issues/1517>`_)
+* Allow reconfiguring 'clock' topic qos (`#1512 <https://github.com/ros2/rclcpp/issues/1512>`_)
+* Allow to add/remove nodes thread safely in rclcpp::Executor  (`#1505 <https://github.com/ros2/rclcpp/issues/1505>`_)
+* Call rclcpp::shutdown in test_node for clean shutdown on Windows (`#1515 <https://github.com/ros2/rclcpp/issues/1515>`_)
+* Reapply "Add get_logging_directory method to rclcpp::Logger (`#1509 <https://github.com/ros2/rclcpp/issues/1509>`_)" (`#1513 <https://github.com/ros2/rclcpp/issues/1513>`_)
+* use describe_parameters of parameter client for test (`#1499 <https://github.com/ros2/rclcpp/issues/1499>`_)
+* Revert "Add get_logging_directory method to rclcpp::Logger (`#1509 <https://github.com/ros2/rclcpp/issues/1509>`_)" (`#1511 <https://github.com/ros2/rclcpp/issues/1511>`_)
+* Add get_logging_directory method to rclcpp::Logger (`#1509 <https://github.com/ros2/rclcpp/issues/1509>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Ivan Santiago Paunovic, eboasson, mauropasse, tomoya
+
+6.2.0 (2021-01-08)
+------------------
+* Better documentation for the QoS class (`#1508 <https://github.com/ros2/rclcpp/issues/1508>`_)
+* Modify excluding callback duration from topic statistics (`#1492 <https://github.com/ros2/rclcpp/issues/1492>`_)
+* Make the test of graph users more robust. (`#1504 <https://github.com/ros2/rclcpp/issues/1504>`_)
+* Make sure to wait for graph change events in test_node_graph. (`#1503 <https://github.com/ros2/rclcpp/issues/1503>`_)
+* add timeout to SyncParametersClient methods (`#1493 <https://github.com/ros2/rclcpp/issues/1493>`_)
+* Fix wrong test expectations (`#1497 <https://github.com/ros2/rclcpp/issues/1497>`_)
+* Update create_publisher/subscription documentation, clarifying when a parameters interface is required (`#1494 <https://github.com/ros2/rclcpp/issues/1494>`_)
+* Fix string literal warnings (`#1442 <https://github.com/ros2/rclcpp/issues/1442>`_)
+* support describe_parameters methods to parameter client. (`#1453 <https://github.com/ros2/rclcpp/issues/1453>`_)
+* Contributors: Audrow Nash, Chris Lalancette, Ivan Santiago Paunovic, Nikolai Morin, hsgwa, tomoya
+
+6.1.0 (2020-12-10)
+------------------
+* Add getters to rclcpp::qos and rclcpp::Policy enum classes (`#1467 <https://github.com/ros2/rclcpp/issues/1467>`_)
+* Change nullptr checks to use ASSERT_TRUE. (`#1486 <https://github.com/ros2/rclcpp/issues/1486>`_)
+* Adjust logic around finding and erasing guard_condition (`#1474 <https://github.com/ros2/rclcpp/issues/1474>`_)
+* Update QDs to QL 1 (`#1477 <https://github.com/ros2/rclcpp/issues/1477>`_)
+* Add performance tests for parameter transport (`#1463 <https://github.com/ros2/rclcpp/issues/1463>`_)
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic, Scott K Logan, Stephen Brawner
+
+6.0.0 (2020-11-18)
+------------------
+* Move ownership of shutdown_guard_condition to executors/graph_listener (`#1404 <https://github.com/ros2/rclcpp/issues/1404>`_)
+* Add options to automatically declare qos parameters when creating a publisher/subscription (`#1465 <https://github.com/ros2/rclcpp/issues/1465>`_)
+* Add `take_data` to `Waitable` and `data` to `AnyExecutable` (`#1241 <https://github.com/ros2/rclcpp/issues/1241>`_)
+* Add benchmarks for node parameters interface (`#1444 <https://github.com/ros2/rclcpp/issues/1444>`_)
+* Remove allocation from executor::remove_node() (`#1448 <https://github.com/ros2/rclcpp/issues/1448>`_)
+* Fix test crashes on CentOS 7 (`#1449 <https://github.com/ros2/rclcpp/issues/1449>`_)
+* Bump rclcpp packages to Quality Level 2 (`#1445 <https://github.com/ros2/rclcpp/issues/1445>`_)
+* Added executor benchmark tests (`#1413 <https://github.com/ros2/rclcpp/issues/1413>`_)
+* Add fully-qualified namespace to WeakCallbackGroupsToNodesMap (`#1435 <https://github.com/ros2/rclcpp/issues/1435>`_)
+* Contributors: Alejandro Hernández Cordero, Audrow Nash, Chris Lalancette, Ivan Santiago Paunovic, Louise Poubel, Scott K Logan, brawner
+
+5.1.0 (2020-11-02)
+------------------
+* Deprecate Duration(rcl_duration_value_t) in favor of static Duration::from_nanoseconds(rcl_duration_value_t) (`#1432 <https://github.com/ros2/rclcpp/issues/1432>`_)
+* Avoid parsing arguments twice in `rclcpp::init_and_remove_ros_arguments` (`#1415 <https://github.com/ros2/rclcpp/issues/1415>`_)
+* Add service and client benchmarks (`#1425 <https://github.com/ros2/rclcpp/issues/1425>`_)
+* Set CMakeLists to only use default rmw for benchmarks (`#1427 <https://github.com/ros2/rclcpp/issues/1427>`_)
+* Update tracetools' QL in rclcpp's QD (`#1428 <https://github.com/ros2/rclcpp/issues/1428>`_)
+* Add missing locking to the rclcpp_action::ServerBase. (`#1421 <https://github.com/ros2/rclcpp/issues/1421>`_)
+* Initial benchmark tests for rclcpp::init/shutdown create/destroy node (`#1411 <https://github.com/ros2/rclcpp/issues/1411>`_)
+* Refactor test CMakeLists in prep for benchmarks (`#1422 <https://github.com/ros2/rclcpp/issues/1422>`_)
+* Add methods in topic and service interface to resolve a name (`#1410 <https://github.com/ros2/rclcpp/issues/1410>`_)
+* Update deprecated gtest macros (`#1370 <https://github.com/ros2/rclcpp/issues/1370>`_)
+* Clear members for StaticExecutorEntitiesCollector to avoid shared_ptr dependency (`#1303 <https://github.com/ros2/rclcpp/issues/1303>`_)
+* Increase test timeouts of slow running tests with rmw_connext_cpp (`#1400 <https://github.com/ros2/rclcpp/issues/1400>`_)
+* Avoid self dependency that not destoryed (`#1301 <https://github.com/ros2/rclcpp/issues/1301>`_)
+* Update maintainers (`#1384 <https://github.com/ros2/rclcpp/issues/1384>`_)
+* Add clock qos to node options (`#1375 <https://github.com/ros2/rclcpp/issues/1375>`_)
+* Fix NodeOptions copy constructor (`#1376 <https://github.com/ros2/rclcpp/issues/1376>`_)
+* Make sure to clean the external client/service handle. (`#1296 <https://github.com/ros2/rclcpp/issues/1296>`_)
+* Increase coverage of WaitSetTemplate (`#1368 <https://github.com/ros2/rclcpp/issues/1368>`_)
+* Increase coverage of guard_condition.cpp to 100% (`#1369 <https://github.com/ros2/rclcpp/issues/1369>`_)
+* Add coverage statement (`#1367 <https://github.com/ros2/rclcpp/issues/1367>`_)
+* Tests for LoanedMessage with mocked loaned message publisher (`#1366 <https://github.com/ros2/rclcpp/issues/1366>`_)
+* Add unit tests for qos and qos_event files (`#1352 <https://github.com/ros2/rclcpp/issues/1352>`_)
+* Finish coverage of publisher API (`#1365 <https://github.com/ros2/rclcpp/issues/1365>`_)
+* Finish API coverage on executors. (`#1364 <https://github.com/ros2/rclcpp/issues/1364>`_)
+* Add test for ParameterService (`#1355 <https://github.com/ros2/rclcpp/issues/1355>`_)
+* Add time API coverage tests (`#1347 <https://github.com/ros2/rclcpp/issues/1347>`_)
+* Add timer coverage tests (`#1363 <https://github.com/ros2/rclcpp/issues/1363>`_)
+* Add in additional tests for parameter_client.cpp coverage.
+* Minor fixes to the parameter_service.cpp file.
+* reset rcl_context shared_ptr after calling rcl_init sucessfully (`#1357 <https://github.com/ros2/rclcpp/issues/1357>`_)
+* Improved test publisher - zero qos history depth value exception (`#1360 <https://github.com/ros2/rclcpp/issues/1360>`_)
+* Covered resolve_use_intra_process (`#1359 <https://github.com/ros2/rclcpp/issues/1359>`_)
+* Improve test_subscription_options (`#1358 <https://github.com/ros2/rclcpp/issues/1358>`_)
+* Add in more tests for init_options coverage. (`#1353 <https://github.com/ros2/rclcpp/issues/1353>`_)
+* Test the remaining node public API (`#1342 <https://github.com/ros2/rclcpp/issues/1342>`_)
+* Complete coverage of Parameter and ParameterValue API (`#1344 <https://github.com/ros2/rclcpp/issues/1344>`_)
+* Add in more tests for the utilities. (`#1349 <https://github.com/ros2/rclcpp/issues/1349>`_)
+* Add in two more tests for expand_topic_or_service_name. (`#1350 <https://github.com/ros2/rclcpp/issues/1350>`_)
+* Add tests for node_options API (`#1343 <https://github.com/ros2/rclcpp/issues/1343>`_)
+* Add in more coverage for expand_topic_or_service_name. (`#1346 <https://github.com/ros2/rclcpp/issues/1346>`_)
+* Test exception in spin_until_future_complete. (`#1345 <https://github.com/ros2/rclcpp/issues/1345>`_)
+* Add coverage tests graph_listener (`#1330 <https://github.com/ros2/rclcpp/issues/1330>`_)
+* Add in unit tests for the Executor class.
+* Allow mimick patching of methods with up to 9 arguments.
+* Improve the error messages in the Executor class.
+* Add coverage for client API (`#1329 <https://github.com/ros2/rclcpp/issues/1329>`_)
+* Increase service coverage (`#1332 <https://github.com/ros2/rclcpp/issues/1332>`_)
+* Make more of the static entity collector API private.
+* Const-ify more of the static executor.
+* Add more tests for the static single threaded executor.
+* Many more tests for the static_executor_entities_collector.
+* Get one more line of code coverage in memory_strategy.cpp
+* Bugfix when adding callback group.
+* Fix typos in comments.
+* Remove deprecated executor::FutureReturnCode APIs. (`#1327 <https://github.com/ros2/rclcpp/issues/1327>`_)
+* Increase coverage of publisher/subscription API (`#1325 <https://github.com/ros2/rclcpp/issues/1325>`_)
+* Not finalize guard condition while destructing SubscriptionIntraProcess (`#1307 <https://github.com/ros2/rclcpp/issues/1307>`_)
+* Expose qos setting for /rosout (`#1247 <https://github.com/ros2/rclcpp/issues/1247>`_)
+* Add coverage for missing API (except executors) (`#1326 <https://github.com/ros2/rclcpp/issues/1326>`_)
+* Include topic name in QoS mismatch warning messages (`#1286 <https://github.com/ros2/rclcpp/issues/1286>`_)
+* Add coverage tests context functions (`#1321 <https://github.com/ros2/rclcpp/issues/1321>`_)
+* Increase coverage of node_interfaces, including with mocking rcl errors (`#1322 <https://github.com/ros2/rclcpp/issues/1322>`_)
+* Contributors: Ada-King, Alejandro Hernández Cordero, Audrow Nash, Barry Xu, Chen Lihui, Chris Lalancette, Christophe Bedard, Ivan Santiago Paunovic, Jorge Perez, Morgan Quigley, brawner
+
 5.0.0 (2020-09-18)
 ------------------
 * Make node_graph::count_graph_users() const (`#1320 <https://github.com/ros2/rclcpp/issues/1320>`_)

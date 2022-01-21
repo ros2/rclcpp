@@ -15,7 +15,7 @@
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/scope_exit.hpp>
+#include <rcpputils/scope_exit.hpp>
 #include <test_msgs/action/fibonacci.hpp>
 
 #include <gtest/gtest.h>
@@ -28,10 +28,6 @@
 #include "rclcpp_action/create_server.hpp"
 #include "rclcpp_action/server.hpp"
 #include "./mocking_utils/patch.hpp"
-
-// Note: This is a long running test with rmw_connext_cpp, if you change this file, please check
-// that this test can complete fully, or adjust the timeout as necessary.
-// See https://github.com/ros2/rmw_connext/issues/325 for resolution
 
 using Fibonacci = test_msgs::action::Fibonacci;
 using CancelResponse = typename Fibonacci::Impl::CancelGoalService::Response;
@@ -207,6 +203,27 @@ TEST_F(TestServer, construction_and_destruction_wait_set_error)
       [](std::shared_ptr<GoalHandle>) {});
     (void)as;
   }, rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestServer, construction_and_destruction_sub_node)
+{
+  auto parent_node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  auto sub_node = parent_node->create_sub_node("construct_sub_node");
+
+  ASSERT_NO_THROW(
+  {
+    using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+    auto as = rclcpp_action::create_server<Fibonacci>(
+      sub_node, "fibonacci",
+      [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        return rclcpp_action::GoalResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {});
+    (void)as;
+  });
 }
 
 TEST_F(TestServer, handle_goal_called)
@@ -489,10 +506,10 @@ TEST_F(TestServer, publish_status_accepted)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -552,10 +569,10 @@ TEST_F(TestServer, publish_status_canceling)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -609,10 +626,10 @@ TEST_F(TestServer, publish_status_canceled)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -668,10 +685,10 @@ TEST_F(TestServer, publish_status_succeeded)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -725,10 +742,10 @@ TEST_F(TestServer, publish_status_aborted)
   (void)as;
 
   // Subscribe to status messages
-  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  std::vector<action_msgs::msg::GoalStatusArray::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", 10,
-    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    [&received_msgs](action_msgs::msg::GoalStatusArray::ConstSharedPtr list)
     {
       received_msgs.push_back(list);
     });
@@ -783,9 +800,9 @@ TEST_F(TestServer, publish_feedback)
 
   // Subscribe to feedback messages
   using FeedbackT = Fibonacci::Impl::FeedbackMessage;
-  std::vector<FeedbackT::SharedPtr> received_msgs;
+  std::vector<FeedbackT::ConstSharedPtr> received_msgs;
   auto subscriber = node->create_subscription<FeedbackT>(
-    "fibonacci/_action/feedback", 10, [&received_msgs](FeedbackT::SharedPtr msg)
+    "fibonacci/_action/feedback", 10, [&received_msgs](FeedbackT::ConstSharedPtr msg)
     {
       received_msgs.push_back(msg);
     });
@@ -1086,11 +1103,11 @@ TEST_F(TestGoalRequestServer, is_ready_rcl_error) {
   ASSERT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 10, 10, 10, 10, 10, 10, rcl_context, allocator));
-  RCLCPP_SCOPE_EXIT(
+  RCPPUTILS_SCOPE_EXIT(
   {
     EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
   });
-  ASSERT_TRUE(action_server_->add_to_wait_set(&wait_set));
+  EXPECT_NO_THROW(action_server_->add_to_wait_set(&wait_set));
 
   EXPECT_TRUE(action_server_->is_ready(&wait_set));
   auto mock = mocking_utils::patch_and_return(
@@ -1156,7 +1173,7 @@ TEST_F(TestGoalRequestServer, publish_status_publish_status_errors)
 
 TEST_F(TestGoalRequestServer, execute_goal_request_received_take_failed)
 {
-  auto mock = mocking_utils::inject_on_return(
+  auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp_action", rcl_action_take_goal_request, RCL_RET_ACTION_SERVER_TAKE_FAILED);
   try {
     SendClientGoalRequest(std::chrono::milliseconds(100));
@@ -1220,4 +1237,105 @@ TEST_F(TestCancelRequestServer, publish_status_send_cancel_response_errors)
     "lib:rclcpp_action", rcl_action_send_cancel_response, RCL_RET_ERROR);
 
   EXPECT_THROW(SendClientCancelRequest(), std::runtime_error);
+}
+
+class TestDeadlockServer : public TestServer
+{
+public:
+  void SetUp()
+  {
+    node_ = std::make_shared<rclcpp::Node>("goal_request", "/rclcpp_action/goal_request");
+    uuid1_ = {{1, 2, 3, 4, 5, 6, 70, 80, 9, 1, 11, 120, 13, 140, 15, 160}};
+    uuid2_ = {{2, 2, 3, 4, 5, 6, 70, 80, 9, 1, 11, 120, 13, 140, 15, 160}};
+    action_server_ = rclcpp_action::create_server<Fibonacci>(
+      node_, "fibonacci",
+      [this](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        // instead of making a deadlock, check if it can acquire the lock in a second
+        std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
+        this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+      },
+      [this](std::shared_ptr<GoalHandle>) {
+        // instead of making a deadlock, check if it can acquire the lock in a second
+        std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
+        this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        return rclcpp_action::CancelResponse::ACCEPT;
+      },
+      [this](std::shared_ptr<GoalHandle> handle) {
+        // instead of making a deadlock, check if it can acquire the lock in a second
+        std::unique_lock<std::recursive_timed_mutex> lock(server_mutex_, std::defer_lock);
+        this->TryLockFor(lock, std::chrono::milliseconds(1000));
+        goal_handle_ = handle;
+      });
+  }
+
+  void GoalSucceeded()
+  {
+    std::lock_guard<std::recursive_timed_mutex> lock(server_mutex_);
+    rclcpp::sleep_for(std::chrono::milliseconds(100));
+    auto result = std::make_shared<Fibonacci::Result>();
+    result->sequence = {5, 8, 13, 21};
+    goal_handle_->succeed(result);
+  }
+
+  void GoalCanceled()
+  {
+    std::lock_guard<std::recursive_timed_mutex> lock(server_mutex_);
+    rclcpp::sleep_for(std::chrono::milliseconds(100));
+    auto result = std::make_shared<Fibonacci::Result>();
+    goal_handle_->canceled(result);
+  }
+
+  void TryLockFor(
+    std::unique_lock<std::recursive_timed_mutex> & lock,
+    std::chrono::milliseconds timeout
+  )
+  {
+    ASSERT_TRUE(lock.try_lock_for(timeout));
+  }
+
+protected:
+  std::recursive_timed_mutex server_mutex_;
+  GoalUUID uuid1_, uuid2_;
+  std::shared_ptr<rclcpp::Node> node_;
+  std::shared_ptr<rclcpp_action::Server<Fibonacci>> action_server_;
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+  std::shared_ptr<GoalHandle> goal_handle_;
+};
+
+TEST_F(TestDeadlockServer, deadlock_while_succeed)
+{
+  send_goal_request(node_, uuid1_);
+  // this will lock wrapper's mutex and intentionally wait 100ms for calling succeed
+  // to try to acquire the lock of rclcpp_action mutex
+  std::thread t(&TestDeadlockServer::GoalSucceeded, this);
+  // after the wrapper's mutex is locked and before succeed is called
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  // call next goal request to intentionally reproduce deadlock
+  // this first locks rclcpp_action mutex and then call callback to lock wrapper's mutex
+  send_goal_request(node_, uuid2_);
+  t.join();
+}
+
+TEST_F(TestDeadlockServer, deadlock_while_canceled)
+{
+  send_goal_request(node_, uuid1_);
+  send_cancel_request(node_, uuid1_);
+  std::thread t(&TestDeadlockServer::GoalCanceled, this);
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  send_goal_request(node_, uuid2_);  // deadlock here
+  t.join();
+}
+
+TEST_F(TestDeadlockServer, deadlock_while_succeed_and_canceled)
+{
+  send_goal_request(node_, uuid1_);
+  std::thread t(&TestDeadlockServer::GoalSucceeded, this);
+  rclcpp::sleep_for(std::chrono::milliseconds(50));
+  auto response_ptr = send_cancel_request(node_, uuid1_);
+
+  // current goal handle is not cancelable, so it returns ERROR_REJECTED
+  EXPECT_EQ(CancelResponse::ERROR_REJECTED, response_ptr->return_code);
+  t.join();
 }
