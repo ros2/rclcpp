@@ -60,7 +60,7 @@ public:
   get_number_of_ready_guard_conditions() override {return 1;}
 
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   bool
@@ -147,11 +147,11 @@ public:
     on_new_message_callback_ = new_callback;
 
     if (unread_count_ > 0) {
-      if (qos_profile_.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL || qos_profile_.depth == 0) {
+      if (qos_profile_.history() == HistoryPolicy::KeepLast || qos_profile_.depth() == 0) {
         on_new_message_callback_(unread_count_);
       } else {
         // Use qos profile depth as upper bound for unread_count_
-        on_new_message_callback_(std::min(unread_count_, qos_profile_.depth));
+        on_new_message_callback_(std::min(unread_count_, qos_profile_.depth()));
       }
       unread_count_ = 0;
     }
