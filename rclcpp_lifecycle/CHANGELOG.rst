@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+15.0.0 (2022-01-14)
+-------------------
+* Automatically transition lifecycle entities when node transitions (`#1863 <https://github.com/ros2/rclcpp/issues/1863>`_)
+* Contributors: Ivan Santiago Paunovic
+
 14.1.0 (2022-01-05)
 -------------------
 

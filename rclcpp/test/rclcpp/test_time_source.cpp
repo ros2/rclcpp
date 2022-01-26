@@ -27,6 +27,8 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
+
 using namespace std::chrono_literals;
 
 class TestTimeSource : public ::testing::Test
@@ -246,9 +248,23 @@ TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
 }
 
 TEST_F(TestTimeSource, ROS_invalid_sim_time) {
-  rclcpp::TimeSource ts;
-  ts.attachNode(node);
+  rclcpp::TimeSource ts(node);
   EXPECT_FALSE(node->set_parameter(rclcpp::Parameter("use_sim_time", "not boolean")).successful);
+}
+
+TEST(TimeSource, invalid_sim_time_parameter_override)
+{
+  rclcpp::init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  options.automatically_declare_parameters_from_overrides(true);
+  options.append_parameter_override("use_sim_time", "not boolean");
+
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::Node("my_node", options),
+    std::invalid_argument("Invalid type for parameter 'use_sim_time', should be 'bool'"));
+
+  rclcpp::shutdown();
 }
 
 TEST_F(TestTimeSource, clock) {
@@ -749,8 +765,7 @@ TEST_F(TestTimeSource, clock_sleep_until_with_ros_time_basic) {
 
   node->set_parameter({"use_sim_time", true});
   auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-  rclcpp::TimeSource time_source;
-  time_source.attachNode(node);
+  rclcpp::TimeSource time_source(node);
   time_source.attachClock(clock);
 
   // Wait until time source has definitely received a first ROS time from the pub node

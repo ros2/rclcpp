@@ -72,8 +72,9 @@ MultiThreadedExecutor::get_number_of_threads()
 }
 
 void
-MultiThreadedExecutor::run(size_t)
+MultiThreadedExecutor::run(size_t this_thread_number)
 {
+  (void)this_thread_number;
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {

@@ -556,3 +556,24 @@ TEST_F(TestExecutor, spin_until_future_complete_future_already_complete) {
     rclcpp::FutureReturnCode::SUCCESS,
     dummy.spin_until_future_complete(future, std::chrono::milliseconds(1)));
 }
+
+TEST_F(TestExecutor, is_spinning) {
+  DummyExecutor dummy;
+  ASSERT_FALSE(dummy.is_spinning());
+
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool timer_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+      timer_called = true;
+      EXPECT_TRUE(dummy.is_spinning());
+    });
+
+  dummy.add_node(node);
+  // Wait for the wall timer to have expired.
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  dummy.spin_some(std::chrono::milliseconds(1));
+
+  ASSERT_TRUE(timer_called);
+}

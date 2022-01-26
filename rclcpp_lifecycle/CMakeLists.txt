@@ -19,6 +19,7 @@ find_package(lifecycle_msgs REQUIRED)
 ### CPP High level library
 add_library(rclcpp_lifecycle
   src/lifecycle_node.cpp
+  src/managed_entity.cpp
   src/node_interfaces/lifecycle_node_interface.cpp
   src/state.cpp
   src/transition.cpp

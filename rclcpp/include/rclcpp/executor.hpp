@@ -401,6 +401,15 @@ public:
   void
   set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
+  /// Returns true if the executor is currently spinning.
+  /**
+   * This function can be called asynchronously from any thread.
+   * \return True if the executor is currently spinning.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_spinning();
+
 protected:
   RCLCPP_PUBLIC
   void

@@ -639,11 +639,25 @@ LifecycleNode::shutdown(LifecycleNodeInterface::CallbackReturn & cb_return_code)
     rcl_lifecycle_shutdown_label, cb_return_code);
 }
 
-void
-LifecycleNode::add_publisher_handle(
-  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub)
+node_interfaces::LifecycleNodeInterface::CallbackReturn
+LifecycleNode::on_activate(const State &)
 {
-  impl_->add_publisher_handle(pub);
+  impl_->on_activate();
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+node_interfaces::LifecycleNodeInterface::CallbackReturn
+LifecycleNode::on_deactivate(const State &)
+{
+  impl_->on_deactivate();
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+void
+LifecycleNode::add_managed_entity(
+  std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface> managed_entity)
+{
+  impl_->add_managed_entity(managed_entity);
 }
 
 void

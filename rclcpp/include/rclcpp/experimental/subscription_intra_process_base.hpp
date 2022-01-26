@@ -15,19 +15,16 @@
 #ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 
-#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
 
-#include "rcl/error_handling.h"
+#include "rcl/wait.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
