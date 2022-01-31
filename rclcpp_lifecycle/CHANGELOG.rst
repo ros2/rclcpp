@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.4.1 (2022-01-31)
+------------------
+
 2.4.0 (2021-09-01)
 ------------------
 * Fix SEGV caused by order of destruction of Node sub-interfaces (`#1469 <https://github.com/ros2/rclcpp/issues/1469>`_) (`#1736 <https://github.com/ros2/rclcpp/issues/1736>`_)

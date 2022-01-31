@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.1 (2022-01-31)
+------------------
+* Fix subscription instrumentation for ConstSharedPtr[WithInfo]Callback (`#1872 <https://github.com/ros2/rclcpp/issues/1872>`_)
+* Add node_waitables\_ to copy constructor (backport `#1799 <https://github.com/ros2/rclcpp/issues/1799>`_) (`#1834 <https://github.com/ros2/rclcpp/issues/1834>`_)
+* Fix returning invalid namespace if sub_namespace is empty (`#1658 <https://github.com/ros2/rclcpp/issues/1658>`_) (`#1811 <https://github.com/ros2/rclcpp/issues/1811>`_)
+* [service] Don't use a weak_ptr to avoid leaking (`#1668 <https://github.com/ros2/rclcpp/issues/1668>`_) (`#1669 <https://github.com/ros2/rclcpp/issues/1669>`_)
+* Use dynamic_pointer_cast to detect allocator mismatch in intra process manager (backport `#1643 <https://github.com/ros2/rclcpp/issues/1643>`_) (`#1645 <https://github.com/ros2/rclcpp/issues/1645>`_)
+* Contributors: Abrar Rahman Protyasha, Christophe Bedard, Ivan Santiago Paunovic, M. Hofstätter, Michel Hidalgo, Tomoya Fujita, William Woodall
+
 2.4.0 (2021-09-01)
 ------------------
 * Guard against integer overflow in duration conversion (`#1584 <https://github.com/ros2/rclcpp/issues/1584>`_) (`#1761 <https://github.com/ros2/rclcpp/issues/1761>`_)
