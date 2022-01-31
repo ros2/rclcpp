@@ -246,6 +246,16 @@ public:
         rclcpp_callback_register,
         (const void *)this,
         get_symbol(shared_ptr_with_info_callback_));
+    } else if (const_shared_ptr_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(const_shared_ptr_callback_));
+    } else if (const_shared_ptr_with_info_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(const_shared_ptr_with_info_callback_));
     } else if (unique_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
