@@ -96,7 +96,7 @@ private:
     // spin in a separate thread, i.e. the time gap between when the executor is created and when
     // it starts to spin is small (although it's not negligible).
 
-    while(!executor_wrapper.executor->is_spinning()) {
+    while (!executor_wrapper.executor->is_spinning()) {
       // This is an arbitrarily small delay to avoid busy looping
       rclcpp::sleep_for(std::chrono::milliseconds(1));
     }
