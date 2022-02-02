@@ -295,8 +295,10 @@ public:
   clear_on_new_response_callback()
   {
     std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
-    set_on_new_response_callback(nullptr, nullptr);
-    on_new_response_callback_ = nullptr;
+    if (on_new_response_callback_) {
+      set_on_new_response_callback(nullptr, nullptr);
+      on_new_response_callback_ = nullptr;
+    }
   }
 
 protected:

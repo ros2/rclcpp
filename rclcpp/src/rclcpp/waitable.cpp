@@ -74,6 +74,6 @@ void
 Waitable::clear_on_ready_callback()
 {
   throw std::runtime_error(
-          "Custom waitables should override clear_on_ready_callback "
-          "if they want to use it.");
+          "Custom waitables should override clear_on_ready_callback if they "
+          "want to use it and make sure to call it on the waitable destructor.");
 }

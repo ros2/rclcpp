@@ -33,7 +33,9 @@ ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
 {}
 
 ServiceBase::~ServiceBase()
-{}
+{
+  clear_on_new_request_callback();
+}
 
 bool
 ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & request_id_out)

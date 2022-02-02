@@ -67,6 +67,7 @@ ClientBase::ClientBase(
 
 ClientBase::~ClientBase()
 {
+  clear_on_new_response_callback();
   // Make sure the client handle is destructed as early as possible and before the node handle
   client_handle_.reset();
 }
