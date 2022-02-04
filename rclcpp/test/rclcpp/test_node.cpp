@@ -2075,6 +2075,33 @@ TEST_F(TestNode, get_parameter_or_undeclared_parameters_allowed) {
   }
 }
 
+// test get_parameter_or with return value
+TEST_F(TestNode, get_parameter_or_with_return_value) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_or_node"_unq);
+  {
+    // normal use (declare first) still works
+    auto name = "parameter"_unq;
+
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+
+    {
+      const int value = node->get_parameter_or(name, 43);
+      EXPECT_EQ(value, 42);
+    }
+  }
+  {
+    // normal use, no declare first
+    auto name = "parameter"_unq;
+
+    {
+      const int value = node->get_parameter_or(name, 43);
+      EXPECT_EQ(value, 43);
+    }
+  }
+}
+
 // test get_parameters with undeclared not allowed
 TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
   auto node = std::make_shared<rclcpp::Node>(
