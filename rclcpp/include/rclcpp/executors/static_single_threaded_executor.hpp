@@ -101,6 +101,7 @@ public:
   /**
    * This non-blocking function will execute entities until timeout (must be >= 0)
    * or no more work available.
+   * If timeout is `0`, this keeps executing until no more work is available.
    * If new entities get ready while executing work available, they will be executed
    * as long as the timeout hasn't expired.
    *
