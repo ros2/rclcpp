@@ -363,8 +363,11 @@ public:
   clear_on_new_message_callback()
   {
     std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
-    set_on_new_message_callback(nullptr, nullptr);
-    on_new_message_callback_ = nullptr;
+
+    if (on_new_message_callback_) {
+      set_on_new_message_callback(nullptr, nullptr);
+      on_new_message_callback_ = nullptr;
+    }
   }
 
   /// Set a callback to be called when each new intra-process message is received.

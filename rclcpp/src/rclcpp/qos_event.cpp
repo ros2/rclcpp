@@ -35,6 +35,10 @@ UnsupportedEventTypeException::UnsupportedEventTypeException(
 
 QOSEventHandlerBase::~QOSEventHandlerBase()
 {
+  if (on_new_event_callback_) {
+    clear_on_ready_callback();
+  }
+
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
@@ -79,7 +83,7 @@ QOSEventHandlerBase::set_on_new_event_callback(
 
   if (RCL_RET_OK != ret) {
     using rclcpp::exceptions::throw_from_rcl_error;
-    throw_from_rcl_error(ret, "failed to set the on new message callback for subscription");
+    throw_from_rcl_error(ret, "failed to set the on new message callback for QOS Event");
   }
 }
 
