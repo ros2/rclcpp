@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -140,7 +141,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
     on_new_message_callback_ = new_callback;
 
     if (unread_count_ > 0) {
@@ -158,12 +159,12 @@ public:
   void
   clear_on_ready_callback() override
   {
-    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
     on_new_message_callback_ = nullptr;
   }
 
 protected:
-  std::recursive_mutex reentrant_mutex_;
+  std::recursive_mutex listener_mutex_;
   std::function<void(size_t)> on_new_message_callback_ {nullptr};
   size_t unread_count_{0};
   rclcpp::GuardCondition gc_;

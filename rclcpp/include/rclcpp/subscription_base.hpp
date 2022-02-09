@@ -340,7 +340,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
 
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
@@ -362,7 +362,7 @@ public:
   void
   clear_on_new_message_callback()
   {
-    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
 
     if (on_new_message_callback_) {
       set_on_new_message_callback(nullptr, nullptr);
@@ -459,7 +459,7 @@ public:
     if (event_handlers_.count(event_type) == 0) {
       RCLCPP_WARN(
         rclcpp::get_logger("rclcpp"),
-        "Calling set_on_new_qos_event_callback for non registered event_type");
+        "Calling set_on_new_qos_event_callback for non registered subscription event_type");
       return;
     }
 
@@ -544,7 +544,7 @@ private:
   std::unordered_map<rclcpp::QOSEventHandlerBase *,
     std::atomic<bool>> qos_events_in_use_by_wait_set_;
 
-  std::recursive_mutex reentrant_mutex_;
+  std::recursive_mutex listener_mutex_;
   std::function<void(size_t)> on_new_message_callback_{nullptr};
 };
 

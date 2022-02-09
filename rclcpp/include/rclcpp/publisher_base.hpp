@@ -282,7 +282,7 @@ public:
     if (event_handlers_.count(event_type) == 0) {
       RCLCPP_WARN(
         rclcpp::get_logger("rclcpp"),
-        "Calling set_on_new_qos_event_callback for non registered event_type");
+        "Calling set_on_new_qos_event_callback for non registered publisher event_type");
       return;
     }
 

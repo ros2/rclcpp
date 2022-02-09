@@ -298,7 +298,7 @@ protected:
     const void * user_data);
 
   // Mutex to protect the callbacks storage.
-  std::recursive_mutex reentrant_mutex_;
+  std::recursive_mutex listener_mutex_;
   // Storage for std::function callbacks to keep them in scope
   std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
 

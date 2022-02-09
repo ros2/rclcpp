@@ -437,7 +437,7 @@ ClientBase::set_callback_to_entity(
     rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
     static_cast<const void *>(&new_callback));
 
-  std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
   // Store the std::function to keep it in scope, also overwrites the existing one.
   auto it = entity_type_to_on_ready_callback_.find(entity_type);
 
@@ -533,7 +533,7 @@ ClientBase::clear_on_ready_callback()
   set_on_ready_callback(EntityType::FeedbackSubscription, nullptr, nullptr);
   set_on_ready_callback(EntityType::StatusSubscription, nullptr, nullptr);
 
-  std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
   entity_type_to_on_ready_callback_.clear();
 }
 

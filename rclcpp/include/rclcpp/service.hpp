@@ -182,7 +182,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
 
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
@@ -204,7 +204,7 @@ public:
   void
   clear_on_new_request_callback()
   {
-    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
     if (on_new_request_callback_) {
       set_on_new_request_callback(nullptr, nullptr);
       on_new_request_callback_ = nullptr;
@@ -235,7 +235,7 @@ protected:
 
   std::atomic<bool> in_use_by_wait_set_{false};
 
-  std::recursive_mutex reentrant_mutex_;
+  std::recursive_mutex listener_mutex_;
   std::function<void(size_t)> on_new_request_callback_{nullptr};
 };
 

@@ -125,6 +125,7 @@ public:
       buffer_->add_shared(convert_ros_message_to_subscribed_type_unique_ptr(*message));
       trigger_guard_condition();
     }
+    invoke_on_new_message_listener();
   }
 
   void
@@ -137,6 +138,7 @@ public:
       buffer_->add_unique(convert_ros_message_to_subscribed_type_unique_ptr(*message));
       trigger_guard_condition();
     }
+    invoke_on_new_message_listener();
   }
 
   void
@@ -144,6 +146,7 @@ public:
   {
     buffer_->add_shared(std::move(message));
     trigger_guard_condition();
+    invoke_on_new_message_listener();
   }
 
   void
@@ -151,6 +154,7 @@ public:
   {
     buffer_->add_unique(std::move(message));
     trigger_guard_condition();
+    invoke_on_new_message_listener();
   }
 
   bool
@@ -169,6 +173,18 @@ protected:
   BufferUniquePtr buffer_;
   SubscribedTypeAllocator subscribed_type_allocator_;
   SubscribedTypeDeleter subscribed_type_deleter_;
+
+private:
+  void
+  invoke_on_new_message_listener()
+  {
+    std::lock_guard<std::recursive_mutex> lock(this->listener_mutex_);
+    if (this->on_new_message_callback_) {
+      this->on_new_message_callback_(1);
+    } else {
+      this->unread_count_++;
+    }
+  }
 };
 
 }  // namespace experimental

@@ -330,66 +330,43 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
+  auto offered_deadline = rclcpp::Duration(std::chrono::milliseconds(1));
+  auto requested_deadline = rclcpp::Duration(std::chrono::milliseconds(2));
+
   rclcpp::QoS qos_profile_publisher(10);
-  qos_profile_publisher.durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
+  qos_profile_publisher.deadline(offered_deadline);
+  rclcpp::PublisherOptions pub_options;
+  pub_options.event_callbacks.deadline_callback = [](auto) {FAIL();};
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(
-    topic_name, qos_profile_publisher);
+    topic_name, qos_profile_publisher, pub_options);
+
+  rclcpp::QoS qos_profile_subscription(10);
+  qos_profile_subscription.deadline(requested_deadline);
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.event_callbacks.deadline_callback = [](auto) {FAIL();};
+  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, qos_profile_subscription, message_callback, sub_options);
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_events) {c1 += count_events;};
-  publisher->set_on_new_qos_event_callback(increase_c1_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+  publisher->set_on_new_qos_event_callback(increase_c1_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
 
-  rclcpp::QoS qos_profile_subscription(10);
-  qos_profile_subscription.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
-  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
-    topic_name, qos_profile_subscription, message_callback);
+  {
+    test_msgs::msg::Empty msg;
+    publisher->publish(msg);
+  }
 
-  auto start = std::chrono::steady_clock::now();
-  do {
-    std::this_thread::sleep_for(100ms);
-  } while (c1 == 0 && std::chrono::steady_clock::now() - start < 10s);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  EXPECT_EQ(c1, 1u);
+  EXPECT_GT(c1, 1u);
 
   std::atomic<size_t> c2 {0};
   auto increase_c2_cb = [&c2](size_t count_events) {c2 += count_events;};
   subscription->set_on_new_qos_event_callback(
     increase_c2_cb,
-    RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
 
-  start = std::chrono::steady_clock::now();
-  do {
-    std::this_thread::sleep_for(100ms);
-  } while (c2 == 0 && std::chrono::steady_clock::now() - start < 10s);
-
-  EXPECT_EQ(c1, 1u);
-  EXPECT_EQ(c2, 1u);
-
-  auto publisher2 = node->create_publisher<test_msgs::msg::Empty>(
-    topic_name, qos_profile_publisher);
-
-  start = std::chrono::steady_clock::now();
-  do {
-    std::this_thread::sleep_for(100ms);
-  } while (c2 == 1u && std::chrono::steady_clock::now() - start < 10s);
-
-  EXPECT_EQ(c1, 1u);
-  EXPECT_EQ(c2, 2u);
-
-  publisher->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
-
-  auto subscription2 = node->create_subscription<test_msgs::msg::Empty>(
-    topic_name, qos_profile_subscription, message_callback);
-
-  publisher->set_on_new_qos_event_callback(increase_c1_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
-
-  start = std::chrono::steady_clock::now();
-  do {
-    std::this_thread::sleep_for(100ms);
-  } while (c1 == 1 && std::chrono::steady_clock::now() - start < 10s);
-
-  EXPECT_EQ(c1, 2u);
-  EXPECT_EQ(c2, 2u);
+  EXPECT_GT(c2, 1u);
 }
 
 TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
@@ -397,7 +374,18 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   auto pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
   auto dummy_cb = [](size_t count_events) {(void)count_events;};
-  std::function<void(size_t)> invalid_cb;
+
+  EXPECT_NO_THROW(
+    pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
+
+  EXPECT_NO_THROW(
+    pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
+
+  EXPECT_NO_THROW(
+    pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_LIVELINESS_LOST));
+
+  EXPECT_NO_THROW(
+    pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_LIVELINESS_LOST));
 
   EXPECT_NO_THROW(
     pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS));
@@ -406,16 +394,39 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
     pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS));
 
   EXPECT_NO_THROW(
+    sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
+
+  EXPECT_NO_THROW(
+    sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
+
+  EXPECT_NO_THROW(
+    sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_LIVELINESS_CHANGED));
+
+  EXPECT_NO_THROW(
+    sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_LIVELINESS_CHANGED));
+
+  EXPECT_NO_THROW(
     sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS));
 
   EXPECT_NO_THROW(
     sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS));
 
-  EXPECT_THROW(
-    pub->set_on_new_qos_event_callback(invalid_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS),
-    std::invalid_argument);
+  std::function<void(size_t)> invalid_cb;
+
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.event_callbacks.deadline_callback = [](auto) {};
+  sub = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, 10, message_callback, sub_options);
 
   EXPECT_THROW(
-    sub->set_on_new_qos_event_callback(invalid_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS),
+    sub->set_on_new_qos_event_callback(invalid_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED),
+    std::invalid_argument);
+
+  rclcpp::PublisherOptions pub_options;
+  pub_options.event_callbacks.deadline_callback = [](auto) {};
+  pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10, pub_options);
+
+  EXPECT_THROW(
+    pub->set_on_new_qos_event_callback(invalid_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED),
     std::invalid_argument);
 }
