@@ -118,6 +118,7 @@ protected:
   std::recursive_mutex reentrant_mutex_;
   std::function<void(size_t)> on_trigger_callback_{nullptr};
   size_t unread_count_{0};
+  rcl_wait_set_t * wait_set_{nullptr};
 };
 
 }  // namespace rclcpp
