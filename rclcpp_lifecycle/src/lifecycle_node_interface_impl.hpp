@@ -529,7 +529,7 @@ public:
     for (const auto & weak_entity : weak_managed_entities_) {
       auto entity = weak_entity.lock();
       if (entity) {
-        entity->on_activate();
+        entity->on_deactivate();
       }
     }
   }
