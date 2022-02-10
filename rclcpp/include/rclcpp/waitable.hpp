@@ -225,6 +225,7 @@ public:
    *
    * \param[in] callback functor to be called when the waitable becomes ready
    */
+  RCLCPP_PUBLIC
   virtual
   void
   set_on_ready_callback(std::function<void(size_t, int)> callback);
@@ -234,6 +235,7 @@ public:
    * Note: this function must be overridden with a proper implementation
    * by the custom classes who inherit from rclcpp::Waitable if they want to use it.
    */
+  RCLCPP_PUBLIC
   virtual
   void
   clear_on_ready_callback();
