@@ -311,6 +311,8 @@ private:
   set_callback_to_entity(
     EntityType entity_type,
     std::function<void(size_t, int)> callback);
+
+  bool on_ready_callback_set_{false};
 };
 
 /// Action Client

@@ -749,6 +749,8 @@ ServerBase::set_callback_to_entity(
       rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
       static_cast<const void *>(&cb));
   }
+
+  on_ready_callback_set_ = true;
 }
 
 void
@@ -801,10 +803,14 @@ ServerBase::set_on_ready_callback(
 void
 ServerBase::clear_on_ready_callback()
 {
-  set_on_ready_callback(EntityType::GoalService, nullptr, nullptr);
-  set_on_ready_callback(EntityType::ResultService, nullptr, nullptr);
-  set_on_ready_callback(EntityType::CancelService, nullptr, nullptr);
-
   std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+
+  if (on_ready_callback_set_) {
+    set_on_ready_callback(EntityType::GoalService, nullptr, nullptr);
+    set_on_ready_callback(EntityType::ResultService, nullptr, nullptr);
+    set_on_ready_callback(EntityType::CancelService, nullptr, nullptr);
+    on_ready_callback_set_ = false;
+  }
+
   entity_type_to_on_ready_callback_.clear();
 }
