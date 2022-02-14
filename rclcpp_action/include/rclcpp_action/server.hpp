@@ -318,6 +318,8 @@ protected:
     EntityType entity_type,
     rcl_event_callback_t callback,
     const void * user_data);
+
+  bool on_ready_callback_set_{false};
 };
 
 /// Action Server
