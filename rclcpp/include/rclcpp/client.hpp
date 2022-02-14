@@ -30,6 +30,7 @@
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
+#include "rcl/event_callback.h"
 #include "rcl/wait.h"
 
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"

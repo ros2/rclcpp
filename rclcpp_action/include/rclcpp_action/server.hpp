@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "rcl/event_callback.h"
 #include "rcl_action/action_server.h"
 #include "rosidl_runtime_c/action_type_support_struct.h"
 #include "rosidl_typesupport_cpp/action_type_support.hpp"

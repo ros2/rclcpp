@@ -22,6 +22,7 @@
 #include <string>
 
 #include "rcl/error_handling.h"
+#include "rcl/event_callback.h"
 #include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/incompatible_qos_events_statuses.h"
 

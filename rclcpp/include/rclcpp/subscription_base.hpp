@@ -23,6 +23,7 @@
 #include <vector>
 #include <utility>
 
+#include "rcl/event_callback.h"
 #include "rcl/subscription.h"
 
 #include "rmw/impl/cpp/demangle.hpp"

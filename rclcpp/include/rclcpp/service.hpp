@@ -24,6 +24,7 @@
 #include <string>
 
 #include "rcl/error_handling.h"
+#include "rcl/event_callback.h"
 #include "rcl/service.h"
 
 #include "rmw/error_handling.h"

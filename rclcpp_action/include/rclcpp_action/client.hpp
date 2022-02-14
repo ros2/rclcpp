@@ -26,6 +26,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include "rcl/event_callback.h"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
