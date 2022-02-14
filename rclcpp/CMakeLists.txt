@@ -255,4 +255,5 @@ if(TEST cppcheck)
   set_tests_properties(cppcheck PROPERTIES TIMEOUT 500)
 endif()
 
-ament_cmake_gen_version_h()
+ament_generate_version_header(${PROJECT_NAME}
+  INSTALL_PATH "include")
