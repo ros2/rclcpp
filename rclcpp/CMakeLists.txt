@@ -259,4 +259,3 @@ if(TEST cppcheck)
 endif()
 
 ament_generate_version_header(${PROJECT_NAME})
-
