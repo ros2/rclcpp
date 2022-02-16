@@ -92,7 +92,7 @@ template<
   typename NodeT>
 std::shared_ptr<PublisherT>
 create_publisher(
-  NodeT & node,
+  NodeT && node,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
