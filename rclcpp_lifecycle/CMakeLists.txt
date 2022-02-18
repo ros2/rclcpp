@@ -19,6 +19,7 @@ find_package(lifecycle_msgs REQUIRED)
 ### CPP High level library
 add_library(rclcpp_lifecycle
   src/lifecycle_node.cpp
+  src/managed_entity.cpp
   src/node_interfaces/lifecycle_node_interface.cpp
   src/state.cpp
   src/transition.cpp
@@ -26,7 +27,7 @@ add_library(rclcpp_lifecycle
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 # specific order: dependents before dependencies
 ament_target_dependencies(rclcpp_lifecycle
   "rclcpp"
@@ -154,14 +155,18 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-# specific order: dependents before dependencies
-ament_export_include_directories(include)
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME})
+
+# Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
+
+# specific order: dependents before dependencies
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rcl_lifecycle)
 ament_export_dependencies(lifecycle_msgs)
 ament_package()
 
 install(DIRECTORY include/
-  DESTINATION include)
+  DESTINATION include/${PROJECT_NAME})

@@ -122,6 +122,7 @@ BENCHMARK_F(ActionClientPerformanceTest, construct_client_without_server)(benchm
 {
   constexpr char action_name[] = "no_corresponding_server";
   for (auto _ : state) {
+    (void)_;
     auto client = rclcpp_action::create_client<Fibonacci>(node, action_name);
 
     // Only timing construction, so destruction needs to happen explicitly while timing is paused
@@ -136,6 +137,7 @@ BENCHMARK_F(ActionClientPerformanceTest, construct_client_with_server)(benchmark
   SetUpServer(fibonacci_action_name);
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto client = rclcpp_action::create_client<Fibonacci>(node, fibonacci_action_name);
 
     // Only timing construction, so destruction needs to happen explicitly while timing is paused
@@ -148,6 +150,7 @@ BENCHMARK_F(ActionClientPerformanceTest, construct_client_with_server)(benchmark
 BENCHMARK_F(ActionClientPerformanceTest, destroy_client)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     // This client does not have a corresponding server
     state.PauseTiming();
     auto client = rclcpp_action::create_client<Fibonacci>(node, fibonacci_action_name);
@@ -170,6 +173,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_send_goal_only)(benchmark::State 
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto future_goal_handle = client->async_send_goal(goal);
   }
 }
@@ -188,6 +192,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_send_goal_rejected)(benchmark::St
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto future_goal_handle = client->async_send_goal(goal);
     rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
     if (!future_goal_handle.valid()) {
@@ -215,6 +220,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_send_goal_get_accepted_response)(
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     // This server's execution is deferred
     auto future_goal_handle = client->async_send_goal(goal);
     rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
@@ -246,6 +252,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_get_result)(benchmark::State & st
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     // Send goal, accept and execute while timing is paused
     state.PauseTiming();
     auto future_goal_handle = client->async_send_goal(goal);
@@ -298,6 +305,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_cancel_goal)(benchmark::State & s
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     auto future_goal_handle = client->async_send_goal(goal);
 
@@ -333,6 +341,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_cancel_all_goals)(benchmark::Stat
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     for (int i = 0; i < num_concurrently_inflight_goals; ++i) {
       auto future_goal_handle = client->async_send_goal(goal);

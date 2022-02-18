@@ -109,6 +109,8 @@ public:
   : std::runtime_error(msg) {}
 };
 
+typedef void (* reset_error_function_t)();
+
 /// Throw a C++ std::exception which was created based on an rcl error.
 /**
  * Passing nullptr for reset_error is safe and will avoid calling any function
@@ -129,7 +131,7 @@ throw_from_rcl_error [[noreturn]] (
   rcl_ret_t ret,
   const std::string & prefix = "",
   const rcl_error_state_t * error_state = nullptr,
-  void (* reset_error)() = rcl_reset_error);
+  reset_error_function_t reset_error = rcl_reset_error);
 /* *INDENT-ON* */
 
 class RCLErrorBase
@@ -254,6 +256,23 @@ public:
   {}
 };
 
+/// Thrown if user attempts to create an uninitialized statically typed parameter
+/**
+ * (see https://github.com/ros2/rclcpp/issues/1691)
+ */
+class UninitializedStaticallyTypedParameterException : public std::runtime_error
+{
+public:
+  /// Construct an instance.
+  /**
+   * \param[in] name the name of the parameter.
+   */
+  RCLCPP_PUBLIC
+  explicit UninitializedStaticallyTypedParameterException(const std::string & name)
+  : std::runtime_error("Statically typed parameter '" + name + "' must be initialized.")
+  {}
+};
+
 /// Thrown if parameter is already declared.
 class ParameterAlreadyDeclaredException : public std::runtime_error
 {
@@ -289,7 +308,6 @@ public:
   /// Construct an instance.
   /**
    * \param[in] name the name of the parameter.
-   * \param[in] message custom exception message.
    */
   explicit ParameterUninitializedException(const std::string & name)
   : std::runtime_error("parameter '" + name + "' is not initialized")

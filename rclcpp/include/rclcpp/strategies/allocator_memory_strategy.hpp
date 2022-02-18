@@ -21,6 +21,7 @@
 #include "rcl/allocator.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -61,17 +62,17 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  void add_guard_condition(const rcl_guard_condition_t * guard_condition) override
+  void add_guard_condition(const rclcpp::GuardCondition & guard_condition) override
   {
     for (const auto & existing_guard_condition : guard_conditions_) {
-      if (existing_guard_condition == guard_condition) {
+      if (existing_guard_condition == &guard_condition) {
         return;
       }
     }
-    guard_conditions_.push_back(guard_condition);
+    guard_conditions_.push_back(&guard_condition);
   }
 
-  void remove_guard_condition(const rcl_guard_condition_t * guard_condition) override
+  void remove_guard_condition(const rclcpp::GuardCondition * guard_condition) override
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
@@ -240,22 +241,11 @@ public:
     }
 
     for (auto guard_condition : guard_conditions_) {
-      if (rcl_wait_set_add_guard_condition(wait_set, guard_condition, NULL) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add guard_condition to wait set: %s",
-          rcl_get_error_string().str);
-        return false;
-      }
+      detail::add_guard_condition_to_rcl_wait_set(*wait_set, *guard_condition);
     }
 
     for (auto waitable : waitable_handles_) {
-      if (!waitable->add_to_wait_set(wait_set)) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add waitable to wait set: %s", rcl_get_error_string().str);
-        return false;
-      }
+      waitable->add_to_wait_set(wait_set);
     }
     return true;
   }
@@ -509,7 +499,7 @@ private:
   using VectorRebind =
     std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
-  VectorRebind<const rcl_guard_condition_t *> guard_conditions_;
+  VectorRebind<const rclcpp::GuardCondition *> guard_conditions_;
 
   VectorRebind<std::shared_ptr<const rcl_subscription_t>> subscription_handles_;
   VectorRebind<std::shared_ptr<const rcl_service_t>> service_handles_;

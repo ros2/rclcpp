@@ -162,7 +162,7 @@ template<typename T,
 #define RCLCPP_EXPECT_THROW_EQ(throwing_statement, expected_exception) \
   do { \
     ::testing::AssertionResult \
-    is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable = \
+      is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable = \
       ::testing::AssertionSuccess(); \
     CHECK_THROW_EQ_IMPL( \
       throwing_statement, \
@@ -183,7 +183,7 @@ template<typename T,
 #define RCLCPP_ASSERT_THROW_EQ(throwing_statement, expected_exception) \
   do { \
     ::testing::AssertionResult \
-    is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable = \
+      is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable = \
       ::testing::AssertionSuccess(); \
     CHECK_THROW_EQ_IMPL( \
       throwing_statement, \

@@ -41,11 +41,15 @@ NodeTimers::add_timer(
   } else {
     node_base_->get_default_callback_group()->add_timer(timer);
   }
-  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
+
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-            std::string("Failed to notify wait set on timer creation: ") +
-            rmw_get_error_string().str);
+            std::string("failed to notify wait set on timer creation: ") + ex.what());
   }
+
   TRACEPOINT(
     rclcpp_timer_link_node,
     static_cast<const void *>(timer->get_timer_handle().get()),

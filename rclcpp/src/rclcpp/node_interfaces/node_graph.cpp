@@ -533,12 +533,12 @@ NodeGraph::notify_graph_change()
     }
   }
   graph_cv_.notify_all();
-  {
-    auto notify_condition_lock = node_base_->acquire_notify_guard_condition_lock();
-    rcl_ret_t ret = rcl_trigger_guard_condition(node_base_->get_notify_guard_condition());
-    if (RCL_RET_OK != ret) {
-      throw_from_rcl_error(ret, "failed to trigger notify guard condition");
-    }
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("failed to notify wait set on graph change: ") + ex.what());
   }
 }
 

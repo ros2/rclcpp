@@ -16,30 +16,16 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
 #include <utility>
-#include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "../mocking_utils/patch.hpp"
-#include "../utils/rclcpp_gtest_macros.hpp"
-
-#include "test_msgs/msg/empty.hpp"
 #include "rclcpp/msg/string.hpp"
-
-
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
 
 
 using namespace std::chrono_literals;
@@ -56,28 +42,6 @@ public:
     if (!rclcpp::ok()) {
       rclcpp::init(0, nullptr);
     }
-  }
-
-protected:
-  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
-  {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
-  }
-
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  rclcpp::Node::SharedPtr node;
-};
-
-class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
   }
 
   static void TearDownTestCase()
@@ -128,7 +92,7 @@ struct TypeAdapter<int, rclcpp::msg::String>
   {
     (void) source;
     (void) destination;
-    throw std::runtime_error("This should happen");
+    throw std::runtime_error("This should not happen");
   }
 
   static void
@@ -150,7 +114,7 @@ TEST_F(TestPublisher, various_creation_signatures) {
   for (auto is_intra_process : {true, false}) {
     rclcpp::NodeOptions options;
     options.use_intra_process_comms(is_intra_process);
-    initialize(options);
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", options);
     {
       using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
       auto publisher = node->create_publisher<StringTypeAdapter>("topic", 42);
@@ -172,8 +136,18 @@ TEST_F(TestPublisher, conversion_exception_is_passed_up) {
   for (auto is_intra_process : {true, false}) {
     rclcpp::NodeOptions options;
     options.use_intra_process_comms(is_intra_process);
-    initialize(options);
+
+    auto callback =
+      [](const rclcpp::msg::String::ConstSharedPtr msg) -> void
+      {
+        (void)msg;
+      };
+
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", options);
     auto pub = node->create_publisher<BadStringTypeAdapter>("topic_name", 1);
+    // A subscription is created to ensure the existence of a buffer in the intra proccess
+    // manager which will trigger the faulty conversion.
+    auto sub = node->create_subscription<rclcpp::msg::String>("topic_name", 1, callback);
     EXPECT_THROW(pub->publish(1), std::runtime_error);
   }
 }
@@ -182,7 +156,7 @@ TEST_F(TestPublisher, conversion_exception_is_passed_up) {
  * Testing that publisher sends type adapted types and ROS message types with intra proccess communications.
  */
 TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  TestPublisher,
   check_type_adapted_message_is_sent_and_received_intra_process) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
@@ -271,7 +245,7 @@ TEST_F(
 TEST_F(TestPublisher, check_type_adapted_message_is_sent_and_received) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
 
-  initialize();
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", rclcpp::NodeOptions());
 
   const std::string message_data = "Message Data";
   const std::string topic_name = "topic_name";

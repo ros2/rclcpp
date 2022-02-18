@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rclcpp/exceptions.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rcpputils/scope_exit.hpp>
-#include <test_msgs/action/fibonacci.hpp>
-
-#include <gtest/gtest.h>
-
 #include <memory>
 #include <vector>
+
+#include "gtest/gtest.h"
+
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rcpputils/scope_exit.hpp"
+#include "test_msgs/action/fibonacci.hpp"
 
 #include "rcl_action/action_server.h"
 #include "rcl_action/wait.h"
 #include "rclcpp_action/create_server.hpp"
 #include "rclcpp_action/server.hpp"
-#include "./mocking_utils/patch.hpp"
+#include "mocking_utils/patch.hpp"
 
 using Fibonacci = test_msgs::action::Fibonacci;
 using CancelResponse = typename Fibonacci::Impl::CancelGoalService::Response;
@@ -203,6 +203,27 @@ TEST_F(TestServer, construction_and_destruction_wait_set_error)
       [](std::shared_ptr<GoalHandle>) {});
     (void)as;
   }, rclcpp::exceptions::RCLError);
+}
+
+TEST_F(TestServer, construction_and_destruction_sub_node)
+{
+  auto parent_node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  auto sub_node = parent_node->create_sub_node("construct_sub_node");
+
+  ASSERT_NO_THROW(
+  {
+    using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+    auto as = rclcpp_action::create_server<Fibonacci>(
+      sub_node, "fibonacci",
+      [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        return rclcpp_action::GoalResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {});
+    (void)as;
+  });
 }
 
 TEST_F(TestServer, handle_goal_called)
@@ -1086,7 +1107,7 @@ TEST_F(TestGoalRequestServer, is_ready_rcl_error) {
   {
     EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
   });
-  ASSERT_TRUE(action_server_->add_to_wait_set(&wait_set));
+  EXPECT_NO_THROW(action_server_->add_to_wait_set(&wait_set));
 
   EXPECT_TRUE(action_server_->is_ready(&wait_set));
   auto mock = mocking_utils::patch_and_return(

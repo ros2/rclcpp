@@ -16,30 +16,14 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
-#include <utility>
-#include <vector>
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "../mocking_utils/patch.hpp"
-#include "../utils/rclcpp_gtest_macros.hpp"
-
-#include "test_msgs/msg/empty.hpp"
 #include "rclcpp/msg/string.hpp"
-
-
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
 
 
 using namespace std::chrono_literals;
@@ -56,28 +40,6 @@ public:
     if (!rclcpp::ok()) {
       rclcpp::init(0, nullptr);
     }
-  }
-
-protected:
-  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
-  {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
-  }
-
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  rclcpp::Node::SharedPtr node;
-};
-
-class CLASSNAME (test_intra_process_within_one_node, RMW_IMPLEMENTATION) : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
   }
 
   static void TearDownTestCase()
@@ -128,11 +90,25 @@ void wait_for_message_to_be_received(
     executor.spin_once(g_sleep_per_loop);
   }
 }
+
+bool wait_for_match(
+  const std::shared_ptr<rclcpp::SubscriptionBase> sub,
+  const std::shared_ptr<rclcpp::PublisherBase> pub)
+{
+  int i = 0;
+  bool matched = false;
+  while (!matched && i < g_max_loops) {
+    matched = sub->get_publisher_count() > 0 && pub->get_subscription_count() > 0;
+    std::this_thread::sleep_for(g_sleep_per_loop);
+  }
+  return matched;
+}
+
 /*
  * Testing publisher creation signatures with a type adapter.
  */
 TEST_F(TestSubscription, various_creation_signatures) {
-  initialize();
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", rclcpp::NodeOptions());
   {
     using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
     auto sub =
@@ -151,7 +127,7 @@ TEST_F(TestSubscription, various_creation_signatures) {
  * Testing that subscriber receives type adapted types and ROS message types with intra proccess communications.
  */
 TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  TestSubscription,
   check_type_adapted_messages_are_received_by_intra_process_subscription) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
@@ -175,6 +151,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -191,6 +168,7 @@ TEST_F(
           ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -206,6 +184,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -222,6 +201,7 @@ TEST_F(
           ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -237,6 +217,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -253,6 +234,7 @@ TEST_F(
           ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -268,6 +250,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -284,6 +267,7 @@ TEST_F(
           ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -299,6 +283,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -315,6 +300,7 @@ TEST_F(
           ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -330,6 +316,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -346,6 +333,7 @@ TEST_F(
           ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -358,7 +346,7 @@ TEST_F(
  * Testing that subscriber receives type adapted types and ROS message types with inter proccess communications.
  */
 TEST_F(
-  CLASSNAME(test_intra_process_within_one_node, RMW_IMPLEMENTATION),
+  TestSubscription,
   check_type_adapted_messages_are_received_by_inter_process_subscription) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
@@ -381,6 +369,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -398,6 +387,7 @@ TEST_F(
           ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -413,6 +403,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -430,6 +421,7 @@ TEST_F(
           ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -445,6 +437,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), (*msg).c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -461,6 +454,7 @@ TEST_F(
           ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -476,6 +470,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg.data.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -492,6 +487,7 @@ TEST_F(
           ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -507,6 +503,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -523,6 +520,7 @@ TEST_F(
           ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -538,6 +536,7 @@ TEST_F(
           ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);
@@ -554,6 +553,7 @@ TEST_F(
           ASSERT_FALSE(message_info.get_rmw_message_info().from_intra_process);
         };
       auto sub = node->create_subscription<StringTypeAdapter>(topic_name, 1, callback);
+      ASSERT_TRUE(wait_for_match(sub, pub));
       pub->publish(msg);
       ASSERT_FALSE(is_received);
       wait_for_message_to_be_received(is_received, node);

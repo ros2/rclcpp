@@ -99,7 +99,8 @@ public:
    */
   RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
-    std::weak_ptr<rclcpp::Executor> executor,
+    std::weak_ptr<rclcpp::Executor> executor =
+    std::weak_ptr<rclcpp::executors::MultiThreadedExecutor>(),
     std::string node_name = "ComponentManager",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
     .start_parameter_services(false)
@@ -130,6 +131,14 @@ public:
   virtual std::shared_ptr<rclcpp_components::NodeFactory>
   create_component_factory(const ComponentResource & resource);
 
+  /// Member function to set a executor in the component
+  /**
+   * \param executor executor to be set
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  set_executor(const std::weak_ptr<rclcpp::Executor> executor);
+
 protected:
   /// Create node options for loaded component
   /**
@@ -139,6 +148,22 @@ protected:
   RCLCPP_COMPONENTS_PUBLIC
   virtual rclcpp::NodeOptions
   create_node_options(const std::shared_ptr<LoadNode::Request> request);
+
+  /// Add component node to executor model, it's invoked in on_load_node()
+  /**
+   * \param node_id  node_id of loaded component node in node_wrappers_
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  add_node_to_executor(uint64_t node_id);
+
+  /// Remove component node from executor model, it's invoked in on_unload_node()
+  /**
+   * \param node_id  node_id of loaded component node in node_wrappers_
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  virtual void
+  remove_node_from_executor(uint64_t node_id);
 
   /// Service callback to load a new node in the component
   /**
@@ -231,7 +256,7 @@ protected:
     on_list_nodes(request_header, request, response);
   }
 
-private:
+protected:
   std::weak_ptr<rclcpp::Executor> executor_;
 
   uint64_t unique_id_ {1};

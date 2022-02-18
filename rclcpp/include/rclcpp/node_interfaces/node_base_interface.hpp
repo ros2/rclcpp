@@ -24,6 +24,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -142,23 +143,16 @@ public:
   std::atomic_bool &
   get_associated_with_executor_atomic() = 0;
 
-  /// Return guard condition that should be notified when the internal node state changes.
+  /// Return a guard condition that should be notified when the internal node state changes.
   /**
    * For example, this should be notified when a publisher is added or removed.
    *
-   * \return the rcl_guard_condition_t if it is valid, else nullptr
+   * \return the GuardCondition if it is valid, else thow runtime error
    */
   RCLCPP_PUBLIC
   virtual
-  rcl_guard_condition_t *
+  rclcpp::GuardCondition &
   get_notify_guard_condition() = 0;
-
-  /// Acquire and return a scoped lock that protects the notify guard condition.
-  /** This should be used when triggering the notify guard condition. */
-  RCLCPP_PUBLIC
-  virtual
-  std::unique_lock<std::recursive_mutex>
-  acquire_notify_guard_condition_lock() const = 0;
 
   /// Return the default preference for using intra process communication.
   RCLCPP_PUBLIC

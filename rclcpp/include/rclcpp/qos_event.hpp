@@ -94,7 +94,7 @@ public:
 
   /// Add the Waitable to a wait set.
   RCLCPP_PUBLIC
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// Check if the Waitable is ready.

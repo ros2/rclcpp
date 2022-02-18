@@ -29,7 +29,7 @@ class InitOptions
 {
 public:
   /// If true, the context will be shutdown on SIGINT by the signal handler (if it was installed).
-  bool shutdown_on_sigint = true;
+  bool shutdown_on_signal = true;
 
   /// Constructor
   /**

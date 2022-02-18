@@ -46,6 +46,18 @@ ComponentManager::ComponentManager(
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor desc{};
+    desc.description = "Number of thread";
+    rcl_interfaces::msg::IntegerRange range{};
+    range.from_value = 1;
+    range.to_value = std::thread::hardware_concurrency();
+    desc.integer_range.push_back(range);
+    desc.read_only = true;
+    this->declare_parameter(
+      "thread_num", static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
+  }
 }
 
 ComponentManager::~ComponentManager()
@@ -160,10 +172,44 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
                 "Extra component argument 'use_intra_process_comms' must be a boolean");
       }
       options.use_intra_process_comms(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "forward_global_arguments") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+                "Extra component argument 'forward_global_arguments' must be a boolean");
+      }
+      options.use_global_arguments(extra_argument.get_value<bool>());
+      if (extra_argument.get_value<bool>()) {
+        RCLCPP_WARN(
+          get_logger(), "forward_global_arguments is true by default in nodes, but is not "
+          "recommended in a component manager. If true, this will cause this node's behavior "
+          "to be influenced by global arguments, not only those targeted at this node.");
+      }
     }
   }
 
   return options;
+}
+
+void
+ComponentManager::set_executor(const std::weak_ptr<rclcpp::Executor> executor)
+{
+  executor_ = executor;
+}
+
+void
+ComponentManager::add_node_to_executor(uint64_t node_id)
+{
+  if (auto exec = executor_.lock()) {
+    exec->add_node(node_wrappers_[node_id].get_node_base_interface(), true);
+  }
+}
+
+void
+ComponentManager::remove_node_from_executor(uint64_t node_id)
+{
+  if (auto exec = executor_.lock()) {
+    exec->remove_node(node_wrappers_[node_id].get_node_base_interface());
+  }
 }
 
 void
@@ -214,10 +260,9 @@ ComponentManager::on_load_node(
         throw ComponentManagerException("Component constructor threw an exception");
       }
 
+      add_node_to_executor(node_id);
+
       auto node = node_wrappers_[node_id].get_node_base_interface();
-      if (auto exec = executor_.lock()) {
-        exec->add_node(node, true);
-      }
       response->full_node_name = node->get_fully_qualified_name();
       response->unique_id = node_id;
       response->success = true;
@@ -253,9 +298,7 @@ ComponentManager::on_unload_node(
     response->error_message = ss.str();
     RCLCPP_WARN(get_logger(), "%s", ss.str().c_str());
   } else {
-    if (auto exec = executor_.lock()) {
-      exec->remove_node(wrapper->second.get_node_base_interface());
-    }
+    remove_node_from_executor(request->unique_id);
     node_wrappers_.erase(wrapper);
     response->success = true;
   }

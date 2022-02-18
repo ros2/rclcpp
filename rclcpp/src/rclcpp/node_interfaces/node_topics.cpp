@@ -14,9 +14,18 @@
 
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
+#include <stdexcept>
 #include <string>
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/publisher_base.hpp"
+#include "rclcpp/publisher_factory.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_factory.hpp"
+#include "rclcpp/qos.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -60,13 +69,12 @@ NodeTopics::add_publisher(
   }
 
   // Notify the executor that a new publisher was created using the parent Node.
-  {
-    auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
-    if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
-      throw std::runtime_error(
-              std::string("Failed to notify wait set on publisher creation: ") +
-              rmw_get_error_string().str);
-    }
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("failed to notify wait set on publisher creation: ") + ex.what());
   }
 }
 
@@ -108,13 +116,12 @@ NodeTopics::add_subscription(
   }
 
   // Notify the executor that a new subscription was created using the parent Node.
-  {
-    auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
-    auto ret = rcl_trigger_guard_condition(node_base_->get_notify_guard_condition());
-    if (ret != RCL_RET_OK) {
-      using rclcpp::exceptions::throw_from_rcl_error;
-      throw_from_rcl_error(ret, "failed to notify wait set on subscription creation");
-    }
+  auto & node_gc = node_base_->get_notify_guard_condition();
+  try {
+    node_gc.trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string("failed to notify wait set on subscription creation: ") + ex.what());
   }
 }
 

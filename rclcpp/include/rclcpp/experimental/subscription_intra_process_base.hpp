@@ -15,18 +15,14 @@
 #ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 
-#include <rmw/rmw.h>
-
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
 
-#include "rcl/error_handling.h"
+#include "rcl/wait.h"
 
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
@@ -41,30 +37,21 @@ public:
 
   RCLCPP_PUBLIC
   SubscriptionIntraProcessBase(
+    rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile)
-  : topic_name_(topic_name), qos_profile_(qos_profile)
+  : gc_(context), topic_name_(topic_name), qos_profile_(qos_profile)
   {}
 
   virtual ~SubscriptionIntraProcessBase() = default;
 
   RCLCPP_PUBLIC
   size_t
-  get_number_of_ready_guard_conditions() {return 1;}
+  get_number_of_ready_guard_conditions() override {return 1;}
 
   RCLCPP_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set);
-
-  virtual bool
-  is_ready(rcl_wait_set_t * wait_set) = 0;
-
-  virtual
-  std::shared_ptr<void>
-  take_data() = 0;
-
-  virtual void
-  execute(std::shared_ptr<void> & data) = 0;
+  void
+  add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   virtual bool
   use_take_shared_method() const = 0;
@@ -79,12 +66,12 @@ public:
 
 protected:
   std::recursive_mutex reentrant_mutex_;
-  rcl_guard_condition_t gc_;
+  rclcpp::GuardCondition gc_;
 
-private:
   virtual void
   trigger_guard_condition() = 0;
 
+private:
   std::string topic_name_;
   QoS qos_profile_;
 };

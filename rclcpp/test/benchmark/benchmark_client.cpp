@@ -62,6 +62,7 @@ BENCHMARK_F(ClientPerformanceTest, construct_client_no_service)(benchmark::State
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto client = node->create_client<test_msgs::srv::Empty>("not_an_existing_service");
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
@@ -79,6 +80,7 @@ BENCHMARK_F(ClientPerformanceTest, construct_client_empty_srv)(benchmark::State 
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto client = node->create_client<test_msgs::srv::Empty>(empty_service_name);
     benchmark::DoNotOptimize(client);
     benchmark::ClobberMemory();
@@ -96,6 +98,7 @@ BENCHMARK_F(ClientPerformanceTest, destroy_client_empty_srv)(benchmark::State & 
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     auto client = node->create_client<test_msgs::srv::Empty>(empty_service_name);
     state.ResumeTiming();
@@ -109,6 +112,7 @@ BENCHMARK_F(ClientPerformanceTest, destroy_client_empty_srv)(benchmark::State & 
 BENCHMARK_F(ClientPerformanceTest, wait_for_service)(benchmark::State & state) {
   int count = 0;
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     const std::string service_name = std::string("service_") + std::to_string(count++);
     // Create client before service so it has to 'discover' the service after construction
@@ -132,6 +136,7 @@ BENCHMARK_F(ClientPerformanceTest, async_send_request_only)(benchmark::State & s
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto future = client->async_send_request(shared_request);
     benchmark::DoNotOptimize(future);
     benchmark::ClobberMemory();
@@ -144,6 +149,7 @@ BENCHMARK_F(ClientPerformanceTest, async_send_request_and_response)(benchmark::S
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     auto future = client->async_send_request(shared_request);
     rclcpp::spin_until_future_complete(
       node->get_node_base_interface(), future, std::chrono::seconds(1));

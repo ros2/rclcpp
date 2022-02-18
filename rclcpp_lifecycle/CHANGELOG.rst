@@ -3,6 +3,27 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+15.0.0 (2022-01-14)
+-------------------
+* Automatically transition lifecycle entities when node transitions (`#1863 <https://github.com/ros2/rclcpp/issues/1863>`_)
+* Contributors: Ivan Santiago Paunovic
+
+14.1.0 (2022-01-05)
+-------------------
+
+14.0.0 (2021-12-17)
+-------------------
+* Remove author by request (`#1818 <https://github.com/ros2/rclcpp/issues/1818>`_)
+* Update maintainers (`#1817 <https://github.com/ros2/rclcpp/issues/1817>`_)
+* Suppress clang dead-store warnings in the benchmarks. (`#1802 <https://github.com/ros2/rclcpp/issues/1802>`_)
+* Contributors: Chris Lalancette, Jacob Perron
+
+13.1.0 (2021-10-18)
+-------------------
+* Update forward declarations of `rcl_lifecycle` types (`#1788 <https://github.com/ros2/rclcpp/issues/1788>`_)
+* Deprecate the `void shared_ptr<MessageT>` subscription callback signatures (`#1713 <https://github.com/ros2/rclcpp/issues/1713>`_)
+* Contributors: Abrar Rahman Protyasha, Michel Hidalgo
+
 13.0.0 (2021-08-23)
 -------------------
 * Update client API to be able to remove pending requests. (`#1734 <https://github.com/ros2/rclcpp/issues/1734>`_)

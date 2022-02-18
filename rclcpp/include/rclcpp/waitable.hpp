@@ -103,12 +103,11 @@ public:
   /// Add the Waitable to a wait set.
   /**
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
-   * \return `true` if the Waitable is added successfully, `false` otherwise.
    * \throws rclcpp::execptions::RCLError from rcl_wait_set_add_*()
    */
   RCLCPP_PUBLIC
   virtual
-  bool
+  void
   add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
 
   /// Check if the Waitable is ready.
@@ -145,8 +144,7 @@ public:
    * ```cpp
    * // ... create a wait set and a Waitable
    * // Add the Waitable to the wait set
-   * bool add_ret = waitable.add_to_wait_set(wait_set);
-   * // ... error handling
+   * waitable.add_to_wait_set(wait_set);
    * // Wait
    * rcl_ret_t wait_ret = rcl_wait(wait_set);
    * // ... error handling
@@ -172,8 +170,7 @@ public:
    * ```cpp
    * // ... create a wait set and a Waitable
    * // Add the Waitable to the wait set
-   * bool add_ret = waitable.add_to_wait_set(wait_set);
-   * // ... error handling
+   * waitable.add_to_wait_set(wait_set);
    * // Wait
    * rcl_ret_t wait_ret = rcl_wait(wait_set);
    * // ... error handling

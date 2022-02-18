@@ -35,7 +35,7 @@ typedef std::map<rclcpp::CallbackGroup::WeakPtr,
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  bool add_to_wait_set(rcl_wait_set_t *) override {return true;}
+  void add_to_wait_set(rcl_wait_set_t *) override {}
   bool is_ready(rcl_wait_set_t *) override {return true;}
   std::shared_ptr<void> take_data() override {return nullptr;}
   void execute(std::shared_ptr<void> & data) override {(void)data;}
@@ -307,6 +307,8 @@ TEST_F(TestMemoryStrategy, get_node_by_group) {
     EXPECT_EQ(
       node_handle,
       memory_strategy()->get_node_by_group(callback_group, weak_groups_to_nodes));
+    // Clear the handles to not hold NodeBase.
+    memory_strategy()->clear_handles();
   }  // Node goes out of scope
   // Callback group still exists, so lookup returns nullptr because node is destroyed.
   EXPECT_EQ(
@@ -363,8 +365,9 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
       callback_group,
       memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
   }  // Node goes out of scope
+  // NodeBase(SubscriptionBase->rcl_node_t->NodeBase) is still alive.
   EXPECT_EQ(
-    nullptr,
+    callback_group,
     memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
 }
 

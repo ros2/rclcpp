@@ -26,6 +26,7 @@ BENCHMARK_F(PerformanceTest, rclcpp_init)(benchmark::State & state)
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     rclcpp::init(0, nullptr);
 
     state.PauseTiming();
@@ -43,6 +44,7 @@ BENCHMARK_F(PerformanceTest, rclcpp_shutdown)(benchmark::State & state)
 
   reset_heap_counters();
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     rclcpp::init(0, nullptr);
     state.ResumeTiming();

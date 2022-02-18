@@ -237,6 +237,8 @@ Node::Node(
   node_services_(other.node_services_),
   node_clock_(other.node_clock_),
   node_parameters_(other.node_parameters_),
+  node_time_source_(other.node_time_source_),
+  node_waitables_(other.node_waitables_),
   node_options_(other.node_options_),
   sub_namespace_(extend_sub_namespace(other.get_sub_namespace(), sub_namespace)),
   effective_namespace_(create_effective_namespace(other.get_namespace(), sub_namespace_))

@@ -2,6 +2,27 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+15.0.0 (2022-01-14)
+-------------------
+* Add rclcpp_components::component (`#1855 <https://github.com/ros2/rclcpp/issues/1855>`_)
+* Contributors: Shane Loretz
+
+14.1.0 (2022-01-05)
+-------------------
+
+14.0.0 (2021-12-17)
+-------------------
+* Add parameter to configure number of thread (`#1708 <https://github.com/ros2/rclcpp/issues/1708>`_)
+* remove RCLCPP_COMPONENTS_PUBLIC in class ComponentManagerIsolated (`#1843 <https://github.com/ros2/rclcpp/issues/1843>`_)
+* create component_container_isolated (`#1781 <https://github.com/ros2/rclcpp/issues/1781>`_)
+* Remove author by request (`#1818 <https://github.com/ros2/rclcpp/issues/1818>`_)
+* Update maintainers (`#1817 <https://github.com/ros2/rclcpp/issues/1817>`_)
+* Suppress clang dead-store warnings in the benchmarks. (`#1802 <https://github.com/ros2/rclcpp/issues/1802>`_)
+* Contributors: Chris Lalancette, Daisuke Nishimatsu, Jacob Perron, gezp
+
+13.1.0 (2021-10-18)
+-------------------
+
 13.0.0 (2021-08-23)
 -------------------
 * Update client API to be able to remove pending requests. (`#1734 <https://github.com/ros2/rclcpp/issues/1734>`_)

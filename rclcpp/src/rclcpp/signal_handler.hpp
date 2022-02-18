@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/utilities.hpp"
 
 // includes for semaphore notification code
 #if defined(_WIN32)
@@ -39,14 +40,14 @@
 namespace rclcpp
 {
 
-/// Responsible for manaaging the SIGINT signal handling.
+/// Responsible for managing the SIGINT/SIGTERM signal handling.
 /**
  * This class is responsible for:
  *
- * - installing the signal handler for SIGINT
- * - uninstalling the signal handler for SIGINT
- * - creating a thread to execute "on sigint" work outside of the signal handler
- * - safely notifying the dedicated signal handling thread when receiving SIGINT
+ * - installing the signal handler for SIGINT/SIGTERM
+ * - uninstalling the signal handler for SIGINT/SIGTERM
+ * - creating a thread to execute "on signal" work outside of the signal handler
+ * - safely notifying the dedicated signal handling thread when receiving SIGINT/SIGTERM
  * - implementation of all of the signal handling work, like shutting down contexts
  *
  * \internal
@@ -64,15 +65,18 @@ public:
   rclcpp::Logger &
   get_logger();
 
-  /// Install the signal handler for SIGINT and start the dedicated signal handling thread.
+  /// Install the signal handler for SIGINT/SIGTERM and start the dedicated signal handling thread.
   /**
-   * Also stores the current signal handler to be called on SIGINT and to
+   * Also stores the current signal handler to be called on signal and to
    * restore when uninstalling this signal handler.
+   *
+   * \param signal_handler_options option to indicate which signal handlers should be installed.
    */
   bool
-  install();
+  install(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
 
-  /// Uninstall the signal handler for SIGINT and join the dedicated singal handling thread.
+  /// Uninstall the signal handler for SIGINT/SIGTERM and join the dedicated singal handling
+  /// thread.
   /**
    * Also restores the previous signal handler.
    */
@@ -83,26 +87,34 @@ public:
   bool
   is_installed();
 
+  /// Get the current signal handler options.
+  /**
+   * If no signal handler is installed, SignalHandlerOptions::None is returned.
+   */
+  rclcpp::SignalHandlerOptions
+  get_current_signal_handler_options();
+
 private:
-  SignalHandler() = default;
-
-  ~SignalHandler();
-
+  /// Signal handler type, platform dependent.
 #if defined(RCLCPP_HAS_SIGACTION)
   using signal_handler_type = struct sigaction;
 #else
   using signal_handler_type = void (*)(int);
 #endif
-  // POSIX signal handler structure storage for the existing signal handler.
-  static SignalHandler::signal_handler_type old_signal_handler_;
 
-  /// Set the signal handler function.
-  static
-  SignalHandler::signal_handler_type
-  set_signal_handler(int signal_value, const SignalHandler::signal_handler_type & signal_handler);
+
+  SignalHandler() = default;
+
+  ~SignalHandler();
+
+  SignalHandler(const SignalHandler &) = delete;
+  SignalHandler(SignalHandler &&) = delete;
+  SignalHandler &
+  operator=(const SignalHandler &) = delete;
+  SignalHandler &&
+  operator=(SignalHandler &&) = delete;
 
   /// Common signal handler code between sigaction and non-sigaction versions.
-  static
   void
   signal_handler_common();
 
@@ -127,7 +139,6 @@ private:
    * This must be called before wait_for_signal() or notify_signal_handler().
    * This is not thread-safe.
    */
-  static
   void
   setup_wait_for_signal();
 
@@ -137,7 +148,6 @@ private:
    *
    * This is not thread-safe.
    */
-  static
   void
   teardown_wait_for_signal() noexcept;
 
@@ -147,7 +157,6 @@ private:
    *
    * This is not thread-safe.
    */
-  static
   void
   wait_for_signal();
 
@@ -158,29 +167,45 @@ private:
    *
    * This is thread-safe.
    */
-  static
   void
   notify_signal_handler() noexcept;
 
+  static
+  signal_handler_type
+  set_signal_handler(
+    int signal_value,
+    const signal_handler_type & signal_handler);
+
+  signal_handler_type
+  get_old_signal_handler(int signum);
+
+  rclcpp::SignalHandlerOptions signal_handlers_options_ = rclcpp::SignalHandlerOptions::None;
+
+  signal_handler_type old_sigint_handler_;
+  signal_handler_type old_sigterm_handler_;
+
+  // logger instance
+  rclcpp::Logger logger_ = rclcpp::get_logger("rclcpp");
+
   // Whether or not a signal has been received.
-  static std::atomic_bool signal_received_;
+  std::atomic_bool signal_received_ = false;
   // A thread to which singal handling tasks are deferred.
   std::thread signal_handler_thread_;
 
   // A mutex used to synchronize the install() and uninstall() methods.
   std::mutex install_mutex_;
   // Whether or not the signal handler has been installed.
-  std::atomic_bool installed_{false};
+  std::atomic_bool installed_ = false;
 
   // Whether or not the semaphore for wait_for_signal is setup.
-  static std::atomic_bool wait_for_signal_is_setup_;
+  std::atomic_bool wait_for_signal_is_setup_;
   // Storage for the wait_for_signal semaphore.
 #if defined(_WIN32)
-  static HANDLE signal_handler_sem_;
+  HANDLE signal_handler_sem_;
 #elif defined(__APPLE__)
-  static dispatch_semaphore_t signal_handler_sem_;
+  dispatch_semaphore_t signal_handler_sem_;
 #else  // posix
-  static sem_t signal_handler_sem_;
+  sem_t signal_handler_sem_;
 #endif
 };
 

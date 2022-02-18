@@ -401,6 +401,15 @@ public:
   void
   set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
+  /// Returns true if the executor is currently spinning.
+  /**
+   * This function can be called asynchronously from any thread.
+   * \return True if the executor is currently spinning.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_spinning();
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -455,6 +464,7 @@ protected:
   /// Return true if the node has been added to this executor.
   /**
    * \param[in] node_ptr a shared pointer that points to a node base interface
+   * \param[in] weak_groups_to_nodes map to nodes to lookup
    * \return true if the node is associated with the executor, otherwise false
    */
   RCLCPP_PUBLIC
@@ -525,7 +535,7 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
+  rclcpp::GuardCondition interrupt_guard_condition_;
 
   std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
 
@@ -549,7 +559,7 @@ protected:
   spin_once_impl(std::chrono::nanoseconds timeout);
 
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rcl_guard_condition_t *,
+      const rclcpp::GuardCondition *,
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
 

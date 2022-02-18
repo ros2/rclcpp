@@ -501,15 +501,37 @@ public:
   }
 
   void
-  add_publisher_handle(std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub)
+  add_managed_entity(std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface> managed_entity)
   {
-    weak_pubs_.push_back(pub);
+    weak_managed_entities_.push_back(managed_entity);
   }
 
   void
   add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer)
   {
     weak_timers_.push_back(timer);
+  }
+
+  void
+  on_activate()
+  {
+    for (const auto & weak_entity : weak_managed_entities_) {
+      auto entity = weak_entity.lock();
+      if (entity) {
+        entity->on_activate();
+      }
+    }
+  }
+
+  void
+  on_deactivate()
+  {
+    for (const auto & weak_entity : weak_managed_entities_) {
+      auto entity = weak_entity.lock();
+      if (entity) {
+        entity->on_deactivate();
+      }
+    }
   }
 
   rcl_lifecycle_state_machine_t state_machine_;
@@ -538,7 +560,7 @@ public:
   GetTransitionGraphSrvPtr srv_get_transition_graph_;
 
   // to controllable things
-  std::vector<std::weak_ptr<rclcpp_lifecycle::LifecyclePublisherInterface>> weak_pubs_;
+  std::vector<std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface>> weak_managed_entities_;
   std::vector<std::weak_ptr<rclcpp::TimerBase>> weak_timers_;
 };
 

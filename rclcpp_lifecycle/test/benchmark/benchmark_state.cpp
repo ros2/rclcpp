@@ -22,6 +22,7 @@ using PerformanceTest = performance_test_fixture::PerformanceTest;
 BENCHMARK_F(PerformanceTest, construct_destruct_state)(benchmark::State & state)
 {
   for (auto _ : state) {
+    (void)_;
     rclcpp_lifecycle::State lifecycle_state(1, "state");
     benchmark::DoNotOptimize(lifecycle_state);
     benchmark::ClobberMemory();
@@ -32,6 +33,7 @@ BENCHMARK_F(PerformanceTest, copy_destruct_state)(benchmark::State & state)
 {
   rclcpp_lifecycle::State lifecycle_state(1, "state");
   for (auto _ : state) {
+    (void)_;
     rclcpp_lifecycle::State state_copy(lifecycle_state);
     benchmark::DoNotOptimize(state_copy);
     benchmark::ClobberMemory();
