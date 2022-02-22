@@ -35,6 +35,7 @@ public:
   std::shared_ptr<void> create_request() override {return nullptr;}
   std::shared_ptr<rmw_request_id_t> create_request_header() override {return nullptr;}
   void handle_request(std::shared_ptr<rmw_request_id_t>, std::shared_ptr<void>) override {}
+  bool add_to_wait_set(rcl_wait_set_t *) override {return true;}
 };
 
 class TestClient : public rclcpp::ClientBase

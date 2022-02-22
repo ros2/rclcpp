@@ -85,6 +85,7 @@
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/lifecycle_service.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
@@ -268,10 +269,14 @@ public:
 
   /// Create and return a Service.
   /**
-   * \sa rclcpp::Node::create_service
+   * \param[in] service_name The topic to service on.
+   * \param[in] callback User-defined callback function.
+   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created lifecycle service.
    */
   template<typename ServiceT, typename CallbackT>
-  typename rclcpp::Service<ServiceT>::SharedPtr
+  typename rclcpp_lifecycle::LifecycleService<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
     CallbackT && callback,

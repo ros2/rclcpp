@@ -121,6 +121,17 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
+  /// Add the Service to a wait set.
+  /**
+   * \param[in] wait_set A handle to the wait set to add the Service to.
+   * \return `true` if the Service is added successfully, `false` otherwise.
+   * \throws rclcpp::execptions::RCLError from rcl_wait_set_add_*()
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
+
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
@@ -351,6 +362,18 @@ public:
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
+  }
+
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    if (rcl_wait_set_add_service(wait_set, get_service_handle().get(), NULL) != RCL_RET_OK) {
+      RCLCPP_ERROR(
+        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
+        "Couldn't add service to wait set: %s", rcl_get_error_string().str);
+      return false;
+    }
+    return true;
   }
 
 private:

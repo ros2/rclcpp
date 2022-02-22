@@ -171,7 +171,7 @@ public:
         });
       group->find_service_ptrs_if(
         [this](const rclcpp::ServiceBase::SharedPtr & service) {
-          service_handles_.push_back(service->get_service_handle());
+          service_handles_.push_back(service);
           return false;
         });
       group->find_client_ptrs_if(
@@ -223,10 +223,7 @@ public:
     }
 
     for (auto service : service_handles_) {
-      if (rcl_wait_set_add_service(wait_set, service.get(), NULL) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add service to wait set: %s", rcl_get_error_string().str);
+      if (!service->add_to_wait_set(wait_set)) {
         return false;
       }
     }
@@ -292,7 +289,7 @@ public:
   {
     auto it = service_handles_.begin();
     while (it != service_handles_.end()) {
-      auto service = get_service_by_handle(*it, weak_groups_to_nodes);
+      auto service = *it;
       if (service) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_service(service, weak_groups_to_nodes);
@@ -502,7 +499,7 @@ private:
   VectorRebind<const rclcpp::GuardCondition *> guard_conditions_;
 
   VectorRebind<std::shared_ptr<const rcl_subscription_t>> subscription_handles_;
-  VectorRebind<std::shared_ptr<const rcl_service_t>> service_handles_;
+  VectorRebind<std::shared_ptr<ServiceBase>> service_handles_;
   VectorRebind<std::shared_ptr<const rcl_client_t>> client_handles_;
   VectorRebind<std::shared_ptr<const rcl_timer_t>> timer_handles_;
   VectorRebind<std::shared_ptr<Waitable>> waitable_handles_;

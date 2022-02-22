@@ -153,6 +153,15 @@ if(BUILD_TESTING)
       PUBLIC RCUTILS_ENABLE_FAULT_INJECTION
     )
   endif()
+  ament_add_gmock(test_lifecycle_service test/test_lifecycle_service.cpp)
+  if(TARGET test_lifecycle_service)
+    ament_target_dependencies(test_lifecycle_service
+      "rcl_lifecycle"
+      "rclcpp"
+      "test_msgs"
+    )
+    target_link_libraries(test_lifecycle_service ${PROJECT_NAME})
+  endif()
 endif()
 
 # Export old-style CMake variables
