@@ -497,14 +497,8 @@ TEST_F(TestAllocatorMemoryStrategy, add_remove_waitables) {
 TEST_F(TestAllocatorMemoryStrategy, number_of_entities_with_subscription) {
   RclWaitSetSizes expected_sizes = {};
   expected_sizes.size_of_subscriptions = 1;
-  const std::string implementation_identifier = rmw_get_implementation_identifier();
-  if (implementation_identifier == "rmw_cyclonedds_cpp" ||
-    implementation_identifier == "rmw_connextdds")
-  {
-    // For cyclonedds and connext, a subscription will also add an event and waitable
-    expected_sizes.size_of_events += 1;
-    expected_sizes.size_of_waitables += 1;
-  }
+  expected_sizes.size_of_events = 1;
+  expected_sizes.size_of_waitables = 1;
   auto node_with_subscription = create_node_with_subscription("subscription_node");
   EXPECT_TRUE(TestNumberOfEntitiesAfterCollection(node_with_subscription, expected_sizes));
 }
