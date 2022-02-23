@@ -146,7 +146,7 @@ public:
     on_new_message_callback_ = new_callback;
 
     if (unread_count_ > 0) {
-      if (qos_profile_.history() == HistoryPolicy::KeepLast || qos_profile_.depth() == 0) {
+      if (qos_profile_.history() == HistoryPolicy::KeepAll) {
         on_new_message_callback_(unread_count_);
       } else {
         // Use qos profile depth as upper bound for unread_count_
