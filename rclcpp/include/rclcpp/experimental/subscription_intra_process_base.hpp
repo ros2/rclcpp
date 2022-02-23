@@ -96,7 +96,7 @@ public:
    * The application should provide a generic callback function that will be then
    * forwarded by the waitable to all of its entities.
    * Before forwarding, a different value for the identifier argument will be
-   * bond to the function.
+   * bound to the function.
    * This implies that the provided callback can use the identifier to behave
    * differently depending on which entity triggered the waitable to become ready.
    *

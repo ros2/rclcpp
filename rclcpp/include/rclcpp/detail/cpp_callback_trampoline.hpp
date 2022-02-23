@@ -38,7 +38,7 @@ namespace detail
  * captures, and various kinds of std::bind instances.
  *
  * The interior of this function is likely to be executed within a C runtime,
- * so no exceptins should be thrown at this point, and doing so results in
+ * so no exceptions should be thrown at this point, and doing so results in
  * undefined behavior.
  *
  * \tparam UserDataT Deduced type based on what is passed for user data,
