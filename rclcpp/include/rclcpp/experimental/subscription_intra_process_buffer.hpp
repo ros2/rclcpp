@@ -125,7 +125,7 @@ public:
       buffer_->add_shared(convert_ros_message_to_subscribed_type_unique_ptr(*message));
       trigger_guard_condition();
     }
-    invoke_on_new_message_listener();
+    invoke_on_new_message();
   }
 
   void
@@ -138,7 +138,7 @@ public:
       buffer_->add_unique(convert_ros_message_to_subscribed_type_unique_ptr(*message));
       trigger_guard_condition();
     }
-    invoke_on_new_message_listener();
+    invoke_on_new_message();
   }
 
   void
@@ -146,7 +146,7 @@ public:
   {
     buffer_->add_shared(std::move(message));
     trigger_guard_condition();
-    invoke_on_new_message_listener();
+    invoke_on_new_message();
   }
 
   void
@@ -154,7 +154,7 @@ public:
   {
     buffer_->add_unique(std::move(message));
     trigger_guard_condition();
-    invoke_on_new_message_listener();
+    invoke_on_new_message();
   }
 
   bool
@@ -176,7 +176,7 @@ protected:
 
 private:
   void
-  invoke_on_new_message_listener()
+  invoke_on_new_message()
   {
     std::lock_guard<std::recursive_mutex> lock(this->listener_mutex_);
     if (this->on_new_message_callback_) {
