@@ -142,7 +142,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
     on_new_message_callback_ = new_callback;
 
     if (unread_count_ > 0) {
@@ -160,18 +160,29 @@ public:
   void
   clear_on_ready_callback() override
   {
-    std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
     on_new_message_callback_ = nullptr;
   }
 
 protected:
-  std::recursive_mutex listener_mutex_;
+  std::recursive_mutex callback_mutex_;
   std::function<void(size_t)> on_new_message_callback_ {nullptr};
   size_t unread_count_{0};
   rclcpp::GuardCondition gc_;
 
   virtual void
   trigger_guard_condition() = 0;
+
+  void
+  invoke_on_new_message()
+  {
+    std::lock_guard<std::recursive_mutex> lock(this->callback_mutex_);
+    if (this->on_new_message_callback_) {
+      this->on_new_message_callback_(1);
+    } else {
+      this->unread_count_++;
+    }
+  }
 
 private:
   std::string topic_name_;
