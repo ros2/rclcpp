@@ -139,6 +139,7 @@ public:
    * \param message a serialized message
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can show
    */
+  RCLCPP_PUBLIC
   void publish_loaned_msg(const rclcpp::SerializedMessage & message);
 
 private:
