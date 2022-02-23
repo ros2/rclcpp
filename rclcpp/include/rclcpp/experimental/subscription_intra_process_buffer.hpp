@@ -173,7 +173,6 @@ protected:
   BufferUniquePtr buffer_;
   SubscribedTypeAllocator subscribed_type_allocator_;
   SubscribedTypeDeleter subscribed_type_deleter_;
-
 };
 
 }  // namespace experimental
