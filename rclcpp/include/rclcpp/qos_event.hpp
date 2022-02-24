@@ -259,6 +259,13 @@ public:
     return std::static_pointer_cast<void>(std::make_shared<EventCallbackInfoT>(callback_info));
   }
 
+  std::shared_ptr<void>
+  take_data_by_entity_id(int id) override
+  {
+    (void)id;
+    return take_data();
+  }
+
   /// Execute any entities of the Waitable that are ready.
   void
   execute(std::shared_ptr<void> & data) override

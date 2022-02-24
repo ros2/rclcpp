@@ -131,6 +131,10 @@ public:
   std::shared_ptr<void>
   take_data() override;
 
+  RCLCPP_ACTION_PUBLIC
+  std::shared_ptr<void>
+  take_data_by_entity_id(int id) override;
+
   /// Act on entities in the wait set which are ready to be acted upon.
   /// \internal
   RCLCPP_ACTION_PUBLIC

@@ -136,6 +136,11 @@ public:
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
+  std::shared_ptr<void>
+  take_data_by_entity_id(int id) override;
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
   void
   execute(std::shared_ptr<void> & data) override;
 
