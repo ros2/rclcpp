@@ -25,7 +25,7 @@
 #include "rmw/rmw.h"
 
 #include "rclcpp/executor.hpp"
-#include "rclcpp/executors/static_executor_entities_collector.hpp"
+#include "rclcpp/executors/detail/static_executor_entities_collector.hpp"
 #include "rclcpp/experimental/executable_list.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -213,7 +213,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
 
-  StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
+  detail::StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
 };
 
 }  // namespace executors

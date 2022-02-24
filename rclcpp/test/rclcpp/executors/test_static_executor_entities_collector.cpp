@@ -88,7 +88,7 @@ public:
   {
     rclcpp::init(0, nullptr);
     entities_collector_ =
-      std::make_shared<rclcpp::executors::StaticExecutorEntitiesCollector>();
+      std::make_shared<rclcpp::executors::detail::StaticExecutorEntitiesCollector>();
   }
 
   void TearDown()
@@ -96,7 +96,7 @@ public:
     rclcpp::shutdown();
   }
 
-  rclcpp::executors::StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
+  rclcpp::executors::detail::StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
 };
 
 TEST_F(TestStaticExecutorEntitiesCollector, construct_destruct) {
@@ -105,28 +105,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, construct_destruct) {
   EXPECT_EQ(0u, entities_collector_->get_number_of_services());
   EXPECT_EQ(0u, entities_collector_->get_number_of_clients());
   EXPECT_EQ(0u, entities_collector_->get_number_of_waitables());
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node) {
-  auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
-  EXPECT_NO_THROW(entities_collector_->add_node(node1->get_node_base_interface()));
-
-  // Check adding second time
-  RCLCPP_EXPECT_THROW_EQ(
-    entities_collector_->add_node(node1->get_node_base_interface()),
-    std::runtime_error("Node has already been added to an executor."));
-
-  auto node2 = std::make_shared<rclcpp::Node>("node2", "ns");
-  EXPECT_FALSE(entities_collector_->remove_node(node2->get_node_base_interface()));
-  EXPECT_NO_THROW(entities_collector_->add_node(node2->get_node_base_interface()));
-
-  EXPECT_TRUE(entities_collector_->remove_node(node1->get_node_base_interface()));
-  EXPECT_FALSE(entities_collector_->remove_node(node1->get_node_base_interface()));
-  EXPECT_TRUE(entities_collector_->remove_node(node2->get_node_base_interface()));
-
-  auto node3 = std::make_shared<rclcpp::Node>("node3", "ns");
-  node3->get_node_base_interface()->get_associated_with_executor_atomic().exchange(true);
-  EXPECT_FALSE(entities_collector_->remove_node(node3->get_node_base_interface()));
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, init_bad_arguments) {
@@ -313,39 +291,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   EXPECT_EQ(0u, entities_collector_->get_number_of_clients());
   // Still one for the executor
   EXPECT_EQ(1u, entities_collector_->get_number_of_waitables());
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, add_callback_group) {
-  auto node = std::make_shared<rclcpp::Node>("node1", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-
-  entities_collector_->add_callback_group(cb_group, node->get_node_base_interface());
-  ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, add_callback_group_after_add_node) {
-  auto node = std::make_shared<rclcpp::Node>("node1", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-
-  entities_collector_->add_node(node->get_node_base_interface());
-  RCLCPP_EXPECT_THROW_EQ(
-    entities_collector_->add_callback_group(cb_group, node->get_node_base_interface()),
-    std::runtime_error("Callback group has already been added to an executor."));
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, add_callback_group_twice) {
-  auto node = std::make_shared<rclcpp::Node>("node1", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-
-  entities_collector_->add_callback_group(cb_group, node->get_node_base_interface());
-  ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
-  cb_group->get_associated_with_executor_atomic().exchange(false);
-  RCLCPP_EXPECT_THROW_EQ(
-    entities_collector_->add_callback_group(cb_group, node->get_node_base_interface()),
-    std::runtime_error("Callback group was already added to executor."));
 }
 
 TEST_F(TestStaticExecutorEntitiesCollector, prepare_wait_set_rcl_wait_set_clear_error) {
@@ -550,46 +495,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, fill_memory_strategy_invalid_group) 
   ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, remove_callback_group_after_node) {
-  auto node = std::make_shared<rclcpp::Node>("node1", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-
-  entities_collector_->add_callback_group(cb_group, node->get_node_base_interface());
-  ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
-
-  node.reset();
-
-  RCLCPP_EXPECT_THROW_EQ(
-    entities_collector_->remove_callback_group(cb_group),
-    std::runtime_error("Node must not be deleted before its callback group(s)."));
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, remove_callback_group_twice) {
-  auto node = std::make_shared<rclcpp::Node>("node1", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-
-  entities_collector_->add_callback_group(cb_group, node->get_node_base_interface());
-  ASSERT_EQ(entities_collector_->get_all_callback_groups().size(), 1u);
-
-  entities_collector_->remove_callback_group(cb_group);
-
-  RCLCPP_EXPECT_THROW_EQ(
-    entities_collector_->remove_callback_group(cb_group),
-    std::runtime_error("Callback group needs to be associated with executor."));
-}
-
-TEST_F(TestStaticExecutorEntitiesCollector, remove_node_opposite_order) {
-  auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
-  EXPECT_NO_THROW(entities_collector_->add_node(node1->get_node_base_interface()));
-
-  auto node2 = std::make_shared<rclcpp::Node>("node2", "ns");
-  EXPECT_NO_THROW(entities_collector_->add_node(node2->get_node_base_interface()));
-
-  EXPECT_TRUE(entities_collector_->remove_node(node2->get_node_base_interface()));
 }
 
 TEST_F(

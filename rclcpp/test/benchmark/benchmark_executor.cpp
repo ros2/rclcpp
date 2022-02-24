@@ -367,8 +367,8 @@ BENCHMARK_F(
   PerformanceTestExecutorSimple,
   static_executor_entities_collector_execute)(benchmark::State & st)
 {
-  rclcpp::executors::StaticExecutorEntitiesCollector::SharedPtr entities_collector_ =
-    std::make_shared<rclcpp::executors::StaticExecutorEntitiesCollector>();
+  auto entities_collector_ =
+    std::make_shared<rclcpp::executors::detail::StaticExecutorEntitiesCollector>();
   entities_collector_->add_node(node->get_node_base_interface());
 
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();

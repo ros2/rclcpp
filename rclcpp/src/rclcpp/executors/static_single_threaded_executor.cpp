@@ -22,6 +22,7 @@
 #include "rcpputils/scope_exit.hpp"
 
 using rclcpp::executors::StaticSingleThreadedExecutor;
+using rclcpp::executors::detail::StaticExecutorEntitiesCollector;
 using rclcpp::experimental::ExecutableList;
 
 StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
-#define RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
+#ifndef RCLCPP__EXECUTORS__DETAIL__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
+#define RCLCPP__EXECUTORS__DETAIL__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
 #include <chrono>
 #include <list>
@@ -24,6 +24,7 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/executors/detail/entities_collector.hpp"
 #include "rclcpp/experimental/executable_list.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategy.hpp"
@@ -34,12 +35,11 @@ namespace rclcpp
 {
 namespace executors
 {
-typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
+namespace detail
+{
 
 class StaticExecutorEntitiesCollector final
-  : public rclcpp::Waitable,
+  : public rclcpp::executors::detail::EntitiesCollector,
   public std::enable_shared_from_this<StaticExecutorEntitiesCollector>
 {
 public:
@@ -79,15 +79,6 @@ public:
   void
   execute(std::shared_ptr<void> & data) override;
 
-  /// Take the data so that it can be consumed with `execute`.
-  /**
-   * For `StaticExecutorEntitiesCollector`, this always return `nullptr`.
-   * \sa rclcpp::Waitable::take_data()
-   */
-  RCLCPP_PUBLIC
-  std::shared_ptr<void>
-  take_data() override;
-
   /// Function to add_handles_to_wait_set and wait for work and
   /**
    * block until the wait set is ready or until the timeout has been exceeded.
@@ -108,85 +99,6 @@ public:
   RCLCPP_PUBLIC
   size_t
   get_number_of_ready_guard_conditions() override;
-
-  /// Add a callback group to an executor.
-  /**
-   * \see rclcpp::Executor::add_callback_group
-   */
-  RCLCPP_PUBLIC
-  bool
-  add_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
-
-  /// Add a callback group to an executor.
-  /**
-   * \see rclcpp::Executor::add_callback_group
-   * \return boolean whether the node from the callback group is new
-   */
-  RCLCPP_PUBLIC
-  bool
-  add_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
-
-  /// Remove a callback group from the executor.
-  /**
-   * \see rclcpp::Executor::remove_callback_group
-   */
-  RCLCPP_PUBLIC
-  bool
-  remove_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr);
-
-  /// Remove a callback group from the executor.
-  /**
-   * \see rclcpp::Executor::remove_callback_group_from_map
-   */
-  RCLCPP_PUBLIC
-  bool
-  remove_callback_group_from_map(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
-
-  /**
-   * \see rclcpp::Executor::add_node()
-   * \throw std::runtime_error if node was already added
-   */
-  RCLCPP_PUBLIC
-  bool
-  add_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
-
-  /**
-   * \see rclcpp::Executor::remove_node()
-   * \throw std::runtime_error if no guard condition is associated with node.
-   */
-  RCLCPP_PUBLIC
-  bool
-  remove_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
-
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_all_callback_groups();
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \see rclcpp::Executor::get_manually_added_callback_groups()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_manually_added_callback_groups();
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \see rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_automatically_added_callback_groups_from_nodes();
 
   /// Complete all available queued work without blocking.
   /**
@@ -283,6 +195,23 @@ public:
   rclcpp::Waitable::SharedPtr
   get_waitable(size_t i) {return exec_list_.waitable[i];}
 
+protected:
+  void
+  callback_group_added_impl(
+    rclcpp::CallbackGroup::SharedPtr group) override;
+
+  void
+  node_added_impl(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node) override;
+
+  void
+  callback_group_removed_impl(
+    rclcpp::CallbackGroup::SharedPtr group) override;
+
+  void
+  node_removed_impl(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node) override;
+
 private:
   /// Function to reallocate space for entities in the wait set.
   /**
@@ -297,45 +226,17 @@ private:
   void
   fill_memory_strategy();
 
-  /// Return true if the node belongs to the collector
-  /**
-   * \param[in] node_ptr a node base interface shared pointer
-   * \param[in] weak_groups_to_nodes map to nodes to lookup
-   * \return boolean whether a node belongs the collector
-   */
-  bool
-  has_node(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
-
-  /// Add all callback groups that can be automatically added by any executor
-  /// and is not already associated with an executor from nodes
-  /// that are associated with executor
-  /**
-   * \see rclcpp::Executor::add_callback_groups_from_nodes_associated_to_executor()
-   */
-  void
-  add_callback_groups_from_nodes_associated_to_executor();
-
   void
   fill_executable_list_from_map(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
-  // maps callback groups to nodes.
-  WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
-  // maps callback groups to nodes.
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
-
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
       const rclcpp::GuardCondition *,
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
-
-  /// List of weak nodes registered in the static executor
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
   // Mutex to protect vector of new nodes.
   std::mutex new_nodes_mutex_;
@@ -351,7 +252,8 @@ private:
   bool initialized_ = false;
 };
 
+}  // namespace detail
 }  // namespace executors
 }  // namespace rclcpp
 
-#endif  // RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
+#endif  // RCLCPP__EXECUTORS__DETAIL__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
