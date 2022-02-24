@@ -23,7 +23,10 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <utility>
+
+#include "rcl/event_callback.h"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
@@ -61,6 +64,16 @@ class ClientBase : public rclcpp::Waitable
 public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
+
+  /// Enum to identify entities belonging to the action client
+  enum class EntityType
+  {
+    GoalClient,
+    ResultClient,
+    CancelClient,
+    FeedbackSubscription,
+    StatusSubscription,
+  };
 
   /// Return true if there is an action server that is ready to take goal requests.
   RCLCPP_ACTION_PUBLIC
@@ -125,6 +138,39 @@ public:
   RCLCPP_ACTION_PUBLIC
   void
   execute(std::shared_ptr<void> & data) override;
+
+  /// \internal
+  /// Set a callback to be called when action client entities have an event
+  /**
+   * The callback receives a size_t which is the number of messages received
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if messages were received before any
+   * callback was set.
+   *
+   * The callback also receives an int identifier argument, which identifies
+   * the action client entity which is ready.
+   * This implies that the provided callback can use the identifier to behave
+   * differently depending on which entity triggered the waitable to become ready.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * An exception will be thrown if the callback is not callable.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the subscription
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \param[in] callback functor to be called when a new message is received.
+   */
+  RCLCPP_ACTION_PUBLIC
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override;
+
+  /// Unset the callback registered for new events, if any.
+  RCLCPP_ACTION_PUBLIC
+  void
+  clear_on_ready_callback() override;
 
   // End Waitables API
   // -----------------
@@ -244,8 +290,31 @@ protected:
   // End API for communication between ClientBase and Client<>
   // ---------------------------------------------------------
 
+  /// \internal
+  /// Set a callback to be called when the specified entity is ready
+  RCLCPP_ACTION_PUBLIC
+  void
+  set_on_ready_callback(
+    EntityType entity_type,
+    rcl_event_callback_t callback,
+    const void * user_data);
+
+  // Mutex to protect the callbacks storage.
+  std::recursive_mutex listener_mutex_;
+  // Storage for std::function callbacks to keep them in scope
+  std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
+
 private:
   std::unique_ptr<ClientBaseImpl> pimpl_;
+
+  /// Set a std::function callback to be called when the specified entity is ready
+  RCLCPP_ACTION_PUBLIC
+  void
+  set_callback_to_entity(
+    EntityType entity_type,
+    std::function<void(size_t, int)> callback);
+
+  bool on_ready_callback_set_{false};
 };
 
 /// Action Client

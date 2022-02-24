@@ -28,11 +28,14 @@
 using rclcpp::ServiceBase;
 
 ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
-: node_handle_(node_handle)
+: node_handle_(node_handle),
+  node_logger_(rclcpp::get_node_logger(node_handle_.get()))
 {}
 
 ServiceBase::~ServiceBase()
-{}
+{
+  clear_on_new_request_callback();
+}
 
 bool
 ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & request_id_out)
@@ -83,4 +86,18 @@ bool
 ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void
+ServiceBase::set_on_new_request_callback(rcl_event_callback_t callback, const void * user_data)
+{
+  rcl_ret_t ret = rcl_service_set_on_new_request_callback(
+    service_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on new request callback for service");
+  }
 }

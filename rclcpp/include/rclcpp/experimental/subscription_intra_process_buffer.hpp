@@ -125,6 +125,7 @@ public:
       buffer_->add_shared(convert_ros_message_to_subscribed_type_unique_ptr(*message));
       trigger_guard_condition();
     }
+    this->invoke_on_new_message();
   }
 
   void
@@ -137,6 +138,7 @@ public:
       buffer_->add_unique(convert_ros_message_to_subscribed_type_unique_ptr(*message));
       trigger_guard_condition();
     }
+    this->invoke_on_new_message();
   }
 
   void
@@ -144,6 +146,7 @@ public:
   {
     buffer_->add_shared(std::move(message));
     trigger_guard_condition();
+    this->invoke_on_new_message();
   }
 
   void
@@ -151,6 +154,7 @@ public:
   {
     buffer_->add_unique(std::move(message));
     trigger_guard_condition();
+    this->invoke_on_new_message();
   }
 
   bool

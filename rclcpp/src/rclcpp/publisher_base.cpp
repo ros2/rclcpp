@@ -22,6 +22,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -99,6 +100,11 @@ PublisherBase::PublisherBase(
 
 PublisherBase::~PublisherBase()
 {
+  for (const auto & pair : event_handlers_) {
+    rcl_publisher_event_type_t event_type = pair.first;
+    clear_on_new_qos_event_callback(event_type);
+  }
+
   // must fini the events before fini-ing the publisher
   event_handlers_.clear();
 
@@ -154,7 +160,8 @@ PublisherBase::get_publisher_handle() const
   return publisher_handle_;
 }
 
-const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+const
+std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 PublisherBase::get_event_handlers() const
 {
   return event_handlers_;

@@ -132,6 +132,7 @@ ServerBase::ServerBase(
 
 ServerBase::~ServerBase()
 {
+  clear_on_ready_callback();
 }
 
 size_t
@@ -677,4 +678,139 @@ ServerBase::publish_feedback(std::shared_ptr<void> feedback_msg)
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
   }
+}
+
+void
+ServerBase::set_on_ready_callback(std::function<void(size_t, int)> callback)
+{
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_ready_callback "
+            "is not callable.");
+  }
+
+  set_callback_to_entity(EntityType::GoalService, callback);
+  set_callback_to_entity(EntityType::ResultService, callback);
+  set_callback_to_entity(EntityType::CancelService, callback);
+}
+
+void
+ServerBase::set_callback_to_entity(
+  EntityType entity_type,
+  std::function<void(size_t, int)> callback)
+{
+  // Note: we bind the int identifier argument to this waitable's entity types
+  auto new_callback =
+    [callback, entity_type, this](size_t number_of_events) {
+      try {
+        callback(number_of_events, static_cast<int>(entity_type));
+      } catch (const std::exception & exception) {
+        RCLCPP_ERROR_STREAM(
+          pimpl_->logger_,
+          "rclcpp_action::ServerBase@" << this <<
+            " caught " << rmw::impl::cpp::demangle(exception) <<
+            " exception in user-provided callback for the 'on ready' callback: " <<
+            exception.what());
+      } catch (...) {
+        RCLCPP_ERROR_STREAM(
+          pimpl_->logger_,
+          "rclcpp_action::ServerBase@" << this <<
+            " caught unhandled exception in user-provided callback " <<
+            "for the 'on ready' callback");
+      }
+    };
+
+
+  // Set it temporarily to the new callback, while we replace the old one.
+  // This two-step setting, prevents a gap where the old std::function has
+  // been replaced but the middleware hasn't been told about the new one yet.
+  set_on_ready_callback(
+    entity_type,
+    rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+    static_cast<const void *>(&new_callback));
+
+  std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+  // Store the std::function to keep it in scope, also overwrites the existing one.
+  auto it = entity_type_to_on_ready_callback_.find(entity_type);
+
+  if (it != entity_type_to_on_ready_callback_.end()) {
+    it->second = new_callback;
+  } else {
+    entity_type_to_on_ready_callback_.emplace(entity_type, new_callback);
+  }
+
+  // Set it again, now using the permanent storage.
+  it = entity_type_to_on_ready_callback_.find(entity_type);
+
+  if (it != entity_type_to_on_ready_callback_.end()) {
+    auto & cb = it->second;
+    set_on_ready_callback(
+      entity_type,
+      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      static_cast<const void *>(&cb));
+  }
+
+  on_ready_callback_set_ = true;
+}
+
+void
+ServerBase::set_on_ready_callback(
+  EntityType entity_type,
+  rcl_event_callback_t callback,
+  const void * user_data)
+{
+  rcl_ret_t ret = RCL_RET_ERROR;
+
+  switch (entity_type) {
+    case EntityType::GoalService:
+      {
+        ret = rcl_action_server_set_goal_service_callback(
+          pimpl_->action_server_.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    case EntityType::ResultService:
+      {
+        ret = rcl_action_server_set_result_service_callback(
+          pimpl_->action_server_.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    case EntityType::CancelService:
+      {
+        ret = rcl_action_server_set_cancel_service_callback(
+          pimpl_->action_server_.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    default:
+      throw std::runtime_error("ServerBase::set_on_ready_callback: Unknown entity type.");
+      break;
+  }
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on ready callback for action client");
+  }
+}
+
+void
+ServerBase::clear_on_ready_callback()
+{
+  std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+
+  if (on_ready_callback_set_) {
+    set_on_ready_callback(EntityType::GoalService, nullptr, nullptr);
+    set_on_ready_callback(EntityType::ResultService, nullptr, nullptr);
+    set_on_ready_callback(EntityType::CancelService, nullptr, nullptr);
+    on_ready_callback_set_ = false;
+  }
+
+  entity_type_to_on_ready_callback_.clear();
 }

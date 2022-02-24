@@ -16,6 +16,7 @@
 #define RCLCPP__WAITABLE_HPP_
 
 #include <atomic>
+#include <functional>
 #include <memory>
 
 #include "rclcpp/macros.hpp"
@@ -199,6 +200,45 @@ public:
   RCLCPP_PUBLIC
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
+
+  /// Set a callback to be called whenever the waitable becomes ready.
+  /**
+   * The callback receives a size_t which is the number of times the waitable was ready
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if waitable was triggered before any
+   * callback was set.
+   *
+   * The callback also receives an int identifier argument.
+   * This is needed because a Waitable may be composed of several distinct entities,
+   * such as subscriptions, services, etc.
+   * The application should provide a generic callback function that will be then
+   * forwarded by the waitable to all of its entities.
+   * Before forwarding, a different value for the identifier argument will be
+   * bond to the function.
+   * This implies that the provided callback can use the identifier to behave
+   * differently depending on which entity triggered the waitable to become ready.
+   *
+   * Note: this function must be overridden with a proper implementation
+   * by the custom classes who inherit from rclcpp::Waitable if they want to use it.
+   *
+   * \sa rclcpp::Waitable::clear_on_ready_callback
+   *
+   * \param[in] callback functor to be called when the waitable becomes ready
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback);
+
+  /// Unset any callback registered via set_on_ready_callback.
+  /**
+   * Note: this function must be overridden with a proper implementation
+   * by the custom classes who inherit from rclcpp::Waitable if they want to use it.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  clear_on_ready_callback();
 
 private:
   std::atomic<bool> in_use_by_wait_set_{false};
