@@ -155,7 +155,8 @@ public:
           this->storage_add_subscription(std::move(local_subscription));
         }
         if (mask.include_events) {
-          for (auto event : inner_subscription->get_event_handlers()) {
+          for (auto key_event_pair : inner_subscription->get_event_handlers()) {
+            auto event = key_event_pair.second;
             auto local_subscription = inner_subscription;
             bool already_in_use =
             local_subscription->exchange_in_use_by_wait_set_state(event.get(), true);
@@ -225,7 +226,8 @@ public:
           this->storage_remove_subscription(std::move(local_subscription));
         }
         if (mask.include_events) {
-          for (auto event : inner_subscription->get_event_handlers()) {
+          for (auto key_event_pair : inner_subscription->get_event_handlers()) {
+            auto event = key_event_pair.second;
             auto local_subscription = inner_subscription;
             local_subscription->exchange_in_use_by_wait_set_state(event.get(), false);
             this->storage_remove_waitable(std::move(event));

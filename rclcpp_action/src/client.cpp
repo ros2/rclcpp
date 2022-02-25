@@ -136,6 +136,7 @@ ClientBase::ClientBase(
 
 ClientBase::~ClientBase()
 {
+  clear_on_ready_callback();
 }
 
 bool
@@ -383,6 +384,163 @@ ClientBase::generate_goal_id()
     goal_id.begin(), goal_id.end(),
     std::ref(pimpl_->random_bytes_generator));
   return goal_id;
+}
+
+void
+ClientBase::set_on_ready_callback(std::function<void(size_t, int)> callback)
+{
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_ready_callback "
+            "is not callable.");
+  }
+
+  set_callback_to_entity(EntityType::GoalClient, callback);
+  set_callback_to_entity(EntityType::ResultClient, callback);
+  set_callback_to_entity(EntityType::CancelClient, callback);
+  set_callback_to_entity(EntityType::FeedbackSubscription, callback);
+  set_callback_to_entity(EntityType::StatusSubscription, callback);
+}
+
+void
+ClientBase::set_callback_to_entity(
+  EntityType entity_type,
+  std::function<void(size_t, int)> callback)
+{
+  // Note: we bind the int identifier argument to this waitable's entity types
+  auto new_callback =
+    [callback, entity_type, this](size_t number_of_events) {
+      try {
+        callback(number_of_events, static_cast<int>(entity_type));
+      } catch (const std::exception & exception) {
+        RCLCPP_ERROR_STREAM(
+          pimpl_->logger,
+          "rclcpp_action::ClientBase@" << this <<
+            " caught " << rmw::impl::cpp::demangle(exception) <<
+            " exception in user-provided callback for the 'on ready' callback: " <<
+            exception.what());
+      } catch (...) {
+        RCLCPP_ERROR_STREAM(
+          pimpl_->logger,
+          "rclcpp_action::ClientBase@" << this <<
+            " caught unhandled exception in user-provided callback " <<
+            "for the 'on ready' callback");
+      }
+    };
+
+
+  // Set it temporarily to the new callback, while we replace the old one.
+  // This two-step setting, prevents a gap where the old std::function has
+  // been replaced but the middleware hasn't been told about the new one yet.
+  set_on_ready_callback(
+    entity_type,
+    rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+    static_cast<const void *>(&new_callback));
+
+  std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+  // Store the std::function to keep it in scope, also overwrites the existing one.
+  auto it = entity_type_to_on_ready_callback_.find(entity_type);
+
+  if (it != entity_type_to_on_ready_callback_.end()) {
+    it->second = new_callback;
+  } else {
+    entity_type_to_on_ready_callback_.emplace(entity_type, new_callback);
+  }
+
+  // Set it again, now using the permanent storage.
+  it = entity_type_to_on_ready_callback_.find(entity_type);
+
+  if (it != entity_type_to_on_ready_callback_.end()) {
+    auto & cb = it->second;
+    set_on_ready_callback(
+      entity_type,
+      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      static_cast<const void *>(&cb));
+  }
+
+  on_ready_callback_set_ = true;
+}
+
+void
+ClientBase::set_on_ready_callback(
+  EntityType entity_type,
+  rcl_event_callback_t callback,
+  const void * user_data)
+{
+  rcl_ret_t ret = RCL_RET_ERROR;
+
+  switch (entity_type) {
+    case EntityType::GoalClient:
+      {
+        ret = rcl_action_client_set_goal_client_callback(
+          pimpl_->client_handle.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    case EntityType::ResultClient:
+      {
+        ret = rcl_action_client_set_result_client_callback(
+          pimpl_->client_handle.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    case EntityType::CancelClient:
+      {
+        ret = rcl_action_client_set_cancel_client_callback(
+          pimpl_->client_handle.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    case EntityType::FeedbackSubscription:
+      {
+        ret = rcl_action_client_set_feedback_subscription_callback(
+          pimpl_->client_handle.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    case EntityType::StatusSubscription:
+      {
+        ret = rcl_action_client_set_status_subscription_callback(
+          pimpl_->client_handle.get(),
+          callback,
+          user_data);
+        break;
+      }
+
+    default:
+      throw std::runtime_error("ClientBase::set_on_ready_callback: Unknown entity type.");
+      break;
+  }
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on ready callback for action client");
+  }
+}
+
+void
+ClientBase::clear_on_ready_callback()
+{
+  std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
+
+  if (on_ready_callback_set_) {
+    set_on_ready_callback(EntityType::GoalClient, nullptr, nullptr);
+    set_on_ready_callback(EntityType::ResultClient, nullptr, nullptr);
+    set_on_ready_callback(EntityType::CancelClient, nullptr, nullptr);
+    set_on_ready_callback(EntityType::FeedbackSubscription, nullptr, nullptr);
+    set_on_ready_callback(EntityType::StatusSubscription, nullptr, nullptr);
+    on_ready_callback_set_ = false;
+  }
+
+  entity_type_to_on_ready_callback_.clear();
 }
 
 std::shared_ptr<void>

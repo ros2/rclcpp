@@ -32,8 +32,6 @@
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
 
-#include "rmw/impl/cpp/demangle.hpp"
-
 #include "./logging_mutex.hpp"
 
 using rclcpp::Context;

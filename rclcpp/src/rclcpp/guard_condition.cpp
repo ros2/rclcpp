@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
+
 #include "rclcpp/guard_condition.hpp"
 
 #include "rclcpp/exceptions.hpp"
@@ -72,9 +74,16 @@ GuardCondition::get_rcl_guard_condition() const
 void
 GuardCondition::trigger()
 {
-  rcl_ret_t ret = rcl_trigger_guard_condition(&rcl_guard_condition_);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
+  std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
+  if (on_trigger_callback_) {
+    on_trigger_callback_(1);
+  } else {
+    rcl_ret_t ret = rcl_trigger_guard_condition(&rcl_guard_condition_);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+    unread_count_++;
   }
 }
 
@@ -82,6 +91,44 @@ bool
 GuardCondition::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void
+GuardCondition::add_to_wait_set(rcl_wait_set_t * wait_set)
+{
+  std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
+  if (exchange_in_use_by_wait_set_state(true)) {
+    if (wait_set != wait_set_) {
+      throw std::runtime_error("guard condition has already been added to a wait set.");
+    }
+  } else {
+    wait_set_ = wait_set;
+  }
+
+  rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, &this->rcl_guard_condition_, NULL);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to add guard condition to wait set");
+  }
+}
+
+void
+GuardCondition::set_on_trigger_callback(std::function<void(size_t)> callback)
+{
+  std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
+  if (callback) {
+    on_trigger_callback_ = callback;
+
+    if (unread_count_) {
+      callback(unread_count_);
+      unread_count_ = 0;
+    }
+    return;
+  }
+
+  on_trigger_callback_ = nullptr;
 }
 
 }  // namespace rclcpp
