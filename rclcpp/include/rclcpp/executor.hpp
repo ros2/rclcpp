@@ -305,7 +305,9 @@ public:
    * If the time that waitables take to be executed is longer than the period on which new waitables
    * become ready, this method will execute work repeatedly until `max_duration` has elapsed.
    *
-   * \param[in] max_duration The maximum amount of time to spend executing work. Must be positive.
+   * \param[in] max_duration The maximum amount of time to spend executing work, must be >= 0.
+   *   `0` is potentially block forever until no more work is available.
+   * \throw throw std::invalid_argument if max_duration is less than 0.
    * Note that spin_all() may take longer than this time as it only returns once max_duration has
    * been exceeded.
    */
