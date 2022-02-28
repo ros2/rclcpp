@@ -37,7 +37,15 @@ int main(int argc, char * argv[])
   std::string class_name = "rclcpp_components::NodeFactoryTemplate<@component@>";
 
   RCLCPP_DEBUG(logger, "Load library %s", library_name.c_str());
-  auto loader = new class_loader::ClassLoader(library_name);
+  try {
+    auto loader = new class_loader::ClassLoader(library_name);
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(logger, "Failed to load library %s", ex.what());
+    return 1;
+  } catch (...) {
+    RCLCPP_ERROR(logger, "Failed to load library");
+    return 1;
+  }
   auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
   for (const auto & clazz : classes) {
     std::string name = clazz.c_str();
