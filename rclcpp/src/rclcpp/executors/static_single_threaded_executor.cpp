@@ -71,8 +71,8 @@ StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
 void
 StaticSingleThreadedExecutor::spin_all(std::chrono::nanoseconds max_duration)
 {
-  if (max_duration <= std::chrono::nanoseconds(0)) {
-    throw std::invalid_argument("max_duration must be positive");
+  if (max_duration < std::chrono::nanoseconds(0)) {
+    throw std::invalid_argument("max_duration must be greater than or equal to 0");
   }
   return this->spin_some_impl(max_duration, true);
 }
