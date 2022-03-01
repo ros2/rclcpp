@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+15.1.0 (2022-03-01)
+-------------------
 * Add RMW listener APIs (`#1579 <https://github.com/ros2/rclcpp/issues/1579>`_)
 * Install headers to include/${PROJECT_NAME} (`#1888 <https://github.com/ros2/rclcpp/issues/1888>`_)
 * Contributors: Shane Loretz, iRobot ROS

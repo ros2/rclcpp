@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+15.1.0 (2022-03-01)
+-------------------
 * spin_all with a zero timeout. (`#1878 <https://github.com/ros2/rclcpp/issues/1878>`_)
 * Add RMW listener APIs (`#1579 <https://github.com/ros2/rclcpp/issues/1579>`_)
 * Remove fastrtps customization on tests (`#1887 <https://github.com/ros2/rclcpp/issues/1887>`_)
