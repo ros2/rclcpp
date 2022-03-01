@@ -27,7 +27,7 @@
 namespace
 {
 
-class DummyEntitiesCollector 
+class DummyEntitiesCollector
   : public rclcpp::executors::detail::EntitiesCollector
 {
 public:
@@ -45,11 +45,14 @@ public:
   is_ready(rcl_wait_set_t * wait_set) override
   {
     (void)wait_set;
+    return false;
   }
 
   std::shared_ptr<void>
   take_data() override
-  { }
+  {
+    return nullptr;
+  }
 
   void
   execute(std::shared_ptr<void> & data) override
