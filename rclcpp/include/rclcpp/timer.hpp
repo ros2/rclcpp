@@ -113,7 +113,8 @@ public:
 
   /// Check how long the timer has until its next scheduled callback.
   /**
-   * \return A std::chrono::duration representing the relative time until the next callback.
+   * \return A std::chrono::duration representing the relative time until the next callback
+   * or std::chrono::nanoseconds::max() if the timer is canceled.
    * \throws std::runtime_error if the rcl_timer_get_time_until_next_call returns a failure
    */
   RCLCPP_PUBLIC
