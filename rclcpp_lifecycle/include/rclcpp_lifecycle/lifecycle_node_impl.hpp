@@ -95,7 +95,7 @@ LifecycleNode::create_subscription(
   const rclcpp::QoS & qos,
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-  rclcpp::CallbackGroup::SharedPtr group,
+  rclcpp::CallbackGroup::SharedPtr callback_group,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
   return rclcpp::create_subscription<MessageT>(
@@ -104,7 +104,7 @@ LifecycleNode::create_subscription(
     qos,
     std::forward<CallbackT>(callback),
     options,
-    group,
+    callback_group,
     msg_mem_strat);
 }
 
@@ -186,7 +186,7 @@ LifecycleNode::create_generic_subscription(
   const rclcpp::QoS & qos,
   std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
   return rclcpp::create_generic_subscription(
     node_topics_,
@@ -197,7 +197,7 @@ LifecycleNode::create_generic_subscription(
     qos,
     std::move(callback),
     options,
-    group
+    callback_group
   );
 }
 

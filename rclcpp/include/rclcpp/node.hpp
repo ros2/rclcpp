@@ -232,7 +232,7 @@ public:
    * \param[in] qos QoS profile for Subcription.
    * \param[in] callback The user-defined callback function to receive a message
    * \param[in] options Additional options for the creation of the Subscription.
-   * \param[in] group Callback group to execute this subscription's callback.
+   * \param[in] callback_group Callback group to execute this subscription's callback.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
    * \return Shared pointer to the created subscription.
    */
@@ -250,7 +250,7 @@ public:
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
     SubscriptionOptionsWithAllocator<AllocatorT>(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr,
     typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
       MessageMemoryStrategyT::create_default()
     )
@@ -334,7 +334,7 @@ public:
    * \param[in] options %Subscription options.
    * Not all subscription options are currently respected, the only relevant options for this
    * subscription are `event_callbacks`, `use_default_callbacks` and `ignore_local_publications`.
-   * \param[in] group Callback group to execute this subscription's callback.
+   * \param[in] callback_group Callback group to execute this subscription's callback.
    * \return Shared pointer to the created generic subscription.
    */
   template<typename AllocatorT = std::allocator<void>>
@@ -346,7 +346,7 @@ public:
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
     ),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr
+    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr
   );
 
   /// Declare and initialize a parameter, return the effective value.

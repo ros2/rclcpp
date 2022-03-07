@@ -214,14 +214,14 @@ public:
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
     ),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr)
+    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr)
   {
     return this->on_parameter_event(
       this->node_topics_interface_,
       callback,
       qos,
       options,
-      group);
+      callback_group);
   }
 
   /**
@@ -243,7 +243,7 @@ public:
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
     ),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr)
+    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr)
   {
     return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node,
@@ -251,7 +251,7 @@ public:
       qos,
       std::forward<CallbackT>(callback),
       options,
-      group);
+      callback_group);
   }
 
   /// Return if the parameter services are ready.

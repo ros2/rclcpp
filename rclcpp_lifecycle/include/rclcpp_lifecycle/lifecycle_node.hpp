@@ -247,7 +247,7 @@ public:
    * \param[in] callback The user-defined callback function.
    * \param[in] qos The quality of service for this subscription.
    * \param[in] options The subscription options for this subscription.
-   * \param[in] group Callback group to execute this subscription's callback.
+   * \param[in] callback_group Callback group to execute this subscription's callback.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
    * \return Shared pointer to the created subscription.
    */
@@ -264,7 +264,7 @@ public:
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
     create_default_subscription_options<AllocatorT>(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr,
     typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
       MessageMemoryStrategyT::create_default()
     )
@@ -333,7 +333,7 @@ public:
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
     ),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr
+    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr
   );
 
   /// Declare and initialize a parameter, return the effective value.

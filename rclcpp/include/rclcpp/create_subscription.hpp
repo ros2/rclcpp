@@ -62,7 +62,7 @@ create_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
   ),
-  rclcpp::CallbackGroup::SharedPtr group = nullptr,
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
     MessageMemoryStrategyT::create_default()
   )
@@ -112,7 +112,7 @@ create_subscription(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
         options.topic_stats_options.publish_period),
       sub_call_back,
-      group,
+      callback_group,
       node_topics_interface->get_node_base_interface(),
       node_timer_interface
     );
@@ -143,8 +143,8 @@ create_subscription(
 # pragma warning(push)
 # pragma warning(disable: 4996)
 #endif
-  if (group == nullptr) {
-    group = options.callback_group;
+  if (callback_group == nullptr) {
+    callback_group = options.callback_group;
   }
 #ifndef _WIN32
 # pragma GCC diagnostic pop
@@ -152,7 +152,7 @@ create_subscription(
 # pragma warning(pop)
 #endif
 
-  node_topics_interface->add_subscription(sub, group);
+  node_topics_interface->add_subscription(sub, callback_group);
 
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
 }
@@ -230,7 +230,7 @@ create_subscription(
  * \param qos
  * \param callback
  * \param options
- * \param group
+ * \param callback_group
  * \param msg_mem_strat
  * \return the created subscription
  * \throws std::invalid_argument if topic statistics is enabled and the publish period is
@@ -252,7 +252,7 @@ create_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
   ),
-  rclcpp::CallbackGroup::SharedPtr group = nullptr,
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
     MessageMemoryStrategyT::create_default()
   )
@@ -260,7 +260,8 @@ create_subscription(
 {
   return rclcpp::detail::create_subscription<
     MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
-    node, node, topic_name, qos, std::forward<CallbackT>(callback), options, group, msg_mem_strat);
+    node, node, topic_name, qos, std::forward<CallbackT>(callback), options, callback_group,
+    msg_mem_strat);
 }
 
 /// Create and return a subscription of the given MessageT type.
@@ -310,7 +311,7 @@ create_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
   ),
-  rclcpp::CallbackGroup::SharedPtr group = nullptr,
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
     MessageMemoryStrategyT::create_default()
   )
@@ -319,7 +320,7 @@ create_subscription(
   return rclcpp::detail::create_subscription<
     MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
     node_parameters, node_topics, topic_name, qos,
-    std::forward<CallbackT>(callback), options, group, msg_mem_strat);
+    std::forward<CallbackT>(callback), options, callback_group, msg_mem_strat);
 }
 
 }  // namespace rclcpp

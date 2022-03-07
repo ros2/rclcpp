@@ -44,7 +44,7 @@ namespace rclcpp
  * \param options %Subscription options.
  * Not all subscription options are currently respected, the only relevant options for this
  * subscription are `event_callbacks` and `use_default_callbacks`.
- * \param group Callback group to execute this subscription's callback.
+ * \param callback_group Callback group to execute this subscription's callback.
  */
 template<typename AllocatorT = std::allocator<void>>
 std::shared_ptr<GenericSubscription> create_generic_subscription(
@@ -56,7 +56,7 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
   ),
-  rclcpp::CallbackGroup::SharedPtr group = nullptr
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr
 )
 {
   auto ts_lib = rclcpp::get_typesupport_library(
@@ -78,8 +78,8 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
 # pragma warning(push)
 # pragma warning(disable: 4996)
 #endif
-  if (group == nullptr) {
-    group = options.callback_group;
+  if (callback_group == nullptr) {
+    callback_group = options.callback_group;
   }
 #ifndef _WIN32
 # pragma GCC diagnostic pop
@@ -87,7 +87,7 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
 # pragma warning(pop)
 #endif
 
-  topics_interface->add_subscription(subscription, group);
+  topics_interface->add_subscription(subscription, callback_group);
 
   return subscription;
 }
