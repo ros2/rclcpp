@@ -36,21 +36,6 @@
 namespace rclcpp
 {
 
-class TypeSupportInterface
-{
-protected:
-  TypeSupportInterface(
-    std::shared_ptr<rcpputils::SharedLibrary> ts_lib,
-    const std::string & topic_type)
-  : ts_lib_(ts_lib),
-    type_support_(rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib)) {}
-
-  // The type support library should stay loaded, so it is stored in the GenericPublisher
-  std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
-
-  const rosidl_message_type_support_t * type_support_;
-};
-
 /// %Publisher for serialized messages whose type is not known at compile time.
 /**
  * Since the type is not known at compile time, this is not a template, and the dynamic library
@@ -58,7 +43,7 @@ protected:
  *
  * It does not support intra-process handling.
  */
-class GenericPublisher : public TypeSupportInterface, public rclcpp::PublisherBase
+class GenericPublisher : public rclcpp::PublisherBase
 {
 public:
   // cppcheck-suppress unknownMacro
@@ -89,12 +74,12 @@ public:
     const std::string & topic_type,
     const rclcpp::QoS & qos,
     const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
-  : TypeSupportInterface(ts_lib, topic_type),
-    PublisherBase(
+  : rclcpp::PublisherBase(
       node_base,
       topic_name,
-      *type_support_,
-      options.template to_rcl_publisher_options<rclcpp::SerializedMessage>(qos))
+      *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
+      options.template to_rcl_publisher_options<rclcpp::SerializedMessage>(qos)),
+    ts_lib_(ts_lib)
   {
     // This is unfortunately duplicated with the code in publisher.hpp.
     // TODO(nnmm): Deduplicate by moving this into PublisherBase.
@@ -143,6 +128,9 @@ public:
   void publish_loaned_msg(const rclcpp::SerializedMessage & message);
 
 private:
+  // The type support library should stay loaded, so it is stored in the GenericPublisher
+  std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
+
   void * borrow_loaned_message();
   void deserialize_message(
     const rmw_serialized_message_t & serialized_message,
