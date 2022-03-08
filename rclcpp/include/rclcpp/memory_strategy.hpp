@@ -100,52 +100,52 @@ public:
 
   static rclcpp::SubscriptionBase::SharedPtr
   get_subscription_by_handle(
-    std::shared_ptr<const rcl_subscription_t> subscriber_handle,
+    const std::shared_ptr<const rcl_subscription_t> & subscriber_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::ServiceBase::SharedPtr
   get_service_by_handle(
-    std::shared_ptr<const rcl_service_t> service_handle,
+    const std::shared_ptr<const rcl_service_t> & service_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::ClientBase::SharedPtr
   get_client_by_handle(
-    std::shared_ptr<const rcl_client_t> client_handle,
+    const std::shared_ptr<const rcl_client_t> & client_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::TimerBase::SharedPtr
   get_timer_by_handle(
-    std::shared_ptr<const rcl_timer_t> timer_handle,
+    const std::shared_ptr<const rcl_timer_t> & timer_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(
-    rclcpp::CallbackGroup::SharedPtr group,
+    const rclcpp::CallbackGroup::SharedPtr & group,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_subscription(
-    rclcpp::SubscriptionBase::SharedPtr subscription,
+    const rclcpp::SubscriptionBase::SharedPtr & subscription,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_service(
-    rclcpp::ServiceBase::SharedPtr service,
+    const rclcpp::ServiceBase::SharedPtr & service,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_client(
-    rclcpp::ClientBase::SharedPtr client,
+    const rclcpp::ClientBase::SharedPtr & client,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_timer(
-    rclcpp::TimerBase::SharedPtr timer,
+    const rclcpp::TimerBase::SharedPtr & timer,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_waitable(
-    rclcpp::Waitable::SharedPtr waitable,
+    const rclcpp::Waitable::SharedPtr & waitable,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 };
 

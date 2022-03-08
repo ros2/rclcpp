@@ -19,7 +19,7 @@ using rclcpp::memory_strategy::MemoryStrategy;
 
 rclcpp::SubscriptionBase::SharedPtr
 MemoryStrategy::get_subscription_by_handle(
-  std::shared_ptr<const rcl_subscription_t> subscriber_handle,
+  const std::shared_ptr<const rcl_subscription_t> & subscriber_handle,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -40,7 +40,7 @@ MemoryStrategy::get_subscription_by_handle(
 
 rclcpp::ServiceBase::SharedPtr
 MemoryStrategy::get_service_by_handle(
-  std::shared_ptr<const rcl_service_t> service_handle,
+  const std::shared_ptr<const rcl_service_t> & service_handle,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -61,7 +61,7 @@ MemoryStrategy::get_service_by_handle(
 
 rclcpp::ClientBase::SharedPtr
 MemoryStrategy::get_client_by_handle(
-  std::shared_ptr<const rcl_client_t> client_handle,
+  const std::shared_ptr<const rcl_client_t> & client_handle,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -82,7 +82,7 @@ MemoryStrategy::get_client_by_handle(
 
 rclcpp::TimerBase::SharedPtr
 MemoryStrategy::get_timer_by_handle(
-  std::shared_ptr<const rcl_timer_t> timer_handle,
+  const std::shared_ptr<const rcl_timer_t> & timer_handle,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -103,7 +103,7 @@ MemoryStrategy::get_timer_by_handle(
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 MemoryStrategy::get_node_by_group(
-  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::CallbackGroup::SharedPtr & group,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   if (!group) {
@@ -121,7 +121,7 @@ MemoryStrategy::get_node_by_group(
 
 rclcpp::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_subscription(
-  rclcpp::SubscriptionBase::SharedPtr subscription,
+  const rclcpp::SubscriptionBase::SharedPtr & subscription,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -143,7 +143,7 @@ MemoryStrategy::get_group_by_subscription(
 
 rclcpp::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_service(
-  rclcpp::ServiceBase::SharedPtr service,
+  const rclcpp::ServiceBase::SharedPtr & service,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -165,7 +165,7 @@ MemoryStrategy::get_group_by_service(
 
 rclcpp::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_client(
-  rclcpp::ClientBase::SharedPtr client,
+  const rclcpp::ClientBase::SharedPtr & client,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -187,7 +187,7 @@ MemoryStrategy::get_group_by_client(
 
 rclcpp::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_timer(
-  rclcpp::TimerBase::SharedPtr timer,
+  const rclcpp::TimerBase::SharedPtr & timer,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
@@ -209,7 +209,7 @@ MemoryStrategy::get_group_by_timer(
 
 rclcpp::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_waitable(
-  rclcpp::Waitable::SharedPtr waitable,
+  const rclcpp::Waitable::SharedPtr & waitable,
   const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
 {
   for (const auto & pair : weak_groups_to_nodes) {
