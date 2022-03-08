@@ -196,7 +196,7 @@ public:
 
   bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) override
   {
-    for (auto subscription : subscription_handles_) {
+    for (const std::shared_ptr<const rcl_subscription_t> & subscription : subscription_handles_) {
       if (rcl_wait_set_add_subscription(wait_set, subscription.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
@@ -205,7 +205,7 @@ public:
       }
     }
 
-    for (auto client : client_handles_) {
+    for (const std::shared_ptr<const rcl_client_t> & client : client_handles_) {
       if (rcl_wait_set_add_client(wait_set, client.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
@@ -214,7 +214,7 @@ public:
       }
     }
 
-    for (auto service : service_handles_) {
+    for (const std::shared_ptr<const rcl_service_t> & service : service_handles_) {
       if (rcl_wait_set_add_service(wait_set, service.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
@@ -223,7 +223,7 @@ public:
       }
     }
 
-    for (auto timer : timer_handles_) {
+    for (const std::shared_ptr<const rcl_timer_t> & timer : timer_handles_) {
       if (rcl_wait_set_add_timer(wait_set, timer.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
@@ -236,7 +236,7 @@ public:
       detail::add_guard_condition_to_rcl_wait_set(*wait_set, *guard_condition);
     }
 
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       waitable->add_to_wait_set(wait_set);
     }
     return true;
@@ -394,7 +394,7 @@ public:
   {
     auto it = waitable_handles_.begin();
     while (it != waitable_handles_.end()) {
-      auto waitable = *it;
+      std::shared_ptr<Waitable> & waitable = *it;
       if (waitable) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_waitable(waitable, weak_groups_to_nodes);
@@ -430,7 +430,7 @@ public:
   size_t number_of_ready_subscriptions() const override
   {
     size_t number_of_subscriptions = subscription_handles_.size();
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       number_of_subscriptions += waitable->get_number_of_ready_subscriptions();
     }
     return number_of_subscriptions;
@@ -439,7 +439,7 @@ public:
   size_t number_of_ready_services() const override
   {
     size_t number_of_services = service_handles_.size();
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       number_of_services += waitable->get_number_of_ready_services();
     }
     return number_of_services;
@@ -448,7 +448,7 @@ public:
   size_t number_of_ready_events() const override
   {
     size_t number_of_events = 0;
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       number_of_events += waitable->get_number_of_ready_events();
     }
     return number_of_events;
@@ -457,7 +457,7 @@ public:
   size_t number_of_ready_clients() const override
   {
     size_t number_of_clients = client_handles_.size();
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       number_of_clients += waitable->get_number_of_ready_clients();
     }
     return number_of_clients;
@@ -466,7 +466,7 @@ public:
   size_t number_of_guard_conditions() const override
   {
     size_t number_of_guard_conditions = guard_conditions_.size();
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       number_of_guard_conditions += waitable->get_number_of_ready_guard_conditions();
     }
     return number_of_guard_conditions;
@@ -475,7 +475,7 @@ public:
   size_t number_of_ready_timers() const override
   {
     size_t number_of_timers = timer_handles_.size();
-    for (auto waitable : waitable_handles_) {
+    for (const std::shared_ptr<Waitable> & waitable : waitable_handles_) {
       number_of_timers += waitable->get_number_of_ready_timers();
     }
     return number_of_timers;
