@@ -40,6 +40,51 @@ CallbackGroup::type() const
   return type_;
 }
 
+void CallbackGroup::collect_all_ptrs(
+  std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
+  std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
+  std::function<void(const rclcpp::ClientBase::SharedPtr &)> client_func,
+  std::function<void(const rclcpp::TimerBase::SharedPtr &)> timer_func,
+  std::function<void(const rclcpp::Waitable::SharedPtr &)> waitable_func) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  for (const rclcpp::SubscriptionBase::WeakPtr & weak_ptr : subscription_ptrs_) {
+    rclcpp::SubscriptionBase::SharedPtr ref_ptr = weak_ptr.lock();
+    if (ref_ptr) {
+      sub_func(ref_ptr);
+    }
+  }
+
+  for (const rclcpp::ServiceBase::WeakPtr & weak_ptr : service_ptrs_) {
+    rclcpp::ServiceBase::SharedPtr ref_ptr = weak_ptr.lock();
+    if (ref_ptr) {
+      service_func(ref_ptr);
+    }
+  }
+
+  for (const rclcpp::ClientBase::WeakPtr & weak_ptr : client_ptrs_) {
+    rclcpp::ClientBase::SharedPtr ref_ptr = weak_ptr.lock();
+    if (ref_ptr) {
+      client_func(ref_ptr);
+    }
+  }
+
+  for (const rclcpp::TimerBase::WeakPtr & weak_ptr : timer_ptrs_) {
+    rclcpp::TimerBase::SharedPtr ref_ptr = weak_ptr.lock();
+    if (ref_ptr) {
+      timer_func(ref_ptr);
+    }
+  }
+
+  for (const rclcpp::Waitable::WeakPtr & weak_ptr : waitable_ptrs_) {
+    rclcpp::Waitable::SharedPtr ref_ptr = weak_ptr.lock();
+    if (ref_ptr) {
+      waitable_func(ref_ptr);
+    }
+  }
+}
+
 std::atomic_bool &
 CallbackGroup::get_associated_with_executor_atomic()
 {
