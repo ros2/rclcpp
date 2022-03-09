@@ -62,7 +62,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientGoalHandle)
 
   // A wrapper that defines the result of an action
-  typedef struct WrappedResult
+  struct WrappedResult
   {
     /// The unique identifier of the goal
     GoalUUID goal_id;
@@ -70,7 +70,7 @@ public:
     ResultCode code;
     /// User defined fields sent back with an action
     typename ActionT::Result::SharedPtr result;
-  } WrappedResult;
+  };
 
   using Feedback = typename ActionT::Feedback;
   using Result = typename ActionT::Result;
@@ -104,7 +104,7 @@ public:
 
 private:
   // The templated Client creates goal handles
-  friend Client<ActionT>;
+  friend class Client<ActionT>;
 
   ClientGoalHandle(
     const GoalInfo & info,
