@@ -17,6 +17,7 @@
 
 #include <array>
 #include <climits>
+#include <functional>
 #include <string>
 
 #include "rcl_action/types.h"
