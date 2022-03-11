@@ -46,6 +46,7 @@ namespace detail
  * \tparam Args the arguments being passed to the callback
  * \tparam ReturnT the return type of this function and the callback, default void
  * \param user_data the function pointer, possibly type erased
+ * \param args the arguments to be forwarded to the callback
  * \returns whatever the callback returns, if anything
  */
 template<

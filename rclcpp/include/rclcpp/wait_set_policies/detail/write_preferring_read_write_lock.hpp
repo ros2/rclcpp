@@ -191,7 +191,7 @@ protected:
 
     WritePreferringReadWriteLock & parent_lock_;
 
-    friend WritePreferringReadWriteLock;
+    friend class WritePreferringReadWriteLock;
   };
 
   /// Write mutex for the WritePreferringReadWriteLock.
@@ -212,7 +212,7 @@ protected:
 
     WritePreferringReadWriteLock & parent_lock_;
 
-    friend WritePreferringReadWriteLock;
+    friend class WritePreferringReadWriteLock;
   };
 
   /// Return read mutex which can be used with standard constructs like std::lock_guard.
