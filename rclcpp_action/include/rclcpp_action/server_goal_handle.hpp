@@ -273,7 +273,7 @@ protected:
   /// A unique id for the goal request.
   const GoalUUID uuid_;
 
-  friend Server<ActionT>;
+  friend class Server<ActionT>;
 
   std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state_;
   std::function<void(const GoalUUID &)> on_executing_;

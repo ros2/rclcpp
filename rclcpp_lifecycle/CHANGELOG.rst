@@ -3,6 +3,12 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+15.1.0 (2022-03-01)
+-------------------
+* Install headers to include/${PROJECT_NAME} (`#1888 <https://github.com/ros2/rclcpp/issues/1888>`_)
+* LifecycleNode::on_deactivate deactivate all managed entities. (`#1885 <https://github.com/ros2/rclcpp/issues/1885>`_)
+* Contributors: Shane Loretz, Tomoya Fujita
+
 15.0.0 (2022-01-14)
 -------------------
 * Automatically transition lifecycle entities when node transitions (`#1863 <https://github.com/ros2/rclcpp/issues/1863>`_)

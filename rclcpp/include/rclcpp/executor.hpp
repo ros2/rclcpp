@@ -307,7 +307,7 @@ public:
    *
    * \param[in] max_duration The maximum amount of time to spend executing work, must be >= 0.
    *   `0` is potentially block forever until no more work is available.
-   * \throw throw std::invalid_argument if max_duration is less than 0.
+   * \throw std::invalid_argument if max_duration is less than 0.
    * Note that spin_all() may take longer than this time as it only returns once max_duration has
    * been exceeded.
    */

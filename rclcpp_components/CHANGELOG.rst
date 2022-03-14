@@ -2,6 +2,14 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+15.1.0 (2022-03-01)
+-------------------
+* small improvements to node_main.cpp.in
+* Install headers to include/${PROJECT_NAME} (`#1888 <https://github.com/ros2/rclcpp/issues/1888>`_)
+* Use spin() in component_manager_isolated.hpp (`#1881 <https://github.com/ros2/rclcpp/issues/1881>`_)
+* add use_global_arguments for node options of component nodes (`#1776 <https://github.com/ros2/rclcpp/issues/1776>`_)
+* Contributors: Alberto Soragna, Shane Loretz, gezp
+
 15.0.0 (2022-01-14)
 -------------------
 * Add rclcpp_components::component (`#1855 <https://github.com/ros2/rclcpp/issues/1855>`_)
