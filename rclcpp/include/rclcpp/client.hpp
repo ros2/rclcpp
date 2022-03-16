@@ -40,6 +40,7 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -217,6 +218,38 @@ public:
   RCLCPP_PUBLIC
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
+
+  /// Get the actual request publsher QoS settings, after the defaults have been determined.
+  /**
+   * The actual configuration applied when using RMW_QOS_POLICY_*_SYSTEM_DEFAULT
+   * can only be resolved after the creation of the client, and it
+   * depends on the underlying rmw implementation.
+   * If the underlying setting in use can't be represented in ROS terms,
+   * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
+   * May throw runtime_error when an unexpected error occurs.
+   *
+   * \return The actual request publsher qos settings.
+   * \throws std::runtime_error if failed to get qos settings
+   */
+  RCLCPP_PUBLIC
+  rclcpp::QoS
+  get_request_publisher_actual_qos() const;
+
+  /// Get the actual response subscription QoS settings, after the defaults have been determined.
+  /**
+   * The actual configuration applied when using RMW_QOS_POLICY_*_SYSTEM_DEFAULT
+   * can only be resolved after the creation of the client, and it
+   * depends on the underlying rmw implementation.
+   * If the underlying setting in use can't be represented in ROS terms,
+   * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
+   * May throw runtime_error when an unexpected error occurs.
+   *
+   * \return The actual response subscription qos settings.
+   * \throws std::runtime_error if failed to get qos settings
+   */
+  RCLCPP_PUBLIC
+  rclcpp::QoS
+  get_response_subscription_actual_qos() const;
 
   /// Set a callback to be called when each new response is received.
   /**

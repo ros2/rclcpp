@@ -88,6 +88,44 @@ ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
   return in_use_by_wait_set_.exchange(in_use_state);
 }
 
+rclcpp::QoS
+ServiceBase::get_response_publisher_actual_qos() const
+{
+  const rmw_qos_profile_t * qos =
+    rcl_service_response_publisher_get_actual_qos(service_handle_.get());
+  if (!qos) {
+    auto msg =
+      std::string("failed to get service's response publisher qos settings: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  rclcpp::QoS response_publisher_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
+
+  return response_publisher_qos;
+}
+
+rclcpp::QoS
+ServiceBase::get_request_subscription_actual_qos() const
+{
+  const rmw_qos_profile_t * qos =
+    rcl_service_request_subscription_get_actual_qos(service_handle_.get());
+  if (!qos) {
+    auto msg =
+      std::string("failed to get service's request subscription qos settings: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  rclcpp::QoS request_subscription_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
+
+  return request_subscription_qos;
+}
+
 void
 ServiceBase::set_on_new_request_callback(rcl_event_callback_t callback, const void * user_data)
 {
