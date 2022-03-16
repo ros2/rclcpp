@@ -165,7 +165,7 @@ public:
    * \param[in] qos The QoS settings to use for any subscriptions.
    */
   template<typename NodeT>
-  ParameterEventHandler(
+  explicit ParameterEventHandler(
     NodeT node,
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
