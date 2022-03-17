@@ -438,10 +438,8 @@ SubscriptionBase::get_content_filter(
     filter_expression = content_filter_options->filter_expression;
   }
 
-  if (content_filter_options->expression_parameters) {
-    for (size_t i = 0; i < content_filter_options->expression_parameters->size; ++i) {
-      expression_parameters.push_back(
-        content_filter_options->expression_parameters->data[i]);
-    }
+  for (size_t i = 0; i < content_filter_options->expression_parameters.size; ++i) {
+    expression_parameters.push_back(
+      content_filter_options->expression_parameters.data[i]);
   }
 }
