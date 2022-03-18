@@ -182,7 +182,7 @@ public:
     (void)options;
 
     // If needed, setup intra process communication.
-    if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
+    if (rclcpp::detail::resolve_use_intra_process(options_.use_intra_process_comm, *node_base)) {
       auto context = node_base->get_context();
       // Get the intra process manager instance for this context.
       auto ipm = context->get_sub_context<rclcpp::experimental::IntraProcessManager>();

@@ -66,7 +66,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   // expect fail
   try {
     rclcpp::Service<test_msgs::srv::Empty>(
-      node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
+      node_handle->get_node_base_interface(),
       &service_handle, cb);
   } catch (const std::runtime_error &) {
     SUCCEED();
@@ -97,7 +97,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
 
   try {
     rclcpp::Service<test_msgs::srv::Empty>(
-      node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
+      node_handle->get_node_base_interface(),
       &service_handle, cb);
   } catch (const std::runtime_error &) {
     FAIL();
@@ -137,7 +137,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
   {
     // Call constructor
     rclcpp::Service<test_msgs::srv::Empty> srv_cpp(
-      node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
+      node_handle->get_node_base_interface(),
       &service_handle, cb);
     // Call destructor
   }

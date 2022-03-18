@@ -15,9 +15,12 @@
 #include <gmock/gmock.h>
 
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
+#include <variant> // NOLINT
 #include <vector>
 
 #define RCLCPP_BUILDING_LIBRARY 1
@@ -304,6 +307,98 @@ public:
   }
 };
 
+class ClientIntraProcessBase
+{
+public:
+  RCLCPP_SMART_PTR_ALIASES_ONLY(ClientIntraProcessBase)
+
+  const char *
+  get_service_name() const
+  {
+    return nullptr;
+  }
+
+  QoS get_actual_qos() const
+  {
+    QoS qos(0);
+    return qos;
+  }
+};
+
+template<typename ServiceT>
+class ClientIntraProcess : public ClientIntraProcessBase
+{
+public:
+  RCLCPP_SMART_PTR_ALIASES_ONLY(ClientIntraProcess)
+};
+
+class ServiceIntraProcessBase
+{
+public:
+  RCLCPP_SMART_PTR_ALIASES_ONLY(ServiceIntraProcessBase)
+
+  void
+  add_intra_process_client(
+    rclcpp::experimental::mock::ClientIntraProcessBase::SharedPtr client,
+    uint64_t client_id)
+  {
+    (void)client;
+    (void)client_id;
+  }
+
+  const char *
+  get_service_name() const
+  {
+    return nullptr;
+  }
+
+  QoS get_actual_qos() const
+  {
+    QoS qos(0);
+    return qos;
+  }
+};
+
+template<typename ServiceT>
+class ServiceIntraProcess : public ServiceIntraProcessBase
+{
+public:
+  RCLCPP_SMART_PTR_ALIASES_ONLY(ServiceIntraProcess)
+
+  using SharedRequest = typename ServiceT::Request::SharedPtr;
+  using SharedResponse = typename ServiceT::Response::SharedPtr;
+
+  using Promise = std::promise<SharedResponse>;
+  using PromiseWithRequest = std::promise<std::pair<SharedRequest, SharedResponse>>;
+
+  using SharedFuture = std::shared_future<SharedResponse>;
+  using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
+
+  using CallbackType = std::function<void (SharedFuture)>;
+  using CallbackWithRequestType = std::function<void (SharedFutureWithRequest)>;
+
+  using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
+  using CallbackWithRequestTypeValueVariant = std::tuple<
+    CallbackWithRequestType, SharedRequest, SharedFutureWithRequest, PromiseWithRequest>;
+
+  using CallbackInfoVariant = std::variant<
+    std::promise<SharedResponse>,
+    CallbackTypeValueVariant,
+    CallbackWithRequestTypeValueVariant>;
+
+  using RequestCallbackPair = std::pair<SharedRequest, CallbackInfoVariant>;
+  using ClientIDtoRequest = std::pair<uint64_t, RequestCallbackPair>;
+
+  void
+  store_intra_process_request(
+    uint64_t intra_process_client_id,
+    RequestCallbackPair request)
+  {
+    (void)intra_process_client_id;
+    (void)request;
+  }
+};
+
 }  // namespace mock
 }  // namespace experimental
 }  // namespace rclcpp
@@ -314,6 +409,10 @@ public:
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BUFFER_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
+#define RCLCPP__EXPERIMENTAL__SERVICE_INTRA_PROCESS_HPP_
+#define RCLCPP__EXPERIMENTAL__SERVICE_INTRA_PROCESS_BASE_HPP_
+#define RCLCPP__EXPERIMENTAL__CLIENT_INTRA_PROCESS_HPP_
+#define RCLCPP__EXPERIMENTAL__CLIENT_INTRA_PROCESS_BASE_HPP_
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
@@ -321,12 +420,20 @@ public:
 #define SubscriptionIntraProcessBase mock::SubscriptionIntraProcessBase
 #define SubscriptionIntraProcessBuffer mock::SubscriptionIntraProcessBuffer
 #define SubscriptionIntraProcess mock::SubscriptionIntraProcess
+#define ServiceIntraProcessBase mock::ServiceIntraProcessBase
+#define ServiceIntraProcess mock::ServiceIntraProcess
+#define ClientIntraProcessBase mock::ClientIntraProcessBase
+#define ClientIntraProcess mock::ClientIntraProcess
 #include "../src/rclcpp/intra_process_manager.cpp"  // NOLINT
 #undef Publisher
 #undef PublisherBase
 #undef IntraProcessBuffer
 #undef SubscriptionIntraProcessBase
 #undef SubscriptionIntraProcess
+#undef ServiceIntraProcessBase
+#undef ServiceIntraProcess
+#undef ClientIntraProcessBase
+#undef ClientIntraProcess
 
 using ::testing::_;
 using ::testing::UnorderedElementsAre;

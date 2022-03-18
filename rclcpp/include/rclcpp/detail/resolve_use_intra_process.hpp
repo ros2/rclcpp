@@ -26,12 +26,12 @@ namespace detail
 {
 
 /// Return whether or not intra process is enabled, resolving "NodeDefault" if needed.
-template<typename OptionsT, typename NodeBaseT>
+template<typename NodeBaseT>
 bool
-resolve_use_intra_process(const OptionsT & options, const NodeBaseT & node_base)
+resolve_use_intra_process(IntraProcessSetting ipc_setting, const NodeBaseT & node_base)
 {
   bool use_intra_process;
-  switch (options.use_intra_process_comm) {
+  switch (ipc_setting) {
     case IntraProcessSetting::Enable:
       use_intra_process = true;
       break;

@@ -28,7 +28,11 @@
 #include <typeinfo>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/experimental/client_intra_process.hpp"
+#include "rclcpp/experimental/client_intra_process_base.hpp"
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
+#include "rclcpp/experimental/service_intra_process.hpp"
+#include "rclcpp/experimental/service_intra_process_base.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/experimental/subscription_intra_process_buffer.hpp"
@@ -97,10 +101,10 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager)
 
   RCLCPP_PUBLIC
-  IntraProcessManager();
+  IntraProcessManager() = default;
 
   RCLCPP_PUBLIC
-  virtual ~IntraProcessManager();
+  virtual ~IntraProcessManager() = default;
 
   /// Register a subscription with the manager, returns subscriptions unique id.
   /**
@@ -116,6 +120,24 @@ public:
   uint64_t
   add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription);
 
+  /// Register an intra-process client with the manager, returns the client unique id.
+  /**
+   * \param client the ClientIntraProcessBase to register.
+   * \return an unsigned 64-bit integer which is the client's unique id.
+   */
+  RCLCPP_PUBLIC
+  uint64_t
+  add_intra_process_client(rclcpp::experimental::ClientIntraProcessBase::SharedPtr client);
+
+  /// Register an intra-process service with the manager, returns the service unique id.
+  /**
+   * \param service the Service IntraProcessBase to register.
+   * \return an unsigned 64-bit integer which is the service's unique id.
+   */
+  RCLCPP_PUBLIC
+  uint64_t
+  add_intra_process_service(rclcpp::experimental::ServiceIntraProcessBase::SharedPtr service);
+
   /// Unregister a subscription using the subscription's unique id.
   /**
    * This method does not allocate memory.
@@ -125,6 +147,22 @@ public:
   RCLCPP_PUBLIC
   void
   remove_subscription(uint64_t intra_process_subscription_id);
+
+  /// Unregister a client using the client's unique id.
+  /**
+   * \param intra_process_client_id id of the client to remove.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_client(uint64_t intra_process_client_id);
+
+  /// Unregister a service using the service's unique id.
+  /**
+   * \param intra_process_service_id id of the service to remove.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_service(uint64_t intra_process_service_id);
 
   /// Register a publisher with the manager, returns the publisher unique id.
   /**
@@ -237,6 +275,52 @@ public:
     }
   }
 
+  /// Send an intra-process client request
+  /**
+   * Using the intra-process client id, a matching intra-process service is retrieved
+   * which will store the request to process it asynchronously.
+   *
+   * \param intra_process_client_id the id of the client sending the request
+   * \param request the client's request plus callbacks if any.
+   */
+  template<typename ServiceT, typename RequestT>
+  void
+  send_intra_process_client_request(
+    uint64_t intra_process_client_id,
+    RequestT request)
+  {
+    std::unique_lock<std::shared_timed_mutex> lock(mutex_);
+
+    auto client_it = clients_to_services_.find(intra_process_client_id);
+
+    if (client_it == clients_to_services_.end()) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Calling send_intra_process_client_request for invalid or no "
+        "longer existing client id");
+      return;
+    }
+    uint64_t service_id = client_it->second;
+
+    auto service_it = services_.find(service_id);
+    if (service_it == services_.end()) {
+      throw std::runtime_error(
+              "There are no services to receive the intra-process request. "
+              "Do Inter process.");
+    }
+    auto service_intra_process_base = service_it->second.lock();
+    if (service_intra_process_base) {
+      auto service = std::dynamic_pointer_cast<
+        rclcpp::experimental::ServiceIntraProcess<ServiceT>>(service_intra_process_base);
+      if (service) {
+        service->store_intra_process_request(
+          intra_process_client_id, std::move(request));
+      }
+    } else {
+      services_.erase(service_it);
+    }
+  }
+
   template<
     typename MessageT,
     typename ROSMessageType,
@@ -306,6 +390,18 @@ public:
   rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr
   get_subscription_intra_process(uint64_t intra_process_subscription_id);
 
+  RCLCPP_PUBLIC
+  rclcpp::experimental::ClientIntraProcessBase::SharedPtr
+  get_client_intra_process(uint64_t intra_process_client_id);
+
+  RCLCPP_PUBLIC
+  rclcpp::experimental::ServiceIntraProcessBase::SharedPtr
+  get_service_intra_process(uint64_t intra_process_service_id);
+
+  RCLCPP_PUBLIC
+  bool
+  service_is_available(uint64_t intra_process_client_id);
+
 private:
   struct SplittedSubscriptions
   {
@@ -322,6 +418,15 @@ private:
   using PublisherToSubscriptionIdsMap =
     std::unordered_map<uint64_t, SplittedSubscriptions>;
 
+  using ClientMap =
+    std::unordered_map<uint64_t, rclcpp::experimental::ClientIntraProcessBase::WeakPtr>;
+
+  using ServiceMap =
+    std::unordered_map<uint64_t, rclcpp::experimental::ServiceIntraProcessBase::WeakPtr>;
+
+  using ClientToServiceIdsMap =
+    std::unordered_map<uint64_t, uint64_t>;
+
   RCLCPP_PUBLIC
   static
   uint64_t
@@ -336,6 +441,12 @@ private:
   can_communicate(
     rclcpp::PublisherBase::SharedPtr pub,
     rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const;
+
+  RCLCPP_PUBLIC
+  bool
+  can_communicate(
+    rclcpp::experimental::ClientIntraProcessBase::SharedPtr client,
+    rclcpp::experimental::ServiceIntraProcessBase::SharedPtr service) const;
 
   template<
     typename MessageT,
@@ -511,6 +622,9 @@ private:
   PublisherToSubscriptionIdsMap pub_to_subs_;
   SubscriptionMap subscriptions_;
   PublisherMap publishers_;
+  ClientToServiceIdsMap clients_to_services_;
+  ClientMap clients_;
+  ServiceMap services_;
 
   mutable std::shared_timed_mutex mutex_;
 };
