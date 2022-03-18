@@ -49,7 +49,7 @@ macro(rclcpp_components_register_node target)
   # default to executor if not specified otherwise
   set(executor "SingleThreadedExecutor")
   if(NOT "${ARGS_EXECUTOR}" STREQUAL "")
-      set(executor ${ARGS_EXECUTOR})
+    set(executor ${ARGS_EXECUTOR})
     message(STATUS "Setting executor non-default value ${executor}")
   endif()
 
