@@ -454,7 +454,7 @@ TEST_F(TestSubscription, on_new_message_callback) {
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
   sub->set_on_new_message_callback(increase_c1_cb);
 
-  auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1);
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 3);
   {
     test_msgs::msg::Empty msg;
     pub->publish(msg);
@@ -500,7 +500,7 @@ TEST_F(TestSubscription, on_new_message_callback) {
   start = std::chrono::steady_clock::now();
   do {
     std::this_thread::sleep_for(100ms);
-  } while (c3 == 0 && std::chrono::steady_clock::now() - start < 10s);
+  } while (c3 < 3 && std::chrono::steady_clock::now() - start < 10s);
 
   EXPECT_EQ(c1.load(), 1u);
   EXPECT_EQ(c2.load(), 1u);
