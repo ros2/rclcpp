@@ -351,12 +351,15 @@ TEST_F(TestClient, on_new_response_callback) {
   auto client_node = std::make_shared<rclcpp::Node>("client_node", "ns");
   auto server_node = std::make_shared<rclcpp::Node>("server_node", "ns");
 
-  auto client = client_node->create_client<test_msgs::srv::Empty>("test_service");
+  rmw_qos_profile_t client_qos = rmw_qos_profile_services_default;
+  client_qos.depth = 3;
+  auto client = client_node->create_client<test_msgs::srv::Empty>("test_service", client_qos);
   std::atomic<size_t> server_requests_count {0};
   auto server_callback = [&server_requests_count](
     const test_msgs::srv::Empty::Request::SharedPtr,
     test_msgs::srv::Empty::Response::SharedPtr) {server_requests_count++;};
-  auto server = server_node->create_service<test_msgs::srv::Empty>("test_service", server_callback);
+  auto server = server_node->create_service<test_msgs::srv::Empty>(
+    "test_service", server_callback, client_qos);
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
 
   std::atomic<size_t> c1 {0};
@@ -423,7 +426,7 @@ TEST_F(TestClient, on_new_response_callback) {
   start = std::chrono::steady_clock::now();
   do {
     std::this_thread::sleep_for(100ms);
-  } while (c3 == 0 && std::chrono::steady_clock::now() - start < 10s);
+  } while (c3 < 3 && std::chrono::steady_clock::now() - start < 10s);
 
   EXPECT_EQ(c1.load(), 1u);
   EXPECT_EQ(c2.load(), 1u);
