@@ -612,7 +612,7 @@ TEST_P(TestPublisherWaitForAllAcked, check_wait_for_all_acked_with_QosPolicy) {
   for (int i = 0; i < 20; i++) {
     ASSERT_NO_THROW(pub->publish(*msg));
   }
-  EXPECT_TRUE(pub->wait_for_all_acked(std::chrono::milliseconds(500)));
+  EXPECT_TRUE(pub->wait_for_all_acked(std::chrono::milliseconds(6000)));
 }
 
 INSTANTIATE_TEST_SUITE_P(
