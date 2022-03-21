@@ -358,7 +358,7 @@ TEST_F(TestClient, on_new_response_callback) {
     const test_msgs::srv::Empty::Request::SharedPtr,
     test_msgs::srv::Empty::Response::SharedPtr) {server_requests_count++;};
   auto server = server_node->create_service<test_msgs::srv::Empty>(
-      "test_service", server_callback, client_qos);
+    "test_service", server_callback, client_qos);
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
 
   std::atomic<size_t> c1 {0};
