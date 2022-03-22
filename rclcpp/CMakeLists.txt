@@ -194,6 +194,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "ament_index_cpp"
   "libstatistics_collector"
   "rcl"
+  "rcl_interfaces"
   "rcl_yaml_param_parser"
   "rcpputils"
   "rcutils"
