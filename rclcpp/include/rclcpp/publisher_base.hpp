@@ -347,7 +347,7 @@ protected:
 
   rmw_gid_t rmw_gid_;
 
-  const rosidl_message_type_support_t * type_support_;
+  const rosidl_message_type_support_t type_support_;
 };
 
 }  // namespace rclcpp

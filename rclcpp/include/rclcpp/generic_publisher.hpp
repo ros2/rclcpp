@@ -125,7 +125,7 @@ public:
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can show
    */
   RCLCPP_PUBLIC
-  void publish_loaned_msg(const rclcpp::SerializedMessage & message);
+  void publish_as_loaned_msg(const rclcpp::SerializedMessage & message);
 
 private:
   // The type support library should stay loaded, so it is stored in the GenericPublisher

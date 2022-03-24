@@ -208,7 +208,7 @@ TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
     ASSERT_TRUE(success);
 
     for (const auto & message : test_messages) {
-      publisher->publish_loaned_msg(
+      publisher->publish_as_loaned_msg(
         serialize_message<int64_t, test_msgs::msg::BasicTypes>(message));
     }
 
@@ -218,7 +218,7 @@ TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
   } else {
     ASSERT_THROW(
     {
-      publisher->publish_loaned_msg(
+      publisher->publish_as_loaned_msg(
         serialize_message<int64_t, test_msgs::msg::BasicTypes>(test_messages[0]));
     }, rclcpp::exceptions::RCLError);
   }
