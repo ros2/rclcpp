@@ -321,15 +321,6 @@ RCLCPP_PUBLIC
 const char *
 get_c_string(const std::string & string_in);
 
-/// Return the std::vector of C string from the given std::vector<std::string>.
-/**
- * \param[in] string_in is a std::string
- * \return the std::vector of C string from the std::vector<std::string>
- */
-RCLCPP_PUBLIC
-std::vector<const char *>
-get_c_vector_string(const std::vector<std::string> & strings);
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__UTILITIES_HPP_

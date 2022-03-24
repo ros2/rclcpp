@@ -59,9 +59,6 @@ bool wait_for_message(
   RCPPUTILS_SCOPE_EXIT(wait_set.remove_subscription(subscription); );
   wait_set.add_guard_condition(gc);
   auto ret = wait_set.wait(time_to_wait);
-  // if it is fixed in other PR, remove them and rebase.
-  wait_set.remove_subscription(subscription);
-  wait_set.remove_guard_condition(gc);
   if (ret.kind() != rclcpp::WaitResultKind::Ready) {
     return false;
   }

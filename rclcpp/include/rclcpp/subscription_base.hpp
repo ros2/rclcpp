@@ -491,14 +491,7 @@ public:
     event_handlers_[event_type]->clear_on_ready_callback();
   }
 
-  /// Check if content filtered topic feature of the subscription instance is enabled.
-  /**
-   * \return boolean flag indicating if the content filtered topic of this subscription is enabled.
-   */
-  RCLCPP_PUBLIC
-  bool
-  is_cft_enabled() const;
-
+#ifdef CONTENT_FILTER_ENABLE
   /// Set the filter expression and expression parameters for the subscription.
   /**
    * \param[in] filter_expression An filter expression to set.
@@ -528,6 +521,7 @@ public:
   get_content_filter(
     std::string & filter_expression,
     std::vector<std::string> & expression_parameters) const;
+#endif  // CONTENT_FILTER_ENABLE
 
 protected:
   template<typename EventCallbackT>
