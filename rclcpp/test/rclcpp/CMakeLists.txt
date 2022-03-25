@@ -734,19 +734,21 @@ if(TARGET test_graph_listener)
   target_link_libraries(test_graph_listener ${PROJECT_NAME} mimick)
 endif()
 
-function(test_subscription_content_filter_for_rmw_implementation)
-  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_subscription_content_filter${target_suffix}
-    test_subscription_content_filter.cpp
-    ENV ${rmw_implementation_env_var}
-  )
-  if(TARGET test_subscription_content_filter${target_suffix})
-    target_link_libraries(test_subscription_content_filter${target_suffix} ${PROJECT_NAME} mimick)
-    ament_target_dependencies(test_subscription_content_filter${target_suffix}
-      "rcpputils"
-      "rosidl_typesupport_cpp"
-      "test_msgs"
+if(DEFINE_CONTENT_FILTER)
+  function(test_subscription_content_filter_for_rmw_implementation)
+    set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+    ament_add_gmock(test_subscription_content_filter${target_suffix}
+      test_subscription_content_filter.cpp
+      ENV ${rmw_implementation_env_var}
     )
-  endif()
-endfunction()
-call_for_each_rmw_implementation(test_subscription_content_filter_for_rmw_implementation)
+    if(TARGET test_subscription_content_filter${target_suffix})
+      target_link_libraries(test_subscription_content_filter${target_suffix} ${PROJECT_NAME} mimick)
+      ament_target_dependencies(test_subscription_content_filter${target_suffix}
+        "rcpputils"
+        "rosidl_typesupport_cpp"
+        "test_msgs"
+      )
+    endif()
+  endfunction()
+  call_for_each_rmw_implementation(test_subscription_content_filter_for_rmw_implementation)
+endif()
