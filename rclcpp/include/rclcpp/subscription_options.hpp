@@ -139,6 +139,22 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
       rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
     }
 
+#ifdef CONTENT_FILTER_ENABLE
+    // Copy content_filter_options into rcl_subscription_options.
+    if (!content_filter_options.filter_expression.empty()) {
+      std::vector<const char *> cstrings =
+        get_c_vector_string(content_filter_options.expression_parameters);
+      rcl_ret_t ret = rcl_subscription_options_set_content_filter_options(
+        get_c_string(content_filter_options.filter_expression),
+        cstrings.size(),
+        cstrings.data(),
+        &result);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "failed to set content_filter_options");
+      }
+    }
+#endif  // CONTENT_FILTER_ENABLE
     return result;
   }
 

@@ -492,6 +492,14 @@ public:
   }
 
 #ifdef CONTENT_FILTER_ENABLE
+  /// Check if content filtered topic feature of the subscription instance is enabled.
+  /**
+   * \return boolean flag indicating if the content filtered topic of this subscription is enabled.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_cft_enabled() const;
+
   /// Set the filter expression and expression parameters for the subscription.
   /**
    * \param[in] filter_expression An filter expression to set.
