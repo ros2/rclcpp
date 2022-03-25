@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+15.2.0 (2022-03-24)
+-------------------
+* Fix rosdoc2 issues (`#1897 <https://github.com/ros2/rclcpp/issues/1897>`_)
+* Contributors: Chris Lalancette
+
 15.1.0 (2022-03-01)
 -------------------
 * Add RMW listener APIs (`#1579 <https://github.com/ros2/rclcpp/issues/1579>`_)

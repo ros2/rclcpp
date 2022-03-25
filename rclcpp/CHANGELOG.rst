@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+15.2.0 (2022-03-24)
+-------------------
+* Add missing ament dependency on rcl_interfaces (`#1903 <https://github.com/ros2/rclcpp/issues/1903>`_)
+* Update data callback tests to account for all published samples (`#1900 <https://github.com/ros2/rclcpp/issues/1900>`_)
+* Increase timeout for acknowledgments to account for slower Connext settings (`#1901 <https://github.com/ros2/rclcpp/issues/1901>`_)
+* clang-tidy: explicit constructors (`#1782 <https://github.com/ros2/rclcpp/issues/1782>`_)
+* Add client/service QoS getters (`#1784 <https://github.com/ros2/rclcpp/issues/1784>`_)
+* Fix a bunch more rosdoc2 issues in rclcpp. (`#1897 <https://github.com/ros2/rclcpp/issues/1897>`_)
+* time_until_trigger returns max time if timer is cancelled (`#1893 <https://github.com/ros2/rclcpp/issues/1893>`_)
+* Micro-optimizations in rclcpp (`#1896 <https://github.com/ros2/rclcpp/issues/1896>`_)
+* Contributors: Andrea Sorbini, Chris Lalancette, Mauro Passerino, Scott K Logan, William Woodall
+
 15.1.0 (2022-03-01)
 -------------------
 * spin_all with a zero timeout. (`#1878 <https://github.com/ros2/rclcpp/issues/1878>`_)
