@@ -47,7 +47,9 @@ PublisherBase::PublisherBase(
   const rosidl_message_type_support_t & type_support,
   const rcl_publisher_options_t & publisher_options)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
-  intra_process_is_enabled_(false), intra_process_publisher_id_(0)
+  intra_process_is_enabled_(false),
+  intra_process_publisher_id_(0),
+  type_support_(type_support)
 {
   auto custom_deleter = [node_handle = this->rcl_node_handle_](rcl_publisher_t * rcl_pub)
     {

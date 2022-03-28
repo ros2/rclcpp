@@ -61,34 +61,37 @@ public:
     publishers_.push_back(publisher);
   }
 
-  std::vector<std::string> subscribe_raw_messages(
-    size_t expected_messages_number, const std::string & topic_name, const std::string & type)
+  template<typename T1, typename T2>
+  std::vector<T1> subscribe_raw_messages(
+    size_t expected_recv_msg_count, const std::string & topic_name, const std::string & type)
   {
-    std::vector<std::string> messages;
+    std::vector<T1> messages;
     size_t counter = 0;
     auto subscription = node_->create_generic_subscription(
       topic_name, type, rclcpp::QoS(1),
-      [&counter, &messages](std::shared_ptr<rclcpp::SerializedMessage> message) {
-        test_msgs::msg::Strings string_message;
-        rclcpp::Serialization<test_msgs::msg::Strings> serializer;
-        serializer.deserialize_message(message.get(), &string_message);
-        messages.push_back(string_message.string_value);
+      [&counter, &messages, this](std::shared_ptr<rclcpp::SerializedMessage> message) {
+        T2 deserialized_message;
+        rclcpp::Serialization<T2> serializer;
+        serializer.deserialize_message(message.get(), &deserialized_message);
+        messages.push_back(this->get_data_from_msg(deserialized_message));
         counter++;
       });
 
-    while (counter < expected_messages_number) {
+    while (counter < expected_recv_msg_count) {
       rclcpp::spin_some(node_);
     }
     return messages;
   }
 
-  rclcpp::SerializedMessage serialize_string_message(const std::string & message)
+  template<typename T1, typename T2>
+  rclcpp::SerializedMessage serialize_message(const T1 & data)
   {
-    test_msgs::msg::Strings string_message;
-    string_message.string_value = message;
-    rclcpp::Serialization<test_msgs::msg::Strings> ser;
+    T2 message;
+    write_message(data, message);
+
+    rclcpp::Serialization<T2> ser;
     SerializedMessage result;
-    ser.serialize_message(&string_message, &result);
+    ser.serialize_message(&message, &result);
     return result;
   }
 
@@ -115,6 +118,27 @@ public:
   std::shared_ptr<rclcpp::Node> node_;
   rclcpp::Node::SharedPtr publisher_node_;
   std::vector<std::shared_ptr<rclcpp::PublisherBase>> publishers_;
+
+private:
+  void write_message(const std::string & data, test_msgs::msg::Strings & message)
+  {
+    message.string_value = data;
+  }
+
+  void write_message(const int64_t & data, test_msgs::msg::BasicTypes & message)
+  {
+    message.int64_value = data;
+  }
+
+  std::string get_data_from_msg(const test_msgs::msg::Strings & message)
+  {
+    return message.string_value;
+  }
+
+  int64_t get_data_from_msg(const test_msgs::msg::BasicTypes & message)
+  {
+    return message.int64_value;
+  }
 };
 
 
@@ -130,7 +154,7 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
 
   auto subscriber_future_ = std::async(
     std::launch::async, [this, topic_name, type] {
-      return subscribe_raw_messages(1, topic_name, type);
+      return subscribe_raw_messages<std::string, test_msgs::msg::Strings>(1, topic_name, type);
     });
 
   // TODO(karsten1987): Port 'wait_for_sub' to rclcpp
@@ -147,12 +171,57 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
   ASSERT_TRUE(success);
 
   for (const auto & message : test_messages) {
-    publisher->publish(serialize_string_message(message));
+    publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>(message));
   }
 
   auto subscribed_messages = subscriber_future_.get();
   EXPECT_THAT(subscribed_messages, SizeIs(Not(0)));
   EXPECT_THAT(subscribed_messages[0], StrEq("Hello World"));
+}
+
+TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
+{
+  // We currently publish more messages because they can get lost
+  std::vector<int64_t> test_messages = {100, 100};
+  std::string topic_name = "/int64_topic";
+  std::string type = "test_msgs/msg/BasicTypes";
+
+  auto publisher = node_->create_generic_publisher(topic_name, type, rclcpp::QoS(1));
+
+  if (publisher->can_loan_messages()) {
+    auto subscriber_future_ = std::async(
+      std::launch::deferred, [this, topic_name, type] {
+        return subscribe_raw_messages<int64_t, test_msgs::msg::BasicTypes>(
+          1, topic_name, type);
+      });
+
+    auto allocator = node_->get_node_options().allocator();
+    auto success = false;
+    auto ret = rcl_wait_for_subscribers(
+      node_->get_node_base_interface()->get_rcl_node_handle(),
+      &allocator,
+      topic_name.c_str(),
+      1u,
+      static_cast<rcutils_duration_value_t>(2e9),
+      &success);
+    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    ASSERT_TRUE(success);
+
+    for (const auto & message : test_messages) {
+      publisher->publish_as_loaned_msg(
+        serialize_message<int64_t, test_msgs::msg::BasicTypes>(message));
+    }
+
+    auto subscribed_messages = subscriber_future_.get();
+    EXPECT_THAT(subscribed_messages, SizeIs(Not(0)));
+    EXPECT_EQ(subscribed_messages[0], test_messages[0]);
+  } else {
+    ASSERT_THROW(
+    {
+      publisher->publish_as_loaned_msg(
+        serialize_message<int64_t, test_msgs::msg::BasicTypes>(test_messages[0]));
+    }, rclcpp::exceptions::RCLError);
+  }
 }
 
 TEST_F(RclcppGenericNodeFixture, generic_subscription_uses_qos)
