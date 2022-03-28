@@ -579,11 +579,11 @@ public:
   /// Send a request to the service server.
   /**
    * This method returns a `FutureAndRequestId` instance
-   * that can be passed to Executor::spin_until_future_complete() to
+   * that can be passed to Executor::spin_until_complete() to
    * wait until it has been completed.
    *
    * If the future never completes,
-   * e.g. the call to Executor::spin_until_future_complete() times out,
+   * e.g. the call to Executor::spin_until_complete() times out,
    * Client::remove_pending_request() must be called to clean the client internal state.
    * Not doing so will make the `Client` instance to use more memory each time a response is not
    * received from the service server.
@@ -592,7 +592,7 @@ public:
    * auto future = client->async_send_request(my_request);
    * if (
    *   rclcpp::FutureReturnCode::TIMEOUT ==
-   *   executor->spin_until_future_complete(future, timeout))
+   *   executor->spin_until_complete(future, timeout))
    * {
    *   client->remove_pending_request(future);
    *   // handle timeout
