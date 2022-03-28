@@ -236,6 +236,7 @@ __check_parameters(
     } else {
       descriptor = parameter_infos[name].descriptor;
     }
+    descriptor.name = name;
     const auto new_type = parameter.get_type();
     const auto specified_type = static_cast<rclcpp::ParameterType>(descriptor.type);
     result.successful = descriptor.dynamic_typing || specified_type == new_type;
@@ -298,11 +299,6 @@ __set_parameters_atomically_common(
   const OnParametersSetCallbackType & callback,
   bool allow_undeclared = false)
 {
-  // Set the parameter name before checks, for more desciprtive error messages
-  for (size_t i = 0; i < parameters.size(); ++i) {
-    const std::string & name = parameters[i].get_name();
-    parameter_infos[name].descriptor.name = parameters[i].get_name();
-  }
   // Check if the value being set complies with the descriptor.
   rcl_interfaces::msg::SetParametersResult result = __check_parameters(
     parameter_infos, parameters, allow_undeclared);
@@ -319,6 +315,7 @@ __set_parameters_atomically_common(
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
       const std::string & name = parameters[i].get_name();
+      parameter_infos[name].descriptor.name = parameters[i].get_name();
       parameter_infos[name].descriptor.type = parameters[i].get_type();
       parameter_infos[name].value = parameters[i].get_parameter_value();
     }
