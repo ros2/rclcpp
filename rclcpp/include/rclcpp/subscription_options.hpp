@@ -86,11 +86,11 @@ struct SubscriptionOptionsBase
   /// Options to configure content filtered topic in the subscription.
   struct ContentFilterOptions
   {
-    /// Filter expression is similar to the WHERE part of an SQL clause
+    /// Filter expression is similar to the WHERE part of an SQL clause.
     std::string filter_expression;
     /**
      * Expression parameters is the tokens placeholder ‘parameters’ (i.e., "%n" tokens begin from 0)
-     * in the filter_expression
+     * in the filter_expression. The maximum expression_parameters size is 100.
      */
     std::vector<std::string> expression_parameters;
   };

@@ -215,13 +215,13 @@ get_c_string(const std::string & string_in)
 }
 
 std::vector<const char *>
-get_c_vector_string(const std::vector<std::string> & strings)
+get_c_vector_string(const std::vector<std::string> & strings_in)
 {
   std::vector<const char *> cstrings;
-  cstrings.reserve(strings.size());
+  cstrings.reserve(strings_in.size());
 
-  for (size_t i = 0; i < strings.size(); ++i) {
-    cstrings.push_back(strings[i].c_str());
+  for (size_t i = 0; i < strings_in.size(); ++i) {
+    cstrings.push_back(strings_in[i].c_str());
   }
 
   return cstrings;
