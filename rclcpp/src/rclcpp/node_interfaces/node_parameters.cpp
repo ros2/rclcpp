@@ -236,6 +236,9 @@ __check_parameters(
     } else {
       descriptor = parameter_infos[name].descriptor;
     }
+    if (descriptor.name.empty()) {
+      descriptor.name = name;
+    }
     const auto new_type = parameter.get_type();
     const auto specified_type = static_cast<rclcpp::ParameterType>(descriptor.type);
     result.successful = descriptor.dynamic_typing || specified_type == new_type;
