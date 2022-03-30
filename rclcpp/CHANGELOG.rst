@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+15.3.0 (2022-03-30)
+-------------------
 * [NodeParameters] Set name in param info pre-check (`#1908 <https://github.com/ros2/rclcpp/issues/1908>`_)
 * Add test-dep ament_cmake_google_benchmark (`#1904 <https://github.com/ros2/rclcpp/issues/1904>`_)
 * Add publish by loaned message in GenericPublisher (`#1856 <https://github.com/ros2/rclcpp/issues/1856>`_)
