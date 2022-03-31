@@ -375,6 +375,7 @@ SubscriptionBase::set_content_filter(
   std::vector<const char *> cstrings =
     get_c_vector_string(expression_parameters);
   rcl_ret_t ret = rcl_subscription_content_filter_options_init(
+    subscription_handle_.get(),
     get_c_string(filter_expression),
     cstrings.size(),
     cstrings.data(),
@@ -385,7 +386,8 @@ SubscriptionBase::set_content_filter(
   }
   RCPPUTILS_SCOPE_EXIT(
   {
-    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(&options);
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(
+      subscription_handle_.get(), &options);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
         rclcpp::get_logger("rclcpp"),
@@ -422,7 +424,8 @@ SubscriptionBase::get_content_filter(
 
   RCPPUTILS_SCOPE_EXIT(
   {
-    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(&options);
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(
+      subscription_handle_.get(), &options);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
         rclcpp::get_logger("rclcpp"),
