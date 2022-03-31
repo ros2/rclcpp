@@ -206,7 +206,7 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
       EXPECT_NO_THROW(
         sub->set_content_filter(filter_expression_init, expression_parameters_2));
       // waiting to allow for filter propagation
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(5));
 
       test_msgs::msg::BasicTypes original_message;
       original_message.int32_value = 3;
@@ -252,7 +252,7 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
       EXPECT_NO_THROW(
         sub->set_content_filter(filter_expression_init, expression_parameters_2));
       // waiting to allow for filter propagation
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(5));
 
       test_msgs::msg::BasicTypes original_message;
       original_message.int32_value = 4;
@@ -299,7 +299,7 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
       EXPECT_NO_THROW(
         sub->set_content_filter(""));
       // waiting to allow for filter propagation
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(5));
 
       test_msgs::msg::BasicTypes original_message;
       original_message.int32_value = 4;
