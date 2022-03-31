@@ -39,6 +39,7 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_content_filter_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -503,15 +504,14 @@ public:
   /// Set the filter expression and expression parameters for the subscription.
   /**
    * \param[in] filter_expression An filter expression to set.
-   *   \sa SubscriptionOptionsBase::ContentFilterOptions::filter_expression
+   *   \sa ContentFilterOptions::filter_expression
    *   Use empty string ("") can reset (or clear) the content filter setting of a subscription.
    * \param[in] expression_parameters Array of expression parameters to set.
-   *   \sa SubscriptionOptionsBase::ContentFilterOptions::expression_parameters
+   *   \sa ContentFilterOptions::expression_parameters
    * \throws RCLBadAlloc if memory cannot be allocated
    * \throws RCLError if an unexpect error occurs
    */
   RCLCPP_PUBLIC
-  virtual
   void
   set_content_filter(
     const std::string & filter_expression,
@@ -519,17 +519,13 @@ public:
 
   /// Get the filter expression and expression parameters for the subscription.
   /**
-   * \param[out] filter_expression An filter expression to get.
-   * \param[out] expression_parameters Array of expression parameters to get.
+   * \return rclcpp::ContentFilterOptions The content filter options to get.
    * \throws RCLBadAlloc if memory cannot be allocated
    * \throws RCLError if an unexpect error occurs
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  get_content_filter(
-    std::string & filter_expression,
-    std::vector<std::string> & expression_parameters) const;
+  rclcpp::ContentFilterOptions
+  get_content_filter() const;
 #endif  // CONTENT_FILTER_ENABLE
 
 protected:

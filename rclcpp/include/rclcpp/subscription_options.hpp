@@ -28,6 +28,7 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
+#include "rclcpp/subscription_content_filter_options.hpp"
 #include "rclcpp/topic_statistics_state.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -83,18 +84,6 @@ struct SubscriptionOptionsBase
   QosOverridingOptions qos_overriding_options;
 
 #ifdef CONTENT_FILTER_ENABLE
-  /// Options to configure content filtered topic in the subscription.
-  struct ContentFilterOptions
-  {
-    /// Filter expression is similar to the WHERE part of an SQL clause.
-    std::string filter_expression;
-    /**
-     * Expression parameters is the tokens placeholder ‘parameters’ (i.e., "%n" tokens begin from 0)
-     * in the filter_expression. The maximum expression_parameters size is 100.
-     */
-    std::vector<std::string> expression_parameters;
-  };
-
   ContentFilterOptions content_filter_options;
 #endif  // CONTENT_FILTER_ENABLE
 };

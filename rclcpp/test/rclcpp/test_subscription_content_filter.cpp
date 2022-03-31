@@ -131,10 +131,9 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), get_content
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_subscription_get_content_filter, RCL_RET_ERROR);
 
-  std::string filter_expression;
-  std::vector<std::string> expression_parameters;
+  rclcpp::ContentFilterOptions options;
   EXPECT_THROW(
-    sub->get_content_filter(filter_expression, expression_parameters),
+    options = sub->get_content_filter(),
     rclcpp::exceptions::RCLError);
 }
 
@@ -150,18 +149,17 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), set_content
 }
 
 TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), get_content_filter) {
-  std::string filter_expression;
-  std::vector<std::string> expression_parameters;
+  rclcpp::ContentFilterOptions options;
 
   if (sub->is_cft_enabled()) {
     EXPECT_NO_THROW(
-      sub->get_content_filter(filter_expression, expression_parameters));
+      options = sub->get_content_filter());
 
-    EXPECT_EQ(filter_expression, filter_expression_init);
-    EXPECT_EQ(expression_parameters, expression_parameters_1);
+    EXPECT_EQ(options.filter_expression, filter_expression_init);
+    EXPECT_EQ(options.expression_parameters, expression_parameters_1);
   } else {
     EXPECT_THROW(
-      sub->get_content_filter(filter_expression, expression_parameters),
+      options = sub->get_content_filter(),
       rclcpp::exceptions::RCLError);
   }
 }

@@ -406,11 +406,10 @@ SubscriptionBase::set_content_filter(
   }
 }
 
-void
-SubscriptionBase::get_content_filter(
-  std::string & filter_expression,
-  std::vector<std::string> & expression_parameters) const
+rclcpp::ContentFilterOptions
+SubscriptionBase::get_content_filter() const
 {
+  rclcpp::ContentFilterOptions ret_options;
   rcl_subscription_content_filter_options_t options =
     rcl_get_zero_initialized_subscription_content_filter_options();
 
@@ -437,11 +436,13 @@ SubscriptionBase::get_content_filter(
 
   rmw_subscription_content_filter_options_t & content_filter_options =
     options.rmw_subscription_content_filter_options;
-  filter_expression = content_filter_options.filter_expression;
+  ret_options.filter_expression = content_filter_options.filter_expression;
 
   for (size_t i = 0; i < content_filter_options.expression_parameters.size; ++i) {
-    expression_parameters.push_back(
+    ret_options.expression_parameters.push_back(
       content_filter_options.expression_parameters.data[i]);
   }
+
+  return ret_options;
 }
 #endif  // CONTENT_FILTER_ENABLE
