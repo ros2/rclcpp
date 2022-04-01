@@ -740,6 +740,7 @@ if(DEFINE_CONTENT_FILTER)
     ament_add_gmock(test_subscription_content_filter${target_suffix}
       test_subscription_content_filter.cpp
       ENV ${rmw_implementation_env_var}
+      TIMEOUT 120
     )
     if(TARGET test_subscription_content_filter${target_suffix})
       target_link_libraries(test_subscription_content_filter${target_suffix} ${PROJECT_NAME} mimick)
