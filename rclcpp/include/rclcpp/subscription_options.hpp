@@ -83,9 +83,7 @@ struct SubscriptionOptionsBase
 
   QosOverridingOptions qos_overriding_options;
 
-#ifdef CONTENT_FILTER_ENABLE
   ContentFilterOptions content_filter_options;
-#endif  // CONTENT_FILTER_ENABLE
 };
 
 /// Structure containing optional configuration for Subscriptions.

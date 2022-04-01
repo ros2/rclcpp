@@ -21,7 +21,6 @@
 namespace rclcpp
 {
 
-#ifdef CONTENT_FILTER_ENABLE
 /// Options to configure content filtered topic in the subscription.
 struct ContentFilterOptions
 {
@@ -33,7 +32,6 @@ struct ContentFilterOptions
    */
   std::vector<std::string> expression_parameters;
 };
-#endif  // CONTENT_FILTER_ENABLE
 
 }  // namespace rclcpp
 
