@@ -189,14 +189,14 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
     auto connected = [pub, sub = this->sub]() -> bool {
         return pub->get_subscription_count() && sub->get_publisher_count();
       };
-    ASSERT_TRUE(wait_for(connected, 5s));
+    ASSERT_TRUE(wait_for(connected, 10s));
 
     test_msgs::msg::BasicTypes original_message;
     original_message.int32_value = 3;
     pub->publish(original_message);
 
     test_msgs::msg::BasicTypes output_message;
-    bool receive = wait_for_message(output_message, sub, context, 5s);
+    bool receive = wait_for_message(output_message, sub, context, 10s);
     EXPECT_TRUE(receive);
     EXPECT_EQ(original_message, output_message);
 
@@ -204,14 +204,14 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
       EXPECT_NO_THROW(
         sub->set_content_filter(filter_expression_init, expression_parameters_2));
       // waiting to allow for filter propagation
-      std::this_thread::sleep_for(std::chrono::seconds(5));
+      std::this_thread::sleep_for(std::chrono::seconds(10));
 
       test_msgs::msg::BasicTypes original_message;
       original_message.int32_value = 3;
       pub->publish(original_message);
 
       test_msgs::msg::BasicTypes output_message;
-      bool receive = wait_for_message(output_message, sub, context, 5s);
+      bool receive = wait_for_message(output_message, sub, context, 10s);
       EXPECT_FALSE(receive);
     }
   }
@@ -231,14 +231,14 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
     auto connected = [pub, sub = this->sub]() -> bool {
         return pub->get_subscription_count() && sub->get_publisher_count();
       };
-    ASSERT_TRUE(wait_for(connected, 5s));
+    ASSERT_TRUE(wait_for(connected, 10s));
 
     test_msgs::msg::BasicTypes original_message;
     original_message.int32_value = 4;
     pub->publish(original_message);
 
     test_msgs::msg::BasicTypes output_message;
-    bool receive = wait_for_message(output_message, sub, context, 5s);
+    bool receive = wait_for_message(output_message, sub, context, 10s);
     if (sub->is_cft_enabled()) {
       EXPECT_FALSE(receive);
     } else {
@@ -250,14 +250,14 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
       EXPECT_NO_THROW(
         sub->set_content_filter(filter_expression_init, expression_parameters_2));
       // waiting to allow for filter propagation
-      std::this_thread::sleep_for(std::chrono::seconds(5));
+      std::this_thread::sleep_for(std::chrono::seconds(10));
 
       test_msgs::msg::BasicTypes original_message;
       original_message.int32_value = 4;
       pub->publish(original_message);
 
       test_msgs::msg::BasicTypes output_message;
-      bool receive = wait_for_message(output_message, sub, context, 5s);
+      bool receive = wait_for_message(output_message, sub, context, 10s);
       EXPECT_TRUE(receive);
       EXPECT_EQ(original_message, output_message);
     }
@@ -278,14 +278,14 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
     auto connected = [pub, sub = this->sub]() -> bool {
         return pub->get_subscription_count() && sub->get_publisher_count();
       };
-    ASSERT_TRUE(wait_for(connected, 5s));
+    ASSERT_TRUE(wait_for(connected, 10s));
 
     test_msgs::msg::BasicTypes original_message;
     original_message.int32_value = 4;
     pub->publish(original_message);
 
     test_msgs::msg::BasicTypes output_message;
-    bool receive = wait_for_message(output_message, sub, context, 5s);
+    bool receive = wait_for_message(output_message, sub, context, 10s);
     if (sub->is_cft_enabled()) {
       EXPECT_FALSE(receive);
     } else {
@@ -297,14 +297,14 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
       EXPECT_NO_THROW(
         sub->set_content_filter(""));
       // waiting to allow for filter propagation
-      std::this_thread::sleep_for(std::chrono::seconds(5));
+      std::this_thread::sleep_for(std::chrono::seconds(10));
 
       test_msgs::msg::BasicTypes original_message;
       original_message.int32_value = 4;
       pub->publish(original_message);
 
       test_msgs::msg::BasicTypes output_message;
-      bool receive = wait_for_message(output_message, sub, context, 5s);
+      bool receive = wait_for_message(output_message, sub, context, 10s);
       EXPECT_TRUE(receive);
       EXPECT_EQ(original_message, output_message);
     }
