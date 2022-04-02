@@ -503,9 +503,9 @@ public:
 
   /// Set the filter expression and expression parameters for the subscription.
   /**
-   * \param[in] filter_expression An filter expression to set.
+   * \param[in] filter_expression A filter expression to set.
    *   \sa ContentFilterOptions::filter_expression
-   *   Use empty string ("") can reset (or clear) the content filter setting of a subscription.
+   *   An empty string ("") will clear the content filter setting of the subscription.
    * \param[in] expression_parameters Array of expression parameters to set.
    *   \sa ContentFilterOptions::expression_parameters
    * \throws RCLBadAlloc if memory cannot be allocated
