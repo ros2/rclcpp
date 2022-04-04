@@ -167,14 +167,16 @@ public:
    * classes that are composed of several distinct entities.
    * The main use-case is in conjunction with the listener APIs.
    *
+   * \param[in] id the id of the entity from which to take
+   * \returns the type-erased data taken from entity specified
+   *
    * \sa rclcpp::Waitable::take_data
    * \sa rclcpp::Waitable::set_on_ready_callback
-   *
    */
   RCLCPP_PUBLIC
   virtual
   std::shared_ptr<void>
-  take_data_by_entity_id(int id);
+  take_data_by_entity_id(size_t id);
 
   /// Execute data that is passed in.
   /**

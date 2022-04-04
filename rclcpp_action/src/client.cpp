@@ -590,7 +590,7 @@ ClientBase::take_data()
 }
 
 std::shared_ptr<void>
-ClientBase::take_data_by_entity_id(int id)
+ClientBase::take_data_by_entity_id(size_t id)
 {
   // Mark as ready the entity from which we want to take data
   switch (static_cast<EntityType>(id)) {

@@ -55,7 +55,7 @@ Waitable::get_number_of_ready_guard_conditions()
 }
 
 std::shared_ptr<void>
-Waitable::take_data_by_entity_id(int id)
+Waitable::take_data_by_entity_id(size_t id)
 {
   (void)id;
   throw std::runtime_error(
