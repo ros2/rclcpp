@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
@@ -354,3 +356,93 @@ SubscriptionBase::set_on_new_message_callback(
     throw_from_rcl_error(ret, "failed to set the on new message callback for subscription");
   }
 }
+
+#ifdef CONTENT_FILTER_ENABLE
+bool
+SubscriptionBase::is_cft_enabled() const
+{
+  return rcl_subscription_is_cft_enabled(subscription_handle_.get());
+}
+
+void
+SubscriptionBase::set_content_filter(
+  const std::string & filter_expression,
+  const std::vector<std::string> & expression_parameters)
+{
+  rcl_subscription_content_filter_options_t options =
+    rcl_get_zero_initialized_subscription_content_filter_options();
+
+  std::vector<const char *> cstrings =
+    get_c_vector_string(expression_parameters);
+  rcl_ret_t ret = rcl_subscription_content_filter_options_init(
+    subscription_handle_.get(),
+    get_c_string(filter_expression),
+    cstrings.size(),
+    cstrings.data(),
+    &options);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to init subscription content_filtered_topic option");
+  }
+  RCPPUTILS_SCOPE_EXIT(
+  {
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(
+      subscription_handle_.get(), &options);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "Failed to fini subscription content_filtered_topic option: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  });
+
+  ret = rcl_subscription_set_content_filter(
+    subscription_handle_.get(),
+    &options);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set cft expression parameters");
+  }
+}
+
+rclcpp::ContentFilterOptions
+SubscriptionBase::get_content_filter() const
+{
+  rclcpp::ContentFilterOptions ret_options;
+  rcl_subscription_content_filter_options_t options =
+    rcl_get_zero_initialized_subscription_content_filter_options();
+
+  rcl_ret_t ret = rcl_subscription_get_content_filter(
+    subscription_handle_.get(),
+    &options);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get cft expression parameters");
+  }
+
+  RCPPUTILS_SCOPE_EXIT(
+  {
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(
+      subscription_handle_.get(), &options);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "Failed to fini subscription content_filtered_topic option: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  });
+
+  rmw_subscription_content_filter_options_t & content_filter_options =
+    options.rmw_subscription_content_filter_options;
+  ret_options.filter_expression = content_filter_options.filter_expression;
+
+  for (size_t i = 0; i < content_filter_options.expression_parameters.size; ++i) {
+    ret_options.expression_parameters.push_back(
+      content_filter_options.expression_parameters.data[i]);
+  }
+
+  return ret_options;
+}
+#endif  // CONTENT_FILTER_ENABLE

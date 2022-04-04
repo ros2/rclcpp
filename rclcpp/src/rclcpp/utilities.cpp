@@ -214,4 +214,17 @@ get_c_string(const std::string & string_in)
   return string_in.c_str();
 }
 
+std::vector<const char *>
+get_c_vector_string(const std::vector<std::string> & strings_in)
+{
+  std::vector<const char *> cstrings;
+  cstrings.reserve(strings_in.size());
+
+  for (size_t i = 0; i < strings_in.size(); ++i) {
+    cstrings.push_back(strings_in[i].c_str());
+  }
+
+  return cstrings;
+}
+
 }  // namespace rclcpp

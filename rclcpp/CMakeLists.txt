@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.12)
 
 project(rclcpp)
 
+option(DEFINE_CONTENT_FILTER "Content filter feature support" ON)
+if(DEFINE_CONTENT_FILTER)
+  add_definitions(-DCONTENT_FILTER_ENABLE)
+endif()
+
 find_package(Threads REQUIRED)
 
 find_package(ament_cmake_ros REQUIRED)

@@ -39,6 +39,7 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_content_filter_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -490,6 +491,42 @@ public:
 
     event_handlers_[event_type]->clear_on_ready_callback();
   }
+
+#ifdef CONTENT_FILTER_ENABLE
+  /// Check if content filtered topic feature of the subscription instance is enabled.
+  /**
+   * \return boolean flag indicating if the content filtered topic of this subscription is enabled.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_cft_enabled() const;
+
+  /// Set the filter expression and expression parameters for the subscription.
+  /**
+   * \param[in] filter_expression A filter expression to set.
+   *   \sa ContentFilterOptions::filter_expression
+   *   An empty string ("") will clear the content filter setting of the subscription.
+   * \param[in] expression_parameters Array of expression parameters to set.
+   *   \sa ContentFilterOptions::expression_parameters
+   * \throws RCLBadAlloc if memory cannot be allocated
+   * \throws RCLError if an unexpect error occurs
+   */
+  RCLCPP_PUBLIC
+  void
+  set_content_filter(
+    const std::string & filter_expression,
+    const std::vector<std::string> & expression_parameters = {});
+
+  /// Get the filter expression and expression parameters for the subscription.
+  /**
+   * \return rclcpp::ContentFilterOptions The content filter options to get.
+   * \throws RCLBadAlloc if memory cannot be allocated
+   * \throws RCLError if an unexpect error occurs
+   */
+  RCLCPP_PUBLIC
+  rclcpp::ContentFilterOptions
+  get_content_filter() const;
+#endif  // CONTENT_FILTER_ENABLE
 
 protected:
   template<typename EventCallbackT>
