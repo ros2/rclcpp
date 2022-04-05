@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+15.4.0 (2022-04-05)
+-------------------
+* add take_data_by_entity_id API to waitable (`#1892 <https://github.com/ros2/rclcpp/issues/1892>`_)
+* Contributors: Alberto Soragna
+
 15.3.0 (2022-03-30)
 -------------------
 

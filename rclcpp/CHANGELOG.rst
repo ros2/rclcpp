@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+15.4.0 (2022-04-05)
+-------------------
+* add take_data_by_entity_id API to waitable (`#1892 <https://github.com/ros2/rclcpp/issues/1892>`_)
+* add content-filtered-topic interfaces (`#1561 <https://github.com/ros2/rclcpp/issues/1561>`_)
+* Contributors: Alberto Soragna, Chen Lihui
+
 15.3.0 (2022-03-30)
 -------------------
 * [NodeParameters] Set name in param info pre-check (`#1908 <https://github.com/ros2/rclcpp/issues/1908>`_)
