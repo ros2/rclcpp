@@ -54,6 +54,15 @@ Waitable::get_number_of_ready_guard_conditions()
   return 0u;
 }
 
+std::shared_ptr<void>
+Waitable::take_data_by_entity_id(size_t id)
+{
+  (void)id;
+  throw std::runtime_error(
+          "Custom waitables should override take_data_by_entity_id "
+          "if they want to use it.");
+}
+
 bool
 Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 {

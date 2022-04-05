@@ -589,6 +589,31 @@ ClientBase::take_data()
   }
 }
 
+std::shared_ptr<void>
+ClientBase::take_data_by_entity_id(size_t id)
+{
+  // Mark as ready the entity from which we want to take data
+  switch (static_cast<EntityType>(id)) {
+    case EntityType::GoalClient:
+      pimpl_->is_goal_response_ready = true;
+      break;
+    case EntityType::ResultClient:
+      pimpl_->is_result_response_ready = true;
+      break;
+    case EntityType::CancelClient:
+      pimpl_->is_cancel_response_ready = true;
+      break;
+    case EntityType::FeedbackSubscription:
+      pimpl_->is_feedback_ready = true;
+      break;
+    case EntityType::StatusSubscription:
+      pimpl_->is_status_ready = true;
+      break;
+  }
+
+  return take_data();
+}
+
 void
 ClientBase::execute(std::shared_ptr<void> & data)
 {

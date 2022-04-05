@@ -268,6 +268,25 @@ ServerBase::take_data()
   }
 }
 
+std::shared_ptr<void>
+ServerBase::take_data_by_entity_id(size_t id)
+{
+  // Mark as ready the entity from which we want to take data
+  switch (static_cast<EntityType>(id)) {
+    case EntityType::GoalService:
+      pimpl_->goal_request_ready_ = true;
+      break;
+    case EntityType::ResultService:
+      pimpl_->result_request_ready_ = true;
+      break;
+    case EntityType::CancelService:
+      pimpl_->cancel_request_ready_ = true;
+      break;
+  }
+
+  return take_data();
+}
+
 void
 ServerBase::execute(std::shared_ptr<void> & data)
 {
@@ -398,6 +417,7 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
   }
   auto request = std::get<1>(*shared_ptr);
   auto request_header = std::get<2>(*shared_ptr);
+  pimpl_->cancel_request_ready_ = false;
 
   // Convert c++ message to C message
   rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();

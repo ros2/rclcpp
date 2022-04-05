@@ -160,6 +160,24 @@ public:
   std::shared_ptr<void>
   take_data() = 0;
 
+  /// Take the data so that it can be consumed with `execute`.
+  /**
+   * This function allows to specify an entity ID to take the data from.
+   * Entity IDs are identifiers that can be defined by waitable-derived
+   * classes that are composed of several distinct entities.
+   * The main use-case is in conjunction with the listener APIs.
+   *
+   * \param[in] id the id of the entity from which to take
+   * \returns the type-erased data taken from entity specified
+   *
+   * \sa rclcpp::Waitable::take_data
+   * \sa rclcpp::Waitable::set_on_ready_callback
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id);
+
   /// Execute data that is passed in.
   /**
    * Before calling this method, the Waitable should be added to a wait set,

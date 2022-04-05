@@ -89,7 +89,7 @@ public:
 class QOSEventHandlerBase : public Waitable
 {
 public:
-  enum class EntityType
+  enum class EntityType : std::size_t
   {
     Event,
   };
@@ -257,6 +257,13 @@ public:
       return nullptr;
     }
     return std::static_pointer_cast<void>(std::make_shared<EventCallbackInfoT>(callback_info));
+  }
+
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override
+  {
+    (void)id;
+    return take_data();
   }
 
   /// Execute any entities of the Waitable that are ready.

@@ -66,7 +66,7 @@ public:
   virtual ~ClientBase();
 
   /// Enum to identify entities belonging to the action client
-  enum class EntityType
+  enum class EntityType : std::size_t
   {
     GoalClient,
     ResultClient,
@@ -133,6 +133,11 @@ public:
   RCLCPP_ACTION_PUBLIC
   std::shared_ptr<void>
   take_data() override;
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC

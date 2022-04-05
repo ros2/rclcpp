@@ -72,7 +72,7 @@ class ServerBase : public rclcpp::Waitable
 {
 public:
   /// Enum to identify entities belonging to the action server
-  enum class EntityType
+  enum class EntityType : std::size_t
   {
     GoalService,
     ResultService,
@@ -130,6 +130,10 @@ public:
   RCLCPP_ACTION_PUBLIC
   std::shared_ptr<void>
   take_data() override;
+
+  RCLCPP_ACTION_PUBLIC
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override;
 
   /// Act on entities in the wait set which are ready to be acted upon.
   /// \internal

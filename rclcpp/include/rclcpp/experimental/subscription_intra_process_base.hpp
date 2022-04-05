@@ -38,7 +38,7 @@ class SubscriptionIntraProcessBase : public rclcpp::Waitable
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
-  enum class EntityType
+  enum class EntityType : std::size_t
   {
     Subscription,
   };
@@ -67,6 +67,13 @@ public:
 
   std::shared_ptr<void>
   take_data() override = 0;
+
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override
+  {
+    (void)id;
+    return take_data();
+  }
 
   void
   execute(std::shared_ptr<void> & data) override = 0;
