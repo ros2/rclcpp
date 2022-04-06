@@ -38,13 +38,6 @@ public:
    */
   Duration(int32_t seconds, uint32_t nanoseconds);
 
-  /// Construct duration from the specified nanoseconds.
-  [[deprecated(
-    "Use Duration::from_nanoseconds instead or std::chrono_literals. For example:"
-    "rclcpp::Duration::from_nanoseconds(int64_variable);"
-    "rclcpp::Duration(0ns);")]]
-  explicit Duration(rcl_duration_value_t nanoseconds);
-
   /// Construct duration from the specified std::chrono::nanoseconds.
   explicit Duration(std::chrono::nanoseconds nanoseconds);
 

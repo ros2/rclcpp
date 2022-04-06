@@ -84,35 +84,6 @@ protected:
   rclcpp::MessageInfo message_info_;
 };
 
-void construct_with_null_allocator()
-{
-// suppress deprecated function warning
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-
-  // We need to wrap this in a function because `EXPECT_THROW` is a macro, and thinks
-  // that the comma in here splits macro arguments, not the template arguments.
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> any_subscription_callback(nullptr);
-
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
-}
-
-TEST(AnySubscriptionCallback, null_allocator) {
-  EXPECT_THROW(
-    construct_with_null_allocator(),
-    std::invalid_argument);
-}
-
 TEST_F(TestAnySubscriptionCallback, construct_destruct) {
   // Default constructor.
   rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc1;
