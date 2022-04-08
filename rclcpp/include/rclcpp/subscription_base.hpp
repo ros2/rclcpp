@@ -492,7 +492,6 @@ public:
     event_handlers_[event_type]->clear_on_ready_callback();
   }
 
-#ifdef CONTENT_FILTER_ENABLE
   /// Check if content filtered topic feature of the subscription instance is enabled.
   /**
    * \return boolean flag indicating if the content filtered topic of this subscription is enabled.
@@ -526,7 +525,6 @@ public:
   RCLCPP_PUBLIC
   rclcpp::ContentFilterOptions
   get_content_filter() const;
-#endif  // CONTENT_FILTER_ENABLE
 
 protected:
   template<typename EventCallbackT>

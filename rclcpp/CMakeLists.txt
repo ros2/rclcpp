@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.12)
 
 project(rclcpp)
 
-# A macro to control the content filter feature support
-add_definitions(-DCONTENT_FILTER_ENABLE)
-
 find_package(Threads REQUIRED)
 
 find_package(ament_cmake_ros REQUIRED)
