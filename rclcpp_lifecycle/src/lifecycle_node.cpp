@@ -183,24 +183,6 @@ LifecycleNode::declare_parameter(
 }
 
 const rclcpp::ParameterValue &
-LifecycleNode::declare_parameter(const std::string & name)
-{
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-  return this->node_parameters_->declare_parameter(name);
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#else
-# pragma warning(pop)
-#endif
-}
-
-const rclcpp::ParameterValue &
 LifecycleNode::declare_parameter(
   const std::string & name,
   rclcpp::ParameterType type,

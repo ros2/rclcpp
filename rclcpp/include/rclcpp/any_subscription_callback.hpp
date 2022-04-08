@@ -354,12 +354,6 @@ public:
     allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
   }
 
-  [[deprecated("use AnySubscriptionCallback(const AllocatorT & allocator) instead")]]
-  explicit
-  AnySubscriptionCallback(std::shared_ptr<AllocatorT> allocator)  // NOLINT[runtime/explicit]
-  : AnySubscriptionCallback(*NotNull<AllocatorT>(allocator.get(), "invalid allocator").pointer)
-  {}
-
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
 
   /// Generic function for setting the callback.

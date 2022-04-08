@@ -468,14 +468,6 @@ declare_parameter_helper(
 }
 
 const rclcpp::ParameterValue &
-NodeParameters::declare_parameter(const std::string & name)
-{
-  rcl_interfaces::msg::ParameterDescriptor descriptor;
-  descriptor.dynamic_typing = true;
-  return this->declare_parameter(name, rclcpp::ParameterValue{}, descriptor, false);
-}
-
-const rclcpp::ParameterValue &
 NodeParameters::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,

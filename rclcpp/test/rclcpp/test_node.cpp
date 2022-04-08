@@ -3138,20 +3138,4 @@ TEST_F(TestNode, static_and_dynamic_typing) {
         "uninitialized_not_valid_except_dynamic_typing", rclcpp::ParameterValue{}),
       rclcpp::exceptions::InvalidParameterTypeException);
   }
-  {
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-    auto param = node->declare_parameter("deprecated_way_dynamic_typing");
-    EXPECT_EQ(param, rclcpp::ParameterValue{});
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#else
-# pragma warning(pop)
-#endif
-  }
 }
