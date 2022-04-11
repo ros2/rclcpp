@@ -126,7 +126,6 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
       rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
     }
 
-#ifdef CONTENT_FILTER_ENABLE
     // Copy content_filter_options into rcl_subscription_options.
     if (!content_filter_options.filter_expression.empty()) {
       std::vector<const char *> cstrings =
@@ -141,7 +140,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
           ret, "failed to set content_filter_options");
       }
     }
-#endif  // CONTENT_FILTER_ENABLE
+
     return result;
   }
 

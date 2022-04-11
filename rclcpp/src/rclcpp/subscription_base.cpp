@@ -357,7 +357,6 @@ SubscriptionBase::set_on_new_message_callback(
   }
 }
 
-#ifdef CONTENT_FILTER_ENABLE
 bool
 SubscriptionBase::is_cft_enabled() const
 {
@@ -445,4 +444,3 @@ SubscriptionBase::get_content_filter() const
 
   return ret_options;
 }
-#endif  // CONTENT_FILTER_ENABLE
