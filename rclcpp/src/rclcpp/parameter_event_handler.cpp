@@ -133,9 +133,13 @@ ParameterEventHandler::get_parameter_from_event(
 {
   rclcpp::Parameter p;
   if (!get_parameter_from_event(event, p, parameter_name, node_name)) {
-    throw std::runtime_error(
-            "Parameter '" + parameter_name + "' of node '" + node_name +
-            "' is not part of parameter event");
+    if (event.node == node_name) {
+      return rclcpp::Parameter(parameter_name, rclcpp::PARAMETER_NOT_SET);
+    } else {
+      throw std::runtime_error(
+              "The node name '" + node_name + "' of parameter '" + parameter_name +
+              +"' doesn't match the node name '" + event.node + "' in parameter event");
+    }
   }
   return p;
 }
