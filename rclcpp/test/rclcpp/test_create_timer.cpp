@@ -116,3 +116,20 @@ TEST(TestCreateTimer, call_wall_timer_with_bad_arguments)
     std::invalid_argument);
   rclcpp::shutdown();
 }
+
+static void test_timer_callback(void) {}
+
+TEST(TestCreateTimer, timer_function_pointer)
+{
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("timer_function_pointer_node");
+
+  // make sure build succeeds with function pointer instead of lambda
+  auto some_timer = rclcpp::create_timer(
+    node,
+    node->get_clock(),
+    rclcpp::Duration(0ms),
+    test_timer_callback);
+
+  rclcpp::shutdown();
+}
