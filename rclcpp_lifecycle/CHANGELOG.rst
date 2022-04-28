@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 9.2.0 (2021-09-17)
 ------------------
 * Added thread safe for_each_callback_group method (`#1741 <https://github.com/ros2/rclcpp/issues/1741>`_)

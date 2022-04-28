@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add test-dep ament_cmake_google_benchmark (`#1904 <https://github.com/ros2/rclcpp/issues/1904>`_) (`#1909 <https://github.com/ros2/rclcpp/issues/1909>`_)
+* Use parantheses around logging macro parameter (`#1820 <https://github.com/ros2/rclcpp/issues/1820>`_) (`#1822 <https://github.com/ros2/rclcpp/issues/1822>`_)
+* Contributors: mergify[bot]
+
 9.2.0 (2021-09-17)
 ------------------
 * Added thread safe for_each_callback_group method (`#1741 <https://github.com/ros2/rclcpp/issues/1741>`_)
