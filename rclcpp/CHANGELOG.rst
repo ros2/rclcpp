@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.2.1 (2022-04-28)
+------------------
 * Add test-dep ament_cmake_google_benchmark (`#1904 <https://github.com/ros2/rclcpp/issues/1904>`_) (`#1909 <https://github.com/ros2/rclcpp/issues/1909>`_)
 * Use parantheses around logging macro parameter (`#1820 <https://github.com/ros2/rclcpp/issues/1820>`_) (`#1822 <https://github.com/ros2/rclcpp/issues/1822>`_)
 * Contributors: mergify[bot]
