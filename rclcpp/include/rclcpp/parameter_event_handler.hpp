@@ -268,6 +268,7 @@ public:
    * \param[in] parameter_name Name of parameter.
    * \param[in] node_name Name of node which hosts the parameter.
    * \returns The resultant rclcpp::Parameter from the event.
+   * \throws std::runtime_error if input node name doesn't match the node name in parameter event.
    */
   RCLCPP_PUBLIC
   static rclcpp::Parameter
