@@ -168,8 +168,6 @@ create_subscription(
  * NodeT must also have a method called get_node_parameters_interface()
  * which returns a shared_ptr to a NodeParametersInterface.
  *
- * \deprecated use another overloaded method create_subscription instead.
- *
  * \tparam MessageT
  * \tparam CallbackT
  * \tparam AllocatorT
@@ -193,6 +191,7 @@ template<
   typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
   typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType,
   typename NodeT>
+[[deprecated("use another overloaded method create_subscription instead")]]
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
   NodeT & node,
