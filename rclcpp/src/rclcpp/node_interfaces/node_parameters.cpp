@@ -42,7 +42,7 @@ using rclcpp::node_interfaces::NodeParameters;
 RCLCPP_LOCAL
 void
 local_perform_automatically_declare_parameters_from_overrides(
-  std::function<const std::map<std::string, rclcpp::ParameterValue>&()> get_parameter_overrides,
+  std::function<const std::map<std::string, rclcpp::ParameterValue> & ()> get_parameter_overrides,
   std::function<bool(const std::string &)> has_parameter,
   std::function<const rclcpp::ParameterValue & (
     const std::string &,
