@@ -51,7 +51,9 @@ IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
     }
     if (can_communicate(publisher, subscription)) {
       uint64_t sub_id = pair.first;
-      insert_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
+      insert_sub_id_for_pub(
+        sub_id, pub_id,
+        subscription->use_take_shared_method(), subscription->is_serialized());
     }
   }
 
@@ -75,7 +77,9 @@ IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr su
     }
     if (can_communicate(publisher, subscription)) {
       uint64_t pub_id = pair.first;
-      insert_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
+      insert_sub_id_for_pub(
+        sub_id, pub_id,
+        subscription->use_take_shared_method(), subscription->is_serialized());
     }
   }
 
@@ -90,19 +94,14 @@ IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
   subscriptions_.erase(intra_process_subscription_id);
 
   for (auto & pair : pub_to_subs_) {
-    pair.second.take_shared_subscriptions.erase(
-      std::remove(
-        pair.second.take_shared_subscriptions.begin(),
-        pair.second.take_shared_subscriptions.end(),
-        intra_process_subscription_id),
-      pair.second.take_shared_subscriptions.end());
-
-    pair.second.take_ownership_subscriptions.erase(
-      std::remove(
-        pair.second.take_ownership_subscriptions.begin(),
-        pair.second.take_ownership_subscriptions.end(),
-        intra_process_subscription_id),
-      pair.second.take_ownership_subscriptions.end());
+    for (auto i = 0u; i < SplittedSubscriptions::IndexNum; ++i) {
+      pair.second.take_subscriptions[i].erase(
+        std::remove(
+          pair.second.take_subscriptions[i].begin(),
+          pair.second.take_subscriptions[i].end(),
+          intra_process_subscription_id),
+        pair.second.take_subscriptions[i].end());
+    }
   }
 }
 
@@ -146,9 +145,10 @@ IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id)
     return 0;
   }
 
-  auto count =
-    publisher_it->second.take_shared_subscriptions.size() +
-    publisher_it->second.take_ownership_subscriptions.size();
+  size_t count = 0u;
+  for (auto i = 0u; i < SplittedSubscriptions::IndexNum; ++i) {
+    count += publisher_it->second.take_subscriptions[i].size();
+  }
 
   return count;
 }
@@ -198,13 +198,12 @@ void
 IntraProcessManager::insert_sub_id_for_pub(
   uint64_t sub_id,
   uint64_t pub_id,
-  bool use_take_shared_method)
+  bool use_take_shared_method,
+  bool is_serialized_subscriber)
 {
-  if (use_take_shared_method) {
-    pub_to_subs_[pub_id].take_shared_subscriptions.push_back(sub_id);
-  } else {
-    pub_to_subs_[pub_id].take_ownership_subscriptions.push_back(sub_id);
-  }
+  pub_to_subs_[pub_id].take_subscriptions[SplittedSubscriptions::get_index(
+      use_take_shared_method,
+      is_serialized_subscriber)].push_back(sub_id);
 }
 
 bool
