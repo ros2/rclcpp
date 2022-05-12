@@ -312,6 +312,23 @@ TEST_F(TestPublisher, serialized_message_publish) {
   EXPECT_NO_THROW(publisher->publish(serialized_msg.get_rcl_serialized_message()));
 }
 
+TEST_F(TestPublisher, serialized_message_intra_process_publish) {
+  initialize();
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+  auto publisher = rclcpp::detail::create_publisher(
+    *node, "topic",
+    rclcpp::get_message_type_support_handle<test_msgs::msg::Empty>(), 10, options);
+
+  rclcpp::SerializedMessage serialized_msg;
+  RCLCPP_EXPECT_THROW_EQ(
+    publisher->publish(serialized_msg),
+    std::runtime_error("storing serialized messages in intra process is not supported yet"));
+
+  auto serialized_unique_msg_ptr = std::make_unique<rclcpp::SerializedMessage>();
+  EXPECT_NO_THROW(publisher->publish(std::move(serialized_unique_msg_ptr)));
+}
+
 TEST_F(TestPublisher, rcl_publisher_init_error) {
   initialize();
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_publisher_init, RCL_RET_ERROR);
