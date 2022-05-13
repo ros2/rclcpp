@@ -613,7 +613,7 @@ public:
   // Dispatch when input is a serialized message and the output could be anything.
   void
   dispatch(
-    std::shared_ptr<rclcpp::SerializedMessage> serialized_message,
+    std::shared_ptr<const rclcpp::SerializedMessage> serialized_message,
     const rclcpp::MessageInfo & message_info)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
