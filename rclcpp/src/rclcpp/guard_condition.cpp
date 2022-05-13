@@ -100,7 +100,7 @@ void
 GuardCondition::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
-  
+
   if (exchange_in_use_by_wait_set_state(true)) {
     if (wait_set != wait_set_) {
       throw std::runtime_error("guard condition has already been added to a wait set.");
