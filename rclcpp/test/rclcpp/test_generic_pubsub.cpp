@@ -266,6 +266,8 @@ TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
 
 TEST_F(RclcppGenericNodeFixture, generic_subscription_different_callbacks)
 {
+  // If the GenericSubscription does not use the provided QoS profile,
+  // its request will be incompatible with the Publisher's offer and no messages will be passed.
   using namespace std::chrono_literals;
   std::string topic_name = "string_topic";
   std::string topic_type = "test_msgs/msg/Strings";
