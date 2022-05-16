@@ -363,6 +363,12 @@ public:
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
+      // In this case, the message will be delivered via intra process and
+      // we should ignore this copy of the message.
+      return;
+    }
+
     auto typed_message = static_cast<ROSMessageType *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
     auto sptr = std::shared_ptr<ROSMessageType>(
