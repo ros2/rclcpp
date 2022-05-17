@@ -193,7 +193,7 @@ public:
   {
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
-    using Indicies = SplittedSubscriptionsIndicies<is_serialized_publisher>;
+    using Indicies = SplitSubscriptionsIndices<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -305,7 +305,7 @@ public:
   {
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
-    using Indicies = SplittedSubscriptionsIndicies<is_serialized_publisher>;
+    using Indicies = SplitSubscriptionsIndices<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -420,13 +420,13 @@ private:
   {
     enum
     {
-      IndexSharedTyped = 0, IndexSharedSerialized = 1,
-      IndexOwnershipTyped = 2, IndexOwnershipSerialized = 3,
-      IndexNum = 4
+      IndexSharedTyped = 0u, IndexSharedSerialized = 1u,
+      IndexOwnershipTyped = 2u, IndexOwnershipSerialized = 3u,
+      IndexNum = 4u
     };
 
     /// get the index for "take_subscriptions" depending on shared/serialized
-    constexpr static int32_t
+    constexpr static uint32_t
     get_index(const bool is_shared, const bool is_serialized)
     {
       return (is_serialized ? IndexSharedTyped : IndexSharedSerialized) +
@@ -437,7 +437,7 @@ private:
   };
 
   template<bool is_serialized>
-  struct SplittedSubscriptionsIndicies
+  struct SplitSubscriptionsIndices
   {
     constexpr static auto ownership_same = SplittedSubscriptions::get_index(
       false,
