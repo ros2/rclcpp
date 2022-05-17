@@ -580,7 +580,7 @@ private:
     const std::vector<uint64_t> & take_ownership_subscriptions,
     const std::vector<uint64_t> & take_shared_subscriptions)
   {
-    for (auto id : take_ownership_subscriptions) {
+    for (const auto id : take_ownership_subscriptions) {
       auto subscription_it = subscriptions_.find(id);
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
@@ -605,7 +605,7 @@ private:
       }
     }
 
-    for (auto id : take_shared_subscriptions) {
+    for (const auto id : take_shared_subscriptions) {
       auto subscription_it = subscriptions_.find(id);
       if (subscription_it == subscriptions_.end()) {
         throw std::runtime_error("subscription has unexpectedly gone out of scope");
