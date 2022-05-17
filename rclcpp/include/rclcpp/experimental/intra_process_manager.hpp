@@ -600,7 +600,7 @@ private:
           take_shared_subscriptions
       ))
       {
-        // message was successfully converted and forwarded, so stop fruther forwarding
+        // message was successfully converted and forwarded, so stop further forwarding
         return;
       }
     }
@@ -625,7 +625,7 @@ private:
           take_shared_subscriptions
       ))
       {
-        // message was successfully converted and forwarded, so stop fruther forwarding
+        // message was successfully converted and forwarded, so stop further forwarding
         return;
       }
     }
@@ -815,6 +815,14 @@ private:
 
 namespace detail
 {
+/**
+ * Helper function to expose method of IntraProcessManager
+ * for publishing messages with same data type.
+ *
+ * This is needed as the publisher of serialized message is not aware of the subscribed
+ * data type. While the subscription has all needed information (MessageT, Allocator) to
+ * cast and deserialize the message. The type information is forwarded by the helper function.
+ */
 template<
   typename MessageT,
   typename ROSMessageType,

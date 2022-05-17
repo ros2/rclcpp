@@ -36,7 +36,7 @@ namespace rclcpp
 namespace experimental
 {
 
-// forward decleartions
+// Forward declartions to reuse methods from IntraProcessManager
 class IntraProcessManager;
 namespace detail
 {

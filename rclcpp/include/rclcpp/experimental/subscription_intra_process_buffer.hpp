@@ -224,6 +224,7 @@ public:
 
       return true;
     } else {
+      // The method is only allowed to be called with valid data (serialized case).
       throw std::runtime_error("nullptr provided for serialized inter-process communication");
     }
 
