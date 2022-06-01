@@ -73,11 +73,11 @@ NodeTopics::add_publisher(
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
+    callback_group->get_notify_guard_condition().trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on publisher creation: ") + ex.what());
   }
-  callback_group->get_notify_guard_condition().trigger();
 }
 
 rclcpp::SubscriptionBase::SharedPtr
@@ -122,11 +122,11 @@ NodeTopics::add_subscription(
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
+    callback_group->get_notify_guard_condition().trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on subscription creation: ") + ex.what());
   }
-  callback_group->get_notify_guard_condition().trigger();
 }
 
 rclcpp::node_interfaces::NodeBaseInterface *
