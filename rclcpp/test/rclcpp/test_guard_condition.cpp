@@ -164,3 +164,21 @@ TEST_F(TestGuardCondition, set_on_trigger_callback) {
     EXPECT_EQ(c1.load(), 2u);
   }
 }
+
+/*
+ * Testing that callback and waitset are both notified by triggering gc
+ */
+TEST_F(TestGuardCondition, callback_and_waitset) {
+  auto gc = std::make_shared<rclcpp::GuardCondition>();
+  std::atomic<size_t> c1 {0};
+  auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
+  gc->set_on_trigger_callback(increase_c1_cb);
+
+  rclcpp::WaitSet wait_set;
+  wait_set.add_guard_condition(gc);
+
+  gc->trigger();
+
+  EXPECT_EQ(rclcpp::WaitResultKind::Ready, wait_set.wait(std::chrono::seconds(1)).kind());
+  EXPECT_EQ(c1.load(), 1u);
+}
