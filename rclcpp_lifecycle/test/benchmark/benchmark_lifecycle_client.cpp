@@ -75,7 +75,7 @@ public:
       throw std::runtime_error("Wait for service timed out");
     }
 
-    auto future_result = client_get_state_->async_send_request(request);
+    auto future_result = client_get_state_->async_send_request(request).future.share();
     auto future_status = future_result.wait_for(time_out);
 
     if (future_status != std::future_status::ready) {
@@ -98,7 +98,7 @@ public:
       throw std::runtime_error("Wait for service timed out");
     }
 
-    auto future_result = client_change_state_->async_send_request(request);
+    auto future_result = client_change_state_->async_send_request(request).future.share();
     auto future_status = future_result.wait_for(time_out);
 
     if (future_status != std::future_status::ready) {
@@ -121,7 +121,7 @@ public:
       throw std::runtime_error("Wait for service timed out");
     }
 
-    auto future_result = client_get_available_states_->async_send_request(request);
+    auto future_result = client_get_available_states_->async_send_request(request).future.share();
     auto future_status = future_result.wait_for(time_out);
 
     if (future_status != std::future_status::ready) {
@@ -144,7 +144,8 @@ public:
       throw std::runtime_error("Wait for service timed out");
     }
 
-    auto future_result = client_get_available_transitions_->async_send_request(request);
+    auto future_result =
+      client_get_available_transitions_->async_send_request(request).future.share();
     auto future_status = future_result.wait_for(time_out);
 
     if (future_status != std::future_status::ready) {
@@ -167,7 +168,7 @@ public:
       throw std::runtime_error("Wait for service timed out");
     }
 
-    auto future_result = client_get_transition_graph_->async_send_request(request);
+    auto future_result = client_get_transition_graph_->async_send_request(request).future.share();
     auto future_status = future_result.wait_for(time_out);
 
     if (future_status != std::future_status::ready) {
