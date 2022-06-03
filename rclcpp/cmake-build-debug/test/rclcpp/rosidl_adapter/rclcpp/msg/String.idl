@@ -1,0 +1,12 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from rclcpp/../msg/String.msg
+// generated code does not contain a copyright notice
+
+
+module rclcpp {
+  module msg {
+    struct String {
+      string data;
+    };
+  };
+};

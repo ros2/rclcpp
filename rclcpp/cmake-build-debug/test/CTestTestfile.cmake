@@ -1,0 +1,10 @@
+# CMake generated Testfile for 
+# Source directory: /home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test
+# Build directory: /home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+add_test(test_rclcpp_gtest_macros "/usr/bin/python3.8" "-u" "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_test/share/ament_cmake_test/cmake/run_test.py" "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test_results/rclcpp/test_rclcpp_gtest_macros.gtest.xml" "--package-name" "rclcpp" "--output-file" "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/ament_cmake_gtest/test_rclcpp_gtest_macros.txt" "--command" "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/test_rclcpp_gtest_macros" "--gtest_output=xml:/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test_results/rclcpp/test_rclcpp_gtest_macros.gtest.xml")
+set_tests_properties(test_rclcpp_gtest_macros PROPERTIES  LABELS "gtest" REQUIRED_FILES "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/test_rclcpp_gtest_macros" TIMEOUT "60" WORKING_DIRECTORY "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test" _BACKTRACE_TRIPLES "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_test/share/ament_cmake_test/cmake/ament_add_test.cmake;125;add_test;/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_gtest/share/ament_cmake_gtest/cmake/ament_add_gtest_test.cmake;86;ament_add_test;/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_gtest/share/ament_cmake_gtest/cmake/ament_add_gtest.cmake;93;ament_add_gtest_test;/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test/CMakeLists.txt;12;ament_add_gtest;/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test/CMakeLists.txt;0;")
+subdirs("benchmark")
+subdirs("rclcpp")

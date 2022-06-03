@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "test/rclcpp/rclcpp_test_msgs__py",
+		"source" : "cmake-build-debug/test/rclcpp/rclcpp_test_msgs__py"
+	}
+}

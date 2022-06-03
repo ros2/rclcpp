@@ -219,6 +219,8 @@ Node::declare_parameter(
 {
   // get advantage of parameter value template magic to get
   // the correct rclcpp::ParameterType from ParameterT
+  std::cout << "Node::declare_parameter template 2" << std::endl;
+
   rclcpp::ParameterValue value{ParameterT{}};
   try {
     return this->declare_parameter(
@@ -239,6 +241,8 @@ Node::declare_parameters(
   const std::map<std::string, ParameterT> & parameters,
   bool ignore_overrides)
 {
+  std::cout << "Node::declare_parameter template 1" << std::endl;
+
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(

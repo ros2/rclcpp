@@ -1,0 +1,156 @@
+{
+	"backtrace" : 17,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target",
+			"include",
+			"find_package"
+		],
+		"files" : 
+		[
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_core/share/ament_cmake_core/cmake/ament_cmake_uninstall_target-extras.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_core/share/ament_cmake_core/cmake/ament_cmake_coreConfig.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_test/share/ament_cmake_test/cmake/ament_cmake_test-extras.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_test/share/ament_cmake_test/cmake/ament_cmake_testConfig.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_pytest/share/ament_cmake_pytest/cmake/ament_cmake_pytest-extras.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_pytest/share/ament_cmake_pytest/cmake/ament_cmake_pytestConfig.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_ros/share/ament_cmake_ros/cmake/ament_cmake_ros-extras.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_ros/share/ament_cmake_ros/cmake/ament_cmake_rosConfig.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 8
+			},
+			{
+				"command" : 2,
+				"file" : 8,
+				"line" : 7,
+				"parent" : 0
+			},
+			{
+				"file" : 7,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 7,
+				"line" : 41,
+				"parent" : 2
+			},
+			{
+				"file" : 6,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 6,
+				"line" : 19,
+				"parent" : 4
+			},
+			{
+				"file" : 5,
+				"parent" : 5
+			},
+			{
+				"command" : 1,
+				"file" : 5,
+				"line" : 41,
+				"parent" : 6
+			},
+			{
+				"file" : 4,
+				"parent" : 7
+			},
+			{
+				"command" : 2,
+				"file" : 4,
+				"line" : 17,
+				"parent" : 8
+			},
+			{
+				"file" : 3,
+				"parent" : 9
+			},
+			{
+				"command" : 1,
+				"file" : 3,
+				"line" : 41,
+				"parent" : 10
+			},
+			{
+				"file" : 2,
+				"parent" : 11
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 39,
+				"parent" : 12
+			},
+			{
+				"file" : 1,
+				"parent" : 13
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 41,
+				"parent" : 14
+			},
+			{
+				"file" : 0,
+				"parent" : 15
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 40,
+				"parent" : 16
+			}
+		]
+	},
+	"id" : "rclcpp_uninstall::@6890427a1f51a3e7e1df",
+	"name" : "rclcpp_uninstall",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 17,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/CMakeFiles/rclcpp_uninstall",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/CMakeFiles/rclcpp_uninstall.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "UTILITY"
+}

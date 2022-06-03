@@ -1,0 +1,8 @@
+{
+  "package_name": "rclcpp",
+  "non_idl_tuples": [
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test/rclcpp:../msg/Header.msg",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test/rclcpp:../msg/MessageWithHeader.msg",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test/rclcpp:../msg/String.msg"
+  ]
+}

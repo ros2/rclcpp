@@ -1,0 +1,29 @@
+{
+  "package_name": "rclcpp",
+  "output_dir": "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_typesupport_introspection_c/rclcpp",
+  "template_dir": "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource",
+  "idl_tuples": [
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp:msg/Header.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp:msg/MessageWithHeader.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp:msg/String.idl"
+  ],
+  "ros_interface_dependencies": [
+    "builtin_interfaces:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "builtin_interfaces:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ],
+  "target_dependencies": [
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/lib/rosidl_typesupport_introspection_c/rosidl_typesupport_introspection_c",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/lib/python3.8/site-packages/rosidl_typesupport_introspection_c/__init__.py",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource/idl__rosidl_typesupport_introspection_c.h.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource/idl__type_support.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource/msg__rosidl_typesupport_introspection_c.h.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource/msg__type_support.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource/srv__rosidl_typesupport_introspection_c.h.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/share/rosidl_typesupport_introspection_c/resource/srv__type_support.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp/msg/Header.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp/msg/MessageWithHeader.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp/msg/String.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "package_name": "rclcpp",
+  "output_dir": "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_generator_py/rclcpp",
+  "template_dir": "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource",
+  "idl_tuples": [
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp:msg/Header.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp:msg/MessageWithHeader.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp:msg/String.idl"
+  ],
+  "ros_interface_dependencies": [
+    "builtin_interfaces:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "builtin_interfaces:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ],
+  "target_dependencies": [
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../../../lib/rosidl_generator_py/rosidl_generator_py",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/lib/python3.8/site-packages/rosidl_generator_py/__init__.py",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/lib/python3.8/site-packages/rosidl_generator_py/generate_py_impl.py",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_action_pkg_typesupport_entry_point.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_action.py.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_idl_pkg_typesupport_entry_point.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_idl_support.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_idl.py.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_msg_pkg_typesupport_entry_point.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_msg_support.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_msg.py.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_srv_pkg_typesupport_entry_point.c.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_srv.py.em",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp/msg/Header.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp/msg/MessageWithHeader.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_adapter/rclcpp/msg/String.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ]
+}

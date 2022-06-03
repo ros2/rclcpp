@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from rclcpp/../msg/MessageWithHeader.msg
+// generated code does not contain a copyright notice
+
+#include "rclcpp/msg/Header.idl"
+
+module rclcpp {
+  module msg {
+    @verbatim (language="comment", text=
+      "Message containing a simple Header field.")
+    struct MessageWithHeader {
+      rclcpp::msg::Header header;
+    };
+  };
+};

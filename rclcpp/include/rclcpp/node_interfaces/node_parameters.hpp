@@ -61,6 +61,7 @@ public:
   explicit ParameterMutationRecursionGuard(bool & allow_mod)
   : allow_modification_(allow_mod)
   {
+    std::cout << "allow_modification_ ## " << allow_modification_ << std::endl;
     if (!allow_modification_) {
       throw rclcpp::exceptions::ParameterModifiedInCallbackException(
               "cannot set or declare a parameter, or change the callback from within set callback");
@@ -177,6 +178,11 @@ public:
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
+  OnSetParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnParametersSetCallbackType callback) override;
+
+  RCLCPP_PUBLIC
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) override;
 
@@ -199,6 +205,8 @@ private:
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   CallbacksContainerType on_parameters_set_callback_container_;
+
+  CallbacksContainerType on_local_parameters_set_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 

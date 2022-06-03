@@ -933,6 +933,11 @@ public:
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback);
 
+  RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
+  OnSetParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnParametersSetCallbackType callback);
+
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
    * Delete a handler returned by `add_on_set_parameters_callback`.
@@ -1312,6 +1317,7 @@ private:
   const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;
   const std::string effective_namespace_;
+  bool use_local_parameter_callback_;
 };
 
 }  // namespace rclcpp

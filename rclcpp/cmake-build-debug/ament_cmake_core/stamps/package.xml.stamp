@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+  <name>rclcpp</name>
+  <version>16.2.0</version>
+  <description>The ROS client library in C++.</description>
+  <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
+  <maintainer email="jacob@openrobotics.org">Jacob Perron</maintainer>
+  <maintainer email="william@openrobotics.org">William Woodall</maintainer>
+  <license>Apache License 2.0</license>
+  <author email="dthomas@openrobotics.org">Dirk Thomas</author>
+
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
+  <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
+  <buildtool_depend>python3</buildtool_depend>
+
+  <build_depend>ament_index_cpp</build_depend>
+  <build_depend>builtin_interfaces</build_depend>
+  <build_depend>rcl_interfaces</build_depend>
+  <build_depend>rosgraph_msgs</build_depend>
+  <build_depend>rosidl_runtime_cpp</build_depend>
+  <build_depend>rosidl_typesupport_c</build_depend>
+  <build_depend>rosidl_typesupport_cpp</build_depend>
+  <build_export_depend>ament_index_cpp</build_export_depend>
+  <build_export_depend>builtin_interfaces</build_export_depend>
+  <build_export_depend>rcl_interfaces</build_export_depend>
+  <build_export_depend>rosgraph_msgs</build_export_depend>
+  <build_export_depend>rosidl_runtime_cpp</build_export_depend>
+  <build_export_depend>rosidl_typesupport_c</build_export_depend>
+  <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
+
+  <depend>libstatistics_collector</depend>
+  <depend>rcl</depend>
+  <depend>rcl_yaml_param_parser</depend>
+  <depend>rcpputils</depend>
+  <depend>rcutils</depend>
+  <depend>rmw</depend>
+  <depend>statistics_msgs</depend>
+  <depend>tracetools</depend>
+
+  <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_cmake_google_benchmark</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>mimick_vendor</test_depend>
+  <test_depend>performance_test_fixture</test_depend>
+  <test_depend>rmw</test_depend>
+  <test_depend>rmw_implementation_cmake</test_depend>
+  <test_depend>rosidl_default_generators</test_depend>
+  <test_depend>test_msgs</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

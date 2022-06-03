@@ -210,6 +210,7 @@ Node::Node(
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
+  std::cout << "Node: Init" << std::endl;
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
   rclcpp::detail::declare_qos_parameters(
@@ -317,6 +318,7 @@ Node::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
+  std::cout << "Node: declare_parameter 1" << std::endl;
   return this->node_parameters_->declare_parameter(
     name,
     default_value,
@@ -331,6 +333,7 @@ Node::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
+  std::cout << "Node: declare_parameter 2" << std::endl;
   return this->node_parameters_->declare_parameter(
     name,
     type,
@@ -422,6 +425,11 @@ rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
 Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
 {
   return node_parameters_->add_on_set_parameters_callback(callback);
+}
+
+rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
+Node::add_local_parameters_callback(OnParametersSetCallbackType callback){
+  return node_parameters_->add_local_parameters_callback(callback);
 }
 
 void
