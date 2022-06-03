@@ -356,12 +356,14 @@ Node::has_parameter(const std::string & name) const
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameter(const rclcpp::Parameter & parameter)
 {
-  return this->set_parameters_atomically({parameter});
+  std::cout << "##### Node: set_parameter" << std::endl;
+  return node_parameters_->set_parameters_atomically_helper({parameter});
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
+  std::cout << "##### Node: set_parameters" << std::endl;
   return node_parameters_->set_parameters(parameters);
 }
 

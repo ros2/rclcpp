@@ -45,6 +45,16 @@ struct OnSetParametersCallbackHandle
   OnParametersSetCallbackType callback;
 };
 
+// this one is for post validation
+struct OnSetLocalParametersCallbackHandle
+{
+  RCLCPP_SMART_PTR_DEFINITIONS(OnSetLocalParametersCallbackHandle)
+
+  using OnLocalParametersSetCallbackType = std::function<void()>;
+
+  OnLocalParametersSetCallbackType callback;
+};
+
 /// Pure virtual interface class for the NodeParameters part of the Node API.
 class NodeParametersInterface
 {
@@ -119,6 +129,12 @@ public:
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically_helper(
+      const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
   /*

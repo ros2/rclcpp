@@ -141,6 +141,11 @@ public:
     const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically_helper(
+      const std::vector<rclcpp::Parameter> & parameters) override;
+
+  RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const override;
 

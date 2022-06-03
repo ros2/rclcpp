@@ -616,7 +616,7 @@ NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters
   std::cout<< "set_parameters: " << "size: " << parameters.size() << std::endl;
 
   for (const auto & p : parameters) {
-    auto result = set_parameters_atomically({{p}});
+    auto result = set_parameters_atomically_helper({{p}});
     results.push_back(result);
   }
 
@@ -634,6 +634,20 @@ __find_parameter_by_name(
     parameters.begin(),
     parameters.end(),
     [&](auto parameter) {return parameter.get_name() == name;});
+}
+
+rcl_interfaces::msg::SetParametersResult
+NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Parameter> & parameters){
+  std::cout << "***************** set_parameters_atomically_helper ##### start #####" << std::endl;
+  std::cout << "" << std::endl;
+
+  const auto& result = this->set_parameters_atomically(parameters);
+
+  std::cout << "" << std::endl;
+  std::cout << "***************** set_parameters_atomically_helper ##### end #####" << std::endl;
+  std::cout << "" << std::endl;
+
+  return result;
 }
 
 rcl_interfaces::msg::SetParametersResult
