@@ -184,8 +184,8 @@ public:
 
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
-  OnSetParametersCallbackHandle::SharedPtr
-  add_local_parameters_callback(OnParametersSetCallbackType callback) override;
+  OnSetLocalParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnLocalParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
   void
@@ -211,7 +211,7 @@ private:
 
   CallbacksContainerType on_parameters_set_callback_container_;
 
-  CallbacksContainerType on_local_parameters_set_callback_container_;
+  std::list<OnSetLocalParametersCallbackHandle::WeakPtr> on_local_parameters_set_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 

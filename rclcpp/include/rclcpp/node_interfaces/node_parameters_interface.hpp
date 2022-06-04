@@ -202,6 +202,7 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
   using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
+  using OnLocalParametersSetCallbackType = OnSetLocalParametersCallbackHandle::OnLocalParametersSetCallbackType;
 
   /// Add a callback for when parameters are being set.
   /**
@@ -214,8 +215,8 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  OnSetParametersCallbackHandle::SharedPtr
-  add_local_parameters_callback(OnParametersSetCallbackType callback) = 0;
+  OnSetLocalParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnLocalParametersSetCallbackType callback) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**

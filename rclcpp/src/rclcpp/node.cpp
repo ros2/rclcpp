@@ -429,8 +429,8 @@ Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
   return node_parameters_->add_on_set_parameters_callback(callback);
 }
 
-rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
-Node::add_local_parameters_callback(OnParametersSetCallbackType callback){
+rclcpp::Node::OnSetLocalParametersCallbackHandle::SharedPtr
+Node::add_local_parameters_callback(OnLocalParametersSetCallbackType callback){
   return node_parameters_->add_local_parameters_callback(callback);
 }
 

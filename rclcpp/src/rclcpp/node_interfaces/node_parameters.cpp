@@ -1076,13 +1076,13 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
   return handle;
 }
 
-OnSetParametersCallbackHandle::SharedPtr
-NodeParameters::add_local_parameters_callback(OnParametersSetCallbackType callback){
+rclcpp::node_interfaces::OnSetLocalParametersCallbackHandle::SharedPtr
+NodeParameters::add_local_parameters_callback(OnLocalParametersSetCallbackType callback){
   std::cout << "$$$$ add_local_parameters_callback" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
-  auto handle = std::make_shared<OnSetParametersCallbackHandle>();
+  auto handle = std::make_shared<OnSetLocalParametersCallbackHandle>();
   handle->callback = callback;
   // the last callback registered is executed first.
   on_local_parameters_set_callback_container_.emplace_front(handle);

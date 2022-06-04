@@ -864,6 +864,11 @@ public:
   using OnParametersSetCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
+  using OnSetLocalParametersCallbackHandle =
+      rclcpp::node_interfaces::OnSetLocalParametersCallbackHandle;
+  using OnLocalParametersSetCallbackType =
+      rclcpp::node_interfaces::NodeParametersInterface::OnLocalParametersSetCallbackType;
+
   /// Add a callback for when parameters are being set.
   /**
    * The callback signature is designed to allow handling of any of the above
@@ -935,8 +940,8 @@ public:
 
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
-  OnSetParametersCallbackHandle::SharedPtr
-  add_local_parameters_callback(OnParametersSetCallbackType callback);
+  OnSetLocalParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnLocalParametersSetCallbackType callback);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
