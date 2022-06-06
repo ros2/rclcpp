@@ -45,7 +45,8 @@ struct OnSetParametersCallbackHandle
   OnParametersSetCallbackType callback;
 };
 
-// this one is for post validation
+// local parameter callback gets invoked when the node parameter changes.
+// TODO: check name of the callbackHandle to avoid confusion with validation callback
 struct OnSetLocalParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetLocalParametersCallbackHandle)
@@ -130,6 +131,7 @@ public:
   set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
+  /// TODO: change the function name
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
@@ -213,6 +215,11 @@ public:
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
 
+  /// callback which gets triggered after parameters are set.
+  /**
+   * \sa rclcpp::Node::add_local_parameters_callback
+   * TODO: check name of the callback to avoid confusion with validation.
+   */
   RCLCPP_PUBLIC
   virtual
   OnSetLocalParametersCallbackHandle::SharedPtr

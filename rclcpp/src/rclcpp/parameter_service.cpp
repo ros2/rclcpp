@@ -86,8 +86,6 @@ ParameterService::ParameterService(
       auto result = rcl_interfaces::msg::SetParametersResult();
       for (auto & p : request->parameters) {
         try {
-          RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "calling service");
-
           result = node_params->set_parameters_atomically_helper(
             {rclcpp::Parameter::from_parameter_msg(p)});
         } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {

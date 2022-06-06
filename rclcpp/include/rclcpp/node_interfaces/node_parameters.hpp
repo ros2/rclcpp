@@ -61,7 +61,6 @@ public:
   explicit ParameterMutationRecursionGuard(bool & allow_mod)
   : allow_modification_(allow_mod)
   {
-    std::cout << "allow_modification_ ## " << allow_modification_ << std::endl;
     if (!allow_modification_) {
       throw rclcpp::exceptions::ParameterModifiedInCallbackException(
               "cannot set or declare a parameter, or change the callback from within set callback");

@@ -318,7 +318,6 @@ Node::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  std::cout << "Node: declare_parameter 1" << std::endl;
   return this->node_parameters_->declare_parameter(
     name,
     default_value,
@@ -333,7 +332,6 @@ Node::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  std::cout << "Node: declare_parameter 2" << std::endl;
   return this->node_parameters_->declare_parameter(
     name,
     type,
@@ -356,14 +354,12 @@ Node::has_parameter(const std::string & name) const
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameter(const rclcpp::Parameter & parameter)
 {
-  std::cout << "##### Node: set_parameter" << std::endl;
   return node_parameters_->set_parameters_atomically_helper({parameter});
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
-  std::cout << "##### Node: set_parameters" << std::endl;
   return node_parameters_->set_parameters(parameters);
 }
 

@@ -66,12 +66,10 @@ NodeParameters::NodeParameters(
   publisher_options.allocator = std::make_shared<AllocatorT>();
 
   if (start_parameter_services) {
-    std::cout << "## initialized start_parameter_services" << std::endl;
     parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);
   }
 
   if (start_parameter_event_publisher) {
-    std::cout << "## initialized events_publisher_" << std::endl;
     // TODO(ivanpauno): Qos of the `/parameters_event` topic should be somehow overridable.
     events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
       node_topics,
@@ -273,32 +271,26 @@ __call_on_parameters_set_callbacks(
   CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback)
 {
-  std::cout << "%%%%%%%%% __call_on_parameters_set_callbacks %%%%%% start" << std::endl;
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   auto it = callback_container.begin();
   while (it != callback_container.end()) {
     auto shared_handle = it->lock();
     if (nullptr != shared_handle) {
-      std::cout << "@ calling 1.1" << std::endl;
 
       result = shared_handle->callback(parameters);
       if (!result.successful) {
-        std::cout << "!result.successful" << std::endl;
         return result;
       }
       it++;
     } else {
-      std::cout << "WHAT?" << std::endl;
       it = callback_container.erase(it);
     }
   }
   if (callback) {
-    std::cout << "@ calling 1.2" << std::endl;
     result = callback(parameters);
   }
 
-  std::cout << "%%%%%%%%%% __call_on_parameters_set_callbacks %%%%%%% end" << std::endl;
   return result;
 }
 
@@ -311,8 +303,6 @@ __set_parameters_atomically_common(
   const OnParametersSetCallbackType & callback,
   bool allow_undeclared = false)
 {
-  std::cout << "" << std::endl;
-  std::cout << "###### __set_parameters_atomically_common #### start ####" << std::endl;
   // Check if the value being set complies with the descriptor.
   rcl_interfaces::msg::SetParametersResult result = __check_parameters(
     parameter_infos, parameters, allow_undeclared);
@@ -327,7 +317,6 @@ __set_parameters_atomically_common(
   }
   // If accepted, actually set the values.
 
-  std::cout << "// If accepted, actually set the values.." << std::endl;
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
       const std::string & name = parameters[i].get_name();
@@ -337,9 +326,6 @@ __set_parameters_atomically_common(
     }
   }
 
-  std::cout << "" << std::endl;
-  std::cout << "###### __set_parameters_atomically_common #### end ####" << std::endl;
-  std::cout << "" << std::endl;
   // Either way, return the result.
   return result;
 }
@@ -356,11 +342,7 @@ __declare_parameter_common(
   const OnParametersSetCallbackType & callback,
   rcl_interfaces::msg::ParameterEvent * parameter_event_out,
   bool ignore_override = false)
-{ 
-  
-  std::cout << "" << std::endl;
-  std::cout << "###### __declare_parameter_common #### start ####" << std::endl;
-
+{
   using rclcpp::node_interfaces::ParameterInfo;
   
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
@@ -370,13 +352,11 @@ __declare_parameter_common(
   const rclcpp::ParameterValue * initial_value = &default_value;
   auto overrides_it = overrides.find(name);
   if (!ignore_override && overrides_it != overrides.end()) {
-    std::cout << "^^^^^ !ignore_override && overrides_it != overrides.end() ^^^^^" << std::endl;
     initial_value = &overrides_it->second;
   }
 
   // If there is no initial value, then skip initialization
   if (initial_value->get_type() == rclcpp::PARAMETER_NOT_SET) {
-    std::cout << "  // If there is no initial value, then skip initialization" << std::endl;
     // Add declared parameters to storage (without a value)
     parameter_infos[name].descriptor.name = name;
     if (parameter_descriptor.dynamic_typing) {
@@ -404,17 +384,12 @@ __declare_parameter_common(
   }
 
   // Add declared parameters to storage.
-  std::cout << "// Add declared parameters to storage" << std::endl;
   parameters_out[name] = parameter_infos.at(name);
 
   // Extend the given parameter event, if valid.
   if (parameter_event_out) {
-    std::cout << "## __declare_parameter_common: parameter_event_out" << std::endl;
     parameter_event_out->new_parameters.push_back(parameter_wrappers[0].to_parameter_msg());
   }
-
-  std::cout << "###### __declare_parameter_common #### end ####" << std::endl;
-  std::cout << "" << std::endl;
 
   return result;
 }
@@ -435,9 +410,6 @@ declare_parameter_helper(
   const std::string & combined_name,
   rclcpp::node_interfaces::NodeClockInterface & node_clock)
 {
-  std::cout<<""<<std::endl;
-  std::cout << "######## __declare_parameter_helper ##### start #####" << std::endl;
-
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
     throw rclcpp::exceptions::InvalidParametersException("parameter name must not be empty");
@@ -445,14 +417,12 @@ declare_parameter_helper(
 
   // Error if this parameter has already been declared and is different
   if (__lockless_has_parameter(parameters, name)) {
-    std::cout << " // Error if this parameter has already been declared and is different " << std::endl;
     throw rclcpp::exceptions::ParameterAlreadyDeclaredException(
             "parameter '" + name + "' has already been declared");
   }
 
   if (!parameter_descriptor.dynamic_typing) {
     if (rclcpp::PARAMETER_NOT_SET == type) {
-      std::cout << "rclcpp::PARAMETER_NOT_SET == type" << std::endl;
       type = default_value.get_type();
     }
     if (rclcpp::PARAMETER_NOT_SET == type) {
@@ -478,7 +448,6 @@ declare_parameter_helper(
 
   // If it failed to be set, then throw an exception.
   if (!result.successful) {
-    std::cout << "## !result.successful" << std::endl;
     constexpr const char type_error_msg_start[] = "Wrong parameter type";
     if (
       0u == std::strncmp(
@@ -494,15 +463,11 @@ declare_parameter_helper(
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
   if (nullptr != events_publisher) {
-      std::cout << "##__declare_parameter_helper: nullptr != events_publisher" << std::endl;
     parameter_event.node = combined_name;
     parameter_event.stamp = node_clock.get_clock()->now();
     events_publisher->publish(parameter_event);
   }
 
-  std::cout << "" << std::endl;
-  std::cout << "######## __declare_parameter_helper ##### end #####" << std::endl;
-  std::cout<<"" << std::endl;
   return parameters.at(name).value;
 }
 
@@ -515,9 +480,6 @@ NodeParameters::declare_parameter(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-  
-  std::cout << "node_parameters: declare_parameter 1" << std::endl;
-  std::cout << "-----------> node_parameters: " << name << std::endl;
 
   return declare_parameter_helper(
     name,
@@ -543,9 +505,6 @@ NodeParameters::declare_parameter(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-
-  std::cout << "node_parameters: declare_parameter 2" << std::endl;
-  std::cout << "-----------> node_parameters: " << name << std::endl;
 
   if (rclcpp::PARAMETER_NOT_SET == type) {
     throw std::invalid_argument{
@@ -612,15 +571,11 @@ NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
   results.reserve(parameters.size());
 
-  std::cout << "############### BEGIN ###########################" << std::endl;
-  std::cout<< "set_parameters: " << "size: " << parameters.size() << std::endl;
-
   for (const auto & p : parameters) {
     auto result = set_parameters_atomically_helper({{p}});
     results.push_back(result);
   }
 
-  std::cout << "############### END ###########################" << std::endl;
   return results;
 }
 
@@ -638,30 +593,20 @@ __find_parameter_by_name(
 
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Parameter> & parameters){
-  std::cout << "***************** set_parameters_atomically_helper ##### start #####" << std::endl;
-  std::cout << "" << std::endl;
-
   const auto& result = this->set_parameters_atomically(parameters);
 
   if(!on_local_parameters_set_callback_container_.empty()){
-    std::cout << "################## !on_local_parameters_set_callback_container_.empty()" << std::endl;
     auto it = on_local_parameters_set_callback_container_.begin();
     while (it != on_local_parameters_set_callback_container_.end()) {
       auto shared_handle = it->lock();
       if (nullptr != shared_handle) {
-        std::cout << "^^^^^ calling 1.1" << std::endl;
         shared_handle->callback(parameters);
         it++;
       } else {
-        std::cout << "^^^^^^^^^^^^^^^^WHAT?" << std::endl;
         it = on_local_parameters_set_callback_container_.erase(it);
       }
     }
   }
-
-  std::cout << "" << std::endl;
-  std::cout << "***************** set_parameters_atomically_helper ##### end #####" << std::endl;
-  std::cout << "" << std::endl;
 
   return result;
 }
@@ -669,18 +614,8 @@ NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Param
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
-  std::cout << "***************** set_parameters_atomically ##### start #####" << std::endl;
-  std::cout << "" << std::endl;
-
-  std::cout << "Params received: this size is always 1" << std::endl;
-  for(const auto&param: parameters){
-    std::cout << param.get_name() << std::endl;
-  }
-
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::cout << "ParameterMutationRecursionGuard: " << parameter_modification_enabled_ << std::endl;
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-
   rcl_interfaces::msg::SetParametersResult result;
 
   // Check if any of the parameters are read-only, or if any parameters are not
@@ -786,7 +721,6 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   std::vector<const rclcpp::Parameter *> parameters_to_be_undeclared;
   for (const auto & parameter : *parameters_to_be_set) {
     if (rclcpp::PARAMETER_NOT_SET == parameter.get_type()) {
-      std::cout << "rclcpp::PARAMETER_NOT_SET == parameter.get_type()" << std::endl;
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
         if (!it->second.descriptor.dynamic_typing) {
@@ -814,7 +748,6 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 
   // If not successful, then stop here.
   if (!result.successful) {
-    std::cout << " // If not successful, then stop here." << std::endl;
     return result;
   }
 
@@ -863,20 +796,16 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
   if (nullptr != events_publisher_) {
-    std::cout << "nullptr != events_publisher_ ### publish" << std::endl;
     parameter_event_msg.stamp = node_clock_->get_clock()->now();
     events_publisher_->publish(parameter_event_msg);
   }
 
-  std::cout << "************ set_parameters_atomically ##### end #####" << std::endl;
   return result;
 }
 
 std::vector<rclcpp::Parameter>
 NodeParameters::get_parameters(const std::vector<std::string> & names) const
 {
-  std::cout << "# get_parameters" << std::endl;
-
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<rclcpp::Parameter> results;
   results.reserve(names.size());
@@ -900,7 +829,6 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 rclcpp::Parameter
 NodeParameters::get_parameter(const std::string & name) const
 {
-  std::cout << "# get_parameter 1" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto param_iter = parameters_.find(name);
@@ -924,7 +852,6 @@ NodeParameters::get_parameter(
   const std::string & name,
   rclcpp::Parameter & parameter) const
 {
-  std::cout << "# get_parameter 2" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto param_iter = parameters_.find(name);
@@ -1081,7 +1008,6 @@ NodeParameters::remove_on_set_parameters_callback(
 OnSetParametersCallbackHandle::SharedPtr
 NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
 {
-  std::cout << "$$$$ add_on_set_parameters_callback" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
@@ -1094,7 +1020,6 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
 
 rclcpp::node_interfaces::OnSetLocalParametersCallbackHandle::SharedPtr
 NodeParameters::add_local_parameters_callback(OnLocalParametersSetCallbackType callback){
-  std::cout << "$$$$ add_local_parameters_callback" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
