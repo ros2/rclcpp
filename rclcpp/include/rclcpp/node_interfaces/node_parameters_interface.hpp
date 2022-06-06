@@ -50,7 +50,7 @@ struct OnSetLocalParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetLocalParametersCallbackHandle)
 
-  using OnLocalParametersSetCallbackType = std::function<void()>;
+  using OnLocalParametersSetCallbackType = std::function<void(const std::vector<rclcpp::Parameter> &)>;
 
   OnLocalParametersSetCallbackType callback;
 };

@@ -643,6 +643,22 @@ NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Param
 
   const auto& result = this->set_parameters_atomically(parameters);
 
+  if(!on_local_parameters_set_callback_container_.empty()){
+    std::cout << "################## !on_local_parameters_set_callback_container_.empty()" << std::endl;
+    auto it = on_local_parameters_set_callback_container_.begin();
+    while (it != on_local_parameters_set_callback_container_.end()) {
+      auto shared_handle = it->lock();
+      if (nullptr != shared_handle) {
+        std::cout << "^^^^^ calling 1.1" << std::endl;
+        shared_handle->callback(parameters);
+        it++;
+      } else {
+        std::cout << "^^^^^^^^^^^^^^^^WHAT?" << std::endl;
+        it = on_local_parameters_set_callback_container_.erase(it);
+      }
+    }
+  }
+
   std::cout << "" << std::endl;
   std::cout << "***************** set_parameters_atomically_helper ##### end #####" << std::endl;
   std::cout << "" << std::endl;
