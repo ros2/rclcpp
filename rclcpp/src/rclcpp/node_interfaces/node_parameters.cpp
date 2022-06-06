@@ -595,7 +595,7 @@ rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Parameter> & parameters){
   const auto& result = this->set_parameters_atomically(parameters);
 
-  if(!on_local_parameters_set_callback_container_.empty()){
+  if(!on_local_parameters_set_callback_container_.empty() && result.successful){
     auto it = on_local_parameters_set_callback_container_.begin();
     while (it != on_local_parameters_set_callback_container_.end()) {
       auto shared_handle = it->lock();
