@@ -1,0 +1,725 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "test/rclcpp/test_subscription_publisher_with_same_type_adapter"
+		}
+	],
+	"backtrace" : 4,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"_ament_add_gtest_executable",
+			"ament_add_gtest_executable",
+			"ament_add_gtest",
+			"target_link_libraries",
+			"ament_target_dependencies",
+			"add_dependencies",
+			"include",
+			"ament_execute_extensions",
+			"rosidl_generate_interfaces",
+			"add_compile_options",
+			"add_definitions",
+			"find_package",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_gtest/share/ament_cmake_gtest/cmake/ament_add_gtest_executable.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_gtest/share/ament_cmake_gtest/cmake/ament_add_gtest.cmake",
+			"test/rclcpp/CMakeLists.txt",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_target_dependencies/share/ament_cmake_target_dependencies/cmake/ament_target_dependencies.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_generator_cpp/share/rosidl_generator_cpp/cmake/rosidl_generator_cpp_generate_interfaces.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_core/share/ament_cmake_core/cmake/core/ament_execute_extensions.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_cmake/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake",
+			"CMakeLists.txt",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_ros/share/ament_cmake_ros/cmake/ament_cmake_ros-extras.cmake",
+			"/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_cmake_ros/share/ament_cmake_ros/cmake/ament_cmake_rosConfig.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 385,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 68,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 37,
+				"parent" : 2
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 50,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 53,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 55,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 392,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 389,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 145,
+				"parent" : 8
+			},
+			{
+				"command" : 9,
+				"file" : 2,
+				"line" : 7,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 6,
+				"line" : 286,
+				"parent" : 10
+			},
+			{
+				"command" : 7,
+				"file" : 5,
+				"line" : 48,
+				"parent" : 11
+			},
+			{
+				"file" : 4,
+				"parent" : 12
+			},
+			{
+				"command" : 6,
+				"file" : 4,
+				"line" : 125,
+				"parent" : 13
+			},
+			{
+				"file" : 7
+			},
+			{
+				"command" : 10,
+				"file" : 7,
+				"line" : 34,
+				"parent" : 15
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 59,
+				"parent" : 3
+			},
+			{
+				"command" : 12,
+				"file" : 7,
+				"line" : 7,
+				"parent" : 15
+			},
+			{
+				"file" : 9,
+				"parent" : 18
+			},
+			{
+				"command" : 7,
+				"file" : 9,
+				"line" : 41,
+				"parent" : 19
+			},
+			{
+				"file" : 8,
+				"parent" : 20
+			},
+			{
+				"command" : 11,
+				"file" : 8,
+				"line" : 25,
+				"parent" : 21
+			},
+			{
+				"command" : 11,
+				"file" : 2,
+				"line" : 5,
+				"parent" : 0
+			},
+			{
+				"command" : 13,
+				"file" : 0,
+				"line" : 51,
+				"parent" : 3
+			},
+			{
+				"command" : 13,
+				"file" : 3,
+				"line" : 141,
+				"parent" : 8
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wextra"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wconversion"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wno-sign-conversion"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wpedantic"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wnon-virtual-dtor"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Woverloaded-virtual"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-pthread"
+				},
+				{
+					"fragment" : "-std=gnu++17"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 7,
+					"define" : "DEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
+				},
+				{
+					"backtrace" : 9,
+					"define" : "RCUTILS_ENABLE_FAULT_INJECTION"
+				},
+				{
+					"backtrace" : 22,
+					"define" : "ROS_PACKAGE_NAME=\"rclcpp\""
+				},
+				{
+					"backtrace" : 23,
+					"define" : "TEST_RESOURCES_DIRECTORY=\"/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/test/resources\""
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 24,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/ament_generate_version_header/rclcpp"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp/rosidl_generator_cpp"
+				},
+				{
+					"backtrace" : 25,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/include/statistics_msgs"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/include/builtin_interfaces"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_runtime_c/include/rosidl_runtime_c"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcutils/include/rcutils"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_interface/include/rosidl_typesupport_interface"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/fastcdr/include"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_runtime_cpp/include/rosidl_runtime_cpp"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_fastrtps_cpp/include/rosidl_typesupport_fastrtps_cpp"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rmw/include/rmw"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_fastrtps_c/include/rosidl_typesupport_fastrtps_c"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/include/rosidl_typesupport_introspection_c"
+				},
+				{
+					"backtrace" : 9,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_cpp/include/rosidl_typesupport_introspection_cpp"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_index_cpp/include/ament_index_cpp"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/libstatistics_collector/include/libstatistics_collector"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl/include/rcl"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/include/rcl_interfaces"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_logging_interface/include/rcl_logging_interface"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_yaml_param_parser/include/rcl_yaml_param_parser"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/libyaml_vendor/include/libyaml_vendor"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/tracetools/include/tracetools"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcpputils/include/rcpputils"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/include/rosgraph_msgs"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_cpp/include/rosidl_typesupport_cpp"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_c/include/rosidl_typesupport_c"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					5,
+					7
+				],
+				"standard" : "17"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 7,
+			"id" : "rclcpp::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 14,
+			"id" : "rclcpp_test_msgs__cpp::@b077e4559383e02eb135"
+		},
+		{
+			"backtrace" : 7,
+			"id" : "rclcpp_test_msgs__rosidl_typesupport_cpp::@b077e4559383e02eb135"
+		},
+		{
+			"backtrace" : 6,
+			"id" : "gtest::@0af4add9fe94340e763e"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "gtest_main::@0af4add9fe94340e763e"
+		}
+	],
+	"id" : "test_subscription_publisher_with_same_type_adapter::@b077e4559383e02eb135",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug:/home/deepanshu/deepanshu/osrf/ros2_rolling/src/ros2/rclcpp/rclcpp/cmake-build-debug/test/rclcpp:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/libstatistics_collector/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rmw_implementation/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_index_cpp/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_logging_spdlog/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_logging_interface/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_yaml_param_parser/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/libyaml_vendor/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_fastrtps_c/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_fastrtps_cpp/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/fastcdr/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rmw/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_cpp/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/tracetools/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_cpp/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_c/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_runtime_c/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcpputils/lib:/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcutils/lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 5,
+				"fragment" : "gtest/libgtest_main.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 6,
+				"fragment" : "gtest/libgtest.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 7,
+				"fragment" : "librclcpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 7,
+				"fragment" : "test/rclcpp/librclcpp__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-pthread",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/libstatistics_collector/lib/liblibstatistics_collector.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_typesupport_fastrtps_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_typesupport_fastrtps_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_generator_py.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 9,
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/statistics_msgs/lib/libstatistics_msgs__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl/lib/librcl.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rmw_implementation/lib/librmw_implementation.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/ament_index_cpp/lib/libament_index_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_logging_spdlog/lib/librcl_logging_spdlog.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_logging_interface/lib/librcl_logging_interface.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_typesupport_fastrtps_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_typesupport_fastrtps_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_generator_py.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_interfaces/lib/librcl_interfaces__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcl_yaml_param_parser/lib/librcl_yaml_param_parser.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/libyaml_vendor/lib/libyaml.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_typesupport_fastrtps_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_typesupport_fastrtps_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_fastrtps_c/lib/librosidl_typesupport_fastrtps_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_typesupport_fastrtps_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_typesupport_fastrtps_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_fastrtps_cpp/lib/librosidl_typesupport_fastrtps_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/fastcdr/lib/libfastcdr.so.1.0.24",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rmw/lib/librmw.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_cpp/lib/librosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_introspection_c/lib/librosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_generator_py.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_generator_py.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosgraph_msgs/lib/librosgraph_msgs__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/tracetools/lib/libtracetools.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/builtin_interfaces/lib/libbuiltin_interfaces__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_cpp/lib/librosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_typesupport_c/lib/librosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rosidl_runtime_c/lib/librosidl_runtime_c.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcpputils/lib/librcpputils.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/deepanshu/deepanshu/osrf/ros2_rolling/install/rcutils/lib/librcutils.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ldl",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "test_subscription_publisher_with_same_type_adapter",
+	"nameOnDisk" : "test_subscription_publisher_with_same_type_adapter",
+	"paths" : 
+	{
+		"build" : "test/rclcpp",
+		"source" : "test/rclcpp"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 4,
+			"compileGroupIndex" : 0,
+			"path" : "test/rclcpp/test_subscription_publisher_with_same_type_adapter.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

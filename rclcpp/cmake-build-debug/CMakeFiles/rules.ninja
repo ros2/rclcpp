@@ -364,6 +364,25 @@ rule C_SHARED_LIBRARY_LINKER__rclcpp__rosidl_typesupport_introspection_c__pyext_
 #############################################
 # Rule for compiling C files.
 
+rule C_COMPILER__rclcpp__rosidl_typesupport_fastrtps_c__pyext_Debug
+  depfile = $DEP_FILE
+  deps = gcc
+  command = /usr/bin/cc $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  description = Building C object $out
+
+
+#############################################
+# Rule for linking C shared library.
+
+rule C_SHARED_LIBRARY_LINKER__rclcpp__rosidl_typesupport_fastrtps_c__pyext_Debug
+  command = $PRE_LINK && /usr/bin/cc -fPIC $LANGUAGE_COMPILE_FLAGS $ARCH_FLAGS $LINK_FLAGS -shared $SONAME_FLAG$SONAME -o $TARGET_FILE $in $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
+  description = Linking C shared library $TARGET_FILE
+  restat = $RESTAT
+
+
+#############################################
+# Rule for compiling C files.
+
 rule C_COMPILER__rclcpp__rosidl_typesupport_c__pyext_Debug
   depfile = $DEP_FILE
   deps = gcc
