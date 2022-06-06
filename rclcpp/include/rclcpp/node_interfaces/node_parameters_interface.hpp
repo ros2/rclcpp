@@ -45,6 +45,18 @@ struct OnSetParametersCallbackHandle
   OnParametersSetCallbackType callback;
 };
 
+// local parameter callback gets invoked when the node parameter changes.
+// TODO: check name of the callbackHandle to avoid confusion with validation callback
+struct OnSetLocalParametersCallbackHandle
+{
+  RCLCPP_SMART_PTR_DEFINITIONS(OnSetLocalParametersCallbackHandle)
+
+  using OnLocalParametersSetCallbackType = std::function<void(const std::vector<rclcpp::Parameter> &)>;
+
+  OnLocalParametersSetCallbackType callback;
+};
+
+
 /// Pure virtual interface class for the NodeParameters part of the Node API.
 class NodeParametersInterface
 {
@@ -120,6 +132,13 @@ public:
   set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
+  /// TODO: change the function name
+  RCLCPP_PUBLIC
+  virtual
+      rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically_helper(
+      const std::vector<rclcpp::Parameter> & parameters) = 0;
+
   /// Get descriptions of parameters given their names.
   /*
    * \param[in] names a list of parameter names to check.
@@ -186,6 +205,7 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
   using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
+  using OnLocalParametersSetCallbackType = OnSetLocalParametersCallbackHandle::OnLocalParametersSetCallbackType;
 
   /// Add a callback for when parameters are being set.
   /**
@@ -195,6 +215,16 @@ public:
   virtual
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
+
+  /// callback which gets triggered after parameters are set.
+  /**
+   * \sa rclcpp::Node::add_local_parameters_callback
+   * TODO: check name of the callback to avoid confusion with validation.
+   */
+  RCLCPP_PUBLIC
+  virtual
+      OnSetLocalParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnLocalParametersSetCallbackType callback) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**

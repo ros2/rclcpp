@@ -568,7 +568,7 @@ NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters
   results.reserve(parameters.size());
 
   for (const auto & p : parameters) {
-    auto result = set_parameters_atomically({{p}});
+    auto result = set_parameters_atomically_helper({{p}});
     results.push_back(result);
   }
 
@@ -585,6 +585,26 @@ __find_parameter_by_name(
     parameters.begin(),
     parameters.end(),
     [&](auto parameter) {return parameter.get_name() == name;});
+}
+
+rcl_interfaces::msg::SetParametersResult
+NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Parameter> & parameters){
+  const auto& result = this->set_parameters_atomically(parameters);
+
+  if(!on_local_parameters_set_callback_container_.empty() && result.successful){
+    auto it = on_local_parameters_set_callback_container_.begin();
+    while (it != on_local_parameters_set_callback_container_.end()) {
+      auto shared_handle = it->lock();
+      if (nullptr != shared_handle) {
+        shared_handle->callback(parameters);
+        it++;
+      } else {
+        it = on_local_parameters_set_callback_container_.erase(it);
+      }
+    }
+  }
+
+  return result;
 }
 
 rcl_interfaces::msg::SetParametersResult
@@ -995,6 +1015,19 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
   on_parameters_set_callback_container_.emplace_front(handle);
   return handle;
 }
+
+rclcpp::node_interfaces::OnSetLocalParametersCallbackHandle::SharedPtr
+NodeParameters::add_local_parameters_callback(OnLocalParametersSetCallbackType callback){
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  auto handle = std::make_shared<OnSetLocalParametersCallbackHandle>();
+  handle->callback = callback;
+  // the last callback registered is executed first.
+  on_local_parameters_set_callback_container_.emplace_front(handle);
+  return handle;
+}
+
 
 const std::map<std::string, rclcpp::ParameterValue> &
 NodeParameters::get_parameter_overrides() const

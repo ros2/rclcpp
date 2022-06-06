@@ -140,6 +140,11 @@ public:
     const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
+      rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically_helper(
+      const std::vector<rclcpp::Parameter> & parameters) override;
+
+  RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const override;
 
@@ -177,6 +182,11 @@ public:
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
+      RCUTILS_WARN_UNUSED
+  OnSetLocalParametersCallbackHandle::SharedPtr
+  add_local_parameters_callback(OnLocalParametersSetCallbackType callback) override;
+
+  RCLCPP_PUBLIC
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) override;
 
@@ -199,6 +209,8 @@ private:
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   CallbacksContainerType on_parameters_set_callback_container_;
+
+  std::list<OnSetLocalParametersCallbackHandle::WeakPtr> on_local_parameters_set_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 
