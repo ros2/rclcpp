@@ -268,8 +268,7 @@ RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
 __call_on_parameters_set_callbacks(
   const std::vector<rclcpp::Parameter> & parameters,
-  CallbacksContainerType & callback_container,
-  const OnParametersSetCallbackType & callback)
+  CallbacksContainerType & callback_container)
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
@@ -286,9 +285,6 @@ __call_on_parameters_set_callbacks(
       it = callback_container.erase(it);
     }
   }
-  if (callback) {
-    result = callback(parameters);
-  }
   return result;
 }
 
@@ -298,7 +294,6 @@ __set_parameters_atomically_common(
   const std::vector<rclcpp::Parameter> & parameters,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
   CallbacksContainerType & callback_container,
-  const OnParametersSetCallbackType & callback,
   bool allow_undeclared = false)
 {
   // Check if the value being set complies with the descriptor.
@@ -307,9 +302,9 @@ __set_parameters_atomically_common(
   if (!result.successful) {
     return result;
   }
-  // Call the user callback to see if the new value(s) are allowed.
+  // Call the user callbacks to see if the new value(s) are allowed.
   result =
-    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
+    __call_on_parameters_set_callbacks(parameters, callback_container);
   if (!result.successful) {
     return result;
   }
@@ -336,7 +331,6 @@ __declare_parameter_common(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   CallbacksContainerType & callback_container,
-  const OnParametersSetCallbackType & callback,
   rcl_interfaces::msg::ParameterEvent * parameter_event_out,
   bool ignore_override = false)
 {
@@ -366,14 +360,13 @@ __declare_parameter_common(
     return result;
   }
 
-  // Check with the user's callback to see if the initial value can be set.
+  // Check with the user's callbacks to see if the initial value can be set.
   std::vector<rclcpp::Parameter> parameter_wrappers {rclcpp::Parameter(name, *initial_value)};
   // This function also takes care of default vs initial value.
   auto result = __set_parameters_atomically_common(
     parameter_wrappers,
     parameter_infos,
-    callback_container,
-    callback);
+    callback_container);
 
   if (!result.successful) {
     return result;
@@ -401,7 +394,6 @@ declare_parameter_helper(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   CallbacksContainerType & callback_container,
-  const OnParametersSetCallbackType & callback,
   rclcpp::Publisher<rcl_interfaces::msg::ParameterEvent> * events_publisher,
   const std::string & combined_name,
   rclcpp::node_interfaces::NodeClockInterface & node_clock)
@@ -438,7 +430,6 @@ declare_parameter_helper(
     parameters,
     overrides,
     callback_container,
-    callback,
     &parameter_event,
     ignore_override);
 
@@ -486,7 +477,6 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_parameters_set_callback_container_,
-    on_parameters_set_callback_,
     events_publisher_.get(),
     combined_name_,
     *node_clock_);
@@ -522,7 +512,6 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_parameters_set_callback_container_,
-    on_parameters_set_callback_,
     events_publisher_.get(),
     combined_name_,
     *node_clock_);
@@ -636,7 +625,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 
   // Declare parameters into a temporary "staging area", incase one of the declares fail.
   // We will use the staged changes as input to the "set atomically" action.
-  // We explicitly avoid calling the user callback here, so that it may be called once, with
+  // We explicitly avoid calling the user callbacks here, so that it may be called once, with
   // all the other parameters to be set (already declared parameters).
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> staged_parameter_changes;
   rcl_interfaces::msg::ParameterEvent parameter_event_msg;
@@ -657,7 +646,6 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       parameter_overrides_,
       // Only call callbacks once below
       empty_callback_container,  // callback_container is explicitly empty
-      nullptr,  // callback is explicitly null.
       &parameter_event_msg,
       true);
     if (!result.successful) {
@@ -717,11 +705,9 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     *parameters_to_be_set,
     // they are actually set on the official parameter storage
     parameters_,
-    // this will get called once, with all the parameters to be set
-    on_parameters_set_callback_container_,
     // These callbacks are called once. When a callback returns an unsuccessful result,
     // the remaining aren't called.
-    on_parameters_set_callback_,
+    on_parameters_set_callback_container_,
     allow_undeclared_);  // allow undeclared
 
   // If not successful, then stop here.
