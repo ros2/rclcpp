@@ -263,6 +263,10 @@ using CallbacksContainerType =
   rclcpp::node_interfaces::NodeParameters::CallbacksContainerType;
 using OnSetParametersCallbackHandle =
   rclcpp::node_interfaces::OnSetParametersCallbackHandle;
+using PostSetParametersCallbackHandle =
+    rclcpp::node_interfaces::PostSetParametersCallbackHandle;
+using PostSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
@@ -590,16 +594,15 @@ __find_parameter_by_name(
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Parameter> & parameters){
   const auto& result = this->set_parameters_atomically(parameters);
-
-  if(!on_local_parameters_set_callback_container_.empty() && result.successful){
-    auto it = on_local_parameters_set_callback_container_.begin();
-    while (it != on_local_parameters_set_callback_container_.end()) {
+  if(!post_set_parameter_callback_container_.empty() && result.successful){
+    auto it = post_set_parameter_callback_container_.begin();
+    while (it != post_set_parameter_callback_container_.end()) {
       auto shared_handle = it->lock();
       if (nullptr != shared_handle) {
         shared_handle->callback(parameters);
         it++;
       } else {
-        it = on_local_parameters_set_callback_container_.erase(it);
+        it = post_set_parameter_callback_container_.erase(it);
       }
     }
   }
@@ -1003,6 +1006,26 @@ NodeParameters::remove_on_set_parameters_callback(
   }
 }
 
+void
+NodeParameters::remove_post_set_parameters_callback(
+    const PostSetParametersCallbackHandle * const handle)
+{
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  auto it = std::find_if(
+      post_set_parameter_callback_container_.begin(),
+      post_set_parameter_callback_container_.end(),
+      [handle](const auto & weak_handle) {
+        return handle == weak_handle.lock().get();
+      });
+  if (it != post_set_parameter_callback_container_.end()) {
+    post_set_parameter_callback_container_.erase(it);
+  } else {
+    throw std::runtime_error("Post set parameter callback doesn't exist");
+  }
+}
+
 OnSetParametersCallbackHandle::SharedPtr
 NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
 {
@@ -1016,18 +1039,17 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
   return handle;
 }
 
-rclcpp::node_interfaces::OnSetLocalParametersCallbackHandle::SharedPtr
-NodeParameters::add_local_parameters_callback(OnLocalParametersSetCallbackType callback){
+PostSetParametersCallbackHandle::SharedPtr
+NodeParameters::add_post_set_parameters_callback(PostSetParametersCallbackType callback){
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
-  auto handle = std::make_shared<OnSetLocalParametersCallbackHandle>();
+  auto handle = std::make_shared<PostSetParametersCallbackHandle>();
   handle->callback = callback;
   // the last callback registered is executed first.
-  on_local_parameters_set_callback_container_.emplace_front(handle);
+  post_set_parameter_callback_container_.emplace_front(handle);
   return handle;
 }
-
 
 const std::map<std::string, rclcpp::ParameterValue> &
 NodeParameters::get_parameter_overrides() const

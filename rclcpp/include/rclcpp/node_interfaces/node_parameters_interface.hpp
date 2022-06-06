@@ -46,14 +46,13 @@ struct OnSetParametersCallbackHandle
 };
 
 // local parameter callback gets invoked when the node parameter changes.
-// TODO: check name of the callbackHandle to avoid confusion with validation callback
-struct OnSetLocalParametersCallbackHandle
+struct PostSetParametersCallbackHandle
 {
-  RCLCPP_SMART_PTR_DEFINITIONS(OnSetLocalParametersCallbackHandle)
+  RCLCPP_SMART_PTR_DEFINITIONS(PostSetParametersCallbackHandle)
 
-  using OnLocalParametersSetCallbackType = std::function<void(const std::vector<rclcpp::Parameter> &)>;
+  using PostSetParametersCallbackType = std::function<void(const std::vector<rclcpp::Parameter> &)>;
 
-  OnLocalParametersSetCallbackType callback;
+  PostSetParametersCallbackType callback;
 };
 
 
@@ -132,7 +131,10 @@ public:
   set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
-  /// TODO: change the function name
+  /// TODO
+  /**
+   * \sa rclcpp::Node::set_parameters_atomically_helper
+   */
   RCLCPP_PUBLIC
   virtual
       rcl_interfaces::msg::SetParametersResult
@@ -205,7 +207,7 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
   using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
-  using OnLocalParametersSetCallbackType = OnSetLocalParametersCallbackHandle::OnLocalParametersSetCallbackType;
+  using PostSetParametersCallbackType = PostSetParametersCallbackHandle::PostSetParametersCallbackType;
 
   /// Add a callback for when parameters are being set.
   /**
@@ -218,13 +220,12 @@ public:
 
   /// callback which gets triggered after parameters are set.
   /**
-   * \sa rclcpp::Node::add_local_parameters_callback
-   * TODO: check name of the callback to avoid confusion with validation.
+   * \sa rclcpp::Node::add_post_set_parameters_callback
    */
   RCLCPP_PUBLIC
   virtual
-      OnSetLocalParametersCallbackHandle::SharedPtr
-  add_local_parameters_callback(OnLocalParametersSetCallbackType callback) = 0;
+      PostSetParametersCallbackHandle::SharedPtr
+  add_post_set_parameters_callback(PostSetParametersCallbackType callback) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
@@ -234,6 +235,15 @@ public:
   virtual
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) = 0;
+
+  /// Remove a callback registered with `add_post_set_parameters_callback`.
+  /**
+   * \sa rclcpp::Node::remove_post_set_parameters_callback
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler) = 0;
 
   /// Return the initial parameter values used by the NodeParameters to override default values.
   RCLCPP_PUBLIC
