@@ -38,14 +38,33 @@
 using namespace std::chrono_literals;
 constexpr char const * lifecycle_node_name = "lc_talker";
 
-constexpr char const * node_get_state_topic = "/lc_talker/get_state";
-constexpr char const * node_change_state_topic = "/lc_talker/change_state";
-constexpr char const * node_get_available_states_topic = "/lc_talker/get_available_states";
+constexpr char const * node_get_state_topic = "lc_talker/get_state";
+constexpr char const * node_change_state_topic = "lc_talker/change_state";
+constexpr char const * node_get_available_states_topic = "lc_talker/get_available_states";
 constexpr char const * node_get_available_transitions_topic =
-  "/lc_talker/get_available_transitions";
+  "lc_talker/get_available_transitions";
 constexpr char const * node_get_transition_graph_topic =
-  "/lc_talker/get_transition_graph";
+  "lc_talker/get_transition_graph";
 const lifecycle_msgs::msg::State unknown_state = lifecycle_msgs::msg::State();
+
+template<typename FutureT, typename WaitTimeT>
+std::future_status
+wait_for_result(
+  FutureT & future,
+  WaitTimeT time_to_wait)
+{
+  auto end = std::chrono::steady_clock::now() + time_to_wait;
+  std::chrono::milliseconds wait_period(100);
+  std::future_status status = std::future_status::timeout;
+  do {
+    auto now = std::chrono::steady_clock::now();
+    auto time_left = end - now;
+    if (time_left <= std::chrono::seconds(0)) {break;}
+    status = future.wait_for((time_left < wait_period) ? time_left : wait_period);
+  } while (rclcpp::ok() && status != std::future_status::ready);
+  return status;
+}
+
 class LifecycleServiceClient : public rclcpp::Node
 {
 public:
@@ -67,7 +86,7 @@ public:
   }
 
   lifecycle_msgs::msg::State
-  get_state(std::chrono::seconds time_out = 1s)
+  get_state(std::chrono::seconds time_out = 3s)
   {
     auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
 
@@ -76,9 +95,12 @@ public:
     }
 
     auto future_result = client_get_state_->async_send_request(request).future.share();
-    auto future_status = future_result.wait_for(time_out);
+    auto future_status = wait_for_result(future_result, time_out);
 
     if (future_status != std::future_status::ready) {
+      if(future_status == std::future_status::timeout){
+	throw std::runtime_error("Get state request timed out");
+      }
       throw std::runtime_error("Get state request failed");
     }
 
@@ -89,7 +111,7 @@ public:
   }
 
   bool
-  change_state(std::uint8_t transition, std::chrono::seconds time_out = 1s)
+  change_state(std::uint8_t transition, std::chrono::seconds time_out = 3s)
   {
     auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
     request->transition.id = transition;
@@ -99,9 +121,12 @@ public:
     }
 
     auto future_result = client_change_state_->async_send_request(request).future.share();
-    auto future_status = future_result.wait_for(time_out);
+    auto future_status = wait_for_result(future_result, time_out);
 
     if (future_status != std::future_status::ready) {
+      if(future_status == std::future_status::timeout){
+	throw std::runtime_error("Change state request timed out");
+      }
       throw std::runtime_error("Change state request failed");
     }
 
@@ -113,7 +138,7 @@ public:
   }
 
   std::vector<lifecycle_msgs::msg::State>
-  get_available_states(std::chrono::seconds time_out = 1s)
+  get_available_states(std::chrono::seconds time_out = 3s)
   {
     auto request = std::make_shared<lifecycle_msgs::srv::GetAvailableStates::Request>();
 
@@ -122,7 +147,7 @@ public:
     }
 
     auto future_result = client_get_available_states_->async_send_request(request).future.share();
-    auto future_status = future_result.wait_for(time_out);
+    auto future_status = wait_for_result(future_result, time_out);
 
     if (future_status != std::future_status::ready) {
       throw std::runtime_error("Get available states request failed");
@@ -136,7 +161,7 @@ public:
   }
 
   std::vector<lifecycle_msgs::msg::TransitionDescription>
-  get_available_transitions(std::chrono::seconds time_out = 1s)
+  get_available_transitions(std::chrono::seconds time_out = 3s)
   {
     auto request = std::make_shared<lifecycle_msgs::srv::GetAvailableTransitions::Request>();
 
@@ -146,7 +171,7 @@ public:
 
     auto future_result =
       client_get_available_transitions_->async_send_request(request).future.share();
-    auto future_status = future_result.wait_for(time_out);
+    auto future_status = wait_for_result(future_result, time_out);
 
     if (future_status != std::future_status::ready) {
       throw std::runtime_error("Get available transitions request failed");
@@ -160,7 +185,7 @@ public:
   }
 
   std::vector<lifecycle_msgs::msg::TransitionDescription>
-  get_transition_graph(std::chrono::seconds time_out = 1s)
+  get_transition_graph(std::chrono::seconds time_out = 3s)
   {
     auto request = std::make_shared<lifecycle_msgs::srv::GetAvailableTransitions::Request>();
 
@@ -169,7 +194,7 @@ public:
     }
 
     auto future_result = client_get_transition_graph_->async_send_request(request).future.share();
-    auto future_status = future_result.wait_for(time_out);
+    auto future_status = wait_for_result(future_result, time_out);
 
     if (future_status != std::future_status::ready) {
       throw std::runtime_error("Get transition graph request failed");
