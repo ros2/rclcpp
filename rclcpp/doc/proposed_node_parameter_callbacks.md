@@ -9,5 +9,6 @@ In the current Node API, the ```add_on_set_parameters_callback``` is used for do
 
 ## Proposed Architecture
 
+![Desgin API](https://github.com/ros2/rclcpp/tree/master/rclcpp/doc/param_callback_design.png)
 
 ## Alternatives
