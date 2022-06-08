@@ -859,6 +859,11 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  using PreSetParametersCallbackHandle =
+      rclcpp::node_interfaces::PreSetParametersCallbackHandle;
+  using PreSetParametersCallbackType =
+      rclcpp::node_interfaces::NodeParametersInterface::PreSetParametersCallbackType;
+
   using OnSetParametersCallbackHandle =
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnParametersSetCallbackType =
@@ -868,6 +873,11 @@ public:
       rclcpp::node_interfaces::PostSetParametersCallbackHandle;
   using PostSetParametersCallbackType =
       rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
+
+  RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
+  PreSetParametersCallbackHandle::SharedPtr
+  add_pre_set_parameters_callback(PreSetParametersCallbackType callback);
 
   /// Add a callback for when parameters are being set.
   /**
@@ -939,7 +949,7 @@ public:
   add_on_set_parameters_callback(OnParametersSetCallbackType callback);
 
   RCLCPP_PUBLIC
-      RCUTILS_WARN_UNUSED
+  RCUTILS_WARN_UNUSED
   PostSetParametersCallbackHandle::SharedPtr
   add_post_set_parameters_callback(PostSetParametersCallbackType callback);
 

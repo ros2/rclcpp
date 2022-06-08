@@ -353,7 +353,7 @@ Node::has_parameter(const std::string & name) const
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameter(const rclcpp::Parameter & parameter)
 {
-  return node_parameters_->set_parameters_atomically_helper({parameter});
+  return node_parameters_->set_parameters_atomically({parameter});
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
@@ -416,6 +416,11 @@ rcl_interfaces::msg::ListParametersResult
 Node::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   return node_parameters_->list_parameters(prefixes, depth);
+}
+
+rclcpp::Node::PreSetParametersCallbackHandle::SharedPtr
+Node::add_pre_set_parameters_callback(PreSetParametersCallbackType callback){
+  return node_parameters_->add_pre_set_parameters_callback(callback);
 }
 
 rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr

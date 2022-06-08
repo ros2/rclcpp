@@ -33,6 +33,15 @@ namespace rclcpp
 namespace node_interfaces
 {
 
+struct PreSetParametersCallbackHandle
+{
+  RCLCPP_SMART_PTR_DEFINITIONS(PreSetParametersCallbackHandle)
+
+  using PreSetParametersCallbackType = std::function<void(std::vector<rclcpp::Parameter> &)>;
+
+  PreSetParametersCallbackType callback;
+};
+
 struct OnSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetParametersCallbackHandle)
@@ -45,7 +54,7 @@ struct OnSetParametersCallbackHandle
   OnParametersSetCallbackType callback;
 };
 
-// local parameter callback gets invoked when the node parameter changes.
+// parameter callback gets invoked after successful node parameter set.
 struct PostSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(PostSetParametersCallbackHandle)
@@ -121,24 +130,10 @@ public:
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
-  /// Set one or more parameters, all at once.
-  /**
-   * \sa rclcpp::Node::set_parameters_atomically
-   */
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-    const std::vector<rclcpp::Parameter> & parameters) = 0;
-
-  /// TODO
-  /**
-   * \sa rclcpp::Node::set_parameters_atomically_helper
-   */
-  RCLCPP_PUBLIC
-  virtual
-      rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically_helper(
       const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
@@ -208,6 +203,16 @@ public:
 
   using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
   using PostSetParametersCallbackType = PostSetParametersCallbackHandle::PostSetParametersCallbackType;
+  using PreSetParametersCallbackType = PreSetParametersCallbackHandle::PreSetParametersCallbackType;
+
+  /// Add a callback before parameters are being validated.
+  /**
+   * \sa rclcpp::Node::add_pre_set_parameters_callback
+   */
+  RCLCPP_PUBLIC
+  virtual
+  PreSetParametersCallbackHandle::SharedPtr
+  add_pre_set_parameters_callback(PreSetParametersCallbackType callback) = 0;
 
   /// Add a callback for when parameters are being set.
   /**

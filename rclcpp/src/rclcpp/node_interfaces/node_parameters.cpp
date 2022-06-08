@@ -257,6 +257,10 @@ __check_parameters(
   return result;
 }
 
+using PreSetParametersCallbackHandle =
+    rclcpp::node_interfaces::PreSetParametersCallbackHandle;
+using PreSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::PreSetParametersCallbackType;
 using OnParametersSetCallbackType =
   rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 using CallbacksContainerType =
@@ -572,7 +576,7 @@ NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters
   results.reserve(parameters.size());
 
   for (const auto & p : parameters) {
-    auto result = set_parameters_atomically_helper({{p}});
+    auto result = set_parameters_atomically({{p}});
     results.push_back(result);
   }
 
@@ -592,25 +596,6 @@ __find_parameter_by_name(
 }
 
 rcl_interfaces::msg::SetParametersResult
-NodeParameters::set_parameters_atomically_helper(const std::vector<rclcpp::Parameter> & parameters){
-  const auto& result = this->set_parameters_atomically(parameters);
-  if(!post_set_parameter_callback_container_.empty() && result.successful){
-    auto it = post_set_parameter_callback_container_.begin();
-    while (it != post_set_parameter_callback_container_.end()) {
-      auto shared_handle = it->lock();
-      if (nullptr != shared_handle) {
-        shared_handle->callback(parameters);
-        it++;
-      } else {
-        it = post_set_parameter_callback_container_.erase(it);
-      }
-    }
-  }
-
-  return result;
-}
-
-rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -619,12 +604,27 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 
   rcl_interfaces::msg::SetParametersResult result;
 
+  // check for any pre-set parameter registered callbacks
+  std::vector<rclcpp::Parameter> parameters_changed(parameters);
+  if(!pre_set_parameter_callback_container_.empty()){
+    auto it = pre_set_parameter_callback_container_.begin();
+    while (it != pre_set_parameter_callback_container_.end()) {
+      auto shared_handle = it->lock();
+      if (nullptr != shared_handle) {
+        shared_handle->callback(parameters_changed);
+        it++;
+      } else {
+        it = pre_set_parameter_callback_container_.erase(it);
+      }
+    }
+  }
+
   // Check if any of the parameters are read-only, or if any parameters are not
   // declared.
   // If not declared, keep track of them in order to declare them later, when
   // undeclared parameters are allowed, and if they're not allowed, fail.
   std::vector<const rclcpp::Parameter *> parameters_to_be_declared;
-  for (const auto & parameter : parameters) {
+  for (const auto & parameter : parameters_changed) {
     const std::string & name = parameter.get_name();
 
     // Check to make sure the parameter name is valid.
@@ -693,12 +693,12 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   // If there were implicitly declared parameters, then we may need to copy the input parameters
   // and then assign the value that was selected after the declare (could be affected by the
   // initial parameter values).
-  const std::vector<rclcpp::Parameter> * parameters_to_be_set = &parameters;
+  const std::vector<rclcpp::Parameter> * parameters_to_be_set = &parameters_changed;
   std::vector<rclcpp::Parameter> parameters_copy;
   if (0 != staged_parameter_changes.size()) {  // If there were any implicitly declared parameters.
     bool any_initial_values_used = false;
     for (const auto & staged_parameter_change : staged_parameter_changes) {
-      auto it = __find_parameter_by_name(parameters, staged_parameter_change.first);
+      auto it = __find_parameter_by_name(parameters_changed, staged_parameter_change.first);
       if (it->get_parameter_value() != staged_parameter_change.second.value) {
         // In this case, the value of the staged parameter differs from the
         // input from the user, and therefore we need to update things before setting.
@@ -708,7 +708,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       }
     }
     if (any_initial_values_used) {
-      parameters_copy = parameters;
+      parameters_copy = parameters_changed;
       for (const auto & staged_parameter_change : staged_parameter_changes) {
         auto it = __find_parameter_by_name(parameters_copy, staged_parameter_change.first);
         *it = Parameter(staged_parameter_change.first, staged_parameter_change.second.value);
@@ -799,6 +799,20 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   if (nullptr != events_publisher_) {
     parameter_event_msg.stamp = node_clock_->get_clock()->now();
     events_publisher_->publish(parameter_event_msg);
+  }
+
+  // post set parameter registered callbacks
+  if(!post_set_parameter_callback_container_.empty()){
+    auto it = post_set_parameter_callback_container_.begin();
+    while (it != post_set_parameter_callback_container_.end()) {
+      auto shared_handle = it->lock();
+      if (nullptr != shared_handle) {
+        shared_handle->callback(parameters_changed);
+        it++;
+      } else {
+        it = post_set_parameter_callback_container_.erase(it);
+      }
+    }
   }
 
   return result;
@@ -1024,6 +1038,19 @@ NodeParameters::remove_post_set_parameters_callback(
   } else {
     throw std::runtime_error("Post set parameter callback doesn't exist");
   }
+}
+
+PreSetParametersCallbackHandle::SharedPtr
+NodeParameters::add_pre_set_parameters_callback(PreSetParametersCallbackType callback)
+{
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  auto handle = std::make_shared<PreSetParametersCallbackHandle>();
+  handle->callback = callback;
+  // the last callback registered is executed first.
+  pre_set_parameter_callback_container_.emplace_front(handle);
+  return handle;
 }
 
 OnSetParametersCallbackHandle::SharedPtr
