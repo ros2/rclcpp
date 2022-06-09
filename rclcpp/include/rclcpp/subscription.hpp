@@ -295,11 +295,31 @@ public:
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
+      // In this case, the message will be delivered via intra process and
+      // we should ignore this copy of the message.
+      return;
+    }
+
     auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
     auto sptr = std::shared_ptr<CallbackMessageT>(
       typed_message, [](CallbackMessageT * msg) {(void) msg;});
+
+    std::chrono::time_point<std::chrono::system_clock> now;
+    if (subscription_topic_statistics_) {
+      // get current time before executing callback to
+      // exclude callback duration from topic statistics result.
+      now = std::chrono::system_clock::now();
+    }
+
     any_callback_.dispatch(sptr, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      subscription_topic_statistics_->handle_message(*typed_message, time);
+    }
   }
 
   /// Return the borrowed message.
