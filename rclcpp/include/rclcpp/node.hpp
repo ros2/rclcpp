@@ -546,13 +546,14 @@ public:
    * deleted.
    *
    * \param[in] parameter The parameter to be set.
+   * \param[in] force Whether to ignore immutable parameter constraints.
    * \return The result of the set action.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameter(const rclcpp::Parameter & parameter);
+  set_parameter(const rclcpp::Parameter & parameter, bool force = false);
 
   /// Set one or more parameters, one at a time.
   /**
@@ -584,13 +585,14 @@ public:
    * with the type rclcpp::PARAMETER_NOT_SET.
    *
    * \param[in] parameters The vector of parameters to be set.
+   * \param[in] force Whether to ignore immutable parameter constraints.
    * \return The results for each set action as a vector.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if any parameter
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters(const std::vector<rclcpp::Parameter> & parameters, bool force = false);
 
   /// Set one or more parameters, all at once.
   /**
@@ -618,13 +620,16 @@ public:
    * with the type rclcpp::PARAMETER_NOT_SET.
    *
    * \param[in] parameters The vector of parameters to be set.
+   * \param[in] force Whether to ignore immutable parameter constraints.
    * \return The aggregate result of setting all the parameters atomically.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if any parameter
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    bool force = false);
 
   /// Return the parameter by the given name.
   /**

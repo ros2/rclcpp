@@ -403,7 +403,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameter(const rclcpp::Parameter & parameter);
+  set_parameter(const rclcpp::Parameter & parameter, bool force = false);
 
   /// Set one or more parameters, one at a time.
   /**
@@ -411,7 +411,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters(const std::vector<rclcpp::Parameter> & parameters, bool force = false);
 
   /// Set one or more parameters, all at once.
   /**
@@ -419,7 +419,9 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
+  set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters,
+    bool force = false);
 
   /// Return the parameter by the given name.
   /**

@@ -209,23 +209,25 @@ LifecycleNode::has_parameter(const std::string & name) const
 }
 
 rcl_interfaces::msg::SetParametersResult
-LifecycleNode::set_parameter(const rclcpp::Parameter & parameter)
+LifecycleNode::set_parameter(const rclcpp::Parameter & parameter, bool force)
 {
-  return this->set_parameters_atomically({parameter});
+  return this->set_parameters_atomically({parameter}, force);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 LifecycleNode::set_parameters(
-  const std::vector<rclcpp::Parameter> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters,
+  bool force)
 {
-  return node_parameters_->set_parameters(parameters);
+  return node_parameters_->set_parameters(parameters, force);
 }
 
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::set_parameters_atomically(
-  const std::vector<rclcpp::Parameter> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters,
+  bool force)
 {
-  return node_parameters_->set_parameters_atomically(parameters);
+  return node_parameters_->set_parameters_atomically(parameters, force);
 }
 
 std::vector<rclcpp::Parameter>
