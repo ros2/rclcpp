@@ -950,7 +950,13 @@ public:
       std::holds_alternative<UniquePtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<SharedConstPtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<ConstRefSharedConstPtrSerializedMessageCallback>(callback_variant_) ||
-      std::holds_alternative<SharedPtrSerializedMessageCallback>(callback_variant_);
+      std::holds_alternative<SharedPtrSerializedMessageCallback>(callback_variant_) ||
+      std::holds_alternative<ConstRefSerializedMessageWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<UniquePtrSerializedMessageWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<SharedConstPtrSerializedMessageWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<ConstRefSharedConstPtrSerializedMessageWithInfoCallback>(
+      callback_variant_) ||
+      std::holds_alternative<SharedPtrSerializedMessageWithInfoCallback>(callback_variant_);
   }
 
   void
