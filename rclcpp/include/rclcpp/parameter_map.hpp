@@ -20,18 +20,23 @@
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
 namespace rclcpp
 {
 
 /// A map of fully qualified node names to a list of parameters
-using ParameterMap = std::unordered_map<std::string, std::vector<Parameter>>;
+using rcl_interfaces::msg::ParameterDescriptor;
+using ParameterAndDescriptor = std::unordered_map<std::string,
+    rclcpp::node_interfaces::ParameterInfo>;
+using ParameterMap = std::unordered_map<std::string, ParameterAndDescriptor>;
 
 /// Convert parameters from rcl_yaml_param_parser into C++ class instances.
 /// \param[in] c_params C structures containing parameters for multiple nodes.
@@ -48,6 +53,12 @@ parameter_map_from(const rcl_params_t * const c_params);
 RCLCPP_PUBLIC
 ParameterValue
 parameter_value_from(const rcl_variant_t * const c_value);
+
+RCLCPP_PUBLIC
+rcl_interfaces::msg::ParameterDescriptor
+parameter_descriptor_from(
+  const char * const name,
+  const rcl_param_descriptor_t * const c_descriptor);
 
 /// Get the ParameterMap from a yaml file.
 /// \param[in] yaml_filename full name of the yaml file.

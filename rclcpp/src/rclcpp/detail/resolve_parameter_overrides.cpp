@@ -23,14 +23,14 @@
 
 #include "rclcpp/parameter_map.hpp"
 
-std::map<std::string, rclcpp::ParameterValue>
+std::map<std::string, rclcpp::node_interfaces::ParameterInfo>
 rclcpp::detail::resolve_parameter_overrides(
   const std::string & node_fqn,
   const std::vector<rclcpp::Parameter> & parameter_overrides,
   const rcl_arguments_t * local_args,
   const rcl_arguments_t * global_args)
 {
-  std::map<std::string, rclcpp::ParameterValue> result;
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> result;
 
   // global before local so that local overwrites global
   std::array<const rcl_arguments_t *, 2> argument_sources = {global_args, local_args};
@@ -59,9 +59,9 @@ rclcpp::detail::resolve_parameter_overrides(
       for (const auto & node_name : node_matching_names) {
         if (initial_map.count(node_name) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
-          for (const rclcpp::Parameter & param : initial_map.at(node_name)) {
-            result[param.get_name()] =
-              rclcpp::ParameterValue(param.get_value_message());
+          for (const auto & param : initial_map.at(node_name)) {
+            result[param.first] = param.second;
+            result[param.first].descriptor.dynamic_typing = true;
           }
         }
       }
@@ -70,7 +70,7 @@ rclcpp::detail::resolve_parameter_overrides(
 
   // parameter overrides passed to constructor will overwrite overrides from yaml file sources
   for (auto & param : parameter_overrides) {
-    result[param.get_name()] =
+    result[param.get_name()].value =
       rclcpp::ParameterValue(param.get_value_message());
   }
   return result;

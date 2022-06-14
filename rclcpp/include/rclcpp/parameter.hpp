@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "rcl_interfaces/msg/parameter.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -33,7 +34,15 @@ class Parameter;
 
 namespace node_interfaces
 {
-struct ParameterInfo;
+// Internal struct for holding useful info about parameters
+struct ParameterInfo
+{
+  /// Current value of the parameter.
+  rclcpp::ParameterValue value;
+
+  /// A description of the parameter
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+};
 }  // namespace node_interfaces
 
 namespace detail

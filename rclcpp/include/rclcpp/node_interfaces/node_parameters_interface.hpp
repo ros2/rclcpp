@@ -208,7 +208,7 @@ public:
   /// Return the initial parameter values used by the NodeParameters to override default values.
   RCLCPP_PUBLIC
   virtual
-  const std::map<std::string, rclcpp::ParameterValue> &
+  const std::map<std::string, ParameterInfo> &
   get_parameter_overrides() const = 0;
 };
 
