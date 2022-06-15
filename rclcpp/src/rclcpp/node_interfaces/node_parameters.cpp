@@ -42,9 +42,9 @@ using rclcpp::node_interfaces::NodeParameters;
 RCLCPP_LOCAL
 void
 local_perform_automatically_declare_parameters_from_overrides(
-  std::function<const std::map<std::string, rclcpp::ParameterValue> & ()> get_parameter_overrides,
+  const std::map<std::string, rclcpp::ParameterValue> & parameter_overrides,
   std::function<bool(const std::string &)> has_parameter,
-  std::function<const rclcpp::ParameterValue & (
+  std::function<void (
     const std::string &,
     const rclcpp::ParameterValue &,
     const rcl_interfaces::msg::ParameterDescriptor &,
@@ -53,7 +53,7 @@ local_perform_automatically_declare_parameters_from_overrides(
 {
   rcl_interfaces::msg::ParameterDescriptor descriptor;
   descriptor.dynamic_typing = true;
-  for (const auto & pair : get_parameter_overrides()) {
+  for (const auto & pair : parameter_overrides) {
     if (!has_parameter(pair.first)) {
       declare_parameter(
         pair.first,
@@ -128,7 +128,7 @@ NodeParameters::NodeParameters(
   if (automatically_declare_parameters_from_overrides) {
     using namespace std::placeholders;
     local_perform_automatically_declare_parameters_from_overrides(
-      std::bind(&NodeParameters::get_parameter_overrides, this),
+      this->get_parameter_overrides(),
       std::bind(&NodeParameters::has_parameter, this, _1),
       [this](
         const std::string & name,
@@ -136,7 +136,7 @@ NodeParameters::NodeParameters(
         const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
         bool ignore_override)
       {
-        return NodeParameters::declare_parameter(
+        NodeParameters::declare_parameter(
           name, default_value, parameter_descriptor, ignore_override);
       }
     );
@@ -147,9 +147,7 @@ void
 NodeParameters::perform_automatically_declare_parameters_from_overrides()
 {
   local_perform_automatically_declare_parameters_from_overrides(
-    [this]() {
-      return this->get_parameter_overrides();
-    },
+    this->get_parameter_overrides(),
     [this](const std::string & name) {
       return this->has_parameter(name);
     },
@@ -159,7 +157,7 @@ NodeParameters::perform_automatically_declare_parameters_from_overrides()
       const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
       bool ignore_override)
     {
-      return this->declare_parameter(
+      this->declare_parameter(
         name, default_value, parameter_descriptor, ignore_override);
     }
   );
