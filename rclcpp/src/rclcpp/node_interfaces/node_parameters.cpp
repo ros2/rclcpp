@@ -44,7 +44,7 @@ void
 local_perform_automatically_declare_parameters_from_overrides(
   const std::map<std::string, rclcpp::ParameterValue> & parameter_overrides,
   std::function<bool(const std::string &)> has_parameter,
-  std::function<void (
+  std::function<void(
     const std::string &,
     const rclcpp::ParameterValue &,
     const rcl_interfaces::msg::ParameterDescriptor &,
