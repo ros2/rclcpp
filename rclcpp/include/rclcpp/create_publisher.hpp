@@ -36,6 +36,10 @@ namespace rclcpp
 namespace detail
 {
 /// Create and return a publisher of the given MessageT type.
+/**
+ * The NodeT type only needs to have a method called get_node_topics_interface()
+ * which returns a shared_ptr to a NodeTopicsInterface.
+ */
 template<
   typename MessageT = SerializedMessage,
   typename AllocatorT = std::allocator<void>,
@@ -72,10 +76,6 @@ create_publisher(
 }
 
 /// Create and return a publisher of the given MessageT type.
-/**
- * The NodeT type only needs to have a method called get_node_topics_interface()
- * which returns a shared_ptr to a NodeTopicsInterface.
- */
 template<
   typename MessageT,
   typename AllocatorT = std::allocator<void>,
