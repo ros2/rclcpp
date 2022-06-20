@@ -198,7 +198,7 @@ public:
     on_new_message_callback_ = nullptr;
   }
 
-  /// Check if subrscription type is a serialized messsage type.
+  /// Check if subscription type is a serialized message type.
   RCLCPP_PUBLIC
   virtual bool
   is_serialized() const = 0;
