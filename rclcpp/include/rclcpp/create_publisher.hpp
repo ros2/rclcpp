@@ -58,19 +58,26 @@ create_publisher(
 {
   // Extract the NodeTopicsInterface from the NodeT.
   using rclcpp::node_interfaces::get_node_topics_interface;
-  auto node_topics = get_node_topics_interface(node);
+  auto node_topics_interface = get_node_topics_interface(node);
+  auto node_parameters = node.get_node_parameters_interface();
+  const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
+    rclcpp::detail::declare_qos_parameters(
+    options.qos_overriding_options, node_parameters,
+    node_topics_interface->resolve_topic_name(topic_name),
+    qos, rclcpp::detail::PublisherQosParametersTraits{}) :
+    qos;
 
   // Create the publisher.
-  auto pub = node_topics->create_publisher(
+  auto pub = node_topics_interface->create_publisher(
     topic_name,
     rclcpp::create_publisher_factory<AllocatorT, PublisherT>(
       options,
       type_support),
-    qos
+    actual_qos
   );
 
   // Add the publisher to the node topics interface.
-  node_topics->add_publisher(pub, options.callback_group);
+  node_topics_interface->add_publisher(pub, options.callback_group);
 
   return std::dynamic_pointer_cast<PublisherT>(pub);
 }
