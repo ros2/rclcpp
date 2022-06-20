@@ -204,6 +204,20 @@ public:
   is_serialized() const = 0;
 
   /// Convert serialized message to ROS message type and serve it back to IPM.
+  /**
+   * Convert serialized message to ROS message type and serve it back to IPM.
+   * This is needed as the publisher of serialized message is not aware of the subscribed
+   * data type. While the subscription has all needed information (MessageT, Allocator) to
+   * cast and deserialize the message.
+   *
+   * \param serialized_message serialized message which needs to be de-serialized.
+   * \param intraprocess_manager intraprocess manger to which the de-serialized messaged should be forwarded.
+   * \param intra_process_publisher_id id of publisher.
+   * \param untyped_allocator pointer to allocator of message.
+   * \param take_ownership_subscriptions subscription ids which takes ownership.
+   * \param take_shared_subscriptions subscription ids with shared ownership.
+   * \return true for success.
+   */
   RCLCPP_PUBLIC
   virtual bool
   serve_serialized_message(
