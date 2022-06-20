@@ -193,7 +193,7 @@ public:
   {
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
-    using Indicies = SplitSubscriptionsIndices<is_serialized_publisher>;
+    using Indices = SplitSubscriptionsIndices<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -208,22 +208,22 @@ public:
     const auto & sub_ids = publisher_it->second;
 
     // check if (de)serialization is needed
-    if (sub_ids.take_subscriptions[Indicies::ownership_other].size() +
-      sub_ids.take_subscriptions[Indicies::shared_other].size() > 0)
+    if (sub_ids.take_subscriptions[Indices::ownership_other].size() +
+      sub_ids.take_subscriptions[Indices::shared_other].size() > 0)
     {
       do_intra_process_publish_other_type<MessageT, ROSMessageType, Alloc, Deleter>(
         intra_process_publisher_id,
         message.get(), allocator,
-        sub_ids.take_subscriptions[Indicies::ownership_other],
-        sub_ids.take_subscriptions[Indicies::shared_other]
+        sub_ids.take_subscriptions[Indices::ownership_other],
+        sub_ids.take_subscriptions[Indices::shared_other]
       );
     }
 
     do_intra_process_publish_same_type<MessageT, ROSMessageType, Alloc, Deleter>(
       intra_process_publisher_id,
       std::move(message), allocator,
-      sub_ids.take_subscriptions[Indicies::ownership_same],
-      sub_ids.take_subscriptions[Indicies::shared_same]
+      sub_ids.take_subscriptions[Indices::ownership_same],
+      sub_ids.take_subscriptions[Indices::shared_same]
     );
   }
 
@@ -305,7 +305,7 @@ public:
   {
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
-    using Indicies = SplitSubscriptionsIndices<is_serialized_publisher>;
+    using Indices = SplitSubscriptionsIndices<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -320,14 +320,14 @@ public:
     const auto & sub_ids = publisher_it->second;
 
     // check if (de)serialization is needed
-    if (sub_ids.take_subscriptions[Indicies::ownership_other].size() +
-      sub_ids.take_subscriptions[Indicies::shared_other].size() > 0)
+    if (sub_ids.take_subscriptions[Indices::ownership_other].size() +
+      sub_ids.take_subscriptions[Indices::shared_other].size() > 0)
     {
       do_intra_process_publish_other_type<MessageT, ROSMessageType, Alloc, Deleter>(
         intra_process_publisher_id,
         message.get(), allocator,
-        sub_ids.take_subscriptions[Indicies::ownership_other],
-        sub_ids.take_subscriptions[Indicies::shared_other]
+        sub_ids.take_subscriptions[Indices::ownership_other],
+        sub_ids.take_subscriptions[Indices::shared_other]
       );
     }
 
@@ -335,8 +335,8 @@ public:
              Deleter>(
       intra_process_publisher_id,
       std::move(message), allocator,
-      sub_ids.take_subscriptions[Indicies::ownership_same],
-      sub_ids.take_subscriptions[Indicies::shared_same]
+      sub_ids.take_subscriptions[Indices::ownership_same],
+      sub_ids.take_subscriptions[Indices::shared_same]
              );
   }
 
