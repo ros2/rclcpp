@@ -224,8 +224,6 @@ public:
       take_shared_subscriptions);
 
     return true;
-
-    return false;
   }
 
   size_t available_capacity() const override
