@@ -37,7 +37,8 @@ struct PreSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(PreSetParametersCallbackHandle)
 
-  using PreSetParametersCallbackType = std::function<void(std::vector<rclcpp::Parameter> &)>;
+  using PreSetParametersCallbackType =
+    std::function<void(std::vector<rclcpp::Parameter> &)>;
 
   PreSetParametersCallbackType callback;
 };
@@ -59,7 +60,8 @@ struct PostSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(PostSetParametersCallbackHandle)
 
-  using PostSetParametersCallbackType = std::function<void(const std::vector<rclcpp::Parameter> &)>;
+  using PostSetParametersCallbackType =
+    std::function<void(const std::vector<rclcpp::Parameter> &)>;
 
   PostSetParametersCallbackType callback;
 };
@@ -205,7 +207,7 @@ public:
   using PostSetParametersCallbackType = PostSetParametersCallbackHandle::PostSetParametersCallbackType;
   using PreSetParametersCallbackType = PreSetParametersCallbackHandle::PreSetParametersCallbackType;
 
-  /// Add a callback before parameters are being validated.
+  /// Add a callback gets triggered before parameters are validated.
   /**
    * \sa rclcpp::Node::add_pre_set_parameters_callback
    */
@@ -223,7 +225,7 @@ public:
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
 
-  /// callback which gets triggered after parameters are set.
+  /// Add a callback gets triggered after parameters are set successfully.
   /**
    * \sa rclcpp::Node::add_post_set_parameters_callback
    */
@@ -231,6 +233,15 @@ public:
   virtual
       PostSetParametersCallbackHandle::SharedPtr
   add_post_set_parameters_callback(PostSetParametersCallbackType callback) = 0;
+
+  /// Remove a callback registered with `add_pre_set_parameters_callback`.
+  /**
+   * \sa rclcpp::Node::remove_pre_set_parameters_callback
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**

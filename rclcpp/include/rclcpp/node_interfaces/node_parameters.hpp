@@ -137,7 +137,7 @@ public:
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-      const std::vector<rclcpp::Parameter> & parameters) override;
+    const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
@@ -182,7 +182,7 @@ public:
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
-      RCUTILS_WARN_UNUSED
+  RCUTILS_WARN_UNUSED
   PostSetParametersCallbackHandle::SharedPtr
   add_post_set_parameters_callback(PostSetParametersCallbackType callback) override;
 
@@ -193,6 +193,10 @@ public:
   RCLCPP_PUBLIC
   void
   remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler) override;
+
+  RCLCPP_PUBLIC
+  void
+  remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler) override;
 
   RCLCPP_PUBLIC
   const std::map<std::string, rclcpp::ParameterValue> &

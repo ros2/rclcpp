@@ -435,9 +435,21 @@ Node::add_post_set_parameters_callback(PostSetParametersCallbackType callback){
 }
 
 void
-Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const callback)
+Node::remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler)
 {
-  return node_parameters_->remove_on_set_parameters_callback(callback);
+  return node_parameters_->remove_pre_set_parameters_callback(handler);
+}
+
+void
+Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler)
+{
+  return node_parameters_->remove_on_set_parameters_callback(handler);
+}
+
+void
+Node::remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler)
+{
+  return node_parameters_->remove_post_set_parameters_callback(handler);
 }
 
 std::vector<std::string>

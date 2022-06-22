@@ -263,14 +263,14 @@ using PreSetParametersCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::PreSetParametersCallbackType;
 using OnParametersSetCallbackType =
   rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
-using CallbacksContainerType =
-  rclcpp::node_interfaces::NodeParameters::CallbacksContainerType;
 using OnSetParametersCallbackHandle =
   rclcpp::node_interfaces::OnSetParametersCallbackHandle;
 using PostSetParametersCallbackHandle =
     rclcpp::node_interfaces::PostSetParametersCallbackHandle;
 using PostSetParametersCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
+using CallbacksContainerType =
+    rclcpp::node_interfaces::NodeParameters::CallbacksContainerType;
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
@@ -1001,6 +1001,26 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
 }
 
 void
+NodeParameters::remove_pre_set_parameters_callback(
+    const PreSetParametersCallbackHandle * const handle)
+{
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  auto it = std::find_if(
+      pre_set_parameter_callback_container_.begin(),
+      pre_set_parameter_callback_container_.end(),
+      [handle](const auto & weak_handle) {
+        return handle == weak_handle.lock().get();
+      });
+  if (it != pre_set_parameter_callback_container_.end()) {
+    pre_set_parameter_callback_container_.erase(it);
+  } else {
+    throw std::runtime_error("Pre set parameter callback doesn't exist");
+  }
+}
+
+void
 NodeParameters::remove_on_set_parameters_callback(
   const OnSetParametersCallbackHandle * const handle)
 {
@@ -1016,7 +1036,7 @@ NodeParameters::remove_on_set_parameters_callback(
   if (it != on_parameters_set_callback_container_.end()) {
     on_parameters_set_callback_container_.erase(it);
   } else {
-    throw std::runtime_error("Callback doesn't exist");
+    throw std::runtime_error("On set parameter callback doesn't exist");
   }
 }
 

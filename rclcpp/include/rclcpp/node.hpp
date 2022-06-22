@@ -874,6 +874,12 @@ public:
   using PostSetParametersCallbackType =
       rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
 
+  /// Add a callback gets triggered before parameters are validated.
+  /**
+   * TODO:
+   * @param callback
+   * @return
+   */
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   PreSetParametersCallbackHandle::SharedPtr
@@ -948,10 +954,20 @@ public:
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback);
 
+  /// Add a callback gets triggered after parameters are set successfully.
+  /**
+   * TODO: 
+   * @param callback
+   * @return
+   */
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   PostSetParametersCallbackHandle::SharedPtr
   add_post_set_parameters_callback(PostSetParametersCallbackType callback);
+
+  RCLCPP_PUBLIC
+  void
+  remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
@@ -979,6 +995,10 @@ public:
   RCLCPP_PUBLIC
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
+
+  RCLCPP_PUBLIC
+  void
+  remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler);
 
   /// Get the fully-qualified names of all available nodes.
   /**
