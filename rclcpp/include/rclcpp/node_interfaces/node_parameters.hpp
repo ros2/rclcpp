@@ -84,6 +84,16 @@ class NodeParameters : public NodeParametersInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParameters)
 
+  /// Constructor.
+  /**
+   * If using automatically_declare_parameters_from_overrides, overrides of
+   * get_parameter_overrides(), has_parameter(), declare_parameter() will not
+   * be respected.
+   * If this is an issue, pass false for
+   * automatically_declare_parameters_from_overrides and invoke
+   * perform_automatically_declare_parameters_from_overrides() manually after
+   * construction.
+   */
   RCLCPP_PUBLIC
   NodeParameters(
     const node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -185,6 +195,11 @@ public:
   get_parameter_overrides() const override;
 
   using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+
+protected:
+  RCLCPP_PUBLIC
+  void
+  perform_automatically_declare_parameters_from_overrides();
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)

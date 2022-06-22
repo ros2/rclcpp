@@ -39,6 +39,31 @@
 
 using rclcpp::node_interfaces::NodeParameters;
 
+RCLCPP_LOCAL
+void
+local_perform_automatically_declare_parameters_from_overrides(
+  const std::map<std::string, rclcpp::ParameterValue> & parameter_overrides,
+  std::function<bool(const std::string &)> has_parameter,
+  std::function<void(
+    const std::string &,
+    const rclcpp::ParameterValue &,
+    const rcl_interfaces::msg::ParameterDescriptor &,
+    bool)>
+  declare_parameter)
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.dynamic_typing = true;
+  for (const auto & pair : parameter_overrides) {
+    if (!has_parameter(pair.first)) {
+      declare_parameter(
+        pair.first,
+        pair.second,
+        descriptor,
+        true);
+    }
+  }
+}
+
 NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
@@ -101,18 +126,41 @@ NodeParameters::NodeParameters(
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
   if (automatically_declare_parameters_from_overrides) {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.dynamic_typing = true;
-    for (const auto & pair : this->get_parameter_overrides()) {
-      if (!this->has_parameter(pair.first)) {
-        this->declare_parameter(
-          pair.first,
-          pair.second,
-          descriptor,
-          true);
+    using namespace std::placeholders;
+    local_perform_automatically_declare_parameters_from_overrides(
+      this->get_parameter_overrides(),
+      std::bind(&NodeParameters::has_parameter, this, _1),
+      [this](
+        const std::string & name,
+        const rclcpp::ParameterValue & default_value,
+        const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+        bool ignore_override)
+      {
+        NodeParameters::declare_parameter(
+          name, default_value, parameter_descriptor, ignore_override);
       }
-    }
+    );
   }
+}
+
+void
+NodeParameters::perform_automatically_declare_parameters_from_overrides()
+{
+  local_perform_automatically_declare_parameters_from_overrides(
+    this->get_parameter_overrides(),
+    [this](const std::string & name) {
+      return this->has_parameter(name);
+    },
+    [this](
+      const std::string & name,
+      const rclcpp::ParameterValue & default_value,
+      const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+      bool ignore_override)
+    {
+      this->declare_parameter(
+        name, default_value, parameter_descriptor, ignore_override);
+    }
+  );
 }
 
 NodeParameters::~NodeParameters()

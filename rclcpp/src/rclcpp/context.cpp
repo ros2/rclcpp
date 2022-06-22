@@ -154,7 +154,9 @@ Context::~Context()
   // this will not prevent errors, but will maybe make them easier to reproduce
   std::lock_guard<std::recursive_mutex> lock(init_mutex_);
   try {
-    this->shutdown("context destructor was called while still not shutdown");
+    // Cannot rely on virtual dispatch in a destructor, so explicitly use the
+    // shutdown() provided by this base class.
+    Context::shutdown("context destructor was called while still not shutdown");
     // at this point it is shutdown and cannot reinit
     // clean_up will finalize the rcl context
     this->clean_up();
