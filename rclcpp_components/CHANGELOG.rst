@@ -2,6 +2,39 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.2.0 (2022-05-03)
+-------------------
+
+16.1.0 (2022-04-29)
+-------------------
+
+16.0.1 (2022-04-13)
+-------------------
+
+16.0.0 (2022-04-08)
+-------------------
+
+15.4.0 (2022-04-05)
+-------------------
+
+15.3.0 (2022-03-30)
+-------------------
+
+15.2.0 (2022-03-24)
+-------------------
+* Select executor in node registration (`#1898 <https://github.com/ros2/rclcpp/issues/1898>`_)
+* Fix rosdoc2 issues in rclcpp (`#1897 <https://github.com/ros2/rclcpp/issues/1897>`_)
+* Fix bugprone-exception-escape in node_main.cpp.in (`#1895 <https://github.com/ros2/rclcpp/issues/1895>`_)
+* Contributors: Alberto Soragna, Chris Lalancette, Hirokazu Ishida
+
+15.1.0 (2022-03-01)
+-------------------
+* small improvements to node_main.cpp.in
+* Install headers to include/${PROJECT_NAME} (`#1888 <https://github.com/ros2/rclcpp/issues/1888>`_)
+* Use spin() in component_manager_isolated.hpp (`#1881 <https://github.com/ros2/rclcpp/issues/1881>`_)
+* add use_global_arguments for node options of component nodes (`#1776 <https://github.com/ros2/rclcpp/issues/1776>`_)
+* Contributors: Alberto Soragna, Shane Loretz, gezp
+
 15.0.0 (2022-01-14)
 -------------------
 * Add rclcpp_components::component (`#1855 <https://github.com/ros2/rclcpp/issues/1855>`_)

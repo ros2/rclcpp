@@ -84,6 +84,16 @@ class NodeParameters : public NodeParametersInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParameters)
 
+  /// Constructor.
+  /**
+   * If using automatically_declare_parameters_from_overrides, overrides of
+   * get_parameter_overrides(), has_parameter(), declare_parameter() will not
+   * be respected.
+   * If this is an issue, pass false for
+   * automatically_declare_parameters_from_overrides and invoke
+   * perform_automatically_declare_parameters_from_overrides() manually after
+   * construction.
+   */
   RCLCPP_PUBLIC
   NodeParameters(
     const node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -102,25 +112,6 @@ public:
   RCLCPP_PUBLIC
   virtual
   ~NodeParameters();
-
-// This is overriding a deprecated method, so we need to ignore the deprecation warning here.
-// Users of the method will still get a warning!
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-  [[deprecated(RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPRECATE_DECLARE)]]
-  RCLCPP_PUBLIC
-  const rclcpp::ParameterValue &
-  declare_parameter(const std::string & name) override;
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#else
-# pragma warning(pop)
-#endif
 
   RCLCPP_PUBLIC
   const rclcpp::ParameterValue &
@@ -205,6 +196,11 @@ public:
 
   using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
 
+protected:
+  RCLCPP_PUBLIC
+  void
+  perform_automatically_declare_parameters_from_overrides();
+
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
@@ -214,8 +210,6 @@ private:
   // (particularly when a set_parameter callback tries to call set_parameter,
   // declare_parameter, etc).  In those cases, this will be set to false.
   bool parameter_modification_enabled_{true};
-
-  OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   CallbacksContainerType on_parameters_set_callback_container_;
 

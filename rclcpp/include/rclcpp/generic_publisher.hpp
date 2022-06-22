@@ -31,6 +31,8 @@
 #include "rclcpp/typesupport_helpers.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rmw/rmw.h"
+
 namespace rclcpp
 {
 
@@ -116,9 +118,24 @@ public:
   RCLCPP_PUBLIC
   void publish(const rclcpp::SerializedMessage & message);
 
+  /**
+   * Publish a rclcpp::SerializedMessage via loaned message after de-serialization.
+   *
+   * \param message a serialized message
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can show
+   */
+  RCLCPP_PUBLIC
+  void publish_as_loaned_msg(const rclcpp::SerializedMessage & message);
+
 private:
   // The type support library should stay loaded, so it is stored in the GenericPublisher
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
+
+  void * borrow_loaned_message();
+  void deserialize_message(
+    const rmw_serialized_message_t & serialized_message,
+    void * deserialized_msg);
+  void publish_loaned_message(void * loaned_message);
 };
 
 }  // namespace rclcpp

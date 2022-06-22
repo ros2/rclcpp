@@ -119,7 +119,9 @@ TimerBase::time_until_trigger()
   int64_t time_until_next_call = 0;
   rcl_ret_t ret = rcl_timer_get_time_until_next_call(
     timer_handle_.get(), &time_until_next_call);
-  if (ret != RCL_RET_OK) {
+  if (ret == RCL_RET_TIMER_CANCELED) {
+    return std::chrono::nanoseconds::max();
+  } else if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Timer could not get time until next call");
   }
   return std::chrono::nanoseconds(time_until_next_call);

@@ -38,7 +38,8 @@ ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph)
 : node_graph_(node_graph),
   node_handle_(node_base->get_shared_rcl_node_handle()),
-  context_(node_base->get_context())
+  context_(node_base->get_context()),
+  node_logger_(rclcpp::get_node_logger(node_handle_.get()))
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
   rcl_client_t * new_rcl_client = new rcl_client_t;
@@ -66,6 +67,7 @@ ClientBase::ClientBase(
 
 ClientBase::~ClientBase()
 {
+  clear_on_new_response_callback();
   // Make sure the client handle is destructed as early as possible and before the node handle
   client_handle_.reset();
 }
@@ -197,4 +199,56 @@ bool
 ClientBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+rclcpp::QoS
+ClientBase::get_request_publisher_actual_qos() const
+{
+  const rmw_qos_profile_t * qos =
+    rcl_client_request_publisher_get_actual_qos(client_handle_.get());
+  if (!qos) {
+    auto msg =
+      std::string("failed to get client's request publisher qos settings: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  rclcpp::QoS request_publisher_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
+
+  return request_publisher_qos;
+}
+
+rclcpp::QoS
+ClientBase::get_response_subscription_actual_qos() const
+{
+  const rmw_qos_profile_t * qos =
+    rcl_client_response_subscription_get_actual_qos(client_handle_.get());
+  if (!qos) {
+    auto msg =
+      std::string("failed to get client's response subscription qos settings: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  rclcpp::QoS response_subscription_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
+
+  return response_subscription_qos;
+}
+
+void
+ClientBase::set_on_new_response_callback(rcl_event_callback_t callback, const void * user_data)
+{
+  rcl_ret_t ret = rcl_client_set_on_new_response_callback(
+    client_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on new response callback for client");
+  }
 }

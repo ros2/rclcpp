@@ -93,6 +93,9 @@ TEST(TestQoS, setters_and_getters) {
   qos.reliable();
   EXPECT_EQ(rclcpp::ReliabilityPolicy::Reliable, qos.reliability());
 
+  qos.reliability_best_available();
+  EXPECT_EQ(rclcpp::ReliabilityPolicy::BestAvailable, qos.reliability());
+
   qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
   EXPECT_EQ(rclcpp::ReliabilityPolicy::BestEffort, qos.reliability());
 
@@ -101,6 +104,9 @@ TEST(TestQoS, setters_and_getters) {
 
   qos.transient_local();
   EXPECT_EQ(rclcpp::DurabilityPolicy::TransientLocal, qos.durability());
+
+  qos.durability_best_available();
+  EXPECT_EQ(rclcpp::DurabilityPolicy::BestAvailable, qos.durability());
 
   qos.durability(rclcpp::DurabilityPolicy::Volatile);
   EXPECT_EQ(rclcpp::DurabilityPolicy::Volatile, qos.durability());
@@ -183,6 +189,9 @@ TEST(TestQoS, DerivedTypes) {
   const rclcpp::KeepLast expected_initialization(RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT);
   const rclcpp::QoS expected_default(expected_initialization);
   EXPECT_EQ(expected_default.get_rmw_qos_profile(), system_default_qos.get_rmw_qos_profile());
+
+  rclcpp::BestAvailableQoS best_available_qos;
+  EXPECT_EQ(rmw_qos_profile_best_available, best_available_qos.get_rmw_qos_profile());
 }
 
 TEST(TestQoS, policy_name_from_kind) {

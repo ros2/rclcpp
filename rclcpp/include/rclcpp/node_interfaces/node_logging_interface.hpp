@@ -37,14 +37,18 @@ public:
   ~NodeLoggingInterface() = default;
 
   /// Return the logger of the node.
-  /** \return The logger of the node. */
+  /**
+   * \return The logger of the node.
+   */
   RCLCPP_PUBLIC
   virtual
   rclcpp::Logger
   get_logger() const = 0;
 
   /// Return the logger name associated with the node.
-  /** \return The logger name associated with the node. */
+  /**
+   * \return The logger name associated with the node.
+   */
   RCLCPP_PUBLIC
   virtual
   const char *

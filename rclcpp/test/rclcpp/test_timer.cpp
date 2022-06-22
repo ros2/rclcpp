@@ -111,11 +111,13 @@ TEST_F(TestTimer, test_is_canceled_reset)
 
   // reset shouldn't affect state (not canceled yet)
   timer->reset();
+  EXPECT_LE(timer->time_until_trigger().count(), std::chrono::nanoseconds::max().count());
   EXPECT_FALSE(timer->is_canceled());
 
   // cancel after reset
   timer->cancel();
   EXPECT_TRUE(timer->is_canceled());
+  EXPECT_EQ(timer->time_until_trigger().count(), std::chrono::nanoseconds::max().count());
 
   // reset and cancel
   timer->reset();

@@ -45,17 +45,6 @@ struct OnSetParametersCallbackHandle
   OnParametersSetCallbackType callback;
 };
 
-#define RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPRECATE_DECLARE \
-  "declare_parameter() with only a name is deprecated and will be deleted in the future.\n" \
-  "If you want to declare a parameter that won't change type without a default value use:\n" \
-  "`node_params->declare_parameter(name, type)`, with e.g. type=rclcpp::PARAMETER_INTEGER.\n\n" \
-  "If you want to declare a parameter that can dynamically change type use:\n" \
-  "```\n" \
-  "rcl_interfaces::msg::ParameterDescriptor descriptor;\n" \
-  "descriptor.dynamic_typing = true;\n" \
-  "node_params->declare_parameter(name, rclcpp::ParameterValue{}, descriptor);\n" \
-  "```"
-
 /// Pure virtual interface class for the NodeParameters part of the Node API.
 class NodeParametersInterface
 {
@@ -65,15 +54,6 @@ public:
   RCLCPP_PUBLIC
   virtual
   ~NodeParametersInterface() = default;
-
-  /// Declare a parameter.
-  /**
-   * \sa rclcpp::Node::declare_parameter
-   */
-  [[deprecated(RCLCPP_INTERNAL_NODE_PARAMETERS_INTERFACE_DEPRECATE_DECLARE)]]
-  virtual
-  const rclcpp::ParameterValue &
-  declare_parameter(const std::string & name) = 0;
 
   /// Declare and initialize a parameter.
   /**

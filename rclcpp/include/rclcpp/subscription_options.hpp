@@ -28,6 +28,7 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
+#include "rclcpp/subscription_content_filter_options.hpp"
 #include "rclcpp/topic_statistics_state.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -81,6 +82,8 @@ struct SubscriptionOptionsBase
   TopicStatisticsOptions topic_stats_options;
 
   QosOverridingOptions qos_overriding_options;
+
+  ContentFilterOptions content_filter_options;
 };
 
 /// Structure containing optional configuration for Subscriptions.
@@ -94,7 +97,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   /// Optional custom allocator.
   std::shared_ptr<Allocator> allocator = nullptr;
 
-  SubscriptionOptionsWithAllocator<Allocator>() {}
+  SubscriptionOptionsWithAllocator() {}
 
   /// Constructor using base class as input.
   explicit SubscriptionOptionsWithAllocator(
@@ -121,6 +124,21 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     // Apply payload to rcl_subscription_options if necessary.
     if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
       rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
+    }
+
+    // Copy content_filter_options into rcl_subscription_options.
+    if (!content_filter_options.filter_expression.empty()) {
+      std::vector<const char *> cstrings =
+        get_c_vector_string(content_filter_options.expression_parameters);
+      rcl_ret_t ret = rcl_subscription_options_set_content_filter_options(
+        get_c_string(content_filter_options.filter_expression),
+        cstrings.size(),
+        cstrings.data(),
+        &result);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "failed to set content_filter_options");
+      }
     }
 
     return result;

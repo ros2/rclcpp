@@ -72,3 +72,38 @@ TEST(TestUtilities, wait_for_message_indefinitely) {
 
   ASSERT_FALSE(received);
 }
+
+TEST(TestUtilities, wait_for_message_twice_one_sub) {
+  rclcpp::init(0, nullptr);
+
+  auto node = std::make_shared<rclcpp::Node>("wait_for_message_node3");
+
+  using MsgT = test_msgs::msg::Strings;
+  auto pub = node->create_publisher<MsgT>("wait_for_message_topic", 10);
+  auto sub = node->create_subscription<MsgT>(
+    "wait_for_message_topic", 1, [](const std::shared_ptr<const MsgT>) {});
+
+  MsgT out1;
+  MsgT out2;
+  auto received = false;
+  auto wait = std::async(
+    [&]() {
+      auto ret = rclcpp::wait_for_message(out1, sub, node->get_node_options().context(), 5s);
+      EXPECT_TRUE(ret);
+      ret = rclcpp::wait_for_message(out2, sub, node->get_node_options().context(), 5s);
+      EXPECT_TRUE(ret);
+      received = true;
+    });
+
+  for (auto i = 0u; i < 10 && received == false; ++i) {
+    pub->publish(*get_messages_strings()[0]);
+    std::this_thread::sleep_for(1s);
+  }
+
+  ASSERT_NO_THROW(wait.get());
+  ASSERT_TRUE(received);
+  EXPECT_EQ(out1, *get_messages_strings()[0]);
+  EXPECT_EQ(out2, *get_messages_strings()[0]);
+
+  rclcpp::shutdown();
+}

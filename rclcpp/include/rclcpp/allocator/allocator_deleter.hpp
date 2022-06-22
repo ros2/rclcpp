@@ -41,7 +41,7 @@ public:
   }
 
   template<typename T>
-  AllocatorDeleter(const AllocatorDeleter<T> & a)
+  explicit AllocatorDeleter(const AllocatorDeleter<T> & a)
   {
     allocator_ = a.get_allocator();
   }

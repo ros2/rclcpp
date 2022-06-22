@@ -24,7 +24,7 @@ find_package(rcpputils REQUIRED)
 add_library(component INTERFACE)
 target_include_directories(component INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(component INTERFACE
   class_loader::class_loader
   rclcpp::rclcpp)
@@ -36,7 +36,7 @@ add_library(
 )
 target_include_directories(component_manager PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 ament_target_dependencies(component_manager
   "ament_index_cpp"
   "class_loader"
@@ -159,7 +159,7 @@ install(
 # Install include directories
 install(
   DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/${PROJECT_NAME}
 )
 
 # Install cmake
@@ -168,10 +168,14 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-# specific order: dependents before dependencies
-ament_export_include_directories(include)
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(component_manager)
+
+# Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME})
+
+# specific order: dependents before dependencies
 ament_export_dependencies(ament_index_cpp)
 ament_export_dependencies(class_loader)
 ament_export_dependencies(composition_interfaces)

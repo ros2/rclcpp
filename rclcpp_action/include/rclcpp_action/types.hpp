@@ -15,6 +15,7 @@
 #ifndef RCLCPP_ACTION__TYPES_HPP_
 #define RCLCPP_ACTION__TYPES_HPP_
 
+#include <array>
 #include <climits>
 #include <functional>
 #include <string>

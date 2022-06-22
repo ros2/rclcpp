@@ -79,7 +79,7 @@ public:
    * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   template<typename NodeT>
-  AsyncParametersClient(
+  explicit AsyncParametersClient(
     const std::shared_ptr<NodeT> node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
@@ -102,7 +102,7 @@ public:
    * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   template<typename NodeT>
-  AsyncParametersClient(
+  explicit AsyncParametersClient(
     NodeT * node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
@@ -333,7 +333,7 @@ public:
   {}
 
   template<typename NodeT>
-  SyncParametersClient(
+  explicit SyncParametersClient(
     NodeT * node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters)

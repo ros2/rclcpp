@@ -3,6 +3,39 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.2.0 (2022-05-03)
+-------------------
+
+16.1.0 (2022-04-29)
+-------------------
+
+16.0.1 (2022-04-13)
+-------------------
+
+16.0.0 (2022-04-08)
+-------------------
+* remove things that were deprecated during galactic (`#1913 <https://github.com/ros2/rclcpp/issues/1913>`_)
+* Contributors: William Woodall
+
+15.4.0 (2022-04-05)
+-------------------
+* add take_data_by_entity_id API to waitable (`#1892 <https://github.com/ros2/rclcpp/issues/1892>`_)
+* Contributors: Alberto Soragna
+
+15.3.0 (2022-03-30)
+-------------------
+
+15.2.0 (2022-03-24)
+-------------------
+* Fix rosdoc2 issues (`#1897 <https://github.com/ros2/rclcpp/issues/1897>`_)
+* Contributors: Chris Lalancette
+
+15.1.0 (2022-03-01)
+-------------------
+* Add RMW listener APIs (`#1579 <https://github.com/ros2/rclcpp/issues/1579>`_)
+* Install headers to include/${PROJECT_NAME} (`#1888 <https://github.com/ros2/rclcpp/issues/1888>`_)
+* Contributors: Shane Loretz, iRobot ROS
+
 15.0.0 (2022-01-14)
 -------------------
 * Fix include order and relative paths for cpplint (`#1859 <https://github.com/ros2/rclcpp/issues/1859>`_)

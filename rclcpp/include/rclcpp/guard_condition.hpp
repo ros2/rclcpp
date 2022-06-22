@@ -72,7 +72,7 @@ public:
   const rcl_guard_condition_t &
   get_rcl_guard_condition() const;
 
-  /// Notify the wait set waiting on this condition, if any, that the condition had been met.
+  /// Signal that the condition has been met, notifying both the wait set and listeners, if any.
   /**
    * This function is thread-safe, and may be called concurrently with waiting
    * on this guard condition in a wait set.
@@ -98,10 +98,43 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
+  /// Adds the guard condition to a waitset
+  /**
+   * This function is thread-safe.
+   * \param[in] wait_set pointer to a wait set where to add the guard condition
+   */
+  RCLCPP_PUBLIC
+  void
+  add_to_wait_set(rcl_wait_set_t * wait_set);
+
+  /// Set a callback to be called whenever the guard condition is triggered.
+  /**
+   * The callback receives a size_t which is the number of times the guard condition was triggered
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if the guard condition was triggered before any
+   * callback was set.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the guard condition
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \param[in] callback functor to be called when the guard condition is triggered
+   */
+  RCLCPP_PUBLIC
+  void
+  set_on_trigger_callback(std::function<void(size_t)> callback);
+
 protected:
   rclcpp::Context::SharedPtr context_;
   rcl_guard_condition_t rcl_guard_condition_;
   std::atomic<bool> in_use_by_wait_set_{false};
+  std::recursive_mutex reentrant_mutex_;
+  std::function<void(size_t)> on_trigger_callback_{nullptr};
+  size_t unread_count_{0};
+  rcl_wait_set_t * wait_set_{nullptr};
 };
 
 }  // namespace rclcpp

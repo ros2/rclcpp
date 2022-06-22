@@ -187,13 +187,14 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "ament_index_cpp"
   "libstatistics_collector"
   "rcl"
+  "rcl_interfaces"
   "rcl_yaml_param_parser"
   "rcpputils"
   "rcutils"
@@ -217,11 +218,14 @@ install(
   RUNTIME DESTINATION bin
 )
 
-# specific order: dependents before dependencies
-ament_export_include_directories(include)
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME})
+
+# Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
+# specific order: dependents before dependencies
 ament_export_dependencies(ament_index_cpp)
 ament_export_dependencies(libstatistics_collector)
 ament_export_dependencies(rcl)
@@ -247,7 +251,7 @@ ament_package()
 
 install(
   DIRECTORY include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
-  DESTINATION include
+  DESTINATION include/${PROJECT_NAME}
 )
 
 if(TEST cppcheck)
@@ -255,4 +259,4 @@ if(TEST cppcheck)
   set_tests_properties(cppcheck PROPERTIES TIMEOUT 500)
 endif()
 
-ament_cmake_gen_version_h()
+ament_generate_version_header(${PROJECT_NAME})

@@ -248,7 +248,7 @@ TEST_F(TestExecutor, spin_all_invalid_duration) {
 
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_all(std::chrono::nanoseconds(-1)),
-    std::invalid_argument("max_duration must be positive"));
+    std::invalid_argument("max_duration must be greater than or equal to 0"));
 }
 
 TEST_F(TestExecutor, spin_some_in_spin_some) {

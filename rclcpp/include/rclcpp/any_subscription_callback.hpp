@@ -354,12 +354,6 @@ public:
     allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
   }
 
-  [[deprecated("use AnySubscriptionCallback(const AllocatorT & allocator) instead")]]
-  explicit
-  AnySubscriptionCallback(std::shared_ptr<AllocatorT> allocator)  // NOLINT[runtime/explicit]
-  : AnySubscriptionCallback(*NotNull<AllocatorT>(allocator.get(), "invalid allocator").pointer)
-  {}
-
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
 
   /// Generic function for setting the callback.
@@ -956,7 +950,13 @@ public:
       std::holds_alternative<UniquePtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<SharedConstPtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<ConstRefSharedConstPtrSerializedMessageCallback>(callback_variant_) ||
-      std::holds_alternative<SharedPtrSerializedMessageCallback>(callback_variant_);
+      std::holds_alternative<SharedPtrSerializedMessageCallback>(callback_variant_) ||
+      std::holds_alternative<ConstRefSerializedMessageWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<UniquePtrSerializedMessageWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<SharedConstPtrSerializedMessageWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<ConstRefSharedConstPtrSerializedMessageWithInfoCallback>(
+      callback_variant_) ||
+      std::holds_alternative<SharedPtrSerializedMessageWithInfoCallback>(callback_variant_);
   }
 
   void

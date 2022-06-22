@@ -22,6 +22,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -46,7 +47,9 @@ PublisherBase::PublisherBase(
   const rosidl_message_type_support_t & type_support,
   const rcl_publisher_options_t & publisher_options)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
-  intra_process_is_enabled_(false), intra_process_publisher_id_(0)
+  intra_process_is_enabled_(false),
+  intra_process_publisher_id_(0),
+  type_support_(type_support)
 {
   auto custom_deleter = [node_handle = this->rcl_node_handle_](rcl_publisher_t * rcl_pub)
     {
@@ -99,6 +102,11 @@ PublisherBase::PublisherBase(
 
 PublisherBase::~PublisherBase()
 {
+  for (const auto & pair : event_handlers_) {
+    rcl_publisher_event_type_t event_type = pair.first;
+    clear_on_new_qos_event_callback(event_type);
+  }
+
   // must fini the events before fini-ing the publisher
   event_handlers_.clear();
 
@@ -154,7 +162,8 @@ PublisherBase::get_publisher_handle() const
   return publisher_handle_;
 }
 
-const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+const
+std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 PublisherBase::get_event_handlers() const
 {
   return event_handlers_;

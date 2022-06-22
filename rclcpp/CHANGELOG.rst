@@ -2,6 +2,66 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.2.0 (2022-05-03)
+-------------------
+* Update get_parameter_from_event to follow the function description (`#1922 <https://github.com/ros2/rclcpp/issues/1922>`_)
+* Add 'best available' QoS enum values and methods (`#1920 <https://github.com/ros2/rclcpp/issues/1920>`_)
+* Contributors: Barry Xu, Jacob Perron
+
+16.1.0 (2022-04-29)
+-------------------
+* use reinterpret_cast for function pointer conversion. (`#1919 <https://github.com/ros2/rclcpp/issues/1919>`_)
+* Contributors: Tomoya Fujita
+
+16.0.1 (2022-04-13)
+-------------------
+* remove DEFINE_CONTENT_FILTER cmake option (`#1914 <https://github.com/ros2/rclcpp/issues/1914>`_)
+* Contributors: Chen Lihui
+
+16.0.0 (2022-04-08)
+-------------------
+* remove things that were deprecated during galactic (`#1913 <https://github.com/ros2/rclcpp/issues/1913>`_)
+* Contributors: William Woodall
+
+15.4.0 (2022-04-05)
+-------------------
+* add take_data_by_entity_id API to waitable (`#1892 <https://github.com/ros2/rclcpp/issues/1892>`_)
+* add content-filtered-topic interfaces (`#1561 <https://github.com/ros2/rclcpp/issues/1561>`_)
+* Contributors: Alberto Soragna, Chen Lihui
+
+15.3.0 (2022-03-30)
+-------------------
+* [NodeParameters] Set name in param info pre-check (`#1908 <https://github.com/ros2/rclcpp/issues/1908>`_)
+* Add test-dep ament_cmake_google_benchmark (`#1904 <https://github.com/ros2/rclcpp/issues/1904>`_)
+* Add publish by loaned message in GenericPublisher (`#1856 <https://github.com/ros2/rclcpp/issues/1856>`_)
+* Contributors: Abrar Rahman Protyasha, Barry Xu, Gaël Écorchard
+
+15.2.0 (2022-03-24)
+-------------------
+* Add missing ament dependency on rcl_interfaces (`#1903 <https://github.com/ros2/rclcpp/issues/1903>`_)
+* Update data callback tests to account for all published samples (`#1900 <https://github.com/ros2/rclcpp/issues/1900>`_)
+* Increase timeout for acknowledgments to account for slower Connext settings (`#1901 <https://github.com/ros2/rclcpp/issues/1901>`_)
+* clang-tidy: explicit constructors (`#1782 <https://github.com/ros2/rclcpp/issues/1782>`_)
+* Add client/service QoS getters (`#1784 <https://github.com/ros2/rclcpp/issues/1784>`_)
+* Fix a bunch more rosdoc2 issues in rclcpp. (`#1897 <https://github.com/ros2/rclcpp/issues/1897>`_)
+* time_until_trigger returns max time if timer is cancelled (`#1893 <https://github.com/ros2/rclcpp/issues/1893>`_)
+* Micro-optimizations in rclcpp (`#1896 <https://github.com/ros2/rclcpp/issues/1896>`_)
+* Contributors: Andrea Sorbini, Chris Lalancette, Mauro Passerino, Scott K Logan, William Woodall
+
+15.1.0 (2022-03-01)
+-------------------
+* spin_all with a zero timeout. (`#1878 <https://github.com/ros2/rclcpp/issues/1878>`_)
+* Add RMW listener APIs (`#1579 <https://github.com/ros2/rclcpp/issues/1579>`_)
+* Remove fastrtps customization on tests (`#1887 <https://github.com/ros2/rclcpp/issues/1887>`_)
+* Install headers to include/${PROJECT_NAME} (`#1888 <https://github.com/ros2/rclcpp/issues/1888>`_)
+* Use ament_generate_version_header (`#1886 <https://github.com/ros2/rclcpp/issues/1886>`_)
+* use universal reference to support rvalue. (`#1883 <https://github.com/ros2/rclcpp/issues/1883>`_)
+* fix one subscription can wait_for_message twice (`#1870 <https://github.com/ros2/rclcpp/issues/1870>`_)
+* Add return value version of get_parameter_or (`#1813 <https://github.com/ros2/rclcpp/issues/1813>`_)
+* Cleanup time source object lifetimes (`#1867 <https://github.com/ros2/rclcpp/issues/1867>`_)
+* add is_spinning() method to executor base class
+* Contributors: Alberto Soragna, Chen Lihui, Chris Lalancette, Kenji Miyake, Miguel Company, Shane Loretz, Tomoya Fujita, iRobot ROS
+
 15.0.0 (2022-01-14)
 -------------------
 * Cleanup the TypeAdapt tests (`#1858 <https://github.com/ros2/rclcpp/issues/1858>`_)

@@ -17,7 +17,10 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -39,6 +42,7 @@ SubscriptionBase::SubscriptionBase(
   bool is_serialized)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
+  node_logger_(rclcpp::get_node_logger(node_handle_.get())),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
   type_support_(type_support_handle),
@@ -83,6 +87,13 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  clear_on_new_message_callback();
+
+  for (const auto & pair : event_handlers_) {
+    rcl_subscription_event_type_t event_type = pair.first;
+    clear_on_new_qos_event_callback(event_type);
+  }
+
   if (!use_intra_process_) {
     return;
   }
@@ -115,7 +126,8 @@ SubscriptionBase::get_subscription_handle() const
   return subscription_handle_;
 }
 
-const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+const
+std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 SubscriptionBase::get_event_handlers() const
 {
   return event_handlers_;
@@ -282,7 +294,8 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   if (get_intra_process_waitable().get() == pointer_to_subscription_part) {
     return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
   }
-  for (const auto & qos_event : event_handlers_) {
+  for (const auto & key_event_pair : event_handlers_) {
+    auto qos_event = key_event_pair.second;
     if (qos_event.get() == pointer_to_subscription_part) {
       return qos_events_in_use_by_wait_set_[qos_event.get()].exchange(in_use_state);
     }
@@ -290,7 +303,8 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   throw std::runtime_error("given pointer_to_subscription_part does not match any part");
 }
 
-std::vector<rclcpp::NetworkFlowEndpoint> SubscriptionBase::get_network_flow_endpoints() const
+std::vector<rclcpp::NetworkFlowEndpoint>
+SubscriptionBase::get_network_flow_endpoints() const
 {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcl_network_flow_endpoint_array_t network_flow_endpoint_array =
@@ -325,4 +339,108 @@ std::vector<rclcpp::NetworkFlowEndpoint> SubscriptionBase::get_network_flow_endp
   }
 
   return network_flow_endpoint_vector;
+}
+
+void
+SubscriptionBase::set_on_new_message_callback(
+  rcl_event_callback_t callback,
+  const void * user_data)
+{
+  rcl_ret_t ret = rcl_subscription_set_on_new_message_callback(
+    subscription_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on new message callback for subscription");
+  }
+}
+
+bool
+SubscriptionBase::is_cft_enabled() const
+{
+  return rcl_subscription_is_cft_enabled(subscription_handle_.get());
+}
+
+void
+SubscriptionBase::set_content_filter(
+  const std::string & filter_expression,
+  const std::vector<std::string> & expression_parameters)
+{
+  rcl_subscription_content_filter_options_t options =
+    rcl_get_zero_initialized_subscription_content_filter_options();
+
+  std::vector<const char *> cstrings =
+    get_c_vector_string(expression_parameters);
+  rcl_ret_t ret = rcl_subscription_content_filter_options_init(
+    subscription_handle_.get(),
+    get_c_string(filter_expression),
+    cstrings.size(),
+    cstrings.data(),
+    &options);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to init subscription content_filtered_topic option");
+  }
+  RCPPUTILS_SCOPE_EXIT(
+  {
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(
+      subscription_handle_.get(), &options);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "Failed to fini subscription content_filtered_topic option: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  });
+
+  ret = rcl_subscription_set_content_filter(
+    subscription_handle_.get(),
+    &options);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set cft expression parameters");
+  }
+}
+
+rclcpp::ContentFilterOptions
+SubscriptionBase::get_content_filter() const
+{
+  rclcpp::ContentFilterOptions ret_options;
+  rcl_subscription_content_filter_options_t options =
+    rcl_get_zero_initialized_subscription_content_filter_options();
+
+  rcl_ret_t ret = rcl_subscription_get_content_filter(
+    subscription_handle_.get(),
+    &options);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get cft expression parameters");
+  }
+
+  RCPPUTILS_SCOPE_EXIT(
+  {
+    rcl_ret_t ret = rcl_subscription_content_filter_options_fini(
+      subscription_handle_.get(), &options);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "Failed to fini subscription content_filtered_topic option: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  });
+
+  rmw_subscription_content_filter_options_t & content_filter_options =
+    options.rmw_subscription_content_filter_options;
+  ret_options.filter_expression = content_filter_options.filter_expression;
+
+  for (size_t i = 0; i < content_filter_options.expression_parameters.size; ++i) {
+    ret_options.expression_parameters.push_back(
+      content_filter_options.expression_parameters.data[i]);
+  }
+
+  return ret_options;
 }

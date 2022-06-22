@@ -24,8 +24,11 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 
 #include "../mocking_utils/patch.hpp"
+#include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/srv/empty.hpp"
+
+using namespace std::chrono_literals;
 
 class TestClient : public ::testing::Test
 {
@@ -339,4 +342,198 @@ TEST_F(TestClientWithServer, take_response) {
       client->take_response(response, *request_header.get()),
       rclcpp::exceptions::RCLError);
   }
+}
+
+/*
+   Testing on_new_response callbacks.
+ */
+TEST_F(TestClient, on_new_response_callback) {
+  auto client_node = std::make_shared<rclcpp::Node>("client_node", "ns");
+  auto server_node = std::make_shared<rclcpp::Node>("server_node", "ns");
+
+  rmw_qos_profile_t client_qos = rmw_qos_profile_services_default;
+  client_qos.depth = 3;
+  auto client = client_node->create_client<test_msgs::srv::Empty>("test_service", client_qos);
+  std::atomic<size_t> server_requests_count {0};
+  auto server_callback = [&server_requests_count](
+    const test_msgs::srv::Empty::Request::SharedPtr,
+    test_msgs::srv::Empty::Response::SharedPtr) {server_requests_count++;};
+  auto server = server_node->create_service<test_msgs::srv::Empty>(
+    "test_service", server_callback, client_qos);
+  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
+
+  std::atomic<size_t> c1 {0};
+  auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
+  client->set_on_new_response_callback(increase_c1_cb);
+
+  client->async_send_request(request);
+  auto start = std::chrono::steady_clock::now();
+  while (server_requests_count == 0 &&
+    (std::chrono::steady_clock::now() - start) < 10s)
+  {
+    rclcpp::spin_some(server_node);
+  }
+
+  ASSERT_EQ(server_requests_count, 1u);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c1 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+
+  std::atomic<size_t> c2 {0};
+  auto increase_c2_cb = [&c2](size_t count_msgs) {c2 += count_msgs;};
+  client->set_on_new_response_callback(increase_c2_cb);
+
+  client->async_send_request(request);
+  start = std::chrono::steady_clock::now();
+  while (server_requests_count == 1 &&
+    (std::chrono::steady_clock::now() - start) < 10s)
+  {
+    rclcpp::spin_some(server_node);
+  }
+
+  ASSERT_EQ(server_requests_count, 2u);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c1 == 0 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+  EXPECT_EQ(c2.load(), 1u);
+
+  client->clear_on_new_response_callback();
+
+  client->async_send_request(request);
+  client->async_send_request(request);
+  client->async_send_request(request);
+  start = std::chrono::steady_clock::now();
+  while (server_requests_count < 5 &&
+    (std::chrono::steady_clock::now() - start) < 10s)
+  {
+    rclcpp::spin_some(server_node);
+  }
+
+  ASSERT_EQ(server_requests_count, 5u);
+
+  std::atomic<size_t> c3 {0};
+  auto increase_c3_cb = [&c3](size_t count_msgs) {c3 += count_msgs;};
+  client->set_on_new_response_callback(increase_c3_cb);
+
+  start = std::chrono::steady_clock::now();
+  do {
+    std::this_thread::sleep_for(100ms);
+  } while (c3 < 3 && std::chrono::steady_clock::now() - start < 10s);
+
+  EXPECT_EQ(c1.load(), 1u);
+  EXPECT_EQ(c2.load(), 1u);
+  EXPECT_EQ(c3.load(), 3u);
+
+  std::function<void(size_t)> invalid_cb = nullptr;
+  EXPECT_THROW(client->set_on_new_response_callback(invalid_cb), std::invalid_argument);
+}
+
+TEST_F(TestClient, rcl_client_request_publisher_get_actual_qos_error) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_client_request_publisher_get_actual_qos, nullptr);
+  auto client = node->create_client<test_msgs::srv::Empty>("service");
+  RCLCPP_EXPECT_THROW_EQ(
+    client->get_request_publisher_actual_qos(),
+    std::runtime_error("failed to get client's request publisher qos settings: error not set"));
+}
+
+TEST_F(TestClient, rcl_client_response_subscription_get_actual_qos_error) {
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_client_response_subscription_get_actual_qos, nullptr);
+  auto client = node->create_client<test_msgs::srv::Empty>("service");
+  RCLCPP_EXPECT_THROW_EQ(
+    client->get_response_subscription_actual_qos(),
+    std::runtime_error("failed to get client's response subscription qos settings: error not set"));
+}
+
+TEST_F(TestClient, client_qos) {
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_services_default;
+  qos_profile.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+  uint64_t duration = 1;
+  qos_profile.deadline = {duration, duration};
+  qos_profile.lifespan = {duration, duration};
+  qos_profile.liveliness_lease_duration = {duration, duration};
+
+  auto client =
+    node->create_client<test_msgs::srv::Empty>("client", qos_profile);
+
+  auto init_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile), qos_profile);
+  auto rp_qos = client->get_request_publisher_actual_qos();
+  auto rs_qos = client->get_response_subscription_actual_qos();
+
+  EXPECT_EQ(init_qos, rp_qos);
+  // Lifespan has no meaning for subscription/readers
+  rs_qos.lifespan(qos_profile.lifespan);
+  EXPECT_EQ(init_qos, rs_qos);
+}
+
+TEST_F(TestClient, client_qos_depth) {
+  using namespace std::literals::chrono_literals;
+
+  rmw_qos_profile_t client_qos_profile = rmw_qos_profile_default;
+  client_qos_profile.depth = 2;
+
+  auto client = node->create_client<test_msgs::srv::Empty>("test_qos_depth", client_qos_profile);
+
+  uint64_t server_cb_count_ = 0;
+  auto server_callback = [&](
+    const test_msgs::srv::Empty::Request::SharedPtr,
+    test_msgs::srv::Empty::Response::SharedPtr) {server_cb_count_++;};
+
+  auto server_node = std::make_shared<rclcpp::Node>("server_node", "/ns");
+
+  rmw_qos_profile_t server_qos_profile = rmw_qos_profile_default;
+
+  auto server = server_node->create_service<test_msgs::srv::Empty>(
+    "test_qos_depth", std::move(server_callback), server_qos_profile);
+
+  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
+  ::testing::AssertionResult request_result = ::testing::AssertionSuccess();
+
+  using SharedFuture = rclcpp::Client<test_msgs::srv::Empty>::SharedFuture;
+  uint64_t client_cb_count_ = 0;
+  auto client_callback = [&client_cb_count_, &request_result](SharedFuture future_response) {
+      if (nullptr == future_response.get()) {
+        request_result = ::testing::AssertionFailure() << "Future response was null";
+      }
+      client_cb_count_++;
+    };
+
+  uint64_t client_requests = 5;
+  for (uint64_t i = 0; i < client_requests; i++) {
+    client->async_send_request(request, client_callback);
+    std::this_thread::sleep_for(10ms);
+  }
+
+  auto start = std::chrono::steady_clock::now();
+  while ((server_cb_count_ < client_requests) &&
+    (std::chrono::steady_clock::now() - start) < 2s)
+  {
+    rclcpp::spin_some(server_node);
+    std::this_thread::sleep_for(2ms);
+  }
+
+  EXPECT_GT(server_cb_count_, client_qos_profile.depth);
+
+  start = std::chrono::steady_clock::now();
+  while ((client_cb_count_ < client_qos_profile.depth) &&
+    (std::chrono::steady_clock::now() - start) < 1s)
+  {
+    rclcpp::spin_some(node);
+  }
+
+  // Spin an extra time to check if client QoS depth has been ignored,
+  // so more client callbacks might be called than expected.
+  rclcpp::spin_some(node);
+
+  EXPECT_EQ(client_cb_count_, client_qos_profile.depth);
 }

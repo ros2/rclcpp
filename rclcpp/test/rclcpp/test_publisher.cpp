@@ -157,6 +157,17 @@ TEST_F(TestPublisher, various_creation_signatures) {
     (void)publisher;
   }
   {
+    auto publisher = rclcpp::create_publisher<Empty>(
+      node->get_node_topics_interface(), "topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
+  {
+    auto node_topics_interface = node->get_node_topics_interface();
+    auto publisher = rclcpp::create_publisher<Empty>(
+      node_topics_interface, "topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
+  {
     auto node_parameters = node->get_node_parameters_interface();
     auto node_topics = node->get_node_topics_interface();
     auto publisher = rclcpp::create_publisher<Empty>(
@@ -503,7 +514,8 @@ TEST_F(TestPublisher, run_event_handlers) {
   initialize();
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
 
-  for (const auto & handler : publisher->get_event_handlers()) {
+  for (const auto & key_event_pair : publisher->get_event_handlers()) {
+    auto handler = key_event_pair.second;
     std::shared_ptr<void> data = handler->take_data();
     handler->execute(data);
   }
@@ -600,7 +612,7 @@ TEST_P(TestPublisherWaitForAllAcked, check_wait_for_all_acked_with_QosPolicy) {
   for (int i = 0; i < 20; i++) {
     ASSERT_NO_THROW(pub->publish(*msg));
   }
-  EXPECT_TRUE(pub->wait_for_all_acked(std::chrono::milliseconds(500)));
+  EXPECT_TRUE(pub->wait_for_all_acked(std::chrono::milliseconds(6000)));
 }
 
 INSTANTIATE_TEST_SUITE_P(

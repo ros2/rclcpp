@@ -113,7 +113,8 @@ public:
 
   /// Check how long the timer has until its next scheduled callback.
   /**
-   * \return A std::chrono::duration representing the relative time until the next callback.
+   * \return A std::chrono::duration representing the relative time until the next callback
+   * or std::chrono::nanoseconds::max() if the timer is canceled.
    * \throws std::runtime_error if the rcl_timer_get_time_until_next_call returns a failure
    */
   RCLCPP_PUBLIC
@@ -188,10 +189,10 @@ public:
     TRACEPOINT(
       rclcpp_timer_callback_added,
       static_cast<const void *>(get_timer_handle().get()),
-      static_cast<const void *>(&callback_));
+      reinterpret_cast<const void *>(&callback_));
     TRACEPOINT(
       rclcpp_callback_register,
-      static_cast<const void *>(&callback_),
+      reinterpret_cast<const void *>(&callback_),
       tracetools::get_symbol(callback_));
   }
 
@@ -225,9 +226,9 @@ public:
   void
   execute_callback() override
   {
-    TRACEPOINT(callback_start, static_cast<const void *>(&callback_), false);
+    TRACEPOINT(callback_start, reinterpret_cast<const void *>(&callback_), false);
     execute_callback_delegate<>();
-    TRACEPOINT(callback_end, static_cast<const void *>(&callback_));
+    TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
   }
 
   // void specialization

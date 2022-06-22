@@ -37,11 +37,6 @@ Duration::Duration(int32_t seconds, uint32_t nanoseconds)
   rcl_duration_.nanoseconds += nanoseconds;
 }
 
-Duration::Duration(rcl_duration_value_t nanoseconds)
-{
-  rcl_duration_.nanoseconds = nanoseconds;
-}
-
 Duration::Duration(std::chrono::nanoseconds nanoseconds)
 {
   rcl_duration_.nanoseconds = nanoseconds.count();

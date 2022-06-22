@@ -138,6 +138,14 @@ public:
   const CallbackGroupType &
   type() const;
 
+  RCLCPP_PUBLIC
+  void collect_all_ptrs(
+    std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
+    std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
+    std::function<void(const rclcpp::ClientBase::SharedPtr &)> client_func,
+    std::function<void(const rclcpp::TimerBase::SharedPtr &)> timer_func,
+    std::function<void(const rclcpp::Waitable::SharedPtr &)> waitable_func) const;
+
   /// Return a reference to the 'associated with executor' atomic boolean.
   /**
    * When a callback group is added to an executor this boolean is checked

@@ -102,3 +102,83 @@ TEST_F(TestGuardCondition, trigger) {
     }
   }
 }
+
+/*
+ * Testing addition to a wait set
+ */
+TEST_F(TestGuardCondition, add_to_wait_set) {
+  {
+    {
+      auto gc = std::make_shared<rclcpp::GuardCondition>();
+
+      auto mock = mocking_utils::patch_and_return(
+        "lib:rclcpp", rcl_wait_set_add_guard_condition, RCL_RET_OK);
+
+      rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+      EXPECT_NO_THROW(gc->add_to_wait_set(&wait_set));
+      EXPECT_NO_THROW(gc->add_to_wait_set(&wait_set));
+
+      rcl_wait_set_t wait_set_2 = rcl_get_zero_initialized_wait_set();
+      EXPECT_THROW(gc->add_to_wait_set(&wait_set_2), std::runtime_error);
+    }
+
+    {
+      auto mock = mocking_utils::patch_and_return(
+        "lib:rclcpp", rcl_wait_set_add_guard_condition, RCL_RET_ERROR);
+
+      auto gd = std::make_shared<rclcpp::GuardCondition>();
+      EXPECT_THROW(gd->add_to_wait_set(nullptr), rclcpp::exceptions::RCLError);
+    }
+  }
+}
+
+/*
+ * Testing set on trigger callback
+ */
+TEST_F(TestGuardCondition, set_on_trigger_callback) {
+  {
+    auto gc = std::make_shared<rclcpp::GuardCondition>();
+
+    std::atomic<size_t> c1 {0};
+    auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
+    gc->set_on_trigger_callback(increase_c1_cb);
+
+    EXPECT_EQ(c1.load(), 0u);
+    EXPECT_NO_THROW(gc->trigger());
+    EXPECT_EQ(c1.load(), 1u);
+
+    std::atomic<size_t> c2 {0};
+    auto increase_c2_cb = [&c2](size_t count_msgs) {c2 += count_msgs;};
+    gc->set_on_trigger_callback(increase_c2_cb);
+
+    EXPECT_NO_THROW(gc->trigger());
+    EXPECT_EQ(c1.load(), 1u);
+    EXPECT_EQ(c2.load(), 1u);
+
+    gc->set_on_trigger_callback(nullptr);
+    EXPECT_NO_THROW(gc->trigger());
+    EXPECT_EQ(c1.load(), 1u);
+    EXPECT_EQ(c2.load(), 1u);
+
+    gc->set_on_trigger_callback(increase_c1_cb);
+    EXPECT_EQ(c1.load(), 2u);
+  }
+}
+
+/*
+ * Testing that callback and waitset are both notified by triggering gc
+ */
+TEST_F(TestGuardCondition, callback_and_waitset) {
+  auto gc = std::make_shared<rclcpp::GuardCondition>();
+  std::atomic<size_t> c1 {0};
+  auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
+  gc->set_on_trigger_callback(increase_c1_cb);
+
+  rclcpp::WaitSet wait_set;
+  wait_set.add_guard_condition(gc);
+
+  gc->trigger();
+
+  EXPECT_EQ(rclcpp::WaitResultKind::Ready, wait_set.wait(std::chrono::seconds(1)).kind());
+  EXPECT_EQ(c1.load(), 1u);
+}

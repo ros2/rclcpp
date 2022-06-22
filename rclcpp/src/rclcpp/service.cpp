@@ -28,11 +28,14 @@
 using rclcpp::ServiceBase;
 
 ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
-: node_handle_(node_handle)
+: node_handle_(node_handle),
+  node_logger_(rclcpp::get_node_logger(node_handle_.get()))
 {}
 
 ServiceBase::~ServiceBase()
-{}
+{
+  clear_on_new_request_callback();
+}
 
 bool
 ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & request_id_out)
@@ -83,4 +86,56 @@ bool
 ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+rclcpp::QoS
+ServiceBase::get_response_publisher_actual_qos() const
+{
+  const rmw_qos_profile_t * qos =
+    rcl_service_response_publisher_get_actual_qos(service_handle_.get());
+  if (!qos) {
+    auto msg =
+      std::string("failed to get service's response publisher qos settings: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  rclcpp::QoS response_publisher_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
+
+  return response_publisher_qos;
+}
+
+rclcpp::QoS
+ServiceBase::get_request_subscription_actual_qos() const
+{
+  const rmw_qos_profile_t * qos =
+    rcl_service_request_subscription_get_actual_qos(service_handle_.get());
+  if (!qos) {
+    auto msg =
+      std::string("failed to get service's request subscription qos settings: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  rclcpp::QoS request_subscription_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
+
+  return request_subscription_qos;
+}
+
+void
+ServiceBase::set_on_new_request_callback(rcl_event_callback_t callback, const void * user_data)
+{
+  rcl_ret_t ret = rcl_service_set_on_new_request_callback(
+    service_handle_.get(),
+    callback,
+    user_data);
+
+  if (RCL_RET_OK != ret) {
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(ret, "failed to set the on new request callback for service");
+  }
 }

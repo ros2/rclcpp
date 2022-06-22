@@ -99,9 +99,10 @@ public:
 
   /// Static executor implementation of spin all
   /**
-   * This non-blocking function will execute entities until
-   * timeout or no more work available. If new entities get ready
-   * while executing work available, they will be executed
+   * This non-blocking function will execute entities until timeout (must be >= 0)
+   * or no more work available.
+   * If timeout is `0`, potentially it blocks forever until no more work is available.
+   * If new entities get ready while executing work available, they will be executed
    * as long as the timeout hasn't expired.
    *
    * Example:

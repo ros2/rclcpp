@@ -197,6 +197,14 @@ public:
                 "intraprocess communication allowed only with volatile durability");
       }
 
+      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
+        MessageT,
+        SubscribedType,
+        SubscribedTypeAllocator,
+        SubscribedTypeDeleter,
+        ROSMessageT,
+        AllocatorT>;
+
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
@@ -355,11 +363,31 @@ public:
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
+      // In this case, the message will be delivered via intra process and
+      // we should ignore this copy of the message.
+      return;
+    }
+
     auto typed_message = static_cast<ROSMessageType *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
     auto sptr = std::shared_ptr<ROSMessageType>(
       typed_message, [](ROSMessageType * msg) {(void) msg;});
+
+    std::chrono::time_point<std::chrono::system_clock> now;
+    if (subscription_topic_statistics_) {
+      // get current time before executing callback to
+      // exclude callback duration from topic statistics result.
+      now = std::chrono::system_clock::now();
+    }
+
     any_callback_.dispatch(sptr, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      subscription_topic_statistics_->handle_message(*typed_message, time);
+    }
   }
 
   /// Return the borrowed message.
@@ -404,15 +432,6 @@ private:
 
   /// Component which computes and publishes topic statistics for this subscriber
   SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
-
-  using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-    MessageT,
-    SubscribedType,
-    SubscribedTypeAllocator,
-    SubscribedTypeDeleter,
-    ROSMessageT,
-    AllocatorT>;
-  std::shared_ptr<SubscriptionIntraProcessT> subscription_intra_process_;
 };
 
 }  // namespace rclcpp
