@@ -63,6 +63,9 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
     topic_type, "rosidl_typesupport_cpp");
 
   auto allocator = options.get_allocator();
+  typename GenericSubscription::MessageMemoryStrategyType::SharedPtr msg_mem_strat = (
+    GenericSubscription::MessageMemoryStrategyType::create_default()
+  );
 
   using rclcpp::AnySubscriptionCallback;
   AnySubscriptionCallback<rclcpp::SerializedMessage, AllocatorT>
@@ -71,12 +74,12 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
 
   auto subscription = std::make_shared<GenericSubscription>(
     topics_interface->get_node_base_interface(),
-    std::move(ts_lib),
+    *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
     topic_name,
-    topic_type,
     qos,
     any_subscription_callback,
-    options);
+    options,
+    msg_mem_strat);
 
   topics_interface->add_subscription(subscription, options.callback_group);
 
