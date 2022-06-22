@@ -25,6 +25,8 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "rcutils/env.h"
+
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
 
@@ -413,10 +415,18 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
 
   {
     rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
-    loaned_msg.release();
+    auto msg = loaned_msg.release();  // this will unmanage the ownership of the message
     RCLCPP_EXPECT_THROW_EQ(
       publisher->publish(std::move(loaned_msg)),
       std::runtime_error("loaned message is not valid"));
+    // if the message is actually loaned from the middleware but not be published,
+    // it is user responsibility to return the message to the middleware manually
+    if (publisher->can_loan_messages()) {
+      ASSERT_EQ(
+        RCL_RET_OK,
+        rcl_return_loaned_message_from_publisher(
+          publisher->get_publisher_handle().get(), msg.get()));
+    }
   }
   RCLCPP_EXPECT_THROW_EQ(
     node->create_publisher<test_msgs::msg::Empty>(
@@ -485,6 +495,11 @@ public:
 TEST_F(TestPublisher, do_loaned_message_publish_error) {
   initialize();
   using PublisherT = TestPublisherProtectedMethods<test_msgs::msg::Empty, std::allocator<void>>;
+  // This test only passes when message is allocated on heap, not middleware.
+  // Since `do_loaned_message_publish()` will fail, there is no way to return the message
+  // to the middleware.
+  // This eventually fails to destroy publisher handle in the implementation.
+  ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "1"));
   auto publisher =
     node->create_publisher<test_msgs::msg::Empty, std::allocator<void>, PublisherT>("topic", 10);
 
