@@ -917,6 +917,9 @@ public:
    * set_parameters, set_parameters_atomically) and is not called while the parameters
    * are being declared using declare_parameters or it's variants.
    *
+   * An empty modified parameter list from the callback will result in "set_parameter*"
+   * returning an unsuccessful result.
+   *
    * The 'remove_pre_set_parameters_callback' can be used to deregister the callback.
    *
    * \param callback The callback to register.
@@ -999,15 +1002,60 @@ public:
 
   /// Add a callback gets triggered after parameters are set successfully.
   /**
-   * TODO:
-   * @param callback
-   * @return
+   * This callback gets triggered after the parameters have been set successfully
+   * The callback gets called after successful validation of parameters after
+   * the "on set parameter" registered callback.    *
+   *
+   * The callback signature is designed to allow handling of any of the `set_parameter*`
+   * or `declare_parameter` methods. The callback takes a reference to a const vector of
+   * parameters that have been set successfully.
+   *
+   * The post callback can be valuable as a place to cause side-effects based on parameter
+   * changes. For instance updating the internally tracked class attributes once the params
+   * have been changed successfully.
+   *
+   * For an example callback:
+   *
+   * void postSetParameterCallback(const std::vector<rclcpp::Parameter>& parameters){
+   *  for(const auto&param:parameters){
+   *   // the internal class member can be changed after
+   *   // successful change to param1 or param2
+   *    if(param.get_name() == "param1"){
+   *      internal_tracked_class_parameter_1_ = param.get_value<double>();
+   *    }
+   *    else if(param.get_name() == "param2"){
+   *      internal_tracked_class_parameter_2_ = param.get_value<double>();
+   *    }
+   *  }
+   *};
+   *
+   * The above callback takes a const reference to list of parameters that have been
+   * set successfully and as a result of this updates the internally tracked class attributes
+   * "internal_tracked_class_parameter_1_" and "internal_tracked_class_parameter_2_"
+   * respectively.
+   *
+   * Note that this callback should not be used to request changes to parameters based on
+   * another and instead "pre set parameter" callback should be used for such usages.
+   *
+   * The 'remove_post_set_parameters_callback' can be used to deregister the callback.
+   *
+   * \param callback The callback to register.
+   * \returns A shared pointer. The callback is valid as long as the smart pointer is alive.
+   * \throws std::bad_alloc if the allocation of the OnSetParametersCallbackHandle fails.
    */
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   PostSetParametersCallbackHandle::SharedPtr
   add_post_set_parameters_callback(PostSetParametersCallbackType callback);
 
+  /// Remove a callback registered with `add_pre_set_parameters_callback`.
+  /**
+   * Delete a handler returned by `add_pre_set_parameters_callback`.
+   *
+   * \param handler The callback handler to remove.
+   * \throws std::runtime_error if the handler was not created with `add_pre_set_parameters_callback`,
+   *   or if it has been removed before.
+   */
   RCLCPP_PUBLIC
   void
   remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler);
@@ -1039,6 +1087,14 @@ public:
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
 
+  /// Remove a callback registered with `add_post_set_parameters_callback`.
+  /**
+   * Delete a handler returned by `add_post_set_parameters_callback`.
+   *
+   * \param handler The callback handler to remove.
+   * \throws std::runtime_error if the handler was not created with `add_post_set_parameters_callback`,
+   *   or if it has been removed before.
+   */
   RCLCPP_PUBLIC
   void
   remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler);
