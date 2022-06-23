@@ -21,7 +21,7 @@
 namespace rclcpp
 {
 
-typedef rclcpp::Subscription<rclcpp::SerializedMessage> GenericSubscription;
+using GenericSubscription = rclcpp::Subscription<rclcpp::SerializedMessage>;
 
 }  // namespace rclcpp
 
