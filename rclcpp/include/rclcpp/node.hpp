@@ -876,9 +876,52 @@ public:
 
   /// Add a callback gets triggered before parameters are validated.
   /**
-   * TODO:
-   * @param callback
-   * @return
+   * This callback can be used to modify the original list of parameters being
+   * set by the user. The modified list of parameters is then forwarded to the
+   * "on set parameter" callback for validation.
+   *
+   * The callback signature is designed to allow handling of any of the `set_parameter*`
+   * methods. The callback takes a reference to a vector of parameters to be set.
+   * This vector of parameters can further be modified based on the user requirement.
+   *
+   * One of the use case of "pre set callback" can be updating additional parameters
+   * conditioned on changes to a parameter.
+   *
+   * For an example callback:
+   *
+   *  void preSetParameterCallback(std::vector<rclcpp::Parameter>& parameters){
+   *  for(auto&param:parameters){
+   *     // if "param1" is being set try setting "param2" as well.
+   *    if(param.get_name() == "param1"){
+   *      auto newParam = rclcpp::Parameter("param2", 4.0);
+   *      auto it = std::find(parameters.begin(), parameters.end(), newParam);
+   *      if(it == parameters.end()){
+   *        parameters.push_back(newParam);
+   *      }else{
+   *        *it = newParam;
+   *      }
+   *    }
+   *  }
+   *};
+   *
+   * The above callback takes list of params by reference and appends 'param2' to the modified
+   * list of params based on the condition that 'param1' is being set by the user. Further,
+   * before appending 'param2' to the modified list of params the callback checks if 'param2'
+   * is already present in the list of params being set.
+   *
+   * Note that once the vector of parameters is modified the pre set parameter callback
+   * will set the returned parameter list atomically. This makes sense since the change of
+   * one parameter is conditioned on some other parameter.
+   *
+   * Also note that the callback is only called while setting parameters(set_parameter,
+   * set_parameters, set_parameters_atomically) and is not called while the parameters
+   * are being declared using declare_parameters or it's variants.
+   *
+   * The 'remove_pre_set_parameters_callback' can be used to deregister the callback.
+   *
+   * \param callback The callback to register.
+   * \returns A shared pointer. The callback is valid as long as the smart pointer is alive.
+   * \throws std::bad_alloc if the allocation of the PreSetParametersCallbackHandle fails.
    */
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED

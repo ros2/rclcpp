@@ -670,8 +670,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
                                          pre_set_parameter_callback_container_))
   {
     result.successful = false;
-    result.reason = "parameter list cannot be empty, the parameters list is empty due "
-                    "to pre_set_parameters_callback modifying the original parameters list.";
+    result.reason = "parameter list cannot be empty, this might be due to "
+                    "pre_set_parameters_callback modifying the original parameters list";
     return result;
   }
 
