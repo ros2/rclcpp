@@ -424,7 +424,7 @@ Node::add_pre_set_parameters_callback(PreSetParametersCallbackType callback){
 }
 
 rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
-Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
+Node::add_on_set_parameters_callback(OnSetParametersCallbackType callback)
 {
   return node_parameters_->add_on_set_parameters_callback(callback);
 }

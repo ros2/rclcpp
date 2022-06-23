@@ -179,7 +179,7 @@ public:
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
+  add_on_set_parameters_callback(OnSetParametersCallbackType callback) override;
 
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
@@ -202,9 +202,11 @@ public:
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const override;
 
-  using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+  using PreSetCallbacksHandleContainer = std::list<PreSetParametersCallbackHandle::WeakPtr>;
+  using OnSetCallbacksHandleContainer = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+  using PostSetCallbacksHandleContainer = std::list<PostSetParametersCallbackHandle::WeakPtr>;
 
-private:
+ private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
   mutable std::recursive_mutex mutex_;
@@ -214,13 +216,13 @@ private:
   // declare_parameter, etc).  In those cases, this will be set to false.
   bool parameter_modification_enabled_{true};
 
-  OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
+  OnSetParametersCallbackType on_parameters_set_callback_ = nullptr;
 
-  std::list<PreSetParametersCallbackHandle::WeakPtr> pre_set_parameter_callback_container_;
+  PreSetCallbacksHandleContainer pre_set_parameter_callback_container_;
 
-  CallbacksContainerType on_parameters_set_callback_container_;
+  OnSetCallbacksHandleContainer on_set_parameters_callback_container_;
 
-  std::list<PostSetParametersCallbackHandle::WeakPtr> post_set_parameter_callback_container_;
+  PostSetCallbacksHandleContainer post_set_parameter_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 

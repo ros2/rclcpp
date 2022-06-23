@@ -47,12 +47,12 @@ struct OnSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetParametersCallbackHandle)
 
-  using OnParametersSetCallbackType =
+  using OnSetParametersCallbackType =
     std::function<
     rcl_interfaces::msg::SetParametersResult(
       const std::vector<rclcpp::Parameter> &)>;
 
-  OnParametersSetCallbackType callback;
+  OnSetParametersCallbackType callback;
 };
 
 // parameter callback gets invoked after successful node parameter set.
@@ -203,7 +203,7 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
-  using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
+  using OnSetParametersCallbackType = OnSetParametersCallbackHandle::OnSetParametersCallbackType;
   using PostSetParametersCallbackType = PostSetParametersCallbackHandle::PostSetParametersCallbackType;
   using PreSetParametersCallbackType = PreSetParametersCallbackHandle::PreSetParametersCallbackType;
 
@@ -223,7 +223,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
+  add_on_set_parameters_callback(OnSetParametersCallbackType callback) = 0;
 
   /// Add a callback gets triggered after parameters are set successfully.
   /**

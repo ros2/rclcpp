@@ -866,8 +866,8 @@ public:
 
   using OnSetParametersCallbackHandle =
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
-  using OnParametersSetCallbackType =
-    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+  using OnSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
 
   using PostSetParametersCallbackHandle =
       rclcpp::node_interfaces::PostSetParametersCallbackHandle;
@@ -952,11 +952,11 @@ public:
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback);
+  add_on_set_parameters_callback(OnSetParametersCallbackType callback);
 
   /// Add a callback gets triggered after parameters are set successfully.
   /**
-   * TODO: 
+   * TODO:
    * @param callback
    * @return
    */
