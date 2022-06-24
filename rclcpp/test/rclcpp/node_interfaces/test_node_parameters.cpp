@@ -170,7 +170,7 @@ TEST_F(TestNodeParameters, set_parameters) {
   EXPECT_TRUE(result[0].successful);
 }
 
-TEST_F(TestNodeParameters, add_remove_parameters_callback) {
+TEST_F(TestNodeParameters, add_remove_on_set_parameters_callback) {
   rcl_interfaces::msg::ParameterDescriptor bool_descriptor;
   bool_descriptor.name = "bool_parameter";
   bool_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
@@ -197,5 +197,93 @@ TEST_F(TestNodeParameters, add_remove_parameters_callback) {
 
   RCLCPP_EXPECT_THROW_EQ(
     node_parameters->remove_on_set_parameters_callback(handle.get()),
-    std::runtime_error("Callback doesn't exist"));
+    std::runtime_error("On set parameter callback doesn't exist"));
+}
+
+TEST_F(TestNodeParameters, add_remove_pre_set_parameters_callback) {
+  rcl_interfaces::msg::ParameterDescriptor param1_descriptor;
+  param1_descriptor.name = "double_parameter1";
+  param1_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+  param1_descriptor.read_only = false;
+  node_parameters->declare_parameter(
+      "param1", rclcpp::ParameterValue(0.0), param1_descriptor, false);
+  const std::vector<rclcpp::Parameter> parameters_to_be_set = {rclcpp::Parameter("param1", 1.0)};
+
+  auto callback = [](std::vector<rclcpp::Parameter> &parameters) {
+    for(const auto& param: parameters){
+      if(param.get_name() == "param1"){
+        parameters.emplace_back("param2", 2.0);
+      }
+    }
+  };
+
+  auto handle = node_parameters->add_pre_set_parameters_callback(callback);
+  auto result = node_parameters->set_parameters(parameters_to_be_set);
+  // we expect the result size to be same as the original "parameters_to_be_set"
+  // since the pre set parameter callback will set the modified param list atomically.
+  ASSERT_EQ(1u, result.size());
+  EXPECT_TRUE(result[0].successful);
+  EXPECT_TRUE(node_parameters->has_parameter("param1"));
+  EXPECT_EQ(node_parameters->get_parameter("param1").get_value<double>(), 1.0);
+  EXPECT_TRUE(node_parameters->has_parameter("param2"));
+  EXPECT_EQ(node_parameters->get_parameter("param2").get_value<double>(), 2.0);
+
+  EXPECT_NO_THROW(node_parameters->remove_pre_set_parameters_callback(handle.get()));
+
+  RCLCPP_EXPECT_THROW_EQ(
+      node_parameters->remove_pre_set_parameters_callback(handle.get()),
+      std::runtime_error("Pre set parameter callback doesn't exist"));
+}
+
+TEST_F(TestNodeParameters, add_remove_post_set_parameters_callback) {
+  rcl_interfaces::msg::ParameterDescriptor param1_descriptor;
+  param1_descriptor.name = "double_parameter1";
+  param1_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+  param1_descriptor.read_only = false;
+
+  rcl_interfaces::msg::ParameterDescriptor param2_descriptor;
+  param2_descriptor.name = "double_parameter2";
+  param2_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+  param2_descriptor.read_only = false;
+
+  node_parameters->declare_parameter(
+      "param1", rclcpp::ParameterValue(0.0),param1_descriptor, false);
+  node_parameters->declare_parameter(
+      "param2", rclcpp::ParameterValue(0.0),param2_descriptor, false);
+
+  double variable_tracking_param1_internally = node_parameters->get_parameter("param1").get_value<double>();
+  double variable_tracking_param2_internally = node_parameters->get_parameter("param2").get_value<double>();
+
+  EXPECT_EQ(variable_tracking_param1_internally, 0.0);
+  EXPECT_EQ(variable_tracking_param2_internally, 0.0);
+
+  const std::vector<rclcpp::Parameter> parameters_to_be_set = {rclcpp::Parameter("param1", 1.0),
+                                                               rclcpp::Parameter("param2", 2.0)};
+
+  // register a callback for successful set parameter and change the internally tracked variables.
+  auto callback = [&](const std::vector<rclcpp::Parameter> &parameters) {
+    for(const auto& param: parameters){
+      if(param.get_name() == "param1"){
+        variable_tracking_param1_internally = param.get_value<double>();
+      }else if(param.get_name() == "param2"){
+        variable_tracking_param2_internally = param.get_value<double>();
+      }
+    }
+  };
+
+  auto handle = node_parameters->add_post_set_parameters_callback(callback);
+  auto result = node_parameters->set_parameters(parameters_to_be_set);
+  ASSERT_EQ(2u, result.size());
+  EXPECT_TRUE(result[0].successful);
+  EXPECT_TRUE(result[1].successful);
+  EXPECT_TRUE(node_parameters->has_parameter("param1"));
+  EXPECT_TRUE(node_parameters->has_parameter("param2"));
+  EXPECT_EQ(variable_tracking_param1_internally, 1.0);
+  EXPECT_EQ(variable_tracking_param2_internally, 2.0);
+
+  EXPECT_NO_THROW(node_parameters->remove_post_set_parameters_callback(handle.get()));
+
+  RCLCPP_EXPECT_THROW_EQ(
+      node_parameters->remove_post_set_parameters_callback(handle.get()),
+      std::runtime_error("Post set parameter callback doesn't exist"));
 }
