@@ -384,7 +384,7 @@ private:
           [this]() {
             auto future = cancel_clock_executor_promise_.get_future();
             clock_executor_->add_callback_group(clock_callback_group_, node_base_);
-            clock_executor_->spin_until_future_complete(future);
+            clock_executor_->spin_until_complete(future);
           }
         );
       }

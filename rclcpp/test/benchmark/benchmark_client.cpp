@@ -151,7 +151,7 @@ BENCHMARK_F(ClientPerformanceTest, async_send_request_and_response)(benchmark::S
   for (auto _ : state) {
     (void)_;
     auto future = client->async_send_request(shared_request);
-    rclcpp::spin_until_future_complete(
+    rclcpp::spin_until_complete(
       node->get_node_base_interface(), future, std::chrono::seconds(1));
     benchmark::DoNotOptimize(future);
     benchmark::ClobberMemory();
