@@ -137,7 +137,7 @@ BENCHMARK_F(ServicePerformanceTest, async_send_response)(benchmark::State & stat
     benchmark::DoNotOptimize(service);
     benchmark::ClobberMemory();
 
-    rclcpp::spin_until_complete(node->get_node_base_interface(), future);
+    rclcpp::spin_until_future_complete(node->get_node_base_interface(), future);
   }
   if (callback_count == 0) {
     state.SkipWithError("Service callback was not called");

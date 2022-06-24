@@ -212,7 +212,7 @@ TEST_F(TestParameterClient, async_parameter_get_parameter_types) {
   std::vector<std::string> names{"foo"};
   std::shared_future<std::vector<rclcpp::ParameterType>> future =
     asynchronous_client->get_parameter_types(names, callback);
-  auto return_code = rclcpp::spin_until_complete(
+  auto return_code = rclcpp::spin_until_future_complete(
     node, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
@@ -236,7 +236,7 @@ TEST_F(TestParameterClient, async_parameter_get_parameter_types_allow_undeclared
   std::vector<std::string> names{"foo"};
   std::shared_future<std::vector<rclcpp::ParameterType>> future =
     asynchronous_client->get_parameter_types(names, callback);
-  auto return_code = rclcpp::spin_until_complete(
+  auto return_code = rclcpp::spin_until_future_complete(
     node_with_option, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
@@ -258,7 +258,7 @@ TEST_F(TestParameterClient, async_parameter_get_parameters) {
   std::vector<std::string> names{"foo"};
   std::shared_future<std::vector<rclcpp::Parameter>> future = asynchronous_client->get_parameters(
     names, callback);
-  auto return_code = rclcpp::spin_until_complete(
+  auto return_code = rclcpp::spin_until_future_complete(
     node, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
@@ -280,7 +280,7 @@ TEST_F(TestParameterClient, async_parameter_get_parameters_allow_undeclared) {
   std::vector<std::string> names{"foo"};
   std::shared_future<std::vector<rclcpp::Parameter>> future = asynchronous_client->get_parameters(
     names, callback);
-  auto return_code = rclcpp::spin_until_complete(
+  auto return_code = rclcpp::spin_until_future_complete(
     node_with_option, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
@@ -306,7 +306,7 @@ TEST_F(TestParameterClient, async_parameter_set_parameters_atomically) {
   parameters.emplace_back(rclcpp::Parameter("foo"));
   std::shared_future<rcl_interfaces::msg::SetParametersResult> future =
     asynchronous_client->set_parameters_atomically(parameters, callback);
-  auto return_code = rclcpp::spin_until_complete(
+  auto return_code = rclcpp::spin_until_future_complete(
     node, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
@@ -328,7 +328,7 @@ TEST_F(TestParameterClient, async_parameter_list_parameters) {
   std::vector<std::string> prefixes{"foo"};
   std::shared_future<rcl_interfaces::msg::ListParametersResult> future =
     asynchronous_client->list_parameters(prefixes, 0, callback);
-  auto return_code = rclcpp::spin_until_complete(
+  auto return_code = rclcpp::spin_until_future_complete(
     node, future, std::chrono::milliseconds(100));
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   ASSERT_TRUE(callback_called);
@@ -553,7 +553,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     std::vector<std::string> names{"none"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     ASSERT_TRUE(callback_called);
@@ -571,7 +571,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     std::vector<std::string> names{"foo"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
@@ -597,7 +597,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     std::vector<std::string> names{"foo", "baz"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     ASSERT_TRUE(callback_called);
@@ -616,7 +616,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     std::vector<std::string> names{"baz", "foo"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     ASSERT_TRUE(callback_called);
@@ -634,7 +634,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters) {
     std::vector<std::string> names{"foo", "bar"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
@@ -733,7 +733,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters_allow_undeclared
     std::vector<std::string> names{"none"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node_with_option, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
@@ -758,7 +758,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters_allow_undeclared
     std::vector<std::string> names{"foo", "baz"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node_with_option, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
@@ -788,7 +788,7 @@ TEST_F(TestParameterClient, async_parameter_describe_parameters_allow_undeclared
     std::vector<std::string> names{"baz", "foo"};
     std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>> future =
       asynchronous_client->describe_parameters(names, callback);
-    auto return_code = rclcpp::spin_until_complete(
+    auto return_code = rclcpp::spin_until_future_complete(
       node_with_option, future, std::chrono::milliseconds(100));
     ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
     std::vector<rcl_interfaces::msg::ParameterDescriptor> parameter_descs = future.get();
@@ -870,17 +870,17 @@ TEST_F(TestParameterClient, async_parameter_delete_parameters) {
     std::make_shared<rclcpp::AsyncParametersClient>(node_with_option);
   // set parameter
   auto set_future = asynchronous_client->set_parameters({rclcpp::Parameter("foo", 4)});
-  rclcpp::spin_until_complete(
+  rclcpp::spin_until_future_complete(
     node_with_option, set_future, std::chrono::milliseconds(100));
   ASSERT_EQ(set_future.get()[0].successful, true);
   // delete one parameter
   auto delete_future = asynchronous_client->delete_parameters({"foo"});
-  rclcpp::spin_until_complete(
+  rclcpp::spin_until_future_complete(
     node_with_option, delete_future, std::chrono::milliseconds(100));
   ASSERT_EQ(delete_future.get()[0].successful, true);
   // check that deleted parameter isn't set
   auto get_future2 = asynchronous_client->get_parameters({"foo"});
-  rclcpp::spin_until_complete(
+  rclcpp::spin_until_future_complete(
     node_with_option, get_future2, std::chrono::milliseconds(100));
   ASSERT_EQ(
     get_future2.get()[0].get_type(),
@@ -918,13 +918,13 @@ TEST_F(TestParameterClient, async_parameter_load_parameters) {
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_parameters.yaml").string();
   auto load_future = asynchronous_client->load_parameters(parameters_filepath);
-  auto result_code = rclcpp::spin_until_complete(
+  auto result_code = rclcpp::spin_until_future_complete(
     load_node, load_future, std::chrono::milliseconds(100));
   ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
   ASSERT_EQ(load_future.get()[0].successful, true);
   // list parameters
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
-  rclcpp::spin_until_complete(
+  rclcpp::spin_until_future_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
   ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(5));
 }

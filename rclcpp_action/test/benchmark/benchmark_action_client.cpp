@@ -194,7 +194,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_send_goal_rejected)(benchmark::St
   for (auto _ : state) {
     (void)_;
     auto future_goal_handle = client->async_send_goal(goal);
-    rclcpp::spin_until_complete(node, future_goal_handle, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
     if (!future_goal_handle.valid()) {
       state.SkipWithError("Shared future was invalid");
       return;
@@ -223,7 +223,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_send_goal_get_accepted_response)(
     (void)_;
     // This server's execution is deferred
     auto future_goal_handle = client->async_send_goal(goal);
-    rclcpp::spin_until_complete(node, future_goal_handle, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
 
     if (!future_goal_handle.valid()) {
       state.SkipWithError("Shared future was invalid");
@@ -258,7 +258,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_get_result)(benchmark::State & st
     auto future_goal_handle = client->async_send_goal(goal);
 
     // Action server accepts and defers, so this spin doesn't include result
-    rclcpp::spin_until_complete(node, future_goal_handle, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
 
     if (!future_goal_handle.valid()) {
       state.SkipWithError("Shared future was invalid");
@@ -276,7 +276,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_get_result)(benchmark::State & st
 
     // Measure how long it takes client to receive the succeeded result
     auto future_result = client->async_get_result(goal_handle);
-    rclcpp::spin_until_complete(node, future_result, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_result, std::chrono::seconds(1));
     const auto & wrapped_result = future_result.get();
     if (rclcpp_action::ResultCode::SUCCEEDED != wrapped_result.code) {
       state.SkipWithError("Fibonacci action did not succeed");
@@ -310,12 +310,12 @@ BENCHMARK_F(ActionClientPerformanceTest, async_cancel_goal)(benchmark::State & s
     auto future_goal_handle = client->async_send_goal(goal);
 
     // Action server accepts and defers, so action can be canceled
-    rclcpp::spin_until_complete(node, future_goal_handle, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
     auto goal_handle = future_goal_handle.get();
     state.ResumeTiming();
 
     auto future_cancel = client->async_cancel_goal(goal_handle);
-    rclcpp::spin_until_complete(node, future_cancel, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_cancel, std::chrono::seconds(1));
     auto cancel_response = future_cancel.get();
 
     using CancelActionResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
@@ -345,13 +345,13 @@ BENCHMARK_F(ActionClientPerformanceTest, async_cancel_all_goals)(benchmark::Stat
     state.PauseTiming();
     for (int i = 0; i < num_concurrently_inflight_goals; ++i) {
       auto future_goal_handle = client->async_send_goal(goal);
-      rclcpp::spin_until_complete(node, future_goal_handle, std::chrono::seconds(1));
+      rclcpp::spin_until_future_complete(node, future_goal_handle, std::chrono::seconds(1));
     }
     // Action server accepts and defers, so action can be canceled
     state.ResumeTiming();
 
     auto future_cancel_all = client->async_cancel_all_goals();
-    rclcpp::spin_until_complete(node, future_cancel_all, std::chrono::seconds(1));
+    rclcpp::spin_until_future_complete(node, future_cancel_all, std::chrono::seconds(1));
     auto cancel_response = future_cancel_all.get();
 
     using CancelActionResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;

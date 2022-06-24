@@ -66,7 +66,7 @@ void test_components_api(bool use_dedicated_executor)
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -81,7 +81,7 @@ void test_components_api(bool use_dedicated_executor)
     request->plugin_name = "test_rclcpp_components::TestComponentBar";
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -98,7 +98,7 @@ void test_components_api(bool use_dedicated_executor)
     request->node_name = "test_component_baz";
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -116,7 +116,7 @@ void test_components_api(bool use_dedicated_executor)
     request->node_name = "test_component_bing";
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -132,7 +132,7 @@ void test_components_api(bool use_dedicated_executor)
     request->plugin_name = "test_rclcpp_components::TestComponent";
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     auto result = future.get();
     EXPECT_EQ(result->success, false);
@@ -148,7 +148,7 @@ void test_components_api(bool use_dedicated_executor)
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     auto result = future.get();
     EXPECT_EQ(result->success, false);
@@ -166,7 +166,7 @@ void test_components_api(bool use_dedicated_executor)
     request->remap_rules.push_back("alice:=bob");
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -186,7 +186,7 @@ void test_components_api(bool use_dedicated_executor)
     request->extra_arguments.push_back(use_intraprocess_comms.to_parameter_msg());
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -208,7 +208,7 @@ void test_components_api(bool use_dedicated_executor)
     request->extra_arguments.push_back(use_intraprocess_comms.to_parameter_msg());
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, false);
@@ -230,7 +230,7 @@ void test_components_api(bool use_dedicated_executor)
     request->extra_arguments.push_back(forward_global_arguments.to_parameter_msg());
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, true);
@@ -251,7 +251,7 @@ void test_components_api(bool use_dedicated_executor)
     request->extra_arguments.push_back(forward_global_arguments.to_parameter_msg());
 
     auto future = composition_client->async_send_request(request);
-    auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+    auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result->success, false);
@@ -284,7 +284,7 @@ void test_components_api(bool use_dedicated_executor)
     {
       auto request = std::make_shared<composition_interfaces::srv::ListNodes::Request>();
       auto future = client->async_send_request(request);
-      auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       auto result = future.get();
       auto result_node_names = result->full_node_names;
@@ -322,7 +322,7 @@ void test_components_api(bool use_dedicated_executor)
       request->unique_id = 1;
 
       auto future = client->async_send_request(request);
-      auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
       auto result = future.get();
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       EXPECT_EQ(result->success, true);
@@ -334,7 +334,7 @@ void test_components_api(bool use_dedicated_executor)
       request->unique_id = 1;
 
       auto future = client->async_send_request(request);
-      auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
       auto result = future.get();
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       EXPECT_EQ(result->success, false);
@@ -353,7 +353,7 @@ void test_components_api(bool use_dedicated_executor)
     {
       auto request = std::make_shared<composition_interfaces::srv::ListNodes::Request>();
       auto future = client->async_send_request(request);
-      auto ret = exec->spin_until_complete(future, 5s);  // Wait for the result.
+      auto ret = exec->spin_until_future_complete(future, 5s);  // Wait for the result.
       EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       auto result = future.get();
       auto result_node_names = result->full_node_names;
