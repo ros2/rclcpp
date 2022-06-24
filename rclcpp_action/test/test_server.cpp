@@ -59,7 +59,7 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::SendGoalService::Request>();
     request->goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
-    auto return_code = rclcpp::spin_until_future_complete(node, future, timeout);
+    auto return_code = rclcpp::spin_until_complete(node, future, timeout);
     if (rclcpp::FutureReturnCode::SUCCESS == return_code) {
       return request;
     } else if (rclcpp::FutureReturnCode::TIMEOUT == return_code) {
@@ -82,7 +82,7 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::CancelGoalService::Request>();
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
-    auto return_code = rclcpp::spin_until_future_complete(node, future, timeout);
+    auto return_code = rclcpp::spin_until_complete(node, future, timeout);
     if (rclcpp::FutureReturnCode::SUCCESS == return_code) {
       return future.get();
     } else if (rclcpp::FutureReturnCode::TIMEOUT == return_code) {
@@ -264,7 +264,7 @@ TEST_F(TestServer, handle_goal_called)
   auto future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    rclcpp::spin_until_complete(node, future));
 
   ASSERT_EQ(uuid, received_uuid);
 }
@@ -881,7 +881,7 @@ TEST_F(TestServer, get_result)
   // Wait for the result request to be received
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    rclcpp::spin_until_complete(node, future));
 
   auto response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
@@ -897,7 +897,7 @@ TEST_F(TestServer, get_result)
   future = result_client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    rclcpp::spin_until_complete(node, future));
 
   response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_UNKNOWN, response->status);
@@ -958,7 +958,7 @@ TEST_F(TestServer, get_result_deferred)
   // Wait for the result request to be received
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    rclcpp::spin_until_complete(node, future));
 
   auto response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
@@ -1045,7 +1045,7 @@ public:
     // Wait for the result request to be received
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
-      rclcpp::spin_until_future_complete(node_, future));
+      rclcpp::spin_until_complete(node_, future));
 
     auto response = future.get();
     EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
@@ -1061,7 +1061,7 @@ public:
     future = result_client->async_send_request(request);
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
-      rclcpp::spin_until_future_complete(node_, future));
+      rclcpp::spin_until_complete(node_, future));
   }
 
 protected:

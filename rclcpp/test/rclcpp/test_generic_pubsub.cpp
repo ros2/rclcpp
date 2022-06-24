@@ -190,7 +190,7 @@ TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
 
   if (publisher->can_loan_messages()) {
     auto subscriber_future_ = std::async(
-      std::launch::deferred, [this, topic_name, type] {
+      std::launch::async, [this, topic_name, type] {
         return subscribe_raw_messages<int64_t, test_msgs::msg::BasicTypes>(
           1, topic_name, type);
       });

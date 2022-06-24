@@ -48,7 +48,7 @@ GraphListener::GraphListener(const std::shared_ptr<Context> & parent_context)
 
 GraphListener::~GraphListener()
 {
-  this->shutdown(std::nothrow);
+  GraphListener::shutdown(std::nothrow);
 }
 
 void GraphListener::init_wait_set()
