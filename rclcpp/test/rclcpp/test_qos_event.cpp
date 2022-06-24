@@ -201,7 +201,7 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 
   // This future won't complete on fastrtps, so just timeout immediately
   const auto timeout = std::chrono::seconds(10);
-  ex.spin_until_complete(log_msgs_future, timeout);
+  ex.spin_until_future_complete(log_msgs_future, timeout);
 
   EXPECT_EQ(
     "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "

@@ -23,7 +23,7 @@
 namespace rclcpp
 {
 
-/// Return codes to be used with spin_until_complete.
+/// Return codes to be used with spin_until_future_complete.
 /**
  * SUCCESS: The future is complete and can be accessed with "get" without blocking.
  *          This does not indicate that the operation succeeded; "get" may still throw an exception.

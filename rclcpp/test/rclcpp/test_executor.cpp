@@ -294,39 +294,6 @@ TEST_F(TestExecutor, spin_some_elapsed) {
   ASSERT_TRUE(timer_called);
 }
 
-TEST_F(TestExecutor, spin_for_duration)
-{
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  bool timer_called = false;
-  auto timer =
-    node->create_wall_timer(
-    std::chrono::milliseconds(0), [&]() {
-      timer_called = true;
-    });
-  dummy.add_node(node);
-  // Wait for the wall timer to have expired.
-  dummy.spin_for(std::chrono::milliseconds(0));
-
-  ASSERT_TRUE(timer_called);
-}
-
-TEST_F(TestExecutor, spin_for_longer_timer)
-{
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  bool timer_called = false;
-  auto timer =
-    node->create_wall_timer(
-    std::chrono::seconds(10), [&]() {
-      timer_called = true;
-    });
-  dummy.add_node(node);
-  dummy.spin_for(std::chrono::milliseconds(5));
-
-  ASSERT_FALSE(timer_called);
-}
-
 TEST_F(TestExecutor, spin_once_in_spin_once) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
@@ -515,20 +482,22 @@ TEST_F(TestExecutor, get_group_by_timer_add_callback_group) {
   ASSERT_EQ(cb_group.get(), dummy.local_get_group_by_timer(timer).get());
 }
 
-TEST_F(TestExecutor, spin_until_complete_in_spin_until_complete) {
+TEST_F(TestExecutor, spin_until_future_complete_in_spin_until_future_complete) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  bool spin_until_complete_in_spin_until_complete = false;
+  bool spin_until_future_complete_in_spin_until_future_complete = false;
   auto timer =
     node->create_wall_timer(
     std::chrono::milliseconds(1), [&]() {
       try {
-        dummy.spin_for(std::chrono::milliseconds(1));
+        std::promise<void> promise;
+        std::future<void> future = promise.get_future();
+        dummy.spin_until_future_complete(future, std::chrono::milliseconds(1));
       } catch (const std::runtime_error & err) {
         if (err.what() == std::string(
-          "spin_until_complete() called while already spinning"))
+          "spin_until_future_complete() called while already spinning"))
         {
-          spin_until_complete_in_spin_until_complete = true;
+          spin_until_future_complete_in_spin_until_future_complete = true;
         }
       }
     });
@@ -536,9 +505,11 @@ TEST_F(TestExecutor, spin_until_complete_in_spin_until_complete) {
   dummy.add_node(node);
   // Wait for the wall timer to have expired.
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  EXPECT_FALSE(spin_until_complete_in_spin_until_complete);
-  dummy.spin_for(std::chrono::milliseconds(2));
-  EXPECT_TRUE(spin_until_complete_in_spin_until_complete);
+  EXPECT_FALSE(spin_until_future_complete_in_spin_until_future_complete);
+  std::promise<void> promise;
+  std::future<void> future = promise.get_future();
+  dummy.spin_until_future_complete(future, std::chrono::milliseconds(1));
+  EXPECT_TRUE(spin_until_future_complete_in_spin_until_future_complete);
 }
 
 TEST_F(TestExecutor, spin_node_once_base_interface) {
@@ -575,7 +546,7 @@ TEST_F(TestExecutor, spin_node_once_node) {
   EXPECT_TRUE(spin_called);
 }
 
-TEST_F(TestExecutor, spin_until_complete_condition_already_complete) {
+TEST_F(TestExecutor, spin_until_future_complete_future_already_complete) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   std::promise<void> promise;
@@ -583,12 +554,7 @@ TEST_F(TestExecutor, spin_until_complete_condition_already_complete) {
   promise.set_value();
   EXPECT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    dummy.spin_until_complete(future, std::chrono::milliseconds(1)));
-
-  auto condition = []() {return true;};
-  EXPECT_EQ(
-    rclcpp::FutureReturnCode::SUCCESS,
-    dummy.spin_until_complete(condition, std::chrono::milliseconds(1)));
+    dummy.spin_until_future_complete(future, std::chrono::milliseconds(1)));
 }
 
 TEST_F(TestExecutor, is_spinning) {

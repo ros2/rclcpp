@@ -219,7 +219,7 @@ BENCHMARK_F(
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
-  static_single_thread_executor_spin_until_complete)(benchmark::State & st)
+  static_single_thread_executor_spin_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   // test success of an immediately finishing future
@@ -228,7 +228,7 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
-  auto ret = executor.spin_until_complete(shared_future, 100ms);
+  auto ret = executor.spin_until_future_complete(shared_future, 100ms);
   if (ret != rclcpp::FutureReturnCode::SUCCESS) {
     st.SkipWithError(rcutils_get_error_string().str);
   }
@@ -243,7 +243,7 @@ BENCHMARK_F(
     executor.add_node(node);
     st.ResumeTiming();
 
-    ret = executor.spin_until_complete(shared_future, 100ms);
+    ret = executor.spin_until_future_complete(shared_future, 100ms);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
       break;
@@ -256,7 +256,7 @@ BENCHMARK_F(
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
-  single_thread_executor_spin_node_until_complete)(benchmark::State & st)
+  single_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   // test success of an immediately finishing future
@@ -265,7 +265,7 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
-  auto ret = rclcpp::executors::spin_node_until_complete(
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
     executor, node, shared_future, 1s);
   if (ret != rclcpp::FutureReturnCode::SUCCESS) {
     st.SkipWithError(rcutils_get_error_string().str);
@@ -275,7 +275,7 @@ BENCHMARK_F(
 
   for (auto _ : st) {
     (void)_;
-    ret = rclcpp::executors::spin_node_until_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
@@ -286,7 +286,7 @@ BENCHMARK_F(
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
-  multi_thread_executor_spin_node_until_complete)(benchmark::State & st)
+  multi_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::MultiThreadedExecutor executor;
   // test success of an immediately finishing future
@@ -295,7 +295,7 @@ BENCHMARK_F(
   promise.set_value(true);
   auto shared_future = future.share();
 
-  auto ret = rclcpp::executors::spin_node_until_complete(
+  auto ret = rclcpp::executors::spin_node_until_future_complete(
     executor, node, shared_future, 1s);
   if (ret != rclcpp::FutureReturnCode::SUCCESS) {
     st.SkipWithError(rcutils_get_error_string().str);
@@ -305,7 +305,7 @@ BENCHMARK_F(
 
   for (auto _ : st) {
     (void)_;
-    ret = rclcpp::executors::spin_node_until_complete(
+    ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
@@ -316,7 +316,7 @@ BENCHMARK_F(
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
-  static_single_thread_executor_spin_node_until_complete)(benchmark::State & st)
+  static_single_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::StaticSingleThreadedExecutor executor;
   // test success of an immediately finishing future
@@ -329,7 +329,7 @@ BENCHMARK_F(
 
   for (auto _ : st) {
     (void)_;
-    auto ret = rclcpp::executors::spin_node_until_complete(
+    auto ret = rclcpp::executors::spin_node_until_future_complete(
       executor, node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
@@ -338,7 +338,7 @@ BENCHMARK_F(
   }
 }
 
-BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_complete)(benchmark::State & st)
+BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark::State & st)
 {
   // test success of an immediately finishing future
   std::promise<bool> promise;
@@ -346,7 +346,7 @@ BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_complete)(benchmark::State
   promise.set_value(true);
   auto shared_future = future.share();
 
-  auto ret = rclcpp::spin_until_complete(node, shared_future, 1s);
+  auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
   if (ret != rclcpp::FutureReturnCode::SUCCESS) {
     st.SkipWithError(rcutils_get_error_string().str);
   }
@@ -355,7 +355,7 @@ BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_complete)(benchmark::State
 
   for (auto _ : st) {
     (void)_;
-    ret = rclcpp::spin_until_complete(node, shared_future, 1s);
+    ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
     if (ret != rclcpp::FutureReturnCode::SUCCESS) {
       st.SkipWithError(rcutils_get_error_string().str);
       break;
