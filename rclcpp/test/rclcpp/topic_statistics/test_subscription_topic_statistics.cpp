@@ -432,7 +432,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   ex.add_node(empty_subscriber);
 
   // Spin and get future
-  ex.spin_until_future_complete(
+  ex.spin_until_complete(
     statistics_listener->GetFuture(),
     kTestTimeout);
 
@@ -497,7 +497,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   ex.add_node(msg_with_header_subscriber);
 
   // Spin and get future
-  ex.spin_until_future_complete(
+  ex.spin_until_complete(
     statistics_listener->GetFuture(),
     kTestTimeout);
 
@@ -550,7 +550,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
   ex.add_node(msg_with_header_subscriber);
 
   // Spin and get future
-  ex.spin_until_future_complete(statistics_listener->GetFuture(), kTestTimeout);
+  ex.spin_until_complete(statistics_listener->GetFuture(), kTestTimeout);
 
   const auto received_messages = statistics_listener->GetReceivedMessages();
   EXPECT_EQ(kNumExpectedMessages, received_messages.size());

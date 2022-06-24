@@ -396,9 +396,9 @@ SyncParametersClient::get_parameters(
   std::chrono::nanoseconds timeout)
 {
   auto f = async_parameters_client_->get_parameters(parameter_names);
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
@@ -424,9 +424,9 @@ SyncParametersClient::describe_parameters(
 {
   auto f = async_parameters_client_->describe_parameters(parameter_names);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   rclcpp::FutureReturnCode future =
-    spin_node_until_future_complete(*executor_, node_base_interface_, f, timeout);
+    spin_node_until_complete(*executor_, node_base_interface_, f, timeout);
   if (future == rclcpp::FutureReturnCode::SUCCESS) {
     return f.get();
   }
@@ -440,9 +440,9 @@ SyncParametersClient::get_parameter_types(
 {
   auto f = async_parameters_client_->get_parameter_types(parameter_names);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
@@ -458,9 +458,9 @@ SyncParametersClient::set_parameters(
 {
   auto f = async_parameters_client_->set_parameters(parameters);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
@@ -476,9 +476,9 @@ SyncParametersClient::delete_parameters(
 {
   auto f = async_parameters_client_->delete_parameters(parameters_names);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
@@ -494,9 +494,9 @@ SyncParametersClient::load_parameters(
 {
   auto f = async_parameters_client_->load_parameters(yaml_filename);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
@@ -512,9 +512,9 @@ SyncParametersClient::set_parameters_atomically(
 {
   auto f = async_parameters_client_->set_parameters_atomically(parameters);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
@@ -532,9 +532,9 @@ SyncParametersClient::list_parameters(
 {
   auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
 
-  using rclcpp::executors::spin_node_until_future_complete;
+  using rclcpp::executors::spin_node_until_complete;
   if (
-    spin_node_until_future_complete(
+    spin_node_until_complete(
       *executor_, node_base_interface_, f,
       timeout) == rclcpp::FutureReturnCode::SUCCESS)
   {
