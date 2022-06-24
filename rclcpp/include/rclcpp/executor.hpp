@@ -26,6 +26,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
@@ -319,6 +320,51 @@ public:
   virtual void
   spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
+  /// Spin (blocking) until the condition is complete, it times out waiting,
+  /// or rclcpp is interrupted.
+  /**
+   * \param[in] future The condition which can be callable or future type to wait on.
+   *   If this function returns SUCCESS, the future can be
+   *   accessed without blocking (though it may still throw an exception).
+   * \param[in] timeout Optional timeout parameter, which gets passed to Executor::spin_node_once.
+   *   `-1` is block forever, `0` is non-blocking.
+   *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
+   *   code.
+   * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
+   */
+  template<typename ConditionT, typename DurationT = std::chrono::milliseconds>
+  FutureReturnCode
+  spin_until_complete(
+    const ConditionT & condition,
+    DurationT timeout = DurationT(-1))
+  {
+    if constexpr (std::is_invocable_v<ConditionT>) {
+      using RetT = std::invoke_result_t<ConditionT>;
+      static_assert(
+        std::is_same_v<bool, RetT>,
+        "Conditional callable has to return boolean type");
+      return spin_until_complete_impl(condition, timeout);
+    } else {
+      auto check_future = [&condition]() {
+          return condition.wait_for(std::chrono::seconds(0)) ==
+                 std::future_status::ready;
+        };
+      return spin_until_complete_impl(check_future, timeout);
+    }
+  }
+
+  /// Spin (blocking) for at least the given amount of duration.
+  /**
+   * \param[in] duration gets passed to Executor::spin_node_once,
+   *   spins the executor for given duration.
+   */
+  template<typename DurationT>
+  void
+  spin_for(DurationT duration)
+  {
+    (void)spin_until_complete([]() {return false;}, duration);
+  }
+
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
    * \param[in] future The future to wait on. If this function returns SUCCESS, the future can be
@@ -330,57 +376,13 @@ public:
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
   template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+  [[deprecated("use spin_until_complete(const ConditionT & condition, DurationT timeout) instead")]]
   FutureReturnCode
   spin_until_future_complete(
     const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
-    // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
-    // inside a callback executed by an executor.
-
-    // Check the future before entering the while loop.
-    // If the future is already complete, don't try to spin.
-    std::future_status status = future.wait_for(std::chrono::seconds(0));
-    if (status == std::future_status::ready) {
-      return FutureReturnCode::SUCCESS;
-    }
-
-    auto end_time = std::chrono::steady_clock::now();
-    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
-    if (timeout_ns > std::chrono::nanoseconds::zero()) {
-      end_time += timeout_ns;
-    }
-    std::chrono::nanoseconds timeout_left = timeout_ns;
-
-    if (spinning.exchange(true)) {
-      throw std::runtime_error("spin_until_future_complete() called while already spinning");
-    }
-    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-    while (rclcpp::ok(this->context_) && spinning.load()) {
-      // Do one item of work.
-      spin_once_impl(timeout_left);
-
-      // Check if the future is set, return SUCCESS if it is.
-      status = future.wait_for(std::chrono::seconds(0));
-      if (status == std::future_status::ready) {
-        return FutureReturnCode::SUCCESS;
-      }
-      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout_ns < std::chrono::nanoseconds::zero()) {
-        continue;
-      }
-      // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto now = std::chrono::steady_clock::now();
-      if (now >= end_time) {
-        return FutureReturnCode::TIMEOUT;
-      }
-      // Subtract the elapsed time from the original timeout.
-      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
-    }
-
-    // The future did not complete before ok() returned false, return INTERRUPTED.
-    return FutureReturnCode::INTERRUPTED;
+    return spin_until_complete(future, timeout);
   }
 
   /// Cancel any running spin* function, causing it to return.
@@ -560,6 +562,55 @@ protected:
   virtual void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
+protected:
+  // Implementation details, used by spin_until_complete and spin_for.
+  // Previouse implementation of spin_until_future_complete.
+  template<typename ConditionT, typename DurationT>
+  FutureReturnCode
+  spin_until_complete_impl(ConditionT condition, DurationT timeout)
+  {
+    auto end_time = std::chrono::steady_clock::now();
+    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      timeout);
+    if (timeout_ns > std::chrono::nanoseconds::zero()) {
+      end_time += timeout_ns;
+    }
+    std::chrono::nanoseconds timeout_left = timeout_ns;
+
+    // Preliminary check, finish if conditon is done already.
+    if (condition()) {
+      return FutureReturnCode::SUCCESS;
+    }
+
+    if (spinning.exchange(true)) {
+      throw std::runtime_error("spin_until_complete() called while already spinning");
+    }
+    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+    while (rclcpp::ok(this->context_) && spinning.load()) {
+      // Do one item of work.
+      spin_once_impl(timeout_left);
+
+      if (condition()) {
+        return FutureReturnCode::SUCCESS;
+      }
+      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
+      if (timeout_ns < std::chrono::nanoseconds::zero()) {
+        continue;
+      }
+      // Otherwise check if we still have time to wait, return TIMEOUT if not.
+      auto now = std::chrono::steady_clock::now();
+      if (now >= end_time) {
+        return FutureReturnCode::TIMEOUT;
+      }
+      // Subtract the elapsed time from the original timeout.
+      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
+    }
+
+    // The condition did not pass before ok() returned false, return INTERRUPTED.
+    return FutureReturnCode::INTERRUPTED;
+  }
+
+public:
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
       const rclcpp::GuardCondition *,
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
