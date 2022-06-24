@@ -202,37 +202,68 @@ TEST_F(TestNodeParameters, add_remove_on_set_parameters_callback) {
 
 TEST_F(TestNodeParameters, add_remove_pre_set_parameters_callback) {
   rcl_interfaces::msg::ParameterDescriptor param1_descriptor;
-  param1_descriptor.name = "double_parameter1";
+  param1_descriptor.name = "param1";
   param1_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
   param1_descriptor.read_only = false;
+
+  rcl_interfaces::msg::ParameterDescriptor param2_descriptor;
+  param1_descriptor.name = "param2";
+  param1_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+  param1_descriptor.read_only = false;
+
   node_parameters->declare_parameter(
       "param1", rclcpp::ParameterValue(0.0), param1_descriptor, false);
+  node_parameters->declare_parameter(
+      "param2", rclcpp::ParameterValue(0.0), param2_descriptor, false);
+
   const std::vector<rclcpp::Parameter> parameters_to_be_set = {rclcpp::Parameter("param1", 1.0)};
 
-  auto callback = [](std::vector<rclcpp::Parameter> &parameters) {
-    for(const auto& param: parameters){
-      if(param.get_name() == "param1"){
-        parameters.emplace_back("param2", 2.0);
+  //  use "pre set callback" to change param2 conditioned on changes to param1.
+  {
+    auto callback = [](std::vector<rclcpp::Parameter> &parameters) {
+      for (const auto &param: parameters) {
+        if (param.get_name() == "param1") {
+          parameters.emplace_back("param2", 2.0);
+        }
       }
-    }
-  };
+    };
 
-  auto handle = node_parameters->add_pre_set_parameters_callback(callback);
-  auto result = node_parameters->set_parameters(parameters_to_be_set);
-  // we expect the result size to be same as the original "parameters_to_be_set"
-  // since the pre set parameter callback will set the modified param list atomically.
-  ASSERT_EQ(1u, result.size());
-  EXPECT_TRUE(result[0].successful);
-  EXPECT_TRUE(node_parameters->has_parameter("param1"));
-  EXPECT_EQ(node_parameters->get_parameter("param1").get_value<double>(), 1.0);
-  EXPECT_TRUE(node_parameters->has_parameter("param2"));
-  EXPECT_EQ(node_parameters->get_parameter("param2").get_value<double>(), 2.0);
+    auto handle = node_parameters->add_pre_set_parameters_callback(callback);
+    auto result = node_parameters->set_parameters(parameters_to_be_set);
+    // we expect the result size to be same as the original "parameters_to_be_set"
+    // since the pre set parameter callback will set the modified param list atomically.
+    ASSERT_EQ(1u, result.size());
+    EXPECT_TRUE(result[0].successful);
+    EXPECT_TRUE(node_parameters->has_parameter("param1"));
+    EXPECT_EQ(node_parameters->get_parameter("param1").get_value<double>(), 1.0);
+    EXPECT_TRUE(node_parameters->has_parameter("param2"));
+    EXPECT_EQ(node_parameters->get_parameter("param2").get_value<double>(), 2.0);
 
-  EXPECT_NO_THROW(node_parameters->remove_pre_set_parameters_callback(handle.get()));
+    EXPECT_NO_THROW(node_parameters->remove_pre_set_parameters_callback(handle.get()));
 
-  RCLCPP_EXPECT_THROW_EQ(
-      node_parameters->remove_pre_set_parameters_callback(handle.get()),
-      std::runtime_error("Pre set parameter callback doesn't exist"));
+    RCLCPP_EXPECT_THROW_EQ(
+        node_parameters->remove_pre_set_parameters_callback(handle.get()),
+        std::runtime_error("Pre set parameter callback doesn't exist"));
+  }
+
+  // the result will be unsuccessful if the pre set callback makes parameter list empty
+  {
+    auto callback = [](std::vector<rclcpp::Parameter> &parameters) {
+      parameters = {};
+    };
+
+    std::string reason = "parameter list cannot be empty, this might be due to "
+                  "pre_set_parameters_callback modifying the original parameters list";
+    auto handle = node_parameters->add_pre_set_parameters_callback(callback);
+    auto results = node_parameters->set_parameters(parameters_to_be_set);
+    EXPECT_FALSE(results[0].successful);
+    EXPECT_EQ(results[0].reason, reason);
+    EXPECT_NO_THROW(node_parameters->remove_pre_set_parameters_callback(handle.get()));
+
+    RCLCPP_EXPECT_THROW_EQ(
+        node_parameters->remove_pre_set_parameters_callback(handle.get()),
+        std::runtime_error("Pre set parameter callback doesn't exist"));
+  }
 }
 
 TEST_F(TestNodeParameters, add_remove_post_set_parameters_callback) {
