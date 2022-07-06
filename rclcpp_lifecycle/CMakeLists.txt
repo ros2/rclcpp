@@ -109,6 +109,14 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_lifecycle_service_client ${PROJECT_NAME} mimick)
   endif()
+  ament_add_gtest(test_client test/test_client.cpp TIMEOUT 120)
+  if(TARGET test_client)
+    target_link_libraries(test_client
+      ${PROJECT_NAME}
+      mimick
+      ${rcl_interfaces_TARGETS}
+      rclcpp::rclcpp)
+  endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)
   if(TARGET test_state_machine_info)
     ament_target_dependencies(test_state_machine_info

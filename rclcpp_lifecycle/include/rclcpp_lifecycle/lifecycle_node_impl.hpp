@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/create_client.hpp"
 #include "rclcpp/create_generic_publisher.hpp"
 #include "rclcpp/create_generic_subscription.hpp"
 #include "rclcpp/create_publisher.hpp"
@@ -103,21 +104,21 @@ LifecycleNode::create_client(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  rcl_client_options_t options = rcl_client_get_default_options();
-  options.qos = qos_profile;
+  return rclcpp::create_client<ServiceT>(
+    node_base_, node_graph_, node_services_,
+    service_name, qos_profile, group);
+}
 
-  using rclcpp::Client;
-  using rclcpp::ClientBase;
-
-  auto cli = Client<ServiceT>::make_shared(
-    node_base_.get(),
-    node_graph_,
-    service_name,
-    options);
-
-  auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
-  node_services_->add_client(cli_base_ptr, group);
-  return cli;
+template<typename ServiceT>
+typename rclcpp::Client<ServiceT>::SharedPtr
+LifecycleNode::create_client(
+  const std::string & service_name,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_client<ServiceT>(
+    node_base_, node_graph_, node_services_,
+    service_name, qos, group);
 }
 
 template<typename ServiceT, typename CallbackT>

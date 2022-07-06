@@ -92,6 +92,14 @@ TEST_F(TestClient, construction_and_destruction) {
   {
     auto client = node->create_client<ListParameters>("service");
   }
+  {
+    auto client = node->create_client<ListParameters>(
+      "service", rmw_qos_profile_services_default);
+  }
+  {
+    auto client = node->create_client<ListParameters>(
+      "service", rclcpp::ServicesQoS());
+  }
 
   {
     ASSERT_THROW(
@@ -120,6 +128,27 @@ TEST_F(TestClient, construction_with_free_function) {
         node->get_node_services_interface(),
         "invalid_?service",
         rmw_qos_profile_services_default,
+        nullptr);
+    }, rclcpp::exceptions::InvalidServiceNameError);
+  }
+  {
+    auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
+      node->get_node_base_interface(),
+      node->get_node_graph_interface(),
+      node->get_node_services_interface(),
+      "service",
+      rclcpp::ServicesQoS(),
+      nullptr);
+  }
+  {
+    ASSERT_THROW(
+    {
+      auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
+        node->get_node_base_interface(),
+        node->get_node_graph_interface(),
+        node->get_node_services_interface(),
+        "invalid_?service",
+        rclcpp::ServicesQoS(),
         nullptr);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }

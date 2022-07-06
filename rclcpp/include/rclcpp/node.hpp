@@ -251,7 +251,21 @@ public:
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    const rmw_qos_profile_t & qos_profile,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a Client.
+  /**
+   * \param[in] service_name The name on which the service is accessible.
+   * \param[in] qos Quality of service profile for client.
+   * \param[in] group Callback group to handle the reply to service calls.
+   * \return Shared pointer to the created client.
+   */
+  template<typename ServiceT>
+  typename rclcpp::Client<ServiceT>::SharedPtr
+  create_client(
+    const std::string & service_name,
+    const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create and return a Service.
