@@ -13,8 +13,10 @@
 // limitations under the License.
 
 #include <string>
+#include <regex>
 #include <vector>
 
+#include "rcpputils/find_and_replace.hpp"
 #include "rclcpp/parameter_map.hpp"
 
 using rclcpp::exceptions::InvalidParametersException;
@@ -23,7 +25,7 @@ using rclcpp::ParameterMap;
 using rclcpp::ParameterValue;
 
 ParameterMap
-rclcpp::parameter_map_from(const rcl_params_t * const c_params)
+rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * node_fqn)
 {
   if (NULL == c_params) {
     throw InvalidParametersException("parameters struct is NULL");
@@ -49,6 +51,17 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
       node_name = c_node_name;
     }
 
+    if (node_fqn) {
+      // Update the regular expression ["/*" -> "(/\\w+)" and "/**" -> "(/\\w+)*"]
+      std::string regex = rcpputils::find_and_replace(node_name, "/*", "(/\\w+)");
+      if (!std::regex_match(node_fqn, std::regex(regex))) {
+        // No need to parse the items because the user just care about node_fqn
+        continue;
+      }
+
+      node_name = node_fqn;
+    }
+
     const rcl_node_params_t * const c_params_node = &(c_params->params[n]);
 
     std::vector<Parameter> & params_node = parameters[node_name];
@@ -65,6 +78,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
       params_node.emplace_back(c_param_name, parameter_value_from(c_param_value));
     }
   }
+
   return parameters;
 }
 
