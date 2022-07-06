@@ -1,0 +1,16 @@
+/**:
+  node2:
+    ros__parameters:
+      a_value: "first"
+      foo: "foo"
+
+/ns:
+  node2:
+    ros__parameters:
+      a_value: "second"
+      bar: "bar"
+
+/*:
+  node2:
+    ros__parameters:
+      a_value: "last_one_win"
