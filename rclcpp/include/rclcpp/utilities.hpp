@@ -169,7 +169,7 @@ remove_ros_arguments(int argc, char const * const * argv);
  * the context initialized by rclcpp::init().
  *
  * \param[in] context Optional check for shutdown of this Context.
- * \return true if shutdown has been called, false otherwise
+ * \return false if shutdown has been called, true otherwise
  */
 RCLCPP_PUBLIC
 bool
