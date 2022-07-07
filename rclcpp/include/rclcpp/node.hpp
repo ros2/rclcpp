@@ -371,6 +371,34 @@ public:
     )
   );
 
+  /// Create and return a GenericSubscription.
+  /**
+   * The returned pointer will never be empty, but this function can throw various exceptions, for
+   * instance when the message's package can not be found on the AMENT_PREFIX_PATH.
+   *
+   * \param[in] topic_name Topic name
+   * \param[in] type_support_handle Topic type support
+   * \param[in] qos %QoS settings
+   * \param[in] callback Callback for new messages of serialized form
+   * \param[in] options %Subscription options.
+   * Not all subscription options are currently respected, the only relevant options for this
+ * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
+ * `%callback_group`.
+   * \return Shared pointer to the created generic subscription.
+   */
+  template<
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>>
+  std::shared_ptr<rclcpp::GenericSubscription> create_generic_subscription(
+    const std::string & topic_name,
+    const rosidl_message_type_support_t & type_support_handle,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+    )
+  );
+
   /// Declare and initialize a parameter, return the effective value.
   /**
    * This method is used to declare that a parameter exists on this node.
