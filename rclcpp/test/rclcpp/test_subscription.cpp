@@ -680,7 +680,8 @@ TEST_F(TestSubscription, on_new_intra_process_serialized_message_callback) {
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
   auto do_nothing = [](std::shared_ptr<const rclcpp::SerializedMessage>) {FAIL();};
-  auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
+  auto sub =
+    node_->create_generic_subscription("~/test_take", "test_msgs/msg/Empty", 10, do_nothing);
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
