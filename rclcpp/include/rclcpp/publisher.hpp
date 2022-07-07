@@ -269,16 +269,18 @@ public:
   >
   publish(std::unique_ptr<T, ROSMessageTypeDeleter> msg)
   {
-    auto status = rcl_publish_serialized_message(
-      publisher_handle_.get(), &msg->get_rcl_serialized_message(), nullptr);
-    if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
-    }
-
     bool inter_process_publish_needed =
       get_subscription_count() > get_intra_process_subscription_count();
 
-    if (intra_process_is_enabled_ && inter_process_publish_needed) {
+    if (inter_process_publish_needed) {
+      auto status = rcl_publish_serialized_message(
+        publisher_handle_.get(), &msg->get_rcl_serialized_message(), nullptr);
+      if (RCL_RET_OK != status) {
+        rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+      }
+    }
+
+    if (intra_process_is_enabled_) {
       this->do_intra_process_ros_message_publish(std::move(msg));
     }
   }
