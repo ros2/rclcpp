@@ -153,6 +153,14 @@ public:
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       using rclcpp::detail::resolve_intra_process_buffer_type;
 
+      if (callback.is_serialized_message_callback() &&
+        !serialization_traits::is_serialized_message_class<SubscribedType>::value)
+      {
+        throw std::invalid_argument(
+                "intraprocess communication for serialized callback "
+                "allowed only with rclcpp::SerializedMessage subscription type");
+      }
+
       // Check if the QoS is compatible with intra-process.
       auto qos_profile = get_actual_qos();
       if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
