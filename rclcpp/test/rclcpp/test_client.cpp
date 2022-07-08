@@ -93,8 +93,24 @@ TEST_F(TestClient, construction_and_destruction) {
     auto client = node->create_client<ListParameters>("service");
   }
   {
+    // suppress deprecated function warning
+    #if !defined(_WIN32)
+    # pragma GCC diagnostic push
+    # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #else  // !defined(_WIN32)
+    # pragma warning(push)
+    # pragma warning(disable: 4996)
+    #endif
+
     auto client = node->create_client<ListParameters>(
       "service", rmw_qos_profile_services_default);
+
+    // remove warning suppression
+    #if !defined(_WIN32)
+    # pragma GCC diagnostic pop
+    #else  // !defined(_WIN32)
+    # pragma warning(pop)
+    #endif
   }
   {
     auto client = node->create_client<ListParameters>(
@@ -380,15 +396,15 @@ TEST_F(TestClient, on_new_response_callback) {
   auto client_node = std::make_shared<rclcpp::Node>("client_node", "ns");
   auto server_node = std::make_shared<rclcpp::Node>("server_node", "ns");
 
-  rmw_qos_profile_t client_qos = rmw_qos_profile_services_default;
-  client_qos.depth = 3;
+  rclcpp::ServicesQoS client_qos;
+  client_qos.keep_last(3);
   auto client = client_node->create_client<test_msgs::srv::Empty>("test_service", client_qos);
   std::atomic<size_t> server_requests_count {0};
   auto server_callback = [&server_requests_count](
     const test_msgs::srv::Empty::Request::SharedPtr,
     test_msgs::srv::Empty::Response::SharedPtr) {server_requests_count++;};
   auto server = server_node->create_service<test_msgs::srv::Empty>(
-    "test_service", server_callback, client_qos);
+    "test_service", server_callback, client_qos.get_rmw_qos_profile());
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
 
   std::atomic<size_t> c1 {0};
@@ -484,32 +500,30 @@ TEST_F(TestClient, rcl_client_response_subscription_get_actual_qos_error) {
 }
 
 TEST_F(TestClient, client_qos) {
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_services_default;
-  qos_profile.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
-  uint64_t duration = 1;
-  qos_profile.deadline = {duration, duration};
-  qos_profile.lifespan = {duration, duration};
-  qos_profile.liveliness_lease_duration = {duration, duration};
+  rclcpp::ServicesQoS qos_profile;
+  qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
+  rclcpp::Duration duration(std::chrono::nanoseconds(1));
+  qos_profile.deadline(duration);
+  qos_profile.lifespan(duration);
+  qos_profile.liveliness_lease_duration(duration);
 
   auto client =
     node->create_client<test_msgs::srv::Empty>("client", qos_profile);
 
-  auto init_qos =
-    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile), qos_profile);
   auto rp_qos = client->get_request_publisher_actual_qos();
   auto rs_qos = client->get_response_subscription_actual_qos();
 
-  EXPECT_EQ(init_qos, rp_qos);
+  EXPECT_EQ(qos_profile, rp_qos);
   // Lifespan has no meaning for subscription/readers
-  rs_qos.lifespan(qos_profile.lifespan);
-  EXPECT_EQ(init_qos, rs_qos);
+  rs_qos.lifespan(qos_profile.lifespan());
+  EXPECT_EQ(qos_profile, rs_qos);
 }
 
 TEST_F(TestClient, client_qos_depth) {
   using namespace std::literals::chrono_literals;
 
-  rmw_qos_profile_t client_qos_profile = rmw_qos_profile_default;
-  client_qos_profile.depth = 2;
+  rclcpp::ServicesQoS client_qos_profile;
+  client_qos_profile.keep_last(2);
 
   auto client = node->create_client<test_msgs::srv::Empty>("test_qos_depth", client_qos_profile);
 
@@ -551,10 +565,10 @@ TEST_F(TestClient, client_qos_depth) {
     std::this_thread::sleep_for(2ms);
   }
 
-  EXPECT_GT(server_cb_count_, client_qos_profile.depth);
+  EXPECT_GT(server_cb_count_, client_qos_profile.depth());
 
   start = std::chrono::steady_clock::now();
-  while ((client_cb_count_ < client_qos_profile.depth) &&
+  while ((client_cb_count_ < client_qos_profile.depth()) &&
     (std::chrono::steady_clock::now() - start) < 1s)
   {
     rclcpp::spin_some(node);
@@ -564,5 +578,5 @@ TEST_F(TestClient, client_qos_depth) {
   // so more client callbacks might be called than expected.
   rclcpp::spin_some(node);
 
-  EXPECT_EQ(client_cb_count_, client_qos_profile.depth);
+  EXPECT_EQ(client_cb_count_, client_qos_profile.depth());
 }

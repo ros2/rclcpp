@@ -246,8 +246,10 @@ public:
    * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
    * \param[in] group Callback group to call the service.
    * \return Shared pointer to the created client.
+   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
    */
   template<typename ServiceT>
+  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,

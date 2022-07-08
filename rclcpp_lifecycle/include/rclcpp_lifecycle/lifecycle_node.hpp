@@ -258,8 +258,10 @@ public:
   /// Create and return a Client.
   /**
    * \sa rclcpp::Node::create_client
+   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
    */
   template<typename ServiceT>
+  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
