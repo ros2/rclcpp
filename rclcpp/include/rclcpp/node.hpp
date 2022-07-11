@@ -909,9 +909,8 @@ public:
    * before appending 'param2' to the modified list of params the callback checks if 'param2'
    * is already present in the list of params being set.
    *
-   * Note that once the vector of parameters is modified the pre set parameter callback
-   * will set the returned parameter list atomically. This makes sense since the change of
-   * one parameter is conditioned on some other parameter.
+   * Note that once the parameters are modified parameters they will be set atomically.
+   * This is because the change of one parameter is conditioned on some other parameter.
    *
    * Also note that the callback is only called while setting parameters(set_parameter,
    * set_parameters, set_parameters_atomically) and is not called while the parameters
@@ -1002,10 +1001,6 @@ public:
 
   /// Add a callback gets triggered after parameters are set successfully.
   /**
-   * This callback gets triggered after the parameters have been set successfully
-   * The callback gets called after successful validation of parameters after
-   * the "on set parameter" registered callback.    *
-   *
    * The callback signature is designed to allow handling of any of the `set_parameter*`
    * or `declare_parameter` methods. The callback takes a reference to a const vector of
    * parameters that have been set successfully.
