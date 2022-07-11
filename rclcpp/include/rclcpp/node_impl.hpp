@@ -124,6 +124,22 @@ template<typename ServiceT>
 typename Client<ServiceT>::SharedPtr
 Node::create_client(
   const std::string & service_name,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_client<ServiceT>(
+    node_base_,
+    node_graph_,
+    node_services_,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    qos,
+    group);
+}
+
+template<typename ServiceT>
+typename Client<ServiceT>::SharedPtr
+Node::create_client(
+  const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 {

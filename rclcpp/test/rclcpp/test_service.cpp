@@ -246,10 +246,10 @@ TEST_F(TestService, on_new_request_callback) {
   auto server_callback =
     [](const test_msgs::srv::Empty::Request::SharedPtr,
       test_msgs::srv::Empty::Response::SharedPtr) {FAIL();};
-  rmw_qos_profile_t service_qos = rmw_qos_profile_services_default;
-  service_qos.depth = 3;
+  rclcpp::ServicesQoS service_qos;
+  service_qos.keep_last(3);
   auto server = node->create_service<test_msgs::srv::Empty>(
-    "~/test_service", server_callback, service_qos);
+    "~/test_service", server_callback, service_qos.get_rmw_qos_profile());
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
@@ -378,7 +378,7 @@ TEST_F(TestService, server_qos_depth) {
   auto server = server_node->create_service<test_msgs::srv::Empty>(
     "test_qos_depth", std::move(server_callback), server_qos_profile);
 
-  rmw_qos_profile_t client_qos_profile = rmw_qos_profile_default;
+  rclcpp::QoS client_qos_profile(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
   auto client = node->create_client<test_msgs::srv::Empty>("test_qos_depth", client_qos_profile);
 
   ::testing::AssertionResult request_result = ::testing::AssertionSuccess();
