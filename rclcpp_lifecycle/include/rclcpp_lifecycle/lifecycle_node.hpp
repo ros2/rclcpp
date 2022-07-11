@@ -510,8 +510,8 @@ public:
 
   using OnSetParametersCallbackHandle =
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
-  using OnParametersSetCallbackType =
-    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+  using OnSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
 
   /// Add a callback for when parameters are being set.
   /**
@@ -521,7 +521,7 @@ public:
   RCUTILS_WARN_UNUSED
   rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(
-    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);
+    rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackType callback);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
