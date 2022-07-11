@@ -162,7 +162,7 @@ protected:
 
     services_.push_back(
       node_with_service->create_service<test_msgs::srv::Empty>(
-        "service", std::move(service_callback), rmw_qos_profile_services_default, callback_group));
+        "service", std::move(service_callback), rclcpp::ServicesQoS(), callback_group));
     return node_with_service;
   }
 
@@ -793,7 +793,7 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_service_out_of_scope) {
       [](const test_msgs::srv::Empty::Request::SharedPtr,
         test_msgs::srv::Empty::Response::SharedPtr) {};
     auto service = node->create_service<test_msgs::srv::Empty>(
-      "service", std::move(service_callback), rmw_qos_profile_services_default, callback_group);
+      "service", std::move(service_callback), rclcpp::ServicesQoS(), callback_group);
 
     node->for_each_callback_group(
       [node, &weak_groups_to_nodes](rclcpp::CallbackGroup::SharedPtr group_ptr)
