@@ -134,6 +134,19 @@ LifecycleNode::create_service(
     service_name, std::forward<CallbackT>(callback), qos_profile, group);
 }
 
+template<typename ServiceT, typename CallbackT>
+typename rclcpp::Service<ServiceT>::SharedPtr
+LifecycleNode::create_service(
+  const std::string & service_name,
+  CallbackT && callback,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_service<ServiceT, CallbackT>(
+    node_base_, node_services_,
+    service_name, std::forward<CallbackT>(callback), qos, group);
+}
+
 template<typename AllocatorT>
 std::shared_ptr<rclcpp::GenericPublisher>
 LifecycleNode::create_generic_publisher(

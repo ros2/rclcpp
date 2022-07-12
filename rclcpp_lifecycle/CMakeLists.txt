@@ -117,6 +117,14 @@ if(BUILD_TESTING)
       ${rcl_interfaces_TARGETS}
       rclcpp::rclcpp)
   endif()
+  ament_add_gtest(test_service test/test_service.cpp TIMEOUT 120)
+  if(TARGET test_service)
+    target_link_libraries(test_service
+      ${PROJECT_NAME}
+      mimick
+      ${test_msgs_TARGETS}
+      rclcpp::rclcpp)
+  endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)
   if(TARGET test_state_machine_info)
     ament_target_dependencies(test_state_machine_info

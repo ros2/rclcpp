@@ -404,7 +404,7 @@ TEST_F(TestClient, on_new_response_callback) {
     const test_msgs::srv::Empty::Request::SharedPtr,
     test_msgs::srv::Empty::Response::SharedPtr) {server_requests_count++;};
   auto server = server_node->create_service<test_msgs::srv::Empty>(
-    "test_service", server_callback, client_qos.get_rmw_qos_profile());
+    "test_service", server_callback, client_qos);
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
 
   std::atomic<size_t> c1 {0};
@@ -534,10 +534,10 @@ TEST_F(TestClient, client_qos_depth) {
 
   auto server_node = std::make_shared<rclcpp::Node>("server_node", "/ns");
 
-  rmw_qos_profile_t server_qos_profile = rmw_qos_profile_default;
+  rclcpp::QoS server_qos(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
 
   auto server = server_node->create_service<test_msgs::srv::Empty>(
-    "test_qos_depth", std::move(server_callback), server_qos_profile);
+    "test_qos_depth", std::move(server_callback), server_qos);
 
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
   ::testing::AssertionResult request_result = ::testing::AssertionSuccess();
