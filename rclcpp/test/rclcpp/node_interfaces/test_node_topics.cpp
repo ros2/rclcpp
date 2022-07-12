@@ -70,7 +70,7 @@ public:
   create_serialized_message() override {return nullptr;}
 
   void handle_message(std::shared_ptr<void> &, const rclcpp::MessageInfo &) override {}
-  void handle_loaned_message(void *, const rclcpp::MessageInfo &) override {}
+  void handle_loaned_message(const void *, const rclcpp::MessageInfo &) override {}
   void handle_serialized_message(
     const std::shared_ptr<rclcpp::SerializedMessage> &, const rclcpp::MessageInfo &) override {}
   void return_message(std::shared_ptr<void> &) override {}

@@ -146,7 +146,7 @@ public:
   /// This function is currently not implemented.
   RCLCPP_PUBLIC
   void handle_loaned_message(
-    void * loaned_message, const rclcpp::MessageInfo & message_info) override;
+    const void * loaned_message, const rclcpp::MessageInfo & message_info) override;
 
   // Same as return_serialized_message() as the subscription is to serialized_messages only
   RCLCPP_PUBLIC
