@@ -327,7 +327,7 @@ using PostSetCallbacksHandleContainer =
     rclcpp::node_interfaces::NodeParameters::PostSetCallbacksHandleContainer;
 
 RCLCPP_LOCAL
-bool
+void
 __call_pre_set_parameters_callbacks(
     std::vector<rclcpp::Parameter> & parameters,
     PreSetCallbacksHandleContainer & callback_container)
@@ -344,8 +344,6 @@ __call_pre_set_parameters_callbacks(
       }
     }
   }
-
-  return parameters.empty();
 }
 
 RCLCPP_LOCAL
@@ -706,16 +704,18 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   // this callback can make changes to the original parameters list
   // also check if the changed parameter list is empty or not, if empty return
   std::vector<rclcpp::Parameter> parameters_after_pre_set_callback(parameters);
-  if(__call_pre_set_parameters_callbacks(parameters_after_pre_set_callback,
-                                         pre_set_parameter_callback_container_))
+  __call_pre_set_parameters_callbacks(parameters_after_pre_set_callback,
+                                     pre_set_parameter_callback_container_);
+
+  if (parameters_after_pre_set_callback.empty())
   {
     result.successful = false;
     result.reason = "parameter list cannot be empty, this might be due to "
-                    "pre_set_parameters_callback modifying the original parameters list";
+                    "pre_set_parameters_callback modifying the original parameters list.";
     return result;
   }
 
-  // Check if any of the parameters are read-only, or if any parameters are not
+  // Check if any of the parameters are read-only,empty_post_set_callback_container or if any parameters are not
   // declared.
   // If not declared, keep track of them in order to declare them later, when
   // undeclared parameters are allowed, and if they're not allowed, fail.
