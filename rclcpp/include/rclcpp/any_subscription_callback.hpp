@@ -553,15 +553,10 @@ public:
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message));
         } else if constexpr (std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>) {
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message), message_info);
-        } else if constexpr (  // NOLINT[readability/braces]
-          is_const && (
-            std::is_same_v<T, SharedPtrROSMessageCallback>||
-            std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>
-        ))
-        {
-          throw std::runtime_error(
-            "Cannot dispatch std::shared_ptr<const ROSMessageType> message "
-            "to callback taking a non-const message");
+        } else if constexpr (is_const && std::is_same_v<T, SharedPtrROSMessageCallback>) {
+          callback(std::make_shared<ROSMessageType>(*message));
+        } else if constexpr (is_const && std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>) {
+          callback(std::make_shared<ROSMessageType>(*message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrROSMessageCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>||
