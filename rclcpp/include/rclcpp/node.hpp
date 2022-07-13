@@ -902,33 +902,26 @@ public:
    * {
    *  for (auto & param : parameters) {
    *    if (param.get_name() == "param1") {
-   *      auto newParam = rclcpp::Parameter("param2", 4.0);
-   *      auto it = std::find(parameters.begin(), parameters.end(), newParam);
-   *      if (it == parameters.end()) {
-   *        parameters.push_back(newParam);
-   *      } else {
-   *        *it = newParam;
-   *      }
+   *      parameters.push_back(rclcpp::Parameter("param2", 4.0));
    *    }
    *  }
    * }
    * ```
-   * The above callback takes list of params by reference and appends 'param2' to the modified
-   * list of params based on the condition that 'param1' is being set by the user.
-   * Further, before appending 'param2' to the modified list of params the callback checks if
-   * 'param2' is already present in the list of params being set.
+   * The above callback appends 'param2' to the list of parameters to be set if
+   * 'param1' is being set by the user.
    *
-   * Note that once the parameters are modified parameters they will be set atomically.
-   * This is because the change of one parameter is conditioned on some other parameter.
+   * All parameters in the vector will be set atomically.
    *
-   * Also note that the callback is only called while setting parameters(set_parameter,
-   * set_parameters, set_parameters_atomically) and is not called while the parameters
-   * are being declared using declare_parameters or it's variants.
+   * Note that the callback is only called while setting parameters with `set_parameter`,
+   * `set_parameters`, `set_parameters_atomically`, or externally with a parameters service.
+   *
+   * The callback is not called when parameters are declared with `declare_parameter`
+   * or `declare_parameters`.
    *
    * An empty modified parameter list from the callback will result in "set_parameter*"
    * returning an unsuccessful result.
    *
-   * The 'remove_pre_set_parameters_callback' can be used to deregister the callback.
+   * The `remove_pre_set_parameters_callback` can be used to deregister the callback.
    *
    * \param callback The callback to register.
    * \returns A shared pointer. The callback is valid as long as the smart pointer is alive.
@@ -939,7 +932,7 @@ public:
   PreSetParametersCallbackHandle::SharedPtr
   add_pre_set_parameters_callback(PreSetParametersCallbackType callback);
 
-  /// Add a callback for when parameters are being set.
+  /// Add a callback to validate parameters before they are set.
   /**
    * The callback signature is designed to allow handling of any of the above
    * `set_parameter*` or `declare_parameter*` methods, and so it takes a const
@@ -1010,15 +1003,15 @@ public:
 
   /// Add a callback that gets triggered after parameters are set successfully.
   /**
-   * The callback signature is designed to allow handling of any of the `set_parameter*`
-   * or `declare_parameter` methods.
+   * The callback is called when any of the `set_parameter*` or `declare_parameter*`
+   * methods are successful.
    *
    * The callback takes a reference to a const vector of parameters that have been
    * set successfully.
    *
    * The post callback can be valuable as a place to cause side-effects based on
    * parameter changes.
-   * For instance updating the internally tracked class attributes once the params
+   * For instance updating internally tracked class attributes once parameters
    * have been changed successfully.
    *
    * For an example callback:
@@ -1042,13 +1035,15 @@ public:
    *
    * The above callback takes a const reference to list of parameters that have been
    * set successfully and as a result of this updates the internally tracked class attributes
-   * "internal_tracked_class_parameter_1_" and "internal_tracked_class_parameter_2_"
+   * `internal_tracked_class_parameter_1_` and `internal_tracked_class_parameter_2_`
    * respectively.
    *
-   * Note that this callback should not be used to request changes to parameters based on
-   * another and instead "pre set parameter" callback should be used for such usages.
+   * This callback should not modify parameters.
    *
-   * The 'remove_post_set_parameters_callback' can be used to deregister the callback.
+   * If you want to make changes to parameters based on changes to another, use
+   * `add_pre_set_parameters_callback`.
+   *
+   * The `remove_post_set_parameters_callback` can be used to deregister the callback.
    *
    * \param callback The callback to register.
    * \returns A shared pointer. The callback is valid as long as the smart pointer is alive.

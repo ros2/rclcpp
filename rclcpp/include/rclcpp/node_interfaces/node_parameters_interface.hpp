@@ -55,7 +55,6 @@ struct OnSetParametersCallbackHandle
   OnSetParametersCallbackType callback;
 };
 
-// parameter callback gets invoked after successful node parameter set.
 struct PostSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(PostSetParametersCallbackHandle)
@@ -65,7 +64,6 @@ struct PostSetParametersCallbackHandle
 
   PostSetParametersCallbackType callback;
 };
-
 
 /// Pure virtual interface class for the NodeParameters part of the Node API.
 class NodeParametersInterface
@@ -132,10 +130,14 @@ public:
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
+  /// Set one or more parameters, all at once.
+  /**
+   * \sa rclcpp::Node::set_parameters_atomically
+   */
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(
+   set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
