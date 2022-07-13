@@ -212,17 +212,17 @@ TEST_F(TestNodeParameters, add_remove_pre_set_parameters_callback) {
 
   // `add_pre_set_parameters_callback` used to make the parameters list empty.
   auto empty_parameter_list_callback = [](std::vector<rclcpp::Parameter> & parameters) {
-    parameters = {};
-  };
+      parameters = {};
+    };
 
   auto handle1 =
     node_parameters->add_pre_set_parameters_callback(modify_parameter_list_callback);
 
   double default_value = 0.0;
   node_parameters->declare_parameter(
-      "param1", rclcpp::ParameterValue(default_value));
+    "param1", rclcpp::ParameterValue(default_value));
   node_parameters->declare_parameter(
-      "param2", rclcpp::ParameterValue(default_value));
+    "param2", rclcpp::ParameterValue(default_value));
 
   // verify that `declare_parameter` does not call any of the callbacks registered with
   // `add_pre_set_parameters_callback`
@@ -233,8 +233,8 @@ TEST_F(TestNodeParameters, add_remove_pre_set_parameters_callback) {
 
   // verify that the `param2` was set successfully conditioned on setting of
   // `param1`
-  const std::vector<rclcpp::Parameter> parameters_to_be_set =
-    {rclcpp::Parameter("param1", 1.0)};
+  const std::vector<rclcpp::Parameter> parameters_to_be_set = {
+    rclcpp::Parameter("param1", 1.0)};
   auto result = node_parameters->set_parameters(parameters_to_be_set);
   // we expect the result size to be same as the original "parameters_to_be_set"
   // since the pre set parameter callback will set the modified param list atomically.
