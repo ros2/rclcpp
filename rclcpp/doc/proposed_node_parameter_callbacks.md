@@ -6,7 +6,9 @@ The original requirement came in **gazeb_ros_pkgs** for setting individual wheel
 
 Related discussion can be found in [#609](https://github.com/ros2/rclcpp/issues/609) [#1789](https://github.com/ros2/rclcpp/pull/1789)
 
-With the current parameters API, the `add_on_set_parameters_callback` is intended for validation of parameter values before they are set, it should **not** cause any side-effects. There is also the `ParameterEventHandler` that publishes changes to node parameters on `/parameter_events` topic for external nodes to see. Though the node could subscribe to the `/parameter_events` topic to be notified of changes to its own parameters, it is less than ideal since there is a delay caused by waiting for an executor to process the callback.
+With the current parameters API, the `add_on_set_parameters_callback` is intended for validation of parameter values before they are set, it should **not** cause any side-effects. 
+
+There is also the `ParameterEventHandler` that publishes changes to node parameters on `/parameter_events` topic for external nodes to see. Though the node could subscribe to the `/parameter_events` topic to be notified of changes to its own parameters, it is less than ideal since there is a delay caused by waiting for an executor to process the callback.
 
 We propose adding a `PostSetParametersCallbackHandle` for successful parameter set similar to `OnSetParametersCallbackHandle` for parameter validation. Also, we propose adding a `PreSetParametersCallbackHandle` useful for modifying list of parameters being set.
 
