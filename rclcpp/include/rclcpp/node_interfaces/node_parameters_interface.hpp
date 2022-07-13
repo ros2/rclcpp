@@ -51,6 +51,8 @@ struct OnSetParametersCallbackHandle
     std::function<
     rcl_interfaces::msg::SetParametersResult(
       const std::vector<rclcpp::Parameter> &)>;
+  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
+    OnSetParametersCallbackType;
 
   OnSetParametersCallbackType callback;
 };
@@ -137,7 +139,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
-   set_parameters_atomically(
+  set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
