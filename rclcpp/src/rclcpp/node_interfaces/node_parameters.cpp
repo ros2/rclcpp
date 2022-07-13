@@ -332,16 +332,18 @@ __call_pre_set_parameters_callbacks(
   std::vector<rclcpp::Parameter> & parameters,
   PreSetCallbacksHandleContainer & callback_container)
 {
-  if (!callback_container.empty()) {
-    auto it = callback_container.begin();
-    while (it != callback_container.end()) {
-      auto shared_handle = it->lock();
-      if (nullptr != shared_handle) {
-        shared_handle->callback(parameters);
-        it++;
-      } else {
-        it = callback_container.erase(it);
-      }
+  if (callback_container.empty()) {
+    return;
+  }
+
+  auto it = callback_container.begin();
+  while (it != callback_container.end()) {
+    auto shared_handle = it->lock();
+    if (nullptr != shared_handle) {
+      shared_handle->callback(parameters);
+      it++;
+    } else {
+      it = callback_container.erase(it);
     }
   }
 }
@@ -375,16 +377,18 @@ void __call_post_set_parameters_callbacks(
   const std::vector<rclcpp::Parameter> & parameters,
   PostSetCallbacksHandleContainer & callback_container)
 {
-  if (!callback_container.empty()) {
-    auto it = callback_container.begin();
-    while (it != callback_container.end()) {
-      auto shared_handle = it->lock();
-      if (nullptr != shared_handle) {
-        shared_handle->callback(parameters);
-        it++;
-      } else {
-        it = callback_container.erase(it);
-      }
+  if (callback_container.empty()) {
+    return;
+  }
+
+  auto it = callback_container.begin();
+  while (it != callback_container.end()) {
+    auto shared_handle = it->lock();
+    if (nullptr != shared_handle) {
+      shared_handle->callback(parameters);
+      it++;
+    } else {
+      it = callback_container.erase(it);
     }
   }
 }
@@ -506,7 +510,6 @@ declare_parameter_helper(
   const std::string & combined_name,
   rclcpp::node_interfaces::NodeClockInterface & node_clock)
 {
-
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
     throw rclcpp::exceptions::InvalidParametersException("parameter name must not be empty");
@@ -712,7 +715,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     return result;
   }
 
-  // Check if any of the parameters are read-only,empty_post_set_callback_container or if any parameters are not
+  // Check if any of the parameters are read-only, or if any parameters are not
   // declared.
   // If not declared, keep track of them in order to declare them later, when
   // undeclared parameters are allowed, and if they're not allowed, fail.

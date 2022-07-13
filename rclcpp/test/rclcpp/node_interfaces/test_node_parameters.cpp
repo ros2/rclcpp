@@ -277,15 +277,10 @@ TEST_F(TestNodeParameters, add_remove_post_set_parameters_callback) {
   param2_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
   param2_descriptor.read_only = false;
 
-  node_parameters->declare_parameter(
+  double variable_tracking_param1_internally = node_parameters->declare_parameter(
     "param1", rclcpp::ParameterValue(0.0), param1_descriptor, false);
-  node_parameters->declare_parameter(
+  double variable_tracking_param2_internally = node_parameters->declare_parameter(
     "param2", rclcpp::ParameterValue(0.0), param2_descriptor, false);
-
-  double variable_tracking_param1_internally =
-    node_parameters->get_parameter("param1").get_value<double>();
-  double variable_tracking_param2_internally =
-    node_parameters->get_parameter("param2").get_value<double>();
 
   EXPECT_EQ(variable_tracking_param1_internally, 0.0);
   EXPECT_EQ(variable_tracking_param2_internally, 0.0);

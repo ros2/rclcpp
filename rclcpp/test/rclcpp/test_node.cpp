@@ -1451,11 +1451,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     auto name2 = "parameter"_unq;
     auto default_value = 0;  // default value of name1 param
 
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_INTEGER;
-
     // declare name1 parameter only
-    node->declare_parameter(name1, default_value, descriptor);
+    node->declare_parameter(name1, default_value);
 
     // add undeclared parameter with name2 to modified list of parameters
     auto pre_set_parameters =
@@ -1521,11 +1518,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
     auto name1 = "parameter"_unq;
     auto name2 = "parameter"_unq;
 
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_INTEGER;
-
     // declare name1 parameter only
-    node->declare_parameter(name1, 0, descriptor);
+    node->declare_parameter(name1, 0);
 
     // add undeclared parameter with name2 to modified list of parameters
     auto pre_set_parameters =
