@@ -590,7 +590,7 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_set_parameters_callback_container_,
-    post_set_parameter_callback_container_,
+    post_set_parameters_callback_container_,
     events_publisher_.get(),
     combined_name_,
     *node_clock_);
@@ -626,7 +626,7 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_set_parameters_callback_container_,
-    post_set_parameter_callback_container_,
+    post_set_parameters_callback_container_,
     events_publisher_.get(),
     combined_name_,
     *node_clock_);
@@ -706,7 +706,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   std::vector<rclcpp::Parameter> parameters_after_pre_set_callback(parameters);
   __call_pre_set_parameters_callbacks(
     parameters_after_pre_set_callback,
-    pre_set_parameter_callback_container_);
+    pre_set_parameters_callback_container_);
 
   if (parameters_after_pre_set_callback.empty()) {
     result.successful = false;
@@ -842,7 +842,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     // These callbacks are called once. When a callback returns an unsuccessful result,
     // the remaining aren't called
     on_set_parameters_callback_container_,
-    post_set_parameter_callback_container_,
+    post_set_parameters_callback_container_,
     allow_undeclared_);  // allow undeclared
 
   // If not successful, then stop here.
@@ -1091,13 +1091,13 @@ NodeParameters::remove_pre_set_parameters_callback(
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   auto it = std::find_if(
-    pre_set_parameter_callback_container_.begin(),
-    pre_set_parameter_callback_container_.end(),
+    pre_set_parameters_callback_container_.begin(),
+    pre_set_parameters_callback_container_.end(),
     [handle](const auto & weak_handle) {
       return handle == weak_handle.lock().get();
     });
-  if (it != pre_set_parameter_callback_container_.end()) {
-    pre_set_parameter_callback_container_.erase(it);
+  if (it != pre_set_parameters_callback_container_.end()) {
+    pre_set_parameters_callback_container_.erase(it);
   } else {
     throw std::runtime_error("Pre set parameter callback doesn't exist");
   }
@@ -1131,13 +1131,13 @@ NodeParameters::remove_post_set_parameters_callback(
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   auto it = std::find_if(
-    post_set_parameter_callback_container_.begin(),
-    post_set_parameter_callback_container_.end(),
+    post_set_parameters_callback_container_.begin(),
+    post_set_parameters_callback_container_.end(),
     [handle](const auto & weak_handle) {
       return handle == weak_handle.lock().get();
     });
-  if (it != post_set_parameter_callback_container_.end()) {
-    post_set_parameter_callback_container_.erase(it);
+  if (it != post_set_parameters_callback_container_.end()) {
+    post_set_parameters_callback_container_.erase(it);
   } else {
     throw std::runtime_error("Post set parameter callback doesn't exist");
   }
@@ -1152,7 +1152,7 @@ NodeParameters::add_pre_set_parameters_callback(PreSetParametersCallbackType cal
   auto handle = std::make_shared<PreSetParametersCallbackHandle>();
   handle->callback = callback;
   // the last callback registered is executed first.
-  pre_set_parameter_callback_container_.emplace_front(handle);
+  pre_set_parameters_callback_container_.emplace_front(handle);
   return handle;
 }
 
@@ -1179,7 +1179,7 @@ NodeParameters::add_post_set_parameters_callback(
   auto handle = std::make_shared<PostSetParametersCallbackHandle>();
   handle->callback = callback;
   // the last callback registered is executed first.
-  post_set_parameter_callback_container_.emplace_front(handle);
+  post_set_parameters_callback_container_.emplace_front(handle);
   return handle;
 }
 

@@ -232,11 +232,11 @@ private:
   // declare_parameter, etc).  In those cases, this will be set to false.
   bool parameter_modification_enabled_{true};
 
-  PreSetCallbacksHandleContainer pre_set_parameter_callback_container_;
+  PreSetCallbacksHandleContainer pre_set_parameters_callback_container_;
 
   OnSetCallbacksHandleContainer on_set_parameters_callback_container_;
 
-  PostSetCallbacksHandleContainer post_set_parameter_callback_container_;
+  PostSetCallbacksHandleContainer post_set_parameters_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 
