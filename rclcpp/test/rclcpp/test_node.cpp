@@ -1977,12 +1977,9 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     auto name3 = "parameter"_unq;
     auto default_value = 0;
 
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_INTEGER;
-
     // declare name1 and name2 parameter only
-    node->declare_parameter(name1, default_value, descriptor);
-    node->declare_parameter(name2, default_value, descriptor);
+    node->declare_parameter(name1, default_value);
+    node->declare_parameter(name2, default_value);
 
     // add undeclared parameter with name3 to modified list of parameters
     // conditioned of name2 param
@@ -1997,7 +1994,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
     EXPECT_THROW(node->set_parameters_atomically({rclcpp::Parameter(name1, 1),
-                                                            rclcpp::Parameter(name2, 2)}),
+                                                  rclcpp::Parameter(name2, 2)}),
                  rclcpp::exceptions::ParameterNotDeclaredException);
     EXPECT_TRUE(node->has_parameter(name1));
     EXPECT_TRUE(node->has_parameter(name2));
@@ -2106,12 +2103,9 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     auto name3 = "parameter"_unq;
     auto default_value = 0;
 
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_INTEGER;
-
     // declare name1 and name2 parameter only
-    node->declare_parameter(name1, default_value, descriptor);
-    node->declare_parameter(name2, default_value, descriptor);
+    node->declare_parameter(name1, default_value);
+    node->declare_parameter(name2, default_value);
 
     // add undeclared parameter with name3 to modified list of parameters
     // conditioned of name2 param

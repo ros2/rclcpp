@@ -879,37 +879,44 @@ public:
   /// Add a callback that gets triggered before parameters are validated.
   /**
    * This callback can be used to modify the original list of parameters being
-   * set by the user. The modified list of parameters is then forwarded to the
-   * "on set parameter" callback for validation.
+   * set by the user.
    *
-   * The callback signature is designed to allow handling of any of the `set_parameter*`
-   * methods. The callback takes a reference to a vector of parameters to be set.
-   * This vector of parameters can further be modified based on the user requirement.
+   * The modified list of parameters is then forwarded to the "on set parameter"
+   * callback for validation.
+   *
+   * The callback is called whenever any of the `set_parameter*` methods are called '
+   * or when a set parameter service request is received.
+   *
+   * The callback takes a reference to the vector of parameters to be set.
+   *
+   * The vector of parameters may be modified by the callback.
    *
    * One of the use case of "pre set callback" can be updating additional parameters
    * conditioned on changes to a parameter.
    *
    * For an example callback:
    *
-   *  void preSetParameterCallback(std::vector<rclcpp::Parameter>& parameters){
-   *  for(auto&param:parameters){
-   *     // if "param1" is being set try setting "param2" as well.
-   *    if(param.get_name() == "param1"){
+   *```cpp
+   * void
+   * preSetParameterCallback(std::vector<rclcpp::Parameter> & parameters)
+   * {
+   *  for (auto & param : parameters) {
+   *    if (param.get_name() == "param1") {
    *      auto newParam = rclcpp::Parameter("param2", 4.0);
    *      auto it = std::find(parameters.begin(), parameters.end(), newParam);
-   *      if(it == parameters.end()){
+   *      if (it == parameters.end()) {
    *        parameters.push_back(newParam);
-   *      }else{
+   *      } else {
    *        *it = newParam;
    *      }
    *    }
    *  }
-   *};
-   *
+   * }
+   * ```
    * The above callback takes list of params by reference and appends 'param2' to the modified
-   * list of params based on the condition that 'param1' is being set by the user. Further,
-   * before appending 'param2' to the modified list of params the callback checks if 'param2'
-   * is already present in the list of params being set.
+   * list of params based on the condition that 'param1' is being set by the user.
+   * Further, before appending 'param2' to the modified list of params the callback checks if
+   * 'param2' is already present in the list of params being set.
    *
    * Note that once the parameters are modified parameters they will be set atomically.
    * This is because the change of one parameter is conditioned on some other parameter.
@@ -1004,27 +1011,34 @@ public:
   /// Add a callback that gets triggered after parameters are set successfully.
   /**
    * The callback signature is designed to allow handling of any of the `set_parameter*`
-   * or `declare_parameter` methods. The callback takes a reference to a const vector of
-   * parameters that have been set successfully.
+   * or `declare_parameter` methods.
    *
-   * The post callback can be valuable as a place to cause side-effects based on parameter
-   * changes. For instance updating the internally tracked class attributes once the params
+   * The callback takes a reference to a const vector of parameters that have been
+   * set successfully.
+   *
+   * The post callback can be valuable as a place to cause side-effects based on
+   * parameter changes.
+   * For instance updating the internally tracked class attributes once the params
    * have been changed successfully.
    *
    * For an example callback:
    *
-   * void postSetParameterCallback(const std::vector<rclcpp::Parameter>& parameters){
-   *  for(const auto&param:parameters){
+   * ```cpp
+   * void
+   * postSetParameterCallback(const std::vector<rclcpp::Parameter> & parameters)
+   * {
+   *  for(const auto & param:parameters) {
    *   // the internal class member can be changed after
    *   // successful change to param1 or param2
-   *    if(param.get_name() == "param1"){
+   *    if(param.get_name() == "param1") {
    *      internal_tracked_class_parameter_1_ = param.get_value<double>();
    *    }
-   *    else if(param.get_name() == "param2"){
+   *    else if(param.get_name() == "param2") {
    *      internal_tracked_class_parameter_2_ = param.get_value<double>();
    *    }
    *  }
-   *};
+   * }
+   * ```
    *
    * The above callback takes a const reference to list of parameters that have been
    * set successfully and as a result of this updates the internally tracked class attributes
