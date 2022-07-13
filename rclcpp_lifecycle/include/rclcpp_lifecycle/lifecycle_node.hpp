@@ -509,9 +509,9 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
   using PreSetParametersCallbackHandle =
-      rclcpp::node_interfaces::PreSetParametersCallbackHandle;
+    rclcpp::node_interfaces::PreSetParametersCallbackHandle;
   using PreSetParametersCallbackType =
-      rclcpp::node_interfaces::NodeParametersInterface::PreSetParametersCallbackType;
+    rclcpp::node_interfaces::NodeParametersInterface::PreSetParametersCallbackType;
 
   using OnSetParametersCallbackHandle =
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
@@ -521,9 +521,9 @@ public:
     OnSetParametersCallbackType;
 
   using PostSetParametersCallbackHandle =
-      rclcpp::node_interfaces::PostSetParametersCallbackHandle;
+    rclcpp::node_interfaces::PostSetParametersCallbackHandle;
   using PostSetParametersCallbackType =
-      rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
+    rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
 
   /// Add a callback that gets triggered before parameters are validated.
   /**

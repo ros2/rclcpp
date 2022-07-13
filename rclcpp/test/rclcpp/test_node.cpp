@@ -1485,7 +1485,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
   {
     {"parameter_with_override", 30},
   });
-  no.allow_undeclared_parameters(1true);
+  no.allow_undeclared_parameters(true);
   auto node = std::make_shared<rclcpp::Node>("test_set_parameter_node"_unq, no);
   {
     // overrides are ignored when not declaring a parameter
