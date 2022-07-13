@@ -868,13 +868,15 @@ public:
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnSetParametersCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
+  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
+      OnSetParametersCallbackType;
 
   using PostSetParametersCallbackHandle =
       rclcpp::node_interfaces::PostSetParametersCallbackHandle;
   using PostSetParametersCallbackType =
       rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
 
-  /// Add a callback gets triggered before parameters are validated.
+  /// Add a callback that gets triggered before parameters are validated.
   /**
    * This callback can be used to modify the original list of parameters being
    * set by the user. The modified list of parameters is then forwarded to the
@@ -999,7 +1001,7 @@ public:
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnSetParametersCallbackType callback);
 
-  /// Add a callback gets triggered after parameters are set successfully.
+  /// Add a callback that gets triggered after parameters are set successfully.
   /**
    * The callback signature is designed to allow handling of any of the `set_parameter*`
    * or `declare_parameter` methods. The callback takes a reference to a const vector of
