@@ -216,6 +216,8 @@ public:
   using PreSetCallbacksHandleContainer = std::list<PreSetParametersCallbackHandle::WeakPtr>;
   using OnSetCallbacksHandleContainer = std::list<OnSetParametersCallbackHandle::WeakPtr>;
   using PostSetCallbacksHandleContainer = std::list<PostSetParametersCallbackHandle::WeakPtr>;
+  using CallbacksContainerType [[deprecated("use OnSetCallbacksHandleContainer instead")]] =
+    OnSetCallbacksHandleContainer;
 
 protected:
   RCLCPP_PUBLIC
