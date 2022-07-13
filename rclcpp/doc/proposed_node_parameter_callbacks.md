@@ -8,7 +8,7 @@ Related discussion can be found in [#609](https://github.com/ros2/rclcpp/issues/
 
 With the current parameters API, the `add_on_set_parameters_callback` is intended for validation of parameter values before they are set, it should **not** cause any side-effects. There is also the `ParameterEventHandler` that publishes changes to node parameters on `/parameter_events` topic for external nodes to see. Though the node could subscribe to the `/parameter_events` topic to be notified of changes to its own parameters, it is less than ideal since there is a delay caused by waiting for an executor to process the callback.
 
-We propose adding a `PostSetParametersCallbackHandle` for successful parameter set similar to `OnSetParametersCallbackHandle` for parameter validation. Additionally, we propose adding a `PreSetParametersCallbackHandle` useful for modifying list of parameters being set.
+We propose adding a `PostSetParametersCallbackHandle` for successful parameter set similar to `OnSetParametersCallbackHandle` for parameter validation. Also, we propose adding a `PreSetParametersCallbackHandle` useful for modifying list of parameters being set.
 
 The validation callback is often abused to trigger side effects in the code, for instance updating class attributes even before a parameter has been set successfully. Instead of relying on the `/parameter_events` topic to be notified of parameter changes, users can register a callback with a new API, `add_post_set_parameters_callback`.
 
