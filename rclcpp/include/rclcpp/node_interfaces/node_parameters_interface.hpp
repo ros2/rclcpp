@@ -210,7 +210,7 @@ public:
     PostSetParametersCallbackHandle::PostSetParametersCallbackType;
   using PreSetParametersCallbackType = PreSetParametersCallbackHandle::PreSetParametersCallbackType;
 
-  /// Add a callback gets triggered before parameters are validated.
+  /// Add a callback that gets triggered before parameters are validated.
   /**
    * \sa rclcpp::Node::add_pre_set_parameters_callback
    */
@@ -219,7 +219,7 @@ public:
   PreSetParametersCallbackHandle::SharedPtr
   add_pre_set_parameters_callback(PreSetParametersCallbackType callback) = 0;
 
-  /// Add a callback for when parameters are being set.
+  /// Add a callback to validate parameters before they are set.
   /**
    * \sa rclcpp::Node::add_on_set_parameters_callback
    */
@@ -228,7 +228,7 @@ public:
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnSetParametersCallbackType callback) = 0;
 
-  /// Add a callback gets triggered after parameters are set successfully.
+  /// Add a callback that gets triggered after parameters are set successfully.
   /**
    * \sa rclcpp::Node::add_post_set_parameters_callback
    */
