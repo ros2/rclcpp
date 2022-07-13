@@ -202,7 +202,8 @@ public:
 
   RCLCPP_PUBLIC
   void
-  remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler) override;
+  remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler)
+  override;
 
   RCLCPP_PUBLIC
   void

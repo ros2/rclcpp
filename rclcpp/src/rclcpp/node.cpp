@@ -419,7 +419,8 @@ Node::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth)
 }
 
 rclcpp::Node::PreSetParametersCallbackHandle::SharedPtr
-Node::add_pre_set_parameters_callback(PreSetParametersCallbackType callback){
+Node::add_pre_set_parameters_callback(PreSetParametersCallbackType callback)
+{
   return node_parameters_->add_pre_set_parameters_callback(callback);
 }
 
@@ -430,7 +431,8 @@ Node::add_on_set_parameters_callback(OnSetParametersCallbackType callback)
 }
 
 rclcpp::Node::PostSetParametersCallbackHandle::SharedPtr
-Node::add_post_set_parameters_callback(PostSetParametersCallbackType callback){
+Node::add_post_set_parameters_callback(PostSetParametersCallbackType callback)
+{
   return node_parameters_->add_post_set_parameters_callback(callback);
 }
 

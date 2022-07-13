@@ -38,7 +38,7 @@ struct PreSetParametersCallbackHandle
   RCLCPP_SMART_PTR_DEFINITIONS(PreSetParametersCallbackHandle)
 
   using PreSetParametersCallbackType =
-    std::function<void(std::vector<rclcpp::Parameter> &)>;
+    std::function<void (std::vector<rclcpp::Parameter> &)>;
 
   PreSetParametersCallbackType callback;
 };
@@ -61,7 +61,7 @@ struct PostSetParametersCallbackHandle
   RCLCPP_SMART_PTR_DEFINITIONS(PostSetParametersCallbackHandle)
 
   using PostSetParametersCallbackType =
-    std::function<void(const std::vector<rclcpp::Parameter> &)>;
+    std::function<void (const std::vector<rclcpp::Parameter> &)>;
 
   PostSetParametersCallbackType callback;
 };
@@ -136,7 +136,7 @@ public:
   virtual
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-      const std::vector<rclcpp::Parameter> & parameters) = 0;
+    const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
   /*
@@ -204,7 +204,8 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
   using OnSetParametersCallbackType = OnSetParametersCallbackHandle::OnSetParametersCallbackType;
-  using PostSetParametersCallbackType = PostSetParametersCallbackHandle::PostSetParametersCallbackType;
+  using PostSetParametersCallbackType =
+    PostSetParametersCallbackHandle::PostSetParametersCallbackType;
   using PreSetParametersCallbackType = PreSetParametersCallbackHandle::PreSetParametersCallbackType;
 
   /// Add a callback gets triggered before parameters are validated.
@@ -231,7 +232,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-      PostSetParametersCallbackHandle::SharedPtr
+  PostSetParametersCallbackHandle::SharedPtr
   add_post_set_parameters_callback(PostSetParametersCallbackType callback) = 0;
 
   /// Remove a callback registered with `add_pre_set_parameters_callback`.
