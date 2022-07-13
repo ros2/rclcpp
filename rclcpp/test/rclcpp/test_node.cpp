@@ -1457,7 +1457,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     // add undeclared parameter with name2 to modified list of parameters
     auto pre_set_parameters =
       [&](std::vector<rclcpp::Parameter> & parameters) {
-        for (const auto & param: parameters) {
+        for (const auto & param : parameters) {
           if (param.get_name() == name1) {
             parameters.emplace_back(rclcpp::Parameter(name2, 2));
           }
@@ -1524,7 +1524,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
     // add undeclared parameter with name2 to modified list of parameters
     auto pre_set_parameters =
       [&](std::vector<rclcpp::Parameter> & parameters) {
-        for (const auto & param: parameters) {
+        for (const auto & param : parameters) {
           if (param.get_name() == name1) {
             parameters.emplace_back(rclcpp::Parameter(name2, 2));
           }
@@ -1708,7 +1708,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     // conditioned of name2 param
     auto pre_set_parameters =
       [&](std::vector<rclcpp::Parameter> & parameters) {
-        for (const auto & param: parameters) {
+        for (const auto & param : parameters) {
           if (param.get_name() == name2) {
             parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
@@ -1798,7 +1798,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_allowed) {
     // conditioned of name2 param
     auto pre_set_parameters =
       [&](std::vector<rclcpp::Parameter> & parameters) {
-        for (const auto & param: parameters) {
+        for (const auto & param : parameters) {
           if (param.get_name() == name2) {
             parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
@@ -1981,7 +1981,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     // conditioned of name2 param
     auto pre_set_parameters =
       [&](std::vector<rclcpp::Parameter> & parameters) {
-        for (const auto & param: parameters) {
+        for (const auto & param : parameters) {
           if (param.get_name() == name2) {
             parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
@@ -2109,7 +2109,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     // conditioned of name2 param
     auto pre_set_parameters =
       [&](std::vector<rclcpp::Parameter> & parameters) {
-        for (const auto & param: parameters) {
+        for (const auto & param : parameters) {
           if (param.get_name() == name2) {
             parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }

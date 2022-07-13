@@ -777,7 +777,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       parameter_overrides_,
       // Only call callbacks once below
       empty_on_set_callback_container,   // callback_container is explicitly empty
-      empty_post_set_callback_container, // callback_container is explicitly empty
+      empty_post_set_callback_container,  // callback_container is explicitly empty
       &parameter_event_msg,
       true);
     if (!result.successful) {

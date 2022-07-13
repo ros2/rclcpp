@@ -203,7 +203,7 @@ TEST_F(TestNodeParameters, add_remove_on_set_parameters_callback) {
 TEST_F(TestNodeParameters, add_remove_pre_set_parameters_callback) {
   //  `add_pre_set_parameters_callback` used to modify parameters list.
   auto modify_parameter_list_callback = [](std::vector<rclcpp::Parameter> & parameters) {
-      for (const auto & param: parameters) {
+      for (const auto & param : parameters) {
         if (param.get_name() == "param1") {
           parameters.emplace_back("param2", 2.0);
         }
@@ -249,7 +249,8 @@ TEST_F(TestNodeParameters, add_remove_pre_set_parameters_callback) {
     node_parameters->remove_pre_set_parameters_callback(handle1.get()),
     std::runtime_error("Pre set parameter callback doesn't exist"));
 
-  // verify that the result should be unsuccessful if the pre set callback makes parameter list empty
+  // verify that the result should be unsuccessful if the pre set callback makes
+  // parameter list empty
   auto handle2 =
     node_parameters->add_pre_set_parameters_callback(empty_parameter_list_callback);
   auto results = node_parameters->set_parameters(parameters_to_be_set);
@@ -289,7 +290,7 @@ TEST_F(TestNodeParameters, add_remove_post_set_parameters_callback) {
 
   // register a callback for successful set parameter and change the internally tracked variables.
   auto callback = [&](const std::vector<rclcpp::Parameter> & parameters) {
-      for (const auto & param: parameters) {
+      for (const auto & param : parameters) {
         if (param.get_name() == "param1") {
           variable_tracking_param1_internally = param.get_value<double>();
         } else if (param.get_name() == "param2") {
