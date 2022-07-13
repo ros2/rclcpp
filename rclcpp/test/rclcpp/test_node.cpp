@@ -1459,22 +1459,23 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
 
     // add undeclared parameter with name2 to modified list of parameters
     auto pre_set_parameters =
-        [&](std::vector<rclcpp::Parameter> &parameters) {
-        for(const auto&param: parameters){
-          if(param.get_name() == name1){
+      [&](std::vector<rclcpp::Parameter> & parameters) {
+        for (const auto & param: parameters) {
+          if (param.get_name() == name1) {
             parameters.emplace_back(rclcpp::Parameter(name2, 2));
           }
         }
-    };
+      };
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
-    EXPECT_THROW(node->set_parameter(rclcpp::Parameter(name1, 4)),
-                 rclcpp::exceptions::ParameterNotDeclaredException);
+    EXPECT_THROW(
+      node->set_parameter(rclcpp::Parameter(name1, 4)),
+      rclcpp::exceptions::ParameterNotDeclaredException);
     EXPECT_TRUE(node->has_parameter(name1));
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), default_value);
     EXPECT_FALSE(node->has_parameter(name2));
     RCPPUTILS_SCOPE_EXIT(
-        {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
+      {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
 }
 
@@ -1484,7 +1485,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
   {
     {"parameter_with_override", 30},
   });
-  no.allow_undeclared_parameters(true);
+  no.allow_undeclared_parameters(1true);
   auto node = std::make_shared<rclcpp::Node>("test_set_parameter_node"_unq, no);
   {
     // overrides are ignored when not declaring a parameter
@@ -1528,13 +1529,13 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
 
     // add undeclared parameter with name2 to modified list of parameters
     auto pre_set_parameters =
-        [&](std::vector<rclcpp::Parameter> &parameters) {
-          for(const auto&param: parameters){
-            if(param.get_name() == name1){
-              parameters.emplace_back(rclcpp::Parameter(name2, 2));
-            }
+      [&](std::vector<rclcpp::Parameter> & parameters) {
+        for (const auto & param: parameters) {
+          if (param.get_name() == name1) {
+            parameters.emplace_back(rclcpp::Parameter(name2, 2));
           }
-        };
+        }
+      };
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
     auto result = node->set_parameter(rclcpp::Parameter(name1, 1));
@@ -1544,7 +1545,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 1);
     EXPECT_EQ(node->get_parameter(name2).get_value<int>(), 2);
     RCPPUTILS_SCOPE_EXIT(
-        {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
+      {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
 }
 
@@ -1712,17 +1713,18 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     // add undeclared parameter with name3 to modified list of parameters
     // conditioned of name2 param
     auto pre_set_parameters =
-        [&](std::vector<rclcpp::Parameter> &parameters) {
-          for(const auto&param: parameters){
-            if(param.get_name() == name2){
-              parameters.emplace_back(rclcpp::Parameter(name3, 3));
-            }
+      [&](std::vector<rclcpp::Parameter> & parameters) {
+        for (const auto & param: parameters) {
+          if (param.get_name() == name2) {
+            parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
-        };
+        }
+      };
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
-    EXPECT_THROW(node->set_parameters({rclcpp::Parameter(name1, 1), rclcpp::Parameter(name2, 2)}),
-                 rclcpp::exceptions::ParameterNotDeclaredException);
+    EXPECT_THROW(
+      node->set_parameters({rclcpp::Parameter(name1, 1), rclcpp::Parameter(name2, 2)}),
+      rclcpp::exceptions::ParameterNotDeclaredException);
     EXPECT_TRUE(node->has_parameter(name1));
     EXPECT_TRUE(node->has_parameter(name2));
     EXPECT_FALSE(node->has_parameter(name3));
@@ -1732,7 +1734,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 1);
     EXPECT_EQ(node->get_parameter(name2).get_value<int>(), default_value);
     RCPPUTILS_SCOPE_EXIT(
-        {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
+      {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
 }
 
@@ -1801,13 +1803,13 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_allowed) {
     // add undeclared parameter with name3 to modified list of parameters
     // conditioned of name2 param
     auto pre_set_parameters =
-        [&](std::vector<rclcpp::Parameter> &parameters) {
-          for(const auto&param: parameters){
-            if(param.get_name() == name2){
-              parameters.emplace_back(rclcpp::Parameter(name3, 3));
-            }
+      [&](std::vector<rclcpp::Parameter> & parameters) {
+        for (const auto & param: parameters) {
+          if (param.get_name() == name2) {
+            parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
-        };
+        }
+      };
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
     auto results = node->set_parameters({rclcpp::Parameter(name1, 1), rclcpp::Parameter(name2, 2)});
@@ -1822,7 +1824,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_allowed) {
     EXPECT_EQ(node->get_parameter(name3).get_value<int>(), 3);
 
     RCPPUTILS_SCOPE_EXIT(
-        {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
+      {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
 }
 
@@ -1984,18 +1986,20 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     // add undeclared parameter with name3 to modified list of parameters
     // conditioned of name2 param
     auto pre_set_parameters =
-        [&](std::vector<rclcpp::Parameter> &parameters) {
-          for(const auto&param: parameters){
-            if(param.get_name() == name2){
-              parameters.emplace_back(rclcpp::Parameter(name3, 3));
-            }
+      [&](std::vector<rclcpp::Parameter> & parameters) {
+        for (const auto & param: parameters) {
+          if (param.get_name() == name2) {
+            parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
-        };
+        }
+      };
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
-    EXPECT_THROW(node->set_parameters_atomically({rclcpp::Parameter(name1, 1),
-                                                  rclcpp::Parameter(name2, 2)}),
-                 rclcpp::exceptions::ParameterNotDeclaredException);
+    EXPECT_THROW(
+      node->set_parameters_atomically(
+        {rclcpp::Parameter(name1, 1),
+          rclcpp::Parameter(name2, 2)}),
+      rclcpp::exceptions::ParameterNotDeclaredException);
     EXPECT_TRUE(node->has_parameter(name1));
     EXPECT_TRUE(node->has_parameter(name2));
     EXPECT_FALSE(node->has_parameter(name3));
@@ -2004,7 +2008,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), default_value);
     EXPECT_EQ(node->get_parameter(name2).get_value<int>(), default_value);
     RCPPUTILS_SCOPE_EXIT(
-        {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
+      {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
 }
 
@@ -2110,17 +2114,18 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     // add undeclared parameter with name3 to modified list of parameters
     // conditioned of name2 param
     auto pre_set_parameters =
-        [&](std::vector<rclcpp::Parameter> &parameters) {
-          for(const auto&param: parameters){
-            if(param.get_name() == name2){
-              parameters.emplace_back(rclcpp::Parameter(name3, 3));
-            }
+      [&](std::vector<rclcpp::Parameter> & parameters) {
+        for (const auto & param: parameters) {
+          if (param.get_name() == name2) {
+            parameters.emplace_back(rclcpp::Parameter(name3, 3));
           }
-        };
+        }
+      };
 
     auto handler = node->add_pre_set_parameters_callback(pre_set_parameters);
-    auto result = node->set_parameters_atomically({rclcpp::Parameter(name1, 1),
-                                                   rclcpp::Parameter(name2, 2)});
+    auto result = node->set_parameters_atomically(
+      {rclcpp::Parameter(name1, 1),
+        rclcpp::Parameter(name2, 2)});
     EXPECT_TRUE(result.successful);
     EXPECT_TRUE(node->has_parameter(name1));
     EXPECT_TRUE(node->has_parameter(name2));
@@ -2130,7 +2135,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     EXPECT_EQ(node->get_parameter(name3).get_value<int>(), 3);
 
     RCPPUTILS_SCOPE_EXIT(
-        {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
+      {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
 }
 
