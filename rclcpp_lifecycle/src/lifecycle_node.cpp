@@ -283,10 +283,29 @@ LifecycleNode::list_parameters(
   return node_parameters_->list_parameters(prefixes, depth);
 }
 
+rclcpp::Node::PreSetParametersCallbackHandle::SharedPtr
+LifecycleNode::add_pre_set_parameters_callback(PreSetParametersCallbackType callback)
+{
+  return node_parameters_->add_pre_set_parameters_callback(callback);
+}
+
 rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
-LifecycleNode::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
+LifecycleNode::add_on_set_parameters_callback(OnSetParametersCallbackType callback)
 {
   return node_parameters_->add_on_set_parameters_callback(callback);
+}
+
+rclcpp::Node::PostSetParametersCallbackHandle::SharedPtr
+LifecycleNode::add_post_set_parameters_callback(PostSetParametersCallbackType callback)
+{
+  return node_parameters_->add_post_set_parameters_callback(callback);
+}
+
+void
+LifecycleNode::remove_pre_set_parameters_callback(
+  const PreSetParametersCallbackHandle * const callback)
+{
+  node_parameters_->remove_pre_set_parameters_callback(callback);
 }
 
 void
@@ -294,6 +313,13 @@ LifecycleNode::remove_on_set_parameters_callback(
   const OnSetParametersCallbackHandle * const callback)
 {
   node_parameters_->remove_on_set_parameters_callback(callback);
+}
+
+void
+LifecycleNode::remove_post_set_parameters_callback(
+  const PostSetParametersCallbackHandle * const callback)
+{
+  node_parameters_->remove_post_set_parameters_callback(callback);
 }
 
 std::vector<std::string>

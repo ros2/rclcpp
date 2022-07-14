@@ -538,10 +538,32 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  using PreSetParametersCallbackHandle =
+    rclcpp::node_interfaces::PreSetParametersCallbackHandle;
+  using PreSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::PreSetParametersCallbackType;
+
   using OnSetParametersCallbackHandle =
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
-  using OnParametersSetCallbackType =
-    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+  using OnSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
+  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
+    OnSetParametersCallbackType;
+
+  using PostSetParametersCallbackHandle =
+    rclcpp::node_interfaces::PostSetParametersCallbackHandle;
+  using PostSetParametersCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::PostSetParametersCallbackType;
+
+  /// Add a callback that gets triggered before parameters are validated.
+  /**
+   * \sa rclcpp::Node::add_pre_set_parameters_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  RCUTILS_WARN_UNUSED
+  rclcpp_lifecycle::LifecycleNode::PreSetParametersCallbackHandle::SharedPtr
+  add_pre_set_parameters_callback(
+    rclcpp_lifecycle::LifecycleNode::PreSetParametersCallbackType callback);
 
   /// Add a callback for when parameters are being set.
   /**
@@ -551,7 +573,26 @@ public:
   RCUTILS_WARN_UNUSED
   rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(
-    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);
+    rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackType callback);
+
+  /// Add a callback that gets triggered after parameters are set successfully.
+  /**
+   * \sa rclcpp::Node::add_post_set_parameters_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  RCUTILS_WARN_UNUSED
+  rclcpp_lifecycle::LifecycleNode::PostSetParametersCallbackHandle::SharedPtr
+  add_post_set_parameters_callback(
+    rclcpp_lifecycle::LifecycleNode::PostSetParametersCallbackType callback);
+
+  /// Remove a callback registered with `add_pre_set_parameters_callback`.
+  /**
+   * \sa rclcpp::Node::remove_pre_set_parameters_callback
+  */
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  remove_pre_set_parameters_callback(
+    const rclcpp_lifecycle::LifecycleNode::PreSetParametersCallbackHandle * const handler);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
@@ -561,6 +602,15 @@ public:
   void
   remove_on_set_parameters_callback(
     const rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle * const handler);
+
+  /// Remove a callback registered with `add_post_set_parameters_callback`.
+  /**
+   * \sa rclcpp::Node::remove_post_set_parameters_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  remove_post_set_parameters_callback(
+    const rclcpp_lifecycle::LifecycleNode::PostSetParametersCallbackHandle * const handler);
 
   /// Return a vector of existing node names (string).
   /**

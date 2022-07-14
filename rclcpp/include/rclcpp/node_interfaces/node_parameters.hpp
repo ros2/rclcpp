@@ -183,18 +183,41 @@ public:
 
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
+  PreSetParametersCallbackHandle::SharedPtr
+  add_pre_set_parameters_callback(PreSetParametersCallbackType callback) override;
+
+  RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
+  add_on_set_parameters_callback(OnSetParametersCallbackType callback) override;
+
+  RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
+  PostSetParametersCallbackHandle::SharedPtr
+  add_post_set_parameters_callback(PostSetParametersCallbackType callback) override;
 
   RCLCPP_PUBLIC
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) override;
 
   RCLCPP_PUBLIC
+  void
+  remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler)
+  override;
+
+  RCLCPP_PUBLIC
+  void
+  remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler) override;
+
+  RCLCPP_PUBLIC
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const override;
 
-  using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+  using PreSetCallbacksHandleContainer = std::list<PreSetParametersCallbackHandle::WeakPtr>;
+  using OnSetCallbacksHandleContainer = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+  using PostSetCallbacksHandleContainer = std::list<PostSetParametersCallbackHandle::WeakPtr>;
+  using CallbacksContainerType [[deprecated("use OnSetCallbacksHandleContainer instead")]] =
+    OnSetCallbacksHandleContainer;
 
 protected:
   RCLCPP_PUBLIC
@@ -211,7 +234,11 @@ private:
   // declare_parameter, etc).  In those cases, this will be set to false.
   bool parameter_modification_enabled_{true};
 
-  CallbacksContainerType on_parameters_set_callback_container_;
+  PreSetCallbacksHandleContainer pre_set_parameters_callback_container_;
+
+  OnSetCallbacksHandleContainer on_set_parameters_callback_container_;
+
+  PostSetCallbacksHandleContainer post_set_parameters_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 
