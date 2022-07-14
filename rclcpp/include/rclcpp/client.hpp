@@ -578,7 +578,7 @@ public:
 
   /// Send a request to the service server.
   /**
-   * This method returns a `FutureAndRequestId` instance
+   * This method returns a `SharedFutureAndRequestId` instance
    * that can be passed to Executor::spin_until_future_complete() to
    * wait until it has been completed.
    *
@@ -602,17 +602,17 @@ public:
    * ```
    *
    * \param[in] request request to be send.
-   * \return a FutureAndRequestId instance.
+   * \return a SharedFutureAndRequestId instance.
    */
-  FutureAndRequestId
+  SharedFutureAndRequestId
   async_send_request(SharedRequest request)
   {
     Promise promise;
-    auto future = promise.get_future();
+    auto future = promise.get_future().share();
     auto req_id = async_send_request_impl(
       *request,
       std::move(promise));
-    return FutureAndRequestId(std::move(future), req_id);
+    return SharedFutureAndRequestId(std::move(future), req_id);
   }
 
   /// Send a request to the service server and schedule a callback in the executor.
