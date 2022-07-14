@@ -16,14 +16,15 @@
 #define RCLCPP__CLIENT_HPP_
 
 #include <atomic>
+#include <functional>
 #include <future>
-#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <variant>  // NOLINT
 #include <vector>

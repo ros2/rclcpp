@@ -23,6 +23,7 @@
 #include "rcl_action/action_client.h"
 #include "rcl_action/wait.h"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 
 #include "rclcpp_action/client.hpp"
@@ -37,12 +38,14 @@ public:
   ClientBaseImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
   : node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
+    node_clock_(std::move(node_clock)),
     logger(node_logging->get_logger().get_child("rclcpp_action")),
     random_bytes_generator(std::random_device{}())
   {
@@ -68,8 +71,8 @@ public:
       });
     *client_handle = rcl_action_get_zero_initialized_client();
     rcl_ret_t ret = rcl_action_client_init(
-      client_handle.get(), node_handle.get(), type_support,
-      action_name.c_str(), &client_options);
+      client_handle.get(), node_handle.get(), node_clock_->get_clock()->get_clock_handle(),
+      type_support, action_name.c_str(), &client_options);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "could not initialize rcl action client");
@@ -105,6 +108,7 @@ public:
   // node_handle must be destroyed after client_handle to prevent memory leak
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
   std::shared_ptr<rcl_action_client_t> client_handle{nullptr};
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_{nullptr};
   rclcpp::Logger logger;
 
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
@@ -125,12 +129,13 @@ public:
 ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const std::string & action_name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
 : pimpl_(new ClientBaseImpl(
-      node_base, node_graph, node_logging, action_name, type_support, client_options))
+      node_base, node_graph, node_clock, node_logging, action_name, type_support, client_options))
 {
 }
 

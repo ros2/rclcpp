@@ -45,12 +45,15 @@ public:
   ParameterService(
     const std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
     const std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+    const std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
     rclcpp::node_interfaces::NodeParametersInterface * node_params,
     const rmw_qos_profile_t & qos_profile)
   : ParameterService(
       node_base,
       node_services,
+      node_clock,
       node_params,
+      false,
       rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)))
   {}
 
@@ -58,7 +61,9 @@ public:
   ParameterService(
     const std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
     const std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+    const std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
     rclcpp::node_interfaces::NodeParametersInterface * node_params,
+    bool enable_service_introspection = false,
     const rclcpp::QoS & qos_profile = rclcpp::ParametersQoS());
 
 private:

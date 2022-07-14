@@ -44,6 +44,7 @@ typename Client<ActionT>::SharedPtr
 create_client(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
   const std::string & name,
@@ -83,6 +84,7 @@ create_client(
     new Client<ActionT>(
       node_base_interface,
       node_graph_interface,
+      node_clock_interface,
       node_logging_interface,
       name,
       options),
@@ -111,6 +113,7 @@ create_client(
   return rclcpp_action::create_client<ActionT>(
     node->get_node_base_interface(),
     node->get_node_graph_interface(),
+    node->get_node_clock_interface(),
     node->get_node_logging_interface(),
     node->get_node_waitables_interface(),
     name,

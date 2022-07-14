@@ -32,6 +32,7 @@
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
+#include "rclcpp/node_interfaces/node_service_introspection.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
@@ -193,7 +194,8 @@ Node::Node(
       get_parameter_events_qos(*node_base_, options),
       options.parameter_event_publisher_options(),
       options.allow_undeclared_parameters(),
-      options.automatically_declare_parameters_from_overrides()
+      options.automatically_declare_parameters_from_overrides(),
+      options.enable_service_introspection()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
       node_base_,
@@ -207,6 +209,9 @@ Node::Node(
       options.use_clock_thread()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
+  node_service_introspection_(new rclcpp::node_interfaces::NodeServiceIntrospection(
+      node_base_,
+      node_parameters_)),
   node_options_(options),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
@@ -591,6 +596,12 @@ rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
 Node::get_node_services_interface()
 {
   return node_services_;
+}
+
+rclcpp::node_interfaces::NodeServiceIntrospectionInterface::SharedPtr
+Node::get_node_service_introspection_interface()
+{
+  return node_service_introspection_;
 }
 
 rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
