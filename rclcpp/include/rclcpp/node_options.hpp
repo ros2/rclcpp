@@ -44,6 +44,7 @@ public:
    *   - use_global_arguments = true
    *   - use_intra_process_comms = false
    *   - enable_topic_statistics = false
+   *   - enable_service_introspection = false
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
    *   - clock_qos = rclcpp::ClockQoS()
@@ -198,6 +199,16 @@ public:
   RCLCPP_PUBLIC
   bool
   enable_topic_statistics() const;
+
+  /// Return the enable_service_introspection flag
+  RCLCPP_PUBLIC
+  bool
+  enable_service_introspection() const;
+
+  /// Set the enable_service_introspection flag
+  RCLCPP_PUBLIC
+  NodeOptions &
+  enable_service_introspection(bool enable_service_introspection);
 
   /// Set the enable_topic_statistics flag, return this for parameter idiom.
   /**
@@ -395,6 +406,8 @@ private:
   bool use_intra_process_comms_ {false};
 
   bool enable_topic_statistics_ {false};
+
+  bool enable_service_introspection_ {false};
 
   bool start_parameter_services_ {true};
 

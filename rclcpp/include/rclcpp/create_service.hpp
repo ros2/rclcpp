@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/rmw.h"
@@ -27,23 +28,31 @@
 namespace rclcpp
 {
 
-/// Create a service with a given type.
+
+/// Create a service with a given type
 /// \internal
 template<typename ServiceT, typename CallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr
 create_service(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name,
-  CallbackT && callback,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
+    std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
+    std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+    std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
+    const std::string & service_name,
+    CallbackT && callback,
+    const rmw_qos_profile_t & qos_profile,
+    rclcpp::CallbackGroup::SharedPtr group,
+    bool enable_service_introspection
+    )
 {
   rclcpp::AnyServiceCallback<ServiceT> any_service_callback;
   any_service_callback.set(std::forward<CallbackT>(callback));
 
   rcl_service_options_t service_options = rcl_service_get_default_options();
   service_options.qos = qos_profile;
+  if (enable_service_introspection) {
+    service_options.enable_service_introspection = enable_service_introspection;
+    service_options.clock = node_clock->get_clock()->get_clock_handle();
+  }
 
   auto serv = Service<ServiceT>::make_shared(
     node_base->get_shared_rcl_node_handle(),
@@ -52,6 +61,7 @@ create_service(
   node_services->add_service(serv_base_ptr, group);
   return serv;
 }
+
 
 }  // namespace rclcpp
 

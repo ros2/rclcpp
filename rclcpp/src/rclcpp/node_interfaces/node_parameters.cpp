@@ -76,7 +76,8 @@ NodeParameters::NodeParameters(
   const rclcpp::QoS & parameter_event_qos,
   const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
   bool allow_undeclared_parameters,
-  bool automatically_declare_parameters_from_overrides)
+  bool automatically_declare_parameters_from_overrides,
+  bool enable_service_introspection_for_parameter_service)
 : allow_undeclared_(allow_undeclared_parameters),
   events_publisher_(nullptr),
   node_logging_(node_logging),
@@ -91,7 +92,8 @@ NodeParameters::NodeParameters(
   publisher_options.allocator = std::make_shared<AllocatorT>();
 
   if (start_parameter_services) {
-    parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);
+    parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, node_clock,
+        this, enable_service_introspection_for_parameter_service);
   }
 
   if (start_parameter_event_publisher) {

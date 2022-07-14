@@ -107,9 +107,11 @@ TEST_F(TestClient, construction_with_free_function) {
       node->get_node_base_interface(),
       node->get_node_graph_interface(),
       node->get_node_services_interface(),
+      node->get_node_clock_interface(),
       "service",
       rmw_qos_profile_services_default,
-      nullptr);
+      nullptr,
+      true);
   }
   {
     ASSERT_THROW(
@@ -118,9 +120,11 @@ TEST_F(TestClient, construction_with_free_function) {
         node->get_node_base_interface(),
         node->get_node_graph_interface(),
         node->get_node_services_interface(),
+        node->get_node_clock_interface(),
         "invalid_?service",
         rmw_qos_profile_services_default,
-        nullptr);
+        nullptr,
+        true);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
 }

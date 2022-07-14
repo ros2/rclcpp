@@ -20,21 +20,25 @@
 #include <vector>
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/create_service.hpp"
 
 #include "./parameter_service_names.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 
 using rclcpp::ParameterService;
 
 ParameterService::ParameterService(
   const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base,
   const std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services,
+  const std::shared_ptr<rclcpp::node_interfaces::NodeClockInterface> node_clock,
   rclcpp::node_interfaces::NodeParametersInterface * node_params,
+  bool enable_service_introspection,
   const rmw_qos_profile_t & qos_profile)
 {
   const std::string node_name = node_base->get_name();
 
   get_parameters_service_ = create_service<rcl_interfaces::srv::GetParameters>(
-    node_base, node_services,
+    node_base, node_services, node_clock,
     node_name + "/" + parameter_service_names::get_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
@@ -50,10 +54,10 @@ ParameterService::ParameterService(
         RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
       }
     },
-    qos_profile, nullptr);
+    qos_profile, nullptr, enable_service_introspection);
 
   get_parameter_types_service_ = create_service<rcl_interfaces::srv::GetParameterTypes>(
-    node_base, node_services,
+    node_base, node_services, node_clock,
     node_name + "/" + parameter_service_names::get_parameter_types,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
@@ -71,10 +75,10 @@ ParameterService::ParameterService(
         RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameter types: %s", ex.what());
       }
     },
-    qos_profile, nullptr);
+    qos_profile, nullptr, enable_service_introspection);
 
   set_parameters_service_ = create_service<rcl_interfaces::srv::SetParameters>(
-    node_base, node_services,
+    node_base, node_services, node_clock,
     node_name + "/" + parameter_service_names::set_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
@@ -96,10 +100,10 @@ ParameterService::ParameterService(
         response->results.push_back(result);
       }
     },
-    qos_profile, nullptr);
+    qos_profile, nullptr, enable_service_introspection);
 
   set_parameters_atomically_service_ = create_service<rcl_interfaces::srv::SetParametersAtomically>(
-    node_base, node_services,
+    node_base, node_services, node_clock,
     node_name + "/" + parameter_service_names::set_parameters_atomically,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
@@ -123,10 +127,10 @@ ParameterService::ParameterService(
         response->result.reason = "One or more parameters were not declared before setting";
       }
     },
-    qos_profile, nullptr);
+    qos_profile, nullptr, enable_service_introspection);
 
   describe_parameters_service_ = create_service<rcl_interfaces::srv::DescribeParameters>(
-    node_base, node_services,
+    node_base, node_services, node_clock,
     node_name + "/" + parameter_service_names::describe_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
@@ -140,10 +144,10 @@ ParameterService::ParameterService(
         RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to describe parameters: %s", ex.what());
       }
     },
-    qos_profile, nullptr);
+    qos_profile, nullptr, enable_service_introspection);
 
   list_parameters_service_ = create_service<rcl_interfaces::srv::ListParameters>(
-    node_base, node_services,
+    node_base, node_services, node_clock,
     node_name + "/" + parameter_service_names::list_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
@@ -153,5 +157,5 @@ ParameterService::ParameterService(
       auto result = node_params->list_parameters(request->prefixes, request->depth);
       response->result = result;
     },
-    qos_profile, nullptr);
+    qos_profile, nullptr, enable_service_introspection);
 }

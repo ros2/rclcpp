@@ -43,7 +43,9 @@ public:
   explicit ParameterService(
     const std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
     const std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+    const std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
     rclcpp::node_interfaces::NodeParametersInterface * node_params,
+    bool enable_service_introspection = false,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
 private:

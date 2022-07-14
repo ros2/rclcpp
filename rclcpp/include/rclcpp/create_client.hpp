@@ -5,7 +5,6 @@
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
-//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +14,12 @@
 #ifndef RCLCPP__CREATE_CLIENT_HPP_
 #define RCLCPP__CREATE_CLIENT_HPP_
 
+#include <iostream>
 #include <memory>
 #include <string>
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rmw/rmw.h"
 
@@ -33,12 +34,19 @@ create_client(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+  std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  bool enable_service_introspection)
 {
+
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
+  if (enable_service_introspection) {
+    options.enable_service_introspection = enable_service_introspection;
+    options.clock = node_clock->get_clock()->get_clock_handle();
+  }
 
   auto cli = rclcpp::Client<ServiceT>::make_shared(
     node_base.get(),

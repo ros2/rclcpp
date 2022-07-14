@@ -26,6 +26,7 @@
 #include "rclcpp/detail/qos_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
+#include "rclcpp/introspection.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_clock.hpp"
@@ -192,7 +193,8 @@ Node::Node(
       get_parameter_events_qos(*node_base_, options),
       options.parameter_event_publisher_options(),
       options.allow_undeclared_parameters(),
-      options.automatically_declare_parameters_from_overrides()
+      options.automatically_declare_parameters_from_overrides(),
+      options.enable_service_introspection()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
       node_base_,
@@ -206,6 +208,10 @@ Node::Node(
       options.use_clock_thread()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
+  introspection_utils_(new rclcpp::IntrospectionUtils(
+        node_base_,
+        node_parameters_
+        )),
   node_options_(options),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))

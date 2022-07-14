@@ -127,13 +127,19 @@ Node::create_client(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  return rclcpp::create_client<ServiceT>(
+  typename Client<ServiceT>::SharedPtr cli = rclcpp::create_client<ServiceT>(
     node_base_,
     node_graph_,
     node_services_,
+    node_clock_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     qos_profile,
-    group);
+    group,
+    node_options_.enable_service_introspection()
+    );
+
+  introspection_utils_->register_client(cli);
+  return cli;
 }
 
 template<typename ServiceT, typename CallbackT>
@@ -144,13 +150,18 @@ Node::create_service(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  return rclcpp::create_service<ServiceT, CallbackT>(
+  typename rclcpp::Service<ServiceT>::SharedPtr serv = rclcpp::create_service<ServiceT, CallbackT>(
     node_base_,
     node_services_,
+    node_clock_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
     qos_profile,
-    group);
+    group,
+    node_options_.enable_service_introspection()
+    );
+  introspection_utils_->register_service(serv);
+  return serv;
 }
 
 template<typename AllocatorT>
