@@ -348,7 +348,7 @@ public:
    * If a callback was registered previously with `add_post_set_parameters_callback`,
    * it will be called after setting the parameter successfully for the node.
    *
-   * This method will `not` result in any callbacks registered with
+   * This method will _not_ result in any callbacks registered with
    * `add_pre_set_parameters_callback` to be called.
    *
    * The returned reference will remain valid until the parameter is
@@ -480,7 +480,7 @@ public:
    * it will be called after setting the parameters successfully for the node,
    * once for each parameter.
    *
-   * This method will `not` result in any callbacks registered with
+   * This method will _not_ result in any callbacks registered with
    * `add_pre_set_parameters_callback` to be called.
    *
    * \param[in] namespace_ The namespace in which to declare the parameters.
@@ -520,7 +520,7 @@ public:
 
   /// Undeclare a previously declared parameter.
   /**
-   * This method will not cause a callback registered with any of the
+   * This method will _not_ cause a callback registered with any of the
    * `add_pre_set_parameters_callback`, `add_on_set_parameters_callback` and
    * `add_post_set_parameters_callback` to be called.
    *

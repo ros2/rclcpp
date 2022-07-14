@@ -2,7 +2,11 @@
 
 ## Introduction:
 
-The original requirement came in **gazeb_ros_pkgs** for setting individual wheel slip parameters based on global wheel slip value [link to original issue](https://github.com/ros-simulation/gazebo_ros_pkgs/pull/1365). The main requirement is to set one or more parameters after another parameter is set successfully. Additionally, it would be nice if users could be notified locally (via a callback) when parameters have been set successfully (i.e. post validation).
+The original requirement came in **gazebo_ros_pkgs** for setting individual wheel slip parameters based on global wheel slip value [link to original issue](https://github.com/ros-simulation/gazebo_ros_pkgs/pull/1365). 
+
+The main requirement is to set one or more parameters after another parameter is set successfully. 
+
+Additionally, it would be nice if users could be notified locally (via a callback) when parameters have been set successfully (i.e. post validation).
 
 Related discussion can be found in [#609](https://github.com/ros2/rclcpp/issues/609) [#1789](https://github.com/ros2/rclcpp/pull/1789)
 
@@ -21,5 +25,5 @@ To workaround these issues, we propose adding a "pre set" callback type that can
 
 ## Alternatives
 
-* Users could call `set_parameter` while processing a message from the `/parameter_events` topic, However, there is extra overhead in having to create subscription (as noted earlier).
+* Users could call `set_parameter` while processing a message from the `/parameter_events` topic, however, there is extra overhead in having to create subscription (as noted earlier).
 * Users could call `set_parameter` inside the "on set" parameters callback, however it is not well-defined how side-effects should handle cases where parameter validation fails.
