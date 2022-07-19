@@ -54,18 +54,6 @@ class IntrospectionUtils
 
     
   private:
-    // TODO(ihasdapie): Should we define these parameter names in rcl and have rclcpp, rclpy use that?
-    static constexpr const char * publish_service_events_param_name_ = "publish_service_events";
-    static constexpr const char * publish_client_events_param_name_ = "publish_client_events";
-    static constexpr const char * enable_service_event_content_param_name_ = "service_event_content";
-    static constexpr const char * enable_client_event_content_param_name_ = "client_event_content";
-
-    // NOTE: I think we can discard the parameter values
-    /* rclcpp::ParameterValue publish_service_events_param;
-    rclcpp::ParameterValue publish_client_events_param;
-    rclcpp::ParameterValue enable_service_content_param;
-    rclcpp::ParameterValue enable_client_content_param; */
-
     std::vector<rcl_service_t *> services;
     std::vector<rcl_client_t *> clients;
     rcl_node_t * rcl_node_ptr_;
