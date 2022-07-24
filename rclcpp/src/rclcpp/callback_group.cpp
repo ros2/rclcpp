@@ -14,20 +14,17 @@
 
 #include "rclcpp/callback_group.hpp"
 
-#include <memory>
-#include <vector>
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;
 
 CallbackGroup::CallbackGroup(
-  rclcpp::Context::SharedPtr context_ptr,
   CallbackGroupType group_type,
   bool automatically_add_to_executor_with_node)
 : type_(group_type), associated_with_executor_(false),
   can_be_taken_from_(true),
-  automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node),
-  notify_guard_condition_(rclcpp::GuardCondition(context_ptr))
+  automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node)
 {}
 
 
@@ -100,7 +97,17 @@ CallbackGroup::automatically_add_to_executor_with_node() const
   return automatically_add_to_executor_with_node_;
 }
 
-rclcpp::GuardCondition &
+std::shared_ptr<rclcpp::GuardCondition>
+CallbackGroup::create_notify_guard_condition(
+  const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> nodebase_ptr)
+{
+  notify_guard_condition_ =
+    std::make_unique<rclcpp::GuardCondition>(nodebase_ptr->get_context());
+
+  return notify_guard_condition_;
+}
+
+std::weak_ptr<rclcpp::GuardCondition>
 CallbackGroup::get_notify_guard_condition()
 {
   return notify_guard_condition_;

@@ -73,7 +73,9 @@ NodeTopics::add_publisher(
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
-    callback_group->get_notify_guard_condition().trigger();
+    if (auto callback_group_gc = callback_group->get_notify_guard_condition().lock()) {
+      callback_group_gc->trigger();
+    }
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on publisher creation: ") + ex.what());
@@ -122,7 +124,9 @@ NodeTopics::add_subscription(
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
-    callback_group->get_notify_guard_condition().trigger();
+    if (auto callback_group_gc = callback_group->get_notify_guard_condition().lock()) {
+      callback_group_gc->trigger();
+    }
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on subscription creation: ") + ex.what());

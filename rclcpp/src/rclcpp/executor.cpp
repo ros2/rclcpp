@@ -215,9 +215,11 @@ Executor::add_callback_group_to_map(
   // Also add to the map that contains all callback groups
   weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
 
-  weak_groups_to_guard_conditions_[weak_group_ptr] = &group_ptr->get_notify_guard_condition();
+  auto callback_group_guard_condition =
+    group_ptr->create_notify_guard_condition(node_ptr);
+  weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition.get();
   // Add the callback_group's notify condition to the guard condition handles
-  memory_strategy_->add_guard_condition(group_ptr->get_notify_guard_condition());
+  memory_strategy_->add_guard_condition(*callback_group_guard_condition);
   if (notify) {
     // Interrupt waiting to handle new node
     try {
@@ -307,7 +309,9 @@ Executor::remove_callback_group_from_map(
                   "Failed to trigger guard condition on callback group remove: ") + ex.what());
       }
     }
-    memory_strategy_->remove_guard_condition(&group_ptr->get_notify_guard_condition());
+    if (auto gc = group_ptr->get_notify_guard_condition().lock()) {
+      memory_strategy_->remove_guard_condition(gc.get());
+    }
   }
 }
 

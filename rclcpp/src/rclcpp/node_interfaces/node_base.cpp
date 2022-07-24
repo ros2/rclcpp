@@ -150,9 +150,10 @@ NodeBase::~NodeBase()
 
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   for (auto & weak_gc : this->callback_groups_) {
-    auto strong_gc = weak_gc.lock();
-    if (strong_gc) {
-      strong_gc->get_notify_guard_condition().trigger();
+    if (auto strong_gc = weak_gc.lock()) {
+      if (auto callback_group_gc = strong_gc->get_notify_guard_condition().lock()) {
+        callback_group_gc->trigger();
+      }
     }
   }
 }
@@ -211,7 +212,6 @@ NodeBase::create_callback_group(
   bool automatically_add_to_executor_with_node)
 {
   auto group = std::make_shared<rclcpp::CallbackGroup>(
-    this->get_context(),
     group_type,
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);

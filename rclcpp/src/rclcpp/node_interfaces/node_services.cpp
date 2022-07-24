@@ -45,7 +45,9 @@ NodeServices::add_service(
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
-    group->get_notify_guard_condition().trigger();
+    if (auto callback_group_gc = group->get_notify_guard_condition().lock()) {
+      callback_group_gc->trigger();
+    }
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on service creation: ") + ex.what());
@@ -72,7 +74,9 @@ NodeServices::add_client(
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
-    group->get_notify_guard_condition().trigger();
+    if (auto callback_group_gc = group->get_notify_guard_condition().lock()) {
+      callback_group_gc->trigger();
+    }
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on client creation: ") + ex.what());
