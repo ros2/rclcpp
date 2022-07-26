@@ -16,6 +16,7 @@
 #define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
