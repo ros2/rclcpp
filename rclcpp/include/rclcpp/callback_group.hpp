@@ -16,12 +16,12 @@
 #define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
-#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
 #include "rclcpp/client.hpp"
+#include "rclcpp/context.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/service.hpp"
@@ -29,17 +29,6 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
-
-namespace rclcpp
-{
-namespace node_interfaces
-{
-
-/// forward declaration.
-class NodeBaseInterface;
-
-}
-}
 
 namespace rclcpp
 {
@@ -188,7 +177,7 @@ public:
   RCLCPP_PUBLIC
   std::shared_ptr<rclcpp::GuardCondition>
   create_notify_guard_condition(
-    const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> nodebase_ptr);
+    const rclcpp::Context::SharedPtr context_ptr);
 
   /// Return the notify guard condition created before.
   RCLCPP_PUBLIC

@@ -14,8 +14,6 @@
 
 #include "rclcpp/callback_group.hpp"
 
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
-
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;
 
@@ -99,10 +97,10 @@ CallbackGroup::automatically_add_to_executor_with_node() const
 
 std::shared_ptr<rclcpp::GuardCondition>
 CallbackGroup::create_notify_guard_condition(
-  const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> nodebase_ptr)
+  const rclcpp::Context::SharedPtr context_ptr)
 {
   notify_guard_condition_ =
-    std::make_unique<rclcpp::GuardCondition>(nodebase_ptr->get_context());
+    std::make_unique<rclcpp::GuardCondition>(context_ptr);
 
   return notify_guard_condition_;
 }
