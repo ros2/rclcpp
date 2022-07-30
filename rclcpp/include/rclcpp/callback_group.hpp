@@ -176,13 +176,17 @@ public:
 
   /// Create and return the notify guard condition.
   RCLCPP_PUBLIC
-  std::shared_ptr<rclcpp::GuardCondition>
-  create_notify_guard_condition(
-    const rclcpp::Context::SharedPtr context_ptr);
+  rclcpp::GuardCondition::SharedPtr
+  create_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr);
 
-  /// Return the notify guard condition created before.
+  /// Destroy the notify guard condition.
   RCLCPP_PUBLIC
-  std::weak_ptr<rclcpp::GuardCondition>
+  void
+  destroy_notify_guard_condition();
+
+  /// Return the notify guard condition.
+  RCLCPP_PUBLIC
+  rclcpp::GuardCondition::SharedPtr
   get_notify_guard_condition();
 
 protected:
@@ -229,6 +233,7 @@ protected:
   const bool automatically_add_to_executor_with_node_;
   // defer the creation of the guard condition
   std::shared_ptr<rclcpp::GuardCondition> notify_guard_condition_ = nullptr;
+  std::mutex notify_guard_condition_mutex_;
 
 private:
   template<typename TypeT, typename Function>
