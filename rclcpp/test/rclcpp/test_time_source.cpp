@@ -630,7 +630,8 @@ class SimClockPublisherNode : public rclcpp::Node
 {
 public:
   SimClockPublisherNode()
-  : rclcpp::Node("sim_clock_publisher_node")
+  : rclcpp::Node("sim_clock_publisher_node"),
+    pub_time_(0, 0)
   {
     // Create a clock publisher
     clock_pub_ = this->create_publisher<rosgraph_msgs::msg::Clock>(
@@ -645,10 +646,6 @@ public:
         &SimClockPublisherNode::timer_callback,
         this)
     );
-
-    // Init clock msg to zero
-    clock_msg_.clock.sec = 0;
-    clock_msg_.clock.nanosec = 0;
   }
 
   ~SimClockPublisherNode()
@@ -671,13 +668,15 @@ public:
 private:
   void timer_callback()
   {
-    // Increment clock msg and publish it
-    clock_msg_.clock.nanosec += 1000000;
+    // Increment the time, update the clock msg and publish it
+    pub_time_ += rclcpp::Duration(0, 1000000);
+    clock_msg_.clock = pub_time_;
     clock_pub_->publish(clock_msg_);
   }
 
   rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
   rclcpp::TimerBase::SharedPtr pub_timer_;
+  rclcpp::Time pub_time_;
   rosgraph_msgs::msg::Clock clock_msg_;
   std::thread node_thread_;
   rclcpp::executors::SingleThreadedExecutor node_executor;
