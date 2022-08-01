@@ -333,6 +333,11 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
+      // In this case, the message will be delivered via intra process and
+      // we should ignore this copy of the message.
+      return;
+    }
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
       // get current time before executing callback to
