@@ -23,6 +23,7 @@
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node_interfaces/get_node_base_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
