@@ -694,7 +694,7 @@ public:
     this->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
     // Create a 100ms timer
-    timer_ = this->create_wall_timer(
+    timer_ = this->create_timer(
       std::chrono::milliseconds(100),
       std::bind(
         &ClockThreadTestingNode::timer_callback,
