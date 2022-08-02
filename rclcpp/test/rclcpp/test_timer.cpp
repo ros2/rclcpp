@@ -51,38 +51,25 @@ protected:
 
     test_node = std::make_shared<rclcpp::Node>("test_timer_node");
 
-    auto timer_type = GetParam();
+    auto lambda_fun = [this]() -> void {
+        this->has_timer_run.store(true);
+
+        if (this->cancel_timer.load()) {
+          this->timer->cancel();
+        }
+        // prevent any tests running timer from blocking
+        this->executor->cancel();
+      };
+
+    // Store the timer type for use in TEST_P declarations.
+    timer_type = GetParam();
     switch (timer_type) {
       case TimerType::WALL_TIMER:
-        timer = test_node->create_wall_timer(
-          100ms,
-          [this]() -> void
-          {
-            this->has_timer_run.store(true);
-
-            if (this->cancel_timer.load()) {
-              this->timer->cancel();
-            }
-            // prevent any tests running timer from blocking
-            this->executor->cancel();
-          }
-        );
+        timer = test_node->create_wall_timer(100ms, lambda_fun);
         EXPECT_TRUE(timer->is_steady());
         break;
       case TimerType::GENERIC_TIMER:
-        timer = test_node->create_timer(
-          100ms,
-          [this]() -> void
-          {
-            this->has_timer_run.store(true);
-
-            if (this->cancel_timer.load()) {
-              this->timer->cancel();
-            }
-            // prevent any tests running timer from blocking
-            this->executor->cancel();
-          }
-        );
+        timer = test_node->create_timer(100ms, lambda_fun);
         EXPECT_FALSE(timer->is_steady());
         break;
     }
@@ -99,6 +86,7 @@ protected:
   }
 
   // set to true if the timer callback executed, false otherwise
+  TimerType timer_type;
   std::atomic<bool> has_timer_run;
   // flag used to cancel the timer in the timer callback. If true cancel the timer, otherwise
   // cancel the executor (preventing any tests from blocking)
@@ -227,11 +215,17 @@ TEST_P(TestTimer, test_bad_arguments) {
 
 TEST_P(TestTimer, callback_with_timer) {
   rclcpp::TimerBase * timer_ptr = nullptr;
-  timer = test_node->create_wall_timer(
-    std::chrono::milliseconds(1),
-    [&timer_ptr](rclcpp::TimerBase & timer) {
+  auto lambda_fun = [&timer_ptr](rclcpp::TimerBase & timer) {
       timer_ptr = &timer;
-    });
+    };
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      timer = test_node->create_wall_timer(1ms, lambda_fun);
+      break;
+    case TimerType::GENERIC_TIMER:
+      timer = test_node->create_timer(1ms, lambda_fun);
+      break;
+  }
   auto start = std::chrono::steady_clock::now();
   while (nullptr == timer_ptr &&
     (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
@@ -245,11 +239,17 @@ TEST_P(TestTimer, callback_with_timer) {
 
 TEST_P(TestTimer, callback_with_period_zero) {
   rclcpp::TimerBase * timer_ptr = nullptr;
-  timer = test_node->create_wall_timer(
-    std::chrono::milliseconds(0),
-    [&timer_ptr](rclcpp::TimerBase & timer) {
+  auto lambda_fun = [&timer_ptr](rclcpp::TimerBase & timer) {
       timer_ptr = &timer;
-    });
+    };
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      timer = test_node->create_wall_timer(0ms, lambda_fun);
+      break;
+    case TimerType::GENERIC_TIMER:
+      timer = test_node->create_timer(0ms, lambda_fun);
+      break;
+  }
   auto start = std::chrono::steady_clock::now();
   while (nullptr == timer_ptr &&
     (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
@@ -272,8 +272,16 @@ TEST_P(TestTimer, test_failures_with_exceptions)
     auto mock = mocking_utils::inject_on_return("lib:rclcpp", rcl_timer_fini, RCL_RET_ERROR);
     EXPECT_NO_THROW(
     {
-      timer_to_test_destructor =
-      test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
+      switch (timer_type) {
+        case TimerType::WALL_TIMER:
+          timer_to_test_destructor =
+          test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
+          break;
+        case TimerType::GENERIC_TIMER:
+          timer_to_test_destructor =
+          test_node->create_timer(std::chrono::milliseconds(0), [](void) {});
+          break;
+      }
       timer_to_test_destructor.reset();
     });
   }
