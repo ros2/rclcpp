@@ -35,7 +35,7 @@ AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
   const std::string & remote_node_name,
-  const rmw_qos_profile_t & qos_profile,
+  const rclcpp::QoS & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 : node_topics_interface_(node_topics_interface)
 {
@@ -46,7 +46,7 @@ AsyncParametersClient::AsyncParametersClient(
   }
 
   rcl_client_options_t options = rcl_client_get_default_options();
-  options.qos = qos_profile;
+  options.qos = qos_profile.get_rmw_qos_profile();
 
   using rclcpp::Client;
   using rclcpp::ClientBase;
