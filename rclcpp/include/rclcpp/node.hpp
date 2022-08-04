@@ -1039,6 +1039,9 @@ public:
    * rcl_interfaces::msg::SetParametersResult to indicate whether or not the
    * parameter should be set or not, and if not why.
    *
+   * The back returns a shared pointer to the callback handle.
+   * The callback is valid as long as the smart pointer is alive.
+   *
    * For an example callback:
    *
    * ```cpp
@@ -1106,6 +1109,9 @@ public:
   /**
    * The callback is called when any of the `set_parameter*` or `declare_parameter*`
    * methods are successful.
+   *
+   * The back returns a shared pointer to the callback handle.
+   * The callback is valid as long as the smart pointer is alive.
    *
    * The callback takes a reference to a const vector of parameters that have been
    * set successfully.
