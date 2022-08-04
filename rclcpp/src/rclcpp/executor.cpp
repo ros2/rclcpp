@@ -320,8 +320,8 @@ Executor::remove_callback_group_from_map(
     }
     if (auto gc = group_ptr->get_notify_guard_condition()) {
       memory_strategy_->remove_guard_condition(gc.get());
+      group_ptr->destroy_notify_guard_condition();
     }
-    group_ptr->destroy_notify_guard_condition();
   }
 }
 
