@@ -133,3 +133,28 @@ TEST(TestCreateTimer, timer_function_pointer)
 
   rclcpp::shutdown();
 }
+
+TEST(TestCreateTimer, timer_without_autostart)
+{
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("test_create_timer_node");
+
+  rclcpp::TimerBase::SharedPtr timer;
+  timer = rclcpp::create_timer(
+    node,
+    node->get_clock(),
+    rclcpp::Duration(0ms),
+    []() {},
+    nullptr,
+    false);
+
+  ASSERT_TRUE(timer->is_canceled());
+
+  timer->reset();
+
+  ASSERT_FALSE(timer->is_canceled());
+
+  timer->cancel();
+
+  rclcpp::shutdown();
+}

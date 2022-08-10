@@ -29,8 +29,9 @@ using rclcpp::TimerBase;
 TimerBase::TimerBase(
   rclcpp::Clock::SharedPtr clock,
   std::chrono::nanoseconds period,
-  rclcpp::Context::SharedPtr context)
-: clock_(clock), timer_handle_(nullptr)
+  rclcpp::Context::SharedPtr context,
+  bool autostart)
+: clock_(clock), timer_handle_(nullptr), context_(context), period_(period), autostart_(autostart)
 {
   if (nullptr == context) {
     context = rclcpp::contexts::get_global_default_context();
@@ -62,8 +63,8 @@ TimerBase::TimerBase(
   {
     std::lock_guard<std::mutex> clock_guard(clock_->get_clock_mutex());
     rcl_ret_t ret = rcl_timer_init(
-      timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
-      rcl_get_default_allocator());
+      timer_handle_.get(), clock_handle, rcl_context.get(), period.count(),
+      nullptr, rcl_get_default_allocator(), autostart_);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize rcl timer handle");
     }

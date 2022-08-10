@@ -59,6 +59,20 @@ protected:
     );
     EXPECT_TRUE(timer->is_steady());
 
+    timer_without_autostart = test_node->create_wall_timer(
+      100ms,
+      [this]() -> void
+      {
+        this->has_timer_run.store(true);
+
+        if (this->cancel_timer.load()) {
+          this->timer->cancel();
+        }
+        // prevent any tests running timer from blocking
+        this->executor->cancel();
+      }, nullptr, false);
+    EXPECT_TRUE(timer_without_autostart->is_steady());
+
     executor->add_node(test_node);
     // don't start spinning, let the test dictate when
   }
@@ -78,6 +92,7 @@ protected:
   std::atomic<bool> cancel_timer;
   rclcpp::Node::SharedPtr test_node;
   std::shared_ptr<rclcpp::TimerBase> timer;
+  std::shared_ptr<rclcpp::TimerBase> timer_without_autostart;
   std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor;
 };
 
@@ -282,4 +297,13 @@ TEST_F(TestTimer, test_failures_with_exceptions)
       timer->time_until_trigger(),
       std::runtime_error("Timer could not get time until next call: error not set"));
   }
+}
+
+/// Simple test of a timer without autostart
+TEST_F(TestTimer, test_timer_without_autostart)
+{
+  EXPECT_TRUE(timer_without_autostart->is_canceled());
+  // Reset to change start timer
+  timer_without_autostart->reset();
+  EXPECT_FALSE(timer_without_autostart->is_canceled());
 }

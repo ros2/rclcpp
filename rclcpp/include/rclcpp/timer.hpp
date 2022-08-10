@@ -53,12 +53,14 @@ public:
    * \param clock A clock to use for time and sleeping
    * \param period The interval at which the timer fires
    * \param context node context
+   * \param autostart timer state on initialization
    */
   RCLCPP_PUBLIC
   explicit TimerBase(
     Clock::SharedPtr clock,
     std::chrono::nanoseconds period,
-    rclcpp::Context::SharedPtr context);
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true);
 
   /// TimerBase destructor
   RCLCPP_PUBLIC
@@ -152,8 +154,11 @@ public:
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
+  rclcpp::Context::SharedPtr context_;
+  std::chrono::nanoseconds period_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
+  bool autostart_{false};
 };
 
 
@@ -179,12 +184,13 @@ public:
    * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
    * \param[in] context custom context to be used.
+   * \param autostart timer state on initialization
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
-    rclcpp::Context::SharedPtr context
+    rclcpp::Context::SharedPtr context, bool autostart = true
   )
-  : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback))
+  : TimerBase(clock, period, context, autostart), callback_(std::forward<FunctorT>(callback))
   {
     TRACEPOINT(
       rclcpp_timer_callback_added,
@@ -287,13 +293,15 @@ public:
    * \param period The interval at which the timer fires
    * \param callback The callback function to execute every interval
    * \param context node context
+   * \param autostart timer state on initialization
    */
   WallTimer(
     std::chrono::nanoseconds period,
     FunctorT && callback,
-    rclcpp::Context::SharedPtr context)
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true)
   : GenericTimer<FunctorT>(
-      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context)
+      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context, autostart)
   {}
 
 protected:
