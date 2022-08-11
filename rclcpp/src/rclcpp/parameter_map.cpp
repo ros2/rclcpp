@@ -25,6 +25,12 @@ using rclcpp::ParameterMap;
 using rclcpp::ParameterValue;
 
 ParameterMap
+rclcpp::parameter_map_from(const rcl_params_t * const c_params)
+{
+  return parameter_map_from(c_params, nullptr);
+}
+
+ParameterMap
 rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * node_fqn)
 {
   if (NULL == c_params) {
