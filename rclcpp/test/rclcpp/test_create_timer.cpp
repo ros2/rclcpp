@@ -133,3 +133,32 @@ TEST(TestCreateTimer, timer_function_pointer)
 
   rclcpp::shutdown();
 }
+
+TEST(TestCreateTimer, timer_triggered_twice)
+{
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("test_timer_triggered_twice");
+
+  std::atomic<int> callback_counter{0};
+
+  rclcpp::TimerBase::SharedPtr timer;
+  timer = rclcpp::create_timer(
+    node,
+    node->get_clock(),
+    rclcpp::Duration(0ms),
+    [&callback_counter]() {
+      callback_counter += 1;
+    }, nullptr, 2);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(1, callback_counter);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(2, callback_counter);
+
+  rclcpp::spin_some(node);
+  ASSERT_NE(callback_counter == 3);
+  ASSERT_TRUE(timer->is_canceled());
+
+  rclcpp::shutdown();
+}

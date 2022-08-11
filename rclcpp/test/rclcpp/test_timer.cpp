@@ -283,3 +283,21 @@ TEST_F(TestTimer, test_failures_with_exceptions)
       std::runtime_error("Timer could not get time until next call: error not set"));
   }
 }
+
+TEST_F(TestTimer, test_timer_triggered_twice) {
+  std::atomic<int> callback_counter{0};
+
+  rclcpp::TimerBase::SharedPtr timer_called_twice;
+  timer_called_twice = test_node->create_wall_timer(
+    0ms,
+    [&callback_counter]() {
+      callback_counter += 1;
+    }, nullptr, 1);
+
+  executor->spin();
+  ASSERT_EQ(1, callback_counter);
+
+  executor->spin();
+  ASSERT_NE(callback_counter == 2);
+  ASSERT_TRUE(timer_called_twice->is_canceled());
+}
