@@ -92,8 +92,12 @@ public:
   Duration
   operator+(const rclcpp::Duration & rhs) const;
 
+  Duratoin& operator+=(Const rclcpp::Duration & rhs);
+
   Duration
   operator-(const rclcpp::Duration & rhs) const;
+
+  Duration& operator-=(Const rclcpp::Duration & rhs);
 
   /// Get the maximum representable value.
   /**
