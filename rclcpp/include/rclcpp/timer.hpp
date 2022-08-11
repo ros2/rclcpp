@@ -179,13 +179,16 @@ public:
    * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
    * \param[in] context custom context to be used.
+   * \param[in] amount_of_callbacks Quantity of times the callback will be triggered.
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
-    rclcpp::Context::SharedPtr context
+    rclcpp::Context::SharedPtr context, unsigned int amount_of_callbacks = 0
   )
-  : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback))
+  : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback)),
+    amount_of_callbacks_(amount_of_callbacks)
   {
+    callbacks_called_ = 0;
     TRACEPOINT(
       rclcpp_timer_callback_added,
       static_cast<const void *>(get_timer_handle().get()),
@@ -229,6 +232,11 @@ public:
     TRACEPOINT(callback_start, reinterpret_cast<const void *>(&callback_), false);
     execute_callback_delegate<>();
     TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
+    if (amount_of_callbacks_ != 0) {
+      if (amount_of_callbacks_ == ++callbacks_called_) {
+        cancel();
+      }
+    }
   }
 
   // void specialization
@@ -268,6 +276,8 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
+  unsigned int callbacks_called_;
+  unsigned int amount_of_callbacks_;
 };
 
 template<
@@ -287,13 +297,16 @@ public:
    * \param period The interval at which the timer fires
    * \param callback The callback function to execute every interval
    * \param context node context
+   * \param amount_of_callbacks Quantity of times the callback will be triggered.
    */
   WallTimer(
     std::chrono::nanoseconds period,
     FunctorT && callback,
-    rclcpp::Context::SharedPtr context)
+    rclcpp::Context::SharedPtr context,
+    unsigned int amount_of_callbacks = 0)
   : GenericTimer<FunctorT>(
-      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context)
+      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context,
+      amount_of_callbacks)
   {}
 
 protected:
