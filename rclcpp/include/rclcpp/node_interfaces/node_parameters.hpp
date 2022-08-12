@@ -132,6 +132,31 @@ public:
     bool ignore_override = false) override;
 
   RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters(
+    const std::string &namespace_,
+    const std::vector<rclcpp::Parameter> &parameters,
+    bool ignore_override = false) override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters(
+    const std::string &namespace_,
+    const std::vector<
+      std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters,
+    bool ignore_override = false) override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters_atomically(
+    const std::string &namespace_,
+    const std::vector<
+      std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters,
+    bool ignore_override = false) override;
+
+  RCLCPP_PUBLIC
   void
   undeclare_parameter(const std::string & name) override;
 

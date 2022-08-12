@@ -338,6 +338,32 @@ Node::declare_parameter(
     ignore_override);
 }
 
+std::vector<rclcpp::ParameterValue>
+Node::declare_parameters(
+  const std::string &namespace_,
+  const std::vector<rclcpp::Parameter> &parameters,
+  bool ignore_override)
+{
+  return this->node_parameters_->declare_parameters(
+    namespace_,
+    parameters,
+    ignore_override);
+}
+
+std::vector<rclcpp::ParameterValue>
+Node::declare_parameters(
+  const std::string &namespace_,
+  const std::vector<
+    std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
+  > & parameters,
+  bool ignore_override)
+{
+  return this->node_parameters_->declare_parameters(
+    namespace_,
+    parameters,
+    ignore_override);
+}
+
 void
 Node::undeclare_parameter(const std::string & name)
 {
