@@ -113,24 +113,6 @@ public:
   Duration &
   operator*=(double scale);
 
-  Duration
-  operator*(const rclcpp::Duration & rhs) const;
-
-  Duration &
-  operator*=(const rclcpp::Duration & rhs);
-
-  Duration
-  operator/(double scale) const;
-
-  Duration &
-  operator/=(double scale);
-
-  Duration
-  operator/(const rclcpp::Duration & rhs) const;
-
-  Duration &
-  operator/=(const rclcpp::Duration & rhs);
-
   /// Get duration in nanosecods
   /**
    * \return the duration in nanoseconds as a rcl_duration_value_t.
