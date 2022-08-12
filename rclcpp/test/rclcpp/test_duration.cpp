@@ -52,8 +52,47 @@ TEST_F(TestDuration, operators) {
   EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
 
+  rclcpp::Duration addequal = old;
+  addequal += young;
+  EXPECT_EQ(addequal.nanoseconds(), old.nanoseconds() + young.nanoseconds());
+  EXPECT_EQ(addequal, old + young);
+
+  rclcpp::Duration subequal = young;
+  subequal -= old;
+  EXPECT_EQ(subequal.nanoseconds(), young.nanoseconds() - old.nanoseconds());
+  EXPECT_EQ(subequal, young - old);
+
   rclcpp::Duration scale = old * 3;
   EXPECT_EQ(scale.nanoseconds(), old.nanoseconds() * 3);
+
+  rclcpp::Duration scaleequal = old;
+  scaleequal *= 3;
+  EXPECT_EQ(scaleequal.nanoseconds(), old.nanoseconds() * 3);
+
+  rclcpp::Duration mul = old * young;
+  EXPECT_EQ(mul.nanoseconds(), old.nanoseconds() * young.nanoseconds());
+  EXPECT_EQ(mul, old * young);
+
+  rclcpp::Duration mulequal = old;
+  mulequal *= young;
+  EXPECT_EQ(mulequal.nanoseconds(), old.nanoseconds() * young.nanoseconds());
+  EXPECT_EQ(mulequal, old * young);
+
+  rclcpp::Duration divscale = old / 3;
+  EXPECT_EQ(divscale.nanoseconds(), old.nanoseconds() / 3);
+
+  rclcpp::Duration divequalscale = old;
+  divequalscale /= 3;
+  EXPECT_EQ(divequalscale.nanoseconds(), old.nanoseconds() / 3);
+
+  rclcpp::Duration div = old / young;
+  EXPECT_EQ(div.nanoseconds(), old.nanoseconds() / young.nanoseconds());
+  EXPECT_EQ(div, old / young);
+
+  rclcpp::Duration divequal = old;
+  divequal /= young;
+  EXPECT_EQ(divequal.nanoseconds(), old.nanoseconds() / young.nanoseconds());
+  EXPECT_EQ(divequal, old / young);
 
   rclcpp::Duration time = rclcpp::Duration(0, 0);
   rclcpp::Duration copy_constructor_duration(time);

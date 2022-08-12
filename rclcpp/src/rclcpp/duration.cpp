@@ -161,8 +161,8 @@ Duration::operator+(const rclcpp::Duration & rhs) const
     rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
 }
 
-Duration&
-Duration::operator+=(const rclcpp::Duration & rhs) const
+Duration &
+Duration::operator+=(const rclcpp::Duration & rhs)
 {
   *this = *this + rhs;
   return *this;
@@ -197,8 +197,8 @@ Duration::operator-(const rclcpp::Duration & rhs) const
     rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
 }
 
-Duration&
-Duration::operator-=(const rclcpp::Duration & rhs) const
+Duration &
+Duration::operator-=(const rclcpp::Duration & rhs)
 {
   *this = *this - rhs;
   return *this;
@@ -220,6 +220,15 @@ bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
   }
 }
 
+void
+bounds_check_mul(int64_t lhs, int64_t rhs)
+{
+  auto res = lhs * rhs;
+  if (lhs != 0 && res / lhs != rhs) {
+    throw std::overflow_error("duration multiply leads to int64_t overflow");
+  }
+}
+
 Duration
 Duration::operator*(double scale) const
 {
@@ -234,6 +243,67 @@ Duration::operator*(double scale) const
   return Duration::from_nanoseconds(
     static_cast<rcl_duration_value_t>(
       static_cast<long double>(rcl_duration_.nanoseconds) * scale_ld));
+}
+
+Duration &
+Duration::operator*=(double scale)
+{
+  *this = *this * scale;
+  return *this;
+}
+
+Duration
+Duration::operator*(const rclcpp::Duration & rhs) const
+{
+  bounds_check_mul(
+    this->rcl_duration_.nanoseconds,
+    rhs.rcl_duration_.nanoseconds);
+  return Duration::from_nanoseconds(
+    rcl_duration_.nanoseconds * rhs.rcl_duration_.nanoseconds);
+}
+
+Duration &
+Duration::operator*=(const rclcpp::Duration & rhs)
+{
+  *this = *this * rhs;
+  return *this;
+}
+
+Duration
+Duration::operator/(double scale) const
+{
+  if (!std::isfinite(scale)) {
+    throw std::runtime_error("abnormal scale in rclcpp::Duration");
+  }
+  bounds_check_duration_scale(
+    this->rcl_duration_.nanoseconds,
+    1.0 / scale,
+    std::numeric_limits<rcl_duration_value_t>::max());
+  long double scale_ld = static_cast<long double>(scale);
+  return Duration::from_nanoseconds(
+    static_cast<rcl_duration_value_t>(
+      static_cast<long double>(rcl_duration_.nanoseconds) / scale_ld));
+}
+
+Duration &
+Duration::operator/=(double scale)
+{
+  *this = *this / scale;
+  return *this;
+}
+
+Duration
+Duration::operator/(const rclcpp::Duration & rhs) const
+{
+  return Duration::from_nanoseconds(
+    rcl_duration_.nanoseconds / rhs.rcl_duration_.nanoseconds);
+}
+
+Duration &
+Duration::operator/=(const rclcpp::Duration & rhs)
+{
+  *this = *this / rhs;
+  return *this;
 }
 
 rcl_duration_value_t
