@@ -249,7 +249,7 @@ public:
    * \param[in] group Callback group to execute this timer's callback in.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
-  typename rclcpp::WallTimer<CallbackT>::SharedPtr
+  typename rclcpp::GenericTimer<CallbackT>::SharedPtr
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,

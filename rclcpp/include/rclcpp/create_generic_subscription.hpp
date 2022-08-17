@@ -61,7 +61,7 @@ std::shared_ptr<GenericSubscription> create_generic_subscription(
     topic_type, "rosidl_typesupport_cpp");
 
   auto subscription = std::make_shared<GenericSubscription>(
-    topics_interface->get_node_base_interface(),
+    topics_interface->get_node_base_interface().get(),
     std::move(ts_lib),
     topic_name,
     topic_type,

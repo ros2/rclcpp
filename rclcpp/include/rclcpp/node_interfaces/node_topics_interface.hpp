@@ -79,12 +79,12 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::node_interfaces::NodeBaseInterface *
+  std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>
   get_node_base_interface() const = 0;
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::node_interfaces::NodeTimersInterface *
+  std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
   get_node_timers_interface() const = 0;
 
   /// Get a remapped and expanded topic name given an input name.

@@ -54,7 +54,7 @@ std::shared_ptr<GenericPublisher> create_generic_publisher(
 {
   auto ts_lib = rclcpp::get_typesupport_library(topic_type, "rosidl_typesupport_cpp");
   auto pub = std::make_shared<GenericPublisher>(
-    topics_interface->get_node_base_interface(),
+    topics_interface->get_node_base_interface().get(),
     std::move(ts_lib),
     topic_name,
     topic_type,
