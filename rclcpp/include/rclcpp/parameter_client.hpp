@@ -124,7 +124,7 @@ public:
       node->get_node_graph_interface(),
       node->get_node_services_interface(),
       remote_node_name,
-      qos_profile,
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)),
       group)
   {}
 
@@ -171,7 +171,7 @@ public:
       node->get_node_graph_interface(),
       node->get_node_services_interface(),
       remote_node_name,
-      qos_profile,
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)),
       group)
   {}
 
@@ -390,7 +390,7 @@ public:
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
       node,
       remote_node_name,
-      qos_profile)
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)))
   {}
 
   template<typename NodeT>
@@ -419,7 +419,7 @@ public:
       node->get_node_graph_interface(),
       node->get_node_services_interface(),
       remote_node_name,
-      qos_profile)
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)))
   {}
 
   template<typename NodeT>
@@ -448,7 +448,7 @@ public:
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
       node,
       remote_node_name,
-      qos_profile)
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)))
   {}
 
   template<typename NodeT>
@@ -477,7 +477,7 @@ public:
       node->get_node_graph_interface(),
       node->get_node_services_interface(),
       remote_node_name,
-      qos_profile)
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)))
   {}
 
   template<typename NodeT>
@@ -515,7 +515,7 @@ public:
       node_graph_interface,
       node_services_interface,
       remote_node_name,
-      qos_profile);
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile)));
   }
 
   RCLCPP_PUBLIC
