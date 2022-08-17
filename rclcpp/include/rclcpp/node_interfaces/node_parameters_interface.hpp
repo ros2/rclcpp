@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -113,8 +114,8 @@ public:
   virtual
   std::vector<rclcpp::ParameterValue>
   declare_parameters(
-    const std::string &namespace_,
-    const std::vector<rclcpp::Parameter> &parameters,
+    const std::string & namespace_,
+    const std::vector<rclcpp::Parameter> & parameters,
     bool ignore_override = false) = 0;
 
   /// Declare parameters.
@@ -125,7 +126,7 @@ public:
   virtual
   std::vector<rclcpp::ParameterValue>
   declare_parameters(
-    const std::string &namespace_,
+    const std::string & namespace_,
     const std::vector<
       std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
     > & parameters,
@@ -139,7 +140,7 @@ public:
   virtual
   std::vector<rclcpp::ParameterValue>
   declare_parameters_atomically(
-    const std::string &namespace_,
+    const std::string & namespace_,
     const std::vector<
       std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
     > & parameters,

@@ -340,8 +340,8 @@ Node::declare_parameter(
 
 std::vector<rclcpp::ParameterValue>
 Node::declare_parameters(
-  const std::string &namespace_,
-  const std::vector<rclcpp::Parameter> &parameters,
+  const std::string & namespace_,
+  const std::vector<rclcpp::Parameter> & parameters,
   bool ignore_override)
 {
   return this->node_parameters_->declare_parameters(
@@ -352,7 +352,7 @@ Node::declare_parameters(
 
 std::vector<rclcpp::ParameterValue>
 Node::declare_parameters(
-  const std::string &namespace_,
+  const std::string & namespace_,
   const std::vector<
     std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
   > & parameters,

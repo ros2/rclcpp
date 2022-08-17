@@ -560,13 +560,13 @@ public:
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterValue>
   declare_parameters(
-    const std::string &namespace_,
-    const std::vector<rclcpp::Parameter> &parameters,
+    const std::string & namespace_,
+    const std::vector<rclcpp::Parameter> & parameters,
     bool ignore_override = false);
 
   /// Declare and initialize several parameters with the same namespace.
   /**
-   * This version will take a vector where the value is a pair, with the 
+   * This version will take a vector where the value is a pair, with the
    * rclcpp::Parameter object as the first item and a parameter descriptor
    * as the second.
    *
@@ -574,7 +574,7 @@ public:
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterValue>
   declare_parameters(
-    const std::string &namespace_,
+    const std::string & namespace_,
     const std::vector<
       std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
     > & parameters,

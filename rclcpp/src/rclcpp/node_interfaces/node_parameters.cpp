@@ -644,7 +644,7 @@ declare_parameters_helper(
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   OnSetCallbacksHandleContainer & on_set_callback_container,
   PostSetCallbacksHandleContainer & post_set_callback_container,
-  rcl_interfaces::msg::ParameterEvent *parameter_event)
+  rcl_interfaces::msg::ParameterEvent * parameter_event)
 {
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
@@ -701,7 +701,7 @@ declare_parameters_helper(
 
 std::vector<rclcpp::ParameterValue>
 NodeParameters::declare_parameters_atomically(
-  const std::string &namespace_,
+  const std::string & namespace_,
   const std::vector<
     std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
   > & parameters,
@@ -712,33 +712,35 @@ NodeParameters::declare_parameters_atomically(
 
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-  for (const auto &elem : parameters) {
+  for (const auto & elem : parameters) {
     auto param = elem.first;
     auto desc = elem.second;
 
     if (rclcpp::PARAMETER_NOT_SET == param.get_type()) {
       throw std::invalid_argument{
-              "declare_parameters_atomically(): the provided parameter type cannot be rclcpp::PARAMETER_NOT_SET"};
+              "declare_parameters_atomically(): the provided parameter type cannot be"
+              "rclcpp::PARAMETER_NOT_SET"};
     }
 
     if (desc.dynamic_typing == true) {
       throw std::invalid_argument{
-              "declare_parameters_atomically(): cannot declare parameter of specific type and pass descriptor"
-              "with `dynamic_typing=true`"};
+              "declare_parameters_atomically(): cannot declare parameter of specific type"
+              "and pass descriptor with `dynamic_typing=true`"};
     }
 
     std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
-    results.push_back(declare_parameters_helper(
-      normalized_namespace + param.get_name(),
-      param.get_type(),
-      param.get_parameter_value(),
-      desc,
-      ignore_override,
-      parameters_,
-      parameter_overrides_,
-      on_set_parameters_callback_container_,
-      post_set_parameters_callback_container_,
-      &parameter_event));
+    results.push_back(
+      declare_parameters_helper(
+        normalized_namespace + param.get_name(),
+        param.get_type(),
+        param.get_parameter_value(),
+        desc,
+        ignore_override,
+        parameters_,
+        parameter_overrides_,
+        on_set_parameters_callback_container_,
+        post_set_parameters_callback_container_,
+        &parameter_event));
   }
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
@@ -753,23 +755,21 @@ NodeParameters::declare_parameters_atomically(
 
 std::vector<rclcpp::ParameterValue>
 NodeParameters::declare_parameters(
-  const std::string &namespace_,
-  const std::vector<rclcpp::Parameter> &parameters,
+  const std::string & namespace_,
+  const std::vector<rclcpp::Parameter> & parameters,
   bool ignore_override)
 {
   std::vector<std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>> parameters_;
-  for (const auto &param : parameters)
-  {
+  for (const auto & param : parameters) {
     parameters_.push_back(std::make_pair(param, rcl_interfaces::msg::ParameterDescriptor()));
   }
 
   return declare_parameters_atomically(namespace_, parameters_, ignore_override);
-
 }
 
 std::vector<rclcpp::ParameterValue>
 NodeParameters::declare_parameters(
-  const std::string &namespace_,
+  const std::string & namespace_,
   const std::vector<
     std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
   > & parameters,

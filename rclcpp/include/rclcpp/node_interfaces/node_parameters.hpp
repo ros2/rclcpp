@@ -20,6 +20,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "rcutils/macros.h"
 
@@ -134,14 +135,14 @@ public:
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterValue>
   declare_parameters(
-    const std::string &namespace_,
-    const std::vector<rclcpp::Parameter> &parameters,
+    const std::string & namespace_,
+    const std::vector<rclcpp::Parameter> & parameters,
     bool ignore_override = false) override;
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterValue>
   declare_parameters(
-    const std::string &namespace_,
+    const std::string & namespace_,
     const std::vector<
       std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
     > & parameters,
@@ -150,7 +151,7 @@ public:
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterValue>
   declare_parameters_atomically(
-    const std::string &namespace_,
+    const std::string & namespace_,
     const std::vector<
       std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
     > & parameters,
