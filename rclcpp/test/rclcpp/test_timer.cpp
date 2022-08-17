@@ -51,7 +51,7 @@ protected:
 
     test_node = std::make_shared<rclcpp::Node>("test_timer_node");
 
-    auto lambda_fun = [this]() -> void {
+    auto timer_callback = [this]() -> void {
         this->has_timer_run.store(true);
 
         if (this->cancel_timer.load()) {
@@ -65,11 +65,11 @@ protected:
     timer_type = GetParam();
     switch (timer_type) {
       case TimerType::WALL_TIMER:
-        timer = test_node->create_wall_timer(100ms, lambda_fun);
+        timer = test_node->create_wall_timer(100ms, timer_callback);
         EXPECT_TRUE(timer->is_steady());
         break;
       case TimerType::GENERIC_TIMER:
-        timer = test_node->create_timer(100ms, lambda_fun);
+        timer = test_node->create_timer(100ms, timer_callback);
         EXPECT_FALSE(timer->is_steady());
         break;
     }
@@ -215,15 +215,15 @@ TEST_P(TestTimer, test_bad_arguments) {
 
 TEST_P(TestTimer, callback_with_timer) {
   rclcpp::TimerBase * timer_ptr = nullptr;
-  auto lambda_fun = [&timer_ptr](rclcpp::TimerBase & timer) {
+  auto timer_callback = [&timer_ptr](rclcpp::TimerBase & timer) {
       timer_ptr = &timer;
     };
   switch (timer_type) {
     case TimerType::WALL_TIMER:
-      timer = test_node->create_wall_timer(1ms, lambda_fun);
+      timer = test_node->create_wall_timer(1ms, timer_callback);
       break;
     case TimerType::GENERIC_TIMER:
-      timer = test_node->create_timer(1ms, lambda_fun);
+      timer = test_node->create_timer(1ms, timer_callback);
       break;
   }
   auto start = std::chrono::steady_clock::now();
@@ -239,15 +239,15 @@ TEST_P(TestTimer, callback_with_timer) {
 
 TEST_P(TestTimer, callback_with_period_zero) {
   rclcpp::TimerBase * timer_ptr = nullptr;
-  auto lambda_fun = [&timer_ptr](rclcpp::TimerBase & timer) {
+  auto timer_callback = [&timer_ptr](rclcpp::TimerBase & timer) {
       timer_ptr = &timer;
     };
   switch (timer_type) {
     case TimerType::WALL_TIMER:
-      timer = test_node->create_wall_timer(0ms, lambda_fun);
+      timer = test_node->create_wall_timer(0ms, timer_callback);
       break;
     case TimerType::GENERIC_TIMER:
-      timer = test_node->create_timer(0ms, lambda_fun);
+      timer = test_node->create_timer(0ms, timer_callback);
       break;
   }
   auto start = std::chrono::steady_clock::now();

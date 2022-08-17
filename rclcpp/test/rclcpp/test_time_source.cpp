@@ -74,7 +74,7 @@ void spin_until_time(
   executor.add_node(node);
 
   auto start = std::chrono::system_clock::now();
-  while (std::chrono::system_clock::now() < (start + 1s)) {
+  while (std::chrono::system_clock::now() < (start + 10s)) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
