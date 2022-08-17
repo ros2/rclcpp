@@ -53,11 +53,12 @@ parameter_value_from(const rcl_variant_t * const c_value);
 
 /// Get the ParameterMap from a yaml file.
 /// \param[in] yaml_filename full name of the yaml file.
+/// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
 /// \returns an instance of a parameter map
 /// \throws from rcl error of rcl_parse_yaml_file()
 RCLCPP_PUBLIC
 ParameterMap
-parameter_map_from_yaml_file(const std::string & yaml_filename);
+parameter_map_from_yaml_file(const std::string & yaml_filename, const char * node_fqn = nullptr);
 
 }  // namespace rclcpp
 

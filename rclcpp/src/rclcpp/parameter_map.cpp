@@ -143,7 +143,7 @@ rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
 }
 
 ParameterMap
-rclcpp::parameter_map_from_yaml_file(const std::string & yaml_filename)
+rclcpp::parameter_map_from_yaml_file(const std::string & yaml_filename, const char * node_fqn)
 {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcl_params_t * rcl_parameters = rcl_yaml_node_struct_init(allocator);
@@ -153,5 +153,5 @@ rclcpp::parameter_map_from_yaml_file(const std::string & yaml_filename)
     rclcpp::exceptions::throw_from_rcl_error(RCL_RET_ERROR);
   }
 
-  return rclcpp::parameter_map_from(rcl_parameters);
+  return rclcpp::parameter_map_from(rcl_parameters, node_fqn);
 }

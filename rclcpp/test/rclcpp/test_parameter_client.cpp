@@ -948,3 +948,52 @@ TEST_F(TestParameterClient, sync_parameter_load_parameters) {
   auto list_parameters = synchronous_client->list_parameters({}, 3);
   ASSERT_EQ(list_parameters.names.size(), static_cast<uint64_t>(5));
 }
+
+/*
+  Coverage for async load_parameters with complicated regex expression
+ */
+TEST_F(TestParameterClient, async_parameter_load_parameters_complicated_regex) {
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
+  // load parameters
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  const std::string parameters_filepath = (
+    test_resources_path / "test_node" / "load_complicated_parameters.yaml").string();
+  auto load_future = asynchronous_client->load_parameters(parameters_filepath);
+  auto result_code = rclcpp::spin_until_future_complete(
+    load_node, load_future, std::chrono::milliseconds(100));
+  ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
+  ASSERT_EQ(load_future.get()[0].successful, true);
+  // list parameters
+  auto list_parameters = asynchronous_client->list_parameters({}, 3);
+  rclcpp::spin_until_future_complete(
+    load_node, list_parameters, std::chrono::milliseconds(100));
+  ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(6));
+  // to check the parameter "a_value"
+  std::string param_name = "a_value";
+  auto param = load_node->get_parameter(param_name);
+  ASSERT_EQ(param.get_value<std::string>(), "last_one_win");
+}
+
+/*
+  Coverage for async load_parameters to load file without valid parameters
+ */
+TEST_F(TestParameterClient, async_parameter_load_no_valid_parameter) {
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
+  // load parameters
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  const std::string parameters_filepath = (
+    test_resources_path / "test_node" / "no_valid_parameters.yaml").string();
+  EXPECT_THROW(
+    asynchronous_client->load_parameters(parameters_filepath),
+    rclcpp::exceptions::InvalidParametersException);
+}
