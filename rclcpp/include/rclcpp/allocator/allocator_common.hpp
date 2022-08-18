@@ -15,6 +15,7 @@
 #ifndef RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
 #define RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
 
+#include <cstring>
 #include <memory>
 
 #include "rcl/allocator.h"
@@ -46,7 +47,13 @@ void * retyped_zero_allocate(size_t number_of_elem, size_t size_of_elem, void * 
   if (!typed_allocator) {
     throw std::runtime_error("Received incorrect allocator type");
   }
-  return std::allocator_traits<Alloc>::allocate(*typed_allocator, number_of_elem * size_of_elem);
+  size_t size = number_of_elem * size_of_elem;
+  void * allocated_memory =
+    std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
+  if (allocated_memory) {
+    std::memset(allocated_memory, 0, size);
+  }
+  return allocated_memory;
 }
 
 template<typename T, typename Alloc>
