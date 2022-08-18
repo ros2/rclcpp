@@ -31,7 +31,7 @@ NodeClock::NodeClock(
   node_graph_(node_graph),
   node_services_(node_services),
   node_logging_(node_logging),
-  ros_clock_(std::make_shared<rclcpp::Clock>(clock_type))
+  clock_(std::make_shared<rclcpp::Clock>(clock_type))
 {}
 
 NodeClock::~NodeClock()
@@ -40,11 +40,11 @@ NodeClock::~NodeClock()
 rclcpp::Clock::SharedPtr
 NodeClock::get_clock()
 {
-  return ros_clock_;
+  return clock_;
 }
 
 rclcpp::Clock::ConstSharedPtr
 NodeClock::get_clock() const
 {
-  return ros_clock_;
+  return clock_;
 }

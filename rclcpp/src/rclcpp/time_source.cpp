@@ -91,10 +91,6 @@ public:
   // Attach a clock
   void attachClock(rclcpp::Clock::SharedPtr clock)
   {
-    if (clock->get_clock_type() != RCL_ROS_TIME) {
-      throw std::invalid_argument("Cannot attach clock to a time source that's not a ROS clock");
-    }
-
     std::lock_guard<std::mutex> guard(clock_list_lock_);
     associated_clocks_.push_back(clock);
     // Set the clock to zero unless there's a recently received message
@@ -125,27 +121,32 @@ public:
   {
     std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
 
-    // Do change
-    if (!set_ros_time_enabled && clock->ros_time_is_active()) {
-      auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
-      if (ret != RCL_RET_OK) {
-        rclcpp::exceptions::throw_from_rcl_error(
-          ret, "Failed to disable ros_time_override_status");
+    if (clock->get_clock_type() == RCL_ROS_TIME) {
+      // Do change
+      if (!set_ros_time_enabled && clock->ros_time_is_active()) {
+        auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
+        if (ret != RCL_RET_OK) {
+          rclcpp::exceptions::throw_from_rcl_error(
+            ret, "Failed to disable ros_time_override_status");
+        }
+      } else if (set_ros_time_enabled && !clock->ros_time_is_active()) {
+        auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
+        if (ret != RCL_RET_OK) {
+          rclcpp::exceptions::throw_from_rcl_error(
+            ret, "Failed to enable ros_time_override_status");
+        }
       }
-    } else if (set_ros_time_enabled && !clock->ros_time_is_active()) {
-      auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
-      if (ret != RCL_RET_OK) {
-        rclcpp::exceptions::throw_from_rcl_error(
-          ret, "Failed to enable ros_time_override_status");
-      }
-    }
 
-    auto ret = rcl_set_ros_time_override(
-      clock->get_clock_handle(),
-      rclcpp::Time(*msg).nanoseconds());
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "Failed to set ros_time_override_status");
+      auto ret = rcl_set_ros_time_override(
+        clock->get_clock_handle(),
+        rclcpp::Time(*msg).nanoseconds());
+      if (ret != RCL_RET_OK) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "Failed to set ros_time_override_status");
+      }
+    } else if (set_ros_time_enabled) {
+      throw std::invalid_argument(
+              "set_ros_time_enabled can't be true while clock is not of RCL_ROS_TIME type");
     }
   }
 

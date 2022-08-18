@@ -69,7 +69,7 @@ private:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
 
-  rclcpp::Clock::SharedPtr ros_clock_;
+  rclcpp::Clock::SharedPtr clock_;
 };
 
 }  // namespace node_interfaces
