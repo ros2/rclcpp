@@ -15,6 +15,7 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_TOPICS_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_TOPICS_HPP_
 
+#include <memory>
 #include <string>
 
 #include "rcl/publisher.h"
