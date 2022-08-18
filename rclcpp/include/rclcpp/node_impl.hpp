@@ -273,17 +273,18 @@ Node::declare_parameters(
   bool ignore_overrides)
 {
   std::vector<ParameterT> result;
-  std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
-  std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
-    [this, &normalized_namespace, ignore_overrides](auto element) {
-      return this->declare_parameter(
-        normalized_namespace + element.first,
-        element.second,
-        rcl_interfaces::msg::ParameterDescriptor(),
-        ignore_overrides);
-    }
-  );
+  std::vector<
+    std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>> parameters_;
+  for (const auto & [name, value] : parameters) {
+    parameters_.push_back(
+      std::make_pair(
+        rclcpp::Parameter(name, value),
+        rcl_interfaces::msg::ParameterDescriptor()));
+  }
+  auto results = this->declare_parameters(namespace_, parameters_, ignore_overrides);
+  for (const auto & res : results) {
+    result.push_back(res.get<ParameterT>());
+  }
   return result;
 }
 
@@ -298,19 +299,16 @@ Node::declare_parameters(
   bool ignore_overrides)
 {
   std::vector<ParameterT> result;
-  std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
-  std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
-    [this, &normalized_namespace, ignore_overrides](auto element) {
-      return static_cast<ParameterT>(
-        this->declare_parameter(
-          normalized_namespace + element.first,
-          element.second.first,
-          element.second.second,
-          ignore_overrides)
-      );
-    }
-  );
+  std::vector<
+    std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>> parameters_;
+  for (const auto & [name, param] : parameters) {
+    parameters_.push_back(
+      std::make_pair(rclcpp::Parameter(name, param.first), param.second));
+  }
+  auto results = this->declare_parameters(namespace_, parameters_, ignore_overrides);
+  for (const auto & res : results) {
+    result.push_back(res.get<ParameterT>());
+  }
   return result;
 }
 
