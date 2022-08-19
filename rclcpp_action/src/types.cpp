@@ -22,12 +22,18 @@ namespace rclcpp_action
 std::string
 to_string(const GoalUUID & goal_id)
 {
-  std::stringstream stream;
-  stream << std::hex;
-  for (const auto & element : goal_id) {
-    stream << static_cast<int>(element);
+  constexpr char HEX[] = "0123456789abcdef";
+  std::string result;
+  result.reserve(36);
+  for (const auto byte : goal_id) {
+    result.push_back(HEX[byte >> 4]);
+    result.push_back(HEX[byte & 0x0f]);
   }
-  return stream.str();
+  result.insert(result.begin() + 20, '-');
+  result.insert(result.begin() + 16, '-');
+  result.insert(result.begin() + 12, '-');
+  result.insert(result.begin() + 8, '-');
+  return result;
 }
 
 void
