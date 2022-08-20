@@ -64,7 +64,6 @@ parameter_map_from_yaml_file(const std::string & yaml_filename, const char * nod
 /// \param[in] parameter_map a parameter map.
 /// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
 /// \returns a list of a parameter
-/// \throws from rcl error of rcl_parse_yaml_file()
 RCLCPP_PUBLIC
 std::vector<Parameter>
 parameters_from_map(const ParameterMap & parameter_map, const char * node_fqn = nullptr);
