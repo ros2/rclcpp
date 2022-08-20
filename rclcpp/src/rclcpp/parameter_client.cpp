@@ -292,18 +292,27 @@ AsyncParametersClient::load_parameters(
 {
   rclcpp::ParameterMap parameter_map =
     rclcpp::parameter_map_from_yaml_file(yaml_filename, remote_node_name_.c_str());
-  return this->load_parameters(parameter_map);
+
+  auto iter = parameter_map.find(remote_node_name_);
+  if (iter == parameter_map.end() || iter->second.size() == 0) {
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
+  }
+  auto future_result = set_parameters(iter->second);
+
+  return future_result;
 }
 
 std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::load_parameters(
   const rclcpp::ParameterMap & parameter_map)
 {
-  auto iter = parameter_map.find(remote_node_name_);
-  if (iter == parameter_map.end() || iter->second.size() == 0) {
+  std::vector<rclcpp::Parameter> parameters =
+    rclcpp::parameters_from_map(parameter_map, remote_node_name_.c_str());
+
+  if (parameters.size() == 0) {
     throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
   }
-  auto future_result = set_parameters(iter->second);
+  auto future_result = set_parameters(parameters);
 
   return future_result;
 }

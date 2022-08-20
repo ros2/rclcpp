@@ -185,6 +185,9 @@ public:
   /**
    * This function filters the parameters to be set based on the node name.
    *
+   * If two duplicate keys exist in node names belongs to one FQN, there is no guarantee
+   * which one could be set.
+   *
    * \param parameter_map named parameters to be loaded
    * \return the future of the set_parameter service used to load the parameters
    * \throw InvalidParametersException if there is no parameter to set

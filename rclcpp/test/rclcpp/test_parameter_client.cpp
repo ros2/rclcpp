@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -995,5 +996,91 @@ TEST_F(TestParameterClient, async_parameter_load_no_valid_parameter) {
     test_resources_path / "test_node" / "no_valid_parameters.yaml").string();
   EXPECT_THROW(
     asynchronous_client->load_parameters(parameters_filepath),
+    rclcpp::exceptions::InvalidParametersException);
+}
+
+/*
+  Coverage for async load_parameters from maps with complicated regex expression
+ */
+TEST_F(TestParameterClient, async_parameter_load_parameters_from_map) {
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
+  // load parameters
+  rclcpp::ParameterMap parameter_map = {
+    {"/**",
+      {
+        {"bar", 5},
+        {"foo", 3.5},
+        {"a_value", "first"}
+      }
+    },
+    {"/*/load_node",
+      {
+        {"bar_foo", "ok"},
+        {"a_value", "second"}
+      }
+    },
+    {"/namespace/load_node",
+      {
+        {"foo_bar", true},
+        {"a_value", "third"}
+      }
+    },
+    {"/bar",
+      {
+        {"fatal", 10}
+      }
+    },
+    {"/**/namespace/*",
+      {
+        {"a_value", "not_win"}
+      }
+    }
+  };
+
+  auto load_future = asynchronous_client->load_parameters(parameter_map);
+  auto result_code = rclcpp::spin_until_future_complete(
+    load_node, load_future, std::chrono::milliseconds(100));
+  ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
+  ASSERT_EQ(load_future.get()[0].successful, true);
+  // list parameters
+  auto list_parameters = asynchronous_client->list_parameters({}, 3);
+  rclcpp::spin_until_future_complete(
+    load_node, list_parameters, std::chrono::milliseconds(100));
+  ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(6));
+  // to check the parameter "a_value"
+  std::string param_name = "a_value";
+  auto param = load_node->get_parameter(param_name);
+  // rclcpp::ParameterMap is an unordered map, no guarantee which value will be set for `a_value`.
+  EXPECT_THAT(
+    (std::array{"first", "second", "third", "not_win"}),
+    testing::Contains(param.get_value<std::string>()));
+}
+
+/*
+  Coverage for async load_parameters from maps without valid parameters
+ */
+TEST_F(TestParameterClient, async_parameter_load_from_map_no_valid_parameter) {
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  auto asynchronous_client =
+    std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
+  // load parameters
+  rclcpp::ParameterMap parameter_map = {
+    {"/no/valid/parameters/node",
+      {
+        {"bar", 5},
+        {"bar", 3.5}
+      }
+    }
+  };
+  EXPECT_THROW(
+    asynchronous_client->load_parameters(parameter_map),
     rclcpp::exceptions::InvalidParametersException);
 }
