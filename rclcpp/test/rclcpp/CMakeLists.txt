@@ -734,6 +734,19 @@ if(TARGET test_graph_listener)
   target_link_libraries(test_graph_listener ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_declare_parameters test_declare_parameters.cpp TIMEOUT 240)
+if(TARGET test_declare_parameters)
+  ament_target_dependencies(test_declare_parameters
+    "rcl_interfaces"
+    "rcpputils"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  target_link_libraries(test_declare_parameters ${PROJECT_NAME} mimick)
+endif()
+
 function(test_subscription_content_filter_for_rmw_implementation)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
   ament_add_gmock(test_subscription_content_filter${target_suffix}
