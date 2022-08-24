@@ -52,7 +52,7 @@ public:
   {}
 
   RCLCPP_PUBLIC
-  virtual ~SubscriptionIntraProcessBase();
+  virtual ~SubscriptionIntraProcessBase() = default;
 
   RCLCPP_PUBLIC
   size_t
