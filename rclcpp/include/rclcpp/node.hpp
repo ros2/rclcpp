@@ -580,6 +580,22 @@ public:
     > & parameters,
     bool ignore_override = false);
 
+  /// Declare and initialize several parameters with the same namespace.
+  /**
+   * This version will take a vector where the value is a pair, with the
+   * rclcpp::Parameter object as the first item and a parameter descriptor
+   * as the second.
+   *
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters_atomically(
+    const std::string & namespace_,
+    const std::vector<
+      std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters,
+    bool ignore_override = false);
+
   /// Undeclare a previously declared parameter.
   /**
    * This method will _not_ cause a callback registered with any of the
