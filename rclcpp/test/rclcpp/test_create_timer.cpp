@@ -69,9 +69,9 @@ TEST(TestCreateWallTimer, call_wall_timer_with_bad_arguments)
   auto callback = []() {};
   rclcpp::CallbackGroup::SharedPtr group = nullptr;
   auto node_interface =
-    rclcpp::node_interfaces::get_node_base_interface(node);
+    rclcpp::node_interfaces::get_node_base_interface(node).get();
   auto timers_interface =
-    rclcpp::node_interfaces::get_node_timers_interface(node);
+    rclcpp::node_interfaces::get_node_timers_interface(node).get();
 
   // Negative period
   EXPECT_THROW(
@@ -124,11 +124,11 @@ TEST(TestCreateTimer, call_timer_with_bad_arguments)
   auto callback = []() {};
   rclcpp::CallbackGroup::SharedPtr group = nullptr;
   auto node_interface =
-    rclcpp::node_interfaces::get_node_base_interface(node);
+    rclcpp::node_interfaces::get_node_base_interface(node).get();
   auto timers_interface =
-    rclcpp::node_interfaces::get_node_timers_interface(node);
+    rclcpp::node_interfaces::get_node_timers_interface(node).get();
   auto clock_interface =
-    rclcpp::node_interfaces::get_node_clock_interface(node);
+    rclcpp::node_interfaces::get_node_clock_interface(node).get();
 
   // Negative period
   EXPECT_THROW(

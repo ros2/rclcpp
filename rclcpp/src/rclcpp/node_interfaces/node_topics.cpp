@@ -32,8 +32,8 @@ using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::node_interfaces::NodeTopics;
 
 NodeTopics::NodeTopics(
-  std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface> node_timers)
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  rclcpp::node_interfaces::NodeTimersInterface * node_timers)
 : node_base_(node_base), node_timers_(node_timers)
 {}
 
@@ -47,7 +47,7 @@ NodeTopics::create_publisher(
   const rclcpp::QoS & qos)
 {
   // Create the MessageT specific Publisher using the factory, but return it as PublisherBase.
-  return publisher_factory.create_typed_publisher(node_base_.get(), topic_name, qos);
+  return publisher_factory.create_typed_publisher(node_base_, topic_name, qos);
 }
 
 void
@@ -86,7 +86,7 @@ NodeTopics::create_subscription(
   const rclcpp::QoS & qos)
 {
   // Create the MessageT specific Subscription using the factory, but return a SubscriptionBase.
-  return subscription_factory.create_typed_subscription(node_base_.get(), topic_name, qos);
+  return subscription_factory.create_typed_subscription(node_base_, topic_name, qos);
 }
 
 void
@@ -127,13 +127,13 @@ NodeTopics::add_subscription(
   }
 }
 
-std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>
+rclcpp::node_interfaces::NodeBaseInterface *
 NodeTopics::get_node_base_interface() const
 {
   return node_base_;
 }
 
-std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+rclcpp::node_interfaces::NodeTimersInterface *
 NodeTopics::get_node_timers_interface() const
 {
   return node_timers_;

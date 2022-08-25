@@ -105,13 +105,15 @@ create_subscription(
         }
       };
 
+    auto node_timer_interface = node_topics_interface->get_node_timers_interface();
+
     auto timer = create_wall_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
         options.topic_stats_options.publish_period),
       sub_call_back,
       options.callback_group,
       node_topics_interface->get_node_base_interface(),
-      node_topics_interface->get_node_timers_interface()
+      node_timer_interface
     );
 
     subscription_topic_stats->set_publisher_timer(timer);

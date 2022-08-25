@@ -46,8 +46,8 @@ public:
 
   RCLCPP_PUBLIC
   NodeTopics(
-    std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base,
-    std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface> node_timers);
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    rclcpp::node_interfaces::NodeTimersInterface * node_timers);
 
   RCLCPP_PUBLIC
   ~NodeTopics() override;
@@ -79,11 +79,11 @@ public:
     rclcpp::CallbackGroup::SharedPtr callback_group) override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<node_interfaces::NodeBaseInterface>
+  rclcpp::node_interfaces::NodeBaseInterface *
   get_node_base_interface() const override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+  rclcpp::node_interfaces::NodeTimersInterface *
   get_node_timers_interface() const override;
 
   RCLCPP_PUBLIC
@@ -93,8 +93,8 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeTopics)
 
-  std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_;
-  std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface> node_timers_;
+  rclcpp::node_interfaces::NodeBaseInterface * node_base_;
+  rclcpp::node_interfaces::NodeTimersInterface * node_timers_;
 };
 
 }  // namespace node_interfaces
