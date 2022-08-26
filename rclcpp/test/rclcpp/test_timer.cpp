@@ -298,6 +298,6 @@ TEST_F(TestTimer, test_timer_triggered_twice) {
   ASSERT_EQ(1, callback_counter);
 
   executor->spin();
-  ASSERT_NE(callback_counter == 2);
+  ASSERT_NE(2, callback_counter);
   ASSERT_TRUE(timer_called_twice->is_canceled());
 }

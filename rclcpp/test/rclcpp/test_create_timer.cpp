@@ -157,7 +157,7 @@ TEST(TestCreateTimer, timer_triggered_twice)
   ASSERT_EQ(2, callback_counter);
 
   rclcpp::spin_some(node);
-  ASSERT_NE(callback_counter == 3);
+  ASSERT_NE(3, callback_counter);
   ASSERT_TRUE(timer->is_canceled());
 
   rclcpp::shutdown();
