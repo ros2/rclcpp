@@ -154,11 +154,8 @@ public:
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
-  rclcpp::Context::SharedPtr context_;
-  std::chrono::nanoseconds period_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
-  bool autostart_{false};
 };
 
 
