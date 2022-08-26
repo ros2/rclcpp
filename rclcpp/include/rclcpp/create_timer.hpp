@@ -78,7 +78,7 @@ safe_cast_to_period_in_ns(std::chrono::duration<DurationRepT, DurationT> period)
 
   return period_ns;
 }
-}
+}  // namespace detail
 
 /// Create a timer with a given clock
 /// \internal
