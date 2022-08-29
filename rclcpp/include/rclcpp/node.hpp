@@ -991,6 +991,9 @@ public:
    * One of the use case of "pre set callback" can be updating additional parameters
    * conditioned on changes to a parameter.
    *
+   * Users should retain a copy of the returned shared pointer, as the callback
+   * is valid only as long as the smart pointer is alive.
+   *
    * For an example callback:
    *
    *```cpp
@@ -1038,6 +1041,9 @@ public:
    * reference to a vector of parameters to be set, and returns an instance of
    * rcl_interfaces::msg::SetParametersResult to indicate whether or not the
    * parameter should be set or not, and if not why.
+   *
+   * Users should retain a copy of the returned shared pointer, as the callback
+   * is valid only as long as the smart pointer is alive.
    *
    * For an example callback:
    *
@@ -1106,6 +1112,9 @@ public:
   /**
    * The callback is called when any of the `set_parameter*` or `declare_parameter*`
    * methods are successful.
+   *
+   * Users should retain a copy of the returned shared pointer, as the callback
+   * is valid only as long as the smart pointer is alive.
    *
    * The callback takes a reference to a const vector of parameters that have been
    * set successfully.
