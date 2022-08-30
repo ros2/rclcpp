@@ -93,12 +93,12 @@ create_timer(
   rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_timer(
-    node_base.get(),
-    node_timers.get(),
     clock,
     period.to_chrono<std::chrono::nanoseconds>(),
     std::forward<CallbackT>(callback),
-    group);
+    group,
+    node_base.get(),
+    node_timers.get());
 }
 
 /// Create a timer with a given clock
