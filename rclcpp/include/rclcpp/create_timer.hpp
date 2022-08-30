@@ -166,7 +166,8 @@ create_timer(
 
   // Add a new generic timer.
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
-    std::move(clock), period_ns, std::move(callback), node_base->get_context(), amount_of_callbacks);
+    std::move(clock), period_ns, std::move(callback), node_base->get_context(),
+    amount_of_callbacks);
   node_timers->add_timer(timer, group);
   return timer;
 }
