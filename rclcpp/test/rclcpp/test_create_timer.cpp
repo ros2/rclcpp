@@ -148,11 +148,12 @@ TEST(TestCreateTimer, timer_without_autostart)
     nullptr,
     false);
 
-  ASSERT_TRUE(timer->is_canceled());
+  EXPECT_TRUE(timer->is_canceled());
+  EXPECT_EQ(timer->time_until_trigger().count(), std::chrono::nanoseconds::max().count());
 
   timer->reset();
-
-  ASSERT_FALSE(timer->is_canceled());
+  EXPECT_LE(timer->time_until_trigger().count(), std::chrono::nanoseconds::max().count());
+  EXPECT_FALSE(timer->is_canceled());
 
   timer->cancel();
 

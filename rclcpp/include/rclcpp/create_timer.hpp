@@ -85,6 +85,7 @@ create_timer(
  * \param group
  * \param node_base
  * \param node_timers
+ * \param autostart defines if the timer should start it's countdown on initialization or not.
  * \return
  * \throws std::invalid argument if either node_base or node_timers
  * are null, or period is negative or too large

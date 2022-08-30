@@ -303,7 +303,13 @@ TEST_F(TestTimer, test_failures_with_exceptions)
 TEST_F(TestTimer, test_timer_without_autostart)
 {
   EXPECT_TRUE(timer_without_autostart->is_canceled());
+  EXPECT_EQ(
+    timer_without_autostart->time_until_trigger().count(),
+    std::chrono::nanoseconds::max().count());
   // Reset to change start timer
   timer_without_autostart->reset();
+  EXPECT_LE(
+    timer_without_autostart->time_until_trigger().count(),
+    std::chrono::nanoseconds::max().count());
   EXPECT_FALSE(timer_without_autostart->is_canceled());
 }
