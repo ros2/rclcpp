@@ -90,28 +90,11 @@ LifecycleNode::create_wall_timer(
   CallbackT callback,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  return rclcpp::create_wall_timer(
-    period,
-    std::move(callback),
-    group,
-    this->node_base_.get(),
-    this->node_timers_.get());
-}
-
-template<typename DurationRepT, typename DurationT, typename CallbackT>
-typename rclcpp::GenericTimer<CallbackT>::SharedPtr
-LifecycleNode::create_timer(
-  std::chrono::duration<DurationRepT, DurationT> period,
-  CallbackT callback,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  return rclcpp::create_timer(
-    this->get_clock(),
-    period,
-    std::move(callback),
-    group,
-    this->node_base_.get(),
-    this->node_timers_.get());
+  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    std::move(callback), this->node_base_->get_context());
+  node_timers_->add_timer(timer, group);
+  return timer;
 }
 
 template<typename ServiceT>
