@@ -719,14 +719,13 @@ NodeParameters::declare_parameters_atomically(
     // If it failed to be set, then throw an exception.
     if (!result.successful) {
       constexpr const char type_error_msg_start[] = "Wrong parameter type";
+      __undeclare_parameters(parameters_, names);
       if (
         0u == std::strncmp(
           result.reason.c_str(), type_error_msg_start, sizeof(type_error_msg_start) - 1))
       {
-        __undeclare_parameters(parameters_, names);
         throw rclcpp::exceptions::InvalidParameterTypeException(name, result.reason);
       }
-      __undeclare_parameters(parameters_, names);
       throw rclcpp::exceptions::InvalidParameterValueException(
               "parameter '" + name + "' could not be set: " + result.reason);
     }

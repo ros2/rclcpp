@@ -580,12 +580,45 @@ public:
     > & parameters,
     bool ignore_override = false);
 
-  /// Declare and initialize several parameters with the same namespace.
+  /// Declare one or more parameters, all at once.
   /**
-   * This version will take a vector where the value is a pair, with the
-   * rclcpp::Parameter object as the first item and a parameter descriptor
-   * as the second.
+   * Declare the given parameters, all at one time, and then aggregate result.
    *
+   * Behaves like declare_parameter, except that it declares multiple parameters,
+   * failing all if just one of the parameters are unsuccessfully declared.
+   * Either all of the parameters are declared or none of them are declared.
+   *
+   * Like declare_parameter and declare_parameters, this method may throw an
+   * rclcpp::exceptions::InvalidParametersException exception if any of the
+   * parameters to be set have not first been declared.
+   * If the exception is thrown then none of the parameters will have been declared.
+   *
+   * This method will result in any callback registered with
+   * 'add_on_set_parameters_callback' to be called, just one time.
+   * If the callback prevents the parameters from being set, then it will be
+   * reflected in the SetParametersResult which is returned, but no exception
+   * will be thrown.
+   *
+   * If a callback was registered previously with `add_post_set_parameters_callback`,
+   * it will be called after setting the node parameters successfully, just one time
+   * for all parameters.
+   *
+   * If you pass multiple rclcpp::Parameter instances with the same name, then
+   * only the last one in the vector (forward iteration) will be set.
+   *
+   * Like declare_parameter() this method will implicitly undeclare parameters
+   * with the type rclcpp::PARAMETER_NOT_SET.
+   *
+   * \param[in] namespace_ The namespace in which to declare the parameters.
+   * \param[in] parameters The parameters to set in the given namespace.
+   * \param[in] ignore_overrides When `true`, the parameters overrides are ignored.
+   *    Default to `false`.
+   * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
+   *   has already been declared.
+   * \throws rclcpp::exceptions::InvalidParametersException if a parameter
+   *   name is invalid.
+   * \throws rclcpp::exceptions::InvalidParameterValueException if initial
+   *   value fails to be set.
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::ParameterValue>
