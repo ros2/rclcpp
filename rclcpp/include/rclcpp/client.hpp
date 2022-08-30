@@ -769,7 +769,9 @@ public:
     auto old_size = pending_requests_.size();
     for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
       if (it->second.first < time_point) {
-        pruned_requests->push_back(it->first);
+        if (pruned_requests) {
+          pruned_requests->push_back(it->first);
+        }
         it = pending_requests_.erase(it);
       } else {
         ++it;
