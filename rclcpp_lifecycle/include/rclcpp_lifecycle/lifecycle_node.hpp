@@ -242,7 +242,7 @@ public:
     )
   );
 
-  /// Create a timer.
+  /// Create a timer that uses the wall clock to drive the callback.
   /**
    * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
@@ -251,6 +251,19 @@ public:
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
+    std::chrono::duration<DurationRepT, DurationT> period,
+    CallbackT callback,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create a timer that uses the node clock to drive the callback.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   */
+  template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
+  typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+  create_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
