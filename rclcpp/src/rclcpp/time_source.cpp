@@ -91,6 +91,13 @@ public:
   // Attach a clock
   void attachClock(rclcpp::Clock::SharedPtr clock)
   {
+    {
+      std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+      if (clock->get_clock_type() != RCL_ROS_TIME && ros_time_active_ == true) {
+        throw std::invalid_argument(
+                "ros_time_active_ can't be true while clock is not of RCL_ROS_TIME type");
+      }
+    }
     std::lock_guard<std::mutex> guard(clock_list_lock_);
     associated_clocks_.push_back(clock);
     // Set the clock to zero unless there's a recently received message
@@ -165,6 +172,18 @@ public:
   void cache_last_msg(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
   {
     last_msg_set_ = msg;
+  }
+
+  bool are_all_clocks_rcl_ros_time()
+  {
+    std::lock_guard<std::mutex> guard(clock_list_lock_);
+    for (auto & clock : associated_clocks_) {
+      std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+      if (clock->get_clock_type() != RCL_ROS_TIME) {
+        return false;
+      }
+    }
+    return true;
   }
 
 private:
@@ -441,9 +460,16 @@ private:
         continue;
       }
       if (it.second->value.bool_value) {
-        parameter_state_ = SET_TRUE;
-        clocks_state_.enable_ros_time();
-        create_clock_sub();
+        if (clocks_state_.are_all_clocks_rcl_ros_time()) {
+          parameter_state_ = SET_TRUE;
+          clocks_state_.enable_ros_time();
+          create_clock_sub();
+        } else {
+          RCLCPP_ERROR(
+            logger_,
+            "use_sim_time parameter can't be true while clocks are not all of RCL_ROS_TIME type");
+          continue;
+        }
       } else {
         parameter_state_ = SET_FALSE;
         destroy_clock_sub();
