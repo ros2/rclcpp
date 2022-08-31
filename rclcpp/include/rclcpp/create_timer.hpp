@@ -94,12 +94,12 @@ create_timer(
   bool autostart = true)
 {
   return create_timer(
-    node_base.get(),
-    node_timers.get(),
     clock,
     period.to_chrono<std::chrono::nanoseconds>(),
     std::forward<CallbackT>(callback),
     group,
+    node_base.get(),
+    node_timers.get(),
     autostart);
 }
 

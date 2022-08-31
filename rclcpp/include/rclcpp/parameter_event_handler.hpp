@@ -86,6 +86,9 @@ struct ParameterEventCallbackHandle
  * the ROS node supplied in the ParameterEventHandler constructor.
  * The callback, a lambda function in this case, simply prints out the value of the parameter.
  *
+ * Note: the object returned from add_parameter_callback must be captured or the callback will
+ * be immediately unregistered.
+ *
  * You may also monitor for changes to parameters in other nodes by supplying the node
  * name to add_parameter_callback:
  *
@@ -103,8 +106,8 @@ struct ParameterEventCallbackHandle
  * In this case, the callback will be invoked whenever "some_remote_param_name" changes
  * on remote node "some_remote_node_name".
  *
- * To remove a parameter callback, call remove_parameter_callback, passing the handle returned
- * from add_parameter_callback:
+ * To remove a parameter callback, reset the callback handle smart pointer or call
+ * remove_parameter_callback, passing the handle returned from add_parameter_callback:
  *
  *   param_handler->remove_parameter_callback(handle2);
  *
@@ -152,9 +155,12 @@ struct ParameterEventCallbackHandle
  * For both parameter callbacks and parameter event callbacks, when multiple callbacks are added,
  * the callbacks are invoked last-in, first-called order (LIFO).
  *
- * To remove a parameter event callback, use:
+ * Note: the callback handle returned from add_parameter_event_callback must be captured or
+ * the callback will immediately be unregistered.
  *
- *   param_handler->remove_event_parameter_callback(handle);
+ * To remove a parameter event callback, reset the callback smart pointer or use:
+ *
+ *   param_handler->remove_event_parameter_callback(handle3);
  */
 class ParameterEventHandler
 {
@@ -189,10 +195,14 @@ public:
   /**
    * This function may be called multiple times to set multiple parameter event callbacks.
    *
+   * Note: if the returned callback handle smart pointer is not captured, the callback is
+   * immediatedly unregistered. A compiler warning should be generated to warn of this.
+   *
    * \param[in] callback Function callback to be invoked on parameter updates.
    * \returns A handle used to refer to the callback.
    */
   RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
   ParameterEventCallbackHandle::SharedPtr
   add_parameter_event_callback(
     ParameterEventCallbackType callback);
@@ -212,12 +222,17 @@ public:
   /**
    * If a node_name is not provided, defaults to the current node.
    *
+   * Note: if the returned callback handle smart pointer is not captured, the callback
+   * is immediately unregistered. A compiler warning should be generated to warn
+   * of this.
+   *
    * \param[in] parameter_name Name of parameter to monitor.
    * \param[in] callback Function callback to be invoked upon parameter update.
    * \param[in] node_name Name of node which hosts the parameter.
    * \returns A handle used to refer to the callback.
    */
   RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
   ParameterCallbackHandle::SharedPtr
   add_parameter_callback(
     const std::string & parameter_name,
