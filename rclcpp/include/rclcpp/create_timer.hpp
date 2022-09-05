@@ -94,12 +94,12 @@ create_timer(
   unsigned int amount_of_callbacks = 0)
 {
   return create_timer(
-    node_base.get(),
-    node_timers.get(),
     clock,
     period.to_chrono<std::chrono::nanoseconds>(),
     std::forward<CallbackT>(callback),
     group,
+    node_base.get(),
+    node_timers.get(),
     amount_of_callbacks);
 }
 
