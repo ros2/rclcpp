@@ -299,7 +299,7 @@ if(TARGET test_init_options)
   ament_target_dependencies(test_init_options "rcl")
   target_link_libraries(test_init_options ${PROJECT_NAME} mimick)
 endif()
-ament_add_gtest(test_parameter_client test_parameter_client.cpp)
+ament_add_gmock(test_parameter_client test_parameter_client.cpp)
 if(TARGET test_parameter_client)
   ament_target_dependencies(test_parameter_client
     "rcl_interfaces"

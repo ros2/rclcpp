@@ -290,28 +290,24 @@ std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::load_parameters(
   const std::string & yaml_filename)
 {
-  rclcpp::ParameterMap parameter_map = rclcpp::parameter_map_from_yaml_file(yaml_filename);
-  return this->load_parameters(parameter_map);
+  rclcpp::ParameterMap parameter_map =
+    rclcpp::parameter_map_from_yaml_file(yaml_filename, remote_node_name_.c_str());
+
+  auto iter = parameter_map.find(remote_node_name_);
+  if (iter == parameter_map.end() || iter->second.size() == 0) {
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
+  }
+  auto future_result = set_parameters(iter->second);
+
+  return future_result;
 }
 
 std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::load_parameters(
   const rclcpp::ParameterMap & parameter_map)
 {
-  std::vector<rclcpp::Parameter> parameters;
-  std::string remote_name = remote_node_name_.substr(remote_node_name_.substr(1).find("/") + 2);
-  for (const auto & params : parameter_map) {
-    std::string node_full_name = params.first;
-    std::string node_name = node_full_name.substr(node_full_name.find("/*/") + 3);
-    if (node_full_name == remote_node_name_ ||
-      node_full_name == "/**" ||
-      (node_name == remote_name))
-    {
-      for (const auto & param : params.second) {
-        parameters.push_back(param);
-      }
-    }
-  }
+  std::vector<rclcpp::Parameter> parameters =
+    rclcpp::parameters_from_map(parameter_map, remote_node_name_.c_str());
 
   if (parameters.size() == 0) {
     throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
