@@ -31,6 +31,8 @@
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
+#include "rcpputils/filesystem_helper.hpp"
+
 class TestNodeParameters : public ::testing::Test
 {
 public:
@@ -47,6 +49,7 @@ public:
       dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
       node->get_node_parameters_interface().get());
     ASSERT_NE(nullptr, node_parameters);
+    test_resources_path /= "test_node_parameters";
   }
 
   void TearDown()
@@ -57,6 +60,8 @@ public:
 protected:
   std::shared_ptr<rclcpp::Node> node;
   rclcpp::node_interfaces::NodeParameters * node_parameters;
+
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 TEST_F(TestNodeParameters, construct_destruct_rcl_errors) {
@@ -198,4 +203,131 @@ TEST_F(TestNodeParameters, add_remove_parameters_callback) {
   RCLCPP_EXPECT_THROW_EQ(
     node_parameters->remove_on_set_parameters_callback(handle.get()),
     std::runtime_error("Callback doesn't exist"));
+}
+
+TEST_F(TestNodeParameters, wildcard_with_namespace)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "wildcards.yaml").string()
+  });
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node2", "ns", opts);
+
+  auto * node_parameters =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters);
+
+  const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+  EXPECT_EQ(7u, parameter_overrides.size());
+  EXPECT_EQ(parameter_overrides.at("full_wild").get<std::string>(), "full_wild");
+  EXPECT_EQ(parameter_overrides.at("namespace_wild").get<std::string>(), "namespace_wild");
+  EXPECT_EQ(
+    parameter_overrides.at("namespace_wild_another").get<std::string>(),
+    "namespace_wild_another");
+  EXPECT_EQ(
+    parameter_overrides.at("namespace_wild_one_star").get<std::string>(),
+    "namespace_wild_one_star");
+  EXPECT_EQ(parameter_overrides.at("node_wild_in_ns").get<std::string>(), "node_wild_in_ns");
+  EXPECT_EQ(
+    parameter_overrides.at("node_wild_in_ns_another").get<std::string>(),
+    "node_wild_in_ns_another");
+  EXPECT_EQ(parameter_overrides.at("explicit_in_ns").get<std::string>(), "explicit_in_ns");
+  EXPECT_EQ(parameter_overrides.count("should_not_appear"), 0u);
+}
+
+TEST_F(TestNodeParameters, wildcard_no_namespace)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "wildcards.yaml").string()
+  });
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node2", opts);
+
+  auto * node_parameters =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters);
+
+  const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+  EXPECT_EQ(5u, parameter_overrides.size());
+  EXPECT_EQ(parameter_overrides.at("full_wild").get<std::string>(), "full_wild");
+  EXPECT_EQ(parameter_overrides.at("namespace_wild").get<std::string>(), "namespace_wild");
+  EXPECT_EQ(
+    parameter_overrides.at("namespace_wild_another").get<std::string>(),
+    "namespace_wild_another");
+  EXPECT_EQ(parameter_overrides.at("node_wild_no_ns").get<std::string>(), "node_wild_no_ns");
+  EXPECT_EQ(parameter_overrides.at("explicit_no_ns").get<std::string>(), "explicit_no_ns");
+  EXPECT_EQ(parameter_overrides.count("should_not_appear"), 0u);
+  // "/*" match exactly one token, not expect to get `namespace_wild_one_star`
+  EXPECT_EQ(parameter_overrides.count("namespace_wild_one_star"), 0u);
+}
+
+TEST_F(TestNodeParameters, params_by_order)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "params_by_order.yaml").string()
+  });
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node2", "ns", opts);
+
+  auto * node_parameters =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters);
+
+  const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+  EXPECT_EQ(3u, parameter_overrides.size());
+  EXPECT_EQ(parameter_overrides.at("a_value").get<std::string>(), "last_one_win");
+  EXPECT_EQ(parameter_overrides.at("foo").get<std::string>(), "foo");
+  EXPECT_EQ(parameter_overrides.at("bar").get<std::string>(), "bar");
+}
+
+TEST_F(TestNodeParameters, complicated_wildcards)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "complicated_wildcards.yaml").string()
+  });
+
+  {
+    // regex matched: /**/foo/*/bar
+    std::shared_ptr<rclcpp::Node> node =
+      std::make_shared<rclcpp::Node>("node2", "/a/b/c/foo/d/bar", opts);
+
+    auto * node_parameters =
+      dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+      node->get_node_parameters_interface().get());
+    ASSERT_NE(nullptr, node_parameters);
+
+    const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+    EXPECT_EQ(2u, parameter_overrides.size());
+    EXPECT_EQ(parameter_overrides.at("foo").get<std::string>(), "foo");
+    EXPECT_EQ(parameter_overrides.at("bar").get<std::string>(), "bar");
+  }
+
+  {
+    // regex not matched: /**/foo/*/bar
+    std::shared_ptr<rclcpp::Node> node =
+      std::make_shared<rclcpp::Node>("node2", "/a/b/c/foo/bar", opts);
+
+    auto * node_parameters =
+      dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+      node->get_node_parameters_interface().get());
+    ASSERT_NE(nullptr, node_parameters);
+
+    const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+    EXPECT_EQ(0u, parameter_overrides.size());
+  }
 }
