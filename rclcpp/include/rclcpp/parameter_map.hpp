@@ -41,6 +41,16 @@ RCLCPP_PUBLIC
 ParameterMap
 parameter_map_from(const rcl_params_t * const c_params);
 
+/// Convert parameters from rcl_yaml_param_parser into C++ class instances.
+/// \param[in] c_params C structures containing parameters for multiple nodes.
+/// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
+///   If it's not nullptr, return the relative node parameters belonging to this node_fqn.
+/// \returns a map where the keys are fully qualified node names and values a list of parameters.
+/// \throws InvalidParametersException if the `rcl_params_t` is inconsistent or invalid.
+RCLCPP_PUBLIC
+ParameterMap
+parameter_map_from(const rcl_params_t * const c_params, const char * node_fqn);
+
 /// Convert parameter value from rcl_yaml_param_parser into a C++ class instance.
 /// \param[in] c_value C structure containing a value of a parameter.
 /// \returns an instance of a parameter value

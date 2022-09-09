@@ -1,0 +1,57 @@
+/**:
+  ros__parameters:
+    full_wild: "full_wild"
+
+/**:
+  node2:
+    ros__parameters:
+      namespace_wild: "namespace_wild"
+
+/**/node2:
+  ros__parameters:
+    namespace_wild_another: "namespace_wild_another"
+
+/*:
+  node2:
+    ros__parameters:
+      namespace_wild_one_star: "namespace_wild_one_star"
+
+ns:
+  "*":
+    ros__parameters:
+      node_wild_in_ns: "node_wild_in_ns"
+
+/ns/*:
+  ros__parameters:
+    node_wild_in_ns_another: "node_wild_in_ns_another"
+
+ns:
+  node2:
+    ros__parameters:
+      explicit_in_ns: "explicit_in_ns"
+
+"*":
+  ros__parameters:
+    node_wild_no_ns: "node_wild_no_ns"
+
+node2:
+  ros__parameters:
+    explicit_no_ns: "explicit_no_ns"
+
+ns:
+  nodeX:
+    ros__parameters:
+      should_not_appear: "incorrect_node_name"
+
+/**/nodeX:
+  ros__parameters:
+    should_not_appear: "incorrect_node_name"
+
+nsX:
+  node2:
+    ros__parameters:
+      should_not_appear: "incorrect_namespace"
+
+/nsX/*:
+  ros__parameters:
+    should_not_appear: "incorrect_namespace"

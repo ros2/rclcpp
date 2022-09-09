@@ -51,18 +51,13 @@ rclcpp::detail::resolve_parameter_overrides(
         [params]() {
           rcl_yaml_node_struct_fini(params);
         });
-      rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
+      rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params, node_fqn.c_str());
 
-      // Enforce wildcard matching precedence
-      // TODO(cottsay) implement further wildcard matching
-      const std::array<std::string, 2> node_matching_names{"/**", node_fqn};
-      for (const auto & node_name : node_matching_names) {
-        if (initial_map.count(node_name) > 0) {
-          // Combine parameter yaml files, overwriting values in older ones
-          for (const rclcpp::Parameter & param : initial_map.at(node_name)) {
-            result[param.get_name()] =
-              rclcpp::ParameterValue(param.get_value_message());
-          }
+      if (initial_map.count(node_fqn) > 0) {
+        // Combine parameter yaml files, overwriting values in older ones
+        for (const rclcpp::Parameter & param : initial_map.at(node_fqn)) {
+          result[param.get_name()] =
+            rclcpp::ParameterValue(param.get_value_message());
         }
       }
     }
