@@ -29,7 +29,7 @@ ParameterService::ParameterService(
   const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base,
   const std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services,
   rclcpp::node_interfaces::NodeParametersInterface * node_params,
-  const rmw_qos_profile_t & qos_profile)
+  const rclcpp::QoS & qos_profile)
 {
   const std::string node_name = node_base->get_name();
 
