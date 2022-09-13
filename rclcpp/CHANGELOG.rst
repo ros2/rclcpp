@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+17.0.0 (2022-09-13)
+-------------------
 * Make ParameterService and Sync/AsyncParameterClient accept rclcpp::QoS (`#1978 <https://github.com/ros2/rclcpp/issues/1978>`_)
 * support regex match for parameter client (`#1992 <https://github.com/ros2/rclcpp/issues/1992>`_)
 * operator+= and operator-= for Duration (`#1988 <https://github.com/ros2/rclcpp/issues/1988>`_)
