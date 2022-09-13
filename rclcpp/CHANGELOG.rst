@@ -2,6 +2,35 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make ParameterService and Sync/AsyncParameterClient accept rclcpp::QoS (`#1978 <https://github.com/ros2/rclcpp/issues/1978>`_)
+* support regex match for parameter client (`#1992 <https://github.com/ros2/rclcpp/issues/1992>`_)
+* operator+= and operator-= for Duration (`#1988 <https://github.com/ros2/rclcpp/issues/1988>`_)
+* Revert "Revert "Add a create_timer method to Node and `LifecycleNode` classes (`#1975 <https://github.com/ros2/rclcpp/issues/1975>`_)" (`#2009 <https://github.com/ros2/rclcpp/issues/2009>`_) (`#2010 <https://github.com/ros2/rclcpp/issues/2010>`_)
+* force compiler warning if callback handles not captured (`#2000 <https://github.com/ros2/rclcpp/issues/2000>`_)
+* Revert "Add a `create_timer` method to `Node` and `LifecycleNode` classes (`#1975 <https://github.com/ros2/rclcpp/issues/1975>`_)" (`#2009 <https://github.com/ros2/rclcpp/issues/2009>`_)
+* Add a `create_timer` method to `Node` and `LifecycleNode` classes (`#1975 <https://github.com/ros2/rclcpp/issues/1975>`_)
+* [docs] add note about callback lifetime for {on, post}_set_parameter_callback (`#1981 <https://github.com/ros2/rclcpp/issues/1981>`_)
+* fix memory leak (`#1994 <https://github.com/ros2/rclcpp/issues/1994>`_)
+* Support pre-set and post-set parameter callbacks in addition to on-set-parameter-callback. (`#1947 <https://github.com/ros2/rclcpp/issues/1947>`_)
+* Make create_service accept rclcpp::QoS (`#1969 <https://github.com/ros2/rclcpp/issues/1969>`_)
+* Make create_client accept rclcpp::QoS (`#1964 <https://github.com/ros2/rclcpp/issues/1964>`_)
+* Fix the documentation for rclcpp::ok to be accurate. (`#1965 <https://github.com/ros2/rclcpp/issues/1965>`_)
+* use regex for wildcard matching (`#1839 <https://github.com/ros2/rclcpp/issues/1839>`_)
+* Revert "Introduce executors new spin_for method, replace spin_until_future_complete with spin_until_complete. (`#1821 <https://github.com/ros2/rclcpp/issues/1821>`_) (`#1874 <https://github.com/ros2/rclcpp/issues/1874>`_)" (`#1956 <https://github.com/ros2/rclcpp/issues/1956>`_)
+* Introduce executors new spin_for method, replace spin_until_future_complete with spin_until_complete. (`#1821 <https://github.com/ros2/rclcpp/issues/1821>`_) (`#1874 <https://github.com/ros2/rclcpp/issues/1874>`_)
+* test adjustment for LoanedMessage. (`#1951 <https://github.com/ros2/rclcpp/issues/1951>`_)
+* fix virtual dispatch issues identified by clang-tidy (`#1816 <https://github.com/ros2/rclcpp/issues/1816>`_)
+* Remove unused on_parameters_set_callback\_ (`#1945 <https://github.com/ros2/rclcpp/issues/1945>`_)
+* Fix subscription.is_serialized() for callbacks with message info (`#1950 <https://github.com/ros2/rclcpp/issues/1950>`_)
+* wait for subscriptions on another thread. (`#1940 <https://github.com/ros2/rclcpp/issues/1940>`_)
+* Fix documentation of `RCLCPP\_[INFO,WARN,...]` (`#1943 <https://github.com/ros2/rclcpp/issues/1943>`_)
+* Always trigger guard condition waitset (`#1923 <https://github.com/ros2/rclcpp/issues/1923>`_)
+* Add statistics for handle_loaned_message (`#1927 <https://github.com/ros2/rclcpp/issues/1927>`_)
+* Drop wrong template specialization (`#1926 <https://github.com/ros2/rclcpp/issues/1926>`_)
+* Contributors: Alberto Soragna, Andrew Symington, Barry Xu, Brian, Chen Lihui, Chris Lalancette, Daniel Reuter, Deepanshu Bansal, Hubert Liberacki, Ivan Santiago Paunovic, Jochen Sprickerhof, Nikolai Morin, Shane Loretz, Tomoya Fujita, Tyler Weaver, William Woodall, schrodinbug
+
 16.2.0 (2022-05-03)
 -------------------
 * Update get_parameter_from_event to follow the function description (`#1922 <https://github.com/ros2/rclcpp/issues/1922>`_)
