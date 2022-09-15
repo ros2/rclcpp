@@ -113,7 +113,7 @@ ComponentManager::create_component_factory(const ComponentResource & resource)
   if (loaders_.find(library_path) == loaders_.end()) {
     RCLCPP_INFO(get_logger(), "Load Library: %s", library_path.c_str());
     try {
-      loaders_[library_path] = std::make_unique<class_loader::ClassLoader>(library_path);
+      loaders_[library_path] = class_loader::ClassLoader::Make(library_path);
     } catch (const std::exception & ex) {
       throw ComponentManagerException("Failed to load library: " + std::string(ex.what()));
     } catch (...) {
