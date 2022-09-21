@@ -74,10 +74,16 @@ spin_node_until_future_complete(
   const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
+  rclcpp::FutureReturnCode retcode;
   // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
   executor.add_node(node_ptr);
-  auto retcode = executor.spin_until_future_complete(future, timeout);
+  try {
+    retcode = executor.spin_until_future_complete(future, timeout);
+  } catch (...) {
+    executor.remove_node(node_ptr);
+    throw;
+  }
   executor.remove_node(node_ptr);
   return retcode;
 }

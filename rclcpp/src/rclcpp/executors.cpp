@@ -32,7 +32,12 @@ rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(node_ptr);
-  exec.spin();
+  try {
+    exec.spin();
+  } catch (...) {
+    exec.remove_node(node_ptr);
+    throw;
+  }
   exec.remove_node(node_ptr);
 }
 

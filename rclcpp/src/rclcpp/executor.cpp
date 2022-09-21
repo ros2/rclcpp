@@ -389,7 +389,12 @@ Executor::spin_node_once_nanoseconds(
 {
   this->add_node(node, false);
   // non-blocking = true
-  spin_once(timeout);
+  try {
+    spin_once(timeout);
+  } catch (...) {
+    this->remove_node(node, false);
+    throw;
+  }
   this->remove_node(node, false);
 }
 
@@ -397,7 +402,12 @@ void
 Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
 {
   this->add_node(node, false);
-  spin_some();
+  try {
+    spin_some();
+  } catch (...) {
+    this->remove_node(node, false);
+    throw;
+  }
   this->remove_node(node, false);
 }
 
