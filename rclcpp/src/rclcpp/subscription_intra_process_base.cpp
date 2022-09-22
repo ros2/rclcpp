@@ -17,11 +17,6 @@
 
 using rclcpp::experimental::SubscriptionIntraProcessBase;
 
-SubscriptionIntraProcessBase::~SubscriptionIntraProcessBase()
-{
-  clear_on_ready_callback();
-}
-
 void
 SubscriptionIntraProcessBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {

@@ -102,11 +102,6 @@ PublisherBase::PublisherBase(
 
 PublisherBase::~PublisherBase()
 {
-  for (const auto & pair : event_handlers_) {
-    rcl_publisher_event_type_t event_type = pair.first;
-    clear_on_new_qos_event_callback(event_type);
-  }
-
   // must fini the events before fini-ing the publisher
   event_handlers_.clear();
 

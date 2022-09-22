@@ -136,7 +136,6 @@ ClientBase::ClientBase(
 
 ClientBase::~ClientBase()
 {
-  clear_on_ready_callback();
 }
 
 bool
