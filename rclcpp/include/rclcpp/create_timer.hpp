@@ -91,7 +91,7 @@ create_timer(
   rclcpp::Duration period,
   CallbackT && callback,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  unsigned int amount_of_callbacks = 0)
+  uint32_t amount_of_callbacks = 0)
 {
   return create_timer(
     clock,
@@ -112,7 +112,7 @@ create_timer(
   rclcpp::Duration period,
   CallbackT && callback,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  unsigned int amount_of_callbacks = 0)
+  uint32_t amount_of_callbacks = 0)
 {
   return create_timer(
     clock,
@@ -136,7 +136,8 @@ create_timer(
  * \param group callback group
  * \param node_base node base interface
  * \param node_timers node timer interface
- * \param amount_of_callbacks Quantity of times the callback will be triggered.
+ * \param amount_of_callbacks Quantity of times the callback will be triggered. The default value is 0
+ * that means an infinite amount of callbacks i.e. the clock's default behavior.
  * \return shared pointer to a generic timer
  * \throws std::invalid_argument if either clock, node_base or node_timers
  * are nullptr, or period is negative or too large
@@ -150,7 +151,7 @@ create_timer(
   rclcpp::CallbackGroup::SharedPtr group,
   node_interfaces::NodeBaseInterface * node_base,
   node_interfaces::NodeTimersInterface * node_timers,
-  unsigned int amount_of_callbacks = 0)
+  uint32_t amount_of_callbacks = 0)
 {
   if (clock == nullptr) {
     throw std::invalid_argument{"clock cannot be null"};
@@ -195,7 +196,7 @@ create_wall_timer(
   rclcpp::CallbackGroup::SharedPtr group,
   node_interfaces::NodeBaseInterface * node_base,
   node_interfaces::NodeTimersInterface * node_timers,
-  unsigned int amount_of_callbacks = 0)
+  uint32_t amount_of_callbacks = 0)
 {
   if (node_base == nullptr) {
     throw std::invalid_argument{"input node_base cannot be null"};

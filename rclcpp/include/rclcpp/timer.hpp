@@ -183,7 +183,7 @@ public:
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
-    rclcpp::Context::SharedPtr context, unsigned int amount_of_callbacks = 0
+    rclcpp::Context::SharedPtr context, uint32_t amount_of_callbacks = 0
   )
   : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback)),
     amount_of_callbacks_(amount_of_callbacks)
@@ -233,7 +233,7 @@ public:
     execute_callback_delegate<>();
     TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
     if (amount_of_callbacks_ != 0) {
-      if (amount_of_callbacks_ == ++callbacks_called_) {
+      if (amount_of_callbacks_ <= ++callbacks_called_) {
         cancel();
       }
     }
@@ -276,8 +276,8 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
-  unsigned int callbacks_called_;
-  unsigned int amount_of_callbacks_;
+  uint32_t callbacks_called_;
+  uint32_t amount_of_callbacks_;
 };
 
 template<
@@ -303,7 +303,7 @@ public:
     std::chrono::nanoseconds period,
     FunctorT && callback,
     rclcpp::Context::SharedPtr context,
-    unsigned int amount_of_callbacks = 0)
+    uint32_t amount_of_callbacks = 0)
   : GenericTimer<FunctorT>(
       std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context,
       amount_of_callbacks)
