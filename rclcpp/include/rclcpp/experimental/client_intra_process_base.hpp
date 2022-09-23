@@ -15,12 +15,16 @@
 #ifndef RCLCPP__EXPERIMENTAL__CLIENT_INTRA_PROCESS_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__CLIENT_INTRA_PROCESS_BASE_HPP_
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <string>
 
+#include "rmw/impl/cpp/demangle.hpp"
+
 #include "rclcpp/context.hpp"
 #include "rclcpp/guard_condition.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
@@ -34,6 +38,11 @@ class ClientIntraProcessBase : public rclcpp::Waitable
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(ClientIntraProcessBase)
+
+  enum class EntityType : std::size_t
+  {
+    Client,
+  };
 
   RCLCPP_PUBLIC
   ClientIntraProcessBase(
@@ -60,6 +69,13 @@ public:
   std::shared_ptr<void>
   take_data() = 0;
 
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override
+  {
+    (void)id;
+    return take_data();
+  }
+
   virtual void
   execute(std::shared_ptr<void> & data) = 0;
 
@@ -71,9 +87,103 @@ public:
   QoS
   get_actual_qos() const;
 
+  /// Set a callback to be called when each new response arrives.
+  /**
+   * The callback receives a size_t which is the number of responses received
+   * since the last time this callback was called.
+   * Normally this is 1, but can be > 1 if responses were received before any
+   * callback was set.
+   *
+   * The callback also receives an int identifier argument.
+   * This is needed because a Waitable may be composed of several distinct entities,
+   * such as subscriptions, services, etc.
+   * The application should provide a generic callback function that will be then
+   * forwarded by the waitable to all of its entities.
+   * Before forwarding, a different value for the identifier argument will be
+   * bound to the function.
+   * This implies that the provided callback can use the identifier to behave
+   * differently depending on which entity triggered the waitable to become ready.
+   *
+   * Calling it again will clear any previously set callback.
+   *
+   * An exception will be thrown if the callback is not callable.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback, like the subscription
+   * or other information, you may use a lambda with captures or std::bind.
+   *
+   * \param[in] callback functor to be called when a new response is received.
+   */
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override
+  {
+    if (!callback) {
+      throw std::invalid_argument(
+              "The callback passed to set_on_ready_callback "
+              "is not callable.");
+    }
+
+    // Note: we bind the int identifier argument to this waitable's entity types
+    auto new_callback =
+      [callback, this](size_t number_of_events) {
+        try {
+          callback(number_of_events, static_cast<int>(EntityType::Client));
+        } catch (const std::exception & exception) {
+          RCLCPP_ERROR_STREAM(
+            // TODO(wjwwood): get this class access to the node logger it is associated with
+            rclcpp::get_logger("rclcpp"),
+            "rclcpp::ClientIntraProcessBase@" << this <<
+              " caught " << rmw::impl::cpp::demangle(exception) <<
+              " exception in user-provided callback for the 'on ready' callback: " <<
+              exception.what());
+        } catch (...) {
+          RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger("rclcpp"),
+            "rclcpp::ClientIntraProcessBase@" << this <<
+              " caught unhandled exception in user-provided callback " <<
+              "for the 'on ready' callback");
+        }
+      };
+
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    on_new_response_callback_ = new_callback;
+
+    if (unread_count_ > 0) {
+      if (qos_profile_.history() == HistoryPolicy::KeepAll) {
+        on_new_response_callback_(unread_count_);
+      } else {
+        // Use qos profile depth as upper bound for unread_count_
+        on_new_response_callback_(std::min(unread_count_, qos_profile_.depth()));
+      }
+      unread_count_ = 0;
+    }
+  }
+
+  /// Unset the callback registered for new messages, if any.
+  void
+  clear_on_ready_callback() override
+  {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    on_new_response_callback_ = nullptr;
+  }
+
 protected:
   std::recursive_mutex reentrant_mutex_;
   rclcpp::GuardCondition gc_;
+  std::function<void(size_t)> on_new_response_callback_ {nullptr};
+  size_t unread_count_{0};
+
+  void
+  invoke_on_new_response()
+  {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+    if (on_new_response_callback_) {
+      on_new_response_callback_(1);
+    } else {
+      unread_count_++;
+    }
+  }
 
 private:
   std::string service_name_;

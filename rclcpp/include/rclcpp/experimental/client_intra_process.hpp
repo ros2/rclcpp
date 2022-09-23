@@ -87,6 +87,7 @@ public:
   {
     buffer_->add(std::move(response));
     gc_.trigger();
+    invoke_on_new_response();
   }
 
   std::shared_ptr<void>

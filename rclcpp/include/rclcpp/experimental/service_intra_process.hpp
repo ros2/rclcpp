@@ -97,6 +97,7 @@ public:
   {
     buffer_->add(std::make_pair(intra_process_client_id, std::move(request)));
     gc_.trigger();
+    invoke_on_new_request();
   }
 
   std::shared_ptr<void>
