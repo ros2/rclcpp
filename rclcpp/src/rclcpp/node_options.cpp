@@ -20,7 +20,6 @@
 #include <vector>
 #include <utility>
 
-#include "rcl/time.h"
 #include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
