@@ -286,6 +286,10 @@ public:
       throw std::invalid_argument("Invalid type for parameter 'use_sim_time', should be 'bool'");
     }
 
+    on_set_parameters_callback_ = node_parameters_->add_on_set_parameters_callback(
+      std::bind(&TimeSource::NodeState::on_set_parameters, this, std::placeholders::_1));
+
+
     // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
     parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
       node_topics_,
@@ -305,6 +309,10 @@ public:
     // can't possibly call any of the callbacks as we are cleaning up.
     destroy_clock_sub();
     clocks_state_.disable_ros_time();
+    if (on_set_parameters_callback_ && node_parameters_) {
+      node_parameters_->remove_on_set_parameters_callback(on_set_parameters_callback_.get());
+    }
+    on_set_parameters_callback_.reset();
     parameter_subscription_.reset();
     node_base_.reset();
     node_topics_.reset();
@@ -439,9 +447,34 @@ private:
     clock_subscription_.reset();
   }
 
+  // On set Parameters callback handle
+  node_interfaces::OnSetParametersCallbackHandle::SharedPtr on_set_parameters_callback_{nullptr};
+
   // Parameter Event subscription
   using ParamSubscriptionT = rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>;
   std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
+
+  // Callback for parameter settings
+  rcl_interfaces::msg::SetParametersResult on_set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters)
+  {
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = true;
+    result.reason = "success";
+    for (const auto & param : parameters) {
+      if (param.get_name() == "use_sim_time" && param.get_type() == rclcpp::PARAMETER_BOOL) {
+        if (param.as_bool() && !(clocks_state_.are_all_clocks_rcl_ros_time())) {
+          result.successful = false;
+          result.reason =
+            "use_sim_time parameter can't be true while clocks are not all of RCL_ROS_TIME type";
+          RCLCPP_ERROR(
+            logger_,
+            "use_sim_time parameter can't be true while clocks are not all of RCL_ROS_TIME type");
+        }
+      }
+    }
+    return result;
+  }
 
   // Callback for parameter updates
   void on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
@@ -460,16 +493,9 @@ private:
         continue;
       }
       if (it.second->value.bool_value) {
-        if (clocks_state_.are_all_clocks_rcl_ros_time()) {
-          parameter_state_ = SET_TRUE;
-          clocks_state_.enable_ros_time();
-          create_clock_sub();
-        } else {
-          RCLCPP_ERROR(
-            logger_,
-            "use_sim_time parameter can't be true while clocks are not all of RCL_ROS_TIME type");
-          continue;
-        }
+        parameter_state_ = SET_TRUE;
+        clocks_state_.enable_ros_time();
+        create_clock_sub();
       } else {
         parameter_state_ = SET_FALSE;
         destroy_clock_sub();
