@@ -93,7 +93,7 @@ public:
   {
     {
       std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
-      if (clock->get_clock_type() != RCL_ROS_TIME && ros_time_active_ == true) {
+      if (clock->get_clock_type() != RCL_ROS_TIME && ros_time_active_) {
         throw std::invalid_argument(
                 "ros_time_active_ can't be true while clock is not of RCL_ROS_TIME type");
       }
@@ -309,7 +309,7 @@ public:
     // can't possibly call any of the callbacks as we are cleaning up.
     destroy_clock_sub();
     clocks_state_.disable_ros_time();
-    if (on_set_parameters_callback_ && node_parameters_) {
+    if (on_set_parameters_callback_) {
       node_parameters_->remove_on_set_parameters_callback(on_set_parameters_callback_.get());
     }
     on_set_parameters_callback_.reset();
