@@ -152,6 +152,7 @@ public:
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
+  uint32_t callbacks_called_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
 };
@@ -276,7 +277,6 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
-  uint32_t callbacks_called_;
   uint32_t amount_of_callbacks_;
 };
 

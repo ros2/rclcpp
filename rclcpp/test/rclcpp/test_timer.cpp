@@ -351,4 +351,13 @@ TEST_P(TestTimer, test_timer_triggered_twice) {
   executor->spin();
   ASSERT_NE(2, callback_counter);
   ASSERT_TRUE(timer_called_twice->is_canceled());
+
+  timer_called_twice->reset();
+
+  executor->spin();
+  ASSERT_EQ(2, callback_counter);
+
+  executor->spin();
+  ASSERT_NE(3, callback_counter);
+  ASSERT_TRUE(timer_called_twice->is_canceled());
 }
