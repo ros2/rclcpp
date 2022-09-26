@@ -240,7 +240,7 @@ public:
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
     rclcpp::CallbackGroup::SharedPtr group = nullptr,
-    unsigned int amount_of_callbacks = 0);
+    uint32_t amount_of_callbacks = 0);
 
   /// Create a timer that uses the node clock to drive the callback.
   /**

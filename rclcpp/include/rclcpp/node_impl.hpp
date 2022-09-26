@@ -111,7 +111,7 @@ Node::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
   rclcpp::CallbackGroup::SharedPtr group,
-  unsigned int amount_of_callbacks)
+  uint32_t amount_of_callbacks)
 {
   return rclcpp::create_wall_timer(
     period,
