@@ -161,7 +161,10 @@ protected:
 using VoidCallbackType = std::function<void ()>;
 using TimerCallbackType = std::function<void (TimerBase &)>;
 
-/// Generic timer. Periodically executes a user-specified callback.
+/// Generic timer. Periodically executes a user-specified callback. The user
+/// can specify a finite amount of times that the callback will be executed
+/// and the timer will cancel itself after that. Otherwise, it will keep exe-
+/// cuting the callback on each period.
 template<
   typename FunctorT,
   typename std::enable_if<
@@ -226,6 +229,11 @@ public:
 
   /**
    * \sa rclcpp::TimerBase::execute_callback
+   * This method will call the callback function and execute it. After executing
+   * the callback it will check if the timer was created with a finite amount of
+   * times it will be triggered and cancel itself after executing the callback that
+   * amount of times. If there was no finite amount of callbacks to call, the timer
+   * will always be triggered on each period.
    */
   void
   execute_callback() override
