@@ -481,6 +481,18 @@ public:
 
   virtual ~Service()
   {
+    if (!use_intra_process_) {
+      return;
+    }
+    auto ipm = weak_ipm_.lock();
+    if (!ipm) {
+      // TODO(ivanpauno): should this raise an error?
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Intra process manager died before than a service.");
+      return;
+    }
+    ipm->remove_service(intra_process_service_id_);
   }
 
   /// Take the next request from the service.

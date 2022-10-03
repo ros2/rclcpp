@@ -304,9 +304,13 @@ public:
 
     auto service_it = services_.find(service_id);
     if (service_it == services_.end()) {
-      throw std::runtime_error(
-              "There are no services to receive the intra-process request. "
-              "Do Inter process.");
+      auto cli = get_client_intra_process(intra_process_client_id);
+      auto warning_msg =
+        "Intra-process service gone out of scope. "
+        "Do inter-process requests.\n"
+        "Client topic name: " + std::string(cli->get_service_name());
+      RCLCPP_WARN(rclcpp::get_logger("rclcpp"), warning_msg.c_str());
+      return;
     }
     auto service_intra_process_base = service_it->second.lock();
     if (service_intra_process_base) {
