@@ -14,7 +14,7 @@
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
-#include "rcl_lifecycle/rcl_lifecycle.h"
+#include "rclcpp_lifecycle/state.hpp"
 
 namespace rclcpp_lifecycle
 {

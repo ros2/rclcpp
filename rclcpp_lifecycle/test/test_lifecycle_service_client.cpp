@@ -33,6 +33,8 @@
 #include "lifecycle_msgs/srv/get_available_transitions.hpp"
 #include "lifecycle_msgs/srv/get_state.hpp"
 
+#include "rcl_lifecycle/rcl_lifecycle.h"
+
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"

@@ -20,9 +20,10 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "lifecycle_msgs/msg/transition_description.hpp"
 #include "lifecycle_msgs/msg/transition_event.h"  // for getting the c-typesupport
@@ -41,6 +42,8 @@
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 
 #include "rcutils/logging_macros.h"
+
+#include "rmw/types.h"
 
 namespace rclcpp_lifecycle
 {
