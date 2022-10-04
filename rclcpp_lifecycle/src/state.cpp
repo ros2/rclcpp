@@ -14,6 +14,7 @@
 
 #include "rclcpp_lifecycle/state.hpp"
 
+#include <stdexcept>
 #include <string>
 
 #include "lifecycle_msgs/msg/state.hpp"

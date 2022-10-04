@@ -17,8 +17,6 @@
 
 #include "lifecycle_msgs/msg/transition.hpp"
 
-#include "rcl_lifecycle/rcl_lifecycle.h"
-
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 

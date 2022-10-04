@@ -36,6 +36,8 @@
 #ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 #define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -49,13 +51,11 @@
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
-#include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
@@ -82,6 +82,8 @@
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
+
+#include "rmw/types.h"
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
@@ -137,7 +139,7 @@ public:
     const rclcpp::NodeOptions & options = rclcpp::NodeOptions(),
     bool enable_communication_interface = true);
 
-  /// Create a node based on the node name and a rclcpp::Context.
+  /// Create a node based on the node name
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.

@@ -20,7 +20,10 @@
 #include <utility>
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 
 #include "rclcpp_lifecycle/managed_entity.hpp"
 

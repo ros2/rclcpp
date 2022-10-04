@@ -14,14 +14,21 @@
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
-#include <string>
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
-#include <vector>
+#include <stdexcept>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rcl_interfaces/msg/list_parameters_result.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
