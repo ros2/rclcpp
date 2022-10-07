@@ -16,7 +16,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <iostream>
 #include <memory>
 #include <random>
 #include <set>
@@ -35,7 +34,6 @@
 
 #include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 
-#include "statistics_msgs/msg/metrics_message.hpp"
 #include "statistics_msgs/msg/statistic_data_point.hpp"
 #include "statistics_msgs/msg/statistic_data_type.hpp"
 

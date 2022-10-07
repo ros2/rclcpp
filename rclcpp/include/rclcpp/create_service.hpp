@@ -22,7 +22,6 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rmw/rmw.h"
 
 namespace rclcpp
 {

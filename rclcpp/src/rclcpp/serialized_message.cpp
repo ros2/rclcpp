@@ -19,8 +19,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 
-#include "rmw/types.h"
-
 namespace rclcpp
 {
 

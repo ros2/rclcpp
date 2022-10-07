@@ -15,13 +15,10 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 
-#include <cassert>
 #include <cstdlib>
 #include <memory>
 #include <vector>
 #include <string>
-
-#include "rmw/rmw.h"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/static_executor_entities_collector.hpp"

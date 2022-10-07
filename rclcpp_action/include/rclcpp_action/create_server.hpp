@@ -27,7 +27,6 @@
 #include <string>
 
 #include "rclcpp_action/server.hpp"
-#include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {

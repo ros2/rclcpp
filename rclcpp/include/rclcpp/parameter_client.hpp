@@ -22,7 +22,6 @@
 
 #include "rcl_interfaces/msg/parameter.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
-#include "rcl_interfaces/msg/parameter_value.hpp"
 #include "rcl_interfaces/srv/describe_parameters.hpp"
 #include "rcl_interfaces/srv/get_parameter_types.hpp"
 #include "rcl_interfaces/srv/get_parameters.hpp"

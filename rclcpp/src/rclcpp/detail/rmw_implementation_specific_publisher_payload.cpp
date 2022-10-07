@@ -14,8 +14,6 @@
 
 #include <rclcpp/detail/rmw_implementation_specific_publisher_payload.hpp>
 
-#include "rcl/publisher.h"
-
 namespace rclcpp
 {
 namespace detail

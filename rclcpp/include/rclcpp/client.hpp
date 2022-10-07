@@ -19,7 +19,6 @@
 #include <future>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -39,7 +38,6 @@
 
 #include "rcutils/logging_macros.h"
 
-#include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
 namespace rclcpp

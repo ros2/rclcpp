@@ -22,8 +22,6 @@
 #include <string>
 #include <utility>
 
-#include "rcl/error_handling.h"
-
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"

@@ -22,7 +22,6 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/publisher_base.hpp"
 
-#include "rcl/allocator.h"
 #include "rcl/publisher.h"
 
 namespace rclcpp

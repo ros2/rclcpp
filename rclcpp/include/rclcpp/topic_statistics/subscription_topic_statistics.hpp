@@ -22,7 +22,6 @@
 
 #include "libstatistics_collector/collector/generate_statistics_message.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
-#include "libstatistics_collector/topic_statistics_collector/constants.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_age.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 

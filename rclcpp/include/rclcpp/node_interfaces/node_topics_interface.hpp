@@ -19,9 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "rcl/publisher.h"
-#include "rcl/subscription.h"
-
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"

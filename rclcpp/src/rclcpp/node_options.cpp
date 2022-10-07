@@ -21,7 +21,6 @@
 #include <utility>
 
 #include "rclcpp/detail/utilities.hpp"
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"

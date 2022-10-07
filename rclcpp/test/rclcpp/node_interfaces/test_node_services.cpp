@@ -20,7 +20,6 @@
 #include "rcl/node_options.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"

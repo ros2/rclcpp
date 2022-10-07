@@ -21,7 +21,6 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
-#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {

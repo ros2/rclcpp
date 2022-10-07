@@ -19,7 +19,6 @@
 #include <rcl/types.h>
 
 #include <rcl_action/names.h>
-#include <rcl_action/default_qos.h>
 #include <rcl_action/wait.h>
 
 #include <rclcpp/clock.hpp>
@@ -27,7 +26,6 @@
 #include <rclcpp/executors.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <rclcpp/service.hpp>
 #include <rclcpp/time.hpp>
 

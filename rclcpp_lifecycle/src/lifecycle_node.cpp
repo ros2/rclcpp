@@ -21,10 +21,7 @@
 #include <utility>
 
 #include "lifecycle_msgs/msg/state.hpp"
-#include "lifecycle_msgs/msg/transition.hpp"
 
-#include "rclcpp/exceptions.hpp"
-#include "rclcpp/graph_listener.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
@@ -37,7 +34,6 @@
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
-#include "rclcpp/parameter_service.hpp"
 
 #include "lifecycle_node_interface_impl.hpp"  // implementation
 

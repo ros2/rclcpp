@@ -26,8 +26,6 @@
 
 #include "../utils/rclcpp_gtest_macros.hpp"
 
-#include "rcl_interfaces/msg/parameter_event.hpp"
-
 class TestParameterClient : public ::testing::Test
 {
 public:

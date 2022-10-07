@@ -24,7 +24,6 @@
 #include "rclcpp/exceptions.hpp"
 
 #include "rcl/error_handling.h"
-#include "rcl/rcl.h"
 
 namespace rclcpp
 {

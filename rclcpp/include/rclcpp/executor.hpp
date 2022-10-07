@@ -16,14 +16,11 @@
 #define RCLCPP__EXECUTOR_HPP_
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <list>
 #include <memory>
 #include <mutex>
-#include <string>
 #include <vector>
 
 #include "rcl/guard_condition.h"

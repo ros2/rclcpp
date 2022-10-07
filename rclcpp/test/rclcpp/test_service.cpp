@@ -23,9 +23,7 @@
 
 #include "../mocking_utils/patch.hpp"
 
-#include "rcl_interfaces/srv/list_parameters.hpp"
 #include "test_msgs/srv/empty.hpp"
-#include "test_msgs/srv/empty.h"
 
 class TestService : public ::testing::Test
 {

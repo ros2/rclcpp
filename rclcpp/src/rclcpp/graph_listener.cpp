@@ -20,11 +20,9 @@
 #include <string>
 #include <vector>
 
-#include "rcl/error_handling.h"
 #include "rcl/types.h"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
-#include "rclcpp/node.hpp"
 #include "rmw/impl/cpp/demangle.hpp"
 
 #include "rcutils/logging_macros.h"

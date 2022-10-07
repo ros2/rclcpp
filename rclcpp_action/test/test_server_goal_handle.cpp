@@ -14,7 +14,6 @@
 
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp/node.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <test_msgs/action/fibonacci.hpp>
 
 #include <gtest/gtest.h>

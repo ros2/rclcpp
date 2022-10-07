@@ -17,7 +17,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <stdexcept>

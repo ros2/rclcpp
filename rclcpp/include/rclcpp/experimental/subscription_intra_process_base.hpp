@@ -17,13 +17,10 @@
 
 #include <rmw/rmw.h>
 
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
-
-#include "rcl/error_handling.h"
 
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"

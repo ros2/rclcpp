@@ -23,7 +23,6 @@
 #include "rcl/graph.h"
 #include "rcl/remap.h"
 #include "rclcpp/event.hpp"
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"

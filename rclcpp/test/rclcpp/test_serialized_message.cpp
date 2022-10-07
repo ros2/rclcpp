@@ -26,7 +26,6 @@
 #include "rcpputils/asserts.hpp"
 
 #include "test_msgs/message_fixtures.hpp"
-#include "test_msgs/msg/basic_types.hpp"
 
 TEST(TestSerializedMessage, empty_initialize) {
   rclcpp::SerializedMessage serialized_message;

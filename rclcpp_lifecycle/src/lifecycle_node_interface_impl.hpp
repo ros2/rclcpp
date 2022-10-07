@@ -35,7 +35,6 @@
 #include "rcl/error_handling.h"
 
 #include "rcl_lifecycle/rcl_lifecycle.h"
-#include "rcl_lifecycle/transition_map.h"
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"

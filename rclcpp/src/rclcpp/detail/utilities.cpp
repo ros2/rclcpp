@@ -16,7 +16,6 @@
 
 #include <cassert>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"

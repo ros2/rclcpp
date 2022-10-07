@@ -22,8 +22,6 @@
 
 #include "rcl/graph.h"
 #include "rcl/node.h"
-#include "rcl/wait.h"
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/utilities.hpp"

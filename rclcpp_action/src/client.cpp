@@ -24,7 +24,6 @@
 #include <string>
 
 #include "rclcpp_action/client.hpp"
-#include "rclcpp_action/exceptions.hpp"
 
 namespace rclcpp_action
 {

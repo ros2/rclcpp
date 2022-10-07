@@ -20,12 +20,10 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/service.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 #include "rcl/service.h"
 
 #include "test_msgs/srv/empty.hpp"
-#include "test_msgs/srv/empty.h"
 
 class TestExternallyDefinedServices : public ::testing::Test
 {

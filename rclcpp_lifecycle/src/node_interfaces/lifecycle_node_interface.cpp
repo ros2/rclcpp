@@ -14,8 +14,6 @@
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
-#include "rcl_lifecycle/rcl_lifecycle.h"
-
 namespace rclcpp_lifecycle
 {
 namespace node_interfaces

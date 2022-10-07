@@ -14,16 +14,8 @@
 
 #include "rclcpp/service.hpp"
 
-#include <functional>
-#include <iostream>
 #include <memory>
-#include <sstream>
 #include <string>
-
-#include "rclcpp/any_service_callback.hpp"
-#include "rclcpp/macros.hpp"
-#include "rmw/error_handling.h"
-#include "rmw/rmw.h"
 
 using rclcpp::ServiceBase;
 

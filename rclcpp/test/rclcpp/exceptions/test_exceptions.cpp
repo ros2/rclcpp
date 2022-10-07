@@ -15,7 +15,6 @@
 #include <gtest/gtest.h>
 
 #include "rclcpp/exceptions/exceptions.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"

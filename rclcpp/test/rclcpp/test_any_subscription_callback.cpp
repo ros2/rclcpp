@@ -20,7 +20,6 @@
 
 #include "rclcpp/any_subscription_callback.hpp"
 #include "test_msgs/msg/empty.hpp"
-#include "test_msgs/msg/empty.h"
 
 class TestAnySubscriptionCallback : public ::testing::Test
 {

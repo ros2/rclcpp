@@ -14,8 +14,6 @@
 
 #include "rclcpp/exceptions.hpp"
 
-#include <cstdio>
-#include <functional>
 #include <string>
 #include <vector>
 

@@ -20,8 +20,6 @@
 #include <string>
 #include <utility>
 
-#include "rcl/subscription.h"
-
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rclcpp/any_subscription_callback.hpp"

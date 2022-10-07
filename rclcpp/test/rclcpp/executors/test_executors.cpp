@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <limits>
 #include <memory>
 #include <string>
 #include <thread>
@@ -30,7 +29,6 @@
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/duration.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "test_msgs/msg/empty.hpp"

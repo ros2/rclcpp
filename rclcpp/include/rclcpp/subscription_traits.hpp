@@ -20,7 +20,6 @@
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_options.hpp"
-#include "rcl/types.h"
 
 namespace rclcpp
 {

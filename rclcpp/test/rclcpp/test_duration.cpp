@@ -14,12 +14,10 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <chrono>
 #include <limits>
 #include <string>
 
-#include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/rclcpp.hpp"

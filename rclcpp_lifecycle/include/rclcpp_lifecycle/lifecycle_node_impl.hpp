@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
-#include "rclcpp/event.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/create_publisher.hpp"
@@ -32,7 +31,6 @@
 #include "rclcpp/type_support_decl.hpp"
 
 #include "lifecycle_publisher.hpp"
-#include "rclcpp_lifecycle/visibility_control.h"
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 

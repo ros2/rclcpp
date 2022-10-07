@@ -19,8 +19,6 @@
 #include <functional>
 #include <stdexcept>
 
-#include "rcl/wait.h"
-
 #include "rclcpp/macros.hpp"
 #include "rclcpp/wait_result_kind.hpp"
 

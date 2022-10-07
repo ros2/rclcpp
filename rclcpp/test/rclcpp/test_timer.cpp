@@ -18,12 +18,10 @@
 #include <chrono>
 #include <exception>
 #include <memory>
-#include <utility>
 
 #include "rcl/timer.h"
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"

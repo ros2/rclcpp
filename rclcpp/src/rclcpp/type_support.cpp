@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "rclcpp/type_support_decl.hpp"
-#include "rclcpp/visibility_control.hpp"
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"

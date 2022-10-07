@@ -23,7 +23,6 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/visibility_control.hpp"
 
 #include "rcutils/logging_macros.h"
 

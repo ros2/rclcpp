@@ -16,7 +16,6 @@
 #define RCLCPP__FUNCTION_TRAITS_HPP_
 
 #include <functional>
-#include <memory>
 #include <tuple>
 
 namespace rclcpp

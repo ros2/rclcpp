@@ -17,8 +17,6 @@
 
 #include <memory>
 
-#include "rcl/wait.h"
-
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"

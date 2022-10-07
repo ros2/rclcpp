@@ -19,15 +19,11 @@
 #include <string>
 #include <vector>
 
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/qos_event.hpp"
-
-#include "rmw/error_handling.h"
-#include "rmw/rmw.h"
 
 using rclcpp::SubscriptionBase;
 

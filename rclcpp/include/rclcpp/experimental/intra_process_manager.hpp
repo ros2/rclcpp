@@ -20,7 +20,6 @@
 #include <shared_mutex>
 
 #include <algorithm>
-#include <atomic>
 #include <cstdint>
 #include <exception>
 #include <map>

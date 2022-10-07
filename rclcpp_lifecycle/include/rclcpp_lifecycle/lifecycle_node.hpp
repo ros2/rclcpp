@@ -49,13 +49,11 @@
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
-#include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"

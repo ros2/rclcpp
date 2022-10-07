@@ -30,15 +30,11 @@
 #ifndef RCLCPP_ACTION__RCLCPP_ACTION_HPP_
 #define RCLCPP_ACTION__RCLCPP_ACTION_HPP_
 
-#include <csignal>
-#include <memory>
-
 #include "rclcpp_action/client.hpp"
 #include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/create_client.hpp"
 #include "rclcpp_action/create_server.hpp"
 #include "rclcpp_action/server.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
-#include "rclcpp_action/visibility_control.hpp"
 
 #endif  // RCLCPP_ACTION__RCLCPP_ACTION_HPP_

@@ -21,8 +21,6 @@
 
 #include "rcl/publisher.h"
 
-#include "rosidl_typesupport_cpp/message_type_support.hpp"
-
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/publisher_options.hpp"

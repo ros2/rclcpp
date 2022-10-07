@@ -18,7 +18,6 @@
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 class TestFindWeakNodes : public ::testing::Test
 {

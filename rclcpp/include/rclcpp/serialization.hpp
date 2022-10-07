@@ -16,8 +16,6 @@
 #define RCLCPP__SERIALIZATION_HPP_
 
 #include <memory>
-#include <stdexcept>
-#include <string>
 
 #include "rclcpp/visibility_control.hpp"
 

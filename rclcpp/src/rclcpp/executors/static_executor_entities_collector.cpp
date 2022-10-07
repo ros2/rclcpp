@@ -20,7 +20,6 @@
 #include <string>
 
 #include "rclcpp/memory_strategy.hpp"
-#include "rclcpp/executors/static_single_threaded_executor.hpp"
 
 using rclcpp::executors::StaticExecutorEntitiesCollector;
 

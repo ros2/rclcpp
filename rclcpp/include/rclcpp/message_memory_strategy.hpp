@@ -26,8 +26,6 @@
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rcutils/logging_macros.h"
-
 #include "rmw/serialized_message.h"
 
 namespace rclcpp

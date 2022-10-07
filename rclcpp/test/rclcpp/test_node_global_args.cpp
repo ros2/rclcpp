@@ -21,7 +21,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_options.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 class TestNodeWithGlobalArgs : public ::testing::Test
 {

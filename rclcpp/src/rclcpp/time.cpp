@@ -14,7 +14,6 @@
 
 #include <limits>
 #include <string>
-#include <utility>
 
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
@@ -22,10 +21,6 @@
 #include "builtin_interfaces/msg/time.hpp"
 
 #include "rcl/time.h"
-
-#include "rclcpp/exceptions.hpp"
-
-#include "rcutils/logging_macros.h"
 
 #include "rclcpp/utilities.hpp"
 

@@ -20,7 +20,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/executors.hpp"
 
 using namespace std::chrono_literals;
 

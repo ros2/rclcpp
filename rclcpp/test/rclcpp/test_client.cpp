@@ -21,8 +21,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "rcl_interfaces/srv/list_parameters.hpp"
-
 #include "../mocking_utils/patch.hpp"
 
 #include "test_msgs/srv/empty.hpp"

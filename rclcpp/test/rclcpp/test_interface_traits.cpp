@@ -15,7 +15,6 @@
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <utility>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/node_interfaces/node_base_interface_traits.hpp"

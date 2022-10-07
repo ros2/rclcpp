@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "rclcpp/node_interfaces/node_parameters.hpp"
-#include "rclcpp/utilities.hpp"
 
 using rclcpp::ParameterType;
 using rclcpp::Parameter;

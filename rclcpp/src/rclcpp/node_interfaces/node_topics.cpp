@@ -16,8 +16,6 @@
 
 #include <string>
 
-#include "rclcpp/exceptions.hpp"
-
 using rclcpp::exceptions::throw_from_rcl_error;
 
 using rclcpp::node_interfaces::NodeTopics;

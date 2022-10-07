@@ -15,7 +15,6 @@
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 
 #include <memory>
-#include <string>
 
 using rclcpp::node_interfaces::NodeTimeSource;
 

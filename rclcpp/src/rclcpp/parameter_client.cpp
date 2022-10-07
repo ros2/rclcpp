@@ -18,7 +18,6 @@
 #include <chrono>
 #include <functional>
 #include <future>
-#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>

@@ -15,8 +15,6 @@
 #ifndef RCLCPP__DETAIL__RESOLVE_INTRA_PROCESS_BUFFER_TYPE_HPP_
 #define RCLCPP__DETAIL__RESOLVE_INTRA_PROCESS_BUFFER_TYPE_HPP_
 
-#include <stdexcept>
-
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
 

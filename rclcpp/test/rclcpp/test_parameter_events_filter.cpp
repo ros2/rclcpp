@@ -17,10 +17,7 @@
 #include <string>
 #include <memory>
 
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/parameter_events_filter.hpp"
-
-#include "rcl_interfaces/msg/parameter_event.hpp"
 
 class TestParameterEventFilter : public ::testing::Test
 {

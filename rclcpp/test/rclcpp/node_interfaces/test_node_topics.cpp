@@ -21,7 +21,6 @@
 #include "rcl/node_options.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 #include "../../mocking_utils/patch.hpp"

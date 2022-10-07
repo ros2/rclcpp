@@ -23,15 +23,12 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
 
 #include "rmw/validate_namespace.h"
 
 #include "test_msgs/msg/basic_types.hpp"
-#include "test_msgs/msg/empty.hpp"
-#include "test_msgs/srv/empty.hpp"
 
 #include "../mocking_utils/patch.hpp"
 

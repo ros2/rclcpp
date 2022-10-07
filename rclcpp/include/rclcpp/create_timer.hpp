@@ -18,8 +18,6 @@
 #include <chrono>
 #include <exception>
 #include <memory>
-#include <string>
-#include <utility>
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node_interfaces/get_node_base_interface.hpp"

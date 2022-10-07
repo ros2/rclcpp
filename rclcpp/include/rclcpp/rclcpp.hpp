@@ -141,7 +141,6 @@
 #define RCLCPP__RCLCPP_HPP_
 
 #include <csignal>
-#include <memory>
 
 #include "rclcpp/executors.hpp"
 #include "rclcpp/guard_condition.hpp"

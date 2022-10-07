@@ -14,7 +14,6 @@
 
 #include "rclcpp/serialization.hpp"
 
-#include <memory>
 #include <string>
 
 #include "rclcpp/exceptions.hpp"

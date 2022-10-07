@@ -15,10 +15,6 @@
 #ifndef RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
 
-#include <rmw/rmw.h>
-
-#include <cassert>
-#include <cstdlib>
 #include <memory>
 #include <vector>
 

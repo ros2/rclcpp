@@ -15,8 +15,6 @@
 #ifndef RCLCPP__DETAIL__UTILITIES_HPP_
 #define RCLCPP__DETAIL__UTILITIES_HPP_
 
-#include "rclcpp/detail/utilities.hpp"
-
 #include <string>
 #include <vector>
 

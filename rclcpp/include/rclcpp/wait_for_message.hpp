@@ -19,7 +19,6 @@
 #include <string>
 
 #include "rclcpp/node.hpp"
-#include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set.hpp"
 
 namespace rclcpp

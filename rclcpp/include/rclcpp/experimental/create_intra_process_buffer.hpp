@@ -16,7 +16,6 @@
 #define RCLCPP__EXPERIMENTAL__CREATE_INTRA_PROCESS_BUFFER_HPP_
 
 #include <memory>
-#include <type_traits>
 #include <utility>
 
 #include "rcl/subscription.h"
