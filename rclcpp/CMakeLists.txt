@@ -259,4 +259,8 @@ if(TEST cppcheck)
   set_tests_properties(cppcheck PROPERTIES TIMEOUT 500)
 endif()
 
+if(TEST cpplint)
+  set_tests_properties(cpplint PROPERTIES TIMEOUT 180)
+endif()
+
 ament_generate_version_header(${PROJECT_NAME})
