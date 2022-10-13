@@ -92,6 +92,26 @@ create_intra_process_buffer(
   return buffer;
 }
 
+template<typename BufferT>
+typename rclcpp::experimental::buffers::ServiceIntraProcessBuffer<BufferT>::UniquePtr
+create_service_intra_process_buffer(const rclcpp::QoS & qos)
+{
+  using rclcpp::experimental::buffers::RingBufferImplementation;
+
+  size_t buffer_size = qos.depth();
+  auto buffer_impl = std::make_unique<RingBufferImplementation<BufferT>>(buffer_size);
+
+  using rclcpp::experimental::buffers::ServiceIntraProcessBuffer;
+  typename ServiceIntraProcessBuffer<BufferT>::UniquePtr buffer;
+
+  // Construct the intra_process_buffer
+  buffer =
+    std::make_unique<ServiceIntraProcessBuffer<BufferT>>(
+    std::move(buffer_impl));
+
+  return buffer;
+}
+
 }  // namespace experimental
 }  // namespace rclcpp
 

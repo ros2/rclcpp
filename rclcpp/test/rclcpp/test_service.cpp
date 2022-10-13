@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -165,18 +166,28 @@ TEST_F(TestService, basic_public_getters) {
     rcl_service_options_t service_options = rcl_service_get_default_options();
     const rosidl_service_type_support_t * ts =
       rosidl_typesupport_cpp::get_service_type_support_handle<test_msgs::srv::Empty>();
+    auto node_base_interface = node_handle_int->get_node_base_interface();
     rcl_ret_t ret = rcl_service_init(
       &service_handle,
-      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
+      node_base_interface->get_rcl_node_handle(),
       ts, "base_node_service", &service_options);
     if (ret != RCL_RET_OK) {
       FAIL();
       return;
     }
     rclcpp::AnyServiceCallback<test_msgs::srv::Empty> cb;
+
+
+    rclcpp::IntraProcessSetting ipc_setting;
+    if (node_base_interface->get_use_intra_process_default()) {
+      ipc_setting = rclcpp::IntraProcessSetting::Enable;
+    } else {
+      ipc_setting = rclcpp::IntraProcessSetting::Disable;
+    }
+
     const rclcpp::Service<test_msgs::srv::Empty> base(
-      node_handle_int->get_node_base_interface()->get_shared_rcl_node_handle(),
-      &service_handle, cb);
+      node_handle_int->get_node_base_interface(),
+      &service_handle, cb, ipc_setting);
     // Use get_service_handle specific to const service
     std::shared_ptr<const rcl_service_t> const_service_handle = base.get_service_handle();
     EXPECT_NE(nullptr, const_service_handle);

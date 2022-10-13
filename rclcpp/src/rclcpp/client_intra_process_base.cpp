@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2021 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__INTRA_PROCESS_SETTING_HPP_
-#define RCLCPP__INTRA_PROCESS_SETTING_HPP_
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
+#include "rclcpp/experimental/client_intra_process_base.hpp"
 
-namespace rclcpp
+using rclcpp::experimental::ClientIntraProcessBase;
+
+void
+ClientIntraProcessBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
+  detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
+}
 
-/// Used as argument when creating publishers, subscriptions, clients and services.
-enum class IntraProcessSetting
+const char *
+ClientIntraProcessBase::get_service_name() const
 {
-  /// Explicitly enable intraprocess comm.
-  Enable,
-  /// Explicitly disable intraprocess comm.
-  Disable,
-  /// Take intraprocess configuration from the node.
-  NodeDefault
-};
+  return service_name_.c_str();
+}
 
-}  // namespace rclcpp
-
-#endif  // RCLCPP__INTRA_PROCESS_SETTING_HPP_
+rclcpp::QoS
+ClientIntraProcessBase::get_actual_qos() const
+{
+  return qos_profile_;
+}
