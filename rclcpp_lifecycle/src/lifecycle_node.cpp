@@ -541,19 +541,19 @@ LifecycleNode::get_current_state()
 }
 
 std::vector<State>
-LifecycleNode::get_available_states()
+LifecycleNode::get_available_states() const
 {
   return impl_->get_available_states();
 }
 
 std::vector<Transition>
-LifecycleNode::get_available_transitions()
+LifecycleNode::get_available_transitions() const
 {
   return impl_->get_available_transitions();
 }
 
 std::vector<Transition>
-LifecycleNode::get_transition_graph()
+LifecycleNode::get_transition_graph() const
 {
   return impl_->get_transition_graph();
 }
