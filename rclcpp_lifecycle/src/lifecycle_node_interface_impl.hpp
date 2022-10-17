@@ -30,6 +30,7 @@
 
 #include "rcl_lifecycle/rcl_lifecycle.h"
 
+#include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 
@@ -102,6 +103,8 @@ public:
   add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer);
 
 private:
+  RCLCPP_DISABLE_COPY(LifecycleNodeInterfaceImpl)
+
   void
   on_change_state(
     const std::shared_ptr<rmw_request_id_t> header,
