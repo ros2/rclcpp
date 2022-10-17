@@ -63,6 +63,45 @@ public:
     std::uint8_t lifecycle_transition,
     std::function<node_interfaces::LifecycleNodeInterface::CallbackReturn(const State &)> & cb);
 
+  const State &
+  get_current_state();
+
+  std::vector<State>
+  get_available_states() const;
+
+  std::vector<Transition>
+  get_available_transitions() const;
+
+  std::vector<Transition>
+  get_transition_graph() const;
+
+  const State &
+  trigger_transition(uint8_t transition_id);
+
+  const State &
+  trigger_transition(
+    uint8_t transition_id,
+    node_interfaces::LifecycleNodeInterface::CallbackReturn & cb_return_code);
+
+  const State & trigger_transition(const char * transition_label);
+
+  const State & trigger_transition(
+    const char * transition_label,
+    node_interfaces::LifecycleNodeInterface::CallbackReturn & cb_return_code);
+
+  void
+  on_activate() const;
+
+  void
+  on_deactivate() const;
+
+  void
+  add_managed_entity(std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface> managed_entity);
+
+  void
+  add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer);
+
+private:
   void
   on_change_state(
     const std::shared_ptr<rmw_request_id_t> header,
@@ -93,18 +132,6 @@ public:
     const std::shared_ptr<GetAvailableTransitionsSrv::Request> req,
     std::shared_ptr<GetAvailableTransitionsSrv::Response> resp) const;
 
-  const State &
-  get_current_state();
-
-  std::vector<State>
-  get_available_states() const;
-
-  std::vector<Transition>
-  get_available_transitions() const;
-
-  std::vector<Transition>
-  get_transition_graph() const;
-
   rcl_ret_t
   change_state(
     std::uint8_t transition_id,
@@ -112,32 +139,6 @@ public:
 
   node_interfaces::LifecycleNodeInterface::CallbackReturn
   execute_callback(unsigned int cb_id, const State & previous_state) const;
-
-  const State & trigger_transition(const char * transition_label);
-
-  const State & trigger_transition(
-    const char * transition_label,
-    node_interfaces::LifecycleNodeInterface::CallbackReturn & cb_return_code);
-
-  const State &
-  trigger_transition(uint8_t transition_id);
-
-  const State &
-  trigger_transition(
-    uint8_t transition_id,
-    node_interfaces::LifecycleNodeInterface::CallbackReturn & cb_return_code);
-
-  void
-  add_managed_entity(std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface> managed_entity);
-
-  void
-  add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer);
-
-  void
-  on_activate() const;
-
-  void
-  on_deactivate() const;
 
   rcl_lifecycle_state_machine_t state_machine_;
   State current_state_;
