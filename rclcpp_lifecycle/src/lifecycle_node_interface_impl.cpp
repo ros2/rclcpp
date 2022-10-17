@@ -238,7 +238,7 @@ void
 LifecycleNode::LifecycleNodeInterfaceImpl::on_get_state(
   const std::shared_ptr<rmw_request_id_t> header,
   const std::shared_ptr<GetStateSrv::Request> req,
-  std::shared_ptr<GetStateSrv::Response> resp)
+  std::shared_ptr<GetStateSrv::Response> resp) const
 {
   (void)header;
   (void)req;
@@ -254,7 +254,7 @@ void
 LifecycleNode::LifecycleNodeInterfaceImpl::on_get_available_states(
   const std::shared_ptr<rmw_request_id_t> header,
   const std::shared_ptr<GetAvailableStatesSrv::Request> req,
-  std::shared_ptr<GetAvailableStatesSrv::Response> resp)
+  std::shared_ptr<GetAvailableStatesSrv::Response> resp) const
 {
   (void)header;
   (void)req;
@@ -276,7 +276,7 @@ void
 LifecycleNode::LifecycleNodeInterfaceImpl::on_get_available_transitions(
   const std::shared_ptr<rmw_request_id_t> header,
   const std::shared_ptr<GetAvailableTransitionsSrv::Request> req,
-  std::shared_ptr<GetAvailableTransitionsSrv::Response> resp)
+  std::shared_ptr<GetAvailableTransitionsSrv::Response> resp) const
 {
   (void)header;
   (void)req;
@@ -303,7 +303,7 @@ void
 LifecycleNode::LifecycleNodeInterfaceImpl::on_get_transition_graph(
   const std::shared_ptr<rmw_request_id_t> header,
   const std::shared_ptr<GetAvailableTransitionsSrv::Request> req,
-  std::shared_ptr<GetAvailableTransitionsSrv::Response> resp)
+  std::shared_ptr<GetAvailableTransitionsSrv::Response> resp) const
 {
   (void)header;
   (void)req;
@@ -334,7 +334,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::get_current_state()
 }
 
 std::vector<State>
-LifecycleNode::LifecycleNodeInterfaceImpl::get_available_states()
+LifecycleNode::LifecycleNodeInterfaceImpl::get_available_states() const
 {
   std::vector<State> states;
   states.reserve(state_machine_.transition_map.states_size);
@@ -346,7 +346,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::get_available_states()
 }
 
 std::vector<Transition>
-LifecycleNode::LifecycleNodeInterfaceImpl::get_available_transitions()
+LifecycleNode::LifecycleNodeInterfaceImpl::get_available_transitions() const
 {
   std::vector<Transition> transitions;
   transitions.reserve(state_machine_.current_state->valid_transition_size);
@@ -358,7 +358,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::get_available_transitions()
 }
 
 std::vector<Transition>
-LifecycleNode::LifecycleNodeInterfaceImpl::get_transition_graph()
+LifecycleNode::LifecycleNodeInterfaceImpl::get_transition_graph() const
 {
   std::vector<Transition> transitions;
   transitions.reserve(state_machine_.transition_map.transitions_size);
@@ -445,7 +445,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
 
 node_interfaces::LifecycleNodeInterface::CallbackReturn
 LifecycleNode::LifecycleNodeInterfaceImpl::execute_callback(
-  unsigned int cb_id, const State & previous_state)
+  unsigned int cb_id, const State & previous_state) const
 {
   // in case no callback was attached, we forward directly
   auto cb_success = node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -516,7 +516,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::add_timer_handle(
 }
 
 void
-LifecycleNode::LifecycleNodeInterfaceImpl::on_activate()
+LifecycleNode::LifecycleNodeInterfaceImpl::on_activate() const
 {
   for (const auto & weak_entity : weak_managed_entities_) {
     auto entity = weak_entity.lock();
@@ -527,7 +527,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::on_activate()
 }
 
 void
-LifecycleNode::LifecycleNodeInterfaceImpl::on_deactivate()
+LifecycleNode::LifecycleNodeInterfaceImpl::on_deactivate() const
 {
   for (const auto & weak_entity : weak_managed_entities_) {
     auto entity = weak_entity.lock();
