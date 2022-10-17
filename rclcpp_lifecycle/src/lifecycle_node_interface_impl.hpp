@@ -40,7 +40,7 @@
 namespace rclcpp_lifecycle
 {
 
-class LifecycleNode::LifecycleNodeInterfaceImpl
+class LifecycleNode::LifecycleNodeInterfaceImpl final
 {
   using ChangeStateSrv = lifecycle_msgs::srv::ChangeState;
   using GetStateSrv = lifecycle_msgs::srv::GetState;
