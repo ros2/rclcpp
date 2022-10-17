@@ -61,7 +61,7 @@ public:
 
   /// Callback function for cleanup transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -69,7 +69,7 @@ public:
 
   /// Callback function for shutdown transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -77,7 +77,7 @@ public:
 
   /// Callback function for activate transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -85,7 +85,7 @@ public:
 
   /// Callback function for deactivate transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -93,7 +93,7 @@ public:
 
   /// Callback function for errorneous transition
   /*
-   * \return false by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
