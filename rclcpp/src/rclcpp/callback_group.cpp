@@ -12,9 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/callback_group.hpp"
-
+#include <algorithm>
+#include <atomic>
+#include <functional>
+#include <memory>
+#include <mutex>
 #include <stdexcept>
+
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/waitable.hpp"
 
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;

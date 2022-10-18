@@ -16,9 +16,9 @@
 #define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <mutex>
-#include <string>
 #include <vector>
 
 #include "rclcpp/client.hpp"
