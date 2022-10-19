@@ -37,6 +37,13 @@ CallbackGroup::CallbackGroup(
   automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node)
 {}
 
+CallbackGroup::~CallbackGroup()
+{
+  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
+  if (notify_guard_condition_) {
+    notify_guard_condition_->trigger();
+  }
+}
 
 std::atomic_bool &
 CallbackGroup::can_be_taken_from()
@@ -111,24 +118,14 @@ rclcpp::GuardCondition::SharedPtr
 CallbackGroup::create_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr)
 {
   std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
-  if (notify_guard_condition_) {
-    throw std::runtime_error("guard condition was already created in the callback group.");
-  }
-
-  notify_guard_condition_ = std::make_shared<rclcpp::GuardCondition>(context_ptr);
-  return notify_guard_condition_;
-}
-
-void
-CallbackGroup::destroy_notify_guard_condition()
-{
-  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
   if (!notify_guard_condition_) {
+    notify_guard_condition_ = std::make_shared<rclcpp::GuardCondition>(context_ptr);
+  } else if (context_ptr != notify_guard_condition_->get_context()) {
     throw std::runtime_error(
-            "guard condition was not created or was already destroyed in the callback group.");
+            "The guard condition can't be used for another context.");
   }
 
-  notify_guard_condition_ = nullptr;
+  return notify_guard_condition_;
 }
 
 rclcpp::GuardCondition::SharedPtr
@@ -136,6 +133,15 @@ CallbackGroup::get_notify_guard_condition()
 {
   std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
   return notify_guard_condition_;
+}
+
+void
+CallbackGroup::trigger_notify_guard_condition()
+{
+  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
+  if (notify_guard_condition_) {
+    notify_guard_condition_->trigger();
+  }
 }
 
 void

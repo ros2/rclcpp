@@ -107,14 +107,8 @@ Executor::~Executor()
   weak_groups_to_nodes_associated_with_executor_.clear();
   weak_groups_to_nodes_.clear();
   for (const auto & pair : weak_groups_to_guard_conditions_) {
-    auto & weak_callback_group_ptr = pair.first;
-    auto & guard_condition = pair.second;
+    auto guard_condition = pair.second;
     memory_strategy_->remove_guard_condition(guard_condition);
-    if (auto callback_group = weak_callback_group_ptr.lock()) {
-      if (callback_group->get_notify_guard_condition()) {
-        callback_group->destroy_notify_guard_condition();
-      }
-    }
   }
   weak_groups_to_guard_conditions_.clear();
 
@@ -320,7 +314,6 @@ Executor::remove_callback_group_from_map(
     }
     if (auto gc = group_ptr->get_notify_guard_condition()) {
       memory_strategy_->remove_guard_condition(gc.get());
-      group_ptr->destroy_notify_guard_condition();
     }
   }
 }
@@ -690,9 +683,6 @@ void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
-  // To keep the guard conditions alive as they could be destroyed when the executor removes nodes.
-  // The lifetime of these guard conditions should be guaranteed during rcl_wait().
-  std::vector<GuardCondition::SharedPtr> alive_guard_condition_ptrs;
   {
     std::lock_guard<std::mutex> guard(mutex_);
 
@@ -701,18 +691,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     // collect entities. Also exchange to false so it is not
     // allowed to add to another executor
     add_callback_groups_from_nodes_associated_to_executor();
-
-    for (auto & weak_node : weak_nodes_) {
-      if (auto node = weak_node.lock()) {
-        node->for_each_callback_group(
-          [&alive_guard_condition_ptrs](rclcpp::CallbackGroup::SharedPtr shared_group_ptr)
-          {
-            if (auto gc = shared_group_ptr->get_notify_guard_condition()) {
-              alive_guard_condition_ptrs.push_back(gc);
-            }
-          });
-      }
-    }
 
     // Collect the subscriptions and timers to be waited on
     memory_strategy_->clear_handles();

@@ -98,6 +98,10 @@ public:
     CallbackGroupType group_type,
     bool automatically_add_to_executor_with_node = true);
 
+  /// Default destructor.
+  RCLCPP_PUBLIC
+  ~CallbackGroup();
+
   template<typename Function>
   rclcpp::SubscriptionBase::SharedPtr
   find_subscription_ptrs_if(Function func) const
@@ -174,20 +178,20 @@ public:
   bool
   automatically_add_to_executor_with_node() const;
 
-  /// Create and return the notify guard condition.
+  /// Defer creating the notify guard condition and return it.
   RCLCPP_PUBLIC
   rclcpp::GuardCondition::SharedPtr
   create_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr);
 
-  /// Destroy the notify guard condition.
-  RCLCPP_PUBLIC
-  void
-  destroy_notify_guard_condition();
-
-  /// Return the notify guard condition.
+  /// Get the notify guard condition.
   RCLCPP_PUBLIC
   rclcpp::GuardCondition::SharedPtr
   get_notify_guard_condition();
+
+  /// Trigger the notify guard condition.
+  RCLCPP_PUBLIC
+  void
+  trigger_notify_guard_condition();
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)

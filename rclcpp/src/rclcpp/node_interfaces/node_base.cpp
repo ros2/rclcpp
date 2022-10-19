@@ -149,11 +149,9 @@ NodeBase::~NodeBase()
   }
 
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
-  for (auto & weak_gc : this->callback_groups_) {
-    if (auto strong_gc = weak_gc.lock()) {
-      if (auto callback_group_gc = strong_gc->get_notify_guard_condition()) {
-        callback_group_gc->trigger();
-      }
+  for (auto & weak_callback_group : this->callback_groups_) {
+    if (auto callback_group = weak_callback_group.lock()) {
+      callback_group->trigger_notify_guard_condition();
     }
   }
 }
