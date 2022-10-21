@@ -35,13 +35,14 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   yield_before_execute_(yield_before_execute),
   next_exec_timeout_(next_exec_timeout)
 {
-  number_of_threads_ = number_of_threads
-                           ? number_of_threads
-                           : std::max(std::thread::hardware_concurrency(), 2U);
+  number_of_threads_ = number_of_threads ?
+    number_of_threads :
+    std::max(std::thread::hardware_concurrency(), 2U);
   if (number_of_threads_ == 1) {
-    RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
-                "MultiThreadedExecutor is used with a single thread.\n"
-                "Use the SingleThreadedExecutor instead.");
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "MultiThreadedExecutor is used with a single thread.\n"
+      "Use the SingleThreadedExecutor instead.");
   }
 }
 
