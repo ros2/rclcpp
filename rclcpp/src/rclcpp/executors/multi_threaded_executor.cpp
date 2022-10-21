@@ -21,6 +21,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
 
 using rclcpp::executors::MultiThreadedExecutor;
@@ -36,9 +37,11 @@ MultiThreadedExecutor::MultiThreadedExecutor(
 {
   number_of_threads_ = number_of_threads
                            ? number_of_threads
-                           : std::max(std::thread::hardware_concurrency(), 2);
-  if (number_of_threads_ == 0) {
-    number_of_threads_ = 2;
+                           : std::max(std::thread::hardware_concurrency(), 2U);
+  if (number_of_threads_ == 1) {
+    RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
+                "MultiThreadedExecutor executor used with a single thread.\n"
+                "Use SingleThreadedExecutor instead.");
   }
 }
 
