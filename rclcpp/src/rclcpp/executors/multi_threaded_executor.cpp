@@ -40,8 +40,8 @@ MultiThreadedExecutor::MultiThreadedExecutor(
                            : std::max(std::thread::hardware_concurrency(), 2U);
   if (number_of_threads_ == 1) {
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
-                "MultiThreadedExecutor executor used with a single thread.\n"
-                "Use SingleThreadedExecutor instead.");
+                "MultiThreadedExecutor is used with a single thread.\n"
+                "Use the SingleThreadedExecutor instead.");
   }
 }
 
