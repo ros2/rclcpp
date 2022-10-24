@@ -65,7 +65,7 @@ public:
     std::function<node_interfaces::LifecycleNodeInterface::CallbackReturn(const State &)> & cb);
 
   const State &
-  get_current_state();
+  get_current_state() const;
 
   std::vector<State>
   get_available_states() const;

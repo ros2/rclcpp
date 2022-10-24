@@ -535,7 +535,7 @@ LifecycleNode::register_on_error(
 }
 
 const State &
-LifecycleNode::get_current_state()
+LifecycleNode::get_current_state() const
 {
   return impl_->get_current_state();
 }
