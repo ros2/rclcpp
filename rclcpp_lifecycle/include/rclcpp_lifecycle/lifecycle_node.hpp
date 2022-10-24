@@ -839,7 +839,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  get_current_state();
+  get_current_state() const;
 
   /// Return a list with the available states.
   /**

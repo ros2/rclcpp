@@ -182,6 +182,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::init(bool enable_communication_interf
         nullptr);
     }
   }
+
+  current_state_ = State(state_machine_.current_state);
 }
 
 bool
@@ -327,9 +329,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::on_get_transition_graph(
 }
 
 const State &
-LifecycleNode::LifecycleNodeInterfaceImpl::get_current_state()
+LifecycleNode::LifecycleNodeInterfaceImpl::get_current_state() const
 {
-  current_state_ = State(state_machine_.current_state);
   return current_state_;
 }
 
@@ -396,6 +397,9 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
     return RCL_RET_ERROR;
   }
 
+  // Update the internal current_state_
+  current_state_ = State(state_machine_.current_state);
+
   auto get_label_for_return_code =
     [](node_interfaces::LifecycleNodeInterface::CallbackReturn cb_return_code) -> const char *{
       auto cb_id = static_cast<uint8_t>(cb_return_code);
@@ -421,6 +425,9 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
     return RCL_RET_ERROR;
   }
 
+  // Update the internal current_state_
+  current_state_ = State(state_machine_.current_state);
+
   // error handling ?!
   // TODO(karsten1987): iterate over possible ret value
   if (cb_return_code == node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR) {
@@ -437,6 +444,10 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
       return RCL_RET_ERROR;
     }
   }
+
+  // Update the internal current_state_
+  current_state_ = State(state_machine_.current_state);
+
   // This true holds in both cases where the actual callback
   // was successful or not, since at this point we have a valid transistion
   // to either a new primary state or error state
