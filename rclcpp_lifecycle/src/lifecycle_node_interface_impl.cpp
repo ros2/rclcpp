@@ -105,6 +105,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::init(bool enable_communication_interf
             node_base_interface_->get_name());
   }
 
+  current_state_ = State(state_machine_.current_state);
+
   if (enable_communication_interface) {
     { // change_state
       auto cb = std::bind(
@@ -188,8 +190,6 @@ LifecycleNode::LifecycleNodeInterfaceImpl::init(bool enable_communication_interf
         nullptr);
     }
   }
-
-  current_state_ = State(state_machine_.current_state);
 }
 
 bool
