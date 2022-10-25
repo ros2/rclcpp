@@ -217,7 +217,7 @@ Executor::add_callback_group_to_map(
 
   if (node_ptr->get_context()->is_valid()) {
     auto callback_group_guard_condition =
-      group_ptr->create_notify_guard_condition(node_ptr->get_context());
+      group_ptr->get_notify_guard_condition(node_ptr->get_context());
     weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition.get();
     // Add the callback_group's notify condition to the guard condition handles
     memory_strategy_->add_guard_condition(*callback_group_guard_condition);
@@ -302,7 +302,12 @@ Executor::remove_callback_group_from_map(
   if (!has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
     !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_))
   {
+    auto iter = weak_groups_to_guard_conditions_.find(weak_group_ptr);
+    if (iter != weak_groups_to_guard_conditions_.end()) {
+      memory_strategy_->remove_guard_condition(iter->second);
+    }
     weak_groups_to_guard_conditions_.erase(weak_group_ptr);
+
     if (notify) {
       try {
         interrupt_guard_condition_.trigger();
@@ -311,9 +316,6 @@ Executor::remove_callback_group_from_map(
                 std::string(
                   "Failed to trigger guard condition on callback group remove: ") + ex.what());
       }
-    }
-    if (auto gc = group_ptr->get_notify_guard_condition()) {
-      memory_strategy_->remove_guard_condition(gc.get());
     }
   }
 }

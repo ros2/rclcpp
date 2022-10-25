@@ -39,10 +39,7 @@ CallbackGroup::CallbackGroup(
 
 CallbackGroup::~CallbackGroup()
 {
-  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
-  if (notify_guard_condition_) {
-    notify_guard_condition_->trigger();
-  }
+  trigger_notify_guard_condition();
 }
 
 std::atomic_bool &
@@ -115,30 +112,27 @@ CallbackGroup::automatically_add_to_executor_with_node() const
 }
 
 rclcpp::GuardCondition::SharedPtr
-CallbackGroup::create_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr)
+CallbackGroup::get_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr)
 {
-  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
-  if (!notify_guard_condition_) {
-    notify_guard_condition_ = std::make_shared<rclcpp::GuardCondition>(context_ptr);
-  } else if (context_ptr != notify_guard_condition_->get_context()) {
-    throw std::runtime_error(
-            "The guard condition can't be used for another context.");
+  std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
+  if (notify_guard_condition_ && context_ptr != notify_guard_condition_->get_context()) {
+    if (associated_with_executor_) {
+      trigger_notify_guard_condition();
+    }
+    notify_guard_condition_ = nullptr;
   }
 
-  return notify_guard_condition_;
-}
+  if (!notify_guard_condition_) {
+    notify_guard_condition_ = std::make_shared<rclcpp::GuardCondition>(context_ptr);
+  }
 
-rclcpp::GuardCondition::SharedPtr
-CallbackGroup::get_notify_guard_condition()
-{
-  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
   return notify_guard_condition_;
 }
 
 void
 CallbackGroup::trigger_notify_guard_condition()
 {
-  std::lock_guard<std::mutex> lock(notify_guard_condition_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
   if (notify_guard_condition_) {
     notify_guard_condition_->trigger();
   }

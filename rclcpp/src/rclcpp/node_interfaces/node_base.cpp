@@ -147,13 +147,6 @@ NodeBase::~NodeBase()
     std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
     notify_guard_condition_is_valid_ = false;
   }
-
-  std::lock_guard<std::mutex> lock(callback_groups_mutex_);
-  for (auto & weak_callback_group : this->callback_groups_) {
-    if (auto callback_group = weak_callback_group.lock()) {
-      callback_group->trigger_notify_guard_condition();
-    }
-  }
 }
 
 const char *
