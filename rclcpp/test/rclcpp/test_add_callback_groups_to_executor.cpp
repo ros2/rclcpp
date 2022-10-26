@@ -277,6 +277,70 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_e
 }
 
 /*
+ * Test callback groups from one node to many executors.
+ * A subscriber on a new executor with a callback group not received a message
+ * because the executor can't be triggered while a subscriber created, see
+ * https://github.com/ros2/rclcpp/issues/1611
+*/
+TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_message)
+{
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+
+  // create a thread running an executor with a new callback group for a coming subscriber
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::executors::SingleThreadedExecutor cb_grp_executor;
+
+  std::promise<bool> received_message_promise;
+  auto received_message_future = received_message_promise.get_future();
+  rclcpp::FutureReturnCode return_code = rclcpp::FutureReturnCode::TIMEOUT;
+  std::thread cb_grp_thread = std::thread(
+    [&cb_grp, &node, &cb_grp_executor, &received_message_future, &return_code]() {
+      cb_grp_executor.add_callback_group(cb_grp, node->get_node_base_interface());
+      return_code = cb_grp_executor.spin_until_future_complete(received_message_future, 10s);
+    });
+
+  // expect the subscriber to receive a message
+  auto sub_callback = [&received_message_promise](test_msgs::msg::Empty::ConstSharedPtr) {
+      received_message_promise.set_value(true);
+    };
+
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
+  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
+  // to create a timer with a callback run on another executor
+  rclcpp::TimerBase::SharedPtr timer = nullptr;
+  std::promise<void> timer_promise;
+  auto timer_callback =
+    [&subscription, &publisher, &timer, &cb_grp, &node, &sub_callback, &timer_promise]() {
+      if (timer) {
+        timer.reset();
+      }
+
+      // create a subscription using the `cb_grp` callback group
+      rclcpp::QoS qos = rclcpp::QoS(1).reliable();
+      auto options = rclcpp::SubscriptionOptions();
+      options.callback_group = cb_grp;
+      subscription =
+        node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
+      // create a publisher to send data
+      publisher =
+        node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
+      publisher->publish(test_msgs::msg::Empty());
+      timer_promise.set_value();
+    };
+
+  rclcpp::executors::SingleThreadedExecutor timer_executor;
+  timer = node->create_wall_timer(100ms, timer_callback);
+  timer_executor.add_node(node);
+  auto future = timer_promise.get_future();
+  timer_executor.spin_until_future_complete(future);
+  cb_grp_thread.join();
+
+  ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
+  EXPECT_TRUE(received_message_future.get());
+}
+
+/*
  * Test removing callback group from executor that its not associated with.
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_group)

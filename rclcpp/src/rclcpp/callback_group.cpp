@@ -12,9 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/callback_group.hpp"
+#include <algorithm>
+#include <atomic>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
 
-#include <vector>
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/waitable.hpp"
 
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;
@@ -27,6 +37,10 @@ CallbackGroup::CallbackGroup(
   automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node)
 {}
 
+CallbackGroup::~CallbackGroup()
+{
+  trigger_notify_guard_condition();
+}
 
 std::atomic_bool &
 CallbackGroup::can_be_taken_from()
@@ -95,6 +109,33 @@ bool
 CallbackGroup::automatically_add_to_executor_with_node() const
 {
   return automatically_add_to_executor_with_node_;
+}
+
+rclcpp::GuardCondition::SharedPtr
+CallbackGroup::get_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr)
+{
+  std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
+  if (notify_guard_condition_ && context_ptr != notify_guard_condition_->get_context()) {
+    if (associated_with_executor_) {
+      trigger_notify_guard_condition();
+    }
+    notify_guard_condition_ = nullptr;
+  }
+
+  if (!notify_guard_condition_) {
+    notify_guard_condition_ = std::make_shared<rclcpp::GuardCondition>(context_ptr);
+  }
+
+  return notify_guard_condition_;
+}
+
+void
+CallbackGroup::trigger_notify_guard_condition()
+{
+  std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
+  if (notify_guard_condition_) {
+    notify_guard_condition_->trigger();
+  }
 }
 
 void
