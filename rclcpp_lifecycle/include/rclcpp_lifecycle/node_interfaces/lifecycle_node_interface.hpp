@@ -53,7 +53,7 @@ public:
 
   /// Callback function for configure transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
