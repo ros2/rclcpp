@@ -409,11 +409,13 @@ public:
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] service_handle service handle.
    * \param[in] any_callback User defined callback to call when a client request is received.
+   * \param[in] ipc_setting Intra-process communication setting for the service.
    */
   Service(
     std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base,
     std::shared_ptr<rcl_service_t> service_handle,
-    AnyServiceCallback<ServiceT> any_callback)
+    AnyServiceCallback<ServiceT> any_callback,
+    rclcpp::IntraProcessSetting ipc_setting = rclcpp::IntraProcessSetting::NodeDefault)
   : ServiceBase(node_base),
     any_callback_(any_callback)
   {
@@ -433,6 +435,11 @@ public:
 #ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
 #endif
+
+    // Setup intra process if requested.
+    if (rclcpp::detail::resolve_use_intra_process(ipc_setting, *node_base)) {
+      create_intra_process_service();
+    }
   }
 
   /// Default constructor.
@@ -444,6 +451,7 @@ public:
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] service_handle service handle.
    * \param[in] any_callback User defined callback to call when a client request is received.
+   * \param[in] ipc_setting Intra-process communication setting for the service.
    */
   Service(
     std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base,
