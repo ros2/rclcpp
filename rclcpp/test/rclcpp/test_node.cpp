@@ -3367,3 +3367,17 @@ TEST_F(TestNode, static_and_dynamic_typing) {
       rclcpp::exceptions::InvalidParameterTypeException);
   }
 }
+
+TEST_F(TestNode, parameter_uninitialized_exception_even_if_allow_undeclared) {
+  rclcpp::NodeOptions no;
+  no.allow_undeclared_parameters(true);
+  auto node = std::make_shared<rclcpp::Node>("node", "ns", no);
+  {
+    auto param = node->declare_parameter("integer_override_not_given", rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, param.get_type());
+    // Throws if not set before access
+    EXPECT_THROW(
+      node->get_parameter("integer_override_not_given"),
+      rclcpp::exceptions::ParameterUninitializedException);
+  }
+}

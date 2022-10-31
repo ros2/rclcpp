@@ -930,18 +930,18 @@ NodeParameters::get_parameter(const std::string & name) const
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto param_iter = parameters_.find(name);
-  if (
-    parameters_.end() != param_iter &&
-    (param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
-    param_iter->second.descriptor.dynamic_typing))
-  {
-    return rclcpp::Parameter{name, param_iter->second.value};
+  if (parameters_.end() != param_iter) {
+    if (
+      param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
+      param_iter->second.descriptor.dynamic_typing)
+    {
+      return rclcpp::Parameter{name, param_iter->second.value};
+    }
+    throw rclcpp::exceptions::ParameterUninitializedException(name);
   } else if (this->allow_undeclared_) {
     return rclcpp::Parameter{};
-  } else if (parameters_.end() == param_iter) {
-    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
   } else {
-    throw rclcpp::exceptions::ParameterUninitializedException(name);
+    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
   }
 }
 
