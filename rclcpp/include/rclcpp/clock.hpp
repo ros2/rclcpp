@@ -140,8 +140,8 @@ public:
   /**
    * Check if the clock is valid.
    *
-   * An invalid clock is either a clock that is RCL_CLOCK_UNINITIALIZED or is an RCL_ROS_TIME
-   * clock that is using ros time (ros_time_is_active()) but with time 0.
+   * An invalid clock is either a clock that is RCL_CLOCK_UNINITIALIZED or a clock with zero-time.
+   * In other words, an uninitialized clock.
    *
    * \return true if clock was or became valid
    */
@@ -152,15 +152,12 @@ public:
   /**
    * Wait for clock to become valid.
    *
-   * \param timeout the maximum time to wait for.
-   * \param wait_tick_ns the time to wait between each iteration of the wait loop (in nanoseconds).
+   * \param context the context to wait in.
    * \return true if clock was or became valid
    */
   RCLCPP_PUBLIC
   bool
-  wait_for_valid(
-    Context::SharedPtr context = contexts::get_global_default_context(),
-    Duration wait_tick_ns = Duration(0, 1e7));
+  wait_for_valid(Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
    * Wait for clock to become valid, with timeout.
@@ -177,7 +174,7 @@ public:
   wait_for_valid(
     const rclcpp::Duration & timeout,
     Context::SharedPtr context = contexts::get_global_default_context(),
-    Duration wait_tick_ns = Duration(0, 1e7));
+    Duration wait_tick_ns = Duration(0, static_cast<uint32_t>(1e7)));
 
   /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
