@@ -440,10 +440,19 @@ TEST_F(TestParameterClient, sync_parameter_get_parameter_types_allow_undeclared)
 TEST_F(TestParameterClient, sync_parameter_get_parameters) {
   node->declare_parameter("foo", 4);
   node->declare_parameter("bar", "this is bar");
+  node->declare_parameter("baz", rclcpp::PARAMETER_INTEGER);
   auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
 
   {
     std::vector<std::string> names{"none"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(0u, parameters.size());
+  }
+
+  {
+    // not throw ParameterUninitializedException while getting parameter from service
+    // even if the parameter is not initialized in the node
+    std::vector<std::string> names{"baz"};
     std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
     ASSERT_EQ(0u, parameters.size());
   }
@@ -487,12 +496,21 @@ TEST_F(TestParameterClient, sync_parameter_get_parameters) {
 TEST_F(TestParameterClient, sync_parameter_get_parameters_allow_undeclared) {
   node_with_option->declare_parameter("foo", 4);
   node_with_option->declare_parameter("bar", "this is bar");
+  node_with_option->declare_parameter("baz", rclcpp::PARAMETER_INTEGER);
   auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node_with_option);
 
   {
     std::vector<std::string> names{"none"};
     std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
     ASSERT_EQ(1u, parameters.size());
+  }
+
+  {
+    // not throw ParameterUninitializedException while getting parameter from service
+    // even if the parameter is not initialized in the node
+    std::vector<std::string> names{"baz"};
+    std::vector<rclcpp::Parameter> parameters = synchronous_client->get_parameters(names, 10s);
+    ASSERT_EQ(0u, parameters.size());
   }
 
   {

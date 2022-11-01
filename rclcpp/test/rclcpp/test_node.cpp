@@ -3373,11 +3373,28 @@ TEST_F(TestNode, parameter_uninitialized_exception_even_if_allow_undeclared) {
   no.allow_undeclared_parameters(true);
   auto node = std::make_shared<rclcpp::Node>("node", "ns", no);
   {
-    auto param = node->declare_parameter("integer_override_not_given", rclcpp::PARAMETER_INTEGER);
-    EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, param.get_type());
+    const std::string param_name = "integer_override_not_given";
+    auto param_value = node->declare_parameter(param_name, rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, param_value.get_type());
     // Throws if not set before access
     EXPECT_THROW(
-      node->get_parameter("integer_override_not_given"),
+      node->get_parameter(param_name),
       rclcpp::exceptions::ParameterUninitializedException);
+    EXPECT_THROW(
+      node->get_parameters({param_name}),
+      rclcpp::exceptions::ParameterUninitializedException);
+  }
+}
+
+TEST_F(TestNode, get_parameter_with_node_allow_undeclared) {
+  rclcpp::NodeOptions no;
+  no.allow_undeclared_parameters(true);
+  auto node = std::make_shared<rclcpp::Node>("node", "ns", no);
+  {
+    const std::string param_name = "allow_undeclared_param";
+    auto param = node->get_parameter(param_name);
+    EXPECT_EQ(param_name, param.get_name());
+    EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, param.get_type());
+    EXPECT_EQ(rclcpp::ParameterValue{}, param.get_parameter_value());
   }
 }

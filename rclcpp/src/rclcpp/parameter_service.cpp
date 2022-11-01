@@ -48,6 +48,8 @@ ParameterService::ParameterService(
         }
       } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
         RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
+      } catch (const rclcpp::exceptions::ParameterUninitializedException & ex) {
+        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
       }
     },
     qos_profile, nullptr);
