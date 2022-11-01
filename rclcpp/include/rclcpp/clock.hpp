@@ -159,8 +159,8 @@ public:
   RCLCPP_PUBLIC
   bool
   wait_for_valid(
-    Context::SharedPtr context=contexts::get_global_default_context(),
-    Duration wait_tick_ns=Duration(0, 1e7));
+    Context::SharedPtr context = contexts::get_global_default_context(),
+    Duration wait_tick_ns = Duration(0, 1e7));
 
   /**
    * Wait for clock to become valid, with timeout.
@@ -175,9 +175,9 @@ public:
   RCLCPP_PUBLIC
   bool
   wait_for_valid(
-    const rclcpp::Duration& timeout,
-    Context::SharedPtr context=contexts::get_global_default_context(),
-    Duration wait_tick_ns=Duration(0, 1e7));
+    const rclcpp::Duration & timeout,
+    Context::SharedPtr context = contexts::get_global_default_context(),
+    Duration wait_tick_ns = Duration(0, 1e7));
 
   /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.

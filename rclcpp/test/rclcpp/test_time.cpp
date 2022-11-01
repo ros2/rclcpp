@@ -978,8 +978,7 @@ void trigger_clock_changes(
         std::chrono::nanoseconds(0),
         expect_time_update
       );
-    }
-    else {
+    } else {
       spin_until_time(
         clock,
         node,
@@ -1053,10 +1052,10 @@ TEST_F(TestClockValid, invalid_timeout) {
   EXPECT_FALSE(ros_clock->is_valid());
   EXPECT_FALSE(ros_clock->wait_for_valid(rclcpp::Duration(0, 1e7)));
 
-  std::thread t([](){
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    rclcpp::shutdown();
-  });
+  std::thread t([]() {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      rclcpp::shutdown();
+    });
 
   // Test rclcpp shutdown escape hatch (otherwise this waits indefinitely)
   EXPECT_FALSE(ros_clock->wait_for_valid(rclcpp::Duration(0, 0)));

@@ -185,8 +185,7 @@ Clock::sleep_for(Duration rel_time, Context::SharedPtr context)
 bool
 Clock::is_valid()
 {
-  switch (get_clock_type())
-  {
+  switch (get_clock_type()) {
     case RCL_ROS_TIME:
     case RCL_STEADY_TIME:
     case RCL_SYSTEM_TIME:
@@ -206,7 +205,7 @@ Clock::wait_for_valid(Context::SharedPtr context, Duration wait_tick_ns)
 
 bool
 Clock::wait_for_valid(
-  const Duration& timeout,
+  const Duration & timeout,
   Context::SharedPtr context,
   Duration wait_tick_ns)
 {
@@ -216,21 +215,21 @@ Clock::wait_for_valid(
 
   if (get_clock_type() == RCL_CLOCK_UNINITIALIZED) {
     throw std::runtime_error(
-      "clock cannot be waited on as its clock_type is RCL_CLOCK_UNINITIALIZED");
+            "clock cannot be waited on as its clock_type is RCL_CLOCK_UNINITIALIZED");
   }
 
   Clock timeout_clock = Clock(RCL_SYSTEM_TIME);
   Time start = timeout_clock.now();
 
   while (!is_valid() && rclcpp::ok(context)) {
-   timeout_clock.sleep_for(Duration(wait_tick_ns));
-   if (timeout > rclcpp::Duration(0, 0) && (timeout_clock.now() - start > timeout)) {
-     return false;
-   }
+    timeout_clock.sleep_for(Duration(wait_tick_ns));
+    if (timeout > rclcpp::Duration(0, 0) && (timeout_clock.now() - start > timeout)) {
+      return false;
+    }
   }
 
   if (!rclcpp::ok(context)) {
-   return false;
+    return false;
   }
   return true;
 }
