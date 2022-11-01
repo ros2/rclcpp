@@ -183,6 +183,60 @@ Clock::sleep_for(Duration rel_time, Context::SharedPtr context)
 }
 
 bool
+Clock::is_valid()
+{
+  switch (get_clock_type())
+  {
+    case RCL_ROS_TIME:
+    case RCL_STEADY_TIME:
+    case RCL_SYSTEM_TIME:
+      return now().nanoseconds() > 0;
+
+    case RCL_CLOCK_UNINITIALIZED:
+    default:
+      return false;
+  }
+}
+
+bool
+Clock::wait_for_valid(Context::SharedPtr context, Duration wait_tick_ns)
+{
+  return wait_for_valid(Duration(0, 0), context, wait_tick_ns);
+}
+
+bool
+Clock::wait_for_valid(
+  const Duration& timeout,
+  Context::SharedPtr context,
+  Duration wait_tick_ns)
+{
+  if (!context || !context->is_valid()) {
+    throw std::runtime_error("context cannot be slept with because it's invalid");
+  }
+
+  if (get_clock_type() == RCL_CLOCK_UNINITIALIZED) {
+    throw std::runtime_error(
+      "clock cannot be waited on as its clock_type is RCL_CLOCK_UNINITIALIZED");
+  }
+
+  Clock timeout_clock = Clock(RCL_SYSTEM_TIME);
+  Time start = timeout_clock.now();
+
+  while (!is_valid() && rclcpp::ok(context)) {
+   timeout_clock.sleep_for(Duration(wait_tick_ns));
+   if (timeout > rclcpp::Duration(0, 0) && (timeout_clock.now() - start > timeout)) {
+     return false;
+   }
+  }
+
+  if (!rclcpp::ok(context)) {
+   return false;
+  }
+  return true;
+}
+
+
+bool
 Clock::ros_time_is_active()
 {
   if (!rcl_clock_valid(&impl_->rcl_clock_)) {
