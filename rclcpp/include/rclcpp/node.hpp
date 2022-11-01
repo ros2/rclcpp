@@ -740,17 +740,21 @@ public:
   /**
    * If the parameter has not been declared, then this method may throw the
    * rclcpp::exceptions::ParameterNotDeclaredException exception.
+   * If the parameter has not been initialized, then this method may throw the
+   * rclcpp::exceptions::ParameterUninitializedException exception.
    *
    * If undeclared parameters are allowed, see the node option
    * rclcpp::NodeOptions::allow_undeclared_parameters, then this method will
-   * not throw an exception, and instead return a default initialized
-   * rclcpp::Parameter, which has a type of
+   * not throw the rclcpp::exceptions::ParameterNotDeclaredException exception,
+   * and instead return a default initialized rclcpp::Parameter, which has a type of
    * rclcpp::ParameterType::PARAMETER_NOT_SET.
    *
    * \param[in] name The name of the parameter to get.
    * \return The requested parameter inside of a rclcpp parameter object.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
    *   has not been declared and undeclared parameters are not allowed.
+   * \throws rclcpp::exceptions::ParameterUninitializedException if the parameter
+   *   has not been initialized.
    */
   RCLCPP_PUBLIC
   rclcpp::Parameter
@@ -834,12 +838,12 @@ public:
 
   /// Return the parameters by the given parameter names.
   /**
-   * Like get_parameters(), this method may throw the
+   * Like get_parameter(const std::string &), this method may throw the
    * rclcpp::exceptions::ParameterNotDeclaredException exception if the
    * requested parameter has not been declared and undeclared parameters are
-   * not allowed.
+   * not allowed, and may throw the rclcpp::exceptions::ParameterUninitializedException exception.
    *
-   * Also like get_parameters(), if undeclared parameters are allowed and the
+   * Also like get_parameter(const std::string &), if undeclared parameters are allowed and the
    * parameter has not been declared, then the corresponding rclcpp::Parameter
    * will be default initialized and therefore have the type
    * rclcpp::ParameterType::PARAMETER_NOT_SET.
@@ -849,6 +853,8 @@ public:
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if any of the
    *   parameters have not been declared and undeclared parameters are not
    *   allowed.
+   * \throws rclcpp::exceptions::ParameterUninitializedException if any of the
+   *   parameters have not been initialized.
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
