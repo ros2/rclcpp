@@ -3346,6 +3346,9 @@ TEST_F(TestNode, static_and_dynamic_typing) {
     EXPECT_THROW(
       node->get_parameter("integer_override_not_given"),
       rclcpp::exceptions::ParameterUninitializedException);
+    EXPECT_THROW(
+      node->get_parameters({"integer_override_not_given"}),
+      rclcpp::exceptions::ParameterUninitializedException);
   }
   {
     auto param = node->declare_parameter("integer_set_after_declare", rclcpp::PARAMETER_INTEGER);
