@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+17.1.0 (2022-11-02)
+-------------------
 * LifecycleNode on_configure doc fix. (`#2034 <https://github.com/ros2/rclcpp/issues/2034>`_)
 * Bugfix 20210810 get current state (`#1756 <https://github.com/ros2/rclcpp/issues/1756>`_)
 * Make lifecycle impl get_current_state() const. (`#2031 <https://github.com/ros2/rclcpp/issues/2031>`_)

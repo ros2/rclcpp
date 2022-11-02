@@ -2,8 +2,8 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+17.1.0 (2022-11-02)
+-------------------
 * use unique ptr and remove unuseful container (`#2013 <https://github.com/ros2/rclcpp/issues/2013>`_)
 * Contributors: Chen Lihui
 

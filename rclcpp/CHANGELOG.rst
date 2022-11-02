@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+17.1.0 (2022-11-02)
+-------------------
 * MultiThreadExecutor number of threads is at least 2+ in default. (`#2032 <https://github.com/ros2/rclcpp/issues/2032>`_)
 * Fix bug that a callback not reached (`#1640 <https://github.com/ros2/rclcpp/issues/1640>`_)
 * Set the minimum number of threads of the Multithreaded executor to 2 (`#2030 <https://github.com/ros2/rclcpp/issues/2030>`_)

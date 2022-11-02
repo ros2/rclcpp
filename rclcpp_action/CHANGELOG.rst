@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+17.1.0 (2022-11-02)
+-------------------
 * Do not clear entities callbacks on destruction (`#2002 <https://github.com/ros2/rclcpp/issues/2002>`_)
 * Contributors: mauropasse
 
