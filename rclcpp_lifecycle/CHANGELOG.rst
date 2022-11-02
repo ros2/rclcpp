@@ -3,6 +3,15 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* LifecycleNode on_configure doc fix. (`#2034 <https://github.com/ros2/rclcpp/issues/2034>`_)
+* Bugfix 20210810 get current state (`#1756 <https://github.com/ros2/rclcpp/issues/1756>`_)
+* Make lifecycle impl get_current_state() const. (`#2031 <https://github.com/ros2/rclcpp/issues/2031>`_)
+* Cleanup the lifecycle implementation (`#2027 <https://github.com/ros2/rclcpp/issues/2027>`_)
+* Cleanup the rclcpp_lifecycle dependencies. (`#2021 <https://github.com/ros2/rclcpp/issues/2021>`_)
+* Contributors: Chris Lalancette, Tomoya Fujita
+
 17.0.0 (2022-09-13)
 -------------------
 * Revert "Revert "Add a create_timer method to Node and `LifecycleNode` classes (`#1975 <https://github.com/ros2/rclcpp/issues/1975>`_)" (`#2009 <https://github.com/ros2/rclcpp/issues/2009>`_) (`#2010 <https://github.com/ros2/rclcpp/issues/2010>`_)

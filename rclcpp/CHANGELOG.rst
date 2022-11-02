@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* MultiThreadExecutor number of threads is at least 2+ in default. (`#2032 <https://github.com/ros2/rclcpp/issues/2032>`_)
+* Fix bug that a callback not reached (`#1640 <https://github.com/ros2/rclcpp/issues/1640>`_)
+* Set the minimum number of threads of the Multithreaded executor to 2 (`#2030 <https://github.com/ros2/rclcpp/issues/2030>`_)
+* check thread whether joinable before join (`#2019 <https://github.com/ros2/rclcpp/issues/2019>`_)
+* Set cpplint test timeout to 3 minutes (`#2022 <https://github.com/ros2/rclcpp/issues/2022>`_)
+* Make sure to include-what-you-use in the node_interfaces. (`#2018 <https://github.com/ros2/rclcpp/issues/2018>`_)
+* Do not clear entities callbacks on destruction (`#2002 <https://github.com/ros2/rclcpp/issues/2002>`_)
+* fix mismatched issue if using zero_allocate (`#1995 <https://github.com/ros2/rclcpp/issues/1995>`_)
+* Contributors: Alexis Paques, Chen Lihui, Chris Lalancette, Cristóbal Arroyo, Tomoya Fujita, mauropasse, uupks
+
 17.0.0 (2022-09-13)
 -------------------
 * Make ParameterService and Sync/AsyncParameterClient accept rclcpp::QoS (`#1978 <https://github.com/ros2/rclcpp/issues/1978>`_)
