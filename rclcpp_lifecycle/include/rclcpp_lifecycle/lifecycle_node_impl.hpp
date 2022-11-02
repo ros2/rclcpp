@@ -33,6 +33,7 @@
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
+#include "rclcpp/node_handle.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
@@ -329,6 +330,13 @@ LifecycleNode::get_parameter_or(
     value = alternative_value;
   }
   return got_parameter;
+}
+
+template<typename ... InterfaceTs>
+typename rclcpp::NodeHandle<InterfaceTs...>::SharedPtr
+LifecycleNode::get_node_handle()
+{
+  return std::make_shared<rclcpp::NodeHandle<InterfaceTs...>>(this);
 }
 
 }  // namespace rclcpp_lifecycle

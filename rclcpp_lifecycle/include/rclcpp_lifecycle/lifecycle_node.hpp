@@ -62,6 +62,7 @@
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/node_handle.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
@@ -821,6 +822,39 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
   get_node_waitables_interface();
+
+  /// Return a NodeHandle bound with the LifecycleNode's internal node interfaces.
+  /**
+   * This overload binds all interfaces, if you want to bind a subset of interfaces, specify them
+   * in the template parameters of the templated method.
+   *
+   * \return a NodeHandle bound with the LifecycleNode's internal node interfaces.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  inline
+  rclcpp::NodeHandle<rclcpp::AllInterfaces>::SharedPtr
+  get_node_handle() {return std::make_shared<rclcpp::NodeHandle<rclcpp::AllInterfaces>>(this);}
+
+  /// Return a NodeHandle bound with the LifecycleNode's internal node interfaces.
+  /**
+   * Specify which interfaces you want to bind using the temlplate parameters. Any unbound
+   * interfaces will be nullptr.
+   *
+   * Additionally, to bind all interfaces, specify AllInterfaces or no template parameters.
+   *
+   * For example:
+   *   - ```node->get_node_handle<>()``` will bind no interfaces.
+   *   - ```node->get_node_handle<BaseInterface>()``` will bind just the NodeBaseInterface.
+   *   - ```node->get_node_handle<BaseInterface, ClockInterface>()``` will bind the base and clock
+   *     interfaces.
+   *   - ```node->get_node_handle<AllInterfaces>()``` will bind all interfaces.
+   *   - ```node->get_node_handle()``` will bind all interfaces.
+   *
+   * \return a NodeHandle bound with the LifecycleNode's internal node interfaces.
+   */
+  template<typename ... InterfaceTs>
+  typename rclcpp::NodeHandle<InterfaceTs...>::SharedPtr
+  get_node_handle();
 
   /// Return the NodeOptions used when creating this node.
   /**
