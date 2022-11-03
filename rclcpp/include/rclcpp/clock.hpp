@@ -162,7 +162,7 @@ public:
   /**
    * Wait for clock to become valid.
    *
-   * \param context the context to wait in.
+   * \param context the context to wait in
    * \return true if clock was or became valid
    * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
    */
@@ -178,7 +178,7 @@ public:
    * \param timeout the maximum time to wait for.
    * \param context the context to wait in.
    * \param wait_tick_ns the time to wait between each iteration of the wait loop (in nanoseconds).
-   * \return true if the clock is active
+   * \return true if clock was or became valid
    * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
    */
   RCLCPP_PUBLIC
@@ -186,7 +186,7 @@ public:
   wait_for_valid(
     const rclcpp::Duration & timeout,
     Context::SharedPtr context = contexts::get_global_default_context(),
-    Duration wait_tick_ns = Duration(0, static_cast<uint32_t>(1e7)));
+    const rclcpp::Duration & wait_tick_ns = rclcpp::Duration(0, static_cast<uint32_t>(1e7)));
 
   /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.

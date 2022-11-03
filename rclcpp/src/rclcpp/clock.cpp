@@ -227,7 +227,7 @@ bool
 Clock::wait_for_valid(
   const Duration & timeout,
   Context::SharedPtr context,
-  Duration wait_tick_ns)
+  const Duration & wait_tick_ns)
 {
   if (!context || !context->is_valid()) {
     throw std::runtime_error("context cannot be slept with because it's invalid");
