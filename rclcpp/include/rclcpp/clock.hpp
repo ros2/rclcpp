@@ -140,8 +140,18 @@ public:
   /**
    * Check if the clock is valid.
    *
-   * An invalid clock is either a clock that is RCL_CLOCK_UNINITIALIZED or a clock with zero-time.
-   * In other words, an uninitialized clock.
+   * A valid clock is a clock that has a non-zero time.
+   * An invalid clock is an uninitialized clock (i.e. not rcl_clock_valid) or a clock with an
+   * uninitialized time (i.e. with zero time.)
+   *
+   * Note:
+   *     This notion of validity is different from the rcl notion of validity (rcl_clock_valid)!
+   *     A clock that is rcl_clock_valid is a clock that can be used to get a time (i.e. not
+   *     NULL, not RCL_CLOCK_UNINITIALIZED, or with a missing get_now() method.)
+   *
+   *     A clock that is valid in the sense codified by this method is a clock with non-zero time.
+   *     Consequently, a clock that is not rcl_clock_valid can never become valid, since it cannot
+   *     be used to obtain a time.
    *
    * \return true if clock was or became valid
    */
@@ -154,6 +164,7 @@ public:
    *
    * \param context the context to wait in.
    * \return true if clock was or became valid
+   * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
    */
   RCLCPP_PUBLIC
   bool
@@ -168,6 +179,7 @@ public:
    * \param context the context to wait in.
    * \param wait_tick_ns the time to wait between each iteration of the wait loop (in nanoseconds).
    * \return true if the clock is active
+   * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
    */
   RCLCPP_PUBLIC
   bool
