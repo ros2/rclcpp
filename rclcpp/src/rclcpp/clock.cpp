@@ -241,7 +241,12 @@ Clock::wait_for_valid(
   Time start = timeout_clock.now();
 
   while (!is_valid() && context->is_valid()) {  // Context check checks for rclcpp::shutdown()
-    timeout_clock.sleep_for(Duration(wait_tick_ns));
+    if (timeout < wait_tick_ns) {
+      timeout_clock.sleep_for(timeout);
+    } else {
+      timeout_clock.sleep_for(Duration(wait_tick_ns));
+    }
+
     if (timeout_clock.now() - start > timeout) {
       return is_valid();
     }
