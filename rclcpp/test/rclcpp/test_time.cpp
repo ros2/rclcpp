@@ -884,7 +884,7 @@ TEST_F(TestClockValid, validity) {
   EXPECT_FALSE(uninit_clock.is_valid());
   RCLCPP_EXPECT_THROW_EQ(
     uninit_clock.wait_for_valid(rclcpp::Duration(0, static_cast<uint32_t>(1e7))),
-    std::runtime_error("clock cannot be waited on as its clock_type is RCL_CLOCK_UNINITIALIZED"));
+    std::runtime_error("clock cannot be waited on as it is not rcl_clock_valid"));
 }
 
 TEST_F(TestClockValid, invalid_timeout) {
