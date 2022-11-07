@@ -193,7 +193,7 @@ public:
   inline void time_source(TimeSourceInterface interface) {time_source_ = interface;}
 
 
-  // Alterate getters
+  // Alternate getters
   inline BaseInterface get_node_base_interface() {return base();}
   inline ClockInterface get_node_clock_interface() {return clock();}
   inline GraphInterface get_node_graph_interface() {return graph();}
