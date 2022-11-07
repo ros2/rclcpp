@@ -4,11 +4,15 @@
   <name>rclcpp</name>
   <version>17.1.0</version>
   <description>The ROS client library in C++.</description>
+
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
-  <maintainer email="jacob@openrobotics.org">Jacob Perron</maintainer>
+  <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
   <maintainer email="william@openrobotics.org">William Woodall</maintainer>
+
   <license>Apache License 2.0</license>
+
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
+  <author email="jacob@openrobotics.org">Jacob Perron</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
