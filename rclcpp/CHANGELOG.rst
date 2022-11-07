@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.2 (2022-11-07)
+-------------------
+* fix mismatched issue if using zero_allocate (`#1995 <https://github.com/ros2/rclcpp/issues/1995>`_) (`#2026 <https://github.com/ros2/rclcpp/issues/2026>`_)
+* use regex for wildcard matching (backport `#1839 <https://github.com/ros2/rclcpp/issues/1839>`_) (`#1986 <https://github.com/ros2/rclcpp/issues/1986>`_)
+* Drop wrong template specialization (`#1926 <https://github.com/ros2/rclcpp/issues/1926>`_) (`#1937 <https://github.com/ros2/rclcpp/issues/1937>`_)
+* Add statistics for handle_loaned_message (`#1927 <https://github.com/ros2/rclcpp/issues/1927>`_) (`#1932 <https://github.com/ros2/rclcpp/issues/1932>`_)
+* Contributors: mergify[bot]
+
 16.0.1 (2022-04-13)
 -------------------
 * remove DEFINE_CONTENT_FILTER cmake option (`#1914 <https://github.com/ros2/rclcpp/issues/1914>`_)
