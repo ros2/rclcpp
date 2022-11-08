@@ -460,7 +460,6 @@ private:
   {
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
-    result.reason = "success";
     for (const auto & param : parameters) {
       if (param.get_name() == "use_sim_time" && param.get_type() == rclcpp::PARAMETER_BOOL) {
         if (param.as_bool() && !(clocks_state_.are_all_clocks_rcl_ros_time())) {
