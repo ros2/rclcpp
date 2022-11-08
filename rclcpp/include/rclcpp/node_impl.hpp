@@ -395,10 +395,10 @@ Node::get_parameters(
 }
 
 template<typename ... InterfaceTs>
-typename rclcpp::NodeHandle<InterfaceTs...>::SharedPtr
+typename rclcpp::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
 Node::get_node_handle()
 {
-  return std::make_shared<rclcpp::NodeHandle<InterfaceTs...>>(this);
+  return std::make_shared<rclcpp::NodeInterfaceHandle<InterfaceTs...>>(this);
 }
 
 }  // namespace rclcpp

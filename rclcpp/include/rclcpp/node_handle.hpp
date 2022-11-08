@@ -46,14 +46,14 @@ struct AllInterfaces {};
 
 /// A helper class for aggregating node interfaces
 template<typename ... InterfaceTs>
-class NodeHandle : public std::enable_shared_from_this<NodeHandle<InterfaceTs...>>
+class NodeInterfaceHandle : public std::enable_shared_from_this<NodeInterfaceHandle<InterfaceTs...>>
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(NodeHandle)
+  RCLCPP_SMART_PTR_DEFINITIONS(NodeInterfaceHandle)
 
   /// Create a new node handle with no bound node interfaces.
   RCLCPP_PUBLIC
-  NodeHandle()
+  NodeInterfaceHandle()
   : base_(nullptr),
     clock_(nullptr),
     graph_(nullptr),
@@ -74,13 +74,13 @@ public:
    * Additionally, to bind all interfaces, specify AllInterfaces.
    *
    * For example:
-   *   - ```NodeHandle<>(node)``` will bind no interfaces.
-   *   - ```NodeHandle<BaseInterface>(node)``` will bind just the NodeBaseInterface.
-   *   - ```NodeHandle<AllInterfaces>(node)``` will bind all interfaces.
+   *   - ```NodeInterfaceHandle<>(node)``` will bind no interfaces.
+   *   - ```NodeInterfaceHandle<BaseInterface>(node)``` will bind just the NodeBaseInterface.
+   *   - ```NodeInterfaceHandle<AllInterfaces>(node)``` will bind all interfaces.
    * \param[in] node Node-like object to bind the interfaces of.
    */
   template<typename NodeT>
-  explicit NodeHandle(const NodeT & node)
+  explicit NodeInterfaceHandle(const NodeT & node)
   {
     if constexpr (0 == sizeof ...(InterfaceTs)) {
       base_ = nullptr;
@@ -237,7 +237,10 @@ private:
 
 /// Create a new node handle bound with no node interfaces.
 RCLCPP_PUBLIC
-inline NodeHandle<>::SharedPtr get_node_handle() {return std::make_shared<NodeHandle<>>();}
+inline NodeInterfaceHandle<>::SharedPtr get_node_handle()
+{
+  return std::make_shared<NodeInterfaceHandle<>>();
+}
 
 
 /// Create a new node handle bound with the passed in node-like object's interfaces.
@@ -248,10 +251,10 @@ inline NodeHandle<>::SharedPtr get_node_handle() {return std::make_shared<NodeHa
  * \param[in] node Node-like object to bind the interfaces of.
  */
 template<typename NodeT>
-typename NodeHandle<>::SharedPtr
+typename NodeInterfaceHandle<>::SharedPtr
 get_node_handle(const NodeT & node)
 {
-  return std::make_shared<NodeHandle<>>(node);
+  return std::make_shared<NodeInterfaceHandle<>>(node);
 }
 
 
@@ -260,18 +263,18 @@ get_node_handle(const NodeT & node)
  * You may specify in the template parameters the interfaces to bind. Any unbound interfaces
  * will be nullptr.
  *
- * For example: ```NodeHandle<BaseInterface>(node)``` will bind just the NodeBaseInterface.
+ * For example: ```NodeInterfaceHandle<BaseInterface>(node)``` will bind just the NodeBaseInterface.
  *
  * \param[in] node Node-like object to bind the interfaces of.
  */
 template<typename ... InterfaceTs, typename NodeT>
-typename NodeHandle<InterfaceTs...>::SharedPtr
+typename NodeInterfaceHandle<InterfaceTs...>::SharedPtr
 get_node_handle(const NodeT & node)
 {
   if constexpr (0 == sizeof...(InterfaceTs)) {
     return get_node_handle(node);
   } else {
-    return std::make_shared<NodeHandle<InterfaceTs...>>(node);
+    return std::make_shared<NodeInterfaceHandle<InterfaceTs...>>(node);
   }
 }
 

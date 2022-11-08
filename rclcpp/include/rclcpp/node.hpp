@@ -1455,19 +1455,19 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
-  /// Return a NodeHandle bound with the Node's internal node interfaces.
+  /// Return a NodeInterfaceHandle bound with the Node's internal node interfaces.
   /**
    * This overload binds all interfaces, if you want to bind a subset of interfaces, specify them
    * in the template parameters of the templated method.
    *
-   * \return a NodeHandle bound with the Node's internal node interfaces.
+   * \return a NodeInterfaceHandle bound with the Node's internal node interfaces.
    */
   RCLCPP_PUBLIC
   inline
-  rclcpp::NodeHandle<AllInterfaces>::SharedPtr
-  get_node_handle() {return std::make_shared<NodeHandle<AllInterfaces>>(this);}
+  rclcpp::NodeInterfaceHandle<AllInterfaces>::SharedPtr
+  get_node_handle() {return std::make_shared<NodeInterfaceHandle<AllInterfaces>>(this);}
 
-  /// Return a NodeHandle bound with the Node's internal node interfaces.
+  /// Return a NodeInterfaceHandle bound with the Node's internal node interfaces.
   /**
    * Specify which interfaces you want to bind using the temlplate parameters. Any unbound
    * interfaces will be nullptr.
@@ -1482,10 +1482,10 @@ public:
    *   - ```node->get_node_handle<AllInterfaces>()``` will bind all interfaces.
    *   - ```node->get_node_handle()``` will bind all interfaces.
    *
-   * \return a NodeHandle bound with the Node's internal node interfaces.
+   * \return a NodeInterfaceHandle bound with the Node's internal node interfaces.
    */
   template<typename ... InterfaceTs>
-  typename rclcpp::NodeHandle<InterfaceTs...>::SharedPtr
+  typename rclcpp::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
   get_node_handle();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
