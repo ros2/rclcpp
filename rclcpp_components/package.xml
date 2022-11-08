@@ -4,10 +4,14 @@
   <name>rclcpp_components</name>
   <version>17.1.0</version>
   <description>Package containing tools for dynamically loadable components</description>
+
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
-  <maintainer email="jacob@openrobotics.org">Jacob Perron</maintainer>
+  <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
   <maintainer email="william@openrobotics.org">William Woodall</maintainer>
+
   <license>Apache License 2.0</license>
+
+  <author email="jacob@openrobotics.org">Jacob Perron</author>
   <author email="michael@openrobotics.org">Michael Carroll</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
