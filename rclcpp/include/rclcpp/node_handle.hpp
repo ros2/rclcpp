@@ -32,18 +32,6 @@
 namespace rclcpp
 {
 
-using BaseInterface = node_interfaces::NodeBaseInterface::SharedPtr;
-using ClockInterface = node_interfaces::NodeClockInterface::SharedPtr;
-using GraphInterface = node_interfaces::NodeGraphInterface::SharedPtr;
-using LoggingInterface = node_interfaces::NodeLoggingInterface::SharedPtr;
-using TimersInterface = node_interfaces::NodeTimersInterface::SharedPtr;
-using TopicsInterface = node_interfaces::NodeTopicsInterface::SharedPtr;
-using ServicesInterface = node_interfaces::NodeServicesInterface::SharedPtr;
-using WaitablesInterface = node_interfaces::NodeWaitablesInterface::SharedPtr;
-using ParametersInterface = node_interfaces::NodeParametersInterface::SharedPtr;
-using TimeSourceInterface = node_interfaces::NodeTimeSourceInterface::SharedPtr;
-struct AllInterfaces {};
-
 /// A helper class for aggregating node interfaces
 template<typename ... InterfaceTs>
 class NodeInterfaceHandle : public std::enable_shared_from_this<NodeInterfaceHandle<InterfaceTs...>>
@@ -75,8 +63,9 @@ public:
    *
    * For example:
    *   - ```NodeInterfaceHandle<>(node)``` will bind no interfaces.
-   *   - ```NodeInterfaceHandle<BaseInterface>(node)``` will bind just the NodeBaseInterface.
-   *   - ```NodeInterfaceHandle<AllInterfaces>(node)``` will bind all interfaces.
+   *   - ```NodeInterfaceHandle<rclcpp::node_interfaces::NodeBaseInterface>(node)```
+   *     will bind just the NodeBaseInterface.
+   *
    * \param[in] node Node-like object to bind the interfaces of.
    */
   template<typename NodeT>
@@ -93,145 +82,177 @@ public:
       waitables_ = nullptr;
       parameters_ = nullptr;
       time_source_ = nullptr;
-
-      // NOTE(methylDragon): Extra parentheses to force parameter pack expansion
-    } else if constexpr ((std::is_same_v<AllInterfaces, InterfaceTs>|| ...)) {
-      base_ = node->get_node_base_interface();
-      clock_ = node->get_node_clock_interface();
-      graph_ = node->get_node_graph_interface();
-      logging_ = node->get_node_logging_interface();
-      timers_ = node->get_node_timers_interface();
-      topics_ = node->get_node_topics_interface();
-      services_ = node->get_node_services_interface();
-      waitables_ = node->get_node_waitables_interface();
-      parameters_ = node->get_node_parameters_interface();
-      time_source_ = node->get_node_time_source_interface();
     } else {
-      base_ = (std::is_same_v<BaseInterface, InterfaceTs>|| ...) ?
-        node->get_node_base_interface() : nullptr;
-      clock_ = (std::is_same_v<ClockInterface, InterfaceTs>|| ...) ?
-        node->get_node_clock_interface() : nullptr;
-      graph_ = (std::is_same_v<GraphInterface, InterfaceTs>|| ...) ?
-        node->get_node_graph_interface() : nullptr;
-      logging_ = (std::is_same_v<LoggingInterface, InterfaceTs>|| ...) ?
-        node->get_node_logging_interface() : nullptr;
-      timers_ = (std::is_same_v<TimersInterface, InterfaceTs>|| ...) ?
-        node->get_node_timers_interface() : nullptr;
-      topics_ = (std::is_same_v<TopicsInterface, InterfaceTs>|| ...) ?
-        node->get_node_topics_interface() : nullptr;
-      services_ = (std::is_same_v<ServicesInterface, InterfaceTs>|| ...) ?
-        node->get_node_services_interface() : nullptr;
-      waitables_ = (std::is_same_v<WaitablesInterface, InterfaceTs>|| ...) ?
-        node->get_node_waitables_interface() : nullptr;
-      parameters_ = (std::is_same_v<ParametersInterface, InterfaceTs>|| ...) ?
-        node->get_node_parameters_interface() : nullptr;
-      time_source_ = (std::is_same_v<TimeSourceInterface, InterfaceTs>|| ...) ?
-        node->get_node_time_source_interface() : nullptr;
+      base_ = (
+        (std::is_same_v<node_interfaces::NodeBaseInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeBaseInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_base_interface() : nullptr;
+      clock_ = (
+        (std::is_same_v<node_interfaces::NodeClockInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeClockInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_clock_interface() : nullptr;
+      graph_ = (
+        (std::is_same_v<node_interfaces::NodeGraphInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeGraphInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_graph_interface() : nullptr;
+      logging_ = (
+        (std::is_same_v<node_interfaces::NodeLoggingInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeLoggingInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_logging_interface() : nullptr;
+      timers_ = (
+        (std::is_same_v<node_interfaces::NodeTimersInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeTimersInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_timers_interface() : nullptr;
+      topics_ = (
+        (std::is_same_v<node_interfaces::NodeTopicsInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeTopicsInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_topics_interface() : nullptr;
+      services_ = (
+        (std::is_same_v<node_interfaces::NodeServicesInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeServicesInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_services_interface() : nullptr;
+      waitables_ = (
+        (std::is_same_v<node_interfaces::NodeWaitablesInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeWaitablesInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_waitables_interface() : nullptr;
+      parameters_ = (
+        (std::is_same_v<node_interfaces::NodeParametersInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeParametersInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_parameters_interface() : nullptr;
+      time_source_ = (
+        (std::is_same_v<node_interfaces::NodeTimeSourceInterface, InterfaceTs>|| ...) ||
+        (std::is_same_v<node_interfaces::NodeTimeSourceInterface::SharedPtr, InterfaceTs>|| ...)
+        ) ? node->get_node_time_source_interface() : nullptr;
     }
   }
 
-  // Getters and setters
+
+  // Getters
 
   /// Return the bound NodeBaseInterface
-  inline BaseInterface base() {return base_;}
-
-  /// Set the bound NodeBaseInterface
-  inline void base(BaseInterface interface) {base_ = interface;}
+  inline node_interfaces::NodeBaseInterface::SharedPtr
+  get_node_base_interface() {return base_;}
 
   /// Return the bound NodeClockInterface
-  inline ClockInterface clock() {return clock_;}
-
-  /// Set the bound NodeClockInterface
-  inline void clock(ClockInterface interface) {clock_ = interface;}
+  inline node_interfaces::NodeClockInterface::SharedPtr
+  get_node_clock_interface() {return clock_;}
 
   /// Return the bound NodeGraphInterface
-  inline GraphInterface graph() {return graph_;}
-
-  /// Set the bound NodeGraphInterface
-  inline void graph(GraphInterface interface) {graph_ = interface;}
+  inline node_interfaces::NodeGraphInterface::SharedPtr
+  get_node_graph_interface() {return graph_;}
 
   /// Return the bound NodeLoggingInterface
-  inline LoggingInterface logging() {return logging_;}
-
-  /// Set the bound NodeLoggingInterface
-  inline void logging(LoggingInterface interface) {logging_ = interface;}
+  inline node_interfaces::NodeLoggingInterface::SharedPtr
+  get_node_logging_interface() {return logging_;}
 
   /// Return the bound NodeTimersInterface
-  inline TimersInterface timers() {return timers_;}
-
-  /// Set the bound NodeTimersInterface
-  inline void timers(TimersInterface interface) {timers_ = interface;}
+  inline node_interfaces::NodeTimersInterface::SharedPtr
+  get_node_timers_interface() {return timers_;}
 
   /// Return the bound NodeTopicsInterface
-  inline TopicsInterface topics() {return topics_;}
-
-  /// Set the bound NodeTopicsInterface
-  inline void topics(TopicsInterface interface) {topics_ = interface;}
+  inline node_interfaces::NodeTopicsInterface::SharedPtr
+  get_node_topics_interface() {return topics_;}
 
   /// Return the bound NodeServicesInterface
-  inline ServicesInterface services() {return services_;}
-
-  /// Set the bound NodeServicesInterface
-  inline void services(ServicesInterface interface) {services_ = interface;}
+  inline node_interfaces::NodeServicesInterface::SharedPtr
+  get_node_services_interface() {return services_;}
 
   /// Return the bound NodeWaitablesInterface
-  inline WaitablesInterface waitables() {return waitables_;}
-
-  /// Set the bound NodeWaitablesInterface
-  inline void waitables(WaitablesInterface interface) {waitables_ = interface;}
+  inline node_interfaces::NodeWaitablesInterface::SharedPtr
+  get_node_waitables_interface() {return waitables_;}
 
   /// Return the bound NodeParametersInterface
-  inline ParametersInterface parameters() {return parameters_;}
-
-  /// Set the bound NodeParametersInterface
-  inline void parameters(ParametersInterface interface) {parameters_ = interface;}
+  inline node_interfaces::NodeParametersInterface::SharedPtr
+  get_node_parameters_interface() {return parameters_;}
 
   /// Return the bound NodeTimeSourceInterface
-  inline TimeSourceInterface time_source() {return time_source_;}
+  inline node_interfaces::NodeTimeSourceInterface::SharedPtr
+  get_node_time_source_interface() {return time_source_;}
+
+
+  // Setters
+
+  /// Set the bound NodeBaseInterface
+  inline void
+  set_node_base_interface(node_interfaces::NodeBaseInterface::SharedPtr interface)
+  {
+    base_ = interface;
+  }
+
+  /// Set the bound NodeClockInterface
+  inline void
+  set_node_clock_interface(node_interfaces::NodeClockInterface::SharedPtr interface)
+  {
+    clock_ = interface;
+  }
+
+  /// Set the bound NodeGraphInterface
+  inline void
+  set_node_graph_interface(node_interfaces::NodeGraphInterface::SharedPtr interface)
+  {
+    graph_ = interface;
+  }
+
+  /// Set the bound NodeLoggingInterface
+  inline void
+  set_node_logging_interface(node_interfaces::NodeLoggingInterface::SharedPtr interface)
+  {
+    logging_ = interface;
+  }
+
+  /// Set the bound NodeTimersInterface
+  inline void
+  set_node_timers_interface(node_interfaces::NodeTimersInterface::SharedPtr interface)
+  {
+    timers_ = interface;
+  }
+
+  /// Set the bound NodeTopicsInterface
+  inline void
+  set_node_topics_interface(node_interfaces::NodeTopicsInterface::SharedPtr interface)
+  {
+    topics_ = interface;
+  }
+
+  /// Set the bound NodeServicesInterface
+  inline void
+  set_node_services_interface(node_interfaces::NodeServicesInterface::SharedPtr interface)
+  {
+    services_ = interface;
+  }
+
+  /// Set the bound NodeWaitablesInterface
+  inline void
+  set_node_waitables_interface(node_interfaces::NodeWaitablesInterface::SharedPtr interface)
+  {
+    waitables_ = interface;
+  }
+
+  /// Set the bound NodeParametersInterface
+  inline void
+  set_node_parameters_interface(node_interfaces::NodeParametersInterface::SharedPtr interface)
+  {
+    parameters_ = interface;
+  }
 
   /// Set the bound NodeTimeSourceInterface
-  inline void time_source(TimeSourceInterface interface) {time_source_ = interface;}
-
-
-  // Alternate getters
-  inline BaseInterface get_node_base_interface() {return base();}
-  inline ClockInterface get_node_clock_interface() {return clock();}
-  inline GraphInterface get_node_graph_interface() {return graph();}
-  inline LoggingInterface get_node_logging_interface() {return logging();}
-  inline TimersInterface get_node_timers_interface() {return timers();}
-  inline TopicsInterface get_node_topics_interface() {return topics();}
-  inline ServicesInterface get_node_services_interface() {return services();}
-  inline WaitablesInterface get_node_waitables_interface() {return waitables();}
-  inline ParametersInterface get_node_parameters_interface() {return parameters();}
-  inline TimeSourceInterface get_node_time_source_interface() {return time_source();}
-
-
-  // Alternate setters
-  inline void set_node_base_interface(BaseInterface interface) {base(interface);}
-  inline void set_node_clock_interface(ClockInterface interface) {clock(interface);}
-  inline void set_node_graph_interface(GraphInterface interface) {graph(interface);}
-  inline void set_node_logging_interface(LoggingInterface interface) {logging(interface);}
-  inline void set_node_timers_interface(TimersInterface interface) {timers(interface);}
-  inline void set_node_topics_interface(TopicsInterface interface) {topics(interface);}
-  inline void set_node_services_interface(ServicesInterface interface) {services(interface);}
-  inline void set_node_waitables_interface(WaitablesInterface interface) {waitables(interface);}
-  inline void set_node_parameters_interface(ParametersInterface interface) {parameters(interface);}
-  inline void set_node_time_source_interface(TimeSourceInterface interface)
+  inline void
+  set_node_time_source_interface(node_interfaces::NodeTimeSourceInterface::SharedPtr interface)
   {
-    time_source(interface);
+    time_source_ = interface;
   }
 
 private:
-  BaseInterface base_;
-  ClockInterface clock_;
-  GraphInterface graph_;
-  LoggingInterface logging_;
-  TimersInterface timers_;
-  TopicsInterface topics_;
-  ServicesInterface services_;
-  WaitablesInterface waitables_;
-  ParametersInterface parameters_;
-  TimeSourceInterface time_source_;
+  node_interfaces::NodeBaseInterface::SharedPtr base_;
+  node_interfaces::NodeClockInterface::SharedPtr clock_;
+  node_interfaces::NodeGraphInterface::SharedPtr graph_;
+  node_interfaces::NodeLoggingInterface::SharedPtr logging_;
+  node_interfaces::NodeTimersInterface::SharedPtr timers_;
+  node_interfaces::NodeTopicsInterface::SharedPtr topics_;
+  node_interfaces::NodeServicesInterface::SharedPtr services_;
+  node_interfaces::NodeWaitablesInterface::SharedPtr waitables_;
+  node_interfaces::NodeParametersInterface::SharedPtr parameters_;
+  node_interfaces::NodeTimeSourceInterface::SharedPtr time_source_;
 };
 
 

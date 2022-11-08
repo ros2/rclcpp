@@ -825,33 +825,17 @@ public:
 
   /// Return a NodeInterfaceHandle bound with the LifecycleNode's internal node interfaces.
   /**
-   * This overload binds all interfaces, if you want to bind a subset of interfaces, specify them
-   * in the template parameters of the templated method.
-   *
-   * \return a NodeInterfaceHandle bound with the LifecycleNode's internal node interfaces.
-   */
-  RCLCPP_LIFECYCLE_PUBLIC
-  inline
-  rclcpp::NodeInterfaceHandle<rclcpp::AllInterfaces>::SharedPtr
-  get_node_handle()
-  {
-    return std::make_shared<rclcpp::NodeInterfaceHandle<rclcpp::AllInterfaces>>(this);
-  }
-
-  /// Return a NodeInterfaceHandle bound with the LifecycleNode's internal node interfaces.
-  /**
    * Specify which interfaces you want to bind using the temlplate parameters. Any unbound
    * interfaces will be nullptr.
    *
-   * Additionally, to bind all interfaces, specify AllInterfaces or no template parameters.
-   *
    * For example:
    *   - ```node->get_node_handle<>()``` will bind no interfaces.
-   *   - ```node->get_node_handle<BaseInterface>()``` will bind just the NodeBaseInterface.
-   *   - ```node->get_node_handle<BaseInterface, ClockInterface>()``` will bind the base and clock
-   *     interfaces.
-   *   - ```node->get_node_handle<AllInterfaces>()``` will bind all interfaces.
-   *   - ```node->get_node_handle()``` will bind all interfaces.
+   *   - ```node->get_node_handle<rclcpp::node_interfaces::NodeBaseInterface>()```
+   *     will bind just the NodeBaseInterface.
+   *   - ```node->get_node_handle<
+   *       rclcpp::node_interfaces::NodeBaseInterface,
+   *       rclcpp::node_interfaces::NodeClockInterface
+   *     >()``` will bind the base and clock interfaces.
    *
    * \return a NodeInterfaceHandle bound with the LifecycleNode's internal node interfaces.
    */

@@ -172,36 +172,7 @@ TEST_F(TestNode, nh_construction_and_destruction) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
-    auto all_nh = node->get_node_handle();
-    EXPECT_NE(nullptr, all_nh->get_node_base_interface());
-    EXPECT_STREQ("my_node", all_nh->get_node_base_interface()->get_name());
-    EXPECT_NE(nullptr, all_nh->get_node_clock_interface());
-    EXPECT_TRUE(RCL_ROS_TIME == all_nh->get_node_clock_interface()->get_clock()->get_clock_type());
-    EXPECT_NE(nullptr, all_nh->get_node_graph_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_logging_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_time_source_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_timers_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_topics_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_services_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_parameters_interface());
-    EXPECT_NE(nullptr, all_nh->get_node_waitables_interface());
-
-    auto all_explicit_nh = node->get_node_handle<rclcpp::AllInterfaces>();
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_base_interface());
-    EXPECT_STREQ("my_node", all_explicit_nh->get_node_base_interface()->get_name());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_clock_interface());
-    EXPECT_TRUE(
-      RCL_ROS_TIME == all_explicit_nh->get_node_clock_interface()->get_clock()->get_clock_type());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_graph_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_logging_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_time_source_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_timers_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_topics_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_services_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_parameters_interface());
-    EXPECT_NE(nullptr, all_explicit_nh->get_node_waitables_interface());
-
-    auto base_nh = node->get_node_handle<rclcpp::BaseInterface>();
+    auto base_nh = node->get_node_handle<rclcpp::node_interfaces::NodeBaseInterface>();
     EXPECT_NE(nullptr, base_nh->get_node_base_interface());
     EXPECT_STREQ("my_node", base_nh->get_node_base_interface()->get_name());
     EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
