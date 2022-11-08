@@ -452,6 +452,18 @@ TEST_F(TestTime, test_overflow_underflow_throws) {
     std::underflow_error("addition leads to int64_t underflow"));
 }
 
+TEST_F(TestTime, validity) {
+  EXPECT_FALSE(rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED).is_valid());
+  EXPECT_FALSE(rclcpp::Time(0, 0, RCL_SYSTEM_TIME).is_valid());
+  EXPECT_FALSE(rclcpp::Time(0, 0, RCL_STEADY_TIME).is_valid());
+  EXPECT_FALSE(rclcpp::Time(0, 0, RCL_ROS_TIME).is_valid());
+
+  EXPECT_TRUE(rclcpp::Time(0, 1, RCL_CLOCK_UNINITIALIZED).is_valid());
+  EXPECT_TRUE(rclcpp::Time(0, 1, RCL_SYSTEM_TIME).is_valid());
+  EXPECT_TRUE(rclcpp::Time(0, 1, RCL_STEADY_TIME).is_valid());
+  EXPECT_TRUE(rclcpp::Time(0, 1, RCL_ROS_TIME).is_valid());
+}
+
 class TestClockSleep : public ::testing::Test
 {
 protected:

@@ -233,6 +233,12 @@ Time::get_clock_type() const
   return rcl_time_.clock_type;
 }
 
+bool
+Time::is_valid() const
+{
+  return rcl_time_point_valid(const_cast<rcl_time_point_t *>(&rcl_time_));
+}
+
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
 {

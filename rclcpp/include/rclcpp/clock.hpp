@@ -145,13 +145,8 @@ public:
    * uninitialized time (i.e. with zero time.)
    *
    * Note:
-   *     This notion of validity is different from the rcl notion of validity (rcl_clock_valid)!
-   *     A clock that is rcl_clock_valid is a clock that can be used to get a time (i.e. not
-   *     NULL, not RCL_CLOCK_UNINITIALIZED, or with a missing get_now() method.)
-   *
-   *     A clock that is valid in the sense codified by this method is a clock with non-zero time.
-   *     Consequently, a clock that is not rcl_clock_valid can never become valid, since it cannot
-   *     be used to obtain a time.
+   *     A valid clock must be both rcl_clock_valid and hold a time that is rcl_time_point_valid.
+   *     An invalid clock can potentially become valid if it is rcl_clock_valid.
    *
    * \return true if clock was or became valid
    */

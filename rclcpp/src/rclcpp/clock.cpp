@@ -195,7 +195,7 @@ Clock::is_valid()
     case RCL_ROS_TIME:
     case RCL_STEADY_TIME:
     case RCL_SYSTEM_TIME:
-      return now().nanoseconds() > 0;
+      return now().is_valid();
 
     // By right we shouldn't even get to this block, but these cases are included for completeness
     case RCL_CLOCK_UNINITIALIZED:
