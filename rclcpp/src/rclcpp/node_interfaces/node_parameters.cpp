@@ -909,7 +909,7 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto & name : names) {
-    results.emplace_back(get_parameter(name));
+    results.emplace_back(this->get_parameter(name));
   }
   return results;
 }
