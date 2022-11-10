@@ -634,30 +634,20 @@ TEST_F(TestDefaultStateMachine, test_getters) {
   EXPECT_NE(nullptr, const_cast<const EmptyLifecycleNode *>(test_node.get())->get_clock());
 
   // Node Handle
-  auto base_nh = test_node->get_node_handle<rclcpp::node_interfaces::NodeBaseInterface>();
+  auto base_nh = test_node->get_node_interface_handle<rclcpp::node_interfaces::Base>();
   EXPECT_NE(nullptr, base_nh->get_node_base_interface());
   EXPECT_STREQ("testnode", base_nh->get_node_base_interface()->get_name());
-  EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_graph_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_logging_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_time_source_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_timers_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_topics_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_services_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_parameters_interface());
-  EXPECT_EQ(nullptr, base_nh->get_node_waitables_interface());
 
-  auto empty_nh = test_node->get_node_handle<>();
-  EXPECT_EQ(nullptr, empty_nh->get_node_base_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_clock_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_graph_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_logging_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_time_source_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_timers_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_topics_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_services_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_parameters_interface());
-  EXPECT_EQ(nullptr, empty_nh->get_node_waitables_interface());
+  // The following will not be defined
+  // EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_graph_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_logging_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_time_source_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_timers_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_topics_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_services_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_parameters_interface());
+  // EXPECT_EQ(nullptr, base_nh->get_node_waitables_interface());
 }
 
 TEST_F(TestDefaultStateMachine, test_graph_topics) {

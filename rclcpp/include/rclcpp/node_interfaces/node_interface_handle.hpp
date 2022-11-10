@@ -16,18 +16,8 @@
 #define RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HPP_
 
 #include <memory>
-#include <type_traits>
 
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/node_interfaces/node_clock_interface.hpp"
-#include "rclcpp/node_interfaces/node_graph_interface.hpp"
-#include "rclcpp/node_interfaces/node_logging_interface.hpp"
-#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
-#include "rclcpp/node_interfaces/node_services_interface.hpp"
-#include "rclcpp/node_interfaces/node_time_source_interface.hpp"
-#include "rclcpp/node_interfaces/node_timers_interface.hpp"
-#include "rclcpp/node_interfaces/node_topics_interface.hpp"
-#include "rclcpp/node_interfaces/node_waitables_interface.hpp"
+#include "rclcpp/node_interfaces/node_interface_handle_helpers.hpp"
 
 namespace rclcpp
 {
@@ -36,9 +26,10 @@ namespace node_interfaces
 
 /// A helper class for aggregating node interfaces
 template<typename ... InterfaceTs>
-class NodeInterfaceHandle : public std::enable_shared_from_this<NodeInterfaceHandle<InterfaceTs...>>
+class NodeInterfaceHandle
+  : public std::enable_shared_from_this<NodeInterfaceHandle<InterfaceTs...>>, public InterfaceTs ...
 {
-  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!")
+  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!");
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(NodeInterfaceHandle)
@@ -134,7 +125,7 @@ template<typename ... InterfaceTs>
 typename NodeInterfaceHandle<InterfaceTs...>::SharedPtr
 get_node_interface_handle()
 {
-  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!")
+  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!");
   return std::make_shared<NodeInterfaceHandle<InterfaceTs...>>();
 }
 
@@ -179,7 +170,7 @@ template<typename ... InterfaceTs, typename NodeT>
 typename NodeInterfaceHandle<InterfaceTs...>::SharedPtr
 get_node_interface_handle(const NodeT & node)
 {
-  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!")
+  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!");
   return std::make_shared<NodeInterfaceHandle<InterfaceTs...>>(node);
 }
 
