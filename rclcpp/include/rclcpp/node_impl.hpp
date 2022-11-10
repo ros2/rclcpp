@@ -396,7 +396,7 @@ Node::get_parameters(
 
 template<typename ... InterfaceTs>
 typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
-Node::get_node_handle()
+Node::get_node_interface_handle()
 {
   return std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>>(this);
 }

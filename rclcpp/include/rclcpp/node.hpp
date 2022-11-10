@@ -1457,23 +1457,48 @@ public:
 
   /// Return a NodeInterfaceHandle bound with the Node's internal node interfaces.
   /**
-   * Specify which interfaces you want to bind using the temlplate parameters. Any unbound
-   * interfaces will be nullptr.
+   * Specify which interfaces you want to bind using the template parameters by specifying
+   * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
    *
-   * For example:
-   *   - ```node->get_node_handle<>()``` will bind no interfaces.
-   *   - ```node->get_node_handle<rclcpp::node_interfaces::NodeBaseInterface>()```
+   * This method will return a NodeInterfaceHandle with no bound interfaces. You must set them using
+   * ```NodeInterfaceHandle->set_<interface_name>_interface(InterfaceT::SharedPtr interface)```
+   *
+   * You may use any of the available support classes in
+   * node_interfaces/node_interface_handle_helpers.hpp:
+   *   - Base:       Supports NodeBaseInterface
+   *   - Clock:      Supports NodeClockInterface
+   *   - Graph:      Supports NodeGraphInterface
+   *   - Logging:    Supports NodeLoggingInterface
+   *   - Parameters: Supports NodeParametersInterface
+   *   - Services:   Supports NodeServicesInterface
+   *   - TimeSource: Supports NodeTimeSourceInterface
+   *   - Timers:     Supports NodeTimersInterface
+   *   - Topics:     Supports NodeTopicsInterface
+   *   - Waitables:  Supports NodeWaitablesInterface
+   *
+   * Or you can define your own interface support classes!
+   *
+   * Each of the support classes should define:
+   *   - Default constructor
+   *   - Templated constructor taking NodeT
+   *   - get_node_<interface_name>_interface()
+   *   - set_node_<interface_name>_interface()
+   *
+   * Usage example:
+   *   - ```NodeInterfaceHandle<rclcpp::node_interfaces::Base>(node)```
    *     will bind just the NodeBaseInterface.
-   *   - ```node->get_node_handle<
-   *       rclcpp::node_interfaces::NodeBaseInterface,
-   *       rclcpp::node_interfaces::NodeClockInterface
-   *     >()``` will bind the base and clock interfaces.
+   *   - ```NodeInterfaceHandle<
+   *          rclcpp::node_interfaces::Base, rclcpp::node_interfaces::Clock>(node)```
+   *     will bind both the NodeBaseInterface and NodeClockInterface.
    *
-   * \return a NodeInterfaceHandle bound with the Node's internal node interfaces.
+   * \sa rclcpp::node_interfaces::NodeInterfaceHandle
+   * \param[in] node Node-like object to bind the interfaces of.
+   * \returns a NodeInterfaceHandle::SharedPtr supporting the stated interfaces, but bound with none
+   *          of them
    */
   template<typename ... InterfaceTs>
   typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
-  get_node_handle();
+  get_node_interface_handle();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**

@@ -334,7 +334,7 @@ LifecycleNode::get_parameter_or(
 
 template<typename ... InterfaceTs>
 typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
-LifecycleNode::get_node_handle()
+LifecycleNode::get_node_interface_handle()
 {
   return std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>>(this);
 }
