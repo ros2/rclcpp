@@ -14,9 +14,9 @@
 
 #include <gtest/gtest.h>
 #include "rclcpp/node.hpp"
-#include "rclcpp/node_interfaces/node_interface_handle.hpp"
+#include "rclcpp/node_interfaces/node_interfaces.hpp"
 
-class TestNodeInterfaceHandle : public ::testing::Test
+class TestNodeInterfaces : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -34,11 +34,11 @@ protected:
 /*
    Testing node handle construction.
  */
-TEST_F(TestNodeInterfaceHandle, nh_init) {
+TEST_F(TestNodeInterfaces, nh_init) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
-    auto empty_nh_from_standalone = rclcpp::node_interfaces::get_node_interface_handle<
+    auto empty_nh_from_standalone = rclcpp::node_interfaces::get_node_interfaces<
       rclcpp::node_interfaces::Base,
       rclcpp::node_interfaces::Clock,
       rclcpp::node_interfaces::Graph,
@@ -61,7 +61,7 @@ TEST_F(TestNodeInterfaceHandle, nh_init) {
     EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_parameters_interface());
     EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_time_source_interface());
 
-    auto base_nh = std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<
+    auto base_nh = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
           rclcpp::node_interfaces::Base
         >>(node);
     EXPECT_NE(nullptr, base_nh->get_node_base_interface());
@@ -77,7 +77,7 @@ TEST_F(TestNodeInterfaceHandle, nh_init) {
     // EXPECT_EQ(nullptr, base_nh->get_node_parameters_interface());
     // EXPECT_EQ(nullptr, base_nh->get_node_time_source_interface());
 
-    auto base_nh_from_standalone = rclcpp::node_interfaces::get_node_interface_handle<
+    auto base_nh_from_standalone = rclcpp::node_interfaces::get_node_interfaces<
       rclcpp::node_interfaces::Base
       >(node);
     EXPECT_NE(nullptr, base_nh_from_standalone->get_node_base_interface());
@@ -94,7 +94,7 @@ TEST_F(TestNodeInterfaceHandle, nh_init) {
     // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_time_source_interface());
 
     auto base_clock_nh =
-      std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<
+      std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
           rclcpp::node_interfaces::Base,
           rclcpp::node_interfaces::Clock
         >>(node);
@@ -114,7 +114,7 @@ TEST_F(TestNodeInterfaceHandle, nh_init) {
     // EXPECT_EQ(nullptr, base_clock_nh->get_node_time_source_interface());
 
     auto sans_base_clock_nh = std::make_shared<
-      rclcpp::node_interfaces::NodeInterfaceHandle<
+      rclcpp::node_interfaces::NodeInterfaces<
         rclcpp::node_interfaces::Graph,
         rclcpp::node_interfaces::Logging,
         rclcpp::node_interfaces::Timers,
@@ -141,11 +141,11 @@ TEST_F(TestNodeInterfaceHandle, nh_init) {
 /*
    Testing node handle setters.
  */
-TEST_F(TestNodeInterfaceHandle, nh_setters) {
+TEST_F(TestNodeInterfaces, nh_setters) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
-    auto base_nh = std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<
+    auto base_nh = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
           rclcpp::node_interfaces::Base,
           rclcpp::node_interfaces::Clock
         >>(node);

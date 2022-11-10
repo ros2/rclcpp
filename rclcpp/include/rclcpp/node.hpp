@@ -50,7 +50,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
-#include "rclcpp/node_interfaces/node_interface_handle.hpp"
+#include "rclcpp/node_interfaces/node_interfaces.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
@@ -1455,16 +1455,16 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
-  /// Return a NodeInterfaceHandle bound with the Node's internal node interfaces.
+  /// Return a NodeInterfaces bound with the Node's internal node interfaces.
   /**
    * Specify which interfaces you want to bind using the template parameters by specifying
    * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
    *
-   * This method will return a NodeInterfaceHandle with no bound interfaces. You must set them using
-   * ```NodeInterfaceHandle->set_<interface_name>_interface(InterfaceT::SharedPtr interface)```
+   * This method will return a NodeInterfaces with no bound interfaces. You must set them using
+   * ```NodeInterfaces->set_<interface_name>_interface(InterfaceT::SharedPtr interface)```
    *
    * You may use any of the available support classes in
-   * node_interfaces/node_interface_handle_helpers.hpp:
+   * node_interfaces/node_interfaces_helpers.hpp:
    *   - Base:       Supports NodeBaseInterface
    *   - Clock:      Supports NodeClockInterface
    *   - Graph:      Supports NodeGraphInterface
@@ -1485,20 +1485,20 @@ public:
    *   - set_node_<interface_name>_interface()
    *
    * Usage example:
-   *   - ```NodeInterfaceHandle<rclcpp::node_interfaces::Base>(node)```
+   *   - ```NodeInterfaces<rclcpp::node_interfaces::Base>(node)```
    *     will bind just the NodeBaseInterface.
-   *   - ```NodeInterfaceHandle<
+   *   - ```NodeInterfaces<
    *          rclcpp::node_interfaces::Base, rclcpp::node_interfaces::Clock>(node)```
    *     will bind both the NodeBaseInterface and NodeClockInterface.
    *
-   * \sa rclcpp::node_interfaces::NodeInterfaceHandle
+   * \sa rclcpp::node_interfaces::NodeInterfaces
    * \param[in] node Node-like object to bind the interfaces of.
-   * \returns a NodeInterfaceHandle::SharedPtr supporting the stated interfaces, but bound with none
+   * \returns a NodeInterfaces::SharedPtr supporting the stated interfaces, but bound with none
    *          of them
    */
   template<typename ... InterfaceTs>
-  typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
-  get_node_interface_handle();
+  typename rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>::SharedPtr
+  get_node_interfaces();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**

@@ -172,7 +172,7 @@ TEST_F(TestNode, nh_construction_and_destruction) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
-    auto base_nh = node->get_node_interface_handle<rclcpp::node_interfaces::Base>();
+    auto base_nh = node->get_node_interfaces<rclcpp::node_interfaces::Base>();
     EXPECT_NE(nullptr, base_nh->get_node_base_interface());
     EXPECT_STREQ("my_node", base_nh->get_node_base_interface()->get_name());
 

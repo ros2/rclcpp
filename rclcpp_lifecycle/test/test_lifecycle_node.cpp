@@ -634,7 +634,7 @@ TEST_F(TestDefaultStateMachine, test_getters) {
   EXPECT_NE(nullptr, const_cast<const EmptyLifecycleNode *>(test_node.get())->get_clock());
 
   // Node Handle
-  auto base_nh = test_node->get_node_interface_handle<rclcpp::node_interfaces::Base>();
+  auto base_nh = test_node->get_node_interfaces<rclcpp::node_interfaces::Base>();
   EXPECT_NE(nullptr, base_nh->get_node_base_interface());
   EXPECT_STREQ("testnode", base_nh->get_node_base_interface()->get_name());
 

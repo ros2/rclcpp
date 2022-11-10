@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HELPERS_HPP_
-#define RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HELPERS_HPP_
+#ifndef RCLCPP__NODE_INTERFACES__NODE_INTERFACES_HELPERS_HPP_
+#define RCLCPP__NODE_INTERFACES__NODE_INTERFACES_HELPERS_HPP_
 
 #include <memory>
 
@@ -27,23 +27,25 @@
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
 namespace node_interfaces
 {
 
-// Helper classes to be inherited by NodeInterfaceHandle to support node interface aggregation
+// Helper classes to be inherited by NodeInterfaces to support node interface aggregation
 // via multiple inheritance.
 
 // These also provide a more terse way to configure the supported interfaces!
 
 
-/// NodeInterfaceHandle support for NodeBaseInterface
+/// NodeInterfaces support for NodeBaseInterface
 class Base
 {
 public:
   /// Default constructor with no bound NodeBaseInterface
+  RCLCPP_PUBLIC
   Base() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeBaseInterface
@@ -61,11 +63,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeClockInterface
+/// NodeInterfaces support for NodeClockInterface
 class Clock
 {
 public:
   /// Default constructor with no bound NodeClockInterface
+  RCLCPP_PUBLIC
   Clock() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeClockInterface
@@ -83,11 +86,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeGraphInterface
+/// NodeInterfaces support for NodeGraphInterface
 class Graph
 {
 public:
   /// Default constructor with no bound NodeGraphInterface
+  RCLCPP_PUBLIC
   Graph() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeGraphInterface
@@ -105,11 +109,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeLoggingInterface
+/// NodeInterfaces support for NodeLoggingInterface
 class Logging
 {
 public:
   /// Default constructor with no bound NodeLoggingInterface
+  RCLCPP_PUBLIC
   Logging() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeLoggingInterface
@@ -128,11 +133,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeParametersInterface
+/// NodeInterfaces support for NodeParametersInterface
 class Parameters
 {
 public:
   /// Default constructor with no bound NodeParametersInterface
+  RCLCPP_PUBLIC
   Parameters() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeParametersInterface
@@ -151,11 +157,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeServicesInterface
+/// NodeInterfaces support for NodeServicesInterface
 class Services
 {
 public:
   /// Default constructor with no bound NodeServicesInterface
+  RCLCPP_PUBLIC
   Services() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeServicesInterface
@@ -174,11 +181,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeTimeSourceInterface
+/// NodeInterfaces support for NodeTimeSourceInterface
 class TimeSource
 {
 public:
   /// Default constructor with no bound NodeTimeSourceInterface
+  RCLCPP_PUBLIC
   TimeSource() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeTimeSourceInterface
@@ -197,11 +205,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeTimersInterface
+/// NodeInterfaces support for NodeTimersInterface
 class Timers
 {
 public:
   /// Default constructor with no bound NodeTimersInterface
+  RCLCPP_PUBLIC
   Timers() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeTimersInterface
@@ -220,11 +229,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeTopicsInterface
+/// NodeInterfaces support for NodeTopicsInterface
 class Topics
 {
 public:
   /// Default constructor with no bound NodeTopicsInterface
+  RCLCPP_PUBLIC
   Topics() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeTopicsInterface
@@ -243,11 +253,12 @@ private:
 };
 
 
-/// NodeInterfaceHandle support for NodeWaitablesInterface
+/// NodeInterfaces support for NodeWaitablesInterface
 class Waitables
 {
 public:
   /// Default constructor with no bound NodeWaitablesInterface
+  RCLCPP_PUBLIC
   Waitables() {impl_ = nullptr;}
 
   /// Bind the passed in node-like object's NodeWaitablesInterface
@@ -269,4 +280,4 @@ private:
 }  // namespace node_interfaces
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HELPERS_HPP_
+#endif  // RCLCPP__NODE_INTERFACES__NODE_INTERFACES_HELPERS_HPP_

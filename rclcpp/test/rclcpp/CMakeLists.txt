@@ -234,10 +234,10 @@ if(TARGET test_node_interfaces__node_graph)
     "test_msgs")
   target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
 endif()
-ament_add_gtest(test_node_interfaces__node_interface_handle
-node_interfaces/test_node_interface_handle.cpp TIMEOUT 240)
-if(TARGET test_node_interfaces__node_interface_handle)
-  target_link_libraries(test_node_interfaces__node_interface_handle ${PROJECT_NAME} mimick)
+ament_add_gtest(test_node_interfaces__node_interfaces
+  node_interfaces/test_node_interfaces.cpp TIMEOUT 240)
+if(TARGET test_node_interfaces__node_interfaces)
+  target_link_libraries(test_node_interfaces__node_interfaces ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
