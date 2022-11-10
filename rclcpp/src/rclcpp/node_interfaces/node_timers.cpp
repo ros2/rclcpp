@@ -37,14 +37,15 @@ NodeTimers::add_timer(
       // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create timer, group not in node.");
     }
-    callback_group->add_timer(timer);
   } else {
-    node_base_->get_default_callback_group()->add_timer(timer);
+    callback_group = node_base_->get_default_callback_group();
   }
+  callback_group->add_timer(timer);
 
   auto & node_gc = node_base_->get_notify_guard_condition();
   try {
     node_gc.trigger();
+    callback_group->trigger_notify_guard_condition();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on timer creation: ") + ex.what());
