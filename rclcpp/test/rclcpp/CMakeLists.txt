@@ -210,19 +210,6 @@ if(TARGET test_node)
   target_link_libraries(test_node ${PROJECT_NAME} mimick)
 endif()
 
-ament_add_gtest(test_node_handle test_node_handle.cpp TIMEOUT 240)
-if(TARGET test_node_handle)
-  ament_target_dependencies(test_node_handle
-    "rcl_interfaces"
-    "rcpputils"
-    "rmw"
-    "rosidl_runtime_cpp"
-    "rosidl_typesupport_cpp"
-    "test_msgs"
-  )
-  target_link_libraries(test_node_handle ${PROJECT_NAME} mimick)
-endif()
-
 ament_add_gtest(test_node_interfaces__get_node_interfaces
   node_interfaces/test_get_node_interfaces.cpp)
 if(TARGET test_node_interfaces__get_node_interfaces)
@@ -246,6 +233,11 @@ if(TARGET test_node_interfaces__node_graph)
     test_node_interfaces__node_graph
     "test_msgs")
   target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
+endif()
+ament_add_gtest(test_node_interfaces__node_interface_handle
+node_interfaces/test_node_interface_handle.cpp TIMEOUT 240)
+if(TARGET test_node_interfaces__node_interface_handle)
+  target_link_libraries(test_node_interfaces__node_interface_handle ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)

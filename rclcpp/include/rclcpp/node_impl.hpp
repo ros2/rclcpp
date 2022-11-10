@@ -43,7 +43,7 @@
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
-#include "rclcpp/node_handle.hpp"
+#include "rclcpp/node_interfaces/node_interface_handle.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/timer.hpp"
@@ -395,10 +395,10 @@ Node::get_parameters(
 }
 
 template<typename ... InterfaceTs>
-typename rclcpp::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
+typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
 Node::get_node_handle()
 {
-  return std::make_shared<rclcpp::NodeInterfaceHandle<InterfaceTs...>>(this);
+  return std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>>(this);
 }
 
 }  // namespace rclcpp

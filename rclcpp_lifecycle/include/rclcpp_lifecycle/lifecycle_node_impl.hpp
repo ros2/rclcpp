@@ -33,7 +33,7 @@
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
-#include "rclcpp/node_handle.hpp"
+#include "rclcpp/node_interfaces/node_interface_handle.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
@@ -333,10 +333,10 @@ LifecycleNode::get_parameter_or(
 }
 
 template<typename ... InterfaceTs>
-typename rclcpp::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
+typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
 LifecycleNode::get_node_handle()
 {
-  return std::make_shared<rclcpp::NodeInterfaceHandle<InterfaceTs...>>(this);
+  return std::make_shared<rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>>(this);
 }
 
 }  // namespace rclcpp_lifecycle

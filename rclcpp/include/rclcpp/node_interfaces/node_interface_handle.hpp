@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODE_HANDLE_HPP_
-#define RCLCPP__NODE_HANDLE_HPP_
+#ifndef RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HPP_
+#define RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HPP_
 
 #include <memory>
 #include <type_traits>
@@ -30,6 +30,8 @@
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 
 namespace rclcpp
+{
+namespace node_interfaces
 {
 
 /// A helper class for aggregating node interfaces
@@ -299,6 +301,7 @@ get_node_handle(const NodeT & node)
   }
 }
 
+}  // namespace node_interfaces
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NODE_HANDLE_HPP_
+#endif  // RCLCPP__NODE_INTERFACES__NODE_INTERFACE_HANDLE_HPP_

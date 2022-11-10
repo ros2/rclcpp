@@ -47,10 +47,10 @@
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
-#include "rclcpp/node_handle.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_interface_handle.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
@@ -1472,7 +1472,7 @@ public:
    * \return a NodeInterfaceHandle bound with the Node's internal node interfaces.
    */
   template<typename ... InterfaceTs>
-  typename rclcpp::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
+  typename rclcpp::node_interfaces::NodeInterfaceHandle<InterfaceTs...>::SharedPtr
   get_node_handle();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
