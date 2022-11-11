@@ -1460,36 +1460,7 @@ public:
    * Specify which interfaces you want to bind using the template parameters by specifying
    * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
    *
-   * This method will return a NodeInterfaces with no bound interfaces. You must set them using
-   * ```NodeInterfaces->set_<interface_name>_interface(InterfaceT::SharedPtr interface)```
-   *
-   * You may use any of the available support classes in
-   * node_interfaces/node_interfaces_helpers.hpp:
-   *   - Base:       Supports NodeBaseInterface
-   *   - Clock:      Supports NodeClockInterface
-   *   - Graph:      Supports NodeGraphInterface
-   *   - Logging:    Supports NodeLoggingInterface
-   *   - Parameters: Supports NodeParametersInterface
-   *   - Services:   Supports NodeServicesInterface
-   *   - TimeSource: Supports NodeTimeSourceInterface
-   *   - Timers:     Supports NodeTimersInterface
-   *   - Topics:     Supports NodeTopicsInterface
-   *   - Waitables:  Supports NodeWaitablesInterface
-   *
-   * Or you can define your own interface support classes!
-   *
-   * Each of the support classes should define:
-   *   - Default constructor
-   *   - Templated constructor taking NodeT
-   *   - get_node_<interface_name>_interface()
-   *   - set_node_<interface_name>_interface()
-   *
-   * Usage example:
-   *   - ```NodeInterfaces<rclcpp::node_interfaces::Base>(node)```
-   *     will bind just the NodeBaseInterface.
-   *   - ```NodeInterfaces<
-   *          rclcpp::node_interfaces::Base, rclcpp::node_interfaces::Clock>(node)```
-   *     will bind both the NodeBaseInterface and NodeClockInterface.
+   * See the rclcpp::node_interfaces::NodeInterfaces class for usage examples and support classes.
    *
    * \sa rclcpp::node_interfaces::NodeInterfaces
    * \param[in] node Node-like object to bind the interfaces of.
