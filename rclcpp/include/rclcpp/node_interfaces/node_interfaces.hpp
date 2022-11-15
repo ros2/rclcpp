@@ -43,6 +43,9 @@ public:
    * Specify which interfaces you want to bind using the template parameters by specifying
    * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
    *
+   * You may also use this constructor to create a NodeInterfaces that contains a subset of
+   * another NodeInterfaces' interfaces.
+   *
    * You may use any of the available support classes in
    * node_interfaces/node_interfaces_helpers.hpp:
    *   - Base:       Supports NodeBaseInterface
@@ -74,8 +77,13 @@ public:
    * \param[in] node Node-like object to bind the interfaces of.
    */
   template<typename NodeT>
-  NodeInterfaces(const NodeT & node)  // NOLINT(runtime/explicit)
+  NodeInterfaces(NodeT & node)  // NOLINT(runtime/explicit)
   : InterfaceTs(node)... {}           // Implicit constructor for node-like passing to functions
+
+  /// SharedPtr Constructor
+  template<typename NodeT>
+  NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
+  : InterfaceTs(node ? *node : throw std::runtime_error("Passed in NodeT is nullptr!"))... {}
 };
 
 
@@ -115,7 +123,26 @@ get_node_interfaces()
  */
 template<typename ... InterfaceTs, typename NodeT>
 typename NodeInterfaces<InterfaceTs...>::SharedPtr
-get_node_interfaces(const NodeT & node)
+get_node_interfaces(NodeT & node)
+{
+  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!");
+  return std::make_shared<NodeInterfaces<InterfaceTs...>>(node);
+}
+
+/// Create a new NodeInterfaces object bound with the passed in node-like shared_ptr's interfaces.
+/**
+ * Specify which interfaces you want to bind using the template parameters by specifying
+ * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
+ *
+ * See the rclcpp::node_interfaces::NodeInterfaces class for usage examples and support classes.
+ *
+ * \sa rclcpp::node_interfaces::NodeInterfaces
+ * \param[in] node Node-like object to bind the interfaces of.
+ * \returns a NodeInterfaces::SharedPtr bound with the node-like objects's interfaces
+ */
+template<typename ... InterfaceTs, typename NodeT>
+typename NodeInterfaces<InterfaceTs...>::SharedPtr
+get_node_interfaces(std::shared_ptr<NodeT> node)
 {
   static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!");
   return std::make_shared<NodeInterfaces<InterfaceTs...>>(node);

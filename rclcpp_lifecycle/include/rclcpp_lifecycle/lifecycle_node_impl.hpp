@@ -336,7 +336,7 @@ template<typename ... InterfaceTs>
 typename rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>::SharedPtr
 LifecycleNode::get_node_interfaces()
 {
-  return std::make_shared<rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>>(this);
+  return std::make_shared<rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>>(*this);
 }
 
 }  // namespace rclcpp_lifecycle

@@ -37,7 +37,7 @@ TEST_F(TestNodeInterfaces, nh_init) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
-    auto empty_nh_from_standalone = rclcpp::node_interfaces::get_node_interfaces<
+    auto empty_interfaces_from_standalone = rclcpp::node_interfaces::get_node_interfaces<
       rclcpp::node_interfaces::Base,
       rclcpp::node_interfaces::Clock,
       rclcpp::node_interfaces::Graph,
@@ -49,70 +49,87 @@ TEST_F(TestNodeInterfaces, nh_init) {
       rclcpp::node_interfaces::Parameters,
       rclcpp::node_interfaces::TimeSource
       >();
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_base_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_clock_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_graph_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_logging_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_timers_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_topics_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_services_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_waitables_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_parameters_interface());
-    EXPECT_EQ(nullptr, empty_nh_from_standalone->get_node_time_source_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_base_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_clock_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_graph_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_logging_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_timers_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_topics_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_services_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_waitables_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_parameters_interface());
+    EXPECT_EQ(nullptr, empty_interfaces_from_standalone->get_node_time_source_interface());
 
-    auto base_nh = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
+    auto base_interfaces = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
           rclcpp::node_interfaces::Base
         >>(node);
-    EXPECT_NE(nullptr, base_nh->get_node_base_interface());
-    EXPECT_STREQ("my_node", base_nh->get_node_base_interface()->get_name());
+    EXPECT_NE(nullptr, base_interfaces->get_node_base_interface());
+    EXPECT_STREQ("my_node", base_interfaces->get_node_base_interface()->get_name());
     // The following will not be defined
-    // EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_graph_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_logging_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_timers_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_topics_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_services_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_waitables_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_parameters_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_time_source_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_clock_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_graph_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_logging_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_timers_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_topics_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_services_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_waitables_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_parameters_interface());
+    // EXPECT_EQ(nullptr, base_interfaces->get_node_time_source_interface());
 
-    auto base_nh_from_standalone = rclcpp::node_interfaces::get_node_interfaces<
+    auto base_interfaces_from_node_obj = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
+          rclcpp::node_interfaces::Base
+        >>(*node);
+    EXPECT_NE(nullptr, base_interfaces_from_node_obj->get_node_base_interface());
+    EXPECT_STREQ("my_node", base_interfaces_from_node_obj->get_node_base_interface()->get_name());
+    // The following will not be defined
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_clock_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_graph_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_logging_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_timers_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_topics_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_services_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_waitables_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_parameters_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_node_obj->get_node_time_source_interface());
+
+    auto base_interfaces_from_standalone = rclcpp::node_interfaces::get_node_interfaces<
       rclcpp::node_interfaces::Base
       >(node);
-    EXPECT_NE(nullptr, base_nh_from_standalone->get_node_base_interface());
-    EXPECT_STREQ("my_node", base_nh_from_standalone->get_node_base_interface()->get_name());
+    EXPECT_NE(nullptr, base_interfaces_from_standalone->get_node_base_interface());
+    EXPECT_STREQ("my_node", base_interfaces_from_standalone->get_node_base_interface()->get_name());
     // The following will not be defined
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_clock_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_graph_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_logging_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_timers_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_topics_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_services_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_waitables_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_parameters_interface());
-    // EXPECT_EQ(nullptr, base_nh_from_standalone->get_node_time_source_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_clock_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_graph_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_logging_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_timers_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_topics_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_services_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_waitables_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_parameters_interface());
+    // EXPECT_EQ(nullptr, base_interfaces_from_standalone->get_node_time_source_interface());
 
-    auto base_clock_nh =
+    auto base_clock_interfaces =
       std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
           rclcpp::node_interfaces::Base,
           rclcpp::node_interfaces::Clock
         >>(node);
-    EXPECT_NE(nullptr, base_clock_nh->get_node_base_interface());
-    EXPECT_STREQ("my_node", base_clock_nh->get_node_base_interface()->get_name());
-    EXPECT_NE(nullptr, base_clock_nh->get_node_clock_interface());
+    EXPECT_NE(nullptr, base_clock_interfaces->get_node_base_interface());
+    EXPECT_STREQ("my_node", base_clock_interfaces->get_node_base_interface()->get_name());
+    EXPECT_NE(nullptr, base_clock_interfaces->get_node_clock_interface());
     EXPECT_TRUE(
-      RCL_ROS_TIME == base_clock_nh->get_node_clock_interface()->get_clock()->get_clock_type());
+      RCL_ROS_TIME ==
+      base_clock_interfaces->get_node_clock_interface()->get_clock()->get_clock_type());
     // The following will not be defined
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_graph_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_logging_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_timers_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_topics_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_services_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_waitables_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_parameters_interface());
-    // EXPECT_EQ(nullptr, base_clock_nh->get_node_time_source_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_graph_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_logging_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_timers_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_topics_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_services_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_waitables_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_parameters_interface());
+    // EXPECT_EQ(nullptr, base_clock_interfaces->get_node_time_source_interface());
 
-    auto sans_base_clock_nh = std::make_shared<
+    auto sans_base_clock_interfaces = std::make_shared<
       rclcpp::node_interfaces::NodeInterfaces<
         rclcpp::node_interfaces::Graph,
         rclcpp::node_interfaces::Logging,
@@ -124,16 +141,30 @@ TEST_F(TestNodeInterfaces, nh_init) {
         rclcpp::node_interfaces::TimeSource
       >>(node);
     // The following will not be defined
-    // EXPECT_EQ(nullptr, sans_base_clock_nh->get_node_base_interface());
-    // EXPECT_EQ(nullptr, sans_base_clock_nh->get_node_clock_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_graph_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_logging_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_timers_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_topics_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_services_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_waitables_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_parameters_interface());
-    EXPECT_NE(nullptr, sans_base_clock_nh->get_node_time_source_interface());
+    // EXPECT_EQ(nullptr, sans_base_clock_interfaces->get_node_base_interface());
+    // EXPECT_EQ(nullptr, sans_base_clock_interfaces->get_node_clock_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_graph_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_logging_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_timers_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_topics_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_services_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_waitables_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_parameters_interface());
+    EXPECT_NE(nullptr, sans_base_clock_interfaces->get_node_time_source_interface());
+
+    // Test conversions
+    rclcpp::node_interfaces::NodeInterfaces<rclcpp::node_interfaces::Graph> subset_from_ptr =
+      sans_base_clock_interfaces;
+
+    rclcpp::node_interfaces::NodeInterfaces<rclcpp::node_interfaces::Graph> subset_from_obj =
+      *sans_base_clock_interfaces;
+
+    auto subset_from_standalone =
+      rclcpp::node_interfaces::get_node_interfaces<rclcpp::node_interfaces::Graph>(
+      sans_base_clock_interfaces);
+    auto subset_from_standalone_obj =
+      rclcpp::node_interfaces::get_node_interfaces<rclcpp::node_interfaces::Graph>(
+      *sans_base_clock_interfaces);
   }
 }
 
@@ -144,19 +175,20 @@ TEST_F(TestNodeInterfaces, nh_setters) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
-    auto base_nh = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
+    auto base_interfaces = std::make_shared<rclcpp::node_interfaces::NodeInterfaces<
           rclcpp::node_interfaces::Base,
           rclcpp::node_interfaces::Clock
         >>(node);
 
-    EXPECT_NE(nullptr, base_nh->get_node_base_interface());
-    EXPECT_STREQ("my_node", base_nh->get_node_base_interface()->get_name());
+    EXPECT_NE(nullptr, base_interfaces->get_node_base_interface());
+    EXPECT_STREQ("my_node", base_interfaces->get_node_base_interface()->get_name());
 
-    base_nh->set_node_clock_interface(nullptr);
-    EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
+    base_interfaces->set_node_clock_interface(nullptr);
+    EXPECT_EQ(nullptr, base_interfaces->get_node_clock_interface());
 
-    base_nh->set_node_clock_interface(node->get_node_clock_interface());
-    EXPECT_NE(nullptr, base_nh->get_node_clock_interface());
-    EXPECT_TRUE(RCL_ROS_TIME == base_nh->get_node_clock_interface()->get_clock()->get_clock_type());
+    base_interfaces->set_node_clock_interface(node->get_node_clock_interface());
+    EXPECT_NE(nullptr, base_interfaces->get_node_clock_interface());
+    EXPECT_TRUE(
+      RCL_ROS_TIME == base_interfaces->get_node_clock_interface()->get_clock()->get_clock_type());
   }
 }

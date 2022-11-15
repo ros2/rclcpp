@@ -50,7 +50,7 @@ public:
 
   /// Bind the passed in node-like object's NodeBaseInterface
   template<class NodeT>
-  explicit Base(const NodeT & node) {impl_ = node->get_node_base_interface();}
+  explicit Base(NodeT & node) {impl_ = node.get_node_base_interface();}
 
   /// Return the bound NodeBaseInterface
   inline NodeBaseInterface::SharedPtr get_node_base_interface() {return impl_;}
@@ -73,7 +73,7 @@ public:
 
   /// Bind the passed in node-like object's NodeClockInterface
   template<class NodeT>
-  explicit Clock(const NodeT & node) {impl_ = node->get_node_clock_interface();}
+  explicit Clock(NodeT & node) {impl_ = node.get_node_clock_interface();}
 
   /// Return the bound NodeClockInterface
   inline NodeClockInterface::SharedPtr get_node_clock_interface() {return impl_;}
@@ -96,7 +96,7 @@ public:
 
   /// Bind the passed in node-like object's NodeGraphInterface
   template<class NodeT>
-  explicit Graph(const NodeT & node) {impl_ = node->get_node_graph_interface();}
+  explicit Graph(NodeT & node) {impl_ = node.get_node_graph_interface();}
 
   /// Return the bound NodeGraphInterface
   inline NodeGraphInterface::SharedPtr get_node_graph_interface() {return impl_;}
@@ -119,7 +119,7 @@ public:
 
   /// Bind the passed in node-like object's NodeLoggingInterface
   template<class NodeT>
-  explicit Logging(const NodeT & node) {impl_ = node->get_node_logging_interface();}
+  explicit Logging(NodeT & node) {impl_ = node.get_node_logging_interface();}
 
   /// Return the bound NodeLoggingInterface
   inline NodeLoggingInterface::SharedPtr get_node_logging_interface() {return impl_;}
@@ -143,7 +143,7 @@ public:
 
   /// Bind the passed in node-like object's NodeParametersInterface
   template<class NodeT>
-  explicit Parameters(const NodeT & node) {impl_ = node->get_node_parameters_interface();}
+  explicit Parameters(NodeT & node) {impl_ = node.get_node_parameters_interface();}
 
   /// Return the bound NodeParametersInterface
   inline NodeParametersInterface::SharedPtr get_node_parameters_interface() {return impl_;}
@@ -167,7 +167,7 @@ public:
 
   /// Bind the passed in node-like object's NodeServicesInterface
   template<class NodeT>
-  explicit Services(const NodeT & node) {impl_ = node->get_node_services_interface();}
+  explicit Services(NodeT & node) {impl_ = node.get_node_services_interface();}
 
   /// Return the bound NodeServicesInterface
   inline NodeServicesInterface::SharedPtr get_node_services_interface() {return impl_;}
@@ -191,7 +191,7 @@ public:
 
   /// Bind the passed in node-like object's NodeTimeSourceInterface
   template<class NodeT>
-  explicit TimeSource(const NodeT & node) {impl_ = node->get_node_time_source_interface();}
+  explicit TimeSource(NodeT & node) {impl_ = node.get_node_time_source_interface();}
 
   /// Return the bound NodeTimeSourceInterface
   inline NodeTimeSourceInterface::SharedPtr get_node_time_source_interface() {return impl_;}
@@ -215,7 +215,7 @@ public:
 
   /// Bind the passed in node-like object's NodeTimersInterface
   template<class NodeT>
-  explicit Timers(const NodeT & node) {impl_ = node->get_node_timers_interface();}
+  explicit Timers(NodeT & node) {impl_ = node.get_node_timers_interface();}
 
   /// Return the bound NodeTimersInterface
   inline NodeTimersInterface::SharedPtr get_node_timers_interface() {return impl_;}
@@ -239,7 +239,7 @@ public:
 
   /// Bind the passed in node-like object's NodeTopicsInterface
   template<class NodeT>
-  explicit Topics(const NodeT & node) {impl_ = node->get_node_topics_interface();}
+  explicit Topics(NodeT & node) {impl_ = node.get_node_topics_interface();}
 
   /// Return the bound NodeTopicsInterface
   inline NodeTopicsInterface::SharedPtr get_node_topics_interface() {return impl_;}
@@ -263,7 +263,7 @@ public:
 
   /// Bind the passed in node-like object's NodeWaitablesInterface
   template<class NodeT>
-  explicit Waitables(const NodeT & node) {impl_ = node->get_node_waitables_interface();}
+  explicit Waitables(NodeT & node) {impl_ = node.get_node_waitables_interface();}
 
   /// Return the bound NodeWaitablesInterface
   inline NodeWaitablesInterface::SharedPtr get_node_waitables_interface() {return impl_;}
