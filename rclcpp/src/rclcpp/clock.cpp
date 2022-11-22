@@ -67,7 +67,7 @@ Clock::Clock(rcl_clock_type_t clock_type)
 Clock::~Clock() {}
 
 Time
-Clock::now()
+Clock::now() const
 {
   Time now(0, 0, impl_->rcl_clock_.type);
 

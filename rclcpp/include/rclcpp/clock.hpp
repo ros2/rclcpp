@@ -77,7 +77,7 @@ public:
    */
   RCLCPP_PUBLIC
   Time
-  now();
+  now() const;
 
   /**
    * Sleep until a specified Time, according to clock type.
