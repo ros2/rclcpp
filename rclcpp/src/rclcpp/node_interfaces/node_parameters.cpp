@@ -938,7 +938,7 @@ NodeParameters::get_parameter(const std::string & name) const
 bool
 NodeParameters::get_parameter(
   const std::string & name,
-  rclcpp::Parameter & parameter) const
+  rclcpp::Parameter & parameter) const noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 

@@ -777,7 +777,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  get_parameter(const std::string & name, rclcpp::Parameter & parameter) const;
+  get_parameter(const std::string & name, rclcpp::Parameter & parameter) const noexcept;
 
   /// Get the value of a parameter by the given name, and return true if it was set.
   /**

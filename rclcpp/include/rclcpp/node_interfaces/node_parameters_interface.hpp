@@ -176,7 +176,7 @@ public:
   bool
   get_parameter(
     const std::string & name,
-    rclcpp::Parameter & parameter) const = 0;
+    rclcpp::Parameter & parameter) const noexcept = 0;
 
   /// Get all parameters that have the specified prefix into the parameters map.
   /*

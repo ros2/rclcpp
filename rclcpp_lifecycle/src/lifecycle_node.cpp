@@ -251,7 +251,7 @@ LifecycleNode::get_parameter(const std::string & name) const
 bool
 LifecycleNode::get_parameter(
   const std::string & name,
-  rclcpp::Parameter & parameter) const
+  rclcpp::Parameter & parameter) const noexcept
 {
   return node_parameters_->get_parameter(name, parameter);
 }

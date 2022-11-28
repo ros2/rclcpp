@@ -375,7 +375,7 @@ Node::get_parameter(const std::string & name) const
 }
 
 bool
-Node::get_parameter(const std::string & name, rclcpp::Parameter & parameter) const
+Node::get_parameter(const std::string & name, rclcpp::Parameter & parameter) const noexcept
 {
   return node_parameters_->get_parameter(name, parameter);
 }

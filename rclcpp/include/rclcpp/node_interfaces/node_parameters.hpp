@@ -162,7 +162,7 @@ public:
   bool
   get_parameter(
     const std::string & name,
-    rclcpp::Parameter & parameter) const override;
+    rclcpp::Parameter & parameter) const noexcept override;
 
   RCLCPP_PUBLIC
   bool
