@@ -114,27 +114,31 @@ SubscriptionBase::bind_event_callbacks(
       event_callbacks.deadline_callback,
       RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
   }
+
   if (event_callbacks.liveliness_callback) {
     this->add_event_handler(
       event_callbacks.liveliness_callback,
       RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
   }
+
+  QOSRequestedIncompatibleQoSCallbackType incompatible_qos_cb;
   if (event_callbacks.incompatible_qos_callback) {
-    this->add_event_handler(
-      event_callbacks.incompatible_qos_callback,
-      RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    incompatible_qos_cb = event_callbacks.incompatible_qos_callback;
   } else if (use_default_callbacks) {
     // Register default callback when not specified
-    try {
-      this->add_event_handler(
-        [this](QOSRequestedIncompatibleQoSInfo & info) {
-          this->default_incompatible_qos_callback(info);
-        },
-        RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-    } catch (UnsupportedEventTypeException & /*exc*/) {
-      // pass
-    }
+    incompatible_qos_cb = [this](QOSRequestedIncompatibleQoSInfo & info) {
+        this->default_incompatible_qos_callback(info);
+      };
   }
+  // Register default callback when not specified
+  try {
+    if (incompatible_qos_cb) {
+      this->add_event_handler(incompatible_qos_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    // pass
+  }
+
   if (event_callbacks.message_lost_callback) {
     this->add_event_handler(
       event_callbacks.message_lost_callback,

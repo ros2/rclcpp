@@ -145,21 +145,22 @@ PublisherBase::bind_event_callbacks(
       event_callbacks.liveliness_callback,
       RCL_PUBLISHER_LIVELINESS_LOST);
   }
+
+  QOSOfferedIncompatibleQoSCallbackType incompatible_qos_cb;
   if (event_callbacks.incompatible_qos_callback) {
-    this->add_event_handler(
-      event_callbacks.incompatible_qos_callback,
-      RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    incompatible_qos_cb = event_callbacks.incompatible_qos_callback;
   } else if (use_default_callbacks) {
     // Register default callback when not specified
-    try {
-      this->add_event_handler(
-        [this](QOSOfferedIncompatibleQoSInfo & info) {
-          this->default_incompatible_qos_callback(info);
-        },
-        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
-    } catch (UnsupportedEventTypeException & /*exc*/) {
-      // pass
+    incompatible_qos_cb = [this](QOSOfferedIncompatibleQoSInfo & info) {
+        this->default_incompatible_qos_callback(info);
+      };
+  }
+  try {
+    if (incompatible_qos_cb) {
+      this->add_event_handler(incompatible_qos_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
     }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    // pass
   }
 }
 
