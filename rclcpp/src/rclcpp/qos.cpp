@@ -16,6 +16,8 @@
 
 #include <string>
 
+#include "rclcpp/logging.hpp"
+
 #include "rmw/error_handling.h"
 #include "rmw/types.h"
 #include "rmw/qos_profiles.h"
@@ -67,13 +69,30 @@ KeepAll::KeepAll()
 
 KeepLast::KeepLast(size_t depth)
 : QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, depth)
-{}
+{
+  if (depth == 0) {
+    RCLCPP_WARN_ONCE(
+      rclcpp::get_logger(
+        "rclcpp"),
+      "A zero depth with KEEP_LAST doesn't make sense; no data could be stored."
+      "This will be interpreted as SYSTEM_DEFAULT");
+  }
+}
 
 QoS::QoS(
   const QoSInitialization & qos_initialization,
   const rmw_qos_profile_t & initial_profile)
 : rmw_qos_profile_(initial_profile)
 {
+  if (qos_initialization.history_policy == RMW_QOS_POLICY_HISTORY_KEEP_LAST &&
+    qos_initialization.depth == 0)
+  {
+    RCLCPP_WARN_ONCE(
+      rclcpp::get_logger(
+        "rclcpp"),
+      "A zero depth with KEEP_LAST doesn't make sense; no data could be stored."
+      "This will be interpreted as SYSTEM_DEFAULT");
+  }
   rmw_qos_profile_.history = qos_initialization.history_policy;
   rmw_qos_profile_.depth = qos_initialization.depth;
 }
@@ -111,6 +130,14 @@ QoS::history(HistoryPolicy history)
 QoS &
 QoS::keep_last(size_t depth)
 {
+  if (depth == 0) {
+    RCLCPP_WARN_ONCE(
+      rclcpp::get_logger(
+        "rclcpp"),
+      "A zero depth with KEEP_LAST doesn't make sense; no data could be stored."
+      "This will be interpreted as SYSTEM_DEFAULT");
+  }
+
   rmw_qos_profile_.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
   rmw_qos_profile_.depth = depth;
   return *this;
