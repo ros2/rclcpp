@@ -37,7 +37,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 
 using rclcpp::PublisherBase;
 

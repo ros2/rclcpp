@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
 #include <string>
 
-#include "rclcpp/qos_event.hpp"
+#include "rcl/event.h"
+
+#include "rclcpp/event_handler.hpp"
+#include "rclcpp/exceptions/exceptions.hpp"
 
 namespace rclcpp
 {
@@ -86,7 +90,7 @@ EventHandlerBase::set_on_new_event_callback(
 
   if (RCL_RET_OK != ret) {
     using rclcpp::exceptions::throw_from_rcl_error;
-    throw_from_rcl_error(ret, "failed to set the on new message callback for QOS Event");
+    throw_from_rcl_error(ret, "failed to set the on new message callback for Event");
   }
 }
 
