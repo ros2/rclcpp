@@ -195,7 +195,7 @@ PublisherBase::get_publisher_handle() const
 }
 
 const
-std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
 PublisherBase::get_event_handlers() const
 {
   return event_handlers_;

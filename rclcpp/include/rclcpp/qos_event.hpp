@@ -86,7 +86,7 @@ public:
     const std::string & prefix);
 };
 
-class QOSEventHandlerBase : public Waitable
+class EventHandlerBase : public Waitable
 {
 public:
   enum class EntityType : std::size_t
@@ -95,7 +95,7 @@ public:
   };
 
   RCLCPP_PUBLIC
-  virtual ~QOSEventHandlerBase();
+  virtual ~EventHandlerBase();
 
   /// Get the number of ready events
   RCLCPP_PUBLIC
@@ -166,14 +166,14 @@ public:
           RCLCPP_ERROR_STREAM(
             // TODO(wjwwood): get this class access to the node logger it is associated with
             rclcpp::get_logger("rclcpp"),
-            "rclcpp::QOSEventHandlerBase@" << this <<
+            "rclcpp::EventHandlerBase@" << this <<
               " caught " << rmw::impl::cpp::demangle(exception) <<
               " exception in user-provided callback for the 'on ready' callback: " <<
               exception.what());
         } catch (...) {
           RCLCPP_ERROR_STREAM(
             rclcpp::get_logger("rclcpp"),
-            "rclcpp::QOSEventHandlerBase@" << this <<
+            "rclcpp::EventHandlerBase@" << this <<
               " caught unhandled exception in user-provided callback " <<
               "for the 'on ready' callback");
         }
@@ -221,12 +221,14 @@ protected:
   size_t wait_set_event_index_;
 };
 
+using QOSEventHandlerBase [[deprecated("Use rclcpp::EventHandlerBase")]] = EventHandlerBase;
+
 template<typename EventCallbackT, typename ParentHandleT>
-class QOSEventHandler : public QOSEventHandlerBase
+class EventHandler : public EventHandlerBase
 {
 public:
   template<typename InitFuncT, typename EventTypeEnum>
-  QOSEventHandler(
+  EventHandler(
     const EventCallbackT & callback,
     InitFuncT init_func,
     ParentHandleT parent_handle,
@@ -287,6 +289,10 @@ private:
   ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
 };
+
+template<typename EventCallbackT, typename ParentHandleT>
+using QOSEventHandler [[deprecated("Use rclcpp::EventHandler")]] = EventHandler<EventCallbackT,
+    ParentHandleT>;
 
 }  // namespace rclcpp
 

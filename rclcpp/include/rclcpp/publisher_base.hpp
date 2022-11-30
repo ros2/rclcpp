@@ -124,7 +124,7 @@ public:
   /** \return The map of QoS event handlers. */
   RCLCPP_PUBLIC
   const
-  std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+  std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
   get_event_handlers() const;
 
   /// Get subscription count
@@ -276,7 +276,7 @@ public:
    * If you want more information available in the callback, like the qos event
    * or other information, you may use a lambda with captures or std::bind.
    *
-   * \sa rclcpp::QOSEventHandlerBase::set_on_ready_callback
+   * \sa rclcpp::EventHandlerBase::set_on_ready_callback
    *
    * \param[in] callback functor to be called when a new event occurs
    * \param[in] event_type identifier for the qos event we want to attach the callback to
@@ -327,7 +327,7 @@ protected:
     const EventCallbackT & callback,
     const rcl_publisher_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+    auto handler = std::make_shared<EventHandler<EventCallbackT,
         std::shared_ptr<rcl_publisher_t>>>(
       callback,
       rcl_publisher_event_init,
@@ -344,7 +344,7 @@ protected:
   std::shared_ptr<rcl_publisher_t> publisher_handle_;
 
   std::unordered_map<rcl_publisher_event_type_t,
-    std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
+    std::shared_ptr<rclcpp::EventHandlerBase>> event_handlers_;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
