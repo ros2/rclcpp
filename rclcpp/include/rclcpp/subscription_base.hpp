@@ -556,6 +556,9 @@ protected:
   void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info) const;
 
   RCLCPP_PUBLIC
+  void default_inconsistent_topic_callback(InconsistentTopicInfo & info) const;
+
+  RCLCPP_PUBLIC
   bool
   matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const;
 

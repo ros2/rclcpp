@@ -339,6 +339,9 @@ protected:
   RCLCPP_PUBLIC
   void default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & info) const;
 
+  RCLCPP_PUBLIC
+  void default_inconsistent_topic_callback(InconsistentTopicInfo & info) const;
+
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   std::shared_ptr<rcl_publisher_t> publisher_handle_;

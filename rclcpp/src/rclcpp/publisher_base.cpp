@@ -162,6 +162,23 @@ PublisherBase::bind_event_callbacks(
   } catch (const UnsupportedEventTypeException & /*exc*/) {
     // pass
   }
+
+  InconsistentTopicCallbackType inconsistent_topic_cb;
+  if (event_callbacks.inconsistent_topic_callback) {
+    inconsistent_topic_cb = event_callbacks.inconsistent_topic_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    inconsistent_topic_cb = [this](InconsistentTopicInfo & info) {
+        this->default_inconsistent_topic_callback(info);
+      };
+  }
+  try {
+    if (inconsistent_topic_cb) {
+      this->add_event_handler(inconsistent_topic_cb, RCL_PUBLISHER_INCONSISTENT_TOPIC);
+    }
+  } catch (UnsupportedEventTypeException & /*exc*/) {
+    // pass
+  }
 }
 
 size_t
@@ -310,6 +327,17 @@ PublisherBase::default_incompatible_qos_callback(
     "Last incompatible policy: %s",
     get_topic_name(),
     policy_name.c_str());
+}
+
+void
+PublisherBase::default_inconsistent_topic_callback(
+  rclcpp::InconsistentTopicInfo & event) const
+{
+  (void)event;
+
+  RCLCPP_WARN(
+    rclcpp::get_logger(rcl_node_get_logger_name(rcl_node_handle_.get())),
+    "Inconsistent topic on topic '%s', no messages will be sent to it.", get_topic_name());
 }
 
 std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoints() const
