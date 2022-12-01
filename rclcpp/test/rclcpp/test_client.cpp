@@ -344,7 +344,8 @@ TEST_F(TestClientWithServer, prune_requests_older_than_with_pruned) {
 
   std::vector<int64_t> pruned_requests;
   EXPECT_EQ(1u, client->prune_requests_older_than(time, &pruned_requests));
-  EXPECT_EQ(1u, pruned_requests.size());
+  ASSERT_EQ(1u, pruned_requests.size());
+  EXPECT_EQ(future.request_id, pruned_requests[0]);
 }
 
 TEST_F(TestClientWithServer, async_send_request_rcl_send_request_error) {
