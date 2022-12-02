@@ -33,10 +33,7 @@ class NodeInterfaces
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(NodeInterfaces)
-
-  /// Create a new NodeInterfaces object with no bound node interfaces.
-  NodeInterfaces()
-  : InterfaceTs()... {}
+  NodeInterfaces() = delete;
 
   /// Create a new NodeInterfaces object bound with the passed in node-like object's interfaces.
   /**
@@ -64,8 +61,9 @@ public:
    * Each of the support classes should define:
    *   - Default constructor
    *   - Templated constructor taking NodeT
+   *   - Templated constructor taking std::shared_ptr<NodeT>
+   *   - Constructor overload a shared_ptr of the interface the support class supports
    *   - get_node_<interface_name>_interface()
-   *   - set_node_<interface_name>_interface()
    *
    * Usage example:
    *   - ```NodeInterfaces<rclcpp::node_interfaces::Base>(node)```
@@ -78,37 +76,25 @@ public:
    */
   template<typename NodeT>
   NodeInterfaces(NodeT & node)  // NOLINT(runtime/explicit)
-  : InterfaceTs(node)... {}           // Implicit constructor for node-like passing to functions
+  : InterfaceTs(node)... {}     // Implicit constructor for node-like passing to functions
 
-  /// SharedPtr Constructor
+  /// NodeT::SharedPtr Constructor
+  // NOTE(CH3): We cannot dereference the shared_ptr and pass it, because otherwise a single arg
+  //            aggregate constructor call that passes a NodeInterface shared_ptr will fail
+  //            since it will match this constructor instead.
+  //
+  //            Instead, we will make do with doing the nullptr check here and enforce that
+  //            support classes implement a shared_ptr<NodeT> variant.
   template<typename NodeT>
   NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
-  : InterfaceTs(node ? *node : throw std::runtime_error("Passed in NodeT is nullptr!"))... {}
+  : InterfaceTs(node ? node : throw std::runtime_error("Passed in NodeT is nullptr!"))... {}
+
+  /// Aggregate Constructor
+  template<typename ... InterfaceTsImpl>
+  NodeInterfaces(InterfaceTsImpl ... interfaces)  // NOLINT(runtime/explicit)
+  : InterfaceTs(interfaces)... {}
 };
 
-
-/// Create a new NodeInterfaces object bound with no node interfaces.
-/**
- * Specify which interfaces you want to bind using the template parameters by specifying
- * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
- *
- * This method will return a NodeInterfaces with no bound interfaces. You must set them using
- * ```NodeInterfaces->set_<interface_name>_interface(InterfaceT::SharedPtr interface)```
- *
- * See the rclcpp::node_interfaces::NodeInterfaces class for usage examples and support classes.
- *
- * \sa rclcpp::node_interfaces::NodeInterfaces
- * \param[in] node Node-like object to bind the interfaces of.
- * \returns a NodeInterfaces::SharedPtr supporting the stated interfaces, but bound with none
- *          of them
- */
-template<typename ... InterfaceTs>
-typename NodeInterfaces<InterfaceTs...>::SharedPtr
-get_node_interfaces()
-{
-  static_assert(0 != sizeof ...(InterfaceTs), "Template parameters must be populated!");
-  return std::make_shared<NodeInterfaces<InterfaceTs...>>();
-}
 
 /// Create a new NodeInterfaces object bound with the passed in node-like object's interfaces.
 /**
@@ -119,7 +105,7 @@ get_node_interfaces()
  *
  * \sa rclcpp::node_interfaces::NodeInterfaces
  * \param[in] node Node-like object to bind the interfaces of.
- * \returns a NodeInterfaces::SharedPtr bound with the node-like objects's interfaces
+ * \returns a NodeInterfaces::SharedPtr bound with the node-like's interfaces
  */
 template<typename ... InterfaceTs, typename NodeT>
 typename NodeInterfaces<InterfaceTs...>::SharedPtr
@@ -138,7 +124,7 @@ get_node_interfaces(NodeT & node)
  *
  * \sa rclcpp::node_interfaces::NodeInterfaces
  * \param[in] node Node-like object to bind the interfaces of.
- * \returns a NodeInterfaces::SharedPtr bound with the node-like objects's interfaces
+ * \returns a NodeInterfaces::SharedPtr bound with the node-like's interfaces
  */
 template<typename ... InterfaceTs, typename NodeT>
 typename NodeInterfaces<InterfaceTs...>::SharedPtr

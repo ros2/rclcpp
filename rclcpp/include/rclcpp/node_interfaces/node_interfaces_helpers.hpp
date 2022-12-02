@@ -34,11 +34,17 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-// Helper classes to be inherited by NodeInterfaces to support node interface aggregation
-// via multiple inheritance.
+/**
+ * Helper classes to be inherited by NodeInterfaces to support node interface aggregation
+ * via multiple inheritance.
+ *
+ * \sa rclcpp::node_interfaces::NodeInterfaces
+ */
 
 // These also provide a more terse way to configure the supported interfaces!
 
+// NOTE: These helpers deliberately do not feature methods to change the internally stored node
+//       interface, since it would make thread-safe code more difficult.
 
 /// NodeInterfaces support for NodeBaseInterface
 class Base
@@ -52,11 +58,16 @@ public:
   template<class NodeT>
   explicit Base(NodeT & node) {impl_ = node.get_node_base_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeBaseInterface
+  template<class NodeT>
+  explicit Base(std::shared_ptr<NodeT> node) {impl_ = node->get_node_base_interface();}
+
+  /// Bind a passed in NodeBaseInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Base(NodeBaseInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeBaseInterface
   inline NodeBaseInterface::SharedPtr get_node_base_interface() {return impl_;}
-
-  /// Set the bound NodeBaseInterface
-  inline void set_node_base_interface(NodeBaseInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeBaseInterface::SharedPtr impl_;
@@ -75,11 +86,16 @@ public:
   template<class NodeT>
   explicit Clock(NodeT & node) {impl_ = node.get_node_clock_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeClockInterface
+  template<class NodeT>
+  explicit Clock(std::shared_ptr<NodeT> node) {impl_ = node->get_node_clock_interface();}
+
+  /// Bind a passed in NodeClockInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Clock(NodeClockInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeClockInterface
   inline NodeClockInterface::SharedPtr get_node_clock_interface() {return impl_;}
-
-  /// Set the bound NodeClockInterface
-  inline void set_node_clock_interface(NodeClockInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeClockInterface::SharedPtr impl_;
@@ -98,11 +114,16 @@ public:
   template<class NodeT>
   explicit Graph(NodeT & node) {impl_ = node.get_node_graph_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeGraphInterface
+  template<class NodeT>
+  explicit Graph(std::shared_ptr<NodeT> node) {impl_ = node->get_node_graph_interface();}
+
+  /// Bind a passed in NodeGraphInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Graph(NodeGraphInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeGraphInterface
   inline NodeGraphInterface::SharedPtr get_node_graph_interface() {return impl_;}
-
-  /// Set the bound NodeGraphInterface
-  inline void set_node_graph_interface(NodeGraphInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeGraphInterface::SharedPtr impl_;
@@ -121,12 +142,16 @@ public:
   template<class NodeT>
   explicit Logging(NodeT & node) {impl_ = node.get_node_logging_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeLoggingInterface
+  template<class NodeT>
+  explicit Logging(std::shared_ptr<NodeT> node) {impl_ = node->get_node_logging_interface();}
+
+  /// Bind a passed in NodeLoggingInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Logging(NodeLoggingInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeLoggingInterface
   inline NodeLoggingInterface::SharedPtr get_node_logging_interface() {return impl_;}
-
-  /// Set the bound NodeLoggingInterface
-  inline void
-  set_node_logging_interface(NodeLoggingInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeLoggingInterface::SharedPtr impl_;
@@ -145,12 +170,16 @@ public:
   template<class NodeT>
   explicit Parameters(NodeT & node) {impl_ = node.get_node_parameters_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeParametersInterface
+  template<class NodeT>
+  explicit Parameters(std::shared_ptr<NodeT> node) {impl_ = node->get_node_parameters_interface();}
+
+  /// Bind a passed in NodeParametersInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Parameters(NodeParametersInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeParametersInterface
   inline NodeParametersInterface::SharedPtr get_node_parameters_interface() {return impl_;}
-
-  /// Set the bound NodeParametersInterface
-  inline void
-  set_node_parameters_interface(NodeParametersInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeParametersInterface::SharedPtr impl_;
@@ -169,12 +198,16 @@ public:
   template<class NodeT>
   explicit Services(NodeT & node) {impl_ = node.get_node_services_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeServicesInterface
+  template<class NodeT>
+  explicit Services(std::shared_ptr<NodeT> node) {impl_ = node->get_node_services_interface();}
+
+  /// Bind a passed in NodeServicesInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Services(NodeServicesInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeServicesInterface
   inline NodeServicesInterface::SharedPtr get_node_services_interface() {return impl_;}
-
-  /// Set the bound NodeServicesInterface
-  inline void
-  set_node_services_interface(NodeServicesInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeServicesInterface::SharedPtr impl_;
@@ -193,12 +226,16 @@ public:
   template<class NodeT>
   explicit TimeSource(NodeT & node) {impl_ = node.get_node_time_source_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeTimeSourceInterface
+  template<class NodeT>
+  explicit TimeSource(std::shared_ptr<NodeT> node) {impl_ = node->get_node_time_source_interface();}
+
+  /// Bind a passed in NodeTimeSourceInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit TimeSource(NodeTimeSourceInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeTimeSourceInterface
   inline NodeTimeSourceInterface::SharedPtr get_node_time_source_interface() {return impl_;}
-
-  /// Set the bound NodeTimeSourceInterface
-  inline void
-  set_node_time_source_interface(NodeTimeSourceInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeTimeSourceInterface::SharedPtr impl_;
@@ -217,12 +254,16 @@ public:
   template<class NodeT>
   explicit Timers(NodeT & node) {impl_ = node.get_node_timers_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeTimersInterface
+  template<class NodeT>
+  explicit Timers(std::shared_ptr<NodeT> node) {impl_ = node->get_node_timers_interface();}
+
+  /// Bind a passed in NodeTimersInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Timers(NodeTimersInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeTimersInterface
   inline NodeTimersInterface::SharedPtr get_node_timers_interface() {return impl_;}
-
-  /// Set the bound NodeTimersInterface
-  inline void
-  set_node_timers_interface(NodeTimersInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeTimersInterface::SharedPtr impl_;
@@ -241,12 +282,16 @@ public:
   template<class NodeT>
   explicit Topics(NodeT & node) {impl_ = node.get_node_topics_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeTopicsInterface
+  template<class NodeT>
+  explicit Topics(std::shared_ptr<NodeT> node) {impl_ = node->get_node_topics_interface();}
+
+  /// Bind a passed in NodeTopicsInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Topics(NodeTopicsInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeTopicsInterface
   inline NodeTopicsInterface::SharedPtr get_node_topics_interface() {return impl_;}
-
-  /// Set the bound NodeTopicsInterface
-  inline void
-  set_node_topics_interface(NodeTopicsInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeTopicsInterface::SharedPtr impl_;
@@ -265,12 +310,16 @@ public:
   template<class NodeT>
   explicit Waitables(NodeT & node) {impl_ = node.get_node_waitables_interface();}
 
+  /// Bind the passed in node-like shared_ptr's NodeWaitablesInterface
+  template<class NodeT>
+  explicit Waitables(std::shared_ptr<NodeT> node) {impl_ = node->get_node_waitables_interface();}
+
+  /// Bind a passed in NodeWaitablesInterface::SharedPtr
+  RCLCPP_PUBLIC
+  explicit Waitables(NodeWaitablesInterface::SharedPtr interface) {impl_ = interface;}
+
   /// Return the bound NodeWaitablesInterface
   inline NodeWaitablesInterface::SharedPtr get_node_waitables_interface() {return impl_;}
-
-  /// Set the bound NodeWaitablesInterface
-  inline void
-  set_node_waitables_interface(NodeWaitablesInterface::SharedPtr interface) {impl_ = interface;}
 
 private:
   NodeWaitablesInterface::SharedPtr impl_;
