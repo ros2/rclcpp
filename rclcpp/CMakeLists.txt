@@ -179,6 +179,7 @@ foreach(interface_file ${interface_files})
 endforeach()
 
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # TODO(wjwwood): address all deprecation warnings and then remove this
 if(WIN32)

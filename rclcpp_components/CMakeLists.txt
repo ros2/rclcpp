@@ -22,6 +22,7 @@ find_package(rcpputils REQUIRED)
 
 # Add an interface library that can be dependend upon by libraries who register components
 add_library(component INTERFACE)
+add_library(rclcpp::component ALIAS component)
 target_include_directories(component INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
@@ -34,6 +35,7 @@ add_library(
   SHARED
   src/component_manager.cpp
 )
+add_library(rclcpp::component_manager ALIAS component_manager)
 target_include_directories(component_manager PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
@@ -96,6 +98,7 @@ if(BUILD_TESTING)
 
   set(components "")
   add_library(test_component SHARED test/components/test_component.cpp)
+  add_library(rclcpp::test_component ALIAS test_component)
   target_link_libraries(test_component PRIVATE component)
   #rclcpp_components_register_nodes(test_component "test_rclcpp_components::TestComponent")
   set(components "${components}test_rclcpp_components::TestComponentFoo;$<TARGET_FILE:test_component>\n")

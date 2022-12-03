@@ -28,6 +28,7 @@ add_library(rclcpp_lifecycle
   src/state.cpp
   src/transition.cpp
 )
+add_library(rclcpp::rclcpp_lifecycle ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
