@@ -138,38 +138,37 @@ public:
     Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
-   * Check if the clock is valid.
+   * Check if the clock is started.
    *
-   * A valid clock is a clock that has a non-zero time.
-   * An invalid clock is an uninitialized clock (i.e. not rcl_clock_valid) or a clock with an
-   * uninitialized time (i.e. with zero time.)
+   * A started clock is a clock that reflects non-zero time.
+   * Typically a clock will be unstarted if it is using RCL_ROS_TIME with ROS time and
+   * nothing has been published on the clock topic yet.
    *
-   * Note:
-   *     A valid clock must be both rcl_clock_valid and hold a time that is rcl_time_point_valid.
-   *     An invalid clock can potentially become valid if it is rcl_clock_valid.
-   *
-   * \return true if clock was or became valid
+   * \return true if clock is started
+   * \throws std::runtime_error if the clock is not rcl_clock_valid
    */
   RCLCPP_PUBLIC
   bool
-  is_valid();
+  started();
 
   /**
-   * Wait for clock to become valid.
+   * Wait until clock to start.
    *
+   * \rclcpp::Clock::started
    * \param context the context to wait in
-   * \return true if clock was or became valid
+   * \return true if clock was already started or became started
    * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
    */
   RCLCPP_PUBLIC
   bool
-  wait_for_valid(Context::SharedPtr context = contexts::get_global_default_context());
+  wait_until_started(Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
-   * Wait for clock to become valid, with timeout.
+   * Wait for clock to start, with timeout.
    *
-   * The timeout is waited in system time.
+   * The timeout is waited in steady time.
    *
+   * \rclcpp::Clock::started
    * \param timeout the maximum time to wait for.
    * \param context the context to wait in.
    * \param wait_tick_ns the time to wait between each iteration of the wait loop (in nanoseconds).
@@ -178,7 +177,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  wait_for_valid(
+  wait_until_started(
     const rclcpp::Duration & timeout,
     Context::SharedPtr context = contexts::get_global_default_context(),
     const rclcpp::Duration & wait_tick_ns = rclcpp::Duration(0, static_cast<uint32_t>(1e7)));

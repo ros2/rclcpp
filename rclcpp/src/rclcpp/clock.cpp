@@ -183,48 +183,34 @@ Clock::sleep_for(Duration rel_time, Context::SharedPtr context)
 }
 
 bool
-Clock::is_valid()
+Clock::started()
 {
-  // Checks for null pointer, missing get_now() implementation, and RCL_CLOCK_UNINITIALIZED
   if (!rcl_clock_valid(get_clock_handle())) {
-    RCUTILS_LOG_WARN("clock is uninitialized and will never become valid");
-    return false;
+    throw std::runtime_error("clock is not rcl_clock_valid");
   }
-
-  switch (get_clock_type()) {
-    case RCL_ROS_TIME:
-    case RCL_STEADY_TIME:
-    case RCL_SYSTEM_TIME:
-      return now().is_valid();
-
-    // By right we shouldn't even get to this block, but these cases are included for completeness
-    case RCL_CLOCK_UNINITIALIZED:
-    default:
-      return false;
-  }
+  return rcl_clock_time_started(get_clock_handle());
 }
 
 bool
-Clock::wait_for_valid(Context::SharedPtr context)
+Clock::wait_until_started(Context::SharedPtr context)
 {
   if (!context || !context->is_valid()) {
     throw std::runtime_error("context cannot be slept with because it's invalid");
   }
-
   if (!rcl_clock_valid(get_clock_handle())) {
     throw std::runtime_error("clock cannot be waited on as it is not rcl_clock_valid");
   }
 
-  if (is_valid()) {
+  if (started()) {
     return true;
   } else {
-    // Wait until the first valid time
+    // Wait until the first non-zero time
     return sleep_until(rclcpp::Time(0, 1, get_clock_type()), context);
   }
 }
 
 bool
-Clock::wait_for_valid(
+Clock::wait_until_started(
   const Duration & timeout,
   Context::SharedPtr context,
   const Duration & wait_tick_ns)
@@ -232,7 +218,6 @@ Clock::wait_for_valid(
   if (!context || !context->is_valid()) {
     throw std::runtime_error("context cannot be slept with because it's invalid");
   }
-
   if (!rcl_clock_valid(get_clock_handle())) {
     throw std::runtime_error("clock cannot be waited on as it is not rcl_clock_valid");
   }
@@ -240,7 +225,7 @@ Clock::wait_for_valid(
   Clock timeout_clock = Clock(RCL_STEADY_TIME);
   Time start = timeout_clock.now();
 
-  while (!is_valid() && context->is_valid()) {  // Context check checks for rclcpp::shutdown()
+  while (!started() && context->is_valid()) {  // Context check checks for rclcpp::shutdown()
     if (timeout < wait_tick_ns) {
       timeout_clock.sleep_for(timeout);
     } else {
@@ -248,11 +233,10 @@ Clock::wait_for_valid(
     }
 
     if (timeout_clock.now() - start > timeout) {
-      return is_valid();
+      return started();
     }
   }
-
-  return is_valid();
+  return started();
 }
 
 

@@ -210,16 +210,6 @@ public:
   rcl_clock_type_t
   get_clock_type() const;
 
-  /// Check if time is valid.
-  /**
-   * A valid time is a time that is non-zero.
-   *
-   * \return true if the time is valid
-   */
-  RCLCPP_PUBLIC
-  bool
-  is_valid() const;
-
 private:
   rcl_time_point_t rcl_time_;
   friend Clock;  // Allow clock to manipulate internal data
