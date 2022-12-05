@@ -81,7 +81,7 @@ public:
       node_base,
       *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
       topic_name,
-      options.template to_rcl_subscription_options<rclcpp::SerializedMessage>(qos),
+      options.to_rcl_subscription_options(qos),
       true),
     callback_(callback),
     ts_lib_(ts_lib)

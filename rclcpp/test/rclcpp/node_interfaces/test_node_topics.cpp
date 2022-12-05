@@ -44,8 +44,8 @@ const rcl_publisher_options_t PublisherOptions()
 
 const rcl_subscription_options_t SubscriptionOptions()
 {
-  return rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>>().template
-         to_rcl_subscription_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+  return rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>>()
+         .to_rcl_subscription_options(rclcpp::QoS(10));
 }
 
 }  // namespace

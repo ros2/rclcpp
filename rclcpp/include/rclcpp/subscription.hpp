@@ -140,7 +140,7 @@ public:
       node_base,
       type_support_handle,
       topic_name,
-      options.template to_rcl_subscription_options<ROSMessageType>(qos),
+      options.to_rcl_subscription_options(qos),
       callback.is_serialized_message_callback()),
     any_callback_(callback),
     options_(options),
