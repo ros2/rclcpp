@@ -43,8 +43,7 @@ void GenericSubscription::handle_message(
           "handle_message is not implemented for GenericSubscription");
 }
 
-void
-GenericSubscription::handle_serialized_message(
+void GenericSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo &)
 {
@@ -70,6 +69,43 @@ void GenericSubscription::return_serialized_message(
   std::shared_ptr<rclcpp::SerializedMessage> & message)
 {
   message.reset();
+}
+
+
+// RUNTIME TYPE ==================================================================================
+// TODO(methylDragon): Reorder later
+std::shared_ptr<ser_dynamic_type_t>
+GenericSubscription::get_dynamic_type()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+    "get_dynamic_type is not implemented for GenericSubscription");
+}
+
+std::shared_ptr<ser_dynamic_data_t>
+GenericSubscription::get_dynamic_data()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+    "get_dynamic_data is not implemented for GenericSubscription");
+}
+
+std::shared_ptr<serialization_support_t>
+GenericSubscription::get_serialization_support()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+    "get_serialization_support is not implemented for GenericSubscription");
+}
+
+void
+GenericSubscription::handle_runtime_type_message(
+  const std::shared_ptr<serialization_support_t> & ser,
+  const std::shared_ptr<ser_dynamic_data_t> & dyn_data,
+  const rclcpp::MessageInfo & message_info)
+{
+  (void) ser;
+  (void) dyn_data;
+  (void) message_info;
+  throw rclcpp::exceptions::UnimplementedError(
+    "handle_runtime_type_message is not implemented for GenericSubscription");
 }
 
 }  // namespace rclcpp

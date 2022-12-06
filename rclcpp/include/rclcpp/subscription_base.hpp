@@ -77,6 +77,8 @@ public:
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options Options for the subscription.
    * \param[in] is_serialized is true if the message will be delivered still serialized
+   * \param[in] use_runtime_type_cb is true if the message will be taken serialized and then handled
+   *                             using dynamic type and dynamic data (type constructed at runtime)
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
@@ -86,7 +88,12 @@ public:
     const rcl_subscription_options_t & subscription_options,
     const SubscriptionEventCallbacks & event_callbacks,
     bool use_default_callbacks,
-    bool is_serialized = false);
+    bool is_serialized = false,
+    bool use_runtime_type_cb = false,
+    bool use_take_runtime_type_message = false);
+    // TODO(methylDragon): If we don't need this, remove it,
+    // rclcpp::node_interfaces::NodeGraphInterface * node_graph = 0,
+    // rclcpp::node_interfaces::NodeServicesInterface * node_services = 0);
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -535,6 +542,54 @@ public:
   rclcpp::ContentFilterOptions
   get_content_filter() const;
 
+  // RUNTIME TYPE ==================================================================================
+  // TODO(methylDragon): Reorder later
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<ser_dynamic_type_t>
+  get_dynamic_type() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<ser_dynamic_data_t>
+  get_dynamic_data() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<serialization_support_t>
+  get_serialization_support() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  handle_runtime_type_message(
+    const std::shared_ptr<serialization_support_t> & ser,
+    const std::shared_ptr<ser_dynamic_data_t> & dyn_data,
+    const rclcpp::MessageInfo & message_info
+  ) = 0;
+
+  // TODO(methylDragon):
+  // RCLCPP_PUBLIC
+  // bool
+  // take_runtime_type_message(ser_dynamic_data_t * message_out, rclcpp::MessageInfo & message_info_out);
+
+  /// Return if the subscription should use runtime type
+  /**
+   * This will cause the subscription to use the handle_runtime_type_message methods, which must be
+   * used with take_serialized or take_runtime_type.
+   *
+   * \return `true` if the subscription should use a runtime type callback, `false` otherwise
+   */
+  RCLCPP_PUBLIC
+  bool
+  use_runtime_type_cb() const;
+
+  RCLCPP_PUBLIC
+  bool
+  use_take_runtime_type_message() const;
+  // ===============================================================================================
+
+
 protected:
   template<typename EventCallbackT>
   void
@@ -568,6 +623,10 @@ protected:
 
   rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
+  // TODO(methylDragon): Remove if we don't need this
+  // rclcpp::node_interfaces::NodeGraphInterface * const node_graph_;
+  // rclcpp::node_interfaces::NodeServicesInterface * const node_services_;
+
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
@@ -588,6 +647,8 @@ private:
 
   rosidl_message_type_support_t type_support_;
   bool is_serialized_;
+  bool use_runtime_type_cb_;
+  bool use_take_runtime_type_message_;
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};

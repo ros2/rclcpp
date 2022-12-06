@@ -77,6 +77,13 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> &, const rclcpp::MessageInfo &) override {}
   void return_message(std::shared_ptr<void> &) override {}
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> &) override {}
+
+  std::shared_ptr<ser_dynamic_type_t> get_dynamic_type() override {return nullptr;}
+  std::shared_ptr<ser_dynamic_data_t> get_dynamic_data() override {return nullptr;}
+  std::shared_ptr<serialization_support_t>   get_serialization_support() override {return nullptr;}
+  void handle_runtime_type_message(
+    const std::shared_ptr<serialization_support_t> &, const std::shared_ptr<ser_dynamic_data_t> &,
+    const rclcpp::MessageInfo &) override {}
 };
 
 class TestNodeTopics : public ::testing::Test

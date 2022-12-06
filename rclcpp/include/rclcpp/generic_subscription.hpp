@@ -123,6 +123,24 @@ public:
   RCLCPP_PUBLIC
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override;
 
+
+  // RUNTIME TYPE ==================================================================================
+  // TODO(methylDragon): Reorder later
+  RCLCPP_PUBLIC
+  std::shared_ptr<ser_dynamic_type_t> get_dynamic_type() override;
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<ser_dynamic_data_t> get_dynamic_data() override;
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<serialization_support_t> get_serialization_support() override;
+
+  RCLCPP_PUBLIC
+  void handle_runtime_type_message(
+    const std::shared_ptr<serialization_support_t> & ser,
+    const std::shared_ptr<ser_dynamic_data_t> & dyn_data,
+    const rclcpp::MessageInfo & message_info) override;
+
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)
 
