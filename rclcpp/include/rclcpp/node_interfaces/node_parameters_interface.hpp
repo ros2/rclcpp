@@ -19,6 +19,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -103,6 +104,46 @@ public:
     rclcpp::ParameterType type,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
     rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false) = 0;
+
+  /// Declare parameters.
+  /**
+   * \sa rclcpp::Node::declare_parameters
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters(
+    const std::string & namespace_,
+    const std::vector<rclcpp::Parameter> & parameters,
+    bool ignore_override = false) = 0;
+
+  /// Declare parameters.
+  /**
+   * \sa rclcpp::Node::declare_parameters
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters(
+    const std::string & namespace_,
+    const std::vector<
+      std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters,
+    bool ignore_override = false) = 0;
+
+  /// Declare one or more parameters, all at once.
+  /**
+   * \sa rclcpp::Node::declare_parameters_atomically
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::ParameterValue>
+  declare_parameters_atomically(
+    const std::string & namespace_,
+    const std::vector<
+      std::pair<rclcpp::Parameter, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters,
     bool ignore_override = false) = 0;
 
   /// Undeclare a parameter.

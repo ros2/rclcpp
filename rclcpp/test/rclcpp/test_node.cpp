@@ -838,6 +838,113 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
   }
 }
 
+TEST_F(TestNode, declare_parameters_in_batch) {
+  // test cases without initial values
+  auto node = std::make_shared<rclcpp::Node>("test_declare_parameters_node"_unq);
+  {
+    // with namespace, defaults, no custom descriptors, no initial
+    auto values = node->declare_parameters(
+      "namespace1", {
+      {"parameter_a", 42},
+      {"parameter_b", "test_string"},
+      {"parameter_c", true},
+    });
+    EXPECT_EQ(42, values[0].get<int>());
+    EXPECT_EQ("test_string", values[1].get<std::string>());
+    EXPECT_TRUE(values[2].get<bool>());
+    EXPECT_TRUE(node->has_parameter("namespace1.parameter_a"));
+    EXPECT_TRUE(node->has_parameter("namespace1.parameter_b"));
+    EXPECT_TRUE(node->has_parameter("namespace1.parameter_c"));
+    EXPECT_FALSE(node->has_parameter("namespace1"));
+  }
+  {
+    // without namespace, defaults, no custom descriptors, no initial
+    auto values = node->declare_parameters(
+      "", {
+      {"parameter_without_ns_a", 42},
+      {"parameter_without_ns_b", true},
+    });
+    EXPECT_EQ(42, values[0].get<int>());
+    EXPECT_TRUE(values[1].get<bool>());
+    EXPECT_TRUE(node->has_parameter("parameter_without_ns_a"));
+    EXPECT_TRUE(node->has_parameter("parameter_without_ns_b"));
+  }
+  {
+    // with namespace, defaults, custom descriptors, no initial
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    auto values = node->declare_parameters(
+      "namespace2", {
+      std::make_pair(rclcpp::Parameter("parameter_a", 42), descriptor),
+      std::make_pair(rclcpp::Parameter("parameter_b", true), descriptor),
+    });
+    EXPECT_EQ(42, values[0].get<int>());
+    EXPECT_TRUE(values[1].get<bool>());
+    EXPECT_TRUE(node->has_parameter("namespace2.parameter_a"));
+    EXPECT_TRUE(node->has_parameter("namespace2.parameter_b"));
+    EXPECT_FALSE(node->has_parameter("namespace2"));
+  }
+  {
+    // without namespace, defaults, custom descriptors, no initial
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    auto values = node->declare_parameters(
+      "", {
+      std::make_pair(rclcpp::Parameter("parameter_without_ns_c", 42), descriptor),
+      std::make_pair(rclcpp::Parameter("parameter_without_ns_d", true), descriptor),
+    });
+    EXPECT_EQ(42, values[0].get<int>());
+    EXPECT_TRUE(values[1].get<bool>());
+    EXPECT_TRUE(node->has_parameter("parameter_without_ns_c"));
+    EXPECT_TRUE(node->has_parameter("parameter_without_ns_d"));
+  }
+  {
+    // empty parameters
+    auto values = node->declare_parameters("", std::vector<rclcpp::Parameter>{});
+    std::vector<rclcpp::ParameterValue> expected {};
+    EXPECT_EQ(values, expected);
+  }
+  {
+    // parameter already declared throws, even with not_set type
+    auto name = "parameter"_unq;
+    node->declare_parameter(name, 42);
+    EXPECT_THROW(
+      {node->declare_parameters("", {{name, 42}});},
+      rclcpp::exceptions::ParameterAlreadyDeclaredException);
+  }
+  {
+    // parameter name invalid throws
+    EXPECT_THROW(
+      {node->declare_parameters("", {{"", 42}});},
+      rclcpp::exceptions::InvalidParametersException);
+  }
+  {
+    // parameter rejected throws
+    auto name = "parameter"_unq;
+    auto on_set_parameters =
+      [&name](const std::vector<rclcpp::Parameter> & parameters) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        for (const auto & parameter : parameters) {
+          if (
+            parameter.get_name() == name &&
+            parameter.get_type() != rclcpp::PARAMETER_INTEGER)
+          {
+            result.successful = false;
+            result.reason = "'" + name + "' must be an integer";
+          }
+        }
+        return result;
+      };
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCPPUTILS_SCOPE_EXIT(
+      {node->remove_on_set_parameters_callback(handler.get());});  // always reset
+    EXPECT_THROW(
+      {node->declare_parameters("", {{name, "not an int"}});},
+      rclcpp::exceptions::InvalidParameterValueException);
+  }
+}
+
 TEST_F(TestNode, declare_parameter_with_cli_overrides) {
   const std::string parameters_filepath = (
     test_resources_path / "test_parameters.yaml").string();
