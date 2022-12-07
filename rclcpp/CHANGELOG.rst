@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.2.2 (2022-12-06)
+------------------
+* Fix returning invalid namespace if sub_namespace is empty (`#1810 <https://github.com/ros2/rclcpp/issues/1810>`_)
+* use regex for wildcard matching (`#1987 <https://github.com/ros2/rclcpp/issues/1987>`_)
+* Add statistics for handle_loaned_message (`#1933 <https://github.com/ros2/rclcpp/issues/1933>`_)
+* Contributors: Aaron Lipinski, Barry Xu, Chen Lihui, M. Hofstätter
+
 9.2.1 (2022-04-28)
 ------------------
 * Add test-dep ament_cmake_google_benchmark (`#1904 <https://github.com/ros2/rclcpp/issues/1904>`_) (`#1909 <https://github.com/ros2/rclcpp/issues/1909>`_)
