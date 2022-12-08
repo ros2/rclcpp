@@ -158,7 +158,7 @@ public:
     }
 
     // Note: we bind the int identifier argument to this waitable's entity types
-    auto new_callback =
+    std::function<void(size_t)> new_callback =
       [callback, this](size_t number_of_events) {
         try {
           callback(number_of_events, static_cast<int>(EntityType::Event));

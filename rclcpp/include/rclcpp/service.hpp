@@ -196,7 +196,7 @@ public:
               "is not callable.");
     }
 
-    auto new_callback =
+    std::function<void(size_t)> new_callback =
       [callback, this](size_t number_of_requests) {
         try {
           callback(number_of_requests);

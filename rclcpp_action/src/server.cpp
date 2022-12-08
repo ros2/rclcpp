@@ -719,7 +719,7 @@ ServerBase::set_callback_to_entity(
   std::function<void(size_t, int)> callback)
 {
   // Note: we bind the int identifier argument to this waitable's entity types
-  auto new_callback =
+  std::function<void(size_t)> new_callback =
     [callback, entity_type, this](size_t number_of_events) {
       try {
         callback(number_of_events, static_cast<int>(entity_type));
