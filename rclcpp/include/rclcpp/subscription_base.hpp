@@ -322,7 +322,7 @@ public:
               "is not callable.");
     }
 
-    std::function<void(size_t)> new_callback =
+    auto new_callback =
       [callback, this](size_t number_of_messages) {
         try {
           callback(number_of_messages);
