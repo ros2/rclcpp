@@ -124,7 +124,7 @@ def get_rclcpp_suffix_from_features(features):
 ) \
   do { \
     static_assert( \
-      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
+      ::std::is_same<typename std::remove_cv_t<typename std::remove_reference_t<decltype(logger)>>, \
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
 @[ if 'throttle' in feature_combination]@ \
