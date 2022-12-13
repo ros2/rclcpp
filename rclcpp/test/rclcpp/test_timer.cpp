@@ -335,7 +335,7 @@ INSTANTIATE_TEST_SUITE_P(
   }
 );
 
-TEST_P(TestTimer, test_timer_triggered_twice) {
+TEST_P(TestTimer, test_timer_triggered_once) {
   std::atomic<int> callback_counter{0};
 
   rclcpp::TimerBase::SharedPtr timer_called_twice;
@@ -349,7 +349,7 @@ TEST_P(TestTimer, test_timer_triggered_twice) {
   ASSERT_EQ(1, callback_counter);
 
   executor->spin();
-  ASSERT_NE(2, callback_counter);
+  ASSERT_EQ(1, callback_counter);
   ASSERT_TRUE(timer_called_twice->is_canceled());
 
   timer_called_twice->reset();
@@ -358,6 +358,6 @@ TEST_P(TestTimer, test_timer_triggered_twice) {
   ASSERT_EQ(2, callback_counter);
 
   executor->spin();
-  ASSERT_NE(3, callback_counter);
+  ASSERT_EQ(2, callback_counter);
   ASSERT_TRUE(timer_called_twice->is_canceled());
 }
