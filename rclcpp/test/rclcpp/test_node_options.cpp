@@ -316,3 +316,12 @@ TEST(TestNodeOptions, set_get_allocator) {
   // Check invalid allocator
   EXPECT_THROW(options.get_rcl_node_options(), std::bad_alloc);
 }
+
+TEST(TestNodeOptions, clock_type) {
+  rclcpp::NodeOptions options;
+  EXPECT_EQ(RCL_ROS_TIME, options.clock_type());
+  options.clock_type(RCL_SYSTEM_TIME);
+  EXPECT_EQ(RCL_SYSTEM_TIME, options.clock_type());
+  options.clock_type(RCL_STEADY_TIME);
+  EXPECT_EQ(RCL_STEADY_TIME, options.clock_type());
+}
