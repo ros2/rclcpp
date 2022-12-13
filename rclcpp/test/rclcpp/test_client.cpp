@@ -282,6 +282,27 @@ TEST_F(TestClientWithServer, test_client_remove_pending_request) {
   EXPECT_TRUE(client->remove_pending_request(future));
 }
 
+TEST_F(TestClientWithServer, prune_requests_older_than_no_pruned) {
+  auto client = node->create_client<test_msgs::srv::Empty>(service_name);
+  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
+  auto future = client->async_send_request(request);
+  auto time = std::chrono::system_clock::now() + 1s;
+
+  EXPECT_EQ(1u, client->prune_requests_older_than(time));
+}
+
+TEST_F(TestClientWithServer, prune_requests_older_than_with_pruned) {
+  auto client = node->create_client<test_msgs::srv::Empty>(service_name);
+  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
+  auto future = client->async_send_request(request);
+  auto time = std::chrono::system_clock::now() + 1s;
+
+  std::vector<int64_t> pruned_requests;
+  EXPECT_EQ(1u, client->prune_requests_older_than(time, &pruned_requests));
+  ASSERT_EQ(1u, pruned_requests.size());
+  EXPECT_EQ(future.request_id, pruned_requests[0]);
+}
+
 TEST_F(TestClientWithServer, async_send_request_rcl_send_request_error) {
   // Checking rcl_send_request in rclcpp::Client::async_send_request()
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_send_request, RCL_RET_ERROR);
