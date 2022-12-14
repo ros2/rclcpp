@@ -54,8 +54,45 @@ public:
   /**
    * Specify which interfaces you need by passing them as template parameters.
    *
+   * This allows you to aggregate interfaces from different sources together to pass as a single
+   * aggregate object to any functions that take node interfaces or node-likes, without needing to
+   * templatize that function.
+   *
    * You may also use this constructor to create a NodeInterfaces that contains a subset of
    * another NodeInterfaces' interfaces.
+   *
+   * Finally, this class supports implicit conversion from node-like objects, allowing you to
+   * directly pass a node-like to a function that takes a NodeInterfaces object.
+   *
+   * Usage examples:
+   *   ```cpp
+   *   // Suppose we have some function:
+   *   void fn(NodeInterfaces<NodeBaseInterface, NodeClockInterface> interfaces);
+   *
+   *   // Then we can, explicitly:
+   *   rclcpp::Node node("some_node");
+   *   auto ni = NodeInterfaces<NodeBaseInterface, NodeClockInterface>(node);
+   *   fn(ni);
+   *
+   *   // But also:
+   *   fn(node);
+   *
+   *   // Subsetting a NodeInterfaces object also works!
+   *   auto ni_base = NodeInterfaces<NodeBaseInterface>(ni);
+   *
+   *   // Or aggregate them (you could aggregate interfaces from disparate node-likes)
+   *   auto ni_aggregated = NodeInterfaces<NodeBaseInterface, NodeClockInterface>(
+   *     node->get_node_base_interface(),
+   *     node->get_node_clock_interface()
+   *   )
+   *
+   *   // And then to access the interfaces:
+   *   // Get with get<>
+   *   auto base = ni.get<NodeBaseInterface>();
+   *
+   *   // Or the appropriate getter
+   *   auto clock = ni.get_clock_interface();
+   *   ```
    *
    * You may use any of the standard node interfaces that come with rclcpp:
    *   - rclcpp::node_interfaces::NodeBaseInterface
@@ -72,12 +109,22 @@ public:
    * Or you use custom interfaces as long as you make a template specialization
    * of the rclcpp::node_interfaces::detail::NodeInterfacesSupport struct using
    * the RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT macro.
-   * If you choose not to use the helper macro, then you can specialize the
-   * template yourself, but you must:
-   *   - TODO
    *
    * Usage example:
-   *   - TODO
+   *   ```RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(rclcpp::node_interfaces::NodeBaseInterface, base)```
+   *
+   * If you choose not to use the helper macro, then you can specialize the
+   * template yourself, but you must:
+   *
+   *   - Provide a template specialization of the get_from_node_like method that gets the interface
+   *     from any node-like that stores the interface, using the node-like's getter
+   *   - Designate the is_supported type as std::true_type using a using directive
+   *   - Provide any number of getter methods to be used to obtain the interface with the
+   *     NodeInterface object, noting that the getters of the storage class will apply to all
+   *     supported interfaces.
+   *     - The getter method names should not clash in name with any other interface getter
+   *       specializations if those other interfaces are meant to be aggregated in the same
+   *       NodeInterfaces object.
    *
    * \param[in] node Node-like object from which to get the node interfaces
    */
@@ -92,7 +139,7 @@ public:
   //            since it will match this constructor instead.
   //
   //            Instead, we will make do with doing the nullptr check here and enforce that
-  //            support classes implement a shared_ptr<NodeT> variant.
+  //            support classes implement support for a shared_ptr<NodeT> constructor.
   template<typename NodeT>
   NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
   : NodeInterfaces(node ? *node : throw std::invalid_argument("given node pointer is nullptr"))

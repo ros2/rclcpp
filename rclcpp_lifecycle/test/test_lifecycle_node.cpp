@@ -632,22 +632,6 @@ TEST_F(TestDefaultStateMachine, test_getters) {
   EXPECT_LT(0u, test_node->now().nanoseconds());
   EXPECT_STREQ("testnode", test_node->get_logger().get_name());
   EXPECT_NE(nullptr, const_cast<const EmptyLifecycleNode *>(test_node.get())->get_clock());
-
-  // NodeInterfaces
-  auto base_nh = test_node->get_node_interfaces<rclcpp::node_interfaces::Base>();
-  EXPECT_NE(nullptr, base_nh->get_node_base_interface());
-  EXPECT_STREQ("testnode", base_nh->get_node_base_interface()->get_name());
-
-  // The following will not be defined
-  // EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_graph_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_logging_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_time_source_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_timers_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_topics_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_services_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_parameters_interface());
-  // EXPECT_EQ(nullptr, base_nh->get_node_waitables_interface());
 }
 
 TEST_F(TestDefaultStateMachine, test_graph_topics) {

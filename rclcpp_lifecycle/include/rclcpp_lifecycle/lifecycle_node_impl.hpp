@@ -332,12 +332,5 @@ LifecycleNode::get_parameter_or(
   return got_parameter;
 }
 
-template<typename ... InterfaceTs>
-typename rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>::SharedPtr
-LifecycleNode::get_node_interfaces()
-{
-  return std::make_shared<rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>>(*this);
-}
-
 }  // namespace rclcpp_lifecycle
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_

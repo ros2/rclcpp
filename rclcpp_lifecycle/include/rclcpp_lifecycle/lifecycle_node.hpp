@@ -823,22 +823,6 @@ public:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
   get_node_waitables_interface();
 
-  /// Return a NodeInterfaces bound with the LifecycleNode's internal node interfaces.
-  /**
-   * Specify which interfaces you want to bind using the template parameters by specifying
-   * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
-   *
-   * See the rclcpp::node_interfaces::NodeInterfaces class for usage examples and support classes.
-   *
-   * \sa rclcpp::node_interfaces::NodeInterfaces
-   * \param[in] node Node-like object to bind the interfaces of.
-   * \return a NodeInterfaces::SharedPtr supporting the stated interfaces, but bound with none
-   *         of them
-   */
-  template<typename ... InterfaceTs>
-  typename rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>::SharedPtr
-  get_node_interfaces();
-
   /// Return the NodeOptions used when creating this node.
   /**
    * \sa rclcpp::Node::get_node_options

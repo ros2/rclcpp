@@ -108,7 +108,7 @@ TEST_F(TestNodeInterfaces, node_interfaces_standard_interfaces) {
 /*
    Testing getters.
  */
-TEST_F(TestNodeInterfaces, nh_init) {
+TEST_F(TestNodeInterfaces, ni_init) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
   using rclcpp::node_interfaces::NodeInterfaces;
@@ -123,26 +123,28 @@ TEST_F(TestNodeInterfaces, nh_init) {
   using rclcpp::node_interfaces::NodeParametersInterface;
   using rclcpp::node_interfaces::NodeTimeSourceInterface;
 
-  auto ni = rclcpp::node_interfaces::NodeInterfaces<
-    rclcpp::node_interfaces::NodeBaseInterface,
-    rclcpp::node_interfaces::NodeClockInterface,
-    rclcpp::node_interfaces::NodeGraphInterface,
-    rclcpp::node_interfaces::NodeLoggingInterface,
-    rclcpp::node_interfaces::NodeTimersInterface,
-    rclcpp::node_interfaces::NodeTopicsInterface,
-    rclcpp::node_interfaces::NodeServicesInterface,
-    rclcpp::node_interfaces::NodeWaitablesInterface,
-    rclcpp::node_interfaces::NodeParametersInterface,
-    rclcpp::node_interfaces::NodeTimeSourceInterface
+  auto ni = NodeInterfaces<
+    NodeBaseInterface,
+    NodeClockInterface,
+    NodeGraphInterface,
+    NodeLoggingInterface,
+    NodeTimersInterface,
+    NodeTopicsInterface,
+    NodeServicesInterface,
+    NodeWaitablesInterface,
+    NodeParametersInterface,
+    NodeTimeSourceInterface
     >(node);
 
   {
     auto base = ni.get<NodeBaseInterface>();
     base = ni.get_node_base_interface();
+    EXPECT_STREQ(base->get_name(), "my_node");  // Test for functionality
   }
   {
     auto clock = ni.get<NodeClockInterface>();
     clock = ni.get_node_clock_interface();
+    clock->get_clock();
   }
   {
     auto graph = ni.get<NodeGraphInterface>();

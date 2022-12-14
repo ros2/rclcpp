@@ -55,7 +55,7 @@ struct NodeInterfacesStorage
   {
     static_assert(
       (std::is_same_v<NodeInterfaceT, InterfaceTs>|| ...),
-      "NodeInterfaces class does not container given NodeInterfaceT");
+      "NodeInterfaces class does not contain given NodeInterfaceT");
     return std::get<std::shared_ptr<NodeInterfaceT>>(interfaces_);
   }
 
@@ -66,7 +66,7 @@ struct NodeInterfacesStorage
   {
     static_assert(
       (std::is_same_v<NodeInterfaceT, InterfaceTs>|| ...),
-      "NodeInterfaces class does not container given NodeInterfaceT");
+      "NodeInterfaces class does not contain given NodeInterfaceT");
     return std::get<std::shared_ptr<NodeInterfaceT>>(interfaces_);
   }
 
