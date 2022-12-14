@@ -225,11 +225,18 @@ Clock::wait_until_started(
   Clock timeout_clock = Clock(RCL_STEADY_TIME);
   Time start = timeout_clock.now();
 
-  while (!started() && context->is_valid()) {  // Context check checks for rclcpp::shutdown()
+  // Check if the clock has started every wait_tick_ns nanoseconds
+  // Context check checks for rclcpp::shutdown()
+  while (!started() && context->is_valid()) {
     if (timeout < wait_tick_ns) {
       timeout_clock.sleep_for(timeout);
     } else {
-      timeout_clock.sleep_for(Duration(wait_tick_ns));
+      Duration time_left = start + timeout - timeout_clock.now();
+      if (time_left > wait_tick_ns) {
+        timeout_clock.sleep_for(Duration(wait_tick_ns));
+      } else {
+        timeout_clock.sleep_for(time_left);
+      }
     }
 
     if (timeout_clock.now() - start > timeout) {
