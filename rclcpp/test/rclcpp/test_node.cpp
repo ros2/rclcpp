@@ -166,30 +166,6 @@ TEST_F(TestNode, construction_and_destruction) {
 }
 
 /*
-   Testing node handle construction and destruction.
- */
-TEST_F(TestNode, nh_construction_and_destruction) {
-  {
-    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-
-    auto base_nh = node->get_node_interfaces<rclcpp::node_interfaces::Base>();
-    EXPECT_NE(nullptr, base_nh->get_node_base_interface());
-    EXPECT_STREQ("my_node", base_nh->get_node_base_interface()->get_name());
-
-    // The following will not be defined
-    // EXPECT_EQ(nullptr, base_nh->get_node_clock_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_graph_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_logging_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_time_source_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_timers_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_topics_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_services_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_parameters_interface());
-    // EXPECT_EQ(nullptr, base_nh->get_node_waitables_interface());
-  }
-}
-
-/*
    Testing lifecycles of subscriptions and publishers after node dies
  */
 TEST_F(TestNode, pub_and_sub_lifecycles) {

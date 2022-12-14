@@ -50,7 +50,6 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
-#include "rclcpp/node_interfaces/node_interfaces.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
@@ -1454,22 +1453,6 @@ public:
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
-
-  /// Return a NodeInterfaces bound with the Node's internal node interfaces.
-  /**
-   * Specify which interfaces you want to bind using the template parameters by specifying
-   * interface support classes to use. Any unmentioned interfaces will be unavailable to bind.
-   *
-   * See the rclcpp::node_interfaces::NodeInterfaces class for usage examples and support classes.
-   *
-   * \sa rclcpp::node_interfaces::NodeInterfaces
-   * \param[in] node Node-like object to bind the interfaces of.
-   * \returns a NodeInterfaces::SharedPtr supporting the stated interfaces, but bound with none
-   *          of them
-   */
-  template<typename ... InterfaceTs>
-  typename rclcpp::node_interfaces::NodeInterfaces<InterfaceTs...>::SharedPtr
-  get_node_interfaces();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**

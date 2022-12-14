@@ -235,7 +235,7 @@ if(TARGET test_node_interfaces__node_graph)
   target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
 endif()
 ament_add_gtest(test_node_interfaces__node_interfaces
-  node_interfaces/test_node_interfaces.cpp TIMEOUT 240)
+  node_interfaces/test_node_interfaces.cpp)
 if(TARGET test_node_interfaces__node_interfaces)
   target_link_libraries(test_node_interfaces__node_interfaces ${PROJECT_NAME} mimick)
 endif()
