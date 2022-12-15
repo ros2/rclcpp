@@ -39,12 +39,15 @@ SubscriptionBase::SubscriptionBase(
   const rosidl_message_type_support_t & type_support_handle,
   const std::string & topic_name,
   const rcl_subscription_options_t & subscription_options,
+  const SubscriptionEventCallbacks & event_callbacks,
+  bool use_default_callbacks,
   bool is_serialized)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
+  event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
@@ -80,9 +83,10 @@ SubscriptionBase::SubscriptionBase(
         rcl_node_get_name(rcl_node_handle),
         rcl_node_get_namespace(rcl_node_handle));
     }
-
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription");
   }
+
+  bind_event_callbacks(event_callbacks_, use_default_callbacks);
 }
 
 SubscriptionBase::~SubscriptionBase()
@@ -99,6 +103,43 @@ SubscriptionBase::~SubscriptionBase()
     return;
   }
   ipm->remove_subscription(intra_process_subscription_id_);
+}
+
+void
+SubscriptionBase::bind_event_callbacks(
+  const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks)
+{
+  if (event_callbacks.deadline_callback) {
+    this->add_event_handler(
+      event_callbacks.deadline_callback,
+      RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+  }
+  if (event_callbacks.liveliness_callback) {
+    this->add_event_handler(
+      event_callbacks.liveliness_callback,
+      RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+  }
+  if (event_callbacks.incompatible_qos_callback) {
+    this->add_event_handler(
+      event_callbacks.incompatible_qos_callback,
+      RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    try {
+      this->add_event_handler(
+        [this](QOSRequestedIncompatibleQoSInfo & info) {
+          this->default_incompatible_qos_callback(info);
+        },
+        RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    } catch (UnsupportedEventTypeException & /*exc*/) {
+      // pass
+    }
+  }
+  if (event_callbacks.message_lost_callback) {
+    this->add_event_handler(
+      event_callbacks.message_lost_callback,
+      RCL_SUBSCRIPTION_MESSAGE_LOST);
+  }
 }
 
 const char *
