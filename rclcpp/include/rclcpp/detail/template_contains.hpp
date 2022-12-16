@@ -41,21 +41,6 @@ struct template_contains<T>
   enum { value = false };
 };
 
-namespace
-{
-
-struct test_template_contains
-{
-  static_assert(template_contains_v<int, int, double>, "failed");
-  static_assert(template_contains_v<double, int, double>, "failed");
-  static_assert(template_contains_v<int, int>, "failed");
-  static_assert(!template_contains_v<int>, "failed");
-  static_assert(!template_contains_v<int, float>, "failed");
-  static_assert(!template_contains_v<int, float, double>, "failed");
-};
-
-}  // namespace
-
 }  // namespace detail
 }  // namespace rclcpp
 

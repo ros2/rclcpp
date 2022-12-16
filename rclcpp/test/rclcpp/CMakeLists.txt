@@ -267,6 +267,11 @@ ament_add_gtest(test_node_interfaces__node_waitables
 if(TARGET test_node_interfaces__node_waitables)
   target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_node_interfaces__test_template_utils
+  node_interfaces/detail/test_template_utils.cpp)
+if(TARGET test_node_interfaces__test_template_utils)
+  target_link_libraries(test_node_interfaces__test_template_utils ${PROJECT_NAME})
+endif()
 
 # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
 # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ref_rclcpp_node

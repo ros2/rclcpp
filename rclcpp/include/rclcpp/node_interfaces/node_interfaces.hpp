@@ -134,12 +134,7 @@ public:
   {}
 
   /// NodeT::SharedPtr Constructor
-  // NOTE(CH3): We cannot dereference the shared_ptr and pass it, because otherwise a single arg
-  //            aggregate constructor call that passes a NodeInterface shared_ptr will fail
-  //            since it will match this constructor instead.
-  //
-  //            Instead, we will make do with doing the nullptr check here and enforce that
-  //            support classes implement support for a shared_ptr<NodeT> constructor.
+  // NOTE(CH3): Have a special SharedPtr constructor to check for nullptr.
   template<typename NodeT>
   NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
   : NodeInterfaces(node ? *node : throw std::invalid_argument("given node pointer is nullptr"))

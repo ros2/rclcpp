@@ -43,20 +43,6 @@ struct template_unique<T>
   enum { value = true };
 };
 
-namespace
-{
-
-struct test_template_unique
-{
-  static_assert(template_unique_v<int>, "failed");
-  static_assert(template_unique_v<int, double>, "failed");
-  static_assert(!template_unique_v<int, int>, "failed");
-  static_assert(!template_unique_v<int, double, int>, "failed");
-  static_assert(!template_unique_v<int, int, double>, "failed");
-};
-
-}   // namespace
-
 }  // namespace detail
 }  // namespace rclcpp
 
