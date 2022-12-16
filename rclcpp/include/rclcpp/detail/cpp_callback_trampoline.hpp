@@ -41,6 +41,7 @@ namespace detail
  * so no exceptions should be thrown at this point, and doing so results in
  * undefined behavior.
  *
+ * \tparam UserDataRealT Declared type of the passed function
  * \tparam UserDataT Deduced type based on what is passed for user data,
  *   usually this type is either `void *` or `const void *`.
  * \tparam Args the arguments being passed to the callback
@@ -50,6 +51,7 @@ namespace detail
  * \returns whatever the callback returns, if anything
  */
 template<
+  typename UserDataRealT,
   typename UserDataT,
   typename ... Args,
   typename ReturnT = void
@@ -57,7 +59,7 @@ template<
 ReturnT
 cpp_callback_trampoline(UserDataT user_data, Args ... args) noexcept
 {
-  auto & actual_callback = *reinterpret_cast<const std::function<ReturnT(Args...)> *>(user_data);
+  auto & actual_callback = *static_cast<const UserDataRealT *>(user_data);
   return actual_callback(args ...);
 }
 
