@@ -32,7 +32,7 @@ inline constexpr bool template_contains_v = template_contains<Args ...>::value;
 template<typename T, typename NextT, typename ... Us>
 struct template_contains<T, NextT, Us ...>
 {
-  enum { value = std::is_same_v<T, NextT>|| template_contains_v<T, Us ...>};
+  enum { value = (std::is_same_v<T, NextT>|| template_contains_v<T, Us ...>)};
 };
 
 template<typename T>
