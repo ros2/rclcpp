@@ -86,9 +86,8 @@ public:
   virtual ~PublisherBase();
 
   /// Add event handlers for passed in event_callbacks.
-  /// This method can be overriden if a derived publisher class has different events to bind.
   RCLCPP_PUBLIC
-  virtual void
+  void
   bind_event_callbacks(const PublisherEventCallbacks & event_callbacks, bool use_default_callbacks);
 
   /// Get the topic that this publisher publishes on.

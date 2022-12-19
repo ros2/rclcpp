@@ -93,9 +93,8 @@ public:
   virtual ~SubscriptionBase();
 
   /// Add event handlers for passed in event_callbacks.
-  /// This method can be overriden if a derived subscription class has different events to bind.
   RCLCPP_PUBLIC
-  virtual void
+  void
   bind_event_callbacks(
     const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks);
 
