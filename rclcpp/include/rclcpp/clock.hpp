@@ -138,6 +138,51 @@ public:
     Context::SharedPtr context = contexts::get_global_default_context());
 
   /**
+   * Check if the clock is started.
+   *
+   * A started clock is a clock that reflects non-zero time.
+   * Typically a clock will be unstarted if it is using RCL_ROS_TIME with ROS time and
+   * nothing has been published on the clock topic yet.
+   *
+   * \return true if clock is started
+   * \throws std::runtime_error if the clock is not rcl_clock_valid
+   */
+  RCLCPP_PUBLIC
+  bool
+  started();
+
+  /**
+   * Wait until clock to start.
+   *
+   * \rclcpp::Clock::started
+   * \param context the context to wait in
+   * \return true if clock was already started or became started
+   * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
+   */
+  RCLCPP_PUBLIC
+  bool
+  wait_until_started(Context::SharedPtr context = contexts::get_global_default_context());
+
+  /**
+   * Wait for clock to start, with timeout.
+   *
+   * The timeout is waited in steady time.
+   *
+   * \rclcpp::Clock::started
+   * \param timeout the maximum time to wait for.
+   * \param context the context to wait in.
+   * \param wait_tick_ns the time to wait between each iteration of the wait loop (in nanoseconds).
+   * \return true if clock was or became valid
+   * \throws std::runtime_error if the context is invalid or clock is not rcl_clock_valid
+   */
+  RCLCPP_PUBLIC
+  bool
+  wait_until_started(
+    const rclcpp::Duration & timeout,
+    Context::SharedPtr context = contexts::get_global_default_context(),
+    const rclcpp::Duration & wait_tick_ns = rclcpp::Duration(0, static_cast<uint32_t>(1e7)));
+
+  /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
    *
    * \return true if the clock is active
