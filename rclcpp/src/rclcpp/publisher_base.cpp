@@ -45,11 +45,14 @@ PublisherBase::PublisherBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const std::string & topic,
   const rosidl_message_type_support_t & type_support,
-  const rcl_publisher_options_t & publisher_options)
+  const rcl_publisher_options_t & publisher_options,
+  const PublisherEventCallbacks & event_callbacks,
+  bool use_default_callbacks)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
   intra_process_is_enabled_(false),
   intra_process_publisher_id_(0),
-  type_support_(type_support)
+  type_support_(type_support),
+  event_callbacks_(event_callbacks)
 {
   auto custom_deleter = [node_handle = this->rcl_node_handle_](rcl_publisher_t * rcl_pub)
     {
@@ -98,6 +101,8 @@ PublisherBase::PublisherBase(
     rmw_reset_error();
     throw std::runtime_error(msg);
   }
+
+  bind_event_callbacks(event_callbacks_, use_default_callbacks);
 }
 
 PublisherBase::~PublisherBase()
@@ -124,6 +129,38 @@ const char *
 PublisherBase::get_topic_name() const
 {
   return rcl_publisher_get_topic_name(publisher_handle_.get());
+}
+
+void
+PublisherBase::bind_event_callbacks(
+  const PublisherEventCallbacks & event_callbacks, bool use_default_callbacks)
+{
+  if (event_callbacks.deadline_callback) {
+    this->add_event_handler(
+      event_callbacks.deadline_callback,
+      RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
+  }
+  if (event_callbacks.liveliness_callback) {
+    this->add_event_handler(
+      event_callbacks.liveliness_callback,
+      RCL_PUBLISHER_LIVELINESS_LOST);
+  }
+  if (event_callbacks.incompatible_qos_callback) {
+    this->add_event_handler(
+      event_callbacks.incompatible_qos_callback,
+      RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    try {
+      this->add_event_handler(
+        [this](QOSOfferedIncompatibleQoSInfo & info) {
+          this->default_incompatible_qos_callback(info);
+        },
+        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    } catch (UnsupportedEventTypeException & /*exc*/) {
+      // pass
+    }
+  }
 }
 
 size_t

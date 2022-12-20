@@ -84,11 +84,19 @@ public:
     const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
+    const SubscriptionEventCallbacks & event_callbacks,
+    bool use_default_callbacks,
     bool is_serialized = false);
 
   /// Destructor.
   RCLCPP_PUBLIC
   virtual ~SubscriptionBase();
+
+  /// Add event handlers for passed in event_callbacks.
+  RCLCPP_PUBLIC
+  void
+  bind_event_callbacks(
+    const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks);
 
   /// Get the topic that this subscription is subscribed on.
   RCLCPP_PUBLIC
@@ -569,6 +577,8 @@ protected:
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_subscription_id_;
   std::shared_ptr<rclcpp::experimental::SubscriptionIntraProcessBase> subscription_intra_process_;
+
+  const SubscriptionEventCallbacks event_callbacks_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
