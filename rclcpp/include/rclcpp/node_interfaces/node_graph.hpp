@@ -114,6 +114,14 @@ public:
   count_subscribers(const std::string & topic_name) const override;
 
   RCLCPP_PUBLIC
+  size_t
+  count_clients(const std::string & service_name) const override;
+
+  RCLCPP_PUBLIC
+  size_t
+  count_services(const std::string & service_name) const override;
+
+  RCLCPP_PUBLIC
   const rcl_guard_condition_t *
   get_graph_guard_condition() const override;
 

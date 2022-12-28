@@ -522,6 +522,18 @@ Node::count_subscribers(const std::string & topic_name) const
   return node_graph_->count_subscribers(topic_name);
 }
 
+size_t
+Node::count_clients(const std::string & service_name) const
+{
+  return node_graph_->count_clients(service_name);
+}
+
+size_t
+Node::count_services(const std::string & service_name) const
+{
+  return node_graph_->count_services(service_name);
+}
+
 std::vector<rclcpp::TopicEndpointInfo>
 Node::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
 {
