@@ -134,7 +134,6 @@ public:
   {}
 
   /// NodeT::SharedPtr Constructor
-  // NOTE(CH3): Have a special SharedPtr constructor to check for nullptr.
   template<typename NodeT>
   NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
   : NodeInterfaces(node ? *node : throw std::invalid_argument("given node pointer is nullptr"))
