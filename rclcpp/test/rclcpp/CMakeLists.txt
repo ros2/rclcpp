@@ -234,6 +234,11 @@ if(TARGET test_node_interfaces__node_graph)
     "test_msgs")
   target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_node_interfaces__node_interfaces
+  node_interfaces/test_node_interfaces.cpp)
+if(TARGET test_node_interfaces__node_interfaces)
+  target_link_libraries(test_node_interfaces__node_interfaces ${PROJECT_NAME} mimick)
+endif()
 ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
 if(TARGET test_node_interfaces__node_parameters)
@@ -261,6 +266,11 @@ ament_add_gtest(test_node_interfaces__node_waitables
   node_interfaces/test_node_waitables.cpp)
 if(TARGET test_node_interfaces__node_waitables)
   target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME} mimick)
+endif()
+ament_add_gtest(test_node_interfaces__test_template_utils  # Compile time test
+  node_interfaces/detail/test_template_utils.cpp)
+if(TARGET test_node_interfaces__test_template_utils)
+  target_link_libraries(test_node_interfaces__test_template_utils ${PROJECT_NAME})
 endif()
 
 # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
