@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include "rclcpp/detail/template_contains.hpp"
 #include "rclcpp/detail/template_unique.hpp"
+
+
+TEST(NoOpTests, test_node_interfaces_template_utils) {
+}                                                        // This is just to let gtest work
 
 namespace rclcpp
 {

@@ -267,7 +267,7 @@ ament_add_gtest(test_node_interfaces__node_waitables
 if(TARGET test_node_interfaces__node_waitables)
   target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME} mimick)
 endif()
-add_library(test_node_interfaces__test_template_utils  # Compile time test
+ament_add_gtest(test_node_interfaces__test_template_utils  # Compile time test
   node_interfaces/detail/test_template_utils.cpp)
 if(TARGET test_node_interfaces__test_template_utils)
   target_link_libraries(test_node_interfaces__test_template_utils ${PROJECT_NAME})

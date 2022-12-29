@@ -20,10 +20,24 @@
 #include "rclcpp/detail/template_unique.hpp"
 #include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
 
+#define ALL_RCLCPP_NODE_INTERFACES \
+  rclcpp::node_interfaces::NodeBaseInterface, \
+  rclcpp::node_interfaces::NodeClockInterface, \
+  rclcpp::node_interfaces::NodeGraphInterface, \
+  rclcpp::node_interfaces::NodeLoggingInterface, \
+  rclcpp::node_interfaces::NodeParametersInterface, \
+  rclcpp::node_interfaces::NodeServicesInterface, \
+  rclcpp::node_interfaces::NodeTimeSourceInterface, \
+  rclcpp::node_interfaces::NodeTimersInterface, \
+  rclcpp::node_interfaces::NodeTopicsInterface, \
+  rclcpp::node_interfaces::NodeWaitablesInterface
+
+
 namespace rclcpp
 {
 namespace node_interfaces
 {
+
 
 /// A helper class for aggregating node interfaces.
 template<typename ... InterfaceTs>
@@ -143,6 +157,7 @@ public:
   : NodeInterfacesSupportsT(args ...)
   {}
 };
+
 
 }  // namespace node_interfaces
 }  // namespace rclcpp
