@@ -17,6 +17,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -46,5 +47,7 @@ public:
 
 }  // namespace node_interfaces
 }  // namespace rclcpp
+
+RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(rclcpp::node_interfaces::NodeTimersInterface, timers)
 
 #endif  // RCLCPP__NODE_INTERFACES__NODE_TIMERS_INTERFACE_HPP_

@@ -25,6 +25,7 @@
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -275,5 +276,7 @@ public:
 
 }  // namespace node_interfaces
 }  // namespace rclcpp
+
+RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(rclcpp::node_interfaces::NodeParametersInterface, parameters)
 
 #endif  // RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_INTERFACE_HPP_
