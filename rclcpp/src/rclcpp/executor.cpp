@@ -112,6 +112,12 @@ Executor::~Executor()
   }
   weak_groups_to_guard_conditions_.clear();
 
+  for (const auto & pair : weak_nodes_to_guard_conditions_) {
+    auto guard_condition = pair.second;
+    memory_strategy_->remove_guard_condition(guard_condition);
+  }
+  weak_nodes_to_guard_conditions_.clear();
+
   // Finalize the wait set.
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
@@ -274,6 +280,10 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       }
     });
 
+  const auto & gc = node_ptr->get_notify_guard_condition();
+  weak_nodes_to_guard_conditions_[node_ptr] = &gc;
+  // Add the node's notify condition to the guard condition handles
+  memory_strategy_->add_guard_condition(gc);
   weak_nodes_.push_back(node_ptr);
 }
 
@@ -377,6 +387,9 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
         notify);
     }
   }
+
+  memory_strategy_->remove_guard_condition(&node_ptr->get_notify_guard_condition());
+  weak_nodes_to_guard_conditions_.erase(node_ptr);
 
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
@@ -706,6 +719,12 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
         auto weak_node_ptr = pair.second;
         if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
           invalid_group_ptrs.push_back(weak_group_ptr);
+          auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
+          if (node_guard_pair != weak_nodes_to_guard_conditions_.end()) {
+            auto guard_condition = node_guard_pair->second;
+            weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
+            memory_strategy_->remove_guard_condition(guard_condition);
+          }
         }
       }
       std::for_each(
