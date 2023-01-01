@@ -305,7 +305,7 @@ public:
   size_t
   count_subscribers(const std::string & topic_name) const = 0;
 
-  /// Return the number of clients created for a given topic.
+  /// Return the number of clients created for a given service.
   /*
    * \param[in] service_name the actual service name used; it will not be automatically remapped.
    */
@@ -314,7 +314,7 @@ public:
   size_t
   count_clients(const std::string & service_name) const = 0;
 
-  /// Return the number of services created for a given topic.
+  /// Return the number of services created for a given service.
   /*
    * \param[in] service_name the actual service name used; it will not be automatically remapped.
    */
