@@ -150,7 +150,7 @@ public:
   /// NodeT::SharedPtr Constructor
   template<typename NodeT>
   NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
-  : NodeInterfaces(node ? *node : throw std::invalid_argument("given node pointer is nullptr"))
+  : NodeInterfaces(*node)
   {}
 
   explicit NodeInterfaces(std::shared_ptr<InterfaceTs>... args)
