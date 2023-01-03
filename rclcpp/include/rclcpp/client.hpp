@@ -19,7 +19,6 @@
 #include <future>
 #include <unordered_map>
 #include <memory>
-#include <mutex>
 #include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
 #include <sstream>
 #include <string>
@@ -44,6 +43,8 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/demangle.hpp"
@@ -364,7 +365,7 @@ protected:
 
   std::atomic<bool> in_use_by_wait_set_{false};
 
-  std::recursive_mutex callback_mutex_;
+  rcpputils::RecursivePIMutex callback_mutex_;
   std::function<void(size_t)> on_new_response_callback_{nullptr};
 };
 
@@ -830,7 +831,7 @@ protected:
       std::chrono::time_point<std::chrono::system_clock>,
       CallbackInfoVariant>>
   pending_requests_;
-  std::mutex pending_requests_mutex_;
+  rcpputils::PIMutex pending_requests_mutex_;
 };
 
 }  // namespace rclcpp

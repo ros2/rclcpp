@@ -18,7 +18,6 @@
 #include <functional>
 #include <future>
 #include <memory>
-#include <mutex>
 
 #include "rcl_action/action_client.h"
 
@@ -29,6 +28,8 @@
 #include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp_action
 {
@@ -163,7 +164,7 @@ private:
   ResultCallback result_callback_{nullptr};
   int8_t status_{GoalStatus::STATUS_ACCEPTED};
 
-  std::mutex handle_mutex_;
+  rcpputils::PIMutex handle_mutex_;
 };
 }  // namespace rclcpp_action
 

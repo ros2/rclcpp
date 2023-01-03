@@ -17,7 +17,6 @@
 
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -27,6 +26,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -146,13 +147,13 @@ private:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rclcpp::CallbackGroup::SharedPtr default_callback_group_;
-  std::mutex callback_groups_mutex_;
+  rcpputils::PIMutex callback_groups_mutex_;
   std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_;
 
   std::atomic_bool associated_with_executor_;
 
   /// Guard condition for notifying the Executor of changes to this node.
-  mutable std::recursive_mutex notify_guard_condition_mutex_;
+  mutable rcpputils::RecursivePIMutex notify_guard_condition_mutex_;
   rclcpp::GuardCondition notify_guard_condition_;
   bool notify_guard_condition_is_valid_;
 };

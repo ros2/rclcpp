@@ -18,7 +18,6 @@
 #include <condition_variable>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -33,6 +32,7 @@
 #include "rclcpp/init_options.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -377,15 +377,15 @@ private:
   std::recursive_mutex sub_contexts_mutex_;
 
   std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
-  mutable std::mutex on_shutdown_callbacks_mutex_;
+  mutable rcpputils::PIMutex on_shutdown_callbacks_mutex_;
 
   std::unordered_set<std::shared_ptr<PreShutdownCallback>> pre_shutdown_callbacks_;
-  mutable std::mutex pre_shutdown_callbacks_mutex_;
+  mutable rcpputils::PIMutex pre_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
   std::condition_variable interrupt_condition_variable_;
   /// Mutex for protecting the global condition variable.
-  std::mutex interrupt_mutex_;
+  rcpputils::PIMutex interrupt_mutex_;
 
   /// Keep shared ownership of global vector of weak contexts
   std::shared_ptr<WeakContextsWrapper> weak_contexts_;

@@ -16,9 +16,7 @@
 #define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
-#include <functional>
-#include <memory>
-#include <mutex>
+#include <string>
 #include <vector>
 
 #include "rclcpp/client.hpp"
@@ -30,6 +28,7 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -221,7 +220,7 @@ protected:
 
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
-  mutable std::mutex mutex_;
+  mutable rcpputils::PIMutex mutex_;
   std::atomic_bool associated_with_executor_;
   std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;

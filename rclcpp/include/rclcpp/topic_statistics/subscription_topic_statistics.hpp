@@ -33,6 +33,8 @@
 
 #include "statistics_msgs/msg/metrics_message.hpp"
 
+#include "rcpputils/mutex.hpp"
+
 namespace rclcpp
 {
 namespace topic_statistics
@@ -227,7 +229,7 @@ private:
   }
 
   /// Mutex to protect the subsequence vectors
-  mutable std::mutex mutex_;
+  mutable rcpputils::PIMutex mutex_;
   /// Collection of statistics collectors
   std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published

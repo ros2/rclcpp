@@ -16,10 +16,10 @@
 #define RCLCPP__INIT_OPTIONS_HPP_
 
 #include <memory>
-#include <mutex>
 
 #include "rcl/init_options.h"
 #include "rclcpp/visibility_control.hpp"
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -104,7 +104,7 @@ private:
   void
   finalize_init_options_impl();
 
-  mutable std::mutex init_options_mutex_;
+  mutable rcpputils::PIMutex init_options_mutex_;
   std::unique_ptr<rcl_init_options_t> init_options_;
   bool initialize_logging_{true};
 };

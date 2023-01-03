@@ -30,6 +30,8 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
+#include "rcpputils/mutex.hpp"
+
 namespace rclcpp
 {
 
@@ -191,7 +193,7 @@ private:
   Logger logger_;
 
   // A lock to protect iterating the associated_clocks_ field.
-  std::mutex clock_list_lock_;
+  rcpputils::PIMutex clock_list_lock_;
   // A vector to store references to associated clocks.
   std::vector<rclcpp::Clock::SharedPtr> associated_clocks_;
 
@@ -358,7 +360,7 @@ private:
   // The subscription for the clock callback
   using SubscriptionT = rclcpp::Subscription<rosgraph_msgs::msg::Clock>;
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
-  std::mutex clock_sub_lock_;
+  rcpputils::PIMutex clock_sub_lock_;
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
   std::promise<void> cancel_clock_executor_promise_;

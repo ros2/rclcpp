@@ -17,7 +17,6 @@
 
 #include <functional>
 #include <memory>
-#include <mutex>
 
 #include "rcl_action/types.h"
 #include "rcl_action/goal_handle.h"
@@ -26,6 +25,8 @@
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/types.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp_action
 {
@@ -113,7 +114,7 @@ protected:
 
 private:
   std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
-  mutable std::mutex rcl_handle_mutex_;
+  mutable rcpputils::PIMutex rcl_handle_mutex_;
 };
 
 // Forward declare server
