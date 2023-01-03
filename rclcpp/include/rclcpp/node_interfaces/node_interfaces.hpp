@@ -147,12 +147,6 @@ public:
   : NodeInterfacesSupportsT(node)
   {}
 
-  /// NodeT::SharedPtr Constructor
-  template<typename NodeT>
-  NodeInterfaces(std::shared_ptr<NodeT> node)  // NOLINT(runtime/explicit)
-  : NodeInterfaces(*node)
-  {}
-
   explicit NodeInterfaces(std::shared_ptr<InterfaceTs>... args)
   : NodeInterfacesSupportsT(args ...)
   {}
