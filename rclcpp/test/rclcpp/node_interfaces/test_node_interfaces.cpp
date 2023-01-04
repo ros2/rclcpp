@@ -44,7 +44,7 @@ TEST_F(TestNodeInterfaces, node_interfaces_nominal) {
     using rclcpp::node_interfaces::NodeInterfaces;
     using rclcpp::node_interfaces::NodeBaseInterface;
     using rclcpp::node_interfaces::NodeGraphInterface;
-    auto node_interfaces = NodeInterfaces<NodeBaseInterface, NodeGraphInterface>(node);
+    auto node_interfaces = NodeInterfaces<NodeBaseInterface, NodeGraphInterface>(*node);
   }
 
   // Implicit conversion of rclcpp::Node into function that uses NodeInterfaces of base.
@@ -55,7 +55,7 @@ TEST_F(TestNodeInterfaces, node_interfaces_nominal) {
         auto base_interface = ni.get<NodeBaseInterface>();
       };
 
-    some_func(node);
+    some_func(*node);
   }
 
   // Implicit narrowing of NodeInterfaces into a new interface NodeInterfaces with fewer interfaces.
@@ -67,7 +67,7 @@ TEST_F(TestNodeInterfaces, node_interfaces_nominal) {
         auto base_interface = ni_with_one.get<NodeBaseInterface>();
       };
 
-    NodeInterfaces<NodeBaseInterface, NodeGraphInterface> ni_with_two(node);
+    NodeInterfaces<NodeBaseInterface, NodeGraphInterface> ni_with_two(*node);
 
     some_func(ni_with_two);
   }
@@ -102,7 +102,7 @@ TEST_F(TestNodeInterfaces, node_interfaces_standard_interfaces) {
     rclcpp::node_interfaces::NodeWaitablesInterface,
     rclcpp::node_interfaces::NodeParametersInterface,
     rclcpp::node_interfaces::NodeTimeSourceInterface
-    >(node);
+    >(*node);
 }
 
 /*
@@ -134,7 +134,7 @@ TEST_F(TestNodeInterfaces, ni_init) {
     NodeWaitablesInterface,
     NodeParametersInterface,
     NodeTimeSourceInterface
-    >(node);
+    >(*node);
 
   {
     auto base = ni.get<NodeBaseInterface>();
@@ -198,7 +198,7 @@ TEST_F(TestNodeInterfaces, ni_all_init) {
   using rclcpp::node_interfaces::NodeParametersInterface;
   using rclcpp::node_interfaces::NodeTimeSourceInterface;
 
-  auto ni = rclcpp::node_interfaces::NodeInterfaces<ALL_RCLCPP_NODE_INTERFACES>(node);
+  auto ni = rclcpp::node_interfaces::NodeInterfaces<ALL_RCLCPP_NODE_INTERFACES>(*node);
 
   {
     auto base = ni.get<NodeBaseInterface>();
