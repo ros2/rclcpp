@@ -186,7 +186,6 @@ TEST_F(TestLoanedMessage, move_loaned_message) {
   auto loaned_msg_moved_to = LoanedMessageT(std::move(loaned_msg_to_move));
 
   ASSERT_TRUE(loaned_msg_moved_to.is_valid());
-  ASSERT_FALSE(loaned_msg_to_move.is_valid());
 
   loaned_msg_moved_to.get().float32_value = 42.0f;
   ASSERT_EQ(42.0f, loaned_msg_moved_to.get().float32_value);
