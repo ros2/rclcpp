@@ -26,6 +26,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
+#include "rcl/node.h"
 
 namespace rclcpp
 {
@@ -225,6 +226,16 @@ get_c_vector_string(const std::vector<std::string> & strings_in)
   }
 
   return cstrings;
+}
+
+void
+notify_new_networks(Context::SharedPtr context)
+{
+  rcl_ret_t ret = rcl_notify_participant_dynamic_network_interface(context->get_rcl_context().get());
+  if (RCL_RET_OK != ret) {
+    exceptions::throw_from_rcl_error(
+      ret, "failed to notify networks");
+  }
 }
 
 }  // namespace rclcpp
