@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.3 (2023-01-10)
+-------------------
+* Fix SharedFuture from async_send_request never becomes valid (`#2044 <https://github.com/ros2/rclcpp/issues/2044>`_) (`#2076 <https://github.com/ros2/rclcpp/issues/2076>`_)
+* do not throw exception if trying to dequeue an empty intra-process buffer (`#2061 <https://github.com/ros2/rclcpp/issues/2061>`_) (`#2070 <https://github.com/ros2/rclcpp/issues/2070>`_)
+* fix nullptr dereference in prune_requests_older_than (`#2008 <https://github.com/ros2/rclcpp/issues/2008>`_) (`#2065 <https://github.com/ros2/rclcpp/issues/2065>`_)
+* Fix bug that a callback not reached (`#1640 <https://github.com/ros2/rclcpp/issues/1640>`_) (`#2033 <https://github.com/ros2/rclcpp/issues/2033>`_)
+* Contributors: mergify[bot]
+
 16.0.2 (2022-11-07)
 -------------------
 * fix mismatched issue if using zero_allocate (`#1995 <https://github.com/ros2/rclcpp/issues/1995>`_) (`#2026 <https://github.com/ros2/rclcpp/issues/2026>`_)
