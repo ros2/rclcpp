@@ -80,7 +80,9 @@ struct RCLCPP_PUBLIC QoSInitialization
   size_t depth;
 
   /// Constructor which takes both a history policy and a depth (even if it would be unused).
-  QoSInitialization(rmw_qos_history_policy_t history_policy_arg, size_t depth_arg);
+  QoSInitialization(
+    rmw_qos_history_policy_t history_policy_arg, size_t depth_arg,
+    bool print_depth_warning = true);
 
   /// Create a QoSInitialization from an existing rmw_qos_profile_t, using its history and depth.
   static
@@ -97,7 +99,7 @@ struct RCLCPP_PUBLIC KeepAll : public rclcpp::QoSInitialization
 /// Use to initialize the QoS with the keep_last history setting and the given depth.
 struct RCLCPP_PUBLIC KeepLast : public rclcpp::QoSInitialization
 {
-  explicit KeepLast(size_t depth);
+  explicit KeepLast(size_t depth, bool print_depth_warning = true);
 };
 
 /// Encapsulation of Quality of Service settings.
