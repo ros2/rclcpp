@@ -416,12 +416,13 @@ bool
 Context::remove_shutdown_callback(
   const ShutdownCallbackHandle & callback_handle)
 {
-  const auto remove_callback = [this, &callback_handle](auto & mutex, auto & callback_set) {
+  const auto callback_shared_ptr = callback_handle.callback.lock();
+  if (callback_shared_ptr == nullptr) {
+    return false;
+  }
+
+  const auto remove_callback = [this, &callback_shared_ptr](auto & mutex, auto & callback_set) {
       const std::lock_guard<std::mutex> lock(mutex);
-      const auto callback_shared_ptr = callback_handle.callback.lock();
-      if (callback_shared_ptr == nullptr) {
-        return false;
-      }
       return callback_set.erase(callback_shared_ptr) == 1;
     };
 
