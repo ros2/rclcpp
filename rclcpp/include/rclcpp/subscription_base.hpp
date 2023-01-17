@@ -556,7 +556,7 @@ protected:
   void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info) const;
 
   RCLCPP_PUBLIC
-  void default_inconsistent_topic_callback(InconsistentTopicInfo & info) const;
+  void default_incompatible_type_callback(IncompatibleTypeInfo & info) const;
 
   RCLCPP_PUBLIC
   bool

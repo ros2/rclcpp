@@ -139,18 +139,18 @@ SubscriptionBase::bind_event_callbacks(
     // pass
   }
 
-  InconsistentTopicCallbackType inconsistent_topic_cb;
-  if (event_callbacks.inconsistent_topic_callback) {
-    inconsistent_topic_cb = event_callbacks.inconsistent_topic_callback;
+  IncompatibleTypeCallbackType incompatible_type_cb;
+  if (event_callbacks.incompatible_type_callback) {
+    incompatible_type_cb = event_callbacks.incompatible_type_callback;
   } else if (use_default_callbacks) {
     // Register default callback when not specified
-    inconsistent_topic_cb = [this](InconsistentTopicInfo & info) {
-        this->default_inconsistent_topic_callback(info);
+    incompatible_type_cb = [this](IncompatibleTypeInfo & info) {
+        this->default_incompatible_type_callback(info);
       };
   }
   try {
-    if (inconsistent_topic_cb) {
-      this->add_event_handler(inconsistent_topic_cb, RCL_SUBSCRIPTION_INCONSISTENT_TOPIC);
+    if (incompatible_type_cb) {
+      this->add_event_handler(incompatible_type_cb, RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE);
     }
   } catch (UnsupportedEventTypeException & /*exc*/) {
     // pass
@@ -321,14 +321,14 @@ SubscriptionBase::default_incompatible_qos_callback(
 }
 
 void
-SubscriptionBase::default_inconsistent_topic_callback(
-  rclcpp::InconsistentTopicInfo & event) const
+SubscriptionBase::default_incompatible_type_callback(
+  rclcpp::IncompatibleTypeInfo & event) const
 {
   (void)event;
 
   RCLCPP_WARN(
     rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
-    "Inconsistent topic on topic '%s', no messages will be sent to it.", get_topic_name());
+    "Incompatible type on topic '%s', no messages will be sent to it.", get_topic_name());
 }
 
 bool

@@ -25,7 +25,7 @@
 #include "rcl/event_callback.h"
 #include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/incompatible_qos_events_statuses.h"
-#include "rmw/events_statuses/inconsistent_topic.h"
+#include "rmw/events_statuses/incompatible_type.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -46,7 +46,7 @@ using QOSMessageLostInfo = rmw_message_lost_status_t;
 using QOSOfferedIncompatibleQoSInfo = rmw_offered_qos_incompatible_event_status_t;
 using QOSRequestedIncompatibleQoSInfo = rmw_requested_qos_incompatible_event_status_t;
 
-using InconsistentTopicInfo = rmw_inconsistent_topic_status_t;
+using IncompatibleTypeInfo = rmw_incompatible_type_status_t;
 
 using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequestedInfo &)>;
 using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
@@ -57,7 +57,7 @@ using QOSOfferedIncompatibleQoSCallbackType = std::function<void (QOSOfferedInco
 using QOSRequestedIncompatibleQoSCallbackType =
   std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
 
-using InconsistentTopicCallbackType = std::function<void (InconsistentTopicInfo &)>;
+using IncompatibleTypeCallbackType = std::function<void (IncompatibleTypeInfo &)>;
 
 /// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
@@ -65,7 +65,7 @@ struct PublisherEventCallbacks
   QOSDeadlineOfferedCallbackType deadline_callback;
   QOSLivelinessLostCallbackType liveliness_callback;
   QOSOfferedIncompatibleQoSCallbackType incompatible_qos_callback;
-  InconsistentTopicCallbackType inconsistent_topic_callback;
+  IncompatibleTypeCallbackType incompatible_type_callback;
 };
 
 /// Contains callbacks for non-message events that a Subscription can receive from the middleware.
@@ -75,7 +75,7 @@ struct SubscriptionEventCallbacks
   QOSLivelinessChangedCallbackType liveliness_callback;
   QOSRequestedIncompatibleQoSCallbackType incompatible_qos_callback;
   QOSMessageLostCallbackType message_lost_callback;
-  InconsistentTopicCallbackType inconsistent_topic_callback;
+  IncompatibleTypeCallbackType incompatible_type_callback;
 };
 
 class UnsupportedEventTypeException : public exceptions::RCLErrorBase, public std::runtime_error
