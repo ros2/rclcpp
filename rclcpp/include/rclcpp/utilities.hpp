@@ -330,6 +330,10 @@ RCLCPP_PUBLIC
 std::vector<const char *>
 get_c_vector_string(const std::vector<std::string> & strings_in);
 
+RCLCPP_PUBLIC
+void
+notify_new_networks(Context::SharedPtr context);
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__UTILITIES_HPP_
