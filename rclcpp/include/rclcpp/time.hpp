@@ -225,7 +225,7 @@ operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 /// Time class that always uses ROS time
 class RosTime : public Time
 {
-  public:
+public:
   /// Time constructor
   /**
    * Initializes the time values for seconds and nanoseconds individually.
@@ -237,7 +237,8 @@ class RosTime : public Time
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
-  explicit RosTime(int32_t seconds, uint32_t nanoseconds = 0) : Time(seconds, nanoseconds, RCL_ROS_TIME) {}
+  explicit RosTime(int32_t seconds, uint32_t nanoseconds = 0)
+  : Time(seconds, nanoseconds, RCL_ROS_TIME) {}
 
   /// Construct from non-ros time
   RCLCPP_PUBLIC
@@ -249,12 +250,13 @@ class RosTime : public Time
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
-  RosTime(const builtin_interfaces::msg::Time & time_msg) : Time(time_msg, RCL_ROS_TIME) {}
+  explicit RosTime(const builtin_interfaces::msg::Time & time_msg)
+  : Time(time_msg, RCL_ROS_TIME) {}
 
   /// Time constructor
   /**
    * \param time_point rcl_time_point_t structure to copy
-   * \throws std::runtime_error if clock type 
+   * \throws std::runtime_error if clock type
    */
   RCLCPP_PUBLIC
   explicit RosTime(const rcl_time_point_t & time_point);

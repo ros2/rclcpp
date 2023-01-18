@@ -290,7 +290,7 @@ RosTime::RosTime(const rcl_time_point_t & time_point)
   rcl_time_ = time_point;
 }
 
-RosTime::RosTime(const Time &other)
+RosTime::RosTime(const Time & other)
 {
   if (RCL_ROS_TIME != other.get_clock_type()) {
     throw std::runtime_error("RosTime requires a clock type of RCL_ROS_TIME");
