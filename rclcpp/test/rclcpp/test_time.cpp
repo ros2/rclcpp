@@ -918,3 +918,86 @@ TEST_F(TestClockStarted, started_timeout) {
   EXPECT_FALSE(ros_clock.wait_until_started());
   t.join();
 }
+
+TEST(TestRosTime, construct) {
+  rclcpp::RosTime t1{0};
+  rclcpp::RosTime t2{0, 1000};
+  EXPECT_EQ(0, t1.nanoseconds());
+  EXPECT_EQ(1000, t2.nanoseconds());
+}
+
+TEST(TestRosTime, convert_from_time) {
+  rclcpp::Time ros_t{0, 1000, RCL_ROS_TIME};
+  rclcpp::Time sys_t{0, 1000, RCL_SYSTEM_TIME};
+
+  {
+    rclcpp::RosTime rt{ros_t};
+    EXPECT_EQ(1000, rt.nanoseconds());
+  }
+  {
+    rclcpp::RosTime rt{5, 4321};
+    rt = ros_t;
+    EXPECT_EQ(1000, rt.nanoseconds());
+  }
+
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::RosTime rt2{rclcpp::Time{}},
+    std::runtime_error("RosTime requires a clock type of RCL_ROS_TIME"));
+}
+
+TEST(TestRosTime, assignment) {
+  rclcpp::RosTime rt1{0, 1000};
+  rclcpp::RosTime rt2{5, 4321};
+  rt2 = rt1;
+  EXPECT_EQ(1000, rt2.nanoseconds());
+}
+
+TEST(TestRosTime, comparison) {
+  rclcpp::RosTime rt1{0, 1000};
+  rclcpp::RosTime rt2{5, 4321};
+
+  EXPECT_TRUE(rt1 < rt2);
+  EXPECT_TRUE(rt1 <= rt2);
+  EXPECT_TRUE(rt2 > rt1);
+  EXPECT_TRUE(rt2 >= rt1);
+  EXPECT_TRUE(rt1 == rt1);
+  EXPECT_TRUE(rt2 == rt2);
+}
+
+TEST(TestRosTime, comparison_with_time) {
+  rclcpp::Time t{0, 1000, RCL_ROS_TIME};
+  rclcpp::RosTime rt{5, 4321};
+
+  EXPECT_TRUE(t < rt);
+  EXPECT_TRUE(t <= rt);
+  EXPECT_TRUE(rt > t);
+  EXPECT_TRUE(rt >= t);
+  EXPECT_TRUE(rt != t);
+
+  {
+    rclcpp::Time t2{5, 4321, RCL_ROS_TIME};
+    rclcpp::RosTime rt2{5, 4321};
+    EXPECT_TRUE(rt2 == t2);
+    EXPECT_FALSE(rt2 != t2);
+  }
+
+  rclcpp::Time sys_t;
+  RCLCPP_EXPECT_THROW_EQ(
+    rt == sys_t,
+    std::runtime_error("can't compare times with different time sources"));
+  RCLCPP_EXPECT_THROW_EQ(
+    rt != sys_t,
+    std::runtime_error("can't compare times with different time sources"));
+  RCLCPP_EXPECT_THROW_EQ(
+    rt < sys_t,
+    std::runtime_error("can't compare times with different time sources"));
+  RCLCPP_EXPECT_THROW_EQ(
+    rt <= sys_t,
+    std::runtime_error("can't compare times with different time sources"));
+  RCLCPP_EXPECT_THROW_EQ(
+    rt > sys_t,
+    std::runtime_error("can't compare times with different time sources"));
+  RCLCPP_EXPECT_THROW_EQ(
+    rt >= sys_t,
+    std::runtime_error("can't compare times with different time sources"));
+}

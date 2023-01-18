@@ -282,4 +282,35 @@ Time::max()
 }
 
 
+RosTime::RosTime(const rcl_time_point_t & time_point)
+{
+  if (RCL_ROS_TIME != time_point.clock_type) {
+    throw std::runtime_error("RosTime requires a clock type of RCL_ROS_TIME");
+  }
+  rcl_time_ = time_point;
+}
+
+RosTime::RosTime(const Time &other)
+{
+  if (RCL_ROS_TIME != other.get_clock_type()) {
+    throw std::runtime_error("RosTime requires a clock type of RCL_ROS_TIME");
+  }
+  rcl_time_.clock_type = RCL_ROS_TIME;
+  rcl_time_.nanoseconds = other.nanoseconds();
+}
+
+RosTime::~RosTime()
+{
+}
+
+RosTime &
+RosTime::operator=(const Time & rhs)
+{
+  if (RCL_ROS_TIME != rhs.get_clock_type()) {
+    throw std::runtime_error("RosTime requires a clock type of RCL_ROS_TIME");
+  }
+  rcl_time_.nanoseconds = rhs.nanoseconds();
+  return *this;
+}
+
 }  // namespace rclcpp

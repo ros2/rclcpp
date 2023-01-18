@@ -210,7 +210,7 @@ public:
   rcl_clock_type_t
   get_clock_type() const;
 
-private:
+protected:
   rcl_time_point_t rcl_time_;
   friend Clock;  // Allow clock to manipulate internal data
 };
@@ -221,6 +221,56 @@ private:
 RCLCPP_PUBLIC
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
+
+/// Time class that always uses ROS time
+class RosTime : public Time
+{
+  public:
+  /// Time constructor
+  /**
+   * Initializes the time values for seconds and nanoseconds individually.
+   * Large values for nanoseconds are wrapped automatically with the remainder added to seconds.
+   * Both inputs must be integers.
+   *
+   * \param seconds part of the time in seconds since time epoch
+   * \param nanoseconds part of the time in nanoseconds since time epoch
+   * \throws std::runtime_error if seconds are negative
+   */
+  RCLCPP_PUBLIC
+  explicit RosTime(int32_t seconds, uint32_t nanoseconds = 0) : Time(seconds, nanoseconds, RCL_ROS_TIME) {}
+
+  /// Construct from non-ros time
+  RCLCPP_PUBLIC
+  explicit RosTime(const Time & rhs);
+
+  /// RosTime constructor
+  /**
+   * \param time_msg builtin_interfaces time message to copy
+   * \throws std::runtime_error if seconds are negative
+   */
+  RCLCPP_PUBLIC
+  RosTime(const builtin_interfaces::msg::Time & time_msg) : Time(time_msg, RCL_ROS_TIME) {}
+
+  /// Time constructor
+  /**
+   * \param time_point rcl_time_point_t structure to copy
+   * \throws std::runtime_error if clock type 
+   */
+  RCLCPP_PUBLIC
+  explicit RosTime(const rcl_time_point_t & time_point);
+
+  /// Destructor
+  RCLCPP_PUBLIC
+  virtual ~RosTime();
+
+  /**
+   * \throws std::runtime_error if seconds are negative
+   * \throws std::runtime_error if rhs clock type is not RCL_ROS_TIME
+   */
+  RCLCPP_PUBLIC
+  RosTime &
+  operator=(const Time & rhs);
+};
 
 }  // namespace rclcpp
 
