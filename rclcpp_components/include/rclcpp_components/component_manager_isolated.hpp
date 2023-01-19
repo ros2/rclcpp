@@ -105,10 +105,10 @@ private:
   void cancel_executor(DedicatedExecutorWrapper & executor_wrapper)
   {
     // Verify that the executor thread has begun spinning.
-    // If it has not, then iterate until the thread starts to ensure
-    // that cancel will fully stop the execution
+    // If it has not, then wait until the thread starts to ensure
+    // that cancel() will fully stop the execution
     //
-    // This prevents a previous race condition that occur between the
+    // This prevents a previous race condition that occurs between the
     // creation of the executor spin thread and cancelling an executor
 
     if (!executor_wrapper.thread_initialized) {
