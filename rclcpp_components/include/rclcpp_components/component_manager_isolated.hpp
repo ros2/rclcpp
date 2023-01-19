@@ -43,8 +43,8 @@ class ComponentManagerIsolated : public rclcpp_components::ComponentManager
     /// Constructor for the wrapper.
     /// This is necessary as atomic variables don't have copy/move operators
     /// implemented so this structure is not copyable/movable by default
-    explicit DedicatedExecutorWrapper(std::shared_ptr<rclcpp::Executor> exec):
-      executor(exec),
+    explicit DedicatedExecutorWrapper(std::shared_ptr<rclcpp::Executor> exec)
+    : executor(exec),
       thread_initialized(false)
     {
     }
@@ -74,9 +74,9 @@ protected:
 
     // Emplace rather than std::move since move operations are deleted for atomics
     auto result = dedicated_executor_wrappers_.emplace(std::make_pair(node_id, exec));
-    DedicatedExecutorWrapper& wrapper = result.first->second;
+    DedicatedExecutorWrapper & wrapper = result.first->second;
     wrapper.executor = exec;
-    auto& thread_initialized = wrapper.thread_initialized;
+    auto & thread_initialized = wrapper.thread_initialized;
     wrapper.thread = std::thread(
       [exec, &thread_initialized]() {
         thread_initialized = true;
@@ -111,8 +111,7 @@ private:
     // This prevents a previous race condition that occur between the
     // creation of the executor spin thread and cancelling an executor
 
-    if (!executor_wrapper.thread_initialized)
-    {
+    if (!executor_wrapper.thread_initialized) {
       auto context = this->get_node_base_interface()->get_context();
 
       // Guarantee that either the executor is spinning or we are shutting down.
