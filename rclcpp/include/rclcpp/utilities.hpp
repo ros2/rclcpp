@@ -330,6 +330,14 @@ RCLCPP_PUBLIC
 std::vector<const char *>
 get_c_vector_string(const std::vector<std::string> & strings_in);
 
+/// Call dds to notify about new network interfaces.
+/**
+ * \param[in] context is the default ROS context.
+ */
+RCLCPP_PUBLIC
+void
+notify_new_networks(Context::SharedPtr context);
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__UTILITIES_HPP_
