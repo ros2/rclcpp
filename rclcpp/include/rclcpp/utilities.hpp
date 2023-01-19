@@ -330,7 +330,7 @@ RCLCPP_PUBLIC
 std::vector<const char *>
 get_c_vector_string(const std::vector<std::string> & strings_in);
 
-/// Call dds to notify about new network interfaces.
+/// Notify middleware to refresh available network interfaces.
 /**
  * \param[in] context is the default ROS context.
  */
