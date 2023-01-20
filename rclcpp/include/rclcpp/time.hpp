@@ -100,9 +100,6 @@ public:
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
 
-  /**
-   * \throws std::runtime_error if the time sources are different
-   */
   RCLCPP_PUBLIC
   bool
   operator==(const rclcpp::Time & rhs) const;

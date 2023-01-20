@@ -116,11 +116,8 @@ Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 bool
 Time::operator==(const rclcpp::Time & rhs) const
 {
-  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
-    throw std::runtime_error("can't compare times with different time sources");
-  }
-
-  return rcl_time_.nanoseconds == rhs.rcl_time_.nanoseconds;
+  return rcl_time_.clock_type == rhs.rcl_time_.clock_type &&
+         rcl_time_.nanoseconds == rhs.rcl_time_.nanoseconds;
 }
 
 bool
