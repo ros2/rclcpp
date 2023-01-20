@@ -226,7 +226,7 @@ operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 class RosTime : public Time
 {
 public:
-  /// Time constructor
+  /// RosTime constructor
   /**
    * Initializes the time values for seconds and nanoseconds individually.
    * Large values for nanoseconds are wrapped automatically with the remainder added to seconds.
@@ -253,7 +253,7 @@ public:
   explicit RosTime(const builtin_interfaces::msg::Time & time_msg)
   : Time(time_msg, RCL_ROS_TIME) {}
 
-  /// Time constructor
+  /// RosTime constructor
   /**
    * \param time_point rcl_time_point_t structure to copy
    * \throws std::runtime_error if clock type
@@ -261,7 +261,7 @@ public:
   RCLCPP_PUBLIC
   explicit RosTime(const rcl_time_point_t & time_point);
 
-  /// Destructor
+  /// RosTime Destructor
   RCLCPP_PUBLIC
   virtual ~RosTime();
 
