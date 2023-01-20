@@ -484,6 +484,10 @@ protected:
     if (!msg) {
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
+    TRACEPOINT(
+      rclcpp_intra_publish,
+      static_cast<const void *>(publisher_handle_.get()),
+      msg.get());
 
     ipm->template do_intra_process_publish<PublishedType, ROSMessageType, AllocatorT>(
       intra_process_publisher_id_,
@@ -502,6 +506,10 @@ protected:
     if (!msg) {
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
+    TRACEPOINT(
+      rclcpp_intra_publish,
+      static_cast<const void *>(publisher_handle_.get()),
+      msg.get());
 
     ipm->template do_intra_process_publish<ROSMessageType, ROSMessageType, AllocatorT>(
       intra_process_publisher_id_,
@@ -521,6 +529,10 @@ protected:
     if (!msg) {
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
+    TRACEPOINT(
+      rclcpp_intra_publish,
+      static_cast<const void *>(publisher_handle_.get()),
+      msg.get());
 
     return ipm->template do_intra_process_publish_and_return_shared<ROSMessageType, ROSMessageType,
              AllocatorT>(
