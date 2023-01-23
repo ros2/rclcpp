@@ -982,13 +982,13 @@ TEST_F(TestParameterClient, async_parameter_load_parameters_complicated_regex) {
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_complicated_parameters.yaml").string();
   auto load_future = asynchronous_client->load_parameters(parameters_filepath);
-  auto result_code = rclcpp::spin_until_future_complete(
+  auto result_code = rclcpp::spin_until_complete(
     load_node, load_future, std::chrono::milliseconds(100));
   ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
   ASSERT_EQ(load_future.get()[0].successful, true);
   // list parameters
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
-  rclcpp::spin_until_future_complete(
+  rclcpp::spin_until_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
   ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(6));
   // to check the parameter "a_value"
@@ -1060,13 +1060,13 @@ TEST_F(TestParameterClient, async_parameter_load_parameters_from_map) {
   };
 
   auto load_future = asynchronous_client->load_parameters(parameter_map);
-  auto result_code = rclcpp::spin_until_future_complete(
+  auto result_code = rclcpp::spin_until_complete(
     load_node, load_future, std::chrono::milliseconds(100));
   ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
   ASSERT_EQ(load_future.get()[0].successful, true);
   // list parameters
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
-  rclcpp::spin_until_future_complete(
+  rclcpp::spin_until_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
   ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(6));
   // to check the parameter "a_value"
