@@ -25,8 +25,8 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
