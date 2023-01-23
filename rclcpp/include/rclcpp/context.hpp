@@ -398,20 +398,22 @@ private:
 
   using ShutdownCallback = ShutdownCallbackHandle::ShutdownCallbackType;
 
+  template<ShutdownType shutdown_type>
   RCLCPP_LOCAL
   ShutdownCallbackHandle
   add_shutdown_callback(
-    ShutdownType shutdown_type,
     ShutdownCallback callback);
 
+  template<ShutdownType shutdown_type>
   RCLCPP_LOCAL
   bool
   remove_shutdown_callback(
-    ShutdownType shutdown_type,
     const ShutdownCallbackHandle & callback_handle);
 
+  template<ShutdownType shutdown_type>
+  RCLCPP_LOCAL
   std::vector<rclcpp::Context::ShutdownCallback>
-  get_shutdown_callback(ShutdownType shutdown_type) const;
+  get_shutdown_callback() const;
 };
 
 /// Return a copy of the list of context shared pointers.

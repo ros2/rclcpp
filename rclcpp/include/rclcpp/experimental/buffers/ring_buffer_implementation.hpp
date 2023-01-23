@@ -86,8 +86,7 @@ public:
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!has_data_()) {
-      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Calling dequeue on empty intra-process buffer");
-      throw std::runtime_error("Calling dequeue on empty intra-process buffer");
+      return BufferT();
     }
 
     auto request = std::move(ring_buffer_[read_index_]);

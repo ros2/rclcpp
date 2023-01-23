@@ -15,9 +15,11 @@
 #ifndef RCLCPP_LIFECYCLE__STATE_HPP_
 #define RCLCPP_LIFECYCLE__STATE_HPP_
 
+#include <mutex>
 #include <string>
 
 #include "rcl_lifecycle/data_types.h"
+
 #include "rclcpp_lifecycle/visibility_control.h"
 
 #include "rcutils/allocator.h"
@@ -91,6 +93,7 @@ protected:
 
   bool owns_rcl_state_handle_;
 
+  mutable std::recursive_mutex state_handle_mutex_;
   rcl_lifecycle_state_t * state_handle_;
 };
 

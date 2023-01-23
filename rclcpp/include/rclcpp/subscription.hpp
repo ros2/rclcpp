@@ -140,44 +140,15 @@ public:
       node_base,
       type_support_handle,
       topic_name,
-      options.template to_rcl_subscription_options<ROSMessageType>(qos),
+      options.to_rcl_subscription_options(qos),
+      // NOTE(methylDragon): Passing these args separately is necessary for event binding
+      options.event_callbacks,
+      options.use_default_callbacks,
       callback.is_serialized_message_callback()),
     any_callback_(callback),
     options_(options),
     message_memory_strategy_(message_memory_strategy)
   {
-    if (options_.event_callbacks.deadline_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.deadline_callback,
-        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
-    }
-    if (options_.event_callbacks.liveliness_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.liveliness_callback,
-        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
-    }
-    if (options_.event_callbacks.incompatible_qos_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.incompatible_qos_callback,
-        RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-    } else if (options_.use_default_callbacks) {
-      // Register default callback when not specified
-      try {
-        this->add_event_handler(
-          [this](QOSRequestedIncompatibleQoSInfo & info) {
-            this->default_incompatible_qos_callback(info);
-          },
-          RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-      } catch (UnsupportedEventTypeException & /*exc*/) {
-        // pass
-      }
-    }
-    if (options_.event_callbacks.message_lost_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.message_lost_callback,
-        RCL_SUBSCRIPTION_MESSAGE_LOST);
-    }
-
     // Setup intra process publishing if requested.
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       using rclcpp::detail::resolve_intra_process_buffer_type;

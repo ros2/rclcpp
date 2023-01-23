@@ -15,7 +15,9 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_GRAPH_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_GRAPH_HPP_
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <mutex>

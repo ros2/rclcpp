@@ -130,7 +130,7 @@ public:
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph);
 
   RCLCPP_PUBLIC
-  virtual ~ClientBase();
+  virtual ~ClientBase() = default;
 
   /// Take the next response for this client as a type erased pointer.
   /**
@@ -312,7 +312,7 @@ public:
     // This two-step setting, prevents a gap where the old std::function has
     // been replaced but the middleware hasn't been told about the new one yet.
     set_on_new_response_callback(
-      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
       static_cast<const void *>(&new_callback));
 
     // Store the std::function to keep it in scope, also overwrites the existing one.
@@ -320,7 +320,8 @@ public:
 
     // Set it again, now using the permanent storage.
     set_on_new_response_callback(
-      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      rclcpp::detail::cpp_callback_trampoline<
+        decltype(on_new_response_callback_), const void *, size_t>,
       static_cast<const void *>(&on_new_response_callback_));
   }
 
@@ -769,7 +770,9 @@ public:
     auto old_size = pending_requests_.size();
     for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
       if (it->second.first < time_point) {
-        pruned_requests->push_back(it->first);
+        if (pruned_requests) {
+          pruned_requests->push_back(it->first);
+        }
         it = pending_requests_.erase(it);
       } else {
         ++it;
@@ -792,16 +795,14 @@ protected:
   async_send_request_impl(const Request & request, CallbackInfoVariant value)
   {
     int64_t sequence_number;
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &request, &sequence_number);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }
-    {
-      std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-      pending_requests_.try_emplace(
-        sequence_number,
-        std::make_pair(std::chrono::system_clock::now(), std::move(value)));
-    }
+    pending_requests_.try_emplace(
+      sequence_number,
+      std::make_pair(std::chrono::system_clock::now(), std::move(value)));
     return sequence_number;
   }
 

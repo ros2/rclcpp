@@ -100,15 +100,20 @@ if(TARGET test_create_subscription)
     "test_msgs"
   )
 endif()
-ament_add_gtest(test_add_callback_groups_to_executor
-  test_add_callback_groups_to_executor.cpp
-  TIMEOUT 120)
-if(TARGET test_add_callback_groups_to_executor)
-  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME})
-  ament_target_dependencies(test_add_callback_groups_to_executor
-    "test_msgs"
+function(test_add_callback_groups_to_executor_for_rmw_implementation)
+  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+  ament_add_gmock(test_add_callback_groups_to_executor${target_suffix} test_add_callback_groups_to_executor.cpp
+    ENV ${rmw_implementation_env_var}
+    TIMEOUT 120
   )
-endif()
+  if(TARGET test_add_callback_groups_to_executor${target_suffix})
+    target_link_libraries(test_add_callback_groups_to_executor${target_suffix} ${PROJECT_NAME})
+    ament_target_dependencies(test_add_callback_groups_to_executor${target_suffix}
+      "test_msgs"
+    )
+  endif()
+endfunction()
+call_for_each_rmw_implementation(test_add_callback_groups_to_executor_for_rmw_implementation)
 ament_add_gtest(test_expand_topic_or_service_name test_expand_topic_or_service_name.cpp)
 if(TARGET test_expand_topic_or_service_name)
   ament_target_dependencies(test_expand_topic_or_service_name
@@ -229,6 +234,11 @@ if(TARGET test_node_interfaces__node_graph)
     "test_msgs")
   target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_node_interfaces__node_interfaces
+  node_interfaces/test_node_interfaces.cpp)
+if(TARGET test_node_interfaces__node_interfaces)
+  target_link_libraries(test_node_interfaces__node_interfaces ${PROJECT_NAME} mimick)
+endif()
 ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
 if(TARGET test_node_interfaces__node_parameters)
@@ -256,6 +266,11 @@ ament_add_gtest(test_node_interfaces__node_waitables
   node_interfaces/test_node_waitables.cpp)
 if(TARGET test_node_interfaces__node_waitables)
   target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME} mimick)
+endif()
+ament_add_gtest(test_node_interfaces__test_template_utils  # Compile time test
+  node_interfaces/detail/test_template_utils.cpp)
+if(TARGET test_node_interfaces__test_template_utils)
+  target_link_libraries(test_node_interfaces__test_template_utils ${PROJECT_NAME})
 endif()
 
 # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
@@ -299,7 +314,7 @@ if(TARGET test_init_options)
   ament_target_dependencies(test_init_options "rcl")
   target_link_libraries(test_init_options ${PROJECT_NAME} mimick)
 endif()
-ament_add_gtest(test_parameter_client test_parameter_client.cpp)
+ament_add_gmock(test_parameter_client test_parameter_client.cpp)
 if(TARGET test_parameter_client)
   ament_target_dependencies(test_parameter_client
     "rcl_interfaces"

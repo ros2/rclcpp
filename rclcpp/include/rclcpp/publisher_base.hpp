@@ -78,10 +78,17 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rosidl_message_type_support_t & type_support,
-    const rcl_publisher_options_t & publisher_options);
+    const rcl_publisher_options_t & publisher_options,
+    const PublisherEventCallbacks & event_callbacks,
+    bool use_default_callbacks);
 
   RCLCPP_PUBLIC
   virtual ~PublisherBase();
+
+  /// Add event handlers for passed in event_callbacks.
+  RCLCPP_PUBLIC
+  void
+  bind_event_callbacks(const PublisherEventCallbacks & event_callbacks, bool use_default_callbacks);
 
   /// Get the topic that this publisher publishes on.
   /** \return The topic name. */
@@ -348,6 +355,8 @@ protected:
   rmw_gid_t rmw_gid_;
 
   const rosidl_message_type_support_t type_support_;
+
+  const PublisherEventCallbacks event_callbacks_;
 };
 
 }  // namespace rclcpp

@@ -3,6 +3,23 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+18.0.0 (2022-12-29)
+-------------------
+* Explicitly set callback type (`#2059 <https://github.com/ros2/rclcpp/issues/2059>`_)
+* Update maintainers (`#2043 <https://github.com/ros2/rclcpp/issues/2043>`_)
+* Contributors: Audrow Nash, mauropasse
+
+17.1.0 (2022-11-02)
+-------------------
+* Do not clear entities callbacks on destruction (`#2002 <https://github.com/ros2/rclcpp/issues/2002>`_)
+* Contributors: mauropasse
+
+17.0.0 (2022-09-13)
+-------------------
+* Revert "Introduce executors new spin_for method, replace spin_until_future_complete with spin_until_complete. (`#1821 <https://github.com/ros2/rclcpp/issues/1821>`_) (`#1874 <https://github.com/ros2/rclcpp/issues/1874>`_)" (`#1956 <https://github.com/ros2/rclcpp/issues/1956>`_)
+* Introduce executors new spin_for method, replace spin_until_future_complete with spin_until_complete. (`#1821 <https://github.com/ros2/rclcpp/issues/1821>`_) (`#1874 <https://github.com/ros2/rclcpp/issues/1874>`_)
+* Contributors: Hubert Liberacki, William Woodall
+
 16.2.0 (2022-05-03)
 -------------------
 

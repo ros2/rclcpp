@@ -15,28 +15,35 @@
 #ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_
 #define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_
 
+#include <algorithm>
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "rclcpp/contexts/default_context.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/create_client.hpp"
 #include "rclcpp/create_generic_publisher.hpp"
 #include "rclcpp/create_generic_subscription.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
-#include "rclcpp/event.hpp"
-#include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 
-#include "lifecycle_publisher.hpp"
-#include "rclcpp_lifecycle/visibility_control.h"
+#include "rmw/types.h"
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/visibility_control.h"
 
 namespace rclcpp_lifecycle
 {
@@ -89,11 +96,28 @@ LifecycleNode::create_wall_timer(
   CallbackT callback,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
-    std::move(callback), this->node_base_->get_context());
-  node_timers_->add_timer(timer, group);
-  return timer;
+  return rclcpp::create_wall_timer(
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get());
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+LifecycleNode::create_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_timer(
+    this->get_clock(),
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get());
 }
 
 template<typename ServiceT>
@@ -103,21 +127,21 @@ LifecycleNode::create_client(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  rcl_client_options_t options = rcl_client_get_default_options();
-  options.qos = qos_profile;
+  return rclcpp::create_client<ServiceT>(
+    node_base_, node_graph_, node_services_,
+    service_name, qos_profile, group);
+}
 
-  using rclcpp::Client;
-  using rclcpp::ClientBase;
-
-  auto cli = Client<ServiceT>::make_shared(
-    node_base_.get(),
-    node_graph_,
-    service_name,
-    options);
-
-  auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
-  node_services_->add_client(cli_base_ptr, group);
-  return cli;
+template<typename ServiceT>
+typename rclcpp::Client<ServiceT>::SharedPtr
+LifecycleNode::create_client(
+  const std::string & service_name,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_client<ServiceT>(
+    node_base_, node_graph_, node_services_,
+    service_name, qos, group);
 }
 
 template<typename ServiceT, typename CallbackT>
@@ -131,6 +155,19 @@ LifecycleNode::create_service(
   return rclcpp::create_service<ServiceT, CallbackT>(
     node_base_, node_services_,
     service_name, std::forward<CallbackT>(callback), qos_profile, group);
+}
+
+template<typename ServiceT, typename CallbackT>
+typename rclcpp::Service<ServiceT>::SharedPtr
+LifecycleNode::create_service(
+  const std::string & service_name,
+  CallbackT && callback,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_service<ServiceT, CallbackT>(
+    node_base_, node_services_,
+    service_name, std::forward<CallbackT>(callback), qos, group);
 }
 
 template<typename AllocatorT>

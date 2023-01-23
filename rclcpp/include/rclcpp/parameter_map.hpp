@@ -35,11 +35,13 @@ using ParameterMap = std::unordered_map<std::string, std::vector<Parameter>>;
 
 /// Convert parameters from rcl_yaml_param_parser into C++ class instances.
 /// \param[in] c_params C structures containing parameters for multiple nodes.
+/// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
+///   If it's not nullptr, return the relative node parameters belonging to this node_fqn.
 /// \returns a map where the keys are fully qualified node names and values a list of parameters.
 /// \throws InvalidParametersException if the `rcl_params_t` is inconsistent or invalid.
 RCLCPP_PUBLIC
 ParameterMap
-parameter_map_from(const rcl_params_t * const c_params);
+parameter_map_from(const rcl_params_t * const c_params, const char * node_fqn = nullptr);
 
 /// Convert parameter value from rcl_yaml_param_parser into a C++ class instance.
 /// \param[in] c_value C structure containing a value of a parameter.
@@ -51,11 +53,20 @@ parameter_value_from(const rcl_variant_t * const c_value);
 
 /// Get the ParameterMap from a yaml file.
 /// \param[in] yaml_filename full name of the yaml file.
+/// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
 /// \returns an instance of a parameter map
 /// \throws from rcl error of rcl_parse_yaml_file()
 RCLCPP_PUBLIC
 ParameterMap
-parameter_map_from_yaml_file(const std::string & yaml_filename);
+parameter_map_from_yaml_file(const std::string & yaml_filename, const char * node_fqn = nullptr);
+
+/// Get the Parameters from ParameterMap.
+/// \param[in] parameter_map a parameter map.
+/// \param[in] node_fqn a Fully Qualified Name of node, default value is nullptr.
+/// \returns a list of a parameter
+RCLCPP_PUBLIC
+std::vector<Parameter>
+parameters_from_map(const ParameterMap & parameter_map, const char * node_fqn = nullptr);
 
 }  // namespace rclcpp
 

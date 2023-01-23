@@ -23,85 +23,29 @@
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node_interfaces/get_node_base_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 
 namespace rclcpp
 {
-/// Create a timer with a given clock
-/// \internal
-template<typename CallbackT>
-typename rclcpp::TimerBase::SharedPtr
-create_timer(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeTimersInterface> node_timers,
-  rclcpp::Clock::SharedPtr clock,
-  rclcpp::Duration period,
-  CallbackT && callback,
-  rclcpp::CallbackGroup::SharedPtr group = nullptr)
+namespace detail
 {
-  auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
-    clock,
-    period.to_chrono<std::chrono::nanoseconds>(),
-    std::forward<CallbackT>(callback),
-    node_base->get_context());
-
-  node_timers->add_timer(timer, group);
-  return timer;
-}
-
-/// Create a timer with a given clock
-template<typename NodeT, typename CallbackT>
-typename rclcpp::TimerBase::SharedPtr
-create_timer(
-  NodeT node,
-  rclcpp::Clock::SharedPtr clock,
-  rclcpp::Duration period,
-  CallbackT && callback,
-  rclcpp::CallbackGroup::SharedPtr group = nullptr)
-{
-  return create_timer(
-    rclcpp::node_interfaces::get_node_base_interface(node),
-    rclcpp::node_interfaces::get_node_timers_interface(node),
-    clock,
-    period,
-    std::forward<CallbackT>(callback),
-    group);
-}
-
-/// Convenience method to create a timer with node resources.
+/// Perform a safe cast to a timer period in nanoseconds
 /**
  *
  * \tparam DurationRepT
  * \tparam DurationT
- * \tparam CallbackT
  * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
- * \param callback callback to execute via the timer period
- * \param group
- * \param node_base
- * \param node_timers
- * \return
- * \throws std::invalid argument if either node_base or node_timers
- * are null, or period is negative or too large
+ * \return period, expressed as chrono::duration::nanoseconds
+ * \throws std::invalid_argument if period is negative or too large
  */
-template<typename DurationRepT, typename DurationT, typename CallbackT>
-typename rclcpp::WallTimer<CallbackT>::SharedPtr
-create_wall_timer(
-  std::chrono::duration<DurationRepT, DurationT> period,
-  CallbackT callback,
-  rclcpp::CallbackGroup::SharedPtr group,
-  node_interfaces::NodeBaseInterface * node_base,
-  node_interfaces::NodeTimersInterface * node_timers)
+template<typename DurationRepT, typename DurationT>
+std::chrono::nanoseconds
+safe_cast_to_period_in_ns(std::chrono::duration<DurationRepT, DurationT> period)
 {
-  if (node_base == nullptr) {
-    throw std::invalid_argument{"input node_base cannot be null"};
-  }
-
-  if (node_timers == nullptr) {
-    throw std::invalid_argument{"input node_timers cannot be null"};
-  }
-
   if (period < std::chrono::duration<DurationRepT, DurationT>::zero()) {
     throw std::invalid_argument{"timer period cannot be negative"};
   }
@@ -132,12 +76,135 @@ create_wall_timer(
             "Casting timer period to nanoseconds resulted in integer overflow."};
   }
 
+  return period_ns;
+}
+}  // namespace detail
+
+/// Create a timer with a given clock
+/// \internal
+template<typename CallbackT>
+typename rclcpp::TimerBase::SharedPtr
+create_timer(
+  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
+  std::shared_ptr<node_interfaces::NodeTimersInterface> node_timers,
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Duration period,
+  CallbackT && callback,
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_timer(
+    clock,
+    period.to_chrono<std::chrono::nanoseconds>(),
+    std::forward<CallbackT>(callback),
+    group,
+    node_base.get(),
+    node_timers.get());
+}
+
+/// Create a timer with a given clock
+template<typename NodeT, typename CallbackT>
+typename rclcpp::TimerBase::SharedPtr
+create_timer(
+  NodeT node,
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Duration period,
+  CallbackT && callback,
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_timer(
+    clock,
+    period.to_chrono<std::chrono::nanoseconds>(),
+    std::forward<CallbackT>(callback),
+    group,
+    rclcpp::node_interfaces::get_node_base_interface(node).get(),
+    rclcpp::node_interfaces::get_node_timers_interface(node).get());
+}
+
+/// Convenience method to create a general timer with node resources.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param clock clock to be used
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \return shared pointer to a generic timer
+ * \throws std::invalid_argument if either clock, node_base or node_timers
+ * are nullptr, or period is negative or too large
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+create_timer(
+  rclcpp::Clock::SharedPtr clock,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers)
+{
+  if (clock == nullptr) {
+    throw std::invalid_argument{"clock cannot be null"};
+  }
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+
+  // Add a new generic timer.
+  auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
+    std::move(clock), period_ns, std::move(callback), node_base->get_context());
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
+/// Convenience method to create a wall timer with node resources.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \return shared pointer to a wall timer
+ * \throws std::invalid_argument if either node_base or node_timers
+ * are null, or period is negative or too large
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::WallTimer<CallbackT>::SharedPtr
+create_wall_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers)
+{
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+
+  // Add a new wall timer.
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     period_ns, std::move(callback), node_base->get_context());
   node_timers->add_timer(timer, group);
   return timer;
 }
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CREATE_TIMER_HPP_

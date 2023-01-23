@@ -120,6 +120,38 @@ Node::create_wall_timer(
     this->node_timers_.get());
 }
 
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+Node::create_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_timer(
+    this->get_clock(),
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get());
+}
+
+template<typename ServiceT>
+typename Client<ServiceT>::SharedPtr
+Node::create_client(
+  const std::string & service_name,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_client<ServiceT>(
+    node_base_,
+    node_graph_,
+    node_services_,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    qos,
+    group);
+}
+
 template<typename ServiceT>
 typename Client<ServiceT>::SharedPtr
 Node::create_client(
@@ -133,6 +165,23 @@ Node::create_client(
     node_services_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     qos_profile,
+    group);
+}
+
+template<typename ServiceT, typename CallbackT>
+typename rclcpp::Service<ServiceT>::SharedPtr
+Node::create_service(
+  const std::string & service_name,
+  CallbackT && callback,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_service<ServiceT, CallbackT>(
+    node_base_,
+    node_services_,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    std::forward<CallbackT>(callback),
+    qos,
     group);
 }
 

@@ -20,10 +20,40 @@
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rmw/rmw.h"
 
 namespace rclcpp
 {
+/// Create a service client with a given type.
+/**
+ * \param[in] node_base NodeBaseInterface implementation of the node on which
+ *  to create the client.
+ * \param[in] node_graph NodeGraphInterface implementation of the node on which
+ *  to create the client.
+ * \param[in] node_services NodeServicesInterface implementation of the node on
+ *  which to create the client.
+ * \param[in] service_name The name on which the service is accessible.
+ * \param[in] qos Quality of service profile for client.
+ * \param[in] group Callback group to handle the reply to service calls.
+ * \return Shared pointer to the created client.
+ */
+template<typename ServiceT>
+typename rclcpp::Client<ServiceT>::SharedPtr
+create_client(
+  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
+  std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
+  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+  const std::string & service_name,
+  const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_client<ServiceT>(
+    node_base, node_graph, node_services,
+    service_name,
+    qos.get_rmw_qos_profile(),
+    group);
+}
 
 /// Create a service client with a given type.
 /// \internal

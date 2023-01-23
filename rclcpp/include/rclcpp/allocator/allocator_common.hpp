@@ -15,6 +15,7 @@
 #ifndef RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
 #define RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
 
+#include <cstring>
 #include <memory>
 
 #include "rcl/allocator.h"
@@ -37,6 +38,22 @@ void * retyped_allocate(size_t size, void * untyped_allocator)
     throw std::runtime_error("Received incorrect allocator type");
   }
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
+}
+
+template<typename Alloc>
+void * retyped_zero_allocate(size_t number_of_elem, size_t size_of_elem, void * untyped_allocator)
+{
+  auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
+  if (!typed_allocator) {
+    throw std::runtime_error("Received incorrect allocator type");
+  }
+  size_t size = number_of_elem * size_of_elem;
+  void * allocated_memory =
+    std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
+  if (allocated_memory) {
+    std::memset(allocated_memory, 0, size);
+  }
+  return allocated_memory;
 }
 
 template<typename T, typename Alloc>
@@ -73,6 +90,7 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
 #ifndef _WIN32
   rcl_allocator.allocate = &retyped_allocate<Alloc>;
+  rcl_allocator.zero_allocate = &retyped_zero_allocate<Alloc>;
   rcl_allocator.deallocate = &retyped_deallocate<T, Alloc>;
   rcl_allocator.reallocate = &retyped_reallocate<T, Alloc>;
   rcl_allocator.state = &allocator;
