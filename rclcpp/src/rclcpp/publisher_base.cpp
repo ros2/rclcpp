@@ -160,7 +160,9 @@ PublisherBase::bind_event_callbacks(
       this->add_event_handler(incompatible_qos_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
     }
   } catch (const UnsupportedEventTypeException & /*exc*/) {
-    // pass
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible qos; wrong callback type");
   }
 
   IncompatibleTypeCallbackType incompatible_type_cb;
@@ -177,7 +179,9 @@ PublisherBase::bind_event_callbacks(
       this->add_event_handler(incompatible_type_cb, RCL_PUBLISHER_INCOMPATIBLE_TYPE);
     }
   } catch (UnsupportedEventTypeException & /*exc*/) {
-    // pass
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible type; wrong callback type");
   }
 }
 
