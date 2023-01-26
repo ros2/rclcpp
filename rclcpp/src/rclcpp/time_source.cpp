@@ -37,7 +37,8 @@ class ClocksState final
 {
 public:
   ClocksState()
-  : logger_(rclcpp::get_logger("rclcpp"))
+  : logger_(rclcpp::get_logger("rclcpp")),
+    last_time_msg_(std::make_shared<builtin_interfaces::msg::Time>())
   {
   }
 
@@ -53,13 +54,8 @@ public:
     ros_time_active_ = true;
 
     // Update all attached clocks to zero or last recorded time
-    std::lock_guard<std::mutex> guard(clock_list_lock_);
-    auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
-    if (last_msg_set_) {
-      time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
-    }
     for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-      set_clock(time_msg, true, *it);
+      set_clock(last_time_msg_, true, *it);
     }
   }
 
@@ -101,11 +97,7 @@ public:
     std::lock_guard<std::mutex> guard(clock_list_lock_);
     associated_clocks_.push_back(clock);
     // Set the clock to zero unless there's a recently received message
-    auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
-    if (last_msg_set_) {
-      time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
-    }
-    set_clock(time_msg, ros_time_active_, clock);
+    set_clock(last_time_msg_, ros_time_active_, clock);
   }
 
   // Detach a clock
@@ -171,7 +163,7 @@ public:
   // Cache the last clock message received
   void cache_last_msg(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
   {
-    last_msg_set_ = msg;
+    last_time_msg_ = std::make_shared<builtin_interfaces::msg::Time>(msg->clock);
   }
 
   bool are_all_clocks_rcl_ros_time()
@@ -199,7 +191,7 @@ private:
   // This is needed when new clocks are added.
   bool ros_time_active_{false};
   // Last set message to be passed to newly registered clocks
-  std::shared_ptr<const rosgraph_msgs::msg::Clock> last_msg_set_;
+  std::shared_ptr<builtin_interfaces::msg::Time> last_time_msg_{nullptr};
 };
 
 class TimeSource::NodeState final
