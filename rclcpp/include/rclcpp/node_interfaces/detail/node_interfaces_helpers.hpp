@@ -44,6 +44,10 @@ struct NodeInterfacesStorage
   : interfaces_(init_tuple<decltype(node), InterfaceTs ...>(node))
   {}
 
+  NodeInterfacesStorage()  // NOLINT(runtime/explicit)
+  : interfaces_()
+  {}
+
   explicit NodeInterfacesStorage(std::shared_ptr<InterfaceTs>... args)
   : interfaces_(args ...)
   {}

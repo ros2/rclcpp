@@ -33,6 +33,15 @@ protected:
   }
 };
 
+TEST_F(TestNodeInterfaces, default_constructor) {
+  auto node = std::make_shared<rclcpp::Node>("my_node");
+  using rclcpp::node_interfaces::NodeInterfaces;
+  using rclcpp::node_interfaces::NodeBaseInterface;
+  using rclcpp::node_interfaces::NodeGraphInterface;
+  NodeInterfaces<NodeBaseInterface, NodeGraphInterface> interfaces;
+  interfaces = NodeInterfaces<NodeBaseInterface, NodeGraphInterface>(*node);
+}
+
 /*
    Testing NodeInterfaces construction from nodes.
  */
