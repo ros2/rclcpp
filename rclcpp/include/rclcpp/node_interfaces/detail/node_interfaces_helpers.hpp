@@ -44,7 +44,7 @@ struct NodeInterfacesStorage
   : interfaces_(init_tuple<decltype(node), InterfaceTs ...>(node))
   {}
 
-  NodeInterfacesStorage()  // NOLINT(runtime/explicit)
+  NodeInterfacesStorage()
   : interfaces_()
   {}
 
