@@ -147,6 +147,11 @@ public:
   : NodeInterfacesSupportsT(node)
   {}
 
+  // Create a NodeInterfaces object with no bound interfaces
+  NodeInterfaces()
+  : NodeInterfacesSupportsT()
+  {}
+
   explicit NodeInterfaces(std::shared_ptr<InterfaceTs>... args)
   : NodeInterfacesSupportsT(args ...)
   {}
