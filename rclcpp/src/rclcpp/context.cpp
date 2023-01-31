@@ -15,7 +15,6 @@
 #include "rclcpp/context.hpp"
 
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -31,6 +30,8 @@
 
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
+
+#include "rcpputils/mutex.hpp"
 
 #include "./logging_mutex.hpp"
 
@@ -91,7 +92,7 @@ public:
 
 private:
   std::vector<std::weak_ptr<rclcpp::Context>> weak_contexts_;
-  std::mutex mutex_;
+  rcpputils::PIMutex mutex_;
 };
 }  // namespace rclcpp
 

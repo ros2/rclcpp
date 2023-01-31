@@ -17,9 +17,10 @@
 
 #include <condition_variable>
 #include <functional>
-#include <mutex>
 
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -229,7 +230,7 @@ protected:
   bool reader_active_ = false;
   std::size_t number_of_writers_waiting_ = 0;
   bool writer_active_ = false;
-  std::mutex mutex_;
+  rcpputils::PIMutex mutex_;
   std::condition_variable condition_variable_;
   ReadMutex read_mutex_;
   WriteMutex write_mutex_;

@@ -17,7 +17,6 @@
 
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -30,6 +29,7 @@
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rcpputils/mutex.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
@@ -564,7 +564,7 @@ private:
   /// A map of goal id to goal handle weak pointers.
   /// This is used to provide a goal handle to handle_cancel.
   std::unordered_map<GoalUUID, GoalHandleWeakPtr> goal_handles_;
-  std::mutex goal_handles_mutex_;
+  rcpputils::PIMutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__SERVER_HPP_

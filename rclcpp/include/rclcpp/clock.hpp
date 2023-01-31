@@ -17,7 +17,6 @@
 
 #include <functional>
 #include <memory>
-#include <mutex>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/macros.hpp"
@@ -27,6 +26,7 @@
 #include "rcl/time.h"
 #include "rcutils/time.h"
 #include "rcutils/types/rcutils_ret.h"
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -204,7 +204,7 @@ public:
 
   /// Get the clock's mutex
   RCLCPP_PUBLIC
-  std::mutex &
+  rcpputils::PIMutex &
   get_clock_mutex() noexcept;
 
   // Add a callback to invoke if the jump threshold is exceeded.

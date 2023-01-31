@@ -20,7 +20,6 @@
 #include <condition_variable>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -33,6 +32,9 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
+
 #include "rmw/topic_endpoint_info_array.h"
 
 namespace rclcpp
@@ -163,7 +165,7 @@ private:
   std::atomic_bool should_add_to_graph_listener_;
 
   /// Mutex to guard the graph event related data structures.
-  mutable std::mutex graph_mutex_;
+  mutable rcpputils::PIMutex graph_mutex_;
   /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
   std::condition_variable graph_cv_;
   /// Weak references to graph events out on loan.

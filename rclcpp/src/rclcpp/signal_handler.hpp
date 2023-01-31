@@ -17,11 +17,12 @@
 
 #include <atomic>
 #include <csignal>
-#include <mutex>
 #include <thread>
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 // includes for semaphore notification code
 #if defined(_WIN32)
@@ -193,7 +194,7 @@ private:
   std::thread signal_handler_thread_;
 
   // A mutex used to synchronize the install() and uninstall() methods.
-  std::mutex install_mutex_;
+  rcpputils::PIMutex install_mutex_;
   // Whether or not the signal handler has been installed.
   std::atomic_bool installed_ = false;
 

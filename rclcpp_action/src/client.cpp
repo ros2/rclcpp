@@ -22,11 +22,14 @@
 
 #include "rcl_action/action_client.h"
 #include "rcl_action/wait.h"
+
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 
 #include "rclcpp_action/client.hpp"
 #include "rclcpp_action/exceptions.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp_action
 {
@@ -110,13 +113,13 @@ public:
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
 
   std::map<int64_t, ResponseCallback> pending_goal_responses;
-  std::mutex goal_requests_mutex;
+  rcpputils::PIMutex goal_requests_mutex;
 
   std::map<int64_t, ResponseCallback> pending_result_responses;
-  std::mutex result_requests_mutex;
+  rcpputils::PIMutex result_requests_mutex;
 
   std::map<int64_t, ResponseCallback> pending_cancel_responses;
-  std::mutex cancel_requests_mutex;
+  rcpputils::PIMutex cancel_requests_mutex;
 
   std::independent_bits_engine<
     std::default_random_engine, 8, unsigned int> random_bytes_generator;

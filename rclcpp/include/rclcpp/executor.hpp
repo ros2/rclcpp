@@ -23,13 +23,13 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 #include "rcpputils/scope_exit.hpp"
+#include "rcpputils/mutex.hpp"
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
@@ -545,7 +545,7 @@ protected:
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 
   // Mutex to protect the subsequent memory_strategy_.
-  mutable std::mutex mutex_;
+  mutable rcpputils::PIMutex mutex_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr

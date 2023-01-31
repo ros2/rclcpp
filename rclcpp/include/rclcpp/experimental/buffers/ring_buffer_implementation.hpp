@@ -15,7 +15,6 @@
 #ifndef RCLCPP__EXPERIMENTAL__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
 #define RCLCPP__EXPERIMENTAL__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
 
-#include <mutex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -25,6 +24,8 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -181,7 +182,7 @@ private:
   size_t read_index_;
   size_t size_;
 
-  mutable std::mutex mutex_;
+  mutable rcpputils::PIMutex mutex_;
 };
 
 }  // namespace buffers

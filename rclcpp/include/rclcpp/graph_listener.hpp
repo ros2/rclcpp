@@ -17,7 +17,6 @@
 
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -28,6 +27,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -187,10 +187,10 @@ private:
   std::thread listener_thread_;
   bool is_started_;
   std::atomic_bool is_shutdown_;
-  mutable std::mutex shutdown_mutex_;
+  mutable rcpputils::PIMutex shutdown_mutex_;
 
-  mutable std::mutex node_graph_interfaces_barrier_mutex_;
-  mutable std::mutex node_graph_interfaces_mutex_;
+  mutable rcpputils::PIMutex node_graph_interfaces_barrier_mutex_;
+  mutable rcpputils::PIMutex node_graph_interfaces_mutex_;
   std::vector<rclcpp::node_interfaces::NodeGraphInterface *> node_graph_interfaces_;
 
   rclcpp::GuardCondition interrupt_guard_condition_;

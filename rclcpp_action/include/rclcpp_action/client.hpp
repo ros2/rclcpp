@@ -21,7 +21,6 @@
 #include <future>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -45,6 +44,7 @@
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp_action
 {
@@ -755,7 +755,7 @@ private:
   }
 
   std::map<GoalUUID, typename GoalHandle::WeakPtr> goal_handles_;
-  std::mutex goal_handles_mutex_;
+  rcpputils::PIMutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
 

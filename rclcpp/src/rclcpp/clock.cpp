@@ -49,7 +49,7 @@ public:
 
   rcl_clock_t rcl_clock_;
   rcl_allocator_t allocator_;
-  std::mutex clock_mutex_;
+  rcpputils::PIMutex clock_mutex_;
 };
 
 JumpHandler::JumpHandler(
@@ -113,7 +113,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
       chrono_entry + std::chrono::nanoseconds(delta_t.nanoseconds());
 
     // loop over spurious wakeups but notice shutdown
-    std::unique_lock lock(impl_->clock_mutex_);
+    std::unique_lock<std::mutex> lock(impl_->clock_mutex_);
     while (now() < until && context->is_valid()) {
       cv.wait_until(lock, chrono_until);
     }
@@ -124,7 +124,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
         std::chrono::nanoseconds(until.nanoseconds())));
 
     // loop over spurious wakeups but notice shutdown
-    std::unique_lock lock(impl_->clock_mutex_);
+    std::unique_lock<std::mutex> lock(impl_->clock_mutex_);
     while (now() < until && context->is_valid()) {
       cv.wait_until(lock, system_time);
     }
@@ -154,7 +154,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
           std::chrono::nanoseconds(until.nanoseconds())));
 
       // loop over spurious wakeups but notice shutdown or time source change
-      std::unique_lock lock(impl_->clock_mutex_);
+      std::unique_lock<std::mutex> lock(impl_->clock_mutex_);
       while (now() < until && context->is_valid() && !time_source_changed) {
         cv.wait_until(lock, system_time);
       }
@@ -162,7 +162,7 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
       // RCL_ROS_TIME with ros_time_is_active.
       // Just wait without "until" because installed
       // jump callbacks wake the cv on every new sample.
-      std::unique_lock lock(impl_->clock_mutex_);
+      std::unique_lock<std::mutex> lock(impl_->clock_mutex_);
       while (now() < until && context->is_valid() && !time_source_changed) {
         cv.wait(lock);
       }
@@ -276,7 +276,7 @@ Clock::get_clock_type() const noexcept
   return impl_->rcl_clock_.type;
 }
 
-std::mutex &
+rcpputils::PIMutex &
 Clock::get_clock_mutex() noexcept
 {
   return impl_->clock_mutex_;

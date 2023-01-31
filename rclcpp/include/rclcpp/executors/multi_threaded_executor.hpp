@@ -17,7 +17,6 @@
 
 #include <chrono>
 #include <memory>
-#include <mutex>
 #include <set>
 #include <thread>
 #include <unordered_map>
@@ -26,6 +25,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/mutex.hpp"
 
 namespace rclcpp
 {
@@ -81,7 +82,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
-  std::mutex wait_mutex_;
+  rcpputils::PIMutex wait_mutex_;
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
