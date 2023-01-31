@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+19.0.0 (2023-01-30)
+-------------------
+* Add default constructor to NodeInterfaces (`#2094 <https://github.com/ros2/rclcpp/issues/2094>`_)
+* Fix clock state cached time to be a copy, not a reference. (`#2092 <https://github.com/ros2/rclcpp/issues/2092>`_)
+* Fix -Wmaybe-uninitialized warning (`#2081 <https://github.com/ros2/rclcpp/issues/2081>`_)
+* Fix the keep_last warning when using system defaults. (`#2082 <https://github.com/ros2/rclcpp/issues/2082>`_)
+* Add in a fix for older compilers. (`#2075 <https://github.com/ros2/rclcpp/issues/2075>`_)
+* Contributors: Alexander Hans, Chris Lalancette, Shane Loretz
+
 18.0.0 (2022-12-29)
 -------------------
 * Implement Unified Node Interface (NodeInterfaces class) (`#2041 <https://github.com/ros2/rclcpp/issues/2041>`_)

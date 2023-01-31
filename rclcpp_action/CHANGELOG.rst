@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+19.0.0 (2023-01-30)
+-------------------
+
 18.0.0 (2022-12-29)
 -------------------
 * Explicitly set callback type (`#2059 <https://github.com/ros2/rclcpp/issues/2059>`_)
