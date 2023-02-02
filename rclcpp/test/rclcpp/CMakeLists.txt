@@ -582,6 +582,9 @@ target_link_libraries(test_logger ${PROJECT_NAME})
 ament_add_gmock(test_logging test_logging.cpp)
 target_link_libraries(test_logging ${PROJECT_NAME})
 
+ament_add_gmock(test_context test_context.cpp)
+target_link_libraries(test_context ${PROJECT_NAME})
+
 ament_add_gtest(test_time test_time.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_time)
