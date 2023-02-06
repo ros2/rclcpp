@@ -30,7 +30,7 @@
 
 using namespace std::chrono_literals;
 
-class TestServiceIntrospection : public ::testing::Test
+class TestService : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -87,7 +87,7 @@ protected:
 /*
    Testing service construction and destruction.
  */
-TEST_F(TestServiceIntrospection, construction_and_destruction) {
+TEST_F(TestService, construction_and_destruction) {
   using rcl_interfaces::srv::ListParameters;
   auto callback =
     [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
@@ -128,7 +128,7 @@ TEST_F(TestServiceSub, construction_and_destruction) {
   }
 }
 
-TEST_F(TestServiceIntrospection, construction_and_destruction_rcl_errors) {
+TEST_F(TestService, construction_and_destruction_rcl_errors) {
   auto callback =
     [](const test_msgs::srv::Empty::Request::SharedPtr,
       test_msgs::srv::Empty::Response::SharedPtr) {};
@@ -148,7 +148,7 @@ TEST_F(TestServiceIntrospection, construction_and_destruction_rcl_errors) {
 }
 
 /* Testing basic getters */
-TEST_F(TestServiceIntrospection, basic_public_getters) {
+TEST_F(TestService, basic_public_getters) {
   using rcl_interfaces::srv::ListParameters;
   auto callback =
     [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
@@ -188,7 +188,7 @@ TEST_F(TestServiceIntrospection, basic_public_getters) {
   }
 }
 
-TEST_F(TestServiceIntrospection, take_request) {
+TEST_F(TestService, take_request) {
   auto callback =
     [](const test_msgs::srv::Empty::Request::SharedPtr,
       test_msgs::srv::Empty::Response::SharedPtr) {};
@@ -216,7 +216,7 @@ TEST_F(TestServiceIntrospection, take_request) {
   }
 }
 
-TEST_F(TestServiceIntrospection, send_response) {
+TEST_F(TestService, send_response) {
   auto callback =
     [](const test_msgs::srv::Empty::Request::SharedPtr,
       test_msgs::srv::Empty::Response::SharedPtr) {};
@@ -242,7 +242,7 @@ TEST_F(TestServiceIntrospection, send_response) {
 /*
    Testing on_new_request callbacks.
  */
-TEST_F(TestServiceIntrospection, on_new_request_callback) {
+TEST_F(TestService, on_new_request_callback) {
   auto server_callback =
     [](const test_msgs::srv::Empty::Request::SharedPtr,
       test_msgs::srv::Empty::Response::SharedPtr) {FAIL();};
@@ -312,7 +312,7 @@ TEST_F(TestServiceIntrospection, on_new_request_callback) {
   EXPECT_THROW(server->set_on_new_request_callback(invalid_cb), std::invalid_argument);
 }
 
-TEST_F(TestServiceIntrospection, rcl_service_response_publisher_get_actual_qos_error) {
+TEST_F(TestService, rcl_service_response_publisher_get_actual_qos_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_service_response_publisher_get_actual_qos, nullptr);
   auto callback =
@@ -324,7 +324,7 @@ TEST_F(TestServiceIntrospection, rcl_service_response_publisher_get_actual_qos_e
     std::runtime_error("failed to get service's response publisher qos settings: error not set"));
 }
 
-TEST_F(TestServiceIntrospection, rcl_service_request_subscription_get_actual_qos_error) {
+TEST_F(TestService, rcl_service_request_subscription_get_actual_qos_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_service_request_subscription_get_actual_qos, nullptr);
   auto callback =
@@ -337,7 +337,7 @@ TEST_F(TestServiceIntrospection, rcl_service_request_subscription_get_actual_qos
 }
 
 
-TEST_F(TestServiceIntrospection, server_qos) {
+TEST_F(TestService, server_qos) {
   rclcpp::ServicesQoS qos_profile;
   qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
   rclcpp::Duration duration(std::chrono::nanoseconds(1));
@@ -359,7 +359,7 @@ TEST_F(TestServiceIntrospection, server_qos) {
   EXPECT_EQ(qos_profile, rs_qos);
 }
 
-TEST_F(TestServiceIntrospection, server_qos_depth) {
+TEST_F(TestService, server_qos_depth) {
   using namespace std::literals::chrono_literals;
 
   uint64_t server_cb_count_ = 0;

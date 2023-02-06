@@ -53,7 +53,6 @@
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
-#include "rclcpp/node_interfaces/node_service_introspection_interface.hpp"
 #include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
@@ -284,22 +283,6 @@ public:
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /// Create and return a Client.
-  /**
-   * \param[in] service_name The name on which the service is accessible.
-   * \param[in] qos Quality of service profile for client.
-   * \param[in] service_event_publisher_qos QOS profile for the service event publisher.
-   * \param[in] group Callback group to handle the reply to service calls.
-   * \return Shared pointer to the created client.
-   */
-  template<typename ServiceT>
-  typename Client<ServiceT>::SharedPtr
-  create_client(
-    const std::string & service_name,
-    const rclcpp::QoS & qos,
-    const rclcpp::QoS & service_event_publisher_qos,
-    rclcpp::CallbackGroup::SharedPtr group);
-
   /// Create and return a Service.
   /**
    * \param[in] service_name The topic to service on.
@@ -333,25 +316,6 @@ public:
     CallbackT && callback,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-
-  /// Create and return a Service.
-  /**
-   * \param[in] service_name The topic to service on.
-   * \param[in] callback User-defined callback function.
-   * \param[in] qos Quality of service profile for the service.
-   * \param[in] service_event_publisher_qos QOS profile for the service event publisher.
-   * \param[in] group Callback group to call the service.
-   * \return Shared pointer to the created service.
-   */
-  template<typename ServiceT, typename CallbackT>
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service(
-    const std::string & service_name,
-    CallbackT && callback,
-    const rclcpp::QoS & qos,
-    const rclcpp::QoS & service_event_publisher_qos,
-    rclcpp::CallbackGroup::SharedPtr group);
 
   /// Create and return a GenericPublisher.
   /**
@@ -1475,11 +1439,6 @@ public:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
   get_node_services_interface();
 
-  /// Return the Node's internal NodeServicesInterface implementation.
-  RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeServiceIntrospectionInterface::SharedPtr
-  get_node_service_introspection_interface();
-
   /// Return the Node's internal NodeWaitablesInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
@@ -1628,7 +1587,6 @@ private:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
-  rclcpp::node_interfaces::NodeServiceIntrospectionInterface::SharedPtr node_service_introspection_;
 
   const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;

@@ -19,7 +19,6 @@
 #include <string>
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/qos.hpp"
 #include "rmw/rmw.h"
@@ -45,15 +44,15 @@ create_client(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
   const std::string & service_name,
-  const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group,
-  bool enable_service_introspection)
+  const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_client<ServiceT>(
-    node_base, node_graph, node_services, node_clock, service_name,
-    qos.get_rmw_qos_profile(), group, enable_service_introspection);
+    node_base, node_graph, node_services,
+    service_name,
+    qos.get_rmw_qos_profile(),
+    group);
 }
 
 /// Create a service client with a given type.
@@ -64,39 +63,12 @@ create_client(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group,
-  bool enable_service_introspection)
-{
-  return create_client<ServiceT>(
-    node_base, node_graph, node_services, node_clock, service_name, qos_profile,
-    rcl_publisher_get_default_options().qos, group, enable_service_introspection);
-}
-
-/// Create a service client with a given type and qos profiles
-/// \internal
-template<typename ServiceT>
-typename rclcpp::Client<ServiceT>::SharedPtr
-create_client(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  std::shared_ptr<node_interfaces::NodeClockInterface> node_clock,
-  const std::string & service_name,
-  const rmw_qos_profile_t & qos_profile,
-  const rmw_qos_profile_t & service_event_publisher_qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group,
-  bool enable_service_introspection)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
-  if (enable_service_introspection) {
-    options.enable_service_introspection = enable_service_introspection;
-    options.clock = node_clock->get_clock()->get_clock_handle();
-    options.event_publisher_options.qos = service_event_publisher_qos_profile;
-  }
 
   auto cli = rclcpp::Client<ServiceT>::make_shared(
     node_base.get(),

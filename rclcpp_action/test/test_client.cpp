@@ -321,7 +321,6 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
     rclcpp_action::create_client<ActionType>(
       client_node->get_node_base_interface(),
       client_node->get_node_graph_interface(),
-      client_node->get_node_clock_interface(),
       client_node->get_node_logging_interface(),
       client_node->get_node_waitables_interface(),
       action_name,

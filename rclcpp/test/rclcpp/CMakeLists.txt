@@ -508,7 +508,6 @@ if(TARGET test_service)
   )
   target_link_libraries(test_service ${PROJECT_NAME} mimick)
 endif()
-# ament_add_gtest(test_service_introspection test_service_introspection.cpp)
 ament_add_gmock(test_service_introspection test_service_introspection.cpp)
 if(TARGET test_service)
   ament_target_dependencies(test_service_introspection

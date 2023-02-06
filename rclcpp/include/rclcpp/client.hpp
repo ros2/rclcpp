@@ -32,8 +32,10 @@
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
+#include "rcl/service_introspection.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/clock.hpp"
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -471,12 +473,12 @@ public:
   : ClientBase(node_base, node_graph)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
-    auto service_type_support_handle =
+    service_type_support_handle_ =
       get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),
-      service_type_support_handle,
+      service_type_support_handle_,
       service_name.c_str(),
       &client_options);
     if (ret != RCL_RET_OK) {
@@ -782,6 +784,33 @@ public:
     return old_size - pending_requests_.size();
   }
 
+  /// Configure client introspection.
+  /**
+   * \param[in] clock clock to use to generate introspection timestamps
+   * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
+   * \param[in] introspection_state the state to set introspection to
+   */
+  void
+  configure_introspection(
+    Clock::SharedPtr clock, const QoS & qos_service_event_pub,
+    rcl_service_introspection_state_t introspection_state)
+  {
+    rcl_publisher_options_t pub_opts = rcl_publisher_get_default_options();
+    pub_opts.qos = qos_service_event_pub.get_rmw_qos_profile();
+
+    rcl_ret_t ret = rcl_client_configure_service_introspection(
+      client_handle_.get(),
+      node_handle_.get(),
+      clock->get_clock_handle(),
+      service_type_support_handle_,
+      pub_opts,
+      introspection_state);
+
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure client introspection");
+    }
+  }
+
 protected:
   using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
   using CallbackWithRequestTypeValueVariant = std::tuple<
@@ -832,6 +861,9 @@ protected:
       CallbackInfoVariant>>
   pending_requests_;
   std::mutex pending_requests_mutex_;
+
+private:
+  const rosidl_service_type_support_t * service_type_support_handle_;
 };
 
 }  // namespace rclcpp

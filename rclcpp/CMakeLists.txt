@@ -78,7 +78,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_logging.cpp
   src/rclcpp/node_interfaces/node_parameters.cpp
   src/rclcpp/node_interfaces/node_services.cpp
-  src/rclcpp/node_interfaces/node_service_introspection.cpp
   src/rclcpp/node_interfaces/node_time_source.cpp
   src/rclcpp/node_interfaces/node_timers.cpp
   src/rclcpp/node_interfaces/node_topics.cpp

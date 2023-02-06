@@ -75,7 +75,6 @@ NodeOptions::operator=(const NodeOptions & other)
     this->enable_rosout_ = other.enable_rosout_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->enable_topic_statistics_ = other.enable_topic_statistics_;
-    this->enable_service_introspection_ = other.enable_service_introspection_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->start_parameter_event_publisher_ = other.start_parameter_event_publisher_;
     this->clock_type_ = other.clock_type_;
@@ -103,7 +102,6 @@ NodeOptions::get_rcl_node_options() const
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->enable_rosout = this->enable_rosout_;
     node_options_->rosout_qos = this->rosout_qos_.get_rmw_qos_profile();
-    node_options_->enable_service_introspection = this->enable_service_introspection_;
 
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
@@ -228,20 +226,6 @@ bool
 NodeOptions::enable_topic_statistics() const
 {
   return this->enable_topic_statistics_;
-}
-
-bool
-NodeOptions::enable_service_introspection() const
-{
-  return this->enable_service_introspection_;
-}
-
-NodeOptions &
-NodeOptions::enable_service_introspection(bool enable_service_introspection)
-{
-  this->node_options_.reset();  // reset node options to make it be recreated on next access.
-  this->enable_service_introspection_ = enable_service_introspection;
-  return *this;
 }
 
 NodeOptions &
