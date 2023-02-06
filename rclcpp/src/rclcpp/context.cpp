@@ -400,10 +400,10 @@ Context::add_shutdown_callback(
 
   if constexpr (shutdown_type == ShutdownType::pre_shutdown) {
     std::lock_guard<std::mutex> lock(pre_shutdown_callbacks_mutex_);
-    pre_shutdown_callbacks_.emplace(callback_shared_ptr);
+    pre_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   } else {
     std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
-    on_shutdown_callbacks_.emplace(callback_shared_ptr);
+    on_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   }
 
   ShutdownCallbackHandle callback_handle;
@@ -421,9 +421,19 @@ Context::remove_shutdown_callback(
     return false;
   }
 
-  const auto remove_callback = [this, &callback_shared_ptr](auto & mutex, auto & callback_set) {
+  const auto remove_callback = [&callback_shared_ptr](auto & mutex, auto & callback_vector) {
       const std::lock_guard<std::mutex> lock(mutex);
-      return callback_set.erase(callback_shared_ptr) == 1;
+      auto iter = callback_vector.begin();
+      for (; iter != callback_vector.end(); iter++) {
+        if ((*iter).get() == callback_shared_ptr.get()) {
+          break;
+        }
+      }
+      if (iter == callback_vector.end()) {
+        return false;
+      }
+      callback_vector.erase(iter);
+      return true;
     };
 
   static_assert(
