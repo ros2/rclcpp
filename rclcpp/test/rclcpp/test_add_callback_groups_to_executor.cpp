@@ -297,7 +297,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
   std::thread cb_grp_thread = std::thread(
     [&cb_grp, &node, &cb_grp_executor, &received_message_future, &return_code]() {
       cb_grp_executor.add_callback_group(cb_grp, node->get_node_base_interface());
-      return_code = cb_grp_executor.spin_until_future_complete(received_message_future, 10s);
+      return_code = cb_grp_executor.spin_until_complete(received_message_future, 10s);
     });
 
   // expect the subscriber to receive a message
@@ -333,7 +333,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
   timer = node->create_wall_timer(100ms, timer_callback);
   timer_executor.add_node(node);
   auto future = timer_promise.get_future();
-  timer_executor.spin_until_future_complete(future);
+  timer_executor.spin_until_complete(future);
   cb_grp_thread.join();
 
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);

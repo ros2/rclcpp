@@ -240,7 +240,7 @@ do_custom_allocator_test(
     EXPECT_NO_THROW(
     {
       publisher->publish(std::move(msg));
-      executor.spin_until_future_complete(received_message_future, std::chrono::seconds(10));
+      executor.spin_until_complete(received_message_future, std::chrono::seconds(10));
     });
     EXPECT_EQ(ptr, received_message_future.get().get());
     EXPECT_EQ(1u, counter);
@@ -249,7 +249,7 @@ do_custom_allocator_test(
     EXPECT_THROW(
     {
       publisher->publish(std::move(msg));
-      executor.spin_until_future_complete(received_message_future, std::chrono::seconds(10));
+      executor.spin_until_complete(received_message_future, std::chrono::seconds(10));
     }, ExpectedExceptionT);
   }
 }

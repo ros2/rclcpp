@@ -222,7 +222,7 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
 }
 
 // Check executor exits immediately if future is complete.
-TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
+TYPED_TEST(TestExecutors, testSpinUntilCompleteFuture) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
@@ -232,11 +232,30 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
   std::future<bool> future = promise.get_future();
   promise.set_value(true);
 
-  // spin_until_future_complete is expected to exit immediately, but would block up until its
+  // spin_until_complete is expected to exit immediately, but would block up until its
   // timeout if the future is not checked before spin_once_impl.
   auto start = std::chrono::steady_clock::now();
   auto shared_future = future.share();
-  auto ret = executor.spin_until_future_complete(shared_future, 1s);
+  auto ret = executor.spin_until_complete(shared_future, 1s);
+  executor.remove_node(this->node, true);
+  // Check it didn't reach timeout
+  EXPECT_GT(500ms, (std::chrono::steady_clock::now() - start));
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
+// Check executor exits immediately if future is complete.
+TYPED_TEST(TestExecutors, testSpinUntilCompleteCallable) {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  executor.add_node(this->node);
+
+  // test success of an immediately completed condition
+  auto condition = []() {return true;};
+
+  // spin_until_complete is expected to exit immediately, but would block up until its
+  // timeout if the future is not checked before spin_once_impl.
+  auto start = std::chrono::steady_clock::now();
+  auto ret = executor.spin_until_complete(condition, 1s);
   executor.remove_node(this->node, true);
   // Check it didn't reach timeout
   EXPECT_GT(500ms, (std::chrono::steady_clock::now() - start));
@@ -244,7 +263,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
 }
 
 // Same test, but uses a shared future.
-TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
+TYPED_TEST(TestExecutors, testSpinUntilCompleteSharedFuture) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
@@ -254,11 +273,11 @@ TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
   std::future<bool> future = promise.get_future();
   promise.set_value(true);
 
-  // spin_until_future_complete is expected to exit immediately, but would block up until its
+  // spin_until_complete is expected to exit immediately, but would block up until its
   // timeout if the future is not checked before spin_once_impl.
   auto shared_future = future.share();
   auto start = std::chrono::steady_clock::now();
-  auto ret = executor.spin_until_future_complete(shared_future, 1s);
+  auto ret = executor.spin_until_complete(shared_future, 1s);
   executor.remove_node(this->node, true);
 
   // Check it didn't reach timeout
@@ -267,7 +286,7 @@ TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
 }
 
 // For a longer running future that should require several iterations of spin_once
-TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
+TYPED_TEST(TestExecutors, testSpinUntilCompleteNoTimeout) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
@@ -286,7 +305,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
 
   // Timeout set to negative for no timeout.
   std::thread spinner([&]() {
-      auto ret = executor.spin_until_future_complete(future, -1s);
+      auto ret = executor.spin_until_complete(future, -1s);
       EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
       executor.remove_node(this->node, true);
       executor.cancel();
@@ -312,15 +331,15 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
   spinner.join();
 }
 
-// Check spin_until_future_complete timeout works as expected
-TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
+// Check spin_until_complete timeout works as expected
+TYPED_TEST(TestExecutors, testSpinUntilCompleteWithTimeout) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
 
   bool spin_exited = false;
 
-  // Needs to run longer than spin_until_future_complete's timeout.
+  // Needs to run longer than spin_until_complete's timeout.
   std::future<void> future = std::async(
     std::launch::async,
     [&spin_exited]() {
@@ -332,7 +351,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
 
   // Short timeout
   std::thread spinner([&]() {
-      auto ret = executor.spin_until_future_complete(future, 1ms);
+      auto ret = executor.spin_until_complete(future, 1ms);
       EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
       executor.remove_node(this->node, true);
       spin_exited = true;
@@ -482,8 +501,8 @@ TYPED_TEST(TestExecutors, spinSome) {
   spinner.join();
 }
 
-// Check spin_node_until_future_complete with node base pointer
-TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodeBasePtr) {
+// Check spin_node_until_complete with node base pointer
+TYPED_TEST(TestExecutors, testSpinNodeUntilCompleteNodeBasePtr) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
 
@@ -492,13 +511,13 @@ TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodeBasePtr) {
   promise.set_value(true);
 
   auto shared_future = future.share();
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
+  auto ret = rclcpp::executors::spin_node_until_complete(
     executor, this->node->get_node_base_interface(), shared_future, 1s);
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 }
 
-// Check spin_node_until_future_complete with node pointer
-TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodePtr) {
+// Check spin_node_until_complete with node pointer
+TYPED_TEST(TestExecutors, testSpinNodeUntilCompleteNodePtr) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
 
@@ -507,13 +526,13 @@ TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodePtr) {
   promise.set_value(true);
 
   auto shared_future = future.share();
-  auto ret = rclcpp::executors::spin_node_until_future_complete(
+  auto ret = rclcpp::executors::spin_node_until_complete(
     executor, this->node, shared_future, 1s);
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 }
 
-// Check spin_until_future_complete can be properly interrupted.
-TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
+// Check spin_until_complete can be properly interrupted.
+TYPED_TEST(TestExecutors, testSpinUntilCompleteInterrupted) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
@@ -521,7 +540,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
   bool spin_exited = false;
 
   // This needs to block longer than it takes to get to the shutdown call below and for
-  // spin_until_future_complete to return
+  // spin_until_complete to return
   std::future<void> future = std::async(
     std::launch::async,
     [&spin_exited]() {
@@ -533,7 +552,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
 
   // Long timeout
   std::thread spinner([&spin_exited, &executor, &future]() {
-      auto ret = executor.spin_until_future_complete(future, 1s);
+      auto ret = executor.spin_until_complete(future, 1s);
       EXPECT_EQ(rclcpp::FutureReturnCode::INTERRUPTED, ret);
       spin_exited = true;
     });
@@ -555,8 +574,8 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
   spinner.join();
 }
 
-// Check spin_until_future_complete with node base pointer (instantiates its own executor)
-TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
+// Check spin_until_complete with node base pointer (instantiates its own executor)
+TEST(TestExecutors, testSpinUntilCompleteNodeBasePtr) {
   rclcpp::init(0, nullptr);
 
   {
@@ -567,7 +586,7 @@ TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
     promise.set_value(true);
 
     auto shared_future = future.share();
-    auto ret = rclcpp::spin_until_future_complete(
+    auto ret = rclcpp::spin_until_complete(
       node->get_node_base_interface(), shared_future, 1s);
     EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
   }
@@ -575,8 +594,8 @@ TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
   rclcpp::shutdown();
 }
 
-// Check spin_until_future_complete with node pointer (instantiates its own executor)
-TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr) {
+// Check spin_until_complete with node pointer (instantiates its own executor)
+TEST(TestExecutors, testSpinUntilCompleteNodePtr) {
   rclcpp::init(0, nullptr);
 
   {
@@ -587,7 +606,7 @@ TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr) {
     promise.set_value(true);
 
     auto shared_future = future.share();
-    auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
+    auto ret = rclcpp::spin_until_complete(node, shared_future, 1s);
     EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
   }
 

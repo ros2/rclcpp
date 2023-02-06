@@ -152,7 +152,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_accept_goal)(benchmark::S
     auto client_goal_handle_future = AsyncSendGoalOfOrder(1);
     state.ResumeTiming();
 
-    rclcpp::spin_until_future_complete(node, client_goal_handle_future);
+    rclcpp::spin_until_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
     if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
       state.SkipWithError("Valid goal was not accepted");
@@ -185,12 +185,12 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_cancel_goal)(benchmark::S
     auto client_goal_handle_future = AsyncSendGoalOfOrder(1);
     // This spin completes when the goal has been accepted, but not executed because server
     // responds with ACCEPT_AND_DEFER
-    rclcpp::spin_until_future_complete(node, client_goal_handle_future, std::chrono::seconds(1));
+    rclcpp::spin_until_complete(node, client_goal_handle_future, std::chrono::seconds(1));
     auto client_goal_handle = client_goal_handle_future.get();
     auto future_cancel = action_client->async_cancel_goal(client_goal_handle);
     state.ResumeTiming();
 
-    rclcpp::spin_until_future_complete(node, future_cancel, std::chrono::seconds(1));
+    rclcpp::spin_until_complete(node, future_cancel, std::chrono::seconds(1));
     auto cancel_response = future_cancel.get();
     using CancelActionResponse = test_msgs::action::Fibonacci::Impl::CancelGoalService::Response;
     if (CancelActionResponse::ERROR_NONE != cancel_response->return_code) {
@@ -221,7 +221,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_execute_goal)(benchmark::
     state.PauseTiming();
     auto client_goal_handle_future = AsyncSendGoalOfOrder(1);
 
-    rclcpp::spin_until_future_complete(node, client_goal_handle_future);
+    rclcpp::spin_until_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
     if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
       state.SkipWithError("Valid goal was not accepted");
@@ -267,7 +267,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_set_success)(benchmark::S
     state.PauseTiming();
     auto client_goal_handle_future = AsyncSendGoalOfOrder(goal_order);
 
-    rclcpp::spin_until_future_complete(node, client_goal_handle_future);
+    rclcpp::spin_until_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
     if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
       state.SkipWithError("Valid goal was not accepted");
@@ -312,7 +312,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_abort)(benchmark::State &
     state.PauseTiming();
     auto client_goal_handle_future = AsyncSendGoalOfOrder(goal_order);
 
-    rclcpp::spin_until_future_complete(node, client_goal_handle_future);
+    rclcpp::spin_until_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
     if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
       state.SkipWithError("Valid goal was not accepted");

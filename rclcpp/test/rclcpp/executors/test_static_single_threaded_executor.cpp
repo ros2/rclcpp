@@ -135,8 +135,8 @@ TEST_F(TestStaticSingleThreadedExecutor, execute_service) {
   std::future<void> future = promise.get_future();
   EXPECT_EQ(
     rclcpp::FutureReturnCode::TIMEOUT,
-    executor.spin_until_future_complete(future, std::chrono::milliseconds(1)));
+    executor.spin_until_complete(future, std::chrono::milliseconds(1)));
 
   executor.remove_node(node);
-  executor.spin_until_future_complete(future, std::chrono::milliseconds(1));
+  executor.spin_until_complete(future, std::chrono::milliseconds(1));
 }
