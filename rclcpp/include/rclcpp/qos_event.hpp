@@ -214,10 +214,11 @@ protected:
   void
   set_on_new_event_callback(rcl_event_callback_t callback, const void * user_data);
 
-  rcl_event_t event_handle_;
-  size_t wait_set_event_index_;
   std::recursive_mutex callback_mutex_;
   std::function<void(size_t)> on_new_event_callback_{nullptr};
+
+  rcl_event_t event_handle_;
+  size_t wait_set_event_index_;
 };
 
 template<typename EventCallbackT, typename ParentHandleT>
