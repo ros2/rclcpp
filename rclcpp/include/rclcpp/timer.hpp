@@ -149,11 +149,48 @@ public:
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 
+  /// Set a callback to be called when the timer is reset
+  /**
+   * You should aim to make this callback fast and not blocking.
+   * If you need to do a lot of work or wait for some other event, you should
+   * spin it off to another thread.
+   *
+   * Calling it again will override any previously set callback.
+   * An exception will be thrown if the callback is not callable.
+   *
+   * This function is thread-safe.
+   *
+   * If you want more information available in the callback,
+   * you may use a lambda with captures or std::bind.
+   *
+   * \param[in] callback functor to be called whenever timer is reset
+   */
+  RCLCPP_PUBLIC
+  void
+  set_on_reset_callback(std::function<void(size_t)> callback);
+
+  /// Unset the callback registered for reset timer
+  RCLCPP_PUBLIC
+  void
+  clear_on_reset_callback();
+
 protected:
+  std::recursive_mutex callback_mutex_;
+  // Declare callback before timer_handle_, so on destruction
+  // the callback is destroyed last. Otherwise, the rcl timer
+  // callback would point briefly to a destroyed function.
+  // Clearing the callback on timer destructor also makes sure
+  // the rcl callback is cleared before on_reset_callback_.
+  std::function<void(size_t)> on_reset_callback_{nullptr};
+
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
+
+  RCLCPP_PUBLIC
+  void
+  set_on_reset_callback(rcl_event_callback_t callback, const void * user_data);
 };
 
 
