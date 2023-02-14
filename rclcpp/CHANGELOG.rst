@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+19.1.0 (2023-02-14)
+-------------------
 * Add support for timers on reset callback (`#1979 <https://github.com/ros2/rclcpp/issues/1979>`_)
 * Topic node guard condition in executor (`#2074 <https://github.com/ros2/rclcpp/issues/2074>`_)
 * Fix bug on the disorder of calling shutdown callback (`#2097 <https://github.com/ros2/rclcpp/issues/2097>`_)
