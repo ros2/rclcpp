@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add support for timers on reset callback (`#1979 <https://github.com/ros2/rclcpp/issues/1979>`_)
+* Topic node guard condition in executor (`#2074 <https://github.com/ros2/rclcpp/issues/2074>`_)
+* Fix bug on the disorder of calling shutdown callback (`#2097 <https://github.com/ros2/rclcpp/issues/2097>`_)
+* Contributors: Barry Xu, Chen Lihui, mauropasse
+
 19.0.0 (2023-01-30)
 -------------------
 * Add default constructor to NodeInterfaces (`#2094 <https://github.com/ros2/rclcpp/issues/2094>`_)
