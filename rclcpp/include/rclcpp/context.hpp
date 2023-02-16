@@ -65,8 +65,11 @@ using PreShutdownCallbackHandle = ShutdownCallbackHandle;
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
  * A context also represents the lifecycle between init and shutdown of rclcpp.
- * It is often used in conjunction with rclcpp::init, or rclcpp::init_local,
- * and rclcpp::shutdown.
+ * Nodes may be attached to a particular context by passing to the rclcpp::Node
+ * constructor a rclcpp::NodeOptions instance in which the Context is set via
+ * rclcpp::NodeOptions::context.
+ * Nodes will be automatically removed from the context when destructed.
+ * Contexts may be shutdown by calling rclcpp::shutdown.
  */
 class Context : public std::enable_shared_from_this<Context>
 {
