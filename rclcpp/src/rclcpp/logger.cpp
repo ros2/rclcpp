@@ -80,7 +80,7 @@ Logger::get_child(const std::string & suffix)
   {
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
     rcl_ret = rcl_logging_rosout_add_sublogger((*name_).c_str(), suffix.c_str());
-    if (RCL_RET_OK != rcl_ret && RCL_RET_SUBLOGGER_ALREADY_EXIST != rcl_ret) {
+    if (RCL_RET_OK != rcl_ret) {
       exceptions::throw_from_rcl_error(
         rcl_ret, "failed to call rcl_logging_rosout_add_sublogger",
         rcutils_get_error_state(), rcutils_reset_error);
