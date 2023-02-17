@@ -409,9 +409,7 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
   std::allocator<void> allocator;
   {
     rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
-    RCLCPP_EXPECT_THROW_EQ(
-      publisher->publish(std::move(loaned_msg)),
-      std::runtime_error("storing loaned messages in intra process is not supported yet"));
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
   }
 
   {
