@@ -24,14 +24,7 @@
 
 using namespace std::chrono_literals;
 
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
-
-class CLASSNAME (TestRosoutSubscription, RMW_IMPLEMENTATION) : public ::testing::Test
+class TestRosoutSubscription : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()

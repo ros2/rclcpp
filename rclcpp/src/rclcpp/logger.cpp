@@ -87,7 +87,7 @@ Logger::get_child(const std::string & suffix)
     }
   }
 
-  Logger logger(*name_ + "." + suffix);
+  Logger logger(*name_ + RCUTILS_LOGGING_SEPARATOR_STRING + suffix);
   if (RCL_RET_OK == rcl_ret) {
     logger.logger_sublogger_pairname_.reset(
       new std::pair<std::string, std::string>({*name_, suffix}),
