@@ -393,7 +393,7 @@ public:
       waitable_triggered_handles_.empty() ? waitable_handles_ : waitable_triggered_handles_;
     auto it = waitable_handles.begin();
     while (it != waitable_handles.end()) {
-      std::shared_ptr<Waitable> waitable = *it;
+      std::shared_ptr<Waitable> & waitable = *it;
       if (waitable) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_waitable(waitable, weak_groups_to_nodes);
