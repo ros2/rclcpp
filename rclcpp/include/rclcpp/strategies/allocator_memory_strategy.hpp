@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <vector>
+#include <utility>
 
 #include "rcl/allocator.h"
 
@@ -121,7 +122,7 @@ public:
     }
     for (size_t i = 0; i < waitable_handles_.size(); ++i) {
       if (waitable_handles_[i]->is_ready(wait_set)) {
-        waitable_triggered_handles_.emplace_back(waitable_handles_[i]);
+        waitable_triggered_handles_.emplace_back(std::move(waitable_handles_[i]));
       }
     }
 
