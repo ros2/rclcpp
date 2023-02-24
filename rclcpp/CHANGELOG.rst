@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+19.2.0 (2023-02-24)
+-------------------
 * to create a sublogger while getting child of Logger (`#1717 <https://github.com/ros2/rclcpp/issues/1717>`_)
 * Fix documentation of Context class (`#2107 <https://github.com/ros2/rclcpp/issues/2107>`_)
 * fixes for rmw callbacks in qos_event class (`#2102 <https://github.com/ros2/rclcpp/issues/2102>`_)
