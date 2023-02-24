@@ -81,7 +81,7 @@ void spin_until_time(
 
     executor.spin_once(10ms);
 
-    if (clock->now().nanoseconds() >= end_time.count()) {
+    if (clock->now().nanoseconds() == end_time.count()) {
       return;
     }
   }
