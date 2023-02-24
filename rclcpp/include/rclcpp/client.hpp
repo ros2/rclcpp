@@ -470,15 +470,13 @@ public:
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
     rcl_client_options_t & client_options)
-  : ClientBase(node_base, node_graph)
+  : ClientBase(node_base, node_graph),
+    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
-    using rosidl_typesupport_cpp::get_service_type_support_handle;
-    service_type_support_handle_ =
-      get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),
-      service_type_support_handle_,
+      srv_type_support_handle_,
       service_name.c_str(),
       &client_options);
     if (ret != RCL_RET_OK) {
@@ -802,7 +800,7 @@ public:
       client_handle_.get(),
       node_handle_.get(),
       clock->get_clock_handle(),
-      service_type_support_handle_,
+      srv_type_support_handle_,
       pub_opts,
       introspection_state);
 
@@ -863,7 +861,7 @@ protected:
   std::mutex pending_requests_mutex_;
 
 private:
-  const rosidl_service_type_support_t * service_type_support_handle_;
+  const rosidl_service_type_support_t * srv_type_support_handle_;
 };
 
 }  // namespace rclcpp
