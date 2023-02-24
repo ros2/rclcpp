@@ -265,7 +265,7 @@ PublisherBase::assert_liveliness() const
 bool
 PublisherBase::can_loan_messages() const
 {
-  return rcl_publisher_can_loan_messages(publisher_handle_.get());
+  return !intra_process_is_enabled_ && rcl_publisher_can_loan_messages(publisher_handle_.get());
 }
 
 bool
