@@ -739,6 +739,12 @@ if(TARGET test_rosout_qos)
   target_link_libraries(test_rosout_qos ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_rosout_subscription test_rosout_subscription.cpp)
+if(TARGET test_rosout_subscription)
+  ament_target_dependencies(test_rosout_subscription "rcl")
+  target_link_libraries(test_rosout_subscription ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_executor test_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 120)
