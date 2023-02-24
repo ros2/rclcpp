@@ -390,8 +390,7 @@ public:
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
-    auto & waitable_handles =
-      waitable_triggered_handles_.empty() ? waitable_handles_ : waitable_triggered_handles_;
+    auto & waitable_handles = waitable_triggered_handles_;
     auto it = waitable_handles.begin();
     while (it != waitable_handles.end()) {
       std::shared_ptr<Waitable> & waitable = *it;
