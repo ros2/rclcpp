@@ -602,7 +602,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   message_info.get_rmw_message_info().from_intra_process = false;
 
   // PROPOSED ======================================================================================
-  // If a subscription is meant to use_runtime_type_cb, then it will use its serialization-specific
+  // If a subscription is meant to use_dynamic_message_cb, then it will use its serialization-specific
   // dynamic data.
   //
   // Two cases:
@@ -613,12 +613,12 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   //   - TODO(methylDragon): I won't be handling this case yet
   //
   // TODO(methylDragon):
-  // - use_runtime_type_cb (can use take_serialized or take_runtime_type)
-  // - take_runtime_type (MUST have use_runtime_type_cb true)
-  if (subscription->use_runtime_type_cb()) {
-    if (subscription->use_take_runtime_type_message()) {
+  // - use_dynamic_message_cb (can use take_serialized or take_dynamic_message)
+  // - take_dynamic_message (MUST have use_dynamic_message_cb true)
+  if (subscription->use_dynamic_message_cb()) {
+    if (subscription->use_take_dynamic_message()) {
       // TODO(methylDragon)
-      throw rclcpp::exceptions::UnimplementedError("take_runtime_type_message is not implemented");
+      throw rclcpp::exceptions::UnimplementedError("take_dynamic_message is not implemented");
     } else {
       std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
       take_and_do_error_handling(
@@ -627,8 +627,8 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
         [&]()
         {
-          std::shared_ptr<serialization_support_t> ser = subscription->get_serialization_support();
-          std::shared_ptr<ser_dynamic_data_t> dyn_data = subscription->get_dynamic_data();
+          std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> serialization_support = subscription->get_serialization_support();
+          std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> dyn_data = subscription->get_dynamic_data();
 
           // NOTE(methylDragon): We might want to consider cloning the dynamic data here
 
@@ -638,7 +638,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
           if (ret != RMW_RET_OK) {
             throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
           }
-          subscription->handle_runtime_type_message(ser, dyn_data, message_info);
+          subscription->handle_dynamic_message(serialization_support, dyn_data, message_info);
         }
       );
       subscription->return_serialized_message(serialized_msg);

@@ -42,8 +42,8 @@ SubscriptionBase::SubscriptionBase(
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
   bool is_serialized,
-  bool use_runtime_type_cb,
-  bool use_take_runtime_type_message)
+  bool use_dynamic_message_cb,
+  bool use_take_dynamic_message)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
@@ -52,8 +52,8 @@ SubscriptionBase::SubscriptionBase(
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
   is_serialized_(is_serialized),
-  use_runtime_type_cb_(use_runtime_type_cb),
-  use_take_runtime_type_message_(use_take_runtime_type_message)
+  use_dynamic_message_cb_(use_dynamic_message_cb),
+  use_take_dynamic_message_(use_take_dynamic_message)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
@@ -524,13 +524,13 @@ SubscriptionBase::get_content_filter() const
 // RUNTIME TYPE ==================================================================================
 // TODO(methylDragon): Reorder later
 bool
-SubscriptionBase::use_runtime_type_cb() const
+SubscriptionBase::use_dynamic_message_cb() const
 {
-  return use_runtime_type_cb_;
+  return use_dynamic_message_cb_;
 }
 
 bool
-SubscriptionBase::use_take_runtime_type_message() const
+SubscriptionBase::use_take_dynamic_message() const
 {
-  return use_take_runtime_type_message_;
+  return use_take_dynamic_message_;
 }

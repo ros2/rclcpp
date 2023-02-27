@@ -183,6 +183,6 @@
 #include "rclcpp/waitable.hpp"
 #include "rclcpp/wait_set.hpp"
 
-#include "rclcpp/runtime_type_subscription.hpp"
+#include "rclcpp/dynamic_subscription.hpp"
 
 #endif  // RCLCPP__RCLCPP_HPP_

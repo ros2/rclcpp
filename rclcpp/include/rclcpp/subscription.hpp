@@ -391,21 +391,21 @@ public:
   // RUNTIME TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   // TODO(methylDragon): Implement later...
-  std::shared_ptr<ser_dynamic_type_t>
+  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
   get_dynamic_type() override
   {
     throw rclcpp::exceptions::UnimplementedError(
       "get_dynamic_type is not implemented for Subscription");
   }
 
-  std::shared_ptr<ser_dynamic_data_t>
+  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
   get_dynamic_data() override
   {
     throw rclcpp::exceptions::UnimplementedError(
       "get_dynamic_data is not implemented for Subscription");
   }
 
-  std::shared_ptr<serialization_support_t>
+  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>
   get_serialization_support() override
   {
     throw rclcpp::exceptions::UnimplementedError(
@@ -413,16 +413,16 @@ public:
   }
 
   void
-  handle_runtime_type_message(
-    const std::shared_ptr<serialization_support_t> & ser,
-    const std::shared_ptr<ser_dynamic_data_t> & dyn_data,
+  handle_dynamic_message(
+    const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> & serialization_support,
+    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
     const rclcpp::MessageInfo & message_info) override
   {
-    (void) ser;
+    (void) serialization_support;
     (void) dyn_data;
     (void) message_info;
     throw rclcpp::exceptions::UnimplementedError(
-      "handle_runtime_type_message is not implemented for Subscription");
+      "handle_dynamic_message is not implemented for Subscription");
   }
 
 private:
