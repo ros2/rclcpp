@@ -508,6 +508,17 @@ if(TARGET test_service)
   )
   target_link_libraries(test_service ${PROJECT_NAME} mimick)
 endif()
+ament_add_gmock(test_service_introspection test_service_introspection.cpp)
+if(TARGET test_service)
+  ament_target_dependencies(test_service_introspection
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  target_link_libraries(test_service_introspection ${PROJECT_NAME} mimick)
+endif()
 # Creating and destroying nodes is slow with Connext, so this needs larger timeout.
 ament_add_gtest(test_subscription test_subscription.cpp TIMEOUT 120)
 if(TARGET test_subscription)

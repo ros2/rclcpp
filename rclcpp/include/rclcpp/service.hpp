@@ -26,6 +26,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
 #include "rcl/service.h"
+#include "rcl/service_introspection.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/demangle.hpp"
@@ -34,6 +35,7 @@
 #include "tracetools/tracetools.h"
 
 #include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -308,11 +310,9 @@ public:
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
-  : ServiceBase(node_handle), any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback),
+    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
-    using rosidl_typesupport_cpp::get_service_type_support_handle;
-    auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
-
     // rcl does the static memory allocation here
     service_handle_ = std::shared_ptr<rcl_service_t>(
       new rcl_service_t, [handle = node_handle_, service_name](rcl_service_t * service)
@@ -331,7 +331,7 @@ public:
     rcl_ret_t ret = rcl_service_init(
       service_handle_.get(),
       node_handle.get(),
-      service_type_support_handle,
+      srv_type_support_handle_,
       service_name.c_str(),
       &service_options);
     if (ret != RCL_RET_OK) {
@@ -371,8 +371,8 @@ public:
     std::shared_ptr<rcl_node_t> node_handle,
     std::shared_ptr<rcl_service_t> service_handle,
     AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle),
-    any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback),
+    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle.get())) {
@@ -406,8 +406,8 @@ public:
     std::shared_ptr<rcl_node_t> node_handle,
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle),
-    any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback),
+    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle)) {
@@ -487,10 +487,39 @@ public:
     }
   }
 
+  /// Configure client introspection.
+  /**
+   * \param[in] clock clock to use to generate introspection timestamps
+   * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
+   * \param[in] introspection_state the state to set introspection to
+   */
+  void
+  configure_introspection(
+    Clock::SharedPtr clock, const QoS & qos_service_event_pub,
+    rcl_service_introspection_state_t introspection_state)
+  {
+    rcl_publisher_options_t pub_opts = rcl_publisher_get_default_options();
+    pub_opts.qos = qos_service_event_pub.get_rmw_qos_profile();
+
+    rcl_ret_t ret = rcl_service_configure_service_introspection(
+      service_handle_.get(),
+      node_handle_.get(),
+      clock->get_clock_handle(),
+      srv_type_support_handle_,
+      pub_opts,
+      introspection_state);
+
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure service introspection");
+    }
+  }
+
 private:
   RCLCPP_DISABLE_COPY(Service)
 
   AnyServiceCallback<ServiceT> any_callback_;
+
+  const rosidl_service_type_support_t * srv_type_support_handle_;
 };
 
 }  // namespace rclcpp
