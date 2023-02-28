@@ -521,7 +521,7 @@ SubscriptionBase::get_content_filter() const
 }
 
 
-// RUNTIME TYPE ==================================================================================
+// DYNAMIC TYPE ==================================================================================
 // TODO(methylDragon): Reorder later
 bool
 SubscriptionBase::use_dynamic_message_cb() const

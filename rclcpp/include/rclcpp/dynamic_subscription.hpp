@@ -53,11 +53,10 @@ public:
     rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    // TODO(methylDragons): Eventually roll out an rclcpp::DynamicData that encompasses the serialization_support
-    //                      support and DynamicData, and pass that to the callback
-    std::function<void(
-      std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>, std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-    )> callback,
+    // TODO(methylDragons): Eventually roll out an rclcpp::DynamicMessage that encompasses the
+    //                      serialization_support support and DynamicData, and pass that to the
+    //                      callback
+    std::function<void(std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
     bool use_take_dynamic_message = false)
   : SubscriptionBase(
@@ -77,7 +76,7 @@ public:
        != rmw_dynamic_typesupport_c__identifier)
     {
       throw std::runtime_error(
-        "DynamicSubscription must use runtime type introspection type support!");
+        "DynamicSubscription must use dynamic type introspection type support!");
     }
   }
 
@@ -145,7 +144,7 @@ public:
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override;
 
 
-  // RUNTIME TYPE ==================================================================================
+  // DYNAMIC TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
@@ -161,7 +160,6 @@ public:
 
   RCLCPP_PUBLIC
   void handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> & serialization_support,
     const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
     const rclcpp::MessageInfo & message_info
   ) override;
@@ -171,10 +169,7 @@ private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
   rosidl_message_type_support_t & ts_;
-
-  std::function<void(
-    std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>, std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-  )> callback_;
+  std::function<void(std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>)> callback_;
 };
 
 }  // namespace rclcpp

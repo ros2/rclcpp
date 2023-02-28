@@ -124,7 +124,7 @@ public:
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override;
 
 
-  // RUNTIME TYPE ==================================================================================
+  // DYNAMIC TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t> get_dynamic_type() override;
@@ -137,7 +137,6 @@ public:
 
   RCLCPP_PUBLIC
   void handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> & serialization_support,
     const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
     const rclcpp::MessageInfo & message_info) override;
 

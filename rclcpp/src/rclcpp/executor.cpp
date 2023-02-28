@@ -602,12 +602,12 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   message_info.get_rmw_message_info().from_intra_process = false;
 
   // PROPOSED ======================================================================================
-  // If a subscription is meant to use_dynamic_message_cb, then it will use its serialization-specific
-  // dynamic data.
+  // If a subscription is meant to use_dynamic_message_cb, then it will use its
+  // serialization-specific dynamic data.
   //
   // Two cases:
-  // - Runtime type subscription using dynamic type stored in its own internal type support struct
-  // - Non-runtime type subscription with no stored dynamic type
+  // - Dynamic type subscription using dynamic type stored in its own internal type support struct
+  // - Non-dynamic type subscription with no stored dynamic type
   //   - Subscriptions of this type must be able to lookup the local message description to
   //     generate a dynamic type at runtime!
   //   - TODO(methylDragon): I won't be handling this case yet
@@ -638,7 +638,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
           if (ret != RMW_RET_OK) {
             throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
           }
-          subscription->handle_dynamic_message(serialization_support, dyn_data, message_info);
+          subscription->handle_dynamic_message(dyn_data, message_info);
         }
       );
       subscription->return_serialized_message(serialized_msg);

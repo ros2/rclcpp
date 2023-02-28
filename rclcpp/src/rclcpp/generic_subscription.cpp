@@ -72,7 +72,7 @@ void GenericSubscription::return_serialized_message(
 }
 
 
-// RUNTIME TYPE ==================================================================================
+// DYNAMIC TYPE ==================================================================================
 // TODO(methylDragon): Reorder later
 std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
 GenericSubscription::get_dynamic_type()
@@ -97,11 +97,9 @@ GenericSubscription::get_serialization_support()
 
 void
 GenericSubscription::handle_dynamic_message(
-  const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> & serialization_support,
   const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
   const rclcpp::MessageInfo & message_info)
 {
-  (void) serialization_support;
   (void) dyn_data;
   (void) message_info;
   throw rclcpp::exceptions::UnimplementedError(

@@ -68,7 +68,7 @@ void DynamicSubscription::return_serialized_message(
 }
 
 
-// RUNTIME TYPE ====================================================================================
+// DYNAMIC TYPE ====================================================================================
 // TODO(methylDragon): Re-order later
 std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
 DynamicSubscription::get_dynamic_type()
@@ -84,7 +84,7 @@ DynamicSubscription::get_dynamic_type()
 // NOTE(methylDragon): Should we store a separate copy of dynamic data in the sub so it isn't tied
 //                     to the typesupport instead?
 //                     If that's the case, will there ever be a lifetime contention between a sub
-//                     that manages the data and the callback/user usage of the data? 
+//                     that manages the data and the callback/user usage of the data?
 std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
 DynamicSubscription::get_dynamic_data()
 {
@@ -107,11 +107,10 @@ std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> DynamicSubsc
 };
 
 void DynamicSubscription::handle_dynamic_message(
-  const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> & serialization_support,
   const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
   const rclcpp::MessageInfo &)
 {
-  callback_(serialization_support, dyn_data);
+  callback_(dyn_data);
 }
 
 }  // namespace rclcpp

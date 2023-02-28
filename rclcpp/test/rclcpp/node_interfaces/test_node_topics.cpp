@@ -82,7 +82,7 @@ public:
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> get_dynamic_data() override {return nullptr;}
   std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>   get_serialization_support() override {return nullptr;}
   void handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> &, const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> &,
+    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> &,
     const rclcpp::MessageInfo &) override {}
 };
 

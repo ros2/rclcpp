@@ -542,7 +542,7 @@ public:
   rclcpp::ContentFilterOptions
   get_content_filter() const;
 
-  // RUNTIME TYPE ==================================================================================
+  // DYNAMIC TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
   virtual
@@ -563,7 +563,6 @@ public:
   virtual
   void
   handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> & serialization_support,
     const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
     const rclcpp::MessageInfo & message_info
   ) = 0;
@@ -573,12 +572,12 @@ public:
   // bool
   // take_dynamic_message(rosidl_dynamic_typesupport_dynamic_data_t * message_out, rclcpp::MessageInfo & message_info_out);
 
-  /// Return if the subscription should use runtime type
+  /// Return if the subscription should use dynamic type
   /**
    * This will cause the subscription to use the handle_dynamic_message methods, which must be
    * used with take_serialized or take_dynamic_message.
    *
-   * \return `true` if the subscription should use a runtime type callback, `false` otherwise
+   * \return `true` if the subscription should use a dynamic type callback, `false` otherwise
    */
   RCLCPP_PUBLIC
   bool
