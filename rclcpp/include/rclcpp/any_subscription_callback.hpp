@@ -965,10 +965,14 @@ public:
 #ifndef TRACETOOLS_DISABLED
     std::visit(
       [this](auto && callback) {
-        TRACEPOINT(
-          rclcpp_callback_register,
-          static_cast<const void *>(this),
-          tracetools::get_symbol(callback));
+        if (TRACEPOINT_ENABLED(rclcpp_callback_register)) {
+          char * symbol = tracetools::get_symbol(callback);
+          DO_TRACEPOINT(
+            rclcpp_callback_register,
+            static_cast<const void *>(this),
+            symbol);
+          std::free(symbol);
+        }
       }, callback_variant_);
 #endif  // TRACETOOLS_DISABLED
   }
