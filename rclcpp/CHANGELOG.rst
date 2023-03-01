@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix memory leak in tracetools::get_symbol() (`#2104 <https://github.com/ros2/rclcpp/issues/2104>`_)
+* Service introspection (`#1985 <https://github.com/ros2/rclcpp/issues/1985>`_)
+* Allow publishing borrowed messages with intra-process enabled (`#2108 <https://github.com/ros2/rclcpp/issues/2108>`_)
+* to fix flaky test about TestTimeSource.callbacks (`#2111 <https://github.com/ros2/rclcpp/issues/2111>`_)
+* Contributors: Brian, Chen Lihui, Christophe Bedard, Miguel Company
+
 19.2.0 (2023-02-24)
 -------------------
 * to create a sublogger while getting child of Logger (`#1717 <https://github.com/ros2/rclcpp/issues/1717>`_)
