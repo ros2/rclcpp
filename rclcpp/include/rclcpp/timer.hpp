@@ -227,16 +227,10 @@ public:
       rclcpp_timer_callback_added,
       static_cast<const void *>(get_timer_handle().get()),
       reinterpret_cast<const void *>(&callback_));
-#ifndef TRACETOOLS_DISABLED
-    if (TRACEPOINT_ENABLED(rclcpp_callback_register)) {
-      char * symbol = tracetools::get_symbol(callback_);
-      DO_TRACEPOINT(
-        rclcpp_callback_register,
-        reinterpret_cast<const void *>(&callback_),
-        symbol);
-      std::free(symbol);
-    }
-#endif
+    TRACEPOINT(
+      rclcpp_callback_register,
+      reinterpret_cast<const void *>(&callback_),
+      tracetools::get_symbol(callback_));
   }
 
   /// Default destructor.
