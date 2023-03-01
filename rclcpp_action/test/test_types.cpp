@@ -54,7 +54,7 @@ TEST(TestActionTypes, rcl_action_goal_info_to_goal_uuid) {
   }
 
   rclcpp_action::GoalUUID goal_id;
-  rclcpp_action::convert(goal_id, &goal_info);
+  rclcpp_action::convert(goal_info, &goal_id);
   for (uint8_t i = 0; i < UUID_SIZE; ++i) {
     EXPECT_EQ(goal_info.goal_id.uuid[i], goal_id[i]);
   }

@@ -15,7 +15,6 @@
 #include "rclcpp_action/types.hpp"
 
 #include <string>
-#include <sstream>
 
 namespace rclcpp_action
 {
@@ -24,22 +23,25 @@ to_string(const GoalUUID & goal_id)
 {
   constexpr char HEX[] = "0123456789abcdef";
   std::string result;
-  result.reserve(36);
-  for (const auto byte : goal_id) {
-    result.push_back(HEX[byte >> 4]);
-    result.push_back(HEX[byte & 0x0f]);
+  result.resize(36);
+  size_t i = 0;
+  for (uint8_t byte : goal_id) {
+    result[i++] = HEX[byte >> 4];
+    result[i++] = HEX[byte & 0x0f];
+    // A RFC-4122 compliant UUID looks like:
+    // 00000000-0000-0000-0000-000000000000
+    // That means that there is a '-' at offset 8, 13, 18, and 23
+    if (i == 8 || i == 13 || i == 18 || i == 23) {
+      result[i++] = '-';
+    }
   }
-  result.insert(result.begin() + 20, '-');
-  result.insert(result.begin() + 16, '-');
-  result.insert(result.begin() + 12, '-');
-  result.insert(result.begin() + 8, '-');
   return result;
 }
 
 void
 convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 {
-  for (size_t i = 0; i < 16; ++i) {
+  for (size_t i = 0; i < UUID_SIZE; ++i) {
     info->goal_id.uuid[i] = goal_id[i];
   }
 }
@@ -47,7 +49,7 @@ convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 void
 convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id)
 {
-  for (size_t i = 0; i < 16; ++i) {
+  for (size_t i = 0; i < UUID_SIZE; ++i) {
     (*goal_id)[i] = info.goal_id.uuid[i];
   }
 }
