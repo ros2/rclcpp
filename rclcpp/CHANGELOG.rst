@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+19.3.0 (2023-03-01)
+-------------------
 * Fix memory leak in tracetools::get_symbol() (`#2104 <https://github.com/ros2/rclcpp/issues/2104>`_)
 * Service introspection (`#1985 <https://github.com/ros2/rclcpp/issues/1985>`_)
 * Allow publishing borrowed messages with intra-process enabled (`#2108 <https://github.com/ros2/rclcpp/issues/2108>`_)
