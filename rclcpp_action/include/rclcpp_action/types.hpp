@@ -34,7 +34,7 @@ using GoalUUID = std::array<uint8_t, UUID_SIZE>;
 using GoalStatus = action_msgs::msg::GoalStatus;
 using GoalInfo = action_msgs::msg::GoalInfo;
 
-/// Convert a goal id to a human readable string.
+/// Convert a goal id to a human readable RFC-4122 compliant string.
 RCLCPP_ACTION_PUBLIC
 std::string
 to_string(const GoalUUID & goal_id);
