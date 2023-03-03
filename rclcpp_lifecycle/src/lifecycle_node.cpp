@@ -165,6 +165,12 @@ LifecycleNode::get_namespace() const
   return node_base_->get_namespace();
 }
 
+const char *
+LifecycleNode::get_fully_qualified_name() const
+{
+  return node_base_->get_fully_qualified_name();
+}
+
 rclcpp::Logger
 LifecycleNode::get_logger() const
 {

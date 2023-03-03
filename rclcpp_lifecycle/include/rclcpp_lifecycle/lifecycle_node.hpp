@@ -172,6 +172,15 @@ public:
   const char *
   get_namespace() const;
 
+  /// Get the fully-qualified name of the node.
+  /**
+   * The fully-qualified name includes the local namespace and name of the node.
+   * \return fully-qualified name of the node.
+   */
+  RCLCPP_PUBLIC
+  const char *
+  get_fully_qualified_name() const;
+
   /// Get the logger of the node.
   /**
    * \return The logger of the node.
