@@ -232,6 +232,24 @@ public:
   NodeOptions &
   start_parameter_services(bool start_parameter_services);
 
+  /// Return the enable_log_service flag.
+  RCLCPP_PUBLIC
+  bool
+  enable_log_service() const;
+
+  /// Set the enable_log_service flag, return this for logger idiom.
+  /**
+   * If true, ROS services are created to allow external nodes to get
+   * and set logger levels of this node.
+   *
+   * If false, loggers will still work locally, but will not be accessible
+   * remotely.
+   *
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  enable_log_service(bool enable_log_service);
+
   /// Return the start_parameter_event_publisher flag.
   RCLCPP_PUBLIC
   bool
@@ -412,6 +430,8 @@ private:
   bool enable_topic_statistics_ {false};
 
   bool start_parameter_services_ {true};
+
+  bool enable_log_service_ {false};
 
   bool start_parameter_event_publisher_ {true};
 

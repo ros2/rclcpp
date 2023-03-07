@@ -167,10 +167,14 @@ Node::Node(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(
+      node_base_,
+      node_services_,
+      options.enable_log_service()
+    )),
   node_clock_(new rclcpp::node_interfaces::NodeClock(
       node_base_,
       node_topics_,
@@ -225,6 +229,8 @@ Node::Node(
     node_topics_->resolve_topic_name("/parameter_events"),
     options.parameter_event_qos(),
     rclcpp::detail::PublisherQosParametersTraits{});
+
+  node_base_->start_builtin_executor_thread();
 }
 
 Node::Node(
@@ -232,10 +238,10 @@ Node::Node(
   const std::string & sub_namespace)
 : node_base_(other.node_base_),
   node_graph_(other.node_graph_),
-  node_logging_(other.node_logging_),
   node_timers_(other.node_timers_),
   node_topics_(other.node_topics_),
   node_services_(other.node_services_),
+  node_logging_(other.node_logging_),
   node_clock_(other.node_clock_),
   node_parameters_(other.node_parameters_),
   node_time_source_(other.node_time_source_),
@@ -263,10 +269,13 @@ Node::Node(
             rmw_namespace_validation_result_string(validation_result),
             invalid_index);
   }
+
+  node_base_->start_builtin_executor_thread();
 }
 
 Node::~Node()
 {
+  node_base_->stop_builtin_executor_thread();
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
   node_waitables_.reset();
   node_time_source_.reset();

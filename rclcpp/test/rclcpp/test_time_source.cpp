@@ -577,11 +577,6 @@ public:
   {
     return this->get_use_clock_thread();
   }
-
-  bool IsClockThreadJoinable()
-  {
-    return this->clock_thread_is_joinable();
-  }
 };
 
 TEST_F(TestTimeSource, check_use_clock_thread_value) {
@@ -614,42 +609,6 @@ TEST_F(TestTimeSource, check_use_clock_thread_value) {
 
   ts.attachNode(no_clock_thread_node_);
   ASSERT_FALSE(ts.GetUseClockThreadOption());
-  ts.detachNode();
-}
-
-TEST_F(TestTimeSource, check_clock_thread_status) {
-  // Test if TimeSource clock-dedicated thread is running
-  // according to the use_sim_time parameter
-  // and to the options of the attached node
-  ClockThreadTestingTimeSource ts;
-
-  // Tests for default options node
-  auto default_node_ = std::make_shared<rclcpp::Node>(
-    "default_option_node");
-
-  default_node_->set_parameter(rclcpp::Parameter("use_sim_time", true));
-  ts.attachNode(default_node_);
-  ASSERT_TRUE(ts.IsClockThreadJoinable());
-  ts.detachNode();
-
-  default_node_->set_parameter(rclcpp::Parameter("use_sim_time", false));
-  ts.attachNode(default_node_);
-  ASSERT_FALSE(ts.IsClockThreadJoinable());
-  ts.detachNode();
-
-  // Tests for node with use_clock_thread option forced to false
-  auto no_clock_thread_node_ = std::make_shared<rclcpp::Node>(
-    "no_clock_thread_node",
-    rclcpp::NodeOptions().use_clock_thread(false));
-
-  no_clock_thread_node_->set_parameter(rclcpp::Parameter("use_sim_time", true));
-  ts.attachNode(no_clock_thread_node_);
-  ASSERT_FALSE(ts.IsClockThreadJoinable());
-  ts.detachNode();
-
-  no_clock_thread_node_->set_parameter(rclcpp::Parameter("use_sim_time", false));
-  ts.attachNode(no_clock_thread_node_);
-  ASSERT_FALSE(ts.IsClockThreadJoinable());
   ts.detachNode();
 }
 

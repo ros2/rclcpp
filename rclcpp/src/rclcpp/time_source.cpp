@@ -226,12 +226,6 @@ public:
     use_clock_thread_ = use_clock_thread;
   }
 
-  // Check if the clock thread is joinable
-  bool clock_thread_is_joinable()
-  {
-    return clock_executor_thread_.joinable();
-  }
-
   // Attach a node to this time source
   void attachNode(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
@@ -330,7 +324,6 @@ private:
 
   // Dedicated thread for clock subscription.
   bool use_clock_thread_;
-  std::thread clock_executor_thread_;
 
   // Preserve the node reference
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_{nullptr};
@@ -351,9 +344,7 @@ private:
   using SubscriptionT = rclcpp::Subscription<rosgraph_msgs::msg::Clock>;
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
-  rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
-  rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
-  std::promise<void> cancel_clock_executor_promise_;
+  rclcpp::CallbackGroup::SharedPtr clock_callback_group_{nullptr};
 
   // The clock callback itself
   void clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
@@ -389,25 +380,8 @@ private:
       });
 
     if (use_clock_thread_) {
-      clock_callback_group_ = node_base_->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive,
-        false
-      );
+      clock_callback_group_ = node_base_->get_builtin_callback_group();
       options.callback_group = clock_callback_group_;
-      rclcpp::ExecutorOptions exec_options;
-      exec_options.context = node_base_->get_context();
-      clock_executor_ =
-        std::make_shared<rclcpp::executors::SingleThreadedExecutor>(exec_options);
-      if (!clock_executor_thread_.joinable()) {
-        cancel_clock_executor_promise_ = std::promise<void>{};
-        clock_executor_thread_ = std::thread(
-          [this]() {
-            auto future = cancel_clock_executor_promise_.get_future();
-            clock_executor_->add_callback_group(clock_callback_group_, node_base_);
-            clock_executor_->spin_until_future_complete(future);
-          }
-        );
-      }
     }
 
     clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
@@ -430,12 +404,6 @@ private:
   void destroy_clock_sub()
   {
     std::lock_guard<std::mutex> guard(clock_sub_lock_);
-    if (clock_executor_thread_.joinable()) {
-      cancel_clock_executor_promise_.set_value();
-      clock_executor_->cancel();
-      clock_executor_thread_.join();
-      clock_executor_->remove_callback_group(clock_callback_group_);
-    }
     clock_subscription_.reset();
   }
 
@@ -584,11 +552,6 @@ bool TimeSource::get_use_clock_thread()
 void TimeSource::set_use_clock_thread(bool use_clock_thread)
 {
   node_state_->set_use_clock_thread(use_clock_thread);
-}
-
-bool TimeSource::clock_thread_is_joinable()
-{
-  return node_state_->clock_thread_is_joinable();
 }
 
 TimeSource::~TimeSource()
