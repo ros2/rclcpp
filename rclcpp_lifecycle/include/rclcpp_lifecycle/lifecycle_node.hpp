@@ -177,7 +177,7 @@ public:
    * The fully-qualified name includes the local namespace and name of the node.
    * \return fully-qualified name of the node.
    */
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   const char *
   get_fully_qualified_name() const;
 
