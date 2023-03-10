@@ -15,10 +15,10 @@
 #ifndef RCLCPP__RATE_HPP_
 #define RCLCPP__RATE_HPP_
 
-#include <chrono>
 #include <memory>
-#include <thread>
 
+#include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -33,33 +33,32 @@ public:
 
   virtual ~RateBase() {}
   virtual bool sleep() = 0;
-  virtual bool is_steady() const = 0;
+  virtual rcl_clock_type_t get_type() const = 0;
   virtual void reset() = 0;
 };
 
-using std::chrono::duration;
-using std::chrono::duration_cast;
-using std::chrono::nanoseconds;
-
-template<class Clock = std::chrono::high_resolution_clock>
-class GenericRate : public RateBase
+class Rate : public RateBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
+  RCLCPP_SMART_PTR_DEFINITIONS(Rate)
 
-  explicit GenericRate(double rate)
-  : GenericRate<Clock>(
-      duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
+  explicit Rate(
+    const double rate,
+    Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME))
+  : Rate(
+      Duration::from_seconds(1.0 / rate), clock)
   {}
-  explicit GenericRate(std::chrono::nanoseconds period)
-  : period_(period), last_interval_(Clock::now())
+  explicit Rate(
+    const Duration & period,
+    Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME))
+  : clock_(clock), period_(period), last_interval_(clock_->now())
   {}
 
   virtual bool
   sleep()
   {
     // Time coming into sleep
-    auto now = Clock::now();
+    auto now = clock_->now();
     // Time of next interval
     auto next_interval = last_interval_ + period_;
     // Detect backwards time flow
@@ -67,12 +66,10 @@ public:
       // Best thing to do is to set the next_interval to now + period
       next_interval = now + period_;
     }
-    // Calculate the time to sleep
-    auto time_to_sleep = next_interval - now;
     // Update the interval
     last_interval_ += period_;
     // If the time_to_sleep is negative or zero, don't sleep
-    if (time_to_sleep <= std::chrono::seconds(0)) {
+    if (next_interval <= now) {
       // If an entire cycle was missed then reset next interval.
       // This might happen if the loop took more than a cycle.
       // Or if time jumps forward.
@@ -82,38 +79,62 @@ public:
       // Either way do not sleep and return false
       return false;
     }
+    // Calculate the time to sleep
+    auto time_to_sleep = next_interval - now;
     // Sleep (will get interrupted by ctrl-c, may not sleep full time)
-    rclcpp::sleep_for(time_to_sleep);
+    clock_->sleep_for(time_to_sleep);
     return true;
   }
 
-  virtual bool
-  is_steady() const
+  virtual rcl_clock_type_t
+  get_type() const
   {
-    return Clock::is_steady;
+    return clock_->get_clock_type();
   }
 
   virtual void
   reset()
   {
-    last_interval_ = Clock::now();
+    last_interval_ = clock_->now();
   }
 
-  std::chrono::nanoseconds period() const
+  Duration period() const
   {
     return period_;
   }
 
 private:
-  RCLCPP_DISABLE_COPY(GenericRate)
+  RCLCPP_DISABLE_COPY(Rate)
 
-  std::chrono::nanoseconds period_;
-  using ClockDurationNano = std::chrono::duration<typename Clock::rep, std::nano>;
-  std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
+  Clock::SharedPtr clock_;
+  Duration period_;
+  Time last_interval_;
 };
 
-using Rate = GenericRate<std::chrono::system_clock>;
-using WallRate = GenericRate<std::chrono::steady_clock>;
+class WallRate : public Rate
+{
+public:
+  explicit WallRate(const double rate)
+  : Rate(rate, std::make_shared<Clock>(RCL_STEADY_TIME))
+  {}
+
+  explicit WallRate(const Duration & period)
+  : Rate(period, std::make_shared<Clock>(RCL_STEADY_TIME))
+  {}
+};
+
+class ROSRate : public Rate
+
+{
+public:
+  explicit ROSRate(const double rate)
+  : Rate(rate, std::make_shared<Clock>(RCL_ROS_TIME))
+  {}
+
+  explicit ROSRate(const Duration & period)
+  : Rate(period, std::make_shared<Clock>(RCL_ROS_TIME))
+  {}
+};
 
 }  // namespace rclcpp
 
