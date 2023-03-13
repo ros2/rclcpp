@@ -232,7 +232,7 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
     auto throwing_statement = [callback, rcl_handle, event_type]() {
         // reset() is not needed for the exception, but it handles unused return value warning
         std::make_shared<
-          rclcpp::QOSEventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
+          rclcpp::EventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
           callback, rcl_publisher_event_init, rcl_handle, event_type).reset();
       };
     // This is done through a lambda because the compiler is having trouble parsing the templated
@@ -248,7 +248,7 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
     auto throwing_statement = [callback, rcl_handle, event_type]() {
         // reset() is needed for this exception
         std::make_shared<
-          rclcpp::QOSEventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
+          rclcpp::EventHandler<decltype(callback), std::shared_ptr<rcl_publisher_t>>>(
           callback, rcl_publisher_event_init, rcl_handle, event_type).reset();
       };
 
@@ -267,7 +267,7 @@ TEST_F(TestQosEvent, execute) {
   auto callback = [&handler_callback_executed](int) {handler_callback_executed = true;};
   rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
 
-  rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)> handler(
+  rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
     callback, rcl_publisher_event_init, rcl_handle, event_type);
 
   std::shared_ptr<void> data = handler.take_data();
@@ -292,7 +292,7 @@ TEST_F(TestQosEvent, add_to_wait_set) {
   auto callback = [](int) {};
 
   rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
-  rclcpp::QOSEventHandler<decltype(callback), decltype(rcl_handle)> handler(
+  rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
     callback, rcl_publisher_event_init, rcl_handle, event_type);
 
   EXPECT_EQ(1u, handler.get_number_of_ready_events());

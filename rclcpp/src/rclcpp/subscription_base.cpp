@@ -27,7 +27,7 @@
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -114,27 +114,48 @@ SubscriptionBase::bind_event_callbacks(
       event_callbacks.deadline_callback,
       RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
   }
+
   if (event_callbacks.liveliness_callback) {
     this->add_event_handler(
       event_callbacks.liveliness_callback,
       RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
   }
+
+  QOSRequestedIncompatibleQoSCallbackType incompatible_qos_cb;
   if (event_callbacks.incompatible_qos_callback) {
-    this->add_event_handler(
-      event_callbacks.incompatible_qos_callback,
-      RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    incompatible_qos_cb = event_callbacks.incompatible_qos_callback;
   } else if (use_default_callbacks) {
     // Register default callback when not specified
-    try {
-      this->add_event_handler(
-        [this](QOSRequestedIncompatibleQoSInfo & info) {
-          this->default_incompatible_qos_callback(info);
-        },
-        RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-    } catch (UnsupportedEventTypeException & /*exc*/) {
-      // pass
-    }
+    incompatible_qos_cb = [this](QOSRequestedIncompatibleQoSInfo & info) {
+        this->default_incompatible_qos_callback(info);
+      };
   }
+  // Register default callback when not specified
+  try {
+    if (incompatible_qos_cb) {
+      this->add_event_handler(incompatible_qos_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    // pass
+  }
+
+  IncompatibleTypeCallbackType incompatible_type_cb;
+  if (event_callbacks.incompatible_type_callback) {
+    incompatible_type_cb = event_callbacks.incompatible_type_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    incompatible_type_cb = [this](IncompatibleTypeInfo & info) {
+        this->default_incompatible_type_callback(info);
+      };
+  }
+  try {
+    if (incompatible_type_cb) {
+      this->add_event_handler(incompatible_type_cb, RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE);
+    }
+  } catch (UnsupportedEventTypeException & /*exc*/) {
+    // pass
+  }
+
   if (event_callbacks.message_lost_callback) {
     this->add_event_handler(
       event_callbacks.message_lost_callback,
@@ -161,7 +182,7 @@ SubscriptionBase::get_subscription_handle() const
 }
 
 const
-std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
 SubscriptionBase::get_event_handlers() const
 {
   return event_handlers_;
@@ -297,6 +318,17 @@ SubscriptionBase::default_incompatible_qos_callback(
     "Last incompatible policy: %s",
     get_topic_name(),
     policy_name.c_str());
+}
+
+void
+SubscriptionBase::default_incompatible_type_callback(
+  rclcpp::IncompatibleTypeInfo & event) const
+{
+  (void)event;
+
+  RCLCPP_WARN(
+    rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
+    "Incompatible type on topic '%s', no messages will be sent to it.", get_topic_name());
 }
 
 bool

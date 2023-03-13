@@ -26,7 +26,7 @@
 #include "rclcpp/detail/rmw_implementation_specific_publisher_payload.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 
 namespace rclcpp
