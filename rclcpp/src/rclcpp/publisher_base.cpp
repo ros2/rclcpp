@@ -183,6 +183,11 @@ PublisherBase::bind_event_callbacks(
       rclcpp::get_logger("rclcpp"),
       "Failed to add event handler for incompatible type; wrong callback type");
   }
+  if (event_callbacks.matched_callback) {
+    this->add_event_handler(
+      event_callbacks.matched_callback,
+      RCL_PUBLISHER_MATCHED);
+  }
 }
 
 size_t

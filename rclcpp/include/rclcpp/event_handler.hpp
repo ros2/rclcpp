@@ -47,6 +47,7 @@ using QOSOfferedIncompatibleQoSInfo = rmw_offered_qos_incompatible_event_status_
 using QOSRequestedIncompatibleQoSInfo = rmw_requested_qos_incompatible_event_status_t;
 
 using IncompatibleTypeInfo = rmw_incompatible_type_status_t;
+using MatchedInfo = rmw_matched_status_t;
 
 using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequestedInfo &)>;
 using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
@@ -58,6 +59,8 @@ using QOSRequestedIncompatibleQoSCallbackType =
   std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
 
 using IncompatibleTypeCallbackType = std::function<void (IncompatibleTypeInfo &)>;
+using PublisherMatchedCallbackType = std::function<void (MatchedInfo &)>;
+using SubscriptionMatchedCallbackType = std::function<void (MatchedInfo &)>;
 
 /// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
@@ -66,6 +69,7 @@ struct PublisherEventCallbacks
   QOSLivelinessLostCallbackType liveliness_callback;
   QOSOfferedIncompatibleQoSCallbackType incompatible_qos_callback;
   IncompatibleTypeCallbackType incompatible_type_callback;
+  PublisherMatchedCallbackType matched_callback;
 };
 
 /// Contains callbacks for non-message events that a Subscription can receive from the middleware.
@@ -76,6 +80,7 @@ struct SubscriptionEventCallbacks
   QOSRequestedIncompatibleQoSCallbackType incompatible_qos_callback;
   QOSMessageLostCallbackType message_lost_callback;
   IncompatibleTypeCallbackType incompatible_type_callback;
+  SubscriptionMatchedCallbackType matched_callback;
 };
 
 class UnsupportedEventTypeException : public exceptions::RCLErrorBase, public std::runtime_error

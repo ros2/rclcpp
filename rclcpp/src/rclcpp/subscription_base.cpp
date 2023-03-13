@@ -161,6 +161,11 @@ SubscriptionBase::bind_event_callbacks(
       event_callbacks.message_lost_callback,
       RCL_SUBSCRIPTION_MESSAGE_LOST);
   }
+  if (event_callbacks.matched_callback) {
+    this->add_event_handler(
+      event_callbacks.matched_callback,
+      RCL_SUBSCRIPTION_MATCHED);
+  }
 }
 
 const char *
