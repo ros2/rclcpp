@@ -15,6 +15,7 @@
 #ifndef RCLCPP__RATE_HPP_
 #define RCLCPP__RATE_HPP_
 
+#include <chrono>
 #include <memory>
 
 #include "rclcpp/clock.hpp"
@@ -35,6 +36,20 @@ public:
   virtual bool sleep() = 0;
   virtual rcl_clock_type_t get_type() const = 0;
   virtual void reset() = 0;
+};
+
+template<class Clock = std::chrono::high_resolution_clock>
+class [[deprecated("use rclcpp::Rate class instead of GenericRate")]] GenericRate : public RateBase
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
+
+  explicit GenericRate(double) {}
+  explicit GenericRate(std::chrono::nanoseconds) {}
+
+  virtual bool sleep() {return false;}
+  virtual rcl_clock_type_t get_type() const {return RCL_CLOCK_UNINITIALIZED;}
+  virtual void reset() {}
 };
 
 class Rate : public RateBase
@@ -124,7 +139,6 @@ public:
 };
 
 class ROSRate : public Rate
-
 {
 public:
   explicit ROSRate(const double rate)
