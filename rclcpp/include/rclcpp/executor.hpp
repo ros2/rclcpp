@@ -318,7 +318,7 @@ public:
 
   /// Collect work once and execute the next available work, optionally within a duration.
   /**
-   * This function can be overridden.  The dfault implementation is suitable for
+   * This function can be overridden.  The default implementation is suitable for
    * a single-thread model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
@@ -428,8 +428,8 @@ protected:
    * Implementation of spin_node_once using std::chrono::nanoseconds
    * \param[in] node Shared pointer to the node to add.
    * \param[in] timeout How long to wait for work to become available. Negative values cause
-   * spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
-   * function to be non-blocking.
+   *   spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
+   *   function to be non-blocking.
    */
   RCLCPP_PUBLIC
   void
@@ -580,7 +580,7 @@ protected:
    * account the current state of callback groups' association with nodes and
    * executors.
    *
-   * This checks in a particular order for avabilable work:
+   * This checks in a particular order for available work:
    *   * Timers
    *   * Subscriptions
    *   * Services
