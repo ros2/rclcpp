@@ -122,10 +122,6 @@ public:
   get_associated_with_executor_atomic() override;
 
   RCLCPP_PUBLIC
-  rclcpp::GuardCondition &
-  get_notify_guard_condition() override;
-
-  RCLCPP_PUBLIC
   bool
   get_use_intra_process_default() const override;
 
@@ -150,11 +146,6 @@ private:
   std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_;
 
   std::atomic_bool associated_with_executor_;
-
-  /// Guard condition for notifying the Executor of changes to this node.
-  mutable std::recursive_mutex notify_guard_condition_mutex_;
-  rclcpp::GuardCondition notify_guard_condition_;
-  bool notify_guard_condition_is_valid_;
 };
 
 }  // namespace node_interfaces

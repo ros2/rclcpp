@@ -44,9 +44,7 @@ NodeBase::NodeBase(
   enable_topic_statistics_default_(enable_topic_statistics_default),
   node_handle_(nullptr),
   default_callback_group_(default_callback_group),
-  associated_with_executor_(false),
-  notify_guard_condition_(context),
-  notify_guard_condition_is_valid_(false)
+  associated_with_executor_(false)
 {
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
@@ -135,19 +133,9 @@ NodeBase::NodeBase(
     default_callback_group_ =
       NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive);
   }
-
-  // Indicate the notify_guard_condition is now valid.
-  notify_guard_condition_is_valid_ = true;
 }
 
-NodeBase::~NodeBase()
-{
-  // Finalize the interrupt guard condition after removing self from graph listener.
-  {
-    std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
-    notify_guard_condition_is_valid_ = false;
-  }
-}
+NodeBase::~NodeBase() = default;
 
 const char *
 NodeBase::get_name() const
@@ -244,16 +232,6 @@ std::atomic_bool &
 NodeBase::get_associated_with_executor_atomic()
 {
   return associated_with_executor_;
-}
-
-rclcpp::GuardCondition &
-NodeBase::get_notify_guard_condition()
-{
-  std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
-  if (!notify_guard_condition_is_valid_) {
-    throw std::runtime_error("failed to get notify guard condition because it is invalid");
-  }
-  return notify_guard_condition_;
 }
 
 bool

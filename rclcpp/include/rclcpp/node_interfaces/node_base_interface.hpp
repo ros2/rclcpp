@@ -150,6 +150,8 @@ public:
    *
    * \return the GuardCondition if it is valid, else thow runtime error
    */
+
+  [[deprecated("use 'rclcpp::CallbackGroup::get_notify_guard_condition instead")]]
   RCLCPP_PUBLIC
   virtual
   rclcpp::GuardCondition &
