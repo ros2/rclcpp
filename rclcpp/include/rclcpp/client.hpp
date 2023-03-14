@@ -314,7 +314,7 @@ public:
     callback(future);
   }
 
-  /// Send a request to the service server.
+/// Send a request to the service server.
   /**
    * This method returns a `SharedFuture` instance
    * that can be passed to Executor::spin_until_future_complete() to
@@ -360,7 +360,7 @@ public:
     >::type * = nullptr
   >
   SharedFuture
-  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr)
+  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr = nullptr)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -391,7 +391,7 @@ public:
     >::type * = nullptr
   >
   SharedFutureWithRequest
-  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr)
+  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr = nullptr)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());
