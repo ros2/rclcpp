@@ -133,6 +133,7 @@ TEST_P(TestLifecyclePublisher, publish_managed_by_node) {
     rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE), ret);
   ASSERT_EQ(success, ret);
   ret = reset_key;
+  (void)ret;  // Just to make clang happy
   EXPECT_FALSE(node_->publisher()->is_activated());
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
