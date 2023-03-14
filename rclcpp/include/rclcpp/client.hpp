@@ -314,10 +314,40 @@ public:
     callback(future);
   }
 
+  /// Send a request to the service server.
+  /**
+   * This method returns a `SharedFuture` instance
+   * that can be passed to Executor::spin_until_future_complete() to
+   * wait until it has been completed.
+   *
+   * If the future never completes,
+   * e.g. the call to Executor::spin_until_future_complete() times out,
+   * Client::remove_pending_request() must be called to clean the client internal state.
+   * Not doing so will make the `Client` instance to use more memory each time a response is not
+   * received from the service server.
+   *
+   * ```cpp
+   * int64_t sequence_number;
+   * auto future = client->async_send_request(my_request, &sequence_number);
+   * if (
+   *   rclcpp::FutureReturnCode::TIMEOUT ==
+   *   executor->spin_until_future_complete(future, timeout))
+   * {
+   *   client->remove_pending_request(sequence_number);
+   *   // handle timeout
+   * } else {
+   *   handle_response(future.get());
+   * }
+   * ```
+   *
+   * \param[in] request request to be send.
+   * \param[in] sequence_number pointer to sequence_number of request.
+   * \return a SharedFuture instance.
+   */
   SharedFuture
-  async_send_request(SharedRequest request)
+  async_send_request(SharedRequest request, int64_t * sequence_number = nullptr)
   {
-    return async_send_request(request, [](SharedFuture) {});
+    return async_send_request(request, [](SharedFuture) {}, sequence_number);
   }
 
   template<
@@ -330,7 +360,7 @@ public:
     >::type * = nullptr
   >
   SharedFuture
-  async_send_request(SharedRequest request, CallbackT && cb)
+  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -343,6 +373,11 @@ public:
     SharedFuture f(call_promise->get_future());
     pending_requests_[sequence_number] =
       std::make_tuple(call_promise, std::forward<CallbackType>(cb), f);
+
+    if (sequence_number_ptr != nullptr) {
+      *sequence_number_ptr = sequence_number;
+    }
+
     return f;
   }
 
@@ -356,7 +391,7 @@ public:
     >::type * = nullptr
   >
   SharedFutureWithRequest
-  async_send_request(SharedRequest request, CallbackT && cb)
+  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());
@@ -367,9 +402,40 @@ public:
         cb(future_with_request);
       };
 
-    async_send_request(request, wrapping_cb);
+    async_send_request(request, wrapping_cb, sequence_number_ptr);
 
     return future_with_request;
+  }
+
+  /// Cleanup a pending request.
+  /**
+   * This notifies the client that we have waited long enough for a response from the server
+   * to come, we have given up and we are not waiting for a response anymore.
+   *
+   * Not calling this will make the client start using more memory for each request
+   * that never got a reply from the server.
+   *
+   * \param[in] sequence_number sequence_number sequence_number by async_send_request(request, &sequence_number).
+   * \return true when a pending request was removed, false if not (e.g. a response was received).
+   */
+  bool
+  remove_pending_request(int64_t sequence_number)
+  {
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+    return pending_requests_.erase(sequence_number) != 0u;
+  }
+
+  /// Clean all pending requests.
+  /**
+   * \return number of pending requests that were removed.
+   */
+  size_t
+  prune_pending_requests()
+  {
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+    auto ret = pending_requests_.size();
+    pending_requests_.clear();
+    return ret;
   }
 
 private:
