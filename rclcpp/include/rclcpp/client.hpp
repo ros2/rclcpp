@@ -314,7 +314,7 @@ public:
     callback(future);
   }
 
-/// Send a request to the service server.
+  /// Send a request to the service server.
   /**
    * This method returns a `SharedFuture` instance
    * that can be passed to Executor::spin_until_future_complete() to
@@ -360,7 +360,7 @@ public:
     >::type * = nullptr
   >
   SharedFuture
-  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr = nullptr)
+  async_send_request(SharedRequest request, CallbackT && cb, int64_t * snp = nullptr)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -374,8 +374,8 @@ public:
     pending_requests_[sequence_number] =
       std::make_tuple(call_promise, std::forward<CallbackType>(cb), f);
 
-    if (sequence_number_ptr != nullptr) {
-      *sequence_number_ptr = sequence_number;
+    if (snp != nullptr) {
+      *snp = sequence_number;
     }
 
     return f;
@@ -391,7 +391,7 @@ public:
     >::type * = nullptr
   >
   SharedFutureWithRequest
-  async_send_request(SharedRequest request, CallbackT && cb, int64_t * sequence_number_ptr = nullptr)
+  async_send_request(SharedRequest request, CallbackT && cb, int64_t * snp = nullptr)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());
@@ -402,7 +402,7 @@ public:
         cb(future_with_request);
       };
 
-    async_send_request(request, wrapping_cb, sequence_number_ptr);
+    async_send_request(request, wrapping_cb, snp);
 
     return future_with_request;
   }
@@ -415,7 +415,7 @@ public:
    * Not calling this will make the client start using more memory for each request
    * that never got a reply from the server.
    *
-   * \param[in] sequence_number sequence_number sequence_number by async_send_request(request, &sequence_number).
+   * \param[in] sequence_number by async_send_request(request, &sequence_number).
    * \return true when a pending request was removed, false if not (e.g. a response was received).
    */
   bool
