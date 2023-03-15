@@ -210,7 +210,8 @@ TEST(TestRate, generic_rate_api) {
 #endif
 
     ASSERT_FALSE(gr.sleep());
-    ASSERT_EQ(RCL_CLOCK_UNINITIALIZED, gr.get_type());
+    ASSERT_FALSE(gr.is_steady());
+    ASSERT_EQ(std::chrono::seconds(1), gr.period());
   }
 
   {
@@ -233,6 +234,7 @@ TEST(TestRate, generic_rate_api) {
 #endif
 
     ASSERT_FALSE(gr.sleep());
-    ASSERT_EQ(RCL_CLOCK_UNINITIALIZED, gr.get_type());
+    ASSERT_FALSE(gr.is_steady());
+    ASSERT_EQ(std::chrono::seconds(1), gr.period());
   }
 }

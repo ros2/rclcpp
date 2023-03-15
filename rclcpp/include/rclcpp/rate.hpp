@@ -39,17 +39,19 @@ public:
 };
 
 template<class Clock = std::chrono::high_resolution_clock>
-class [[deprecated("use rclcpp::Rate class instead of GenericRate")]] GenericRate : public RateBase
+class [[deprecated("use rclcpp::Rate class instead of GenericRate")]] GenericRate
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
 
   explicit GenericRate(double) {}
   explicit GenericRate(std::chrono::nanoseconds) {}
+  virtual ~GenericRate() {}
 
   virtual bool sleep() {return false;}
-  virtual rcl_clock_type_t get_type() const {return RCL_CLOCK_UNINITIALIZED;}
+  virtual bool is_steady() const {return false;}
   virtual void reset() {}
+  std::chrono::nanoseconds period() const {return std::chrono::seconds(1);}
 };
 
 class Rate : public RateBase
