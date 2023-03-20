@@ -217,7 +217,7 @@ Context::init(
     if (0u == count) {
       ret = rcl_logging_configure_with_output_handler(
         &rcl_context_->global_arguments,
-        rcl_init_options_get_allocator(init_options_.get_rcl_init_options()),
+        rcl_init_options_get_allocator(init_options.get_rcl_init_options()),
         rclcpp_logging_output_handler);
       if (RCL_RET_OK != ret) {
         rcl_context_.reset();
