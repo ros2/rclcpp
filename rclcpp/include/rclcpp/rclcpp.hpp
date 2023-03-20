@@ -117,6 +117,19 @@
  * - Allocator related items:
  *   - rclcpp/allocator/allocator_common.hpp
  *   - rclcpp/allocator/allocator_deleter.hpp
+ * - Dynamic typesupport wrappers
+ *   - rclcpp::dynamic_typesupport::DynamicData
+ *   - rclcpp::dynamic_typesupport::DynamicMessage
+ *   - rclcpp::dynamic_typesupport::DynamicMessageType
+ *   - rclcpp::dynamic_typesupport::DynamicSerializationSupport
+ *   - rclcpp::dynamic_typesupport::DynamicTypeBuilder
+ *   - rclcpp::dynamic_typesupport::DynamicType
+ *   - rclcpp/dynamic_typesupport/dynamic_data.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_message.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_message_type.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_type_builder.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_type.hpp
  * - Generic publisher
  *   - rclcpp::Node::create_generic_publisher()
  *   - rclcpp::GenericPublisher
