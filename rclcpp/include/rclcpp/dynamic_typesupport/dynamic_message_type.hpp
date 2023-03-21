@@ -61,7 +61,7 @@ public:
 
   /// Construct a new DynamicType with the provided dynamic type builder
   RCLCPP_PUBLIC
-  explicit DynamicMessageType(std::shared_ptr<DynamicTypeBuilder> dynamic_type_builder);
+  explicit DynamicMessageType(DynamicTypeBuilder::SharedPtr dynamic_type_builder);
 
   /// Assume ownership of raw pointer
   RCLCPP_PUBLIC

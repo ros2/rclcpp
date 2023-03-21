@@ -143,7 +143,7 @@ public:
   get_shared_dynamic_serialization_support();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<const DynamicSerializationSupport>
+  DynamicSerializationSupport::ConstSharedPtr
   get_shared_dynamic_serialization_support() const;
 
   RCLCPP_PUBLIC

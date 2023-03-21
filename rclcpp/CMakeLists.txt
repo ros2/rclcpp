@@ -52,6 +52,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/dynamic_typesupport/dynamic_data.cpp
   src/rclcpp/dynamic_typesupport/dynamic_message.cpp
   src/rclcpp/dynamic_typesupport/dynamic_message_type.cpp
+  src/rclcpp/dynamic_typesupport/dynamic_message_type_support.cpp
   src/rclcpp/dynamic_typesupport/dynamic_serialization_support.cpp
   src/rclcpp/dynamic_typesupport/dynamic_type.cpp
   src/rclcpp/dynamic_typesupport/dynamic_type_builder.cpp
