@@ -303,7 +303,7 @@ DynamicData::get_shared_dynamic_serialization_support()
 }
 
 
-std::shared_ptr<const DynamicSerializationSupport>
+DynamicSerializationSupport::ConstSharedPtr
 DynamicData::get_shared_dynamic_serialization_support() const
 {
   return serialization_support_;

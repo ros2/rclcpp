@@ -130,6 +130,9 @@
  *   - rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp
  *   - rclcpp/dynamic_typesupport/dynamic_type_builder.hpp
  *   - rclcpp/dynamic_typesupport/dynamic_type.hpp
+ * - Dynamic typesupport
+ *   - rclcpp::dynamic_typesupport::DynamicMessageTypeSupport
+ *   - rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp
  * - Generic publisher
  *   - rclcpp::Node::create_generic_publisher()
  *   - rclcpp::GenericPublisher
