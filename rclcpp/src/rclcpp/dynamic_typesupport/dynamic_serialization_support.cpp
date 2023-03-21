@@ -46,8 +46,7 @@ DynamicSerializationSupport::DynamicSerializationSupport(
     rosidl_serialization_support,
     // Custom deleter
     [](rosidl_dynamic_typesupport_serialization_support_t * rosidl_serialization_support) -> void {
-      rosidl_dynamic_typesupport_serialization_support_fini(rosidl_serialization_support);
-      free(rosidl_serialization_support);
+      rosidl_dynamic_typesupport_serialization_support_destroy(rosidl_serialization_support);
     });
 }
 
@@ -64,8 +63,7 @@ DynamicSerializationSupport::DynamicSerializationSupport(
   rosidl_serialization_support_.reset(
     rosidl_serialization_support,
     [](rosidl_dynamic_typesupport_serialization_support_t * rosidl_serialization_support) -> void {
-      rosidl_dynamic_typesupport_serialization_support_fini(rosidl_serialization_support);
-      free(rosidl_serialization_support);
+      rosidl_dynamic_typesupport_serialization_support_destroy(rosidl_serialization_support);
     });
 }
 

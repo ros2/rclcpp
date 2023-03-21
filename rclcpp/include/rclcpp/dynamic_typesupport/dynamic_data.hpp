@@ -23,6 +23,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include <rcl/types.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
 
@@ -222,11 +223,11 @@ public:
 
   RCLCPP_PUBLIC
   bool
-  serialize(std::shared_ptr<rcutils_uint8_array_t> buffer);
+  serialize(rcl_serialized_message_t * buffer);
 
   RCLCPP_PUBLIC
   bool
-  deserialize(std::shared_ptr<rcutils_uint8_array_t> buffer);
+  deserialize(rcl_serialized_message_t * buffer);
 
 
   // MEMBER ACCESS TEMPLATES =======================================================================

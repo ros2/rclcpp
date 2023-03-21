@@ -48,7 +48,7 @@ public:
   // CONSTRUCTION ==================================================================================
   /// Get the rmw middleware implementation specific serialization support (configured by name)
   RCLCPP_PUBLIC
-  explicit DynamicSerializationSupport(const std::string & serialization_library_name = nullptr);
+  explicit DynamicSerializationSupport(const std::string & serialization_library_name = "");
 
   /// Assume ownership of raw pointer
   RCLCPP_PUBLIC
