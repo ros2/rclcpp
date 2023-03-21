@@ -20,6 +20,7 @@
 #include "rclcpp/dynamic_typesupport/dynamic_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_type_builder.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rcl/types.h"
 #include "rcutils/logging_macros.h"
 
 #include <rosidl_dynamic_typesupport/api/dynamic_type.h>
@@ -455,18 +456,16 @@ DynamicData::print() const
 
 
 bool
-DynamicData::serialize(std::shared_ptr<rcutils_uint8_array_t> buffer)
+DynamicData::serialize(rcl_serialized_message_t * buffer)
 {
-  return rosidl_dynamic_typesupport_dynamic_data_serialize(
-    get_rosidl_dynamic_data(), buffer.get());
+  return rosidl_dynamic_typesupport_dynamic_data_serialize(get_rosidl_dynamic_data(), buffer);
 }
 
 
 bool
-DynamicData::deserialize(std::shared_ptr<rcutils_uint8_array_t> buffer)
+DynamicData::deserialize(rcl_serialized_message_t * buffer)
 {
-  return rosidl_dynamic_typesupport_dynamic_data_deserialize(
-    get_rosidl_dynamic_data(), buffer.get());
+  return rosidl_dynamic_typesupport_dynamic_data_deserialize(get_rosidl_dynamic_data(), buffer);
 }
 
 

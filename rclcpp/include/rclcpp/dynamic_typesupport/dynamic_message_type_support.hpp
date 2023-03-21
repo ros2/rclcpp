@@ -64,7 +64,7 @@ public:
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
     rosidl_runtime_c__type_description__TypeDescription * description,
-    const std::string & serialization_library_name = nullptr);
+    const std::string & serialization_library_name = "");
 
   /// From description, for provided serialization support
   RCLCPP_PUBLIC
