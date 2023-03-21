@@ -57,7 +57,8 @@ public:
     node_namespace_(info.node_namespace),
     topic_type_(info.topic_type),
     endpoint_type_(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
-    qos_profile_({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile)
+    qos_profile_({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile),
+    topic_type_hash_(info.topic_type_hash)
   {
     std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid_.begin());
   }
@@ -122,6 +123,14 @@ public:
   const rclcpp::QoS &
   qos_profile() const;
 
+  RCLCPP_PUBLIC
+  rosidl_type_hash_t &
+  topic_type_hash();
+
+  RCLCPP_PUBLIC
+  const rosidl_type_hash_t &
+  topic_type_hash() const;
+
 private:
   std::string node_name_;
   std::string node_namespace_;
@@ -129,6 +138,7 @@ private:
   rclcpp::EndpointType endpoint_type_;
   std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid_;
   rclcpp::QoS qos_profile_;
+  rosidl_type_hash_t topic_type_hash_;
 };
 
 namespace node_interfaces
