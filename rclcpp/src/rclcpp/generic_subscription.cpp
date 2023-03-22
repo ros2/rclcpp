@@ -72,32 +72,32 @@ void GenericSubscription::return_serialized_message(
 }
 
 
-// DYNAMIC TYPE ==================================================================================
+// DYNAMIC TYPE ====================================================================================
 // TODO(methylDragon): Reorder later
-std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-GenericSubscription::get_dynamic_type()
+rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+GenericSubscription::get_shared_dynamic_message_type()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "get_dynamic_type is not implemented for GenericSubscription");
+    "get_shared_dynamic_message_type is not implemented for GenericSubscription");
 }
 
-std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-GenericSubscription::get_dynamic_data()
+rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+GenericSubscription::get_shared_dynamic_message()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "get_dynamic_data is not implemented for GenericSubscription");
+    "get_shared_dynamic_message is not implemented for GenericSubscription");
 }
 
-std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>
-GenericSubscription::get_serialization_support()
+rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+GenericSubscription::get_shared_dynamic_serialization_support()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "get_serialization_support is not implemented for GenericSubscription");
+    "get_shared_dynamic_serialization_support is not implemented for GenericSubscription");
 }
 
 void
 GenericSubscription::handle_dynamic_message(
-  const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
+  const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
   const rclcpp::MessageInfo & message_info)
 {
   (void) dyn_data;

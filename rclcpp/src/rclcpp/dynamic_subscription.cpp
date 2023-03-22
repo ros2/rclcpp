@@ -34,8 +34,7 @@ std::shared_ptr<rclcpp::SerializedMessage> DynamicSubscription::create_serialize
   return std::make_shared<rclcpp::SerializedMessage>(0);
 }
 
-void DynamicSubscription::handle_message(
-  std::shared_ptr<void> &, const rclcpp::MessageInfo &)
+void DynamicSubscription::handle_message(std::shared_ptr<void> &, const rclcpp::MessageInfo &)
 {
   throw rclcpp::exceptions::UnimplementedError(
           "handle_message is not implemented for DynamicSubscription");
@@ -48,8 +47,7 @@ void DynamicSubscription::handle_serialized_message(
           "handle_serialized_message is not implemented for DynamicSubscription");
 }
 
-void DynamicSubscription::handle_loaned_message(
-  void *, const rclcpp::MessageInfo &)
+void DynamicSubscription::handle_loaned_message(void *, const rclcpp::MessageInfo &)
 {
   throw rclcpp::exceptions::UnimplementedError(
           "handle_loaned_message is not implemented for DynamicSubscription");
@@ -70,44 +68,26 @@ void DynamicSubscription::return_serialized_message(
 
 // DYNAMIC TYPE ====================================================================================
 // TODO(methylDragon): Re-order later
-std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-DynamicSubscription::get_dynamic_type()
+rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+DynamicSubscription::get_shared_dynamic_message_type()
 {
-  auto ts_impl = (rmw_dynamic_typesupport_impl_t *)(ts_.data);
-
-  // no-op deleter because the lifetime is managed by the typesupport outside
-  return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>(
-    ts_impl->dynamic_type, [](rosidl_dynamic_typesupport_dynamic_type_t *){}
-  );
+  return dynamic_message_type_;
 };
 
-// NOTE(methylDragon): Should we store a separate copy of dynamic data in the sub so it isn't tied
-//                     to the typesupport instead?
-//                     If that's the case, will there ever be a lifetime contention between a sub
-//                     that manages the data and the callback/user usage of the data?
-std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-DynamicSubscription::get_dynamic_data()
+rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+DynamicSubscription::get_shared_dynamic_message()
 {
-  auto ts_impl = (rmw_dynamic_typesupport_impl_t *)(ts_.data);
-
-  // no-op deleter because the lifetime is managed by the typesupport outside
-  return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>(
-    ts_impl->dynamic_data, [](rosidl_dynamic_typesupport_dynamic_data_t *){}
-  );
+  return dynamic_message_;
 };
 
-std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> DynamicSubscription::get_serialization_support()
+rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+DynamicSubscription::get_shared_dynamic_serialization_support()
 {
-  auto ts_impl = (rmw_dynamic_typesupport_impl_t *)(ts_.data);
-
-  // no-op deleter because the lifetime is managed by the typesupport outside
-  return std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>(
-    ts_impl->serialization_support, [](rosidl_dynamic_typesupport_serialization_support_t *){}
-  );
+  return serialization_support_;
 };
 
 void DynamicSubscription::handle_dynamic_message(
-  const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
+  const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
   const rclcpp::MessageInfo &)
 {
   callback_(dyn_data);

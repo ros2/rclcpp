@@ -22,6 +22,7 @@
 #include "rcpputils/shared_library.hpp"
 
 #include "rclcpp/callback_group.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
@@ -50,18 +51,15 @@ public:
   template<typename AllocatorT = std::allocator<void>>
   DynamicSubscription(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    rosidl_message_type_support_t & type_support_handle,
+    rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr type_support,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    // TODO(methylDragons): Eventually roll out an rclcpp::DynamicMessage that encompasses the
-    //                      serialization_support support and DynamicData, and pass that to the
-    //                      callback
-    std::function<void(std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>)> callback,
+    std::function<void(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
     bool use_take_dynamic_message = false)
   : SubscriptionBase(
       node_base,
-      type_support_handle,
+      *(type_support->get_rosidl_message_type_support()),
       topic_name,
       options.to_rcl_subscription_options(qos),
       options.event_callbacks,
@@ -69,15 +67,26 @@ public:
       false,
       true,
       use_take_dynamic_message),
-    ts_(type_support_handle),
-    callback_(callback)
+    ts_(type_support),
+    callback_(callback),
+    serialization_support_(nullptr),
+    dynamic_message_(nullptr),
+    dynamic_message_type_(nullptr)
   {
-    if(type_support_handle.typesupport_identifier
-       != rmw_dynamic_typesupport_c__identifier)
+    if (!type_support) {
+      throw std::runtime_error("DynamicMessageTypeSupport cannot be nullptr!");
+    }
+
+    if (type_support->get_rosidl_message_type_support()->typesupport_identifier !=
+      rmw_dynamic_typesupport_c__identifier)
     {
       throw std::runtime_error(
-        "DynamicSubscription must use dynamic type introspection type support!");
+              "DynamicSubscription must use dynamic type introspection type support!");
     }
+
+    serialization_support_ = type_support->get_shared_dynamic_serialization_support();
+    dynamic_message_type_ = type_support->get_shared_dynamic_message_type()->clone_shared();
+    dynamic_message_ = type_support->get_shared_dynamic_message()->clone_shared();
   }
 
   // TODO(methylDragon):
@@ -91,7 +100,8 @@ public:
   //   // TODO(methylDragons): Eventually roll out an rclcpp::DynamicData that encompasses the serialization_support
   //   //                      support and DynamicData, and pass that to the callback
   //   std::function<void(
-  //     std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>, std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
+  //     rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr,
+  //     rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
   //   )> callback,
   //   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   //   const char * serialization_lib_name = nullptr)
@@ -147,29 +157,31 @@ public:
   // DYNAMIC TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-  get_dynamic_type() override;
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+  get_shared_dynamic_message_type() override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-  get_dynamic_data() override;
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  get_shared_dynamic_message() override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>
-  get_serialization_support() override;
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override;
 
   RCLCPP_PUBLIC
   void handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
-    const rclcpp::MessageInfo & message_info
-  ) override;
-
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
+    const rclcpp::MessageInfo & message_info) override;
 
 private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
-  rosidl_message_type_support_t & ts_;
-  std::function<void(std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>)> callback_;
+  rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
+  std::function<void(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr)> callback_;
+
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message_;
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr dynamic_message_type_;
 };
 
 }  // namespace rclcpp

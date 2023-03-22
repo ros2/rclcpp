@@ -31,6 +31,9 @@
 
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
@@ -546,26 +549,25 @@ public:
   // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
   virtual
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-  get_dynamic_type() = 0;
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+  get_shared_dynamic_message_type() = 0;
 
   RCLCPP_PUBLIC
   virtual
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-  get_dynamic_data() = 0;
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  get_shared_dynamic_message() = 0;
 
   RCLCPP_PUBLIC
   virtual
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>
-  get_serialization_support() = 0;
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() = 0;
 
   RCLCPP_PUBLIC
   virtual
   void
   handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
-    const rclcpp::MessageInfo & message_info
-  ) = 0;
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
+    const rclcpp::MessageInfo & message_info) = 0;
 
   // TODO(methylDragon):
   // RCLCPP_PUBLIC

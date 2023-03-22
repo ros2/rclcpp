@@ -28,6 +28,11 @@
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
+using rclcpp::dynamic_typesupport::DynamicMessageType;
+using rclcpp::dynamic_typesupport::DynamicMessage;
+using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
+
+
 namespace
 {
 
@@ -78,11 +83,11 @@ public:
   void return_message(std::shared_ptr<void> &) override {}
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> &) override {}
 
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t> get_dynamic_type() override {return nullptr;}
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> get_dynamic_data() override {return nullptr;}
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>   get_serialization_support() override {return nullptr;}
+  DynamicMessageType::SharedPtr get_shared_dynamic_message_type() override {return nullptr;}
+  DynamicMessage::SharedPtr get_shared_dynamic_message() override {return nullptr;}
+  DynamicSerializationSupport::SharedPtr   get_shared_dynamic_serialization_support() override {return nullptr;}
   void handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> &,
+    const DynamicMessage::SharedPtr &,
     const rclcpp::MessageInfo &) override {}
 };
 

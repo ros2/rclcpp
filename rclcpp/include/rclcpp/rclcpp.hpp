@@ -133,6 +133,9 @@
  * - Dynamic typesupport
  *   - rclcpp::dynamic_typesupport::DynamicMessageTypeSupport
  *   - rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp
+ * - Dynamic subscription
+ *   - rclcpp::DynamicSubscription
+ *   - rclcpp/dynamic_subscription.hpp
  * - Generic publisher
  *   - rclcpp::Node::create_generic_publisher()
  *   - rclcpp::GenericPublisher

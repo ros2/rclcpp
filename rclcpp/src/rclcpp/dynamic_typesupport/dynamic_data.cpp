@@ -156,7 +156,10 @@ DynamicData::DynamicData(
 DynamicData::DynamicData(
   DynamicData::SharedPtr parent_data,
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_loaned_data)
-: DynamicData(parent_data->get_shared_dynamic_serialization_support(), rosidl_loaned_data)
+: serialization_support_(parent_data->get_shared_dynamic_serialization_support()),
+  rosidl_dynamic_data_(nullptr),
+  is_loaned_(true),
+  parent_data_(nullptr)
 {
   if (!parent_data) {
     throw std::runtime_error("parent dynamic data cannot be nullptr!");
@@ -165,8 +168,21 @@ DynamicData::DynamicData(
     throw std::runtime_error("loaned rosidl dynamic data cannot be nullptr!");
   }
 
+  if (serialization_support_) {
+    if (!match_serialization_support_(*serialization_support_, *rosidl_loaned_data)) {
+      throw std::runtime_error(
+          "serialization support library identifier does not match loaned dynamic data's!");
+    }
+  }
+
+  rosidl_dynamic_data_.reset(
+    rosidl_loaned_data,
+    // Custom no-op deleter
+    [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
+      // Data fini and destruction is deferred to return_loaned_value()
+      (void) rosidl_dynamic_data;
+    });
   parent_data_ = parent_data;
-  is_loaned_ = true;
 }
 
 
@@ -384,8 +400,7 @@ DynamicData::loan_value(rosidl_dynamic_typesupport_member_id_t id)
 {
   return DynamicData::make_shared(
     shared_from_this(),
-    rosidl_dynamic_typesupport_dynamic_data_loan_value(
-      get_rosidl_dynamic_data(), id));
+    rosidl_dynamic_typesupport_dynamic_data_loan_value(get_rosidl_dynamic_data(), id));
 }
 
 

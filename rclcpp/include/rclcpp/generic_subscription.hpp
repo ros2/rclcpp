@@ -127,17 +127,19 @@ public:
   // DYNAMIC TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t> get_dynamic_type() override;
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr get_shared_dynamic_message_type()
+  override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> get_dynamic_data() override;
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr get_shared_dynamic_message() override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> get_serialization_support() override;
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override;
 
   RCLCPP_PUBLIC
   void handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
     const rclcpp::MessageInfo & message_info) override;
 
 private:

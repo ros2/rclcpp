@@ -627,18 +627,15 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
         [&]()
         {
-          std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> serialization_support = subscription->get_serialization_support();
-          std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> dyn_data = subscription->get_dynamic_data();
-
           // NOTE(methylDragon): We might want to consider cloning the dynamic data here
+          rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message =
+            subscription->get_shared_dynamic_message();
 
-          rcl_ret_t ret = rmw_serialized_to_dynamic_data(
-            &serialized_msg->get_rcl_serialized_message(), dyn_data.get());
-
-          if (ret != RMW_RET_OK) {
+          bool ret = dynamic_message->deserialize(&serialized_msg->get_rcl_serialized_message());
+          if (!ret) {
             throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
           }
-          subscription->handle_dynamic_message(dyn_data, message_info);
+          subscription->handle_dynamic_message(dynamic_message, message_info);
         }
       );
       subscription->return_serialized_message(serialized_msg);

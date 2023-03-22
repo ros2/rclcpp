@@ -391,30 +391,30 @@ public:
   // DYNAMIC TYPE ==================================================================================
   // TODO(methylDragon): Reorder later
   // TODO(methylDragon): Implement later...
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-  get_dynamic_type() override
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+  get_shared_dynamic_message_type() override
   {
     throw rclcpp::exceptions::UnimplementedError(
-      "get_dynamic_type is not implemented for Subscription");
+      "get_shared_dynamic_message_type is not implemented for Subscription");
   }
 
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-  get_dynamic_data() override
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  get_shared_dynamic_message() override
   {
     throw rclcpp::exceptions::UnimplementedError(
-      "get_dynamic_data is not implemented for Subscription");
+      "get_shared_dynamic_message is not implemented for Subscription");
   }
 
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>
-  get_serialization_support() override
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override
   {
     throw rclcpp::exceptions::UnimplementedError(
-      "get_serialization_support is not implemented for Subscription");
+      "get_shared_dynamic_serialization_support is not implemented for Subscription");
   }
 
   void
   handle_dynamic_message(
-    const std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> & dyn_data,
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
     const rclcpp::MessageInfo & message_info) override
   {
     (void) dyn_data;
