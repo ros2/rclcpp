@@ -282,6 +282,30 @@ public:
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
     DynamicType & nested_type, size_t sequence_bound);
 
+  RCLCPP_PUBLIC
+  void
+  add_complex_member_builder(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    DynamicTypeBuilder & nested_type_builder);
+
+  RCLCPP_PUBLIC
+  void
+  add_complex_array_member_builder(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    DynamicTypeBuilder & nested_type_builder, size_t array_length);
+
+  RCLCPP_PUBLIC
+  void
+  add_complex_unbounded_sequence_member_builder(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    DynamicTypeBuilder & nested_type_builder);
+
+  RCLCPP_PUBLIC
+  void
+  add_complex_bounded_sequence_member_builder(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    DynamicTypeBuilder & nested_type_builder, size_t sequence_bound);
+
 protected:
   // NOTE(methylDragon):
   // This is just here to extend the lifetime of the serialization support

@@ -490,3 +490,47 @@ DynamicTypeBuilder::add_complex_bounded_sequence_member(
     get_rosidl_dynamic_type_builder(), id, name.c_str(), name.size(),
     nested_type.get_rosidl_dynamic_type(), sequence_bound);
 }
+
+
+void
+DynamicTypeBuilder::add_complex_member_builder(
+  rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+  DynamicTypeBuilder & nested_type_builder)
+{
+  rosidl_dynamic_typesupport_dynamic_type_builder_add_complex_member_builder(
+    get_rosidl_dynamic_type_builder(), id, name.c_str(), name.size(),
+    nested_type_builder.get_rosidl_dynamic_type_builder());
+}
+
+
+void
+DynamicTypeBuilder::add_complex_array_member_builder(
+  rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+  DynamicTypeBuilder & nested_type_builder, size_t array_length)
+{
+  rosidl_dynamic_typesupport_dynamic_type_builder_add_complex_array_member_builder(
+    get_rosidl_dynamic_type_builder(), id, name.c_str(), name.size(),
+    nested_type_builder.get_rosidl_dynamic_type_builder(), array_length);
+}
+
+
+void
+DynamicTypeBuilder::add_complex_unbounded_sequence_member_builder(
+  rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+  DynamicTypeBuilder & nested_type_builder)
+{
+  rosidl_dynamic_typesupport_dynamic_type_builder_add_complex_unbounded_sequence_member_builder(
+    get_rosidl_dynamic_type_builder(), id, name.c_str(), name.size(),
+    nested_type_builder.get_rosidl_dynamic_type_builder());
+}
+
+
+void
+DynamicTypeBuilder::add_complex_bounded_sequence_member_builder(
+  rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+  DynamicTypeBuilder & nested_type_builder, size_t sequence_bound)
+{
+  rosidl_dynamic_typesupport_dynamic_type_builder_add_complex_bounded_sequence_member_builder(
+    get_rosidl_dynamic_type_builder(), id, name.c_str(), name.size(),
+    nested_type_builder.get_rosidl_dynamic_type_builder(), sequence_bound);
+}

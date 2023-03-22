@@ -38,8 +38,7 @@ namespace dynamic_typesupport
 // NOTE(methylDragon): We just alias the type in this case...
 //                     I'd have made a wrapper class but then I'd need to redirect every single
 //                     method (or dynamic cast everywhere else), so.. no thanks.
-using DynamicMessageType = DynamicType;
-
+using DynamicMessage = DynamicData;
 
 }  // namespace dynamic_typesupport
 }  // namespace rclcpp

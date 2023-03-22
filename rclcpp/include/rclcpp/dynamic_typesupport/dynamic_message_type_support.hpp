@@ -145,6 +145,12 @@ public:
   DynamicMessage::ConstSharedPtr
   get_shared_dynamic_message() const;
 
+
+  // METHODS =======================================================================================
+  RCLCPP_PUBLIC
+  void
+  print_description() const;
+
 protected:
   RCLCPP_DISABLE_COPY(DynamicMessageTypeSupport)
 
@@ -179,7 +185,7 @@ private:
     DynamicSerializationSupport::SharedPtr serialization_support,
     DynamicMessageType::SharedPtr dynamic_message_type,
     DynamicMessage::SharedPtr dynamic_message,
-    const rosidl_runtime_c__type_description__TypeDescription * description);
+    rosidl_runtime_c__type_description__TypeDescription * description);
 };
 
 
