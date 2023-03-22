@@ -57,7 +57,7 @@ public:
 
   /// Copy shared pointer
   RCLCPP_PUBLIC
-  DynamicSerializationSupport(  // NOLINT(explicit)
+  DynamicSerializationSupport(
     std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> serialization_support);
 
   /// Move constructor

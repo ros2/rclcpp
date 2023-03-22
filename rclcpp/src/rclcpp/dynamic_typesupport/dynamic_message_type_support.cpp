@@ -29,6 +29,7 @@
 
 #include <rosidl_dynamic_typesupport/types.h>
 #include <rosidl_runtime_c/message_type_support_struct.h>
+#include "rosidl_runtime_c/type_description_utils.h"
 #include <rosidl_runtime_c/type_description/type_description__functions.h>
 #include <rosidl_runtime_c/type_description/type_description__struct.h>
 
@@ -225,7 +226,7 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   DynamicSerializationSupport::SharedPtr serialization_support,
   DynamicMessageType::SharedPtr dynamic_message_type,
   DynamicMessage::SharedPtr dynamic_message,
-  const rosidl_runtime_c__type_description__TypeDescription * description)
+  rosidl_runtime_c__type_description__TypeDescription * description)
 {
   bool middleware_supports_type_discovery =
     rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY);
@@ -242,8 +243,11 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   }
 
   // NOTE(methylDragon): We don't finalize the rosidl_message_type_support->data since its members
-  //                     are they're managed by the passed in SharedPtr wrapper classes
-  rosidl_message_type_support_ = std::make_shared<rosidl_message_type_support_t>();
+  //                     are managed by the passed in SharedPtr wrapper classes
+  rosidl_message_type_support_.reset(
+    new rosidl_message_type_support_t(),
+    [](rosidl_message_type_support_t * ts) -> void {free(const_cast<void *>(ts->data));}
+  );
 
   if (!rosidl_message_type_support_) {
     RCUTILS_LOG_ERROR_NAMED(
@@ -270,26 +274,8 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   ts_impl->serialization_support = serialization_support->get_rosidl_serialization_support();
   ts_impl->dynamic_type = dynamic_message_type->get_rosidl_dynamic_type();
   ts_impl->dynamic_data = dynamic_message->get_rosidl_dynamic_data();
+  ts_impl->description = description;
   rosidl_message_type_support_->func = get_message_typesupport_handle_function;
-
-  if (description) {
-    ts_impl->description = rosidl_runtime_c__type_description__TypeDescription__create();
-    if (ts_impl->description == NULL) {
-      RCUTILS_LOG_ERROR_NAMED(
-        rmw_dynamic_typesupport_c__identifier,
-        "Could not create type description to assign into");
-      rosidl_message_type_support_.reset();
-    }
-
-    if (!rosidl_runtime_c__type_description__TypeDescription__copy(
-      description, ts_impl->description))
-    {
-      RCUTILS_LOG_ERROR_NAMED(
-        rmw_dynamic_typesupport_c__identifier,
-        "Could not copy type description");
-      rosidl_message_type_support_.reset();
-    }
-  }
 }
 
 
@@ -396,4 +382,15 @@ DynamicMessage::ConstSharedPtr
 DynamicMessageTypeSupport::get_shared_dynamic_message() const
 {
   return dynamic_message_;
+}
+
+
+// METHODS =========================================================================================
+void
+DynamicMessageTypeSupport::print_description() const
+{
+  if (!description_) {
+    RCUTILS_LOG_ERROR("Can't print description, no bound description!");
+  }
+  rosidl_runtime_c_type_description_utils_print_type_description(description_.get());
 }
