@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <future>
@@ -313,6 +314,11 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
+  // rmw_connextdds doesn't support rmw_event_set_callback() interface
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP();
+  }
+
   auto offered_deadline = rclcpp::Duration(std::chrono::milliseconds(1));
   auto requested_deadline = rclcpp::Duration(std::chrono::milliseconds(2));
 
@@ -354,6 +360,11 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 {
+  // rmw_connextdds doesn't support rmw_event_set_callback() interface
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP();
+  }
+
   auto pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
   auto dummy_cb = [](size_t count_events) {(void)count_events;};
@@ -377,6 +388,12 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
     pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS));
 
   EXPECT_NO_THROW(
+    pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_MATCHED));
+
+  EXPECT_NO_THROW(
+    pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_MATCHED));
+
+  EXPECT_NO_THROW(
     sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
 
   EXPECT_NO_THROW(
@@ -393,6 +410,12 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 
   EXPECT_NO_THROW(
     sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS));
+
+  EXPECT_NO_THROW(
+    sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_MATCHED));
+
+  EXPECT_NO_THROW(
+    sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_MATCHED));
 
   std::function<void(size_t)> invalid_cb;
 
@@ -412,4 +435,171 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   EXPECT_THROW(
     pub->set_on_new_qos_event_callback(invalid_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED),
     std::invalid_argument);
+}
+
+TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
+{
+  // rmw_connextdds doesn't support rmw_event_set_callback() interface
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP();
+  }
+
+  std::atomic_size_t matched_count = 0;
+
+  rclcpp::PublisherOptions pub_options;
+  pub_options.event_callbacks.matched_callback = [](auto) {};
+  auto pub = node->create_publisher<test_msgs::msg::Empty>(
+    topic_name, 10, pub_options);
+
+  auto matched_event_callback = [&matched_count](size_t count) {
+      matched_count += count;
+    };
+
+  pub->set_on_new_qos_event_callback(matched_event_callback, RCL_PUBLISHER_MATCHED);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(node->get_node_base_interface());
+
+  const auto timeout = std::chrono::milliseconds(200);
+
+  {
+    auto sub1 = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
+    ex.spin_some(timeout);
+    EXPECT_EQ(matched_count, static_cast<size_t>(1));
+
+    {
+      auto sub2 = node->create_subscription<test_msgs::msg::Empty>(
+        topic_name, 10, message_callback);
+      ex.spin_some(timeout);
+      EXPECT_EQ(matched_count, static_cast<size_t>(2));
+    }
+    ex.spin_some(timeout);
+    EXPECT_EQ(matched_count, static_cast<size_t>(3));
+  }
+
+  ex.spin_some(timeout);
+  EXPECT_EQ(matched_count, static_cast<size_t>(4));
+}
+
+TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
+{
+  // rmw_connextdds doesn't support rmw_event_set_callback() interface
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP();
+  }
+
+  std::atomic_size_t matched_count = 0;
+
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.event_callbacks.matched_callback = [](auto) {};
+  auto sub = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, 10, message_callback, sub_options);
+
+  auto matched_event_callback = [&matched_count](size_t count) {
+      matched_count += count;
+    };
+
+  sub->set_on_new_qos_event_callback(matched_event_callback, RCL_SUBSCRIPTION_MATCHED);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(node->get_node_base_interface());
+
+  const auto timeout = std::chrono::milliseconds(200);
+
+  {
+    auto pub1 = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+
+    ex.spin_some(timeout);
+    EXPECT_EQ(matched_count, static_cast<size_t>(1));
+
+    {
+      auto pub2 = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+      ex.spin_some(timeout);
+      EXPECT_EQ(matched_count, static_cast<size_t>(2));
+    }
+
+    ex.spin_some(timeout);
+    EXPECT_EQ(matched_count, static_cast<size_t>(3));
+  }
+
+  ex.spin_some(timeout);
+  EXPECT_EQ(matched_count, static_cast<size_t>(4));
+}
+
+TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
+{
+  rmw_matched_status_t matched_expected_result;
+
+  rclcpp::PublisherOptions pub_options;
+  pub_options.event_callbacks.matched_callback =
+    [&matched_expected_result](rmw_matched_status_t & s) {
+      EXPECT_EQ(s.total_count, matched_expected_result.total_count);
+      EXPECT_EQ(s.total_count_change, matched_expected_result.total_count_change);
+      EXPECT_EQ(s.current_count, matched_expected_result.current_count);
+      EXPECT_EQ(s.current_count_change, matched_expected_result.current_count_change);
+    };
+
+  auto pub = node->create_publisher<test_msgs::msg::Empty>(
+    topic_name, 10, pub_options);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(node->get_node_base_interface());
+
+  // Create a connected subscription
+  matched_expected_result.total_count = 1;
+  matched_expected_result.total_count_change = 1;
+  matched_expected_result.current_count = 1;
+  matched_expected_result.current_count_change = 1;
+
+  const auto timeout = std::chrono::milliseconds(200);
+
+  {
+    auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
+    ex.spin_some(timeout);
+
+    // destroy a connected subscription
+    matched_expected_result.total_count = 1;
+    matched_expected_result.total_count_change = 0;
+    matched_expected_result.current_count = 0;
+    matched_expected_result.current_count_change = -1;
+  }
+  ex.spin_some(timeout);
+}
+
+TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
+{
+  rmw_matched_status_t matched_expected_result;
+
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.event_callbacks.matched_callback =
+    [&matched_expected_result](rmw_matched_status_t & s) {
+      EXPECT_EQ(s.total_count, matched_expected_result.total_count);
+      EXPECT_EQ(s.total_count_change, matched_expected_result.total_count_change);
+      EXPECT_EQ(s.current_count, matched_expected_result.current_count);
+      EXPECT_EQ(s.current_count_change, matched_expected_result.current_count_change);
+    };
+  auto sub = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, 10, message_callback, sub_options);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(node->get_node_base_interface());
+
+  // Create a connected publisher
+  matched_expected_result.total_count = 1;
+  matched_expected_result.total_count_change = 1;
+  matched_expected_result.current_count = 1;
+  matched_expected_result.current_count_change = 1;
+
+  const auto timeout = std::chrono::milliseconds(200);
+  {
+    auto pub1 = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+    ex.spin_some(timeout);
+
+    // destroy a connected publisher
+    matched_expected_result.total_count = 1;
+    matched_expected_result.total_count_change = 0;
+    matched_expected_result.current_count = 0;
+    matched_expected_result.current_count_change = -1;
+  }
+  ex.spin_some(timeout);
 }
