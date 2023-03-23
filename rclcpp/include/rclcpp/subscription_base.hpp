@@ -80,8 +80,8 @@ public:
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options Options for the subscription.
    * \param[in] is_serialized is true if the message will be delivered still serialized
-   * \param[in] use_dynamic_message_cb is true if the message will be taken serialized and then handled
-   *                             using dynamic type and dynamic data (type constructed at runtime)
+   * \param[in] is_dynamic is true if the message will be delivered dynamic (type constructed at
+   *                       runtime)
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
@@ -92,11 +92,8 @@ public:
     const SubscriptionEventCallbacks & event_callbacks,
     bool use_default_callbacks,
     bool is_serialized = false,
-    bool use_dynamic_message_cb = false,
+    bool is_dynamic = false,
     bool use_take_dynamic_message = false);
-    // TODO(methylDragon): If we don't need this, remove it,
-    // rclcpp::node_interfaces::NodeGraphInterface * node_graph = 0,
-    // rclcpp::node_interfaces::NodeServicesInterface * node_services = 0);
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -562,28 +559,41 @@ public:
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
   get_shared_dynamic_serialization_support() = 0;
 
+  /// Borrow a new serialized message (this clones!)
+  /** \return Shared pointer to a rclcpp::dynamic_typesupport::DynamicMessage. */
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  create_dynamic_message() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  return_dynamic_message(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) = 0;
+
   RCLCPP_PUBLIC
   virtual
   void
   handle_dynamic_message(
-    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
     const rclcpp::MessageInfo & message_info) = 0;
 
-  // TODO(methylDragon):
-  // RCLCPP_PUBLIC
-  // bool
-  // take_dynamic_message(rosidl_dynamic_typesupport_dynamic_data_t * message_out, rclcpp::MessageInfo & message_info_out);
+  RCLCPP_PUBLIC
+  bool
+  take_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage & message_out,
+    rclcpp::MessageInfo & message_info_out);
 
-  /// Return if the subscription should use dynamic type
+  /// Return if the subscription handles dynamic messages
   /**
    * This will cause the subscription to use the handle_dynamic_message methods, which must be
    * used with take_serialized or take_dynamic_message.
    *
-   * \return `true` if the subscription should use a dynamic type callback, `false` otherwise
+   * \return `true` if the subscription should use a dynamic message callback, `false` otherwise
    */
   RCLCPP_PUBLIC
   bool
-  use_dynamic_message_cb() const;
+  is_dynamic() const;
 
   RCLCPP_PUBLIC
   bool
@@ -648,7 +658,7 @@ private:
 
   rosidl_message_type_support_t type_support_;
   bool is_serialized_;
-  bool use_dynamic_message_cb_;
+  bool is_dynamic_;
   bool use_take_dynamic_message_;
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};

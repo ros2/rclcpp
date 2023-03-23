@@ -56,7 +56,7 @@ public:
     const rclcpp::QoS & qos,
     std::function<void(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr)> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-    bool use_take_dynamic_message = false)
+    bool use_take_dynamic_message = true)
   : SubscriptionBase(
       node_base,
       *(type_support->get_rosidl_message_type_support()),
@@ -161,16 +161,22 @@ public:
   get_shared_dynamic_message_type() override;
 
   RCLCPP_PUBLIC
-  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
-  get_shared_dynamic_message() override;
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr get_shared_dynamic_message() override;
 
   RCLCPP_PUBLIC
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
   get_shared_dynamic_serialization_support() override;
 
   RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr create_dynamic_message() override;
+
+  RCLCPP_PUBLIC
+  void return_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override;
+
+  RCLCPP_PUBLIC
   void handle_dynamic_message(
-    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
     const rclcpp::MessageInfo & message_info) override;
 
 private:

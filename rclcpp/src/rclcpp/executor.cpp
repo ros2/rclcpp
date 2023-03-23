@@ -24,6 +24,7 @@
 #include "rcl/error_handling.h"
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/guard_condition.hpp"
@@ -598,12 +599,13 @@ take_and_do_error_handling(
 void
 Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
+  using rclcpp::dynamic_typesupport::DynamicMessage;
+
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
-  // PROPOSED ======================================================================================
-  // If a subscription is meant to use_dynamic_message_cb, then it will use its
-  // serialization-specific dynamic data.
+  // DYNAMIC SUBSCRIPTION ==========================================================================
+  // If a subscription is dynamic, then it will use its serialization-specific dynamic data.
   //
   // Two cases:
   // - Dynamic type subscription using dynamic type stored in its own internal type support struct
@@ -611,26 +613,30 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   //   - Subscriptions of this type must be able to lookup the local message description to
   //     generate a dynamic type at runtime!
   //   - TODO(methylDragon): I won't be handling this case yet
-  //
-  // TODO(methylDragon):
-  // - use_dynamic_message_cb (can use take_serialized or take_dynamic_message)
-  // - take_dynamic_message (MUST have use_dynamic_message_cb true)
-  if (subscription->use_dynamic_message_cb()) {
+  if (subscription->is_dynamic()) {
+    // Take dynamic message directly from the middleware
     if (subscription->use_take_dynamic_message()) {
-      // TODO(methylDragon)
-      throw rclcpp::exceptions::UnimplementedError("take_dynamic_message is not implemented");
+      DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
+      take_and_do_error_handling(
+        "taking a dynamic message from topic",
+        subscription->get_topic_name(),
+        // This modifies the stored dynamic data in the DynamicMessage in-place
+        [&]() {return subscription->take_dynamic_message(*dynamic_message, message_info);},
+        [&]() {subscription->handle_dynamic_message(dynamic_message, message_info);});
+      subscription->return_dynamic_message(dynamic_message);
+
+    // Take serialized and then convert to dynamic message
     } else {
       std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
+
+      // NOTE(methylDragon): Is this clone necessary? If I'm following the pattern, it seems so.
+      DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
       take_and_do_error_handling(
         "taking a serialized message from topic",
         subscription->get_topic_name(),
         [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
         [&]()
         {
-          // NOTE(methylDragon): We might want to consider cloning the dynamic data here
-          rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message =
-            subscription->get_shared_dynamic_message();
-
           bool ret = dynamic_message->deserialize(&serialized_msg->get_rcl_serialized_message());
           if (!ret) {
             throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
@@ -639,6 +645,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         }
       );
       subscription->return_serialized_message(serialized_msg);
+      subscription->return_dynamic_message(dynamic_message);
     }
     return;
   }

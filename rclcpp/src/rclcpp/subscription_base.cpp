@@ -22,6 +22,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
@@ -31,6 +32,8 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+
+#include "rosidl_dynamic_typesupport/types.h"
 
 using rclcpp::SubscriptionBase;
 
@@ -42,7 +45,7 @@ SubscriptionBase::SubscriptionBase(
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
   bool is_serialized,
-  bool use_dynamic_message_cb,
+  bool is_dynamic,
   bool use_take_dynamic_message)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
@@ -52,7 +55,7 @@ SubscriptionBase::SubscriptionBase(
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
   is_serialized_(is_serialized),
-  use_dynamic_message_cb_(use_dynamic_message_cb),
+  is_dynamic_(is_dynamic),
   use_take_dynamic_message_(use_take_dynamic_message)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
@@ -446,8 +449,7 @@ SubscriptionBase::set_content_filter(
   rcl_subscription_content_filter_options_t options =
     rcl_get_zero_initialized_subscription_content_filter_options();
 
-  std::vector<const char *> cstrings =
-    get_c_vector_string(expression_parameters);
+  std::vector<const char *> cstrings = get_c_vector_string(expression_parameters);
   rcl_ret_t ret = rcl_subscription_content_filter_options_init(
     subscription_handle_.get(),
     get_c_string(filter_expression),
@@ -524,13 +526,31 @@ SubscriptionBase::get_content_filter() const
 // DYNAMIC TYPE ==================================================================================
 // TODO(methylDragon): Reorder later
 bool
-SubscriptionBase::use_dynamic_message_cb() const
+SubscriptionBase::is_dynamic() const
 {
-  return use_dynamic_message_cb_;
+  return is_dynamic_;
 }
 
 bool
 SubscriptionBase::use_take_dynamic_message() const
 {
   return use_take_dynamic_message_;
+}
+
+bool
+SubscriptionBase::take_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage & message_out,
+  rclcpp::MessageInfo & message_info_out)
+{
+  rcl_ret_t ret = rcl_take_dynamic_message(
+    this->get_subscription_handle().get(),
+    message_out.get_rosidl_dynamic_data(),
+    &message_info_out.get_rmw_message_info(),
+    nullptr);
+  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+    return false;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  return true;
 }

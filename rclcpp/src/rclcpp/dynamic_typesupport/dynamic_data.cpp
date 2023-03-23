@@ -16,6 +16,7 @@
 #include <string>
 
 #include "rclcpp/dynamic_typesupport/dynamic_data.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_type_builder.hpp"
@@ -381,6 +382,24 @@ DynamicData::clone_shared() const
   return DynamicData::make_shared(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_data_clone(get_rosidl_dynamic_data()));
+}
+
+
+DynamicData
+DynamicData::init_from_type(DynamicMessageType & type) const
+{
+  return DynamicData(
+    serialization_support_,
+    rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(type.get_rosidl_dynamic_type()));
+}
+
+
+DynamicData::SharedPtr
+DynamicData::init_from_type_shared(DynamicMessageType & type) const
+{
+  return DynamicData::make_shared(
+    serialization_support_,
+    rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(type.get_rosidl_dynamic_type()));
 }
 
 

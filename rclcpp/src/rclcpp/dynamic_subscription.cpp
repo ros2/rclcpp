@@ -68,12 +68,15 @@ void DynamicSubscription::return_serialized_message(
 
 // DYNAMIC TYPE ====================================================================================
 // TODO(methylDragon): Re-order later
+
+// Does not clone
 rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
 DynamicSubscription::get_shared_dynamic_message_type()
 {
   return dynamic_message_type_;
 };
 
+// Does not clone
 rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
 DynamicSubscription::get_shared_dynamic_message()
 {
@@ -86,11 +89,24 @@ DynamicSubscription::get_shared_dynamic_serialization_support()
   return serialization_support_;
 };
 
+rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+DynamicSubscription::create_dynamic_message()
+{
+  return dynamic_message_->init_from_type_shared(*dynamic_message_type_);
+};
+
+void
+DynamicSubscription::return_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message)
+{
+  message.reset();
+};
+
 void DynamicSubscription::handle_dynamic_message(
-  const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
+  const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
   const rclcpp::MessageInfo &)
 {
-  callback_(dyn_data);
+  callback_(message);
 }
 
 }  // namespace rclcpp

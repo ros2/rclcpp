@@ -412,12 +412,28 @@ public:
       "get_shared_dynamic_serialization_support is not implemented for Subscription");
   }
 
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  create_dynamic_message() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+      "create_dynamic_message is not implemented for Subscription");
+  }
+
+  void
+  return_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override
+  {
+    (void) message;
+    throw rclcpp::exceptions::UnimplementedError(
+      "return_dynamic_message is not implemented for Subscription");
+  }
+
   void
   handle_dynamic_message(
-    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & dyn_data,
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
     const rclcpp::MessageInfo & message_info) override
   {
-    (void) dyn_data;
+    (void) message;
     (void) message_info;
     throw rclcpp::exceptions::UnimplementedError(
       "handle_dynamic_message is not implemented for Subscription");
