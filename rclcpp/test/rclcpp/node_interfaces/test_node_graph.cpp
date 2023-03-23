@@ -599,6 +599,9 @@ TEST_F(TestNodeGraph, get_info_by_topic)
   rclcpp::QoS const_actual_qos = const_publisher_endpoint_info.qos_profile();
   EXPECT_EQ(const_actual_qos.reliability(), rclcpp::ReliabilityPolicy::Reliable);
 
+  const rosidl_type_hash_t type_hash = rosidl_get_zero_initialized_type_hash();
+  EXPECT_EQ(0, memcmp(&publisher_endpoint_info.topic_type_hash(), &type_hash, sizeof(rosidl_type_hash_t)));
+
   auto endpoint_gid = publisher_endpoint_info.endpoint_gid();
   auto const_endpoint_gid = const_publisher_endpoint_info.endpoint_gid();
   bool endpoint_gid_is_all_zeros = true;

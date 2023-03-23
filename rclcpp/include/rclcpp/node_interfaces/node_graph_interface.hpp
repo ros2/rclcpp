@@ -123,10 +123,12 @@ public:
   const rclcpp::QoS &
   qos_profile() const;
 
+  /// Get a mutable reference to the type hash of the topic endpoint.
   RCLCPP_PUBLIC
   rosidl_type_hash_t &
   topic_type_hash();
 
+  /// Get a const reference to the type hash of the topic endpoint.
   RCLCPP_PUBLIC
   const rosidl_type_hash_t &
   topic_type_hash() const;
