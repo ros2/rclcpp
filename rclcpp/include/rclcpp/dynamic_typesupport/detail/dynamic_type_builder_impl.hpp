@@ -33,40 +33,56 @@
   template<> \
   void \
   DynamicTypeBuilder::add_member<MemberT>( \
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name) \
+    rosidl_dynamic_typesupport_member_id_t id, \
+    const std::string & name, \
+    const std::string & default_value) \
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _member( \
-      rosidl_dynamic_type_builder_.get(), id, name.c_str(), name.size()); \
+      rosidl_dynamic_type_builder_.get(), \
+      id, name.c_str(), name.size(), default_value.c_str(), default_value.size()); \
   }
 
 #define __DYNAMIC_TYPE_BUILDER_ADD_ARRAY_MEMBER_FN(MemberT, FunctionT) \
   template<> \
   void \
   DynamicTypeBuilder::add_array_member<MemberT>( \
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t array_length) \
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, \
+    size_t array_length, \
+    const std::string & default_value) \
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _array_member( \
-      rosidl_dynamic_type_builder_.get(), id, name.c_str(), name.size(), array_length); \
+      rosidl_dynamic_type_builder_.get(), \
+      id, name.c_str(), name.size(), default_value.c_str(), default_value.size(), \
+      array_length); \
   }
 
 #define __DYNAMIC_TYPE_BUILDER_ADD_UNBOUNDED_SEQUENCE_MEMBER_FN(MemberT, FunctionT) \
   template<> \
   void \
   DynamicTypeBuilder::add_unbounded_sequence_member<MemberT>( \
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name) \
+    rosidl_dynamic_typesupport_member_id_t id, \
+    const std::string & name, \
+    const std::string & default_value) \
   { \
-    rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _unbounded_sequence_member( \
-      rosidl_dynamic_type_builder_.get(), id, name.c_str(), name.size()); \
+    rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## \
+    _unbounded_sequence_member( \
+      rosidl_dynamic_type_builder_.get(), \
+      id, name.c_str(), name.size(), default_value.c_str(), default_value.size()); \
   }
 
 #define __DYNAMIC_TYPE_BUILDER_ADD_BOUNDED_SEQUENCE_MEMBER_FN(MemberT, FunctionT) \
   template<> \
   void \
   DynamicTypeBuilder::add_bounded_sequence_member<MemberT>( \
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t sequence_bound) \
+    rosidl_dynamic_typesupport_member_id_t id, \
+    const std::string & name, \
+    size_t sequence_bound, \
+    const std::string & default_value) \
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _bounded_sequence_member( \
-      rosidl_dynamic_type_builder_.get(), id, name.c_str(), name.size(), sequence_bound); \
+      rosidl_dynamic_type_builder_.get(), \
+      id, name.c_str(), name.size(), default_value.c_str(), default_value.size(), \
+      sequence_bound); \
   }
 
 #define DYNAMIC_TYPE_BUILDER_DEFINITIONS(MemberT, FunctionT) \
@@ -113,7 +129,10 @@ DYNAMIC_TYPE_BUILDER_DEFINITIONS(std::u16string, wstring);
 // THROW FOR UNSUPPORTED TYPES =====================================================================
 template<typename MemberT>
 void
-DynamicTypeBuilder::add_member(rosidl_dynamic_typesupport_member_id_t id, const std::string & name)
+DynamicTypeBuilder::add_member(
+  rosidl_dynamic_typesupport_member_id_t id,
+  const std::string & name,
+  const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
     "add_member is not implemented for input type");
@@ -123,7 +142,9 @@ DynamicTypeBuilder::add_member(rosidl_dynamic_typesupport_member_id_t id, const 
 template<typename MemberT>
 void
 DynamicTypeBuilder::add_array_member(
-  rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t array_length)
+  rosidl_dynamic_typesupport_member_id_t id,
+  const std::string & name,
+  size_t array_length, const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
     "add_array_member is not implemented for input type");
@@ -133,7 +154,9 @@ DynamicTypeBuilder::add_array_member(
 template<typename MemberT>
 void
 DynamicTypeBuilder::add_unbounded_sequence_member(
-  rosidl_dynamic_typesupport_member_id_t id, const std::string & name)
+  rosidl_dynamic_typesupport_member_id_t id,
+  const std::string & name,
+  const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
     "add_unbounded_sequence_member is not implemented for input type");
@@ -143,7 +166,10 @@ DynamicTypeBuilder::add_unbounded_sequence_member(
 template<typename MemberT>
 void
 DynamicTypeBuilder::add_bounded_sequence_member(
-  rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t sequence_bound)
+  rosidl_dynamic_typesupport_member_id_t id,
+  const std::string & name,
+  size_t sequence_bound,
+  const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
     "add_bounded_sequence_member is not implemented for input type");

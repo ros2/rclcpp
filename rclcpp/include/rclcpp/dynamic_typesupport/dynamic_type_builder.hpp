@@ -193,68 +193,77 @@ public:
 
   template<typename MemberT>
   void
-  add_member(rosidl_dynamic_typesupport_member_id_t id, const std::string & name);
+  add_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    const std::string & default_value = "");
 
   template<typename MemberT>
   void
   add_array_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t array_length);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t array_length,
+    const std::string & default_value = "");
 
   template<typename MemberT>
   void
   add_unbounded_sequence_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    const std::string & default_value = "");
 
   template<typename MemberT>
   void
   add_bounded_sequence_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t sequence_bound);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t sequence_bound,
+    const std::string & default_value = "");
 
 
   // ADD BOUNDED STRING MEMBERS ====================================================================
   RCLCPP_PUBLIC
   void
   add_bounded_string_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t string_bound);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t string_bound,
+    const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_wstring_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t wstring_bound);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t wstring_bound,
+    const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_string_array_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    size_t string_bound, size_t array_length);
+    size_t string_bound, size_t array_length, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_wstring_array_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    size_t wstring_bound, size_t array_length);
+    size_t wstring_bound, size_t array_length, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_string_unbounded_sequence_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t string_bound);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t string_bound,
+    const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_wstring_unbounded_sequence_member(
-    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t wstring_bound);
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t wstring_bound,
+    const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_string_bounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    size_t string_bound, size_t sequence_bound);
+    size_t string_bound, size_t sequence_bound, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_bounded_wstring_bounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    size_t wstring_bound, size_t sequence_bound);
+    size_t wstring_bound, size_t sequence_bound, const std::string & default_value = "");
 
 
   // ADD NESTED MEMBERS ============================================================================
@@ -262,49 +271,51 @@ public:
   void
   add_complex_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type);
+    DynamicType & nested_type, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_array_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type, size_t array_length);
+    DynamicType & nested_type, size_t array_length, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_unbounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type);
+    DynamicType & nested_type, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_bounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type, size_t sequence_bound);
+    DynamicType & nested_type, size_t sequence_bound, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder);
+    DynamicTypeBuilder & nested_type_builder, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_array_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder, size_t array_length);
+    DynamicTypeBuilder & nested_type_builder, size_t array_length,
+    const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_unbounded_sequence_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder);
+    DynamicTypeBuilder & nested_type_builder, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_bounded_sequence_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder, size_t sequence_bound);
+    DynamicTypeBuilder & nested_type_builder, size_t sequence_bound,
+    const std::string & default_value = "");
 
 protected:
   // NOTE(methylDragon):
