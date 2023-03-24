@@ -92,7 +92,8 @@ using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
+  rclcpp::executors::StaticSingleThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
 
 class ExecutorTypeNames
 {
@@ -113,6 +114,10 @@ public:
       return "StaticSingleThreadedExecutor";
     }
 
+    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
+      return "EventsExecutor";
+    }
+
     return "";
   }
 };
@@ -126,7 +131,8 @@ TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor>;
+  rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
 TYPED_TEST_SUITE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
@@ -380,12 +386,34 @@ public:
     return nullptr;
   }
 
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override
+  {
+    (void) id;
+    return nullptr;
+  }
+
   void
   execute(std::shared_ptr<void> & data) override
   {
     (void) data;
     count_++;
     std::this_thread::sleep_for(3ms);
+  }
+
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override
+  {
+    auto gc_callback = [callback](size_t count) {
+        callback(count, 0);
+      };
+    gc_.set_on_trigger_callback(gc_callback);
+  }
+
+  void
+  clear_on_ready_callback() override
+  {
+    gc_.set_on_trigger_callback(nullptr);
   }
 
   size_t

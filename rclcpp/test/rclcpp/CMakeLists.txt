@@ -618,6 +618,14 @@ if(TARGET test_timer)
   target_link_libraries(test_timer ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_timers_manager test_timers_manager.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_timers_manager)
+  ament_target_dependencies(test_timers_manager
+    "rcl")
+  target_link_libraries(test_timers_manager ${PROJECT_NAME} mimick)
+endif()
+
 ament_add_gtest(test_time_source test_time_source.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_time_source)
@@ -704,6 +712,22 @@ if(TARGET test_executor_notify_waitable)
     "rcl"
     "test_msgs")
   target_link_libraries(test_executor_notify_waitable ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_events_executor executors/test_events_executor.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_executor)
+  ament_target_dependencies(test_events_executor
+    "test_msgs")
+  target_link_libraries(test_events_executor ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(test_events_queue executors/test_events_queue.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_queue)
+  ament_target_dependencies(test_events_queue
+    "test_msgs")
+  target_link_libraries(test_events_queue ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_guard_condition test_guard_condition.cpp

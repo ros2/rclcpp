@@ -46,11 +46,15 @@ public:
   }
 };
 
+template<typename T>
+class TestAddCallbackGroupsToExecutorStable : public TestAddCallbackGroupsToExecutor<T> {};
+
 using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
+  rclcpp::executors::StaticSingleThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
 
 class ExecutorTypeNames
 {
@@ -71,11 +75,23 @@ public:
       return "StaticSingleThreadedExecutor";
     }
 
+    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
+      return "EventsExecutor";
+    }
+
     return "";
   }
 };
 
 TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutor, ExecutorTypes, ExecutorTypeNames);
+
+// StaticSingleThreadedExecutor is not included in these tests for now
+using StandardExecutors =
+  ::testing::Types<
+  rclcpp::executors::SingleThreadedExecutor,
+  rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
+TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutorStable, StandardExecutors, ExecutorTypeNames);
 
 /*
  * Test adding callback groups.
@@ -158,7 +174,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, add_duplicate_callback_groups)
 {
-  rclcpp::executors::MultiThreadedExecutor executor;
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
@@ -176,7 +193,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_duplicate_callback_groups)
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_to_executor)
 {
-  rclcpp::executors::MultiThreadedExecutor executor;
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   executor.add_node(node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
@@ -210,13 +228,14 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
 {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
-  rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_callback_group(cb_grp, node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
 
@@ -245,14 +264,15 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_executors)
 {
+  using ExecutorType = TypeParam;
+  ExecutorType timer_executor;
+  ExecutorType sub_executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
-  rclcpp::executors::MultiThreadedExecutor timer_executor;
-  rclcpp::executors::MultiThreadedExecutor sub_executor;
   timer_executor.add_callback_group(cb_grp, node->get_node_base_interface());
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
@@ -289,7 +309,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
   // create a thread running an executor with a new callback group for a coming subscriber
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
-  rclcpp::executors::SingleThreadedExecutor cb_grp_executor;
+  using ExecutorType = TypeParam;
+  ExecutorType cb_grp_executor;
 
   std::promise<bool> received_message_promise;
   auto received_message_future = received_message_promise.get_future();
@@ -329,7 +350,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
       timer_promise.set_value();
     };
 
-  rclcpp::executors::SingleThreadedExecutor timer_executor;
+  ExecutorType timer_executor;
   timer = node->create_wall_timer(100ms, timer_callback);
   timer_executor.add_node(node);
   auto future = timer_promise.get_future();
@@ -346,7 +367,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
  * because the executor can't be triggered while a subscriber created, see
  * https://github.com/ros2/rclcpp/issues/2067
 */
-TYPED_TEST(TestAddCallbackGroupsToExecutor, callback_group_create_after_spin)
+TYPED_TEST(TestAddCallbackGroupsToExecutorStable, callback_group_create_after_spin)
 {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
@@ -357,7 +378,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, callback_group_create_after_spin)
   publisher->publish(test_msgs::msg::Empty());
 
   // create a thread running an executor
-  rclcpp::executors::SingleThreadedExecutor executor;
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
   executor.add_node(node);
   std::promise<bool> received_message_promise;
   auto received_message_future = received_message_promise.get_future();
@@ -392,7 +414,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, callback_group_create_after_spin)
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_group)
 {
-  rclcpp::executors::MultiThreadedExecutor executor;
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
