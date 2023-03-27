@@ -166,6 +166,7 @@ public:
   /**
    * \sa rclcpp::Executor::add_callback_group
    */
+  RCLCPP_PUBLIC
   void
   add_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
