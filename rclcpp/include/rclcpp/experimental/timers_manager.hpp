@@ -72,6 +72,7 @@ public:
    * @param on_ready_callback The timers on ready callback. if not callable,
    * this object will directly execute timers when they are ready.
    */
+  RCLCPP_PUBLIC
   TimersManager(
     std::shared_ptr<rclcpp::Context> context,
     std::function<void(void *)> on_ready_callback = nullptr);
@@ -79,6 +80,7 @@ public:
   /**
    * @brief Destruct the TimersManager object making sure to stop thread and release memory.
    */
+  RCLCPP_PUBLIC
   ~TimersManager();
 
   /**
@@ -88,6 +90,7 @@ public:
    * @param timer the timer to add.
    * @throws std::invalid_argument if timer is a nullptr.
    */
+  RCLCPP_PUBLIC
   void add_timer(rclcpp::TimerBase::SharedPtr timer);
 
   /**
@@ -97,24 +100,28 @@ public:
    *
    * @param timer the timer to remove.
    */
+  RCLCPP_PUBLIC
   void remove_timer(rclcpp::TimerBase::SharedPtr timer);
 
   /**
    * @brief Remove all the timers stored in the object.
    * Function is thread safe and it can be called regardless of the state of the timers thread.
    */
+  RCLCPP_PUBLIC
   void clear();
 
   /**
    * @brief Starts a thread that takes care of executing the timers stored in this object.
    * Function will throw an error if the timers thread was already running.
    */
+  RCLCPP_PUBLIC
   void start();
 
   /**
    * @brief Stops the timers thread.
    * Will do nothing if the timer thread was not running.
    */
+  RCLCPP_PUBLIC
   void stop();
 
   /**
@@ -123,6 +130,7 @@ public:
    * This function is thread safe.
    * @throws std::runtime_error if the timers thread was already running.
    */
+  RCLCPP_PUBLIC
   void execute_ready_timers();
 
   /**
@@ -132,6 +140,7 @@ public:
    * @return size_t number of ready timers.
    * @throws std::runtime_error if the timers thread was already running.
    */
+  RCLCPP_PUBLIC
   size_t get_number_ready_timers();
 
   /**
@@ -141,6 +150,7 @@ public:
    * @return true if head timer was ready.
    * @throws std::runtime_error if the timers thread was already running.
    */
+  RCLCPP_PUBLIC
   bool execute_head_timer();
 
   /**
@@ -149,6 +159,7 @@ public:
    *
    * @param timer_id the timer ID of the timer to execute
    */
+  RCLCPP_PUBLIC
   void execute_ready_timer(const void * timer_id);
 
   /**
@@ -160,6 +171,7 @@ public:
    * or std::chrono::nanoseconds::max() if there are no timers stored in the object.
    * @throws std::runtime_error if the timers thread was already running.
    */
+  RCLCPP_PUBLIC
   std::chrono::nanoseconds get_head_timeout();
 
 private:
