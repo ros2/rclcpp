@@ -170,6 +170,15 @@ public:
   RCLCPP_PUBLIC
   void
   set_level(Level level);
+
+  /// Get effective level for current logger.
+  /**
+   * \throws rclcpp::exceptions::RCLError if any error happens.
+   * \return Level for the current logger.
+   */
+  RCLCPP_PUBLIC
+  Level
+  get_effective_level() const;
 };
 
 }  // namespace rclcpp
