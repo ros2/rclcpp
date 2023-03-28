@@ -242,40 +242,42 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     return;
   }
 
+  rmw_dynamic_typesupport_impl_t * ts_impl = new rmw_dynamic_typesupport_impl_t{
+    middleware_can_take_dynamic_data,                           // take_dynamic_data
+    description,                                                // description
+    serialization_support->get_rosidl_serialization_support(),  // serialization_support
+    dynamic_message_type->get_rosidl_dynamic_type(),            // dynamic_type
+    dynamic_message->get_rosidl_dynamic_data()                  // dynamic_data
+  };
+  if (!ts_impl) {
+    RCUTILS_LOG_ERROR_NAMED(
+      rmw_dynamic_typesupport_c__identifier,
+      "Could not allocate rmw_dynamic_typesupport_impl_t struct");
+    return;
+  }
+
   // NOTE(methylDragon): We don't finalize the rosidl_message_type_support->data since its members
-  //                     are managed by the passed in SharedPtr wrapper classes
+  //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
   rosidl_message_type_support_.reset(
-    new rosidl_message_type_support_t(),
-    [](rosidl_message_type_support_t * ts) -> void {free(const_cast<void *>(ts->data));}
+    new rosidl_message_type_support_t{
+      rmw_dynamic_typesupport_c__identifier,              // typesupport_identifier
+      ts_impl,                                            // data
+      get_message_typesupport_handle_function,            // func
+      nullptr  // TODO(methylDragon): Populate type hash  // type_hash
+    },
+    [](rosidl_message_type_support_t * ts) -> void {
+      delete static_cast<const rmw_dynamic_typesupport_impl_t *>(ts->data);
+      delete ts->type_hash;  // Only because we should've allocated it here
+    }
   );
 
   if (!rosidl_message_type_support_) {
     RCUTILS_LOG_ERROR_NAMED(
       rmw_dynamic_typesupport_c__identifier,
       "Could not allocate rosidl_message_type_support_t struct");
+    delete ts_impl;
     return;
   }
-
-  rosidl_message_type_support_->typesupport_identifier = rmw_dynamic_typesupport_c__identifier;
-
-  // NOTE(methylDragon): To populate dynamic_type and description if deferred, OUTSIDE
-  rosidl_message_type_support_->data = calloc(1, sizeof(rmw_dynamic_typesupport_impl_t));
-  if (!rosidl_message_type_support_->data) {
-    RCUTILS_LOG_ERROR_NAMED(
-      rmw_dynamic_typesupport_c__identifier,
-      "Could not allocate rmw_dynamic_typesupport_impl_t struct");
-    rosidl_message_type_support_.reset();
-  }
-
-  rmw_dynamic_typesupport_impl_t * ts_impl =
-    (rmw_dynamic_typesupport_impl_t *)rosidl_message_type_support_->data;
-
-  ts_impl->take_dynamic_data = middleware_can_take_dynamic_data;
-  ts_impl->serialization_support = serialization_support->get_rosidl_serialization_support();
-  ts_impl->dynamic_type = dynamic_message_type->get_rosidl_dynamic_type();
-  ts_impl->dynamic_data = dynamic_message->get_rosidl_dynamic_data();
-  ts_impl->description = description;
-  rosidl_message_type_support_->func = get_message_typesupport_handle_function;
 }
 
 

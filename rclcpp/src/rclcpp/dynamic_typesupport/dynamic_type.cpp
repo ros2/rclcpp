@@ -59,7 +59,7 @@ DynamicType::DynamicType(DynamicTypeBuilder::SharedPtr dynamic_type_builder)
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
       rosidl_dynamic_typesupport_dynamic_type_fini(rosidl_dynamic_type);
-      free(rosidl_dynamic_type);
+      delete rosidl_dynamic_type;
     });
 }
 
@@ -84,7 +84,7 @@ DynamicType::DynamicType(
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
       rosidl_dynamic_typesupport_dynamic_type_fini(rosidl_dynamic_type);
-      free(rosidl_dynamic_type);
+      delete rosidl_dynamic_type;
     });
 }
 
@@ -174,7 +174,7 @@ DynamicType::init_from_description(
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
       rosidl_dynamic_typesupport_dynamic_type_fini(rosidl_dynamic_type);
-      free(rosidl_dynamic_type);
+      delete rosidl_dynamic_type;
     });
 }
 

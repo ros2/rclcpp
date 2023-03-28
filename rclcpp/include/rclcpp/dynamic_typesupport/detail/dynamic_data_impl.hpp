@@ -178,7 +178,7 @@ DynamicData::get_value<std::string>(rosidl_dynamic_typesupport_member_id_t id)
   rosidl_dynamic_typesupport_dynamic_data_get_string_value(
     get_rosidl_dynamic_data(), id, &buf, &buf_length);
   auto out = std::string(buf, buf_length);
-  free(buf);
+  delete buf;
   return out;
 }
 
@@ -192,7 +192,7 @@ DynamicData::get_value<std::u16string>(rosidl_dynamic_typesupport_member_id_t id
   rosidl_dynamic_typesupport_dynamic_data_get_wstring_value(
     get_rosidl_dynamic_data(), id, &buf, &buf_length);
   auto out = std::u16string(buf, buf_length);
-  free(buf);
+  delete buf;
   return out;
 }
 

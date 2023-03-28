@@ -68,7 +68,7 @@ DynamicData::DynamicData(const DynamicTypeBuilder::SharedPtr dynamic_type_builde
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
       rosidl_dynamic_typesupport_dynamic_data_fini(rosidl_dynamic_data);
-      free(rosidl_dynamic_data);
+      delete rosidl_dynamic_data;
     });
 }
 
@@ -101,7 +101,7 @@ DynamicData::DynamicData(const DynamicType::SharedPtr dynamic_type)
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
       rosidl_dynamic_typesupport_dynamic_data_fini(rosidl_dynamic_data);
-      free(rosidl_dynamic_data);
+      delete rosidl_dynamic_data;
     });
 }
 
@@ -129,7 +129,7 @@ DynamicData::DynamicData(
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
       rosidl_dynamic_typesupport_dynamic_data_fini(rosidl_dynamic_data);
-      free(rosidl_dynamic_data);
+      delete rosidl_dynamic_data;
     });
 }
 
@@ -517,7 +517,7 @@ DynamicData::get_bounded_string_value(
   rosidl_dynamic_typesupport_dynamic_data_get_bounded_string_value(
     get_rosidl_dynamic_data(), id, &buf, &buf_length, string_bound);
   auto out = std::string(buf, buf_length);
-  free(buf);
+  delete buf;
   return out;
 }
 
@@ -538,7 +538,7 @@ DynamicData::get_bounded_wstring_value(
   rosidl_dynamic_typesupport_dynamic_data_get_bounded_wstring_value(
     get_rosidl_dynamic_data(), id, &buf, &buf_length, wstring_bound);
   auto out = std::u16string(buf, buf_length);
-  free(buf);
+  delete buf;
   return out;
 }
 

@@ -71,7 +71,7 @@ DynamicTypeBuilder::DynamicTypeBuilder(
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder)->void {
       rosidl_dynamic_typesupport_dynamic_type_builder_fini(rosidl_dynamic_type_builder);
-      free(rosidl_dynamic_type_builder);
+      delete rosidl_dynamic_type_builder;
     });
 }
 
@@ -167,7 +167,7 @@ DynamicTypeBuilder::init_from_description(
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder)->void {
       rosidl_dynamic_typesupport_dynamic_type_builder_fini(rosidl_dynamic_type_builder);
-      free(rosidl_dynamic_type_builder);
+      delete rosidl_dynamic_type_builder;
     });
 }
 
@@ -198,7 +198,7 @@ DynamicTypeBuilder::init_from_serialization_support_(
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder)->void {
       rosidl_dynamic_typesupport_dynamic_type_builder_fini(rosidl_dynamic_type_builder);
-      free(rosidl_dynamic_type_builder);
+      delete rosidl_dynamic_type_builder;
     });
 }
 
