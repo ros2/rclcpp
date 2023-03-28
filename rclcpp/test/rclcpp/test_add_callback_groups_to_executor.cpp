@@ -352,7 +352,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_e
  * because the executor can't be triggered while a subscriber created, see
  * https://github.com/ros2/rclcpp/issues/1611
 */
-TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_message)
+TYPED_TEST(TestAddCallbackGroupsToExecutorStable, subscriber_triggered_to_receive_message)
 {
   using ExecutorType = TypeParam;
   // rmw_connextdds doesn't support events-executor
