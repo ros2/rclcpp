@@ -193,7 +193,7 @@ TEST_F(TestTimersManager, timers_order)
 
   size_t t1_runs = 0;
   auto t1 = TimerT::make_shared(
-    1ms,
+    10ms,
     [&t1_runs]() {
       t1_runs++;
     },
@@ -201,7 +201,7 @@ TEST_F(TestTimersManager, timers_order)
 
   size_t t2_runs = 0;
   auto t2 = TimerT::make_shared(
-    3ms,
+    30ms,
     [&t2_runs]() {
       t2_runs++;
     },
@@ -209,7 +209,7 @@ TEST_F(TestTimersManager, timers_order)
 
   size_t t3_runs = 0;
   auto t3 = TimerT::make_shared(
-    10ms,
+    100ms,
     [&t3_runs]() {
       t3_runs++;
     },
@@ -220,19 +220,19 @@ TEST_F(TestTimersManager, timers_order)
   timers_manager->add_timer(t3);
   timers_manager->add_timer(t1);
 
-  std::this_thread::sleep_for(1ms);
+  std::this_thread::sleep_for(10ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(1u, t1_runs);
   EXPECT_EQ(0u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
-  std::this_thread::sleep_for(3ms);
+  std::this_thread::sleep_for(30ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(2u, t1_runs);
   EXPECT_EQ(1u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(100ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(2u, t2_runs);
@@ -240,7 +240,7 @@ TEST_F(TestTimersManager, timers_order)
 
   timers_manager->remove_timer(t1);
 
-  std::this_thread::sleep_for(3ms);
+  std::this_thread::sleep_for(30ms);
   timers_manager->execute_ready_timers();
   EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(3u, t2_runs);
@@ -319,14 +319,14 @@ TEST_F(TestTimersManager, destructor)
     timers_manager->add_timer(t);
 
     timers_manager->start();
-    std::this_thread::sleep_for(3ms);
+    std::this_thread::sleep_for(100ms);
 
     EXPECT_LT(1u, t_runs);
   }
 
   // The thread is not running anymore, so this value does not increase
   size_t runs = t_runs;
-  std::this_thread::sleep_for(3ms);
+  std::this_thread::sleep_for(100ms);
   EXPECT_EQ(runs, t_runs);
   t.reset();
   EXPECT_FALSE(t_weak.lock() != nullptr);
