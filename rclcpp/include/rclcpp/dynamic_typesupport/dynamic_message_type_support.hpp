@@ -39,7 +39,7 @@ namespace dynamic_typesupport
 /**
  *
  * NOTE: This class is the recommended way to obtain the dynamic message type
- *       support struct, instead of rcl_get_dynamic_message_typesupport_handle,
+ *       support struct, instead of rcl_dynamic_message_typesupport_handle_init,
  *       because this class will manage the lifetimes for you.
  *
  *       Do NOT call rcl_dynamic_message_typesupport_handle_fini!!
@@ -61,24 +61,36 @@ public:
 
   // CONSTRUCTION ==================================================================================
   /// From description
+  /// Does NOT take ownership of the description (copies instead.)
+  /// Constructs type support top-down (calling rcl_dynamic_message_typesupport_handle_init)
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
-    rosidl_runtime_c__type_description__TypeDescription * description,
+    const rosidl_runtime_c__type_description__TypeDescription & description,
     const std::string & serialization_library_name = "");
 
   /// From description, for provided serialization support
+  /// Does NOT take ownership of the description (copies instead.)
+  /// Constructs type support top-down (calling rmw_dynamic_message_typesupport_handle_init)
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
     DynamicSerializationSupport::SharedPtr serialization_support,
-    rosidl_runtime_c__type_description__TypeDescription * description);
+    const rosidl_runtime_c__type_description__TypeDescription & description);
 
   /// Assume ownership of managed types
+  /// Does NOT take ownership of the description (copies instead.)
+  ///
+  /// The serialization support used to construct all managed SharedPtrs must match.
+  /// The structure of the provided `description` must match the `dynamic_message_type`
+  /// The structure of the provided `dynamic_message_type` must match the `dynamic_message
+  ///
+  /// In this case, the user would have constructed the type support bototm-up (by creating the
+  /// respective dynamic members.)
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
     DynamicSerializationSupport::SharedPtr serialization_support,
     DynamicMessageType::SharedPtr dynamic_message_type,
     DynamicMessage::SharedPtr dynamic_message,
-    rosidl_runtime_c__type_description__TypeDescription * description = nullptr);
+    const rosidl_runtime_c__type_description__TypeDescription & description);
 
   RCLCPP_PUBLIC
   virtual ~DynamicMessageTypeSupport();
@@ -167,7 +179,11 @@ private:
 
   RCLCPP_PUBLIC
   void
-  init_serialization_support_(const std::string & serialization_library_name);
+  manage_rosidl_message_type_support_(rosidl_message_type_support_t * rosidl_message_type_support);
+
+  RCLCPP_PUBLIC
+  void
+  manage_description_(rosidl_runtime_c__type_description__TypeDescription * description);
 
   RCLCPP_PUBLIC
   void
@@ -181,7 +197,7 @@ private:
 
   RCLCPP_PUBLIC
   void
-  init_rosidl_message_type_support_(
+  init_rosidl_message_type_support_(  // by aggregation
     DynamicSerializationSupport::SharedPtr serialization_support,
     DynamicMessageType::SharedPtr dynamic_message_type,
     DynamicMessage::SharedPtr dynamic_message,

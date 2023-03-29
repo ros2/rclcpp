@@ -18,7 +18,7 @@
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
-#include "rmw/dynamic_typesupport.h"
+#include "rmw/dynamic_message_typesupport.h"
 
 #include <rosidl_dynamic_typesupport/api/serialization_support.h>
 

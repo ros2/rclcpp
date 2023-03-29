@@ -58,6 +58,11 @@ SubscriptionBase::SubscriptionBase(
   is_dynamic_(is_dynamic),
   use_take_dynamic_message_(use_take_dynamic_message)
 {
+  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE) && use_take_dynamic_message_)
+  {
+    throw std::runtime_error("Cannot use_take_dynamic_message, feature not supported in rmw");
+  }
+
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
       if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {

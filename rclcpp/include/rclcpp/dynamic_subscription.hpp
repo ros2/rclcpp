@@ -54,7 +54,10 @@ public:
     rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr type_support,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    std::function<void(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr)> callback,
+    std::function<void(
+      rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
+      std::shared_ptr<const rosidl_runtime_c__type_description__TypeDescription>
+    )> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
     bool use_take_dynamic_message = true)
   : SubscriptionBase(
@@ -64,8 +67,8 @@ public:
       options.to_rcl_subscription_options(qos),
       options.event_callbacks,
       options.use_default_callbacks,
-      false,
-      true,
+      false,  // is_serialized
+      true,   // is_dynamic
       use_take_dynamic_message),
     ts_(type_support),
     callback_(callback),
@@ -92,32 +95,6 @@ public:
   // TODO(methylDragon):
   /// Deferred type description constructor, only usable if the middleware implementation supports
   /// type discovery
-  // template<typename AllocatorT = std::allocator<void>>
-  // DynamicSubscription(
-  //   rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  //   const std::string & topic_name,
-  //   const rclcpp::QoS & qos,
-  //   // TODO(methylDragons): Eventually roll out an rclcpp::DynamicData that encompasses the serialization_support
-  //   //                      support and DynamicData, and pass that to the callback
-  //   std::function<void(
-  //     rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr,
-  //     rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
-  //   )> callback,
-  //   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-  //   const char * serialization_lib_name = nullptr)
-  // : SubscriptionBase(
-  //     node_base,
-  //     // NOTE(methylDragon): Since the typesupport is deferred, it needs to be modified post-hoc
-  //     //                     which means it technically isn't const correct...
-  //     *rmw_get_dynamic_message_typesupport_handle(serialization_lib_name),
-  //     topic_name,
-  //     options.to_rcl_subscription_options(qos),
-  //     options.event_callbacks,
-  //     options.use_default_callbacks,
-  //     false,
-  //     true),
-  //   callback_(callback)
-  // {}
 
   RCLCPP_PUBLIC
   virtual ~DynamicSubscription() = default;
@@ -183,7 +160,10 @@ private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
-  std::function<void(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr)> callback_;
+  std::function<void(
+    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
+    std::shared_ptr<const rosidl_runtime_c__type_description__TypeDescription>
+  )> callback_;
 
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;
   rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message_;

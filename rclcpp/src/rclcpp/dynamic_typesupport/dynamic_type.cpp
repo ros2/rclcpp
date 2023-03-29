@@ -108,7 +108,7 @@ DynamicType::DynamicType(
 
 DynamicType::DynamicType(
   DynamicSerializationSupport::SharedPtr serialization_support,
-  const rosidl_runtime_c__type_description__TypeDescription * description)
+  const rosidl_runtime_c__type_description__TypeDescription & description)
 : serialization_support_(serialization_support), rosidl_dynamic_type_(nullptr)
 {
   init_from_description(description, serialization_support);
@@ -150,12 +150,9 @@ DynamicType::~DynamicType() {}
 
 void
 DynamicType::init_from_description(
-  const rosidl_runtime_c__type_description__TypeDescription * description,
+  const rosidl_runtime_c__type_description__TypeDescription & description,
   DynamicSerializationSupport::SharedPtr serialization_support)
 {
-  if (!description) {
-    throw std::runtime_error("description cannot be nullptr!");
-  }
   if (serialization_support) {
     // Swap serialization support if serialization support is given
     serialization_support_ = serialization_support;
@@ -164,7 +161,7 @@ DynamicType::init_from_description(
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
   rosidl_dynamic_type =
     rosidl_dynamic_typesupport_dynamic_type_init_from_description(
-    serialization_support_->get_rosidl_serialization_support(), description);
+    serialization_support_->get_rosidl_serialization_support(), &description);
   if (!rosidl_dynamic_type) {
     throw std::runtime_error("could not create new dynamic type object");
   }

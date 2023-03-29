@@ -49,6 +49,11 @@ class DynamicTypeBuilder;
  *   DynamicSerializationSupport. So it cannot outlive the DynamicSerializationSupport.
  * - The DynamicSerializationSupport's rosidl_dynamic_typesupport_serialization_support_t pointer
  *   must point to the same location in memory as the stored raw pointer!
+ *
+ * Note: This class is meant to map to the lower level rosidl_dynamic_typesupport_dynamic_data_t,
+ *       even though rosidl_dynamic_typesupport_dynamic_data_t is equivalent to
+ *       rmw_dynamic_message_t, exposing the fundamental methods available to
+ *       rosidl_dynamic_typesupport_dynamic_data_t, allowing the user to access the data's fields.
  */
 class DynamicData : public std::enable_shared_from_this<DynamicData>
 {

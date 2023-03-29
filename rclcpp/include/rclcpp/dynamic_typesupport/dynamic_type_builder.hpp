@@ -45,6 +45,14 @@ class DynamicType;
  *   DynamicSerializationSupport. So it cannot outlive the DynamicSerializationSupport.
  * - The DynamicSerializationSupport's rosidl_dynamic_typesupport_serialization_support_t pointer
  *   must point to the same location in memory as the stored raw pointer!
+ *
+ * Note: This class is meant to map to rosidl_dynamic_typesupport_dynamic_type_builder_t,
+ *       facilitating the construction of dynamic types bottom-up in the C++ layer.
+ *
+ *       The usual method of obtaining a DynamicType is through construction of
+ *       rosidl_message_type_support_t via rcl_dynamic_message_typesupport_handle_init(), then taking
+ *       ownership of its contents. But DynamicTypeBuilder can also be used to obtain DynamicType by
+ *       constructing it bottom-up instead, since it exposes the lower_level rosidl methods.
  */
 class DynamicTypeBuilder : public std::enable_shared_from_this<DynamicTypeBuilder>
 {
@@ -97,7 +105,7 @@ public:
   RCLCPP_PUBLIC
   DynamicTypeBuilder(
     DynamicSerializationSupport::SharedPtr serialization_support,
-    const rosidl_runtime_c__type_description__TypeDescription * description);
+    const rosidl_runtime_c__type_description__TypeDescription & description);
 
   RCLCPP_PUBLIC
   virtual ~DynamicTypeBuilder();
@@ -106,7 +114,7 @@ public:
   RCLCPP_PUBLIC
   void
   init_from_description(
-    const rosidl_runtime_c__type_description__TypeDescription * description,
+    const rosidl_runtime_c__type_description__TypeDescription & description,
     DynamicSerializationSupport::SharedPtr serialization_support = nullptr);
 
 

@@ -97,7 +97,7 @@ DynamicTypeBuilder::DynamicTypeBuilder(
 
 DynamicTypeBuilder::DynamicTypeBuilder(
   DynamicSerializationSupport::SharedPtr serialization_support,
-  const rosidl_runtime_c__type_description__TypeDescription * description)
+  const rosidl_runtime_c__type_description__TypeDescription & description)
 : serialization_support_(serialization_support),
   rosidl_dynamic_type_builder_(nullptr)
 {
@@ -143,12 +143,9 @@ DynamicTypeBuilder::~DynamicTypeBuilder() {}
 
 void
 DynamicTypeBuilder::init_from_description(
-  const rosidl_runtime_c__type_description__TypeDescription * description,
+  const rosidl_runtime_c__type_description__TypeDescription & description,
   DynamicSerializationSupport::SharedPtr serialization_support)
 {
-  if (!description) {
-    throw std::runtime_error("description cannot be nullptr!");
-  }
   if (serialization_support) {
     // Swap serialization support if serialization support is given
     serialization_support_ = serialization_support;
@@ -157,7 +154,7 @@ DynamicTypeBuilder::init_from_description(
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
   rosidl_dynamic_type_builder =
     rosidl_dynamic_typesupport_dynamic_type_builder_init_from_description(
-    serialization_support_->get_rosidl_serialization_support(), description);
+    serialization_support_->get_rosidl_serialization_support(), &description);
   if (!rosidl_dynamic_type_builder) {
     throw std::runtime_error("could not create new dynamic type builder object");
   }
