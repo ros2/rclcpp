@@ -63,7 +63,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit ExecutorEntitiesCollector(
-      std::function<void(void)> on_notify_waitable_callback = {});
+    std::function<void(void)> on_notify_waitable_callback = {});
 
   /// Destructor
   RCLCPP_PUBLIC
@@ -172,7 +172,8 @@ protected:
   RCLCPP_PUBLIC
   void
   add_automatically_associated_callback_groups(
-    std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> nodes_to_check) RCPPUTILS_TSA_REQUIRES(mutex_);
+    std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> nodes_to_check)
+  RCPPUTILS_TSA_REQUIRES(mutex_);
 
   RCLCPP_PUBLIC
   void

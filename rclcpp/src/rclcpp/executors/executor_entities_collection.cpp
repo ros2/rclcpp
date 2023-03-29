@@ -82,13 +82,14 @@ build_entities_collection(
   }
 }
 
-template <typename EntityCollectionType>
+template<typename EntityCollectionType>
 void check_ready(
   EntityCollectionType & collection,
   std::deque<rclcpp::AnyExecutable> & executables,
   size_t size_of_waited_entities,
   typename EntityCollectionType::Key * waited_entities,
-  std::function<bool(rclcpp::AnyExecutable, typename EntityCollectionType::EntitySharedPtr)> fill_executable)
+  std::function<bool(rclcpp::AnyExecutable,
+  typename EntityCollectionType::EntitySharedPtr)> fill_executable)
 {
   for (size_t ii = 0; ii < size_of_waited_entities; ++ii) {
     if (waited_entities[ii]) {
@@ -130,7 +131,7 @@ ready_executables(
     ret,
     rcl_wait_set.size_of_timers,
     rcl_wait_set.timers,
-    [](auto exec, auto timer){
+    [](auto exec, auto timer) {
       if (!timer->call()) {
         return false;
       }
@@ -143,7 +144,7 @@ ready_executables(
     ret,
     rcl_wait_set.size_of_subscriptions,
     rcl_wait_set.subscriptions,
-    [](auto exec, auto subscription){
+    [](auto exec, auto subscription) {
       exec.subscription = subscription;
       return true;
     });
@@ -153,7 +154,7 @@ ready_executables(
     ret,
     rcl_wait_set.size_of_services,
     rcl_wait_set.services,
-    [](auto exec, auto service){
+    [](auto exec, auto service) {
       exec.service = service;
       return true;
     });
@@ -163,7 +164,7 @@ ready_executables(
     ret,
     rcl_wait_set.size_of_clients,
     rcl_wait_set.clients,
-    [](auto exec, auto client){
+    [](auto exec, auto client) {
       exec.client = client;
       return true;
     });

@@ -15,7 +15,6 @@
 #ifndef RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTION_HPP_
 #define RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTION_HPP_
 
-#include "rclcpp/subscription_base.hpp"
 #include <deque>
 #include <unordered_map>
 #include <vector>
@@ -33,18 +32,19 @@ namespace rclcpp
 namespace executors
 {
 
-template <typename EntityValueType>
-struct CollectionEntry {
+template<typename EntityValueType>
+struct CollectionEntry
+{
   typename EntityValueType::WeakPtr entity;
   rclcpp::CallbackGroup::WeakPtr callback_group;
 };
 
-template <typename CollectionType>
+template<typename CollectionType>
 void update_entities(
   const CollectionType & update_from,
   CollectionType update_to,
-  std::function<void (typename CollectionType::mapped_type::EntitySharedPtr) > on_added,
-  std::function<void (typename CollectionType::mapped_type::EntitySharedPtr) > on_removed
+  std::function<void(typename CollectionType::mapped_type::EntitySharedPtr)> on_added,
+  std::function<void(typename CollectionType::mapped_type::EntitySharedPtr)> on_removed
 )
 {
   for (auto it = update_to.begin(); it != update_to.end(); ) {
@@ -68,18 +68,19 @@ void update_entities(
     }
   }
 }
-template <typename EntityKeyType, typename EntityValueType>
-class EntityCollection:
-  public std::unordered_map<const EntityKeyType *, CollectionEntry<EntityValueType>>
+template<typename EntityKeyType, typename EntityValueType>
+class EntityCollection
+  : public std::unordered_map<const EntityKeyType *, CollectionEntry<EntityValueType>>
 {
 public:
   using Key = const EntityKeyType *;
   using EntityWeakPtr = typename EntityValueType::WeakPtr;
   using EntitySharedPtr = typename EntityValueType::SharedPtr;
 
-  void update(const EntityCollection<EntityKeyType, EntityValueType> & other,
-              std::function<void (EntitySharedPtr)> on_added,
-              std::function<void (EntitySharedPtr)> on_removed)
+  void update(
+    const EntityCollection<EntityKeyType, EntityValueType> & other,
+    std::function<void(EntitySharedPtr)> on_added,
+    std::function<void(EntitySharedPtr)> on_removed)
   {
     update_entities(*this, other, on_added, on_removed);
   }

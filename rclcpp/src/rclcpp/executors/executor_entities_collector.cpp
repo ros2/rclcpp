@@ -24,10 +24,9 @@ namespace executors
 {
 
 ExecutorEntitiesCollector::ExecutorEntitiesCollector(
-    std::function<void(void)> on_notify_waitable_callback) {
-  notify_waitable_ = std::make_shared<ExecutorNotifyWaitable>(
-    [on_notify_waitable_callback](){on_notify_waitable_callback();});
-
+  std::function<void(void)> on_notify_waitable_callback)
+: notify_waitable_(std::make_shared<ExecutorNotifyWaitable>(on_notify_waitable_callback))
+{
 }
 
 ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
