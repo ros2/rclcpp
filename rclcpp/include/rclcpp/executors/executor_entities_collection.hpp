@@ -15,11 +15,10 @@
 #ifndef RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTION_HPP_
 #define RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTION_HPP_
 
+#include "rclcpp/subscription_base.hpp"
 #include <deque>
 #include <unordered_map>
 #include <vector>
-
-#include "rcpputils/thread_safety_annotations.hpp"
 
 #include <rclcpp/any_executable.hpp>
 #include <rclcpp/node_interfaces/node_base.hpp>
@@ -34,45 +33,82 @@ namespace rclcpp
 namespace executors
 {
 
+template <typename EntityValueType>
+struct CollectionEntry {
+  typename EntityValueType::WeakPtr entity;
+  rclcpp::CallbackGroup::WeakPtr callback_group;
+};
+
+template <typename CollectionType>
+void update_entities(
+  const CollectionType & update_from,
+  CollectionType update_to,
+  std::function<void (typename CollectionType::mapped_type::EntitySharedPtr) > on_added,
+  std::function<void (typename CollectionType::mapped_type::EntitySharedPtr) > on_removed
+)
+{
+  for (auto it = update_to.begin(); it != update_to.end(); ) {
+    if (update_from.count(it->first) == 0) {
+      auto entity = it->second.entity.lock();
+      if (entity) {
+        on_removed(entity);
+      }
+      it = update_to.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  for (auto it = update_from.begin(); it != update_from.end(); ++it) {
+    if (update_to.count(it->first) == 0) {
+      auto entity = it->entity.lock();
+      if (entity) {
+        on_added(entity);
+      }
+      update_to.insert(*it);
+    }
+  }
+}
+template <typename EntityKeyType, typename EntityValueType>
+class EntityCollection:
+  public std::unordered_map<const EntityKeyType *, CollectionEntry<EntityValueType>>
+{
+public:
+  using Key = const EntityKeyType *;
+  using EntityWeakPtr = typename EntityValueType::WeakPtr;
+  using EntitySharedPtr = typename EntityValueType::SharedPtr;
+
+  void update(const EntityCollection<EntityKeyType, EntityValueType> & other,
+              std::function<void (EntitySharedPtr)> on_added,
+              std::function<void (EntitySharedPtr)> on_removed)
+  {
+    update_entities(*this, other, on_added, on_removed);
+  }
+};
+
+/// Represent the total set of entities for a single executor
+/**
+ * This allows the entities to be stored from ExecutorEntitiesCollector.
+ * The structure also makes in convenient to re-evaluate when entities have been added or removed.
+ */
 struct ExecutorEntitiesCollection
 {
-  struct TimerEntry
-  {
-    rclcpp::TimerBase::WeakPtr timer;
-    rclcpp::CallbackGroup::WeakPtr callback_group;
-  };
-  using TimerCollection = std::unordered_map<const rcl_timer_t *, TimerEntry>;
+  /// Entity entries for timers
+  using TimerCollection = EntityCollection<rcl_timer_t, rclcpp::TimerBase>;
 
-  struct SubscriptionEntry
-  {
-    rclcpp::SubscriptionBase::WeakPtr subscription;
-    rclcpp::CallbackGroup::WeakPtr callback_group;
-  };
-  using SubscriptionCollection = std::unordered_map<const rcl_subscription_t *, SubscriptionEntry>;
+  /// Entity entries for subscriptions
+  using SubscriptionCollection = EntityCollection<rcl_subscription_t, rclcpp::SubscriptionBase>;
 
-  struct ClientEntry
-  {
-    rclcpp::ClientBase::WeakPtr client;
-    rclcpp::CallbackGroup::WeakPtr callback_group;
-  };
-  using ClientCollection = std::unordered_map<const rcl_client_t *, ClientEntry>;
+  /// Entity entries for clients
+  using ClientCollection = EntityCollection<rcl_client_t, rclcpp::ClientBase>;
 
-  struct ServiceEntry
-  {
-    rclcpp::ServiceBase::WeakPtr service;
-    rclcpp::CallbackGroup::WeakPtr callback_group;
-  };
-  using ServiceCollection = std::unordered_map<const rcl_service_t *, ServiceEntry>;
+  /// Entity entries for services
+  using ServiceCollection = EntityCollection<rcl_service_t, rclcpp::ServiceBase>;
 
-  struct WaitableEntry
-  {
-    rclcpp::Waitable::WeakPtr waitable;
-    rclcpp::CallbackGroup::WeakPtr callback_group;
-  };
-  using WaitableCollection = std::unordered_map<const rclcpp::Waitable *, WaitableEntry>;
+  /// Entity entries for waitables
+  using WaitableCollection = EntityCollection<rclcpp::Waitable, rclcpp::Waitable>;
 
-  using GuardConditionCollection = std::unordered_map<const rcl_guard_condition_t *,
-      rclcpp::GuardCondition::WeakPtr>;
+  /// Entity entries for guard conditions
+  using GuardConditionCollection = EntityCollection<rcl_guard_condition_t, rclcpp::GuardCondition>;
 
   TimerCollection timers;
   SubscriptionCollection subscriptions;
@@ -82,42 +118,6 @@ struct ExecutorEntitiesCollection
   WaitableCollection waitables;
 
   void clear();
-
-  using TimerUpdatedFunc = std::function<void (rclcpp::TimerBase::SharedPtr)>;
-  void update_timers(
-    const ExecutorEntitiesCollection::TimerCollection & other,
-    TimerUpdatedFunc timer_added,
-    TimerUpdatedFunc timer_removed);
-
-  using SubscriptionUpdatedFunc = std::function<void (rclcpp::SubscriptionBase::SharedPtr)>;
-  void update_subscriptions(
-    const ExecutorEntitiesCollection::SubscriptionCollection & other,
-    SubscriptionUpdatedFunc subscription_added,
-    SubscriptionUpdatedFunc subscription_removed);
-
-  using ClientUpdatedFunc = std::function<void (rclcpp::ClientBase::SharedPtr)>;
-  void update_clients(
-    const ExecutorEntitiesCollection::ClientCollection & other,
-    ClientUpdatedFunc client_added,
-    ClientUpdatedFunc client_removed);
-
-  using ServiceUpdatedFunc = std::function<void (rclcpp::ServiceBase::SharedPtr)>;
-  void update_services(
-    const ExecutorEntitiesCollection::ServiceCollection & other,
-    ServiceUpdatedFunc service_added,
-    ServiceUpdatedFunc service_removed);
-
-  using GuardConditionUpdatedFunc = std::function<void (rclcpp::GuardCondition::SharedPtr)>;
-  void update_guard_conditions(
-    const ExecutorEntitiesCollection::GuardConditionCollection & other,
-    GuardConditionUpdatedFunc guard_condition_added,
-    GuardConditionUpdatedFunc guard_condition_removed);
-
-  using WaitableUpdatedFunc = std::function<void (rclcpp::Waitable::SharedPtr)>;
-  void update_waitables(
-    const ExecutorEntitiesCollection::WaitableCollection & other,
-    WaitableUpdatedFunc waitable_added,
-    WaitableUpdatedFunc waitable_removed);
 };
 
 void
