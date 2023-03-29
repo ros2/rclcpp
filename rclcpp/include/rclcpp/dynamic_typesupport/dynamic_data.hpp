@@ -278,6 +278,51 @@ public:
   insert_value(ValueT value);
 
 
+  // FIXED STRING MEMBER ACCESS ====================================================================
+  RCLCPP_PUBLIC
+  const std::string
+  get_fixed_string_value(rosidl_dynamic_typesupport_member_id_t id, size_t string_length);
+
+  RCLCPP_PUBLIC
+  const std::string
+  get_fixed_string_value(const std::string & name, size_t string_length);
+
+  RCLCPP_PUBLIC
+  const std::u16string
+  get_fixed_wstring_value(rosidl_dynamic_typesupport_member_id_t id, size_t wstring_length);
+
+  RCLCPP_PUBLIC
+  const std::u16string
+  get_fixed_wstring_value(const std::string & name, size_t wstring_length);
+
+  RCLCPP_PUBLIC
+  void
+  set_fixed_string_value(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string value, size_t string_length);
+
+  RCLCPP_PUBLIC
+  void
+  set_fixed_string_value(const std::string & name, const std::string value, size_t string_length);
+
+  RCLCPP_PUBLIC
+  void
+  set_fixed_wstring_value(
+    rosidl_dynamic_typesupport_member_id_t id, const std::u16string value, size_t wstring_length);
+
+  RCLCPP_PUBLIC
+  void
+  set_fixed_wstring_value(
+    const std::string & name, const std::u16string value, size_t wstring_length);
+
+  RCLCPP_PUBLIC
+  rosidl_dynamic_typesupport_member_id_t
+  insert_fixed_string_value(const std::string value, size_t string_length);
+
+  RCLCPP_PUBLIC
+  rosidl_dynamic_typesupport_member_id_t
+  insert_fixed_wstring_value(const std::u16string value, size_t wstring_length);
+
+
   // BOUNDED STRING MEMBER ACCESS ==================================================================
   RCLCPP_PUBLIC
   const std::string

@@ -507,6 +507,103 @@ DynamicData::deserialize(rcl_serialized_message_t * buffer)
 // Defined in "detail/dynamic_data_impl.hpp"
 
 
+// FIXED STRING MEMBER ACCESS ======================================================================
+const std::string
+DynamicData::get_fixed_string_value(
+  rosidl_dynamic_typesupport_member_id_t id, size_t string_length)
+{
+  size_t buf_length;
+  char * buf = nullptr;
+  rosidl_dynamic_typesupport_dynamic_data_get_fixed_string_value(
+    get_rosidl_dynamic_data(), id, &buf, &buf_length, string_length);
+  auto out = std::string(buf, buf_length);
+  delete buf;
+  return out;
+}
+
+
+const std::string
+DynamicData::get_fixed_string_value(const std::string & name, size_t string_length)
+{
+  return get_fixed_string_value(get_member_id(name), string_length);
+}
+
+
+const std::u16string
+DynamicData::get_fixed_wstring_value(
+  rosidl_dynamic_typesupport_member_id_t id, size_t wstring_length)
+{
+  size_t buf_length;
+  char16_t * buf = nullptr;
+  rosidl_dynamic_typesupport_dynamic_data_get_fixed_wstring_value(
+    get_rosidl_dynamic_data(), id, &buf, &buf_length, wstring_length);
+  auto out = std::u16string(buf, buf_length);
+  delete buf;
+  return out;
+}
+
+
+const std::u16string
+DynamicData::get_fixed_wstring_value(const std::string & name, size_t wstring_length)
+{
+  return get_fixed_wstring_value(get_member_id(name), wstring_length);
+}
+
+
+void
+DynamicData::set_fixed_string_value(
+  rosidl_dynamic_typesupport_member_id_t id, const std::string value, size_t string_length)
+{
+  rosidl_dynamic_typesupport_dynamic_data_set_fixed_string_value(
+    get_rosidl_dynamic_data(), id, value.c_str(), value.size(), string_length);
+}
+
+
+void
+DynamicData::set_fixed_string_value(
+  const std::string & name, const std::string value, size_t string_length)
+{
+  set_fixed_string_value(get_member_id(name), value, string_length);
+}
+
+
+void
+DynamicData::set_fixed_wstring_value(
+  rosidl_dynamic_typesupport_member_id_t id, const std::u16string value, size_t wstring_length)
+{
+  rosidl_dynamic_typesupport_dynamic_data_set_fixed_wstring_value(
+    get_rosidl_dynamic_data(), id, value.c_str(), value.size(), wstring_length);
+}
+
+
+void
+DynamicData::set_fixed_wstring_value(
+  const std::string & name, const std::u16string value, size_t wstring_length)
+{
+  set_fixed_wstring_value(get_member_id(name), value, wstring_length);
+}
+
+
+rosidl_dynamic_typesupport_member_id_t
+DynamicData::insert_fixed_string_value(const std::string value, size_t string_length)
+{
+  rosidl_dynamic_typesupport_member_id_t out;
+  rosidl_dynamic_typesupport_dynamic_data_insert_fixed_string_value(
+    get_rosidl_dynamic_data(), value.c_str(), value.size(), string_length, &out);
+  return out;
+}
+
+
+rosidl_dynamic_typesupport_member_id_t
+DynamicData::insert_fixed_wstring_value(const std::u16string value, size_t wstring_length)
+{
+  rosidl_dynamic_typesupport_member_id_t out;
+  rosidl_dynamic_typesupport_dynamic_data_insert_fixed_wstring_value(
+    get_rosidl_dynamic_data(), value.c_str(), value.size(), wstring_length, &out);
+  return out;
+}
+
+
 // BOUNDED STRING MEMBER ACCESS ====================================================================
 const std::string
 DynamicData::get_bounded_string_value(

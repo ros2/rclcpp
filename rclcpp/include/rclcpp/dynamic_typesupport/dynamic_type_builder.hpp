@@ -224,6 +224,56 @@ public:
     const std::string & default_value = "");
 
 
+  // ADD FIXED STRING MEMBERS ======================================================================
+  RCLCPP_PUBLIC
+  void
+  add_fixed_string_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t string_length,
+    const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_wstring_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t wstring_length,
+    const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_string_array_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    size_t string_length, size_t array_length, const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_wstring_array_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    size_t wstring_length, size_t array_length, const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_string_unbounded_sequence_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t string_length,
+    const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_wstring_unbounded_sequence_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name, size_t wstring_length,
+    const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_string_bounded_sequence_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    size_t string_length, size_t sequence_bound, const std::string & default_value = "");
+
+  RCLCPP_PUBLIC
+  void
+  add_fixed_wstring_bounded_sequence_member(
+    rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
+    size_t wstring_length, size_t sequence_bound, const std::string & default_value = "");
+
+
   // ADD BOUNDED STRING MEMBERS ====================================================================
   RCLCPP_PUBLIC
   void
