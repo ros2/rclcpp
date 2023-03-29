@@ -16,15 +16,18 @@
 
 #include "rclcpp/executors/executor_entities_collector.hpp"
 #include "rclcpp/executors/executor_notify_waitable.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 
 namespace rclcpp
 {
 namespace executors
 {
 
-ExecutorEntitiesCollector::ExecutorEntitiesCollector()
-: notify_waitable_(std::make_shared<ExecutorNotifyWaitable>())
-{
+ExecutorEntitiesCollector::ExecutorEntitiesCollector(
+    std::function<void(void)> on_notify_waitable_callback) {
+  notify_waitable_ = std::make_shared<ExecutorNotifyWaitable>(
+    [on_notify_waitable_callback](){on_notify_waitable_callback();});
+
 }
 
 ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
@@ -81,7 +84,8 @@ ExecutorEntitiesCollector::add_node(rclcpp::node_interfaces::NodeBaseInterface::
   }
   weak_nodes_.push_back(node_ptr);
   this->notify_waitable_->add_guard_condition(&node_ptr->get_notify_guard_condition());
-  this->add_automatically_associated_callback_groups();
+
+  this->add_automatically_associated_callback_groups({node_ptr});
 }
 
 void
@@ -182,14 +186,8 @@ ExecutorEntitiesCollector::get_automatically_added_callback_groups()
 void
 ExecutorEntitiesCollector::update_collections()
 {
-  this->add_automatically_associated_callback_groups();
+  this->add_automatically_associated_callback_groups(this->weak_nodes_);
   this->prune_invalid_nodes_and_groups();
-}
-
-std::shared_ptr<ExecutorNotifyWaitable>
-ExecutorEntitiesCollector::get_executor_notify_waitable()
-{
-  return this->notify_waitable_;
 }
 
 void
@@ -232,9 +230,11 @@ ExecutorEntitiesCollector::remove_callback_group_from_collection(
 }
 
 void
-ExecutorEntitiesCollector::add_automatically_associated_callback_groups()
+ExecutorEntitiesCollector::add_automatically_associated_callback_groups(
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> nodes_to_check
+)
 {
-  for (auto & weak_node : weak_nodes_) {
+  for (auto & weak_node : nodes_to_check) {
     auto node = weak_node.lock();
     if (node) {
       node->for_each_callback_group(

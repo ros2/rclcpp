@@ -35,12 +35,37 @@ namespace rclcpp
 namespace executors
 {
 
+/// Class to monitor a set of nodes and callback groups for changes in entity membership
+/**
+ * This is to be used with an executor to track the membership of various nodes, groups,
+ * and entities (timers, subscriptions, clients, services, etc) and report status to the
+ * executor.
+ *
+ * In general, users will add either nodes or callback groups to an executor.
+ * Each node may have callback groups that are automatically associated with executors,
+ * or callback groups that must be manually associated with an executor.
+ *
+ * This object tracks both types of callback groups as well as nodes that have been
+ * previously added to the executor.
+ * When a new callback group is added/removed or new entities are added/removed, the
+ * corresponding node or callback group will signal this to the executor so that the
+ * entity collection may be rebuilt according to that executor's implementation.
+ *
+ */
 class ExecutorEntitiesCollector
 {
 public:
+  /// Constructor
+  /**
+   * \param[in] on_notify_waitable Callback to execute when one of the associated
+   *   nodes or callback groups trigger their guard condition, indicating that their
+   *   corresponding entities have changed.
+   */
   RCLCPP_PUBLIC
-  ExecutorEntitiesCollector();
+  explicit ExecutorEntitiesCollector(
+      std::function<void(void)> on_notify_waitable_callback = {});
 
+  /// Destructor
   RCLCPP_PUBLIC
   ~ExecutorEntitiesCollector();
 
@@ -63,6 +88,11 @@ public:
   void
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
+  /// Check if a node is associated with this executor/collector.
+  /**
+   * \param[in] node_ptr a shared pointer that points to a node base interface
+   * \return true if the node is tracked in this collector, false otherwise
+   */
   RCLCPP_PUBLIC
   bool
   has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
@@ -86,25 +116,41 @@ public:
   void
   remove_callback_group(rclcpp::CallbackGroup::SharedPtr group_ptr);
 
+  /// Get all callback groups known to this entity collector
+  /**
+   * This will include manually added and automatically added (node associated) groups
+   * \return vector of all callback groups
+   */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_all_callback_groups();
 
+  /// Get manually-added callback groups known to this entity collector
+  /**
+   * This will include callback groups that have been added via add_callback_group
+   * \return vector of manually-added callback groups
+   */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_manually_added_callback_groups();
 
+  /// Get automatically-added callback groups known to this entity collector
+  /**
+   * This will include callback groups that are associated with nodes added via add_node
+   * \return vector of automatically-added callback groups
+   */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_automatically_added_callback_groups();
 
+  /// Update the underlying collections
+  /**
+   * This will prune nodes and callback groups that are no longer valid as well
+   * as adding new callback groups from any associated nodes.
+   */
   RCLCPP_PUBLIC
   void
   update_collections();
-
-  RCLCPP_PUBLIC
-  std::shared_ptr<ExecutorNotifyWaitable>
-  get_executor_notify_waitable();
 
 protected:
   using CallbackGroupCollection = std::set<
@@ -125,7 +171,8 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_automatically_associated_callback_groups() RCPPUTILS_TSA_REQUIRES(mutex_);
+  add_automatically_associated_callback_groups(
+    std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> nodes_to_check) RCPPUTILS_TSA_REQUIRES(mutex_);
 
   RCLCPP_PUBLIC
   void
