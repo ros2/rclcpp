@@ -222,8 +222,7 @@ Executor::add_callback_group_to_map(
   weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
 
   if (node_ptr->get_context()->is_valid()) {
-    auto callback_group_guard_condition =
-      group_ptr->get_notify_guard_condition(node_ptr->get_context());
+    auto callback_group_guard_condition = group_ptr->get_notify_guard_condition();
     weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition.get();
     // Add the callback_group's notify condition to the guard condition handles
     memory_strategy_->add_guard_condition(*callback_group_guard_condition);

@@ -89,6 +89,8 @@ public:
    * added to the executor in either case.
    *
    * \param[in] group_type The type of the callback group.
+   * \param[in] get_node_context Lambda to retrieve the node context when
+   *   checking that the creating node is valid and using the guard condition.
    * \param[in] automatically_add_to_executor_with_node A boolean that
    *   determines whether a callback group is automatically added to an executor
    *   with the node with which it is associated.
@@ -96,6 +98,7 @@ public:
   RCLCPP_PUBLIC
   explicit CallbackGroup(
     CallbackGroupType group_type,
+    std::function<rclcpp::Context::SharedPtr(void)> get_node_context,
     bool automatically_add_to_executor_with_node = true);
 
   /// Default destructor.
@@ -136,6 +139,18 @@ public:
   {
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
+
+  /// Return if the node that created this callback group still exists
+  /**
+   * As nodes can share ownership of callback groups with an executor, this
+   * may be used to ensures that the executor doesn't operate on a callback
+   * group that has outlived it's creating node.
+   *
+   * \return true if the creating node still exists, otherwise false
+   */
+  RCLCPP_PUBLIC
+  bool
+  has_valid_node();
 
   RCLCPP_PUBLIC
   std::atomic_bool &
@@ -178,10 +193,23 @@ public:
   bool
   automatically_add_to_executor_with_node() const;
 
-  /// Defer creating the notify guard condition and return it.
+  /// Retrieve the guard condition used to signal changes to this callback group.
+  /**
+   * \param[in] context_ptr context to use when creating the guard condition
+   * \return guard condition if it is valid, otherwise nullptr.
+   */
+  [[deprecated("Use get_notify_guard_condition() without arguments")]]
   RCLCPP_PUBLIC
   rclcpp::GuardCondition::SharedPtr
   get_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr);
+
+  /// Retrieve the guard condition used to signal changes to this callback group.
+  /**
+   * \return guard condition if it is valid, otherwise nullptr.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::GuardCondition::SharedPtr
+  get_notify_guard_condition();
 
   /// Trigger the notify guard condition.
   RCLCPP_PUBLIC
@@ -233,6 +261,8 @@ protected:
   // defer the creation of the guard condition
   std::shared_ptr<rclcpp::GuardCondition> notify_guard_condition_ = nullptr;
   std::recursive_mutex notify_guard_condition_mutex_;
+
+  std::function<rclcpp::Context::SharedPtr(void)> get_context_;
 
 private:
   template<typename TypeT, typename Function>
