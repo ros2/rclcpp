@@ -19,6 +19,7 @@
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
+#include <deque>
 #include <iostream>
 #include <list>
 #include <map>
@@ -29,25 +30,23 @@
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
+#include "rclcpp/executors/executor_notify_waitable.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors/executor_entities_collection.hpp"
+#include "rclcpp/executors/executor_entities_collector.hpp"
 #include "rclcpp/future_return_code.hpp"
-#include "rclcpp/memory_strategies.hpp"
-#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/wait_set.hpp"
 
 namespace rclcpp
 {
-
-typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
 // Forward declaration is used in convenience method signature.
 class Node;
@@ -402,17 +401,6 @@ public:
   void
   cancel();
 
-  /// Support dynamic switching of the memory strategy.
-  /**
-   * Switching the memory strategy while the executor is spinning in another threading could have
-   * unintended consequences.
-   * \param[in] memory_strategy Shared pointer to the memory strategy to set.
-   * \throws std::runtime_error if memory_strategy is null
-   */
-  RCLCPP_PUBLIC
-  void
-  set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
-
   /// Returns true if the executor is currently spinning.
   /**
    * This function can be called asynchronously from any thread.
@@ -497,6 +485,10 @@ protected:
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+  RCLCPP_PUBLIC
+  void
+  collect_entities();
+
   /// Block until more work becomes avilable or timeout is reached.
   /**
    * Builds a set of waitable entities, which are passed to the middleware.
@@ -508,62 +500,6 @@ protected:
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
-  /// Find node associated with a callback group
-  /**
-   * \param[in] weak_groups_to_nodes map of callback groups to nodes
-   * \param[in] group callback group to find assocatiated node
-   * \return Pointer to associated node if found, else nullptr
-   */
-  RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    rclcpp::CallbackGroup::SharedPtr group);
-
-  /// Return true if the node has been added to this executor.
-  /**
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \param[in] weak_groups_to_nodes map to nodes to lookup
-   * \return true if the node is associated with the executor, otherwise false
-   */
-  RCLCPP_PUBLIC
-  bool
-  has_node(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
-
-  /// Find the callback group associated with a timer
-  /**
-   * \param[in] timer Timer to find associated callback group
-   * \return Pointer to callback group node if found, else nullptr
-   */
-  RCLCPP_PUBLIC
-  rclcpp::CallbackGroup::SharedPtr
-  get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
-
-  /// Add a callback group to an executor
-  /**
-   * \see rclcpp::Executor::add_callback_group
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  add_callback_group_to_map(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
-
-  /// Remove a callback group from the executor.
-  /**
-   * \see rclcpp::Executor::remove_callback_group
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  remove_callback_group_from_map(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
-
   /// Check for executable in ready state and populate union structure.
   /**
    * \param[out] any_executable populated union structure of ready executable
@@ -573,33 +509,6 @@ protected:
   RCLCPP_PUBLIC
   bool
   get_next_ready_executable(AnyExecutable & any_executable);
-
-  /// Check for executable in ready state and populate union structure.
-  /**
-   * This is the implementation of get_next_ready_executable that takes into
-   * account the current state of callback groups' association with nodes and
-   * executors.
-   *
-   * This checks in a particular order for available work:
-   *   * Timers
-   *   * Subscriptions
-   *   * Services
-   *   * Clients
-   *   * Waitable
-   *
-   * If the next executable is not associated with this executor/node pair,
-   * then this method will return false.
-   *
-   * \param[out] any_executable populated union structure of ready executable
-   * \param[in] weak_groups_to_nodes mapping of callback groups to nodes
-   * \return true if an executable was ready and any_executable was populated,
-   *   otherwise false
-   */
-  RCLCPP_PUBLIC
-  bool
-  get_next_ready_executable_from_map(
-    AnyExecutable & any_executable,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   /// Wait for executable in ready state and populate union structure.
   /**
@@ -618,21 +527,6 @@ protected:
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
-  /// Add all callback groups that can be automatically added from associated nodes.
-  /**
-   * The executor, before collecting entities, verifies if any callback group from
-   * nodes associated with the executor, which is not already associated to an executor,
-   * can be automatically added to this executor.
-   * This takes care of any callback group that has been added to a node but not explicitly added
-   * to the executor.
-   * It is important to note that in order for the callback groups to be automatically added to an
-   * executor through this function, the node of the callback groups needs to have been added
-   * through the `add_node` method.
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  add_callback_groups_from_nodes_associated_to_executor() RCPPUTILS_TSA_REQUIRES(mutex_);
-
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
@@ -642,15 +536,7 @@ protected:
   /// Guard condition for signaling the rmw layer to wake up for system shutdown.
   std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
 
-  /// Wait set for managing entities that the rmw layer waits on.
-  rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
-
-  // Mutex to protect the subsequent memory_strategy_.
   mutable std::mutex mutex_;
-
-  /// The memory strategy: an interface for handling user-defined memory allocation strategies.
-  memory_strategy::MemoryStrategy::SharedPtr
-  memory_strategy_ RCPPUTILS_TSA_PT_GUARDED_BY(mutex_);
 
   /// The context associated with this executor.
   std::shared_ptr<rclcpp::Context> context_;
@@ -661,39 +547,14 @@ protected:
   virtual void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
-  typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rclcpp::GuardCondition *,
-      std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
-    WeakNodesToGuardConditionsMap;
+  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
+  rclcpp::executors::ExecutorEntitiesCollector collector_;
 
-  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-      const rclcpp::GuardCondition *,
-      std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
-    WeakCallbackGroupsToGuardConditionsMap;
+  rclcpp::executors::ExecutorEntitiesCollection current_collection_;
+  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> current_notify_waitable_;
 
-  /// maps nodes to guard conditions
-  WeakNodesToGuardConditionsMap
-  weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// maps callback groups to guard conditions
-  WeakCallbackGroupsToGuardConditionsMap
-  weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// maps callback groups associated to nodes
-  WeakCallbackGroupsToNodesMap
-  weak_groups_associated_with_executor_to_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// maps callback groups to nodes associated with executor
-  WeakCallbackGroupsToNodesMap
-  weak_groups_to_nodes_associated_with_executor_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// maps all callback groups to nodes
-  WeakCallbackGroupsToNodesMap
-  weak_groups_to_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// nodes that are associated with the executor
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>
-  weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::shared_ptr<rclcpp::WaitSet> wait_set_;
+  std::deque<rclcpp::AnyExecutable> ready_executables_;
 
   /// shutdown callback handle registered to Context
   rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;

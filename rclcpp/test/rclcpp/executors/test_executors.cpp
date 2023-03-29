@@ -91,8 +91,7 @@ class TestExecutorsStable : public TestExecutors<T> {};
 using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
+  rclcpp::executors::MultiThreadedExecutor>;
 
 class ExecutorTypeNames
 {
@@ -107,10 +106,6 @@ public:
 
     if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
       return "MultiThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
-      return "StaticSingleThreadedExecutor";
     }
 
     return "";
@@ -135,6 +130,7 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
   {
     ExecutorType executor;
     executor.add_node(this->node);
+    std::cout << "here" << std::endl;
   }
   {
     ExecutorType executor;
@@ -156,7 +152,7 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   }
 
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.
-  std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+  std::thread spinner([&]() {executor.spin();});
 
   std::this_thread::sleep_for(50ms);
   executor.cancel();

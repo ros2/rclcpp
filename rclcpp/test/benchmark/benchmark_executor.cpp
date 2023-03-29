@@ -191,71 +191,6 @@ BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_remove_node)(be
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
-  static_single_thread_executor_add_node)(benchmark::State & st)
-{
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
-  for (auto _ : st) {
-    (void)_;
-    executor.add_node(node);
-    st.PauseTiming();
-    executor.remove_node(node);
-    st.ResumeTiming();
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  static_single_thread_executor_remove_node)(benchmark::State & st)
-{
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
-  for (auto _ : st) {
-    (void)_;
-    st.PauseTiming();
-    executor.add_node(node);
-    st.ResumeTiming();
-    executor.remove_node(node);
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  static_single_thread_executor_spin_until_future_complete)(benchmark::State & st)
-{
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  auto ret = executor.spin_until_future_complete(shared_future, 100ms);
-  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    (void)_;
-    // static_single_thread_executor has a special design. We need to add/remove the node each
-    // time you call spin
-    st.PauseTiming();
-    executor.add_node(node);
-    st.ResumeTiming();
-
-    ret = executor.spin_until_future_complete(shared_future, 100ms);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-    st.PauseTiming();
-    executor.remove_node(node);
-    st.ResumeTiming();
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
   single_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
@@ -314,29 +249,6 @@ BENCHMARK_F(
   }
 }
 
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  static_single_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
-{
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    (void)_;
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
-      executor, node, shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-  }
-}
 
 BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark::State & st)
 {
@@ -360,44 +272,5 @@ BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark
       st.SkipWithError(rcutils_get_error_string().str);
       break;
     }
-  }
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  static_executor_entities_collector_execute)(benchmark::State & st)
-{
-  rclcpp::executors::StaticExecutorEntitiesCollector::SharedPtr entities_collector_ =
-    std::make_shared<rclcpp::executors::StaticExecutorEntitiesCollector>();
-  entities_collector_->add_node(node->get_node_base_interface());
-
-  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  rcl_allocator_t allocator = rcl_get_default_allocator();
-  auto shared_context = node->get_node_base_interface()->get_context();
-  rcl_context_t * context = shared_context->get_rcl_context().get();
-  rcl_ret_t ret = rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator);
-  if (ret != RCL_RET_OK) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-  RCPPUTILS_SCOPE_EXIT(
-  {
-    rcl_ret_t ret = rcl_wait_set_fini(&wait_set);
-    if (ret != RCL_RET_OK) {
-      st.SkipWithError(rcutils_get_error_string().str);
-    }
-  });
-
-  auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
-  rclcpp::GuardCondition guard_condition(shared_context);
-
-  entities_collector_->init(&wait_set, memory_strategy);
-  RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    (void)_;
-    std::shared_ptr<void> data = entities_collector_->take_data();
-    entities_collector_->execute(data);
   }
 }

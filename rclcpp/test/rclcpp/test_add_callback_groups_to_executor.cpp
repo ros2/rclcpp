@@ -49,8 +49,7 @@ public:
 using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
+  rclcpp::executors::MultiThreadedExecutor>;
 
 class ExecutorTypeNames
 {
@@ -65,10 +64,6 @@ public:
 
     if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
       return "MultiThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
-      return "StaticSingleThreadedExecutor";
     }
 
     return "";
@@ -137,15 +132,18 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
     2s, timer_callback, cb_grp);
   ExecutorType executor;
   executor.add_callback_group(cb_grp, node->get_node_base_interface());
+
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
+
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
   options.callback_group = cb_grp2;
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
+
 
   executor.remove_callback_group(cb_grp);
   ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);

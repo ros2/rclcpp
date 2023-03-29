@@ -15,6 +15,7 @@
 #ifndef RCLCPP__WAIT_SET_POLICIES__DETAIL__STORAGE_POLICY_COMMON_HPP_
 #define RCLCPP__WAIT_SET_POLICIES__DETAIL__STORAGE_POLICY_COMMON_HPP_
 
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -79,6 +80,7 @@ protected:
           throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
         }
         // Flag for pruning.
+        std::cout << "waitable needs pruning" << std::endl;
         needs_pruning_ = true;
         continue;
       }
@@ -86,6 +88,8 @@ protected:
       rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
       subscriptions_from_waitables += waitable.get_number_of_ready_subscriptions();
       guard_conditions_from_waitables += waitable.get_number_of_ready_guard_conditions();
+      std::cout << "guard_conditions_from_waitables: " << guard_conditions_from_waitables <<
+        std::endl;
       timers_from_waitables += waitable.get_number_of_ready_timers();
       clients_from_waitables += waitable.get_number_of_ready_clients();
       services_from_waitables += waitable.get_number_of_ready_services();

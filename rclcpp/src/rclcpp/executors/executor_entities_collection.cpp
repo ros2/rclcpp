@@ -121,6 +121,7 @@ void check_ready(
         exec.callback_group = callback_group;
         if (fill_executable(exec, entity)) {
           executables.push_back(exec);
+        } else {
         }
       }
     }

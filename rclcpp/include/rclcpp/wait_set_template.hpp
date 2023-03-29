@@ -661,6 +661,7 @@ public:
     this->storage_acquire_ownerships();
     RCPPUTILS_SCOPE_EXIT({this->storage_release_ownerships();});
 
+
     // this method comes from the SynchronizationPolicy
     return this->template sync_wait<WaitResult<WaitSetTemplate>>(
       // pass along the time_to_wait duration as nanoseconds
