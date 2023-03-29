@@ -44,9 +44,7 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
-  bool is_serialized,
-  bool is_dynamic,
-  bool use_take_dynamic_message)
+  SubscriptionType subscription_type)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
@@ -54,13 +52,13 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  is_serialized_(is_serialized),
-  is_dynamic_(is_dynamic),
-  use_take_dynamic_message_(use_take_dynamic_message)
+  subscription_type_(subscription_type)
 {
-  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE) && use_take_dynamic_message_)
+  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE)
+    && subscription_type == rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT)
   {
-    throw std::runtime_error("Cannot use_take_dynamic_message, feature not supported in rmw");
+    throw std::runtime_error(
+      "Cannot set subscription to take dynamic message directly, feature not supported in rmw");
   }
 
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
@@ -267,10 +265,10 @@ SubscriptionBase::get_message_type_support_handle() const
   return type_support_;
 }
 
-bool
-SubscriptionBase::is_serialized() const
+rclcpp::SubscriptionType
+SubscriptionBase::get_subscription_type() const
 {
-  return is_serialized_;
+  return subscription_type_;
 }
 
 size_t
@@ -530,18 +528,6 @@ SubscriptionBase::get_content_filter() const
 
 // DYNAMIC TYPE ==================================================================================
 // TODO(methylDragon): Reorder later
-bool
-SubscriptionBase::is_dynamic() const
-{
-  return is_dynamic_;
-}
-
-bool
-SubscriptionBase::use_take_dynamic_message() const
-{
-  return use_take_dynamic_message_;
-}
-
 bool
 SubscriptionBase::take_dynamic_message(
   rclcpp::dynamic_typesupport::DynamicMessage & message_out,

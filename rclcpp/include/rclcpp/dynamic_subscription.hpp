@@ -67,9 +67,7 @@ public:
       options.to_rcl_subscription_options(qos),
       options.event_callbacks,
       options.use_default_callbacks,
-      false,  // is_serialized
-      true,   // is_dynamic
-      use_take_dynamic_message),
+      use_take_dynamic_message ? SubscriptionType::DYNAMIC_MESSAGE_DIRECT : SubscriptionType::DYNAMIC_MESSAGE_FROM_SERIALIZED),  // NOLINT
     ts_(type_support),
     callback_(callback),
     serialization_support_(nullptr),

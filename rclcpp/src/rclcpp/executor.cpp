@@ -604,114 +604,133 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
-  // DYNAMIC SUBSCRIPTION ==========================================================================
-  // If a subscription is dynamic, then it will use its serialization-specific dynamic data.
-  //
-  // Two cases:
-  // - Dynamic type subscription using dynamic type stored in its own internal type support struct
-  // - Non-dynamic type subscription with no stored dynamic type
-  //   - Subscriptions of this type must be able to lookup the local message description to
-  //     generate a dynamic type at runtime!
-  //   - TODO(methylDragon): I won't be handling this case yet
-  if (subscription->is_dynamic()) {
+  switch (subscription->get_subscription_type()) {
+
+    // Take ROS message
+    case rclcpp::SubscriptionType::ROS_MESSAGE:
+      {
+        if (subscription->can_loan_messages()) {
+          // This is the case where a loaned message is taken from the middleware via
+          // inter-process communication, given to the user for their callback,
+          // and then returned.
+          void * loaned_msg = nullptr;
+          // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
+          //   is extened to support subscriptions as well.
+          take_and_do_error_handling(
+            "taking a loaned message from topic",
+            subscription->get_topic_name(),
+            [&]()
+            {
+              rcl_ret_t ret = rcl_take_loaned_message(
+                subscription->get_subscription_handle().get(),
+                &loaned_msg,
+                &message_info.get_rmw_message_info(),
+                nullptr);
+              if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+                return false;
+              } else if (RCL_RET_OK != ret) {
+                rclcpp::exceptions::throw_from_rcl_error(ret);
+              }
+              return true;
+            },
+            [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
+          if (nullptr != loaned_msg) {
+            rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
+              subscription->get_subscription_handle().get(), loaned_msg);
+            if (RCL_RET_OK != ret) {
+              RCLCPP_ERROR(
+                rclcpp::get_logger(
+                  "rclcpp"),
+                "rcl_return_loaned_message_from_subscription() failed for subscription on topic '%s':"
+                " %s",
+                subscription->get_topic_name(), rcl_get_error_string().str);
+            }
+            loaned_msg = nullptr;
+          }
+        } else {
+          // This case is taking a copy of the message data from the middleware via
+          // inter-process communication.
+          std::shared_ptr<void> message = subscription->create_message();
+          take_and_do_error_handling(
+            "taking a message from topic",
+            subscription->get_topic_name(),
+            [&]() {return subscription->take_type_erased(message.get(), message_info);},
+            [&]() {subscription->handle_message(message, message_info);});
+          subscription->return_message(message);
+        }
+        break;
+      }
+
+    // Take serialized message
+    case rclcpp::SubscriptionType::SERIALIZED_MESSAGE:
+      {
+        // This is the case where a copy of the serialized message is taken from
+        // the middleware via inter-process communication.
+        std::shared_ptr<SerializedMessage> serialized_msg =
+          subscription->create_serialized_message();
+        take_and_do_error_handling(
+          "taking a serialized message from topic",
+          subscription->get_topic_name(),
+          [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
+          [&]()
+          {
+            subscription->handle_serialized_message(serialized_msg, message_info);
+          });
+        subscription->return_serialized_message(serialized_msg);
+        break;
+      }
+
+    // DYNAMIC SUBSCRIPTION ========================================================================
+    // If a subscription is dynamic, then it will use its serialization-specific dynamic data.
+    //
+    // Two cases:
+    // - Dynamic type subscription using dynamic type stored in its own internal type support struct
+    // - Non-dynamic type subscription with no stored dynamic type
+    //   - Subscriptions of this type must be able to lookup the local message description to
+    //     generate a dynamic type at runtime!
+    //   - TODO(methylDragon): I won't be handling this case yet
+
     // Take dynamic message directly from the middleware
-    if (subscription->use_take_dynamic_message()) {
-      DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
-      take_and_do_error_handling(
-        "taking a dynamic message from topic",
-        subscription->get_topic_name(),
-        // This modifies the stored dynamic data in the DynamicMessage in-place
-        [&]() {return subscription->take_dynamic_message(*dynamic_message, message_info);},
-        [&]() {subscription->handle_dynamic_message(dynamic_message, message_info);});
-      subscription->return_dynamic_message(dynamic_message);
+    case rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT:
+      {
+        DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
+        take_and_do_error_handling(
+          "taking a dynamic message from topic",
+          subscription->get_topic_name(),
+          // This modifies the stored dynamic data in the DynamicMessage in-place
+          [&]() {return subscription->take_dynamic_message(*dynamic_message, message_info);},
+          [&]() {subscription->handle_dynamic_message(dynamic_message, message_info);});
+        subscription->return_dynamic_message(dynamic_message);
+        break;
+      }
 
     // Take serialized and then convert to dynamic message
-    } else {
-      std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
+    case rclcpp::SubscriptionType::DYNAMIC_MESSAGE_FROM_SERIALIZED:
+      {
+        std::shared_ptr<SerializedMessage> serialized_msg =
+          subscription->create_serialized_message();
 
-      // NOTE(methylDragon): Is this clone necessary? If I'm following the pattern, it seems so.
-      DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
-      take_and_do_error_handling(
-        "taking a serialized message from topic",
-        subscription->get_topic_name(),
-        [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
-        [&]()
-        {
-          bool ret = dynamic_message->deserialize(&serialized_msg->get_rcl_serialized_message());
-          if (!ret) {
-            throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
+        // NOTE(methylDragon): Is this clone necessary? If I'm following the pattern, it seems so.
+        DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
+        take_and_do_error_handling(
+          "taking a serialized message from topic",
+          subscription->get_topic_name(),
+          [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
+          [&]()
+          {
+            bool ret = dynamic_message->deserialize(&serialized_msg->get_rcl_serialized_message());
+            if (!ret) {
+              throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
+            }
+            subscription->handle_dynamic_message(dynamic_message, message_info);
           }
-          subscription->handle_dynamic_message(dynamic_message, message_info);
-        }
-      );
-      subscription->return_serialized_message(serialized_msg);
-      subscription->return_dynamic_message(dynamic_message);
-    }
-    return;
-  }
-  // ===============================================================================================
-
-  if (subscription->is_serialized()) {
-    // This is the case where a copy of the serialized message is taken from
-    // the middleware via inter-process communication.
-    std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
-    take_and_do_error_handling(
-      "taking a serialized message from topic",
-      subscription->get_topic_name(),
-      [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
-      [&]()
-      {
-        subscription->handle_serialized_message(serialized_msg, message_info);
-      });
-    subscription->return_serialized_message(serialized_msg);
-  } else if (subscription->can_loan_messages()) {
-    // This is the case where a loaned message is taken from the middleware via
-    // inter-process communication, given to the user for their callback,
-    // and then returned.
-    void * loaned_msg = nullptr;
-    // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
-    //   is extened to support subscriptions as well.
-    take_and_do_error_handling(
-      "taking a loaned message from topic",
-      subscription->get_topic_name(),
-      [&]()
-      {
-        rcl_ret_t ret = rcl_take_loaned_message(
-          subscription->get_subscription_handle().get(),
-          &loaned_msg,
-          &message_info.get_rmw_message_info(),
-          nullptr);
-        if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-          return false;
-        } else if (RCL_RET_OK != ret) {
-          rclcpp::exceptions::throw_from_rcl_error(ret);
-        }
-        return true;
-      },
-      [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
-    if (nullptr != loaned_msg) {
-      rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
-        subscription->get_subscription_handle().get(),
-        loaned_msg);
-      if (RCL_RET_OK != ret) {
-        RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"),
-          "rcl_return_loaned_message_from_subscription() failed for subscription on topic '%s': %s",
-          subscription->get_topic_name(), rcl_get_error_string().str);
+        );
+        subscription->return_serialized_message(serialized_msg);
+        subscription->return_dynamic_message(dynamic_message);
+        break;
       }
-      loaned_msg = nullptr;
-    }
-  } else {
-    // This case is taking a copy of the message data from the middleware via
-    // inter-process communication.
-    std::shared_ptr<void> message = subscription->create_message();
-    take_and_do_error_handling(
-      "taking a message from topic",
-      subscription->get_topic_name(),
-      [&]() {return subscription->take_type_erased(message.get(), message_info);},
-      [&]() {subscription->handle_message(message, message_info);});
-    subscription->return_message(message);
   }
+  return;
 }
 
 void

@@ -84,7 +84,7 @@ public:
       options.to_rcl_subscription_options(qos),
       options.event_callbacks,
       options.use_default_callbacks,
-      true),
+      SubscriptionType::SERIALIZED_MESSAGE),
     callback_(callback),
     ts_lib_(ts_lib)
   {}

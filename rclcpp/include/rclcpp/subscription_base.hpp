@@ -63,6 +63,14 @@ namespace experimental
 class IntraProcessManager;
 }  // namespace experimental
 
+enum class SubscriptionType : uint8_t
+{
+  ROS_MESSAGE = 1,  // take message as ROS message and handle as ROS message
+  SERIALIZED_MESSAGE = 2,  // take message as serialized and handle as serialized
+  DYNAMIC_MESSAGE_DIRECT = 3,  // take message as DynamicMessage and handle as DynamicMessage
+  DYNAMIC_MESSAGE_FROM_SERIALIZED = 4  // take message as serialized and handle as DynamicMessage
+};
+
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
 class SubscriptionBase : public std::enable_shared_from_this<SubscriptionBase>
@@ -79,9 +87,7 @@ public:
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options Options for the subscription.
-   * \param[in] is_serialized is true if the message will be delivered still serialized
-   * \param[in] is_dynamic is true if the message will be delivered dynamic (type constructed at
-   *                       runtime)
+   * \param[in] subscription_type Enum flag to change how the message will be received and delivered
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
@@ -91,9 +97,7 @@ public:
     const rcl_subscription_options_t & subscription_options,
     const SubscriptionEventCallbacks & event_callbacks,
     bool use_default_callbacks,
-    bool is_serialized = false,
-    bool is_dynamic = false,
-    bool use_take_dynamic_message = false);
+    SubscriptionType subscription_type = SubscriptionType::ROS_MESSAGE);
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -234,13 +238,13 @@ public:
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
-  /// Return if the subscription is serialized
+  /// Return the type of the subscription.
   /**
-   * \return `true` if the subscription is serialized, `false` otherwise
+   * \return `SubscriptionType`, which adjusts how messages are received and delivered.
    */
   RCLCPP_PUBLIC
-  bool
-  is_serialized() const;
+  SubscriptionType
+  get_subscription_type() const;
 
   /// Get matching publisher count.
   /** \return The number of publishers on this topic. */
@@ -583,21 +587,6 @@ public:
   take_dynamic_message(
     rclcpp::dynamic_typesupport::DynamicMessage & message_out,
     rclcpp::MessageInfo & message_info_out);
-
-  /// Return if the subscription handles dynamic messages
-  /**
-   * This will cause the subscription to use the handle_dynamic_message methods, which must be
-   * used with take_serialized or take_dynamic_message.
-   *
-   * \return `true` if the subscription should use a dynamic message callback, `false` otherwise
-   */
-  RCLCPP_PUBLIC
-  bool
-  is_dynamic() const;
-
-  RCLCPP_PUBLIC
-  bool
-  use_take_dynamic_message() const;
   // ===============================================================================================
 
 
@@ -657,9 +646,7 @@ private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 
   rosidl_message_type_support_t type_support_;
-  bool is_serialized_;
-  bool is_dynamic_;
-  bool use_take_dynamic_message_;
+  SubscriptionType subscription_type_;
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
