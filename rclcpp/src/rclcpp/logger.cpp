@@ -125,4 +125,18 @@ Logger::set_level(Level level)
   }
 }
 
+Logger::Level
+Logger::get_effective_level() const
+{
+  int logger_level = rcutils_logging_get_logger_effective_level(get_name());
+
+  if (logger_level < 0) {
+    exceptions::throw_from_rcl_error(
+      RCL_RET_ERROR, "Couldn't get logger level",
+      rcutils_get_error_state(), rcutils_reset_error);
+  }
+
+  return static_cast<Level>(logger_level);
+}
+
 }  // namespace rclcpp
