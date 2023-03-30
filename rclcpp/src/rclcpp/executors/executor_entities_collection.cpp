@@ -18,6 +18,15 @@ namespace rclcpp
 {
 namespace executors
 {
+bool ExecutorEntitiesCollection::empty() const
+{
+  return (subscriptions.empty() &&
+          timers.empty() &&
+          guard_conditions.empty() &&
+          clients.empty() &&
+          services.empty() &&
+           waitables.empty());
+}
 
 void ExecutorEntitiesCollection::clear()
 {
@@ -28,6 +37,7 @@ void ExecutorEntitiesCollection::clear()
   services.clear();
   waitables.clear();
 }
+
 
 void
 build_entities_collection(
@@ -42,43 +52,46 @@ build_entities_collection(
       continue;
     }
 
-    group_ptr->collect_all_ptrs(
-      [&collection, weak_group_ptr](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-        collection.subscriptions.insert(
-          {
-            subscription->get_subscription_handle().get(),
-            {subscription, weak_group_ptr}
-          });
-      },
-      [&collection, weak_group_ptr](const rclcpp::ServiceBase::SharedPtr & service) {
-        collection.services.insert(
-          {
-            service->get_service_handle().get(),
-            {service, weak_group_ptr}
-          });
-      },
-      [&collection, weak_group_ptr](const rclcpp::ClientBase::SharedPtr & client) {
-        collection.clients.insert(
-          {
-            client->get_client_handle().get(),
-            {client, weak_group_ptr}
-          });
-      },
-      [&collection, weak_group_ptr](const rclcpp::TimerBase::SharedPtr & timer) {
-        collection.timers.insert(
-          {
-            timer->get_timer_handle().get(),
-            {timer, weak_group_ptr}
-          });
-      },
-      [&collection, weak_group_ptr](const rclcpp::Waitable::SharedPtr & waitable) {
-        collection.waitables.insert(
-          {
-            waitable.get(),
-            {waitable, weak_group_ptr}
-          });
-      }
-    );
+    if (group_ptr->can_be_taken_from().load())
+    {
+      group_ptr->collect_all_ptrs(
+        [&collection, weak_group_ptr](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
+          collection.subscriptions.insert(
+            {
+              subscription->get_subscription_handle().get(),
+              {subscription, weak_group_ptr}
+            });
+        },
+        [&collection, weak_group_ptr](const rclcpp::ServiceBase::SharedPtr & service) {
+          collection.services.insert(
+            {
+              service->get_service_handle().get(),
+              {service, weak_group_ptr}
+            });
+        },
+        [&collection, weak_group_ptr](const rclcpp::ClientBase::SharedPtr & client) {
+          collection.clients.insert(
+            {
+              client->get_client_handle().get(),
+              {client, weak_group_ptr}
+            });
+        },
+        [&collection, weak_group_ptr](const rclcpp::TimerBase::SharedPtr & timer) {
+          collection.timers.insert(
+            {
+              timer->get_timer_handle().get(),
+              {timer, weak_group_ptr}
+            });
+        },
+        [&collection, weak_group_ptr](const rclcpp::Waitable::SharedPtr & waitable) {
+          collection.waitables.insert(
+            {
+              waitable.get(),
+              {waitable, weak_group_ptr}
+            });
+        }
+      );
+    }
   }
 }
 
@@ -88,24 +101,28 @@ void check_ready(
   std::deque<rclcpp::AnyExecutable> & executables,
   size_t size_of_waited_entities,
   typename EntityCollectionType::Key * waited_entities,
-  std::function<bool(rclcpp::AnyExecutable,
-  typename EntityCollectionType::EntitySharedPtr)> fill_executable)
+  std::function<bool(rclcpp::AnyExecutable &,
+                     typename EntityCollectionType::EntitySharedPtr &)> fill_executable)
 {
   for (size_t ii = 0; ii < size_of_waited_entities; ++ii) {
     if (waited_entities[ii]) {
       auto entity_iter = collection.find(waited_entities[ii]);
       if (entity_iter != collection.end()) {
         auto entity = entity_iter->second.entity.lock();
-        auto callback_group = entity_iter->second.callback_group.lock();
-
-        if (!entity || !callback_group || !callback_group->can_be_taken_from().load()) {
+        if (!entity) {
           continue;
         }
 
+        auto callback_group = entity_iter->second.callback_group.lock();
+        if (callback_group && !callback_group->can_be_taken_from().load()) {
+          continue;
+        }
         rclcpp::AnyExecutable exec;
+
         exec.callback_group = callback_group;
         if (fill_executable(exec, entity)) {
           executables.push_back(exec);
+        } else {
         }
       }
     }
@@ -123,15 +140,13 @@ ready_executables(
   if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
     return ret;
   }
-
   auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
-
   check_ready(
     collection.timers,
     ret,
     rcl_wait_set.size_of_timers,
     rcl_wait_set.timers,
-    [](auto exec, auto timer) {
+    [](rclcpp::AnyExecutable & exec, auto timer) {
       if (!timer->call()) {
         return false;
       }
@@ -144,17 +159,18 @@ ready_executables(
     ret,
     rcl_wait_set.size_of_subscriptions,
     rcl_wait_set.subscriptions,
-    [](auto exec, auto subscription) {
+    [](rclcpp::AnyExecutable & exec, auto subscription) {
       exec.subscription = subscription;
       return true;
     });
+
 
   check_ready(
     collection.services,
     ret,
     rcl_wait_set.size_of_services,
     rcl_wait_set.services,
-    [](auto exec, auto service) {
+    [](rclcpp::AnyExecutable & exec, auto service) {
       exec.service = service;
       return true;
     });
@@ -164,7 +180,7 @@ ready_executables(
     ret,
     rcl_wait_set.size_of_clients,
     rcl_wait_set.clients,
-    [](auto exec, auto client) {
+    [](rclcpp::AnyExecutable & exec, auto client) {
       exec.client = client;
       return true;
     });
@@ -173,7 +189,7 @@ ready_executables(
     auto waitable = entry.entity.lock();
     if (waitable && waitable->is_ready(&rcl_wait_set)) {
       auto group = entry.callback_group.lock();
-      if (!group || !group->can_be_taken_from().load()) {
+      if (group && !group->can_be_taken_from().load()) {
         continue;
       }
 

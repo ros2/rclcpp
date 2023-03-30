@@ -688,6 +688,15 @@ if(TARGET test_static_executor_entities_collector)
   target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_gtest(test_entities_collector executors/test_entities_collector.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
+if(TARGET test_entities_collector)
+  ament_target_dependencies(test_entities_collector
+    "rcl"
+    "test_msgs")
+  target_link_libraries(test_entities_collector ${PROJECT_NAME} mimick)
+endif()
+
 ament_add_gtest(test_executor_notify_waitable executors/test_executor_notify_waitable.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
 if(TARGET test_executor_notify_waitable)

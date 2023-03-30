@@ -85,7 +85,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_guard_condition(rclcpp::GuardCondition * guard_condition);
+  add_guard_condition(const rclcpp::GuardCondition * guard_condition);
 
   /// Remove a guard condition from being waited on.
   /**
@@ -93,7 +93,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_guard_condition(rclcpp::GuardCondition * guard_condition);
+  remove_guard_condition(const rclcpp::GuardCondition * guard_condition);
 
   /// Get the number of ready guard_conditions
   /**
@@ -108,7 +108,16 @@ private:
   std::function<void(void)> execute_callback_;
 
   /// The collection of guard conditions to be waited on.
+  std::mutex guard_condition_mutex_;
+
+  /// The collection of guard conditions to be waited on.
   std::list<const rclcpp::GuardCondition *> notify_guard_conditions_;
+
+  /// The collection of guard conditions to be waited on.
+  std::list<const rclcpp::GuardCondition *> to_add_;
+
+  /// The collection of guard conditions to be waited on.
+  std::list<const rclcpp::GuardCondition *> to_remove_;
 };
 
 }  // namespace executors

@@ -143,6 +143,9 @@ public:
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_automatically_added_callback_groups();
 
+  RCLCPP_PUBLIC
+  std::shared_ptr<ExecutorNotifyWaitable> get_notify_waitable();
+
   /// Update the underlying collections
   /**
    * This will prune nodes and callback groups that are no longer valid as well
@@ -153,9 +156,33 @@ public:
   update_collections();
 
 protected:
+  using NodeCollection = std::set<
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>;
+
   using CallbackGroupCollection = std::set<
     rclcpp::CallbackGroup::WeakPtr,
     std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
+
+  using WeakNodesToGuardConditionsMap = std::map<
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    const rclcpp::GuardCondition *,
+    std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>;
+
+  using WeakGroupsToGuardConditionsMap = std::map<
+    rclcpp::CallbackGroup::WeakPtr,
+    const rclcpp::GuardCondition *,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
+
+  RCLCPP_PUBLIC
+  NodeCollection::iterator
+  remove_weak_node(NodeCollection::iterator weak_node) RCPPUTILS_TSA_REQUIRES(mutex_);
+
+  RCLCPP_PUBLIC
+  CallbackGroupCollection::iterator
+  remove_weak_callback_group(
+    CallbackGroupCollection::iterator weak_group_it,
+    CallbackGroupCollection & collection) RCPPUTILS_TSA_REQUIRES(mutex_);
 
   RCLCPP_PUBLIC
   void
@@ -172,7 +199,7 @@ protected:
   RCLCPP_PUBLIC
   void
   add_automatically_associated_callback_groups(
-    std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> nodes_to_check)
+    const NodeCollection & nodes_to_check)
   RCPPUTILS_TSA_REQUIRES(mutex_);
 
   RCLCPP_PUBLIC
@@ -181,19 +208,25 @@ protected:
 
   mutable std::mutex mutex_;
 
+  /// Callback groups that were added via `add_callback_group`
   CallbackGroupCollection
   manually_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
+  /// Callback groups that were added by their association with added nodes
   CallbackGroupCollection
   automatically_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// nodes that are associated with the executor
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>
+  NodeCollection
   weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 }  // namespace executors
 }  // namespace rclcpp
-
+//
 #endif  // RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTOR_HPP_

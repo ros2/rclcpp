@@ -129,13 +129,6 @@ NodeBase::NodeBase(
       delete node;
     });
 
-  // Create the default callback group, if needed.
-  if (nullptr == default_callback_group_) {
-    using rclcpp::CallbackGroupType;
-    default_callback_group_ =
-      NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive);
-  }
-
   // Indicate the notify_guard_condition is now valid.
   notify_guard_condition_is_valid_ = true;
 }
@@ -205,8 +198,7 @@ NodeBase::create_callback_group(
   auto weak_ptr = this->weak_from_this();
   auto group = std::make_shared<rclcpp::CallbackGroup>(
     group_type,
-    [this]() -> rclcpp::Context::SharedPtr {
-      auto weak_ptr = this->weak_from_this();
+    [weak_ptr]() -> rclcpp::Context::SharedPtr {
       auto node_ptr = weak_ptr.lock();
       if (node_ptr) {
         return node_ptr->get_context();
@@ -222,6 +214,13 @@ NodeBase::create_callback_group(
 rclcpp::CallbackGroup::SharedPtr
 NodeBase::get_default_callback_group()
 {
+  // Create the default callback group, if needed.
+  if (nullptr == default_callback_group_) {
+    using rclcpp::CallbackGroupType;
+    default_callback_group_ =
+      NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive);
+  }
+
   return default_callback_group_;
 }
 

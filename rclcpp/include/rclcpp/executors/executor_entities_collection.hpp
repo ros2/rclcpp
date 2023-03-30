@@ -35,16 +35,19 @@ namespace executors
 template<typename EntityValueType>
 struct CollectionEntry
 {
-  typename EntityValueType::WeakPtr entity;
+  using EntityWeakPtr = typename EntityValueType::WeakPtr;
+  using EntitySharedPtr = typename EntityValueType::SharedPtr;
+
+  EntityWeakPtr entity;
   rclcpp::CallbackGroup::WeakPtr callback_group;
 };
 
 template<typename CollectionType>
 void update_entities(
   const CollectionType & update_from,
-  CollectionType update_to,
-  std::function<void(typename CollectionType::mapped_type::EntitySharedPtr)> on_added,
-  std::function<void(typename CollectionType::mapped_type::EntitySharedPtr)> on_removed
+  CollectionType & update_to,
+  std::function<void(typename CollectionType::EntitySharedPtr)> on_added,
+  std::function<void(typename CollectionType::EntitySharedPtr)> on_removed
 )
 {
   for (auto it = update_to.begin(); it != update_to.end(); ) {
@@ -60,7 +63,7 @@ void update_entities(
   }
   for (auto it = update_from.begin(); it != update_from.end(); ++it) {
     if (update_to.count(it->first) == 0) {
-      auto entity = it->entity.lock();
+      auto entity = it->second.entity.lock();
       if (entity) {
         on_added(entity);
       }
@@ -82,7 +85,7 @@ public:
     std::function<void(EntitySharedPtr)> on_added,
     std::function<void(EntitySharedPtr)> on_removed)
   {
-    update_entities(*this, other, on_added, on_removed);
+    update_entities(other, *this, on_added, on_removed);
   }
 };
 
@@ -118,6 +121,7 @@ struct ExecutorEntitiesCollection
   GuardConditionCollection guard_conditions;
   WaitableCollection waitables;
 
+  bool empty() const;
   void clear();
 };
 
