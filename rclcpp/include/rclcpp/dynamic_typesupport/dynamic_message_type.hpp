@@ -37,7 +37,7 @@ namespace dynamic_typesupport
 //                     I'd have made a wrapper class but then I'd need to redirect every single
 //                     method (or dynamic cast everywhere else)
 //
-/// This type maps to the underlying rmw_dynamic_message_type_t, rather than the equivalent
+/// This type maps to the underlying rosidl_dynamic_typesupport_dynamic_type_t, rather than the equivalent
 /// rosidl_dynamic_typesupport_dynamic_type_t struct.
 using DynamicMessageType = DynamicType;
 

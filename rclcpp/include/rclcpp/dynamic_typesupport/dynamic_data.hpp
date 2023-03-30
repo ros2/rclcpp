@@ -52,7 +52,7 @@ class DynamicTypeBuilder;
  *
  * Note: This class is meant to map to the lower level rosidl_dynamic_typesupport_dynamic_data_t,
  *       even though rosidl_dynamic_typesupport_dynamic_data_t is equivalent to
- *       rmw_dynamic_message_t, exposing the fundamental methods available to
+ *       rosidl_dynamic_typesupport_dynamic_data_t, exposing the fundamental methods available to
  *       rosidl_dynamic_typesupport_dynamic_data_t, allowing the user to access the data's fields.
  */
 class DynamicData : public std::enable_shared_from_this<DynamicData>
