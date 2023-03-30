@@ -164,12 +164,12 @@ protected:
 
   using WeakNodesToGuardConditionsMap = std::map<
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    const rclcpp::GuardCondition *,
+    rclcpp::GuardCondition *,
     std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>;
 
   using WeakGroupsToGuardConditionsMap = std::map<
     rclcpp::CallbackGroup::WeakPtr,
-    const rclcpp::GuardCondition *,
+    rclcpp::GuardCondition *,
     std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
 
   RCLCPP_PUBLIC

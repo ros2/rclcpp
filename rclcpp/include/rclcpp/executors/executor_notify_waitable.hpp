@@ -84,8 +84,20 @@ public:
    * \param[in] guard_condition The guard condition to add.
    */
   RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override;
+
+  RCLCPP_PUBLIC
   void
-  add_guard_condition(const rclcpp::GuardCondition * guard_condition);
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override;
+
+  RCLCPP_PUBLIC
+  void
+  clear_on_ready_callback() override;
+
+  RCLCPP_PUBLIC
+  void
+  add_guard_condition(rclcpp::GuardCondition * guard_condition);
 
   /// Remove a guard condition from being waited on.
   /**
@@ -93,7 +105,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_guard_condition(const rclcpp::GuardCondition * guard_condition);
+  remove_guard_condition(rclcpp::GuardCondition * guard_condition);
 
   /// Get the number of ready guard_conditions
   /**
@@ -107,17 +119,20 @@ private:
   /// Callback to run when waitable executes
   std::function<void(void)> execute_callback_;
 
-  /// The collection of guard conditions to be waited on.
-  std::mutex guard_condition_mutex_;
+  /// Callback to run when a guard condition is triggered
+  std::function<void(size_t)> on_ready_callback_;
 
   /// The collection of guard conditions to be waited on.
-  std::list<const rclcpp::GuardCondition *> notify_guard_conditions_;
+  std::recursive_mutex guard_condition_mutex_;
 
   /// The collection of guard conditions to be waited on.
-  std::list<const rclcpp::GuardCondition *> to_add_;
+  std::list<rclcpp::GuardCondition *> notify_guard_conditions_;
 
   /// The collection of guard conditions to be waited on.
-  std::list<const rclcpp::GuardCondition *> to_remove_;
+  std::list<rclcpp::GuardCondition *> to_add_;
+
+  /// The collection of guard conditions to be waited on.
+  std::list<rclcpp::GuardCondition *> to_remove_;
 };
 
 }  // namespace executors

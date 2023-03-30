@@ -15,15 +15,16 @@
 #ifndef RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__EVENTS_EXECUTOR_HPP_
 #define RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__EVENTS_EXECUTOR_HPP_
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <queue>
 #include <vector>
 
 #include "rclcpp/executor.hpp"
-#include "rclcpp/experimental/executors/events_executor/events_executor_entities_collector.hpp"
+#include "rclcpp/executors/executor_entities_collection.hpp"
+#include "rclcpp/executors/executor_entities_collector.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_executor_event_types.hpp"
-#include "rclcpp/experimental/executors/events_executor/events_executor_notify_waitable.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_queue.hpp"
 #include "rclcpp/experimental/executors/events_executor/simple_events_queue.hpp"
 #include "rclcpp/experimental/timers_manager.hpp"
@@ -220,11 +221,46 @@ private:
   void
   execute_event(const ExecutorEvent & event);
 
+  void
+  refresh_current_collection_from_callback_groups();
+
+  void
+  refresh_current_collection(const rclcpp::executors::ExecutorEntitiesCollection & new_collection);
+
+  std::function<void(size_t)>
+  create_entity_callback(void * exec_entity_id, ExecutorEventType type);
+
+  std::function<void(size_t, int)>
+  create_waitable_callback(void * waitable_id);
+
+  template<typename CollectionType>
+  typename CollectionType::EntitySharedPtr
+  retrieve_entity(typename CollectionType::Key entity_id, CollectionType & collection)
+  {
+    // TODO: need locks?
+    auto it = collection.find(entity_id);
+    
+    if (it == collection.end()) {
+      std::cout<<"Entity " << entity_id << " not found"<<std::endl;
+      return nullptr;
+    }
+
+    auto entity = it->second.entity.lock();
+    if (!entity) {
+      std::cout<<"Entity " << entity_id << " out of scope"<<std::endl;
+      collection.erase(it);
+    }
+      std::cout<<"Entity " << entity_id << " found"<<std::endl;
+
+    return entity;
+  }
+
   // Queue where entities can push events
   rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue_;
 
-  EventsExecutorEntitiesCollector::SharedPtr entities_collector_;
-  EventsExecutorNotifyWaitable::SharedPtr executor_notifier_;
+  std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollector> entities_collector_;
+  std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
+  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
   // Timers manager
   std::shared_ptr<rclcpp::experimental::TimersManager> timers_manager_;

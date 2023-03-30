@@ -41,6 +41,71 @@ public:
   }
 };
 
+TEST_F(TestEventsExecutor, run_pub_sub)
+{
+  // rmw_connextdds doesn't support events-executor
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP();
+  }
+
+  auto node = std::make_shared<rclcpp::Node>("node");
+  std::cout<<"Created node"<<std::endl;
+
+  bool msg_received = false;
+  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+    "topic", rclcpp::SensorDataQoS(),
+    [&msg_received](test_msgs::msg::Empty::ConstSharedPtr msg)
+    {
+      (void)msg;
+      std::cout<<"receive msg"<<std::endl;
+      msg_received = true;
+    });
+  std::cout<<"Created sub " << subscription->get_subscription_handle().get()<<std::endl;
+
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", rclcpp::SensorDataQoS());
+  std::cout<<"Created pub"<<std::endl;
+
+  EventsExecutor executor;
+  executor.add_node(node);
+  std::cout<<"Added node to executor"<<std::endl;
+
+  bool spin_exited = false;
+  std::thread spinner([&spin_exited, &executor, this]() {
+      executor.spin();
+      spin_exited = true;
+    });
+
+  auto msg = std::make_unique<test_msgs::msg::Empty>();
+  publisher->publish(std::move(msg));
+  std::cout<<"Published msg"<<std::endl;
+
+  // Wait some time for the subscription to receive the message
+  auto start = std::chrono::high_resolution_clock::now();
+  while (
+    !msg_received &&
+    !spin_exited &&
+    (std::chrono::high_resolution_clock::now() - start < 1s))
+  {
+    auto time = std::chrono::high_resolution_clock::now() - start;
+    auto time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+    std::cout<<"Waiting "<< time_msec.count() << " " << (time < 1s) << std::endl;
+    std::this_thread::sleep_for(25ms);
+  }
+
+  executor.cancel();
+  std::cout<<"Cancel executor"<<std::endl;
+
+
+  spinner.join();
+  std::cout<<"Join spijner"<<std::endl;
+
+  executor.remove_node(node);
+  std::cout<<"Remove node"<<std::endl;
+
+  EXPECT_TRUE(msg_received);
+  EXPECT_TRUE(spin_exited);
+}
+
 TEST_F(TestEventsExecutor, run_clients_servers)
 {
   // rmw_connextdds doesn't support events-executor
@@ -427,9 +492,7 @@ TEST_F(TestEventsExecutor, destroy_entities)
   spinner.join();
 }
 
-/*
-   Testing construction of a subscriptions with QoS event callback functions.
- */
+//Testing construction of a subscriptions with QoS event callback functions.
 std::string * g_pub_log_msg;
 std::string * g_sub_log_msg;
 std::promise<void> * g_log_msgs_promise;

@@ -714,8 +714,7 @@ if(TARGET test_executor_notify_waitable)
   target_link_libraries(test_executor_notify_waitable ${PROJECT_NAME} mimick)
 endif()
 
-ament_add_gtest(test_events_executor executors/test_events_executor.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+ament_add_gtest(test_events_executor executors/test_events_executor.cpp TIMEOUT 5)
 if(TARGET test_events_executor)
   ament_target_dependencies(test_events_executor
     "test_msgs")

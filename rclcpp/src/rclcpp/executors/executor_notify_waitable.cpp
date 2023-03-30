@@ -30,7 +30,7 @@ ExecutorNotifyWaitable::ExecutorNotifyWaitable(std::function<void(void)> on_exec
 void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
   for (auto guard_condition : this->notify_guard_conditions_) {
     auto rcl_guard_condition = guard_condition->get_rcl_guard_condition();
 
@@ -48,7 +48,7 @@ ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 {
-  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
   for (size_t ii = 0; ii < wait_set->size_of_guard_conditions; ++ii) {
     auto rcl_guard_condition = wait_set->guard_conditions[ii];
 
@@ -78,30 +78,81 @@ ExecutorNotifyWaitable::take_data()
   return nullptr;
 }
 
+std::shared_ptr<void>
+ExecutorNotifyWaitable::take_data_by_entity_id(size_t id)
+{
+  (void) id;
+  return nullptr;
+}
+
 void
-ExecutorNotifyWaitable::add_guard_condition(const rclcpp::GuardCondition * guard_condition)
+ExecutorNotifyWaitable::set_on_ready_callback(std::function<void(size_t, int)> callback)
+{
+  std::cout<<"====> ExecutorNotifyWaitable::set_on_ready_callback"<<std::endl;
+  // The second argument of the callback should identify which guard condition
+  // triggered the event.
+  // We could indicate which of the guard conditions was triggered, but the executor
+  // is already going to check that.
+  auto gc_callback = [callback](size_t count) {
+      std::cout<<"====> calling ExecutorNotifyWaitable callback"<<std::endl;
+      callback(count, 0);
+    };
+
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
+
+  // This refreshes the `notify_guard_conditions_` list
+  get_number_of_ready_guard_conditions();
+
+  on_ready_callback_ = gc_callback;
+  for (auto gc : notify_guard_conditions_) {
+    std::cout<<"====> Setting ExecutorNotifyWaitable callback on "<< gc <<std::endl;
+    gc->set_on_trigger_callback(on_ready_callback_);
+  }
+}
+
+RCLCPP_PUBLIC
+void
+ExecutorNotifyWaitable::clear_on_ready_callback()
+{
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
+
+  std::cout<<"====> ExecutorNotifyWaitable::clear_on_ready_callback"<<std::endl;
+
+  // This refreshes the `notify_guard_conditions_` list
+  get_number_of_ready_guard_conditions();
+
+  on_ready_callback_ = nullptr;
+  for (auto gc : notify_guard_conditions_) {
+    gc->set_on_trigger_callback(nullptr);
+  }
+}
+
+void
+ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition * guard_condition)
 {
   if (guard_condition == nullptr) {
     throw std::runtime_error("Attempting to add null guard condition.");
   }
-  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
   to_add_.push_back(guard_condition);
+  guard_condition->set_on_trigger_callback(on_ready_callback_);
 }
 
 void
-ExecutorNotifyWaitable::remove_guard_condition(const rclcpp::GuardCondition * guard_condition)
+ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition * guard_condition)
 {
   if (guard_condition == nullptr) {
     throw std::runtime_error("Attempting to remove null guard condition.");
   }
-  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
   to_remove_.push_back(guard_condition);
+  guard_condition->set_on_trigger_callback(nullptr);
 }
 
 size_t
 ExecutorNotifyWaitable::get_number_of_ready_guard_conditions()
 {
-  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(guard_condition_mutex_);
 
   for (auto add_guard_condition : to_add_) {
     auto guard_it = std::find(

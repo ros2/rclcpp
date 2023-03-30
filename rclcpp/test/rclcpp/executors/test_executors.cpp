@@ -187,6 +187,25 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode)
   spinner.join();
 }
 
+// Make sure that a spinning empty executor can be cancelled
+TYPED_TEST(TestExecutors, emptyExecutor)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  ExecutorType executor;
+  std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+  std::this_thread::sleep_for(50ms);
+  executor.cancel();
+  spinner.join();
+}
+
 // Check executor throws properly if the same node is added a second time
 TYPED_TEST(TestExecutors, addNodeTwoExecutors)
 {
