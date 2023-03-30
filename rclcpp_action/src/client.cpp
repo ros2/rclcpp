@@ -319,18 +319,14 @@ ClientBase::handle_result_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  ResponseCallback response_callback;
-  {
-    std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
-    const int64_t & sequence_number = response_header.sequence_number;
-    if (pimpl_->pending_result_responses.count(sequence_number) == 0) {
-      RCLCPP_ERROR(pimpl_->logger, "unknown result response, ignoring...");
-      return;
-    }
-    response_callback = std::move(pimpl_->pending_result_responses[sequence_number]);
-    pimpl_->pending_result_responses.erase(sequence_number);
+  std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
+  const int64_t & sequence_number = response_header.sequence_number;
+  if (pimpl_->pending_result_responses.count(sequence_number) == 0) {
+    RCLCPP_ERROR(pimpl_->logger, "unknown result response, ignoring...");
+    return;
   }
-  response_callback(response);
+  pimpl_->pending_result_responses[sequence_number](response);
+  pimpl_->pending_result_responses.erase(sequence_number);
 }
 
 void
