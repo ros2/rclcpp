@@ -28,8 +28,8 @@
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
-using rclcpp::dynamic_typesupport::DynamicMessageType;
 using rclcpp::dynamic_typesupport::DynamicMessage;
+using rclcpp::dynamic_typesupport::DynamicMessageType;
 using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 
 

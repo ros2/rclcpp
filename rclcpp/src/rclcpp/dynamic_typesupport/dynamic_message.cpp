@@ -15,11 +15,10 @@
 #include <memory>
 #include <string>
 
-#include "rclcpp/dynamic_typesupport/dynamic_data.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
-#include "rclcpp/dynamic_typesupport/dynamic_type.hpp"
-#include "rclcpp/dynamic_typesupport/dynamic_type_builder.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rcl/types.h"
 #include "rcutils/logging_macros.h"
@@ -28,19 +27,19 @@
 #include <rosidl_dynamic_typesupport/api/dynamic_data.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
-using rclcpp::dynamic_typesupport::DynamicData;
+using rclcpp::dynamic_typesupport::DynamicMessage;
+using rclcpp::dynamic_typesupport::DynamicMessageType;
+using rclcpp::dynamic_typesupport::DynamicMessageTypeBuilder;
 using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
-using rclcpp::dynamic_typesupport::DynamicType;
-using rclcpp::dynamic_typesupport::DynamicTypeBuilder;
 
-#ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DETAIL__DYNAMIC_DATA_IMPL_HPP_
+#ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DETAIL__DYNAMIC_MESSAGE_IMPL_HPP_
 // Template specialization implementations
-#include "rclcpp/dynamic_typesupport/detail/dynamic_data_impl.hpp"
+#include "rclcpp/dynamic_typesupport/detail/dynamic_message_impl.hpp"
 #endif
 
 
 // CONSTRUCTION ==================================================================================
-DynamicData::DynamicData(const DynamicTypeBuilder::SharedPtr dynamic_type_builder)
+DynamicMessage::DynamicMessage(const DynamicMessageTypeBuilder::SharedPtr dynamic_type_builder)
 : serialization_support_(dynamic_type_builder->get_shared_dynamic_serialization_support()),
   rosidl_dynamic_data_(nullptr),
   is_loaned_(false),
@@ -73,7 +72,7 @@ DynamicData::DynamicData(const DynamicTypeBuilder::SharedPtr dynamic_type_builde
 }
 
 
-DynamicData::DynamicData(const DynamicType::SharedPtr dynamic_type)
+DynamicMessage::DynamicMessage(const DynamicMessageType::SharedPtr dynamic_type)
 : serialization_support_(dynamic_type->get_shared_dynamic_serialization_support()),
   rosidl_dynamic_data_(nullptr),
   is_loaned_(false),
@@ -106,7 +105,7 @@ DynamicData::DynamicData(const DynamicType::SharedPtr dynamic_type)
 }
 
 
-DynamicData::DynamicData(
+DynamicMessage::DynamicMessage(
   DynamicSerializationSupport::SharedPtr serialization_support,
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)
 : serialization_support_(serialization_support),
@@ -134,7 +133,7 @@ DynamicData::DynamicData(
 }
 
 
-DynamicData::DynamicData(
+DynamicMessage::DynamicMessage(
   DynamicSerializationSupport::SharedPtr serialization_support,
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> rosidl_dynamic_data)
 : serialization_support_(serialization_support),
@@ -154,8 +153,8 @@ DynamicData::DynamicData(
 }
 
 
-DynamicData::DynamicData(
-  DynamicData::SharedPtr parent_data,
+DynamicMessage::DynamicMessage(
+  DynamicMessage::SharedPtr parent_data,
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_loaned_data)
 : serialization_support_(parent_data->get_shared_dynamic_serialization_support()),
   rosidl_dynamic_data_(nullptr),
@@ -187,21 +186,21 @@ DynamicData::DynamicData(
 }
 
 
-DynamicData::DynamicData(const DynamicData & other)
+DynamicMessage::DynamicMessage(const DynamicMessage & other)
 : enable_shared_from_this(),
   serialization_support_(nullptr),
   rosidl_dynamic_data_(nullptr),
   is_loaned_(false),
   parent_data_(nullptr)
 {
-  DynamicData out = other.clone();
+  DynamicMessage out = other.clone();
   // We don't copy is_loaned_ or parent_data_ because it's a fresh copy now
   std::swap(serialization_support_, out.serialization_support_);
   std::swap(rosidl_dynamic_data_, out.rosidl_dynamic_data_);
 }
 
 
-DynamicData::DynamicData(DynamicData && other) noexcept
+DynamicMessage::DynamicMessage(DynamicMessage && other) noexcept
 : serialization_support_(std::exchange(other.serialization_support_, nullptr)),
   rosidl_dynamic_data_(std::exchange(other.rosidl_dynamic_data_, nullptr)),
   is_loaned_(other.is_loaned_),
@@ -209,15 +208,15 @@ DynamicData::DynamicData(DynamicData && other) noexcept
 {}
 
 
-DynamicData &
-DynamicData::operator=(const DynamicData & other)
+DynamicMessage &
+DynamicMessage::operator=(const DynamicMessage & other)
 {
-  return *this = DynamicData(other);
+  return *this = DynamicMessage(other);
 }
 
 
-DynamicData &
-DynamicData::operator=(DynamicData && other) noexcept
+DynamicMessage &
+DynamicMessage::operator=(DynamicMessage && other) noexcept
 {
   std::swap(serialization_support_, other.serialization_support_);
   std::swap(rosidl_dynamic_data_, other.rosidl_dynamic_data_);
@@ -227,7 +226,7 @@ DynamicData::operator=(DynamicData && other) noexcept
 }
 
 
-DynamicData::~DynamicData()
+DynamicMessage::~DynamicMessage()
 {
   if (is_loaned_) {
     if (!parent_data_) {
@@ -241,7 +240,7 @@ DynamicData::~DynamicData()
 
 
 bool
-DynamicData::match_serialization_support_(
+DynamicMessage::match_serialization_support_(
   const DynamicSerializationSupport & serialization_support,
   const rosidl_dynamic_typesupport_dynamic_data_t & rosidl_dynamic_type_data)
 {
@@ -268,14 +267,14 @@ DynamicData::match_serialization_support_(
 
 // GETTERS =======================================================================================
 const std::string
-DynamicData::get_library_identifier() const
+DynamicMessage::get_library_identifier() const
 {
   return std::string(rosidl_dynamic_data_->serialization_support->library_identifier);
 }
 
 
 const std::string
-DynamicData::get_name() const
+DynamicMessage::get_name() const
 {
   size_t buf_length;
   const char * buf = rosidl_dynamic_typesupport_dynamic_data_get_name(
@@ -285,21 +284,21 @@ DynamicData::get_name() const
 
 
 rosidl_dynamic_typesupport_dynamic_data_t *
-DynamicData::get_rosidl_dynamic_data()
+DynamicMessage::get_rosidl_dynamic_data()
 {
   return rosidl_dynamic_data_.get();
 }
 
 
 const rosidl_dynamic_typesupport_dynamic_data_t *
-DynamicData::get_rosidl_dynamic_data() const
+DynamicMessage::get_rosidl_dynamic_data() const
 {
   return rosidl_dynamic_data_.get();
 }
 
 
 std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-DynamicData::get_shared_rosidl_dynamic_data()
+DynamicMessage::get_shared_rosidl_dynamic_data()
 {
   return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>(
     shared_from_this(), rosidl_dynamic_data_.get());
@@ -307,7 +306,7 @@ DynamicData::get_shared_rosidl_dynamic_data()
 
 
 std::shared_ptr<const rosidl_dynamic_typesupport_dynamic_data_t>
-DynamicData::get_shared_rosidl_dynamic_data() const
+DynamicMessage::get_shared_rosidl_dynamic_data() const
 {
   return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>(
     shared_from_this(), rosidl_dynamic_data_.get());
@@ -315,28 +314,28 @@ DynamicData::get_shared_rosidl_dynamic_data() const
 
 
 DynamicSerializationSupport::SharedPtr
-DynamicData::get_shared_dynamic_serialization_support()
+DynamicMessage::get_shared_dynamic_serialization_support()
 {
   return serialization_support_;
 }
 
 
 DynamicSerializationSupport::ConstSharedPtr
-DynamicData::get_shared_dynamic_serialization_support() const
+DynamicMessage::get_shared_dynamic_serialization_support() const
 {
   return serialization_support_;
 }
 
 
 size_t
-DynamicData::get_item_count() const
+DynamicMessage::get_item_count() const
 {
   return rosidl_dynamic_typesupport_dynamic_data_get_item_count(get_rosidl_dynamic_data());
 }
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::get_member_id(size_t index) const
+DynamicMessage::get_member_id(size_t index) const
 {
   return rosidl_dynamic_typesupport_dynamic_data_get_member_id_at_index(
     get_rosidl_dynamic_data(), index);
@@ -344,7 +343,7 @@ DynamicData::get_member_id(size_t index) const
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::get_member_id(const std::string & name) const
+DynamicMessage::get_member_id(const std::string & name) const
 {
   return rosidl_dynamic_typesupport_dynamic_data_get_member_id_by_name(
     get_rosidl_dynamic_data(), name.c_str(), name.size());
@@ -352,7 +351,7 @@ DynamicData::get_member_id(const std::string & name) const
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::get_array_index(size_t index) const
+DynamicMessage::get_array_index(size_t index) const
 {
   return rosidl_dynamic_typesupport_dynamic_data_get_array_index(
     get_rosidl_dynamic_data(), index);
@@ -360,51 +359,51 @@ DynamicData::get_array_index(size_t index) const
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::get_array_index(const std::string & name) const
+DynamicMessage::get_array_index(const std::string & name) const
 {
   return get_array_index(get_member_id(name));
 }
 
 
 // METHODS =======================================================================================
-DynamicData
-DynamicData::clone() const
+DynamicMessage
+DynamicMessage::clone() const
 {
-  return DynamicData(
+  return DynamicMessage(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_data_clone(get_rosidl_dynamic_data()));
 }
 
 
-DynamicData::SharedPtr
-DynamicData::clone_shared() const
+DynamicMessage::SharedPtr
+DynamicMessage::clone_shared() const
 {
-  return DynamicData::make_shared(
+  return DynamicMessage::make_shared(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_data_clone(get_rosidl_dynamic_data()));
 }
 
 
-DynamicData
-DynamicData::init_from_type(DynamicMessageType & type) const
+DynamicMessage
+DynamicMessage::init_from_type(DynamicMessageType & type) const
 {
-  return DynamicData(
+  return DynamicMessage(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(type.get_rosidl_dynamic_type()));
 }
 
 
-DynamicData::SharedPtr
-DynamicData::init_from_type_shared(DynamicMessageType & type) const
+DynamicMessage::SharedPtr
+DynamicMessage::init_from_type_shared(DynamicMessageType & type) const
 {
-  return DynamicData::make_shared(
+  return DynamicMessage::make_shared(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(type.get_rosidl_dynamic_type()));
 }
 
 
 bool
-DynamicData::equals(const DynamicData & other) const
+DynamicMessage::equals(const DynamicMessage & other) const
 {
   if (get_library_identifier() != other.get_library_identifier()) {
     throw std::runtime_error("library identifiers don't match");
@@ -414,59 +413,59 @@ DynamicData::equals(const DynamicData & other) const
 }
 
 
-DynamicData::SharedPtr
-DynamicData::loan_value(rosidl_dynamic_typesupport_member_id_t id)
+DynamicMessage::SharedPtr
+DynamicMessage::loan_value(rosidl_dynamic_typesupport_member_id_t id)
 {
-  return DynamicData::make_shared(
+  return DynamicMessage::make_shared(
     shared_from_this(),
     rosidl_dynamic_typesupport_dynamic_data_loan_value(get_rosidl_dynamic_data(), id));
 }
 
 
-DynamicData::SharedPtr
-DynamicData::loan_value(const std::string & name)
+DynamicMessage::SharedPtr
+DynamicMessage::loan_value(const std::string & name)
 {
   return loan_value(get_member_id(name));
 }
 
 
 void
-DynamicData::clear_all_values()
+DynamicMessage::clear_all_values()
 {
   rosidl_dynamic_typesupport_dynamic_data_clear_all_values(get_rosidl_dynamic_data());
 }
 
 
 void
-DynamicData::clear_nonkey_values()
+DynamicMessage::clear_nonkey_values()
 {
   rosidl_dynamic_typesupport_dynamic_data_clear_nonkey_values(get_rosidl_dynamic_data());
 }
 
 
 void
-DynamicData::clear_value(rosidl_dynamic_typesupport_member_id_t id)
+DynamicMessage::clear_value(rosidl_dynamic_typesupport_member_id_t id)
 {
   rosidl_dynamic_typesupport_dynamic_data_clear_value(get_rosidl_dynamic_data(), id);
 }
 
 
 void
-DynamicData::clear_value(const std::string & name)
+DynamicMessage::clear_value(const std::string & name)
 {
   clear_value(get_member_id(name));
 }
 
 
 void
-DynamicData::clear_sequence()
+DynamicMessage::clear_sequence()
 {
   rosidl_dynamic_typesupport_dynamic_data_clear_sequence_data(get_rosidl_dynamic_data());
 }
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_sequence_data()
+DynamicMessage::insert_sequence_data()
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_sequence_data(get_rosidl_dynamic_data(), &out);
@@ -475,7 +474,7 @@ DynamicData::insert_sequence_data()
 
 
 void
-DynamicData::remove_sequence_data(rosidl_dynamic_typesupport_member_id_t index)
+DynamicMessage::remove_sequence_data(rosidl_dynamic_typesupport_member_id_t index)
 {
   rosidl_dynamic_typesupport_dynamic_data_remove_sequence_data(
     get_rosidl_dynamic_data(), index);
@@ -483,33 +482,33 @@ DynamicData::remove_sequence_data(rosidl_dynamic_typesupport_member_id_t index)
 
 
 void
-DynamicData::print() const
+DynamicMessage::print() const
 {
   rosidl_dynamic_typesupport_dynamic_data_print(get_rosidl_dynamic_data());
 }
 
 
 bool
-DynamicData::serialize(rcl_serialized_message_t * buffer)
+DynamicMessage::serialize(rcl_serialized_message_t * buffer)
 {
   return rosidl_dynamic_typesupport_dynamic_data_serialize(get_rosidl_dynamic_data(), buffer);
 }
 
 
 bool
-DynamicData::deserialize(rcl_serialized_message_t * buffer)
+DynamicMessage::deserialize(rcl_serialized_message_t * buffer)
 {
   return rosidl_dynamic_typesupport_dynamic_data_deserialize(get_rosidl_dynamic_data(), buffer);
 }
 
 
 // MEMBER ACCESS ===================================================================================
-// Defined in "detail/dynamic_data_impl.hpp"
+// Defined in "detail/dynamic_message_impl.hpp"
 
 
 // FIXED STRING MEMBER ACCESS ======================================================================
 const std::string
-DynamicData::get_fixed_string_value(
+DynamicMessage::get_fixed_string_value(
   rosidl_dynamic_typesupport_member_id_t id, size_t string_length)
 {
   size_t buf_length;
@@ -523,14 +522,14 @@ DynamicData::get_fixed_string_value(
 
 
 const std::string
-DynamicData::get_fixed_string_value(const std::string & name, size_t string_length)
+DynamicMessage::get_fixed_string_value(const std::string & name, size_t string_length)
 {
   return get_fixed_string_value(get_member_id(name), string_length);
 }
 
 
 const std::u16string
-DynamicData::get_fixed_wstring_value(
+DynamicMessage::get_fixed_wstring_value(
   rosidl_dynamic_typesupport_member_id_t id, size_t wstring_length)
 {
   size_t buf_length;
@@ -544,14 +543,14 @@ DynamicData::get_fixed_wstring_value(
 
 
 const std::u16string
-DynamicData::get_fixed_wstring_value(const std::string & name, size_t wstring_length)
+DynamicMessage::get_fixed_wstring_value(const std::string & name, size_t wstring_length)
 {
   return get_fixed_wstring_value(get_member_id(name), wstring_length);
 }
 
 
 void
-DynamicData::set_fixed_string_value(
+DynamicMessage::set_fixed_string_value(
   rosidl_dynamic_typesupport_member_id_t id, const std::string value, size_t string_length)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_fixed_string_value(
@@ -560,7 +559,7 @@ DynamicData::set_fixed_string_value(
 
 
 void
-DynamicData::set_fixed_string_value(
+DynamicMessage::set_fixed_string_value(
   const std::string & name, const std::string value, size_t string_length)
 {
   set_fixed_string_value(get_member_id(name), value, string_length);
@@ -568,7 +567,7 @@ DynamicData::set_fixed_string_value(
 
 
 void
-DynamicData::set_fixed_wstring_value(
+DynamicMessage::set_fixed_wstring_value(
   rosidl_dynamic_typesupport_member_id_t id, const std::u16string value, size_t wstring_length)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_fixed_wstring_value(
@@ -577,7 +576,7 @@ DynamicData::set_fixed_wstring_value(
 
 
 void
-DynamicData::set_fixed_wstring_value(
+DynamicMessage::set_fixed_wstring_value(
   const std::string & name, const std::u16string value, size_t wstring_length)
 {
   set_fixed_wstring_value(get_member_id(name), value, wstring_length);
@@ -585,7 +584,7 @@ DynamicData::set_fixed_wstring_value(
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_fixed_string_value(const std::string value, size_t string_length)
+DynamicMessage::insert_fixed_string_value(const std::string value, size_t string_length)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_fixed_string_value(
@@ -595,7 +594,7 @@ DynamicData::insert_fixed_string_value(const std::string value, size_t string_le
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_fixed_wstring_value(const std::u16string value, size_t wstring_length)
+DynamicMessage::insert_fixed_wstring_value(const std::u16string value, size_t wstring_length)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_fixed_wstring_value(
@@ -606,7 +605,7 @@ DynamicData::insert_fixed_wstring_value(const std::u16string value, size_t wstri
 
 // BOUNDED STRING MEMBER ACCESS ====================================================================
 const std::string
-DynamicData::get_bounded_string_value(
+DynamicMessage::get_bounded_string_value(
   rosidl_dynamic_typesupport_member_id_t id, size_t string_bound)
 {
   size_t buf_length;
@@ -620,14 +619,14 @@ DynamicData::get_bounded_string_value(
 
 
 const std::string
-DynamicData::get_bounded_string_value(const std::string & name, size_t string_bound)
+DynamicMessage::get_bounded_string_value(const std::string & name, size_t string_bound)
 {
   return get_bounded_string_value(get_member_id(name), string_bound);
 }
 
 
 const std::u16string
-DynamicData::get_bounded_wstring_value(
+DynamicMessage::get_bounded_wstring_value(
   rosidl_dynamic_typesupport_member_id_t id, size_t wstring_bound)
 {
   size_t buf_length;
@@ -641,14 +640,14 @@ DynamicData::get_bounded_wstring_value(
 
 
 const std::u16string
-DynamicData::get_bounded_wstring_value(const std::string & name, size_t wstring_bound)
+DynamicMessage::get_bounded_wstring_value(const std::string & name, size_t wstring_bound)
 {
   return get_bounded_wstring_value(get_member_id(name), wstring_bound);
 }
 
 
 void
-DynamicData::set_bounded_string_value(
+DynamicMessage::set_bounded_string_value(
   rosidl_dynamic_typesupport_member_id_t id, const std::string value, size_t string_bound)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_bounded_string_value(
@@ -657,7 +656,7 @@ DynamicData::set_bounded_string_value(
 
 
 void
-DynamicData::set_bounded_string_value(
+DynamicMessage::set_bounded_string_value(
   const std::string & name, const std::string value, size_t string_bound)
 {
   set_bounded_string_value(get_member_id(name), value, string_bound);
@@ -665,7 +664,7 @@ DynamicData::set_bounded_string_value(
 
 
 void
-DynamicData::set_bounded_wstring_value(
+DynamicMessage::set_bounded_wstring_value(
   rosidl_dynamic_typesupport_member_id_t id, const std::u16string value, size_t wstring_bound)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_bounded_wstring_value(
@@ -674,7 +673,7 @@ DynamicData::set_bounded_wstring_value(
 
 
 void
-DynamicData::set_bounded_wstring_value(
+DynamicMessage::set_bounded_wstring_value(
   const std::string & name, const std::u16string value, size_t wstring_bound)
 {
   set_bounded_wstring_value(get_member_id(name), value, wstring_bound);
@@ -682,7 +681,7 @@ DynamicData::set_bounded_wstring_value(
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_bounded_string_value(const std::string value, size_t string_bound)
+DynamicMessage::insert_bounded_string_value(const std::string value, size_t string_bound)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_bounded_string_value(
@@ -692,7 +691,7 @@ DynamicData::insert_bounded_string_value(const std::string value, size_t string_
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_bounded_wstring_value(const std::u16string value, size_t wstring_bound)
+DynamicMessage::insert_bounded_wstring_value(const std::u16string value, size_t wstring_bound)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_bounded_wstring_value(
@@ -702,43 +701,43 @@ DynamicData::insert_bounded_wstring_value(const std::u16string value, size_t wst
 
 
 // NESTED MEMBER ACCESS ============================================================================
-DynamicData
-DynamicData::get_complex_value(rosidl_dynamic_typesupport_member_id_t id)
+DynamicMessage
+DynamicMessage::get_complex_value(rosidl_dynamic_typesupport_member_id_t id)
 {
   rosidl_dynamic_typesupport_dynamic_data_t * out_ptr = nullptr;
   rosidl_dynamic_typesupport_dynamic_data_get_complex_value(
     get_rosidl_dynamic_data(), id, &out_ptr);
-  return DynamicData(get_shared_dynamic_serialization_support(), out_ptr);
+  return DynamicMessage(get_shared_dynamic_serialization_support(), out_ptr);
 }
 
 
-DynamicData
-DynamicData::get_complex_value(const std::string & name)
+DynamicMessage
+DynamicMessage::get_complex_value(const std::string & name)
 {
   return get_complex_value(get_member_id(name));
 }
 
 
-DynamicData::SharedPtr
-DynamicData::get_complex_value_shared(rosidl_dynamic_typesupport_member_id_t id)
+DynamicMessage::SharedPtr
+DynamicMessage::get_complex_value_shared(rosidl_dynamic_typesupport_member_id_t id)
 {
   rosidl_dynamic_typesupport_dynamic_data_t * out_ptr = nullptr;
   rosidl_dynamic_typesupport_dynamic_data_get_complex_value(
     get_rosidl_dynamic_data(), id, &out_ptr);
-  return DynamicData::make_shared(get_shared_dynamic_serialization_support(), out_ptr);
+  return DynamicMessage::make_shared(get_shared_dynamic_serialization_support(), out_ptr);
 }
 
 
-DynamicData::SharedPtr
-DynamicData::get_complex_value_shared(const std::string & name)
+DynamicMessage::SharedPtr
+DynamicMessage::get_complex_value_shared(const std::string & name)
 {
   return get_complex_value_shared(get_member_id(name));
 }
 
 
 void
-DynamicData::set_complex_value(
-  rosidl_dynamic_typesupport_member_id_t id, DynamicData & value)
+DynamicMessage::set_complex_value(
+  rosidl_dynamic_typesupport_member_id_t id, DynamicMessage & value)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_complex_value(
     get_rosidl_dynamic_data(), id, value.get_rosidl_dynamic_data());
@@ -746,14 +745,14 @@ DynamicData::set_complex_value(
 
 
 void
-DynamicData::set_complex_value(const std::string & name, DynamicData & value)
+DynamicMessage::set_complex_value(const std::string & name, DynamicMessage & value)
 {
   set_complex_value(get_member_id(name), value);
 }
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_complex_value_copy(const DynamicData & value)
+DynamicMessage::insert_complex_value_copy(const DynamicMessage & value)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_complex_value_copy(
@@ -763,7 +762,7 @@ DynamicData::insert_complex_value_copy(const DynamicData & value)
 
 
 rosidl_dynamic_typesupport_member_id_t
-DynamicData::insert_complex_value(DynamicData & value)
+DynamicMessage::insert_complex_value(DynamicMessage & value)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_complex_value(

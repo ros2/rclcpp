@@ -21,8 +21,8 @@
 
 #include "rcl/rcl_dynamic_typesupport_c/message_introspection.h"
 
-#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
@@ -35,10 +35,10 @@
 #include <rosidl_runtime_c/type_description/type_description__functions.h>
 #include <rosidl_runtime_c/type_description/type_description__struct.h>
 
-using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 using rclcpp::dynamic_typesupport::DynamicMessage;
 using rclcpp::dynamic_typesupport::DynamicMessageType;
 using rclcpp::dynamic_typesupport::DynamicMessageTypeSupport;
+using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 
 
 // CONSTRUCTION ====================================================================================
@@ -61,7 +61,7 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
       serialization_library_name.c_str(), &description, &ts);
   }
   if (ret != RCL_RET_OK) {
-    throw std::runtime_error("error initializing rosidl message type support");    
+    throw std::runtime_error("error initializing rosidl message type support");
   }
   if (!ts) {
     throw std::runtime_error("could not init rosidl message type support");

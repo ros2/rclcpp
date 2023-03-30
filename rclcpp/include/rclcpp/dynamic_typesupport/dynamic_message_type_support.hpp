@@ -18,8 +18,8 @@
 #include <memory>
 #include <string>
 
-#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 
 #include "rclcpp/macros.hpp"
@@ -193,7 +193,7 @@ private:
 
   RCLCPP_PUBLIC
   void
-  init_dynamic_message_(DynamicType::SharedPtr dynamic_type);
+  init_dynamic_message_(DynamicMessageType::SharedPtr dynamic_type);
 
   RCLCPP_PUBLIC
   void

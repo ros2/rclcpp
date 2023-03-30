@@ -15,10 +15,10 @@
 #include <memory>
 #include <string>
 
-#include "rclcpp/dynamic_typesupport/dynamic_data.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
-#include "rclcpp/dynamic_typesupport/dynamic_type.hpp"
-#include "rclcpp/dynamic_typesupport/dynamic_type_builder.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
 
@@ -26,14 +26,14 @@
 #include <rosidl_dynamic_typesupport/api/dynamic_type.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
-using rclcpp::dynamic_typesupport::DynamicData;
+using rclcpp::dynamic_typesupport::DynamicMessage;
+using rclcpp::dynamic_typesupport::DynamicMessageType;
+using rclcpp::dynamic_typesupport::DynamicMessageTypeBuilder;
 using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
-using rclcpp::dynamic_typesupport::DynamicType;
-using rclcpp::dynamic_typesupport::DynamicTypeBuilder;
 
 
 // CONSTRUCTION ====================================================================================
-DynamicType::DynamicType(DynamicTypeBuilder::SharedPtr dynamic_type_builder)
+DynamicMessageType::DynamicMessageType(DynamicMessageTypeBuilder::SharedPtr dynamic_type_builder)
 : serialization_support_(dynamic_type_builder->get_shared_dynamic_serialization_support()),
   rosidl_dynamic_type_(nullptr)
 {
@@ -64,7 +64,7 @@ DynamicType::DynamicType(DynamicTypeBuilder::SharedPtr dynamic_type_builder)
 }
 
 
-DynamicType::DynamicType(
+DynamicMessageType::DynamicMessageType(
   DynamicSerializationSupport::SharedPtr serialization_support,
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)
 : serialization_support_(serialization_support), rosidl_dynamic_type_(nullptr)
@@ -89,7 +89,7 @@ DynamicType::DynamicType(
 }
 
 
-DynamicType::DynamicType(
+DynamicMessageType::DynamicMessageType(
   DynamicSerializationSupport::SharedPtr serialization_support,
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t> rosidl_dynamic_type)
 : serialization_support_(serialization_support), rosidl_dynamic_type_(rosidl_dynamic_type)
@@ -106,7 +106,7 @@ DynamicType::DynamicType(
 }
 
 
-DynamicType::DynamicType(
+DynamicMessageType::DynamicMessageType(
   DynamicSerializationSupport::SharedPtr serialization_support,
   const rosidl_runtime_c__type_description__TypeDescription & description)
 : serialization_support_(serialization_support), rosidl_dynamic_type_(nullptr)
@@ -115,29 +115,29 @@ DynamicType::DynamicType(
 }
 
 
-DynamicType::DynamicType(const DynamicType & other)
+DynamicMessageType::DynamicMessageType(const DynamicMessageType & other)
 : enable_shared_from_this(), serialization_support_(nullptr), rosidl_dynamic_type_(nullptr)
 {
-  DynamicType out = other.clone();
+  DynamicMessageType out = other.clone();
   std::swap(serialization_support_, out.serialization_support_);
   std::swap(rosidl_dynamic_type_, out.rosidl_dynamic_type_);
 }
 
 
-DynamicType::DynamicType(DynamicType && other) noexcept
+DynamicMessageType::DynamicMessageType(DynamicMessageType && other) noexcept
 : serialization_support_(std::exchange(other.serialization_support_, nullptr)),
   rosidl_dynamic_type_(std::exchange(other.rosidl_dynamic_type_, nullptr)) {}
 
 
-DynamicType &
-DynamicType::operator=(const DynamicType & other)
+DynamicMessageType &
+DynamicMessageType::operator=(const DynamicMessageType & other)
 {
-  return *this = DynamicType(other);
+  return *this = DynamicMessageType(other);
 }
 
 
-DynamicType &
-DynamicType::operator=(DynamicType && other) noexcept
+DynamicMessageType &
+DynamicMessageType::operator=(DynamicMessageType && other) noexcept
 {
   std::swap(serialization_support_, other.serialization_support_);
   std::swap(rosidl_dynamic_type_, other.rosidl_dynamic_type_);
@@ -145,11 +145,11 @@ DynamicType::operator=(DynamicType && other) noexcept
 }
 
 
-DynamicType::~DynamicType() {}
+DynamicMessageType::~DynamicMessageType() {}
 
 
 void
-DynamicType::init_from_description(
+DynamicMessageType::init_from_description(
   const rosidl_runtime_c__type_description__TypeDescription & description,
   DynamicSerializationSupport::SharedPtr serialization_support)
 {
@@ -177,7 +177,7 @@ DynamicType::init_from_description(
 
 
 bool
-DynamicType::match_serialization_support_(
+DynamicMessageType::match_serialization_support_(
   const DynamicSerializationSupport & serialization_support,
   const rosidl_dynamic_typesupport_dynamic_type_t & rosidl_dynamic_type)
 {
@@ -206,14 +206,14 @@ DynamicType::match_serialization_support_(
 
 // GETTERS =========================================================================================
 const std::string
-DynamicType::get_library_identifier() const
+DynamicMessageType::get_library_identifier() const
 {
   return std::string(rosidl_dynamic_type_->serialization_support->library_identifier);
 }
 
 
 const std::string
-DynamicType::get_name() const
+DynamicMessageType::get_name() const
 {
   size_t buf_length;
   const char * buf = rosidl_dynamic_typesupport_dynamic_type_get_name(
@@ -223,28 +223,28 @@ DynamicType::get_name() const
 
 
 size_t
-DynamicType::get_member_count() const
+DynamicMessageType::get_member_count() const
 {
   return rosidl_dynamic_typesupport_dynamic_type_get_member_count(rosidl_dynamic_type_.get());
 }
 
 
 rosidl_dynamic_typesupport_dynamic_type_t *
-DynamicType::get_rosidl_dynamic_type()
+DynamicMessageType::get_rosidl_dynamic_type()
 {
   return rosidl_dynamic_type_.get();
 }
 
 
 const rosidl_dynamic_typesupport_dynamic_type_t *
-DynamicType::get_rosidl_dynamic_type() const
+DynamicMessageType::get_rosidl_dynamic_type() const
 {
   return rosidl_dynamic_type_.get();
 }
 
 
 std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-DynamicType::get_shared_rosidl_dynamic_type()
+DynamicMessageType::get_shared_rosidl_dynamic_type()
 {
   return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>(
     shared_from_this(), rosidl_dynamic_type_.get());
@@ -252,7 +252,7 @@ DynamicType::get_shared_rosidl_dynamic_type()
 
 
 std::shared_ptr<const rosidl_dynamic_typesupport_dynamic_type_t>
-DynamicType::get_shared_rosidl_dynamic_type() const
+DynamicMessageType::get_shared_rosidl_dynamic_type() const
 {
   return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>(
     shared_from_this(), rosidl_dynamic_type_.get());
@@ -260,40 +260,40 @@ DynamicType::get_shared_rosidl_dynamic_type() const
 
 
 DynamicSerializationSupport::SharedPtr
-DynamicType::get_shared_dynamic_serialization_support()
+DynamicMessageType::get_shared_dynamic_serialization_support()
 {
   return serialization_support_;
 }
 
 
 DynamicSerializationSupport::ConstSharedPtr
-DynamicType::get_shared_dynamic_serialization_support() const
+DynamicMessageType::get_shared_dynamic_serialization_support() const
 {
   return serialization_support_;
 }
 
 
 // METHODS =========================================================================================
-DynamicType
-DynamicType::clone() const
+DynamicMessageType
+DynamicMessageType::clone() const
 {
-  return DynamicType(
+  return DynamicMessageType(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_type_clone(get_rosidl_dynamic_type()));
 }
 
 
-DynamicType::SharedPtr
-DynamicType::clone_shared() const
+DynamicMessageType::SharedPtr
+DynamicMessageType::clone_shared() const
 {
-  return DynamicType::make_shared(
+  return DynamicMessageType::make_shared(
     serialization_support_,
     rosidl_dynamic_typesupport_dynamic_type_clone(get_rosidl_dynamic_type()));
 }
 
 
 bool
-DynamicType::equals(const DynamicType & other) const
+DynamicMessageType::equals(const DynamicMessageType & other) const
 {
   if (get_library_identifier() != other.get_library_identifier()) {
     throw std::runtime_error("library identifiers don't match");
@@ -303,15 +303,15 @@ DynamicType::equals(const DynamicType & other) const
 }
 
 
-DynamicData
-DynamicType::build_data()
+DynamicMessage
+DynamicMessageType::build_dynamic_message()
 {
-  return DynamicData(shared_from_this());
+  return DynamicMessage(shared_from_this());
 }
 
 
-DynamicData::SharedPtr
-DynamicType::build_data_shared()
+DynamicMessage::SharedPtr
+DynamicMessageType::build_dynamic_message_shared()
 {
-  return DynamicData::make_shared(shared_from_this());
+  return DynamicMessage::make_shared(shared_from_this());
 }

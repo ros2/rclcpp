@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_TYPE_BUILDER_HPP_
-#define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_TYPE_BUILDER_HPP_
+#ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_BUILDER_HPP_
+#define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_BUILDER_HPP_
 
 #include <memory>
 #include <string>
@@ -30,8 +30,8 @@ namespace rclcpp
 namespace dynamic_typesupport
 {
 
-class DynamicData;
-class DynamicType;
+class DynamicMessage;
+class DynamicMessageType;
 
 /// Utility wrapper class for rosidl_dynamic_typesupport_dynamic_type_builder_t *
 /**
@@ -49,15 +49,16 @@ class DynamicType;
  * Note: This class is meant to map to rosidl_dynamic_typesupport_dynamic_type_builder_t,
  *       facilitating the construction of dynamic types bottom-up in the C++ layer.
  *
- *       The usual method of obtaining a DynamicType is through construction of
+ *       The usual method of obtaining a DynamicMessageType is through construction of
  *       rosidl_message_type_support_t via rcl_dynamic_message_typesupport_handle_init(), then taking
- *       ownership of its contents. But DynamicTypeBuilder can also be used to obtain DynamicType by
- *       constructing it bottom-up instead, since it exposes the lower_level rosidl methods.
+ *       ownership of its contents. But DynamicMessageTypeBuilder can also be used to obtain
+ *       DynamicMessageType by constructing it bottom-up instead, since it exposes the lower_level
+ *       rosidl methods.
  */
-class DynamicTypeBuilder : public std::enable_shared_from_this<DynamicTypeBuilder>
+class DynamicMessageTypeBuilder : public std::enable_shared_from_this<DynamicMessageTypeBuilder>
 {
 public:
-  RCLCPP_SMART_PTR_ALIASES_ONLY(DynamicTypeBuilder)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(DynamicMessageTypeBuilder)
 
   // CONSTRUCTION ==================================================================================
   // All constructors require a passed in DynamicSerializationSupport::SharedPtr, to extend the
@@ -67,48 +68,48 @@ public:
   // the builder should be the exact same object managed by the DynamicSerializationSupport,
   // otherwise the lifetime management will not work properly.
 
-  /// Construct a new DynamicTypeBuilder with the provided serialization support
+  /// Construct a new DynamicMessageTypeBuilder with the provided serialization support
   RCLCPP_PUBLIC
-  DynamicTypeBuilder(
+  DynamicMessageTypeBuilder(
     DynamicSerializationSupport::SharedPtr serialization_support,
     const std::string & name);
 
   /// Assume ownership of raw pointer
   RCLCPP_PUBLIC
-  DynamicTypeBuilder(
+  DynamicMessageTypeBuilder(
     DynamicSerializationSupport::SharedPtr serialization_support,
     rosidl_dynamic_typesupport_dynamic_type_builder_t * dynamic_type_builder);
 
   /// Copy shared pointer
   RCLCPP_PUBLIC
-  DynamicTypeBuilder(
+  DynamicMessageTypeBuilder(
     DynamicSerializationSupport::SharedPtr serialization_support,
     std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_builder_t> dynamic_type_builder);
 
   /// Copy constructor
   RCLCPP_PUBLIC
-  DynamicTypeBuilder(const DynamicTypeBuilder & other);
+  DynamicMessageTypeBuilder(const DynamicMessageTypeBuilder & other);
 
   /// Move constructor
   RCLCPP_PUBLIC
-  DynamicTypeBuilder(DynamicTypeBuilder && other) noexcept;
+  DynamicMessageTypeBuilder(DynamicMessageTypeBuilder && other) noexcept;
 
   /// Copy assignment
   RCLCPP_PUBLIC
-  DynamicTypeBuilder & operator=(const DynamicTypeBuilder & other);
+  DynamicMessageTypeBuilder & operator=(const DynamicMessageTypeBuilder & other);
 
   /// Move assignment
   RCLCPP_PUBLIC
-  DynamicTypeBuilder & operator=(DynamicTypeBuilder && other) noexcept;
+  DynamicMessageTypeBuilder & operator=(DynamicMessageTypeBuilder && other) noexcept;
 
   /// From description
   RCLCPP_PUBLIC
-  DynamicTypeBuilder(
+  DynamicMessageTypeBuilder(
     DynamicSerializationSupport::SharedPtr serialization_support,
     const rosidl_runtime_c__type_description__TypeDescription & description);
 
   RCLCPP_PUBLIC
-  virtual ~DynamicTypeBuilder();
+  virtual ~DynamicMessageTypeBuilder();
 
   /// Swaps the serialization support if serialization_support is populated
   RCLCPP_PUBLIC
@@ -158,11 +159,11 @@ public:
   set_name(const std::string & name);
 
   RCLCPP_PUBLIC
-  DynamicTypeBuilder
+  DynamicMessageTypeBuilder
   clone() const;
 
   RCLCPP_PUBLIC
-  DynamicTypeBuilder::SharedPtr
+  DynamicMessageTypeBuilder::SharedPtr
   clone_shared() const;
 
   RCLCPP_PUBLIC
@@ -170,20 +171,20 @@ public:
   clear();
 
   RCLCPP_PUBLIC
-  DynamicData
-  build_data();
+  DynamicMessage
+  build_dynamic_message();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<DynamicData>
-  build_data_shared();
+  DynamicMessage::SharedPtr
+  build_dynamic_message_shared();
 
   RCLCPP_PUBLIC
-  DynamicType
-  build_type();
+  DynamicMessageType
+  build_dynamic_message_type();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<DynamicType>
-  build_type_shared();
+  DynamicMessageType::SharedPtr
+  build_dynamic_message_type_shared();
 
 
   // ADD MEMBERS TEMPLATES =========================================================================
@@ -329,50 +330,50 @@ public:
   void
   add_complex_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type, const std::string & default_value = "");
+    DynamicMessageType & nested_type, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_array_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type, size_t array_length, const std::string & default_value = "");
+    DynamicMessageType & nested_type, size_t array_length, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_unbounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type, const std::string & default_value = "");
+    DynamicMessageType & nested_type, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_bounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicType & nested_type, size_t sequence_bound, const std::string & default_value = "");
+    DynamicMessageType & nested_type, size_t sequence_bound, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder, const std::string & default_value = "");
+    DynamicMessageTypeBuilder & nested_type_builder, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_array_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder, size_t array_length,
+    DynamicMessageTypeBuilder & nested_type_builder, size_t array_length,
     const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_unbounded_sequence_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder, const std::string & default_value = "");
+    DynamicMessageTypeBuilder & nested_type_builder, const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void
   add_complex_bounded_sequence_member_builder(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicTypeBuilder & nested_type_builder, size_t sequence_bound,
+    DynamicMessageTypeBuilder & nested_type_builder, size_t sequence_bound,
     const std::string & default_value = "");
 
 protected:
@@ -388,7 +389,7 @@ protected:
 
 private:
   RCLCPP_PUBLIC
-  DynamicTypeBuilder();
+  DynamicMessageTypeBuilder();
 
   RCLCPP_PUBLIC
   void
@@ -408,4 +409,4 @@ private:
 }  // namespace rclcpp
 
 
-#endif  // RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_TYPE_BUILDER_HPP_
+#endif  // RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_BUILDER_HPP_
