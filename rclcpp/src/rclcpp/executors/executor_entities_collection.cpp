@@ -20,12 +20,12 @@ namespace executors
 {
 bool ExecutorEntitiesCollection::empty() const
 {
-  return (subscriptions.empty() &&
-          timers.empty() &&
-          guard_conditions.empty() &&
-          clients.empty() &&
-          services.empty() &&
-           waitables.empty());
+  return subscriptions.empty() &&
+         timers.empty() &&
+         guard_conditions.empty() &&
+         clients.empty() &&
+         services.empty() &&
+         waitables.empty();
 }
 
 void ExecutorEntitiesCollection::clear()
@@ -52,8 +52,7 @@ build_entities_collection(
       continue;
     }
 
-    if (group_ptr->can_be_taken_from().load())
-    {
+    if (group_ptr->can_be_taken_from().load()) {
       group_ptr->collect_all_ptrs(
         [&collection, weak_group_ptr](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
           collection.subscriptions.insert(
@@ -102,7 +101,7 @@ void check_ready(
   size_t size_of_waited_entities,
   typename EntityCollectionType::Key * waited_entities,
   std::function<bool(rclcpp::AnyExecutable &,
-                     typename EntityCollectionType::EntitySharedPtr &)> fill_executable)
+  typename EntityCollectionType::EntitySharedPtr &)> fill_executable)
 {
   for (size_t ii = 0; ii < size_of_waited_entities; ++ii) {
     if (waited_entities[ii]) {
@@ -122,7 +121,6 @@ void check_ready(
         exec.callback_group = callback_group;
         if (fill_executable(exec, entity)) {
           executables.push_back(exec);
-        } else {
         }
       }
     }

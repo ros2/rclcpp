@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
 #include <list>
+#include <map>
 #include <memory>
 #include <set>
 #include <vector>

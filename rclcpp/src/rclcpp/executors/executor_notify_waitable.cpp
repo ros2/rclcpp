@@ -103,23 +103,23 @@ ExecutorNotifyWaitable::get_number_of_ready_guard_conditions()
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
-  for (auto add_guard_condition: to_add_)
-  {
-    auto guard_it = std::find(notify_guard_conditions_.begin(),
-                              notify_guard_conditions_.end(),
-                              add_guard_condition);
+  for (auto add_guard_condition : to_add_) {
+    auto guard_it = std::find(
+      notify_guard_conditions_.begin(),
+      notify_guard_conditions_.end(),
+      add_guard_condition);
     if (guard_it == notify_guard_conditions_.end()) {
       notify_guard_conditions_.push_back(add_guard_condition);
     }
   }
   to_add_.clear();
 
-  for (auto remove_guard_condition: to_remove_)
-  {
-    auto guard_it = std::find(notify_guard_conditions_.begin(),
-                              notify_guard_conditions_.end(),
-                              remove_guard_condition);
-    if (guard_it != notify_guard_conditions_.end()){
+  for (auto remove_guard_condition : to_remove_) {
+    auto guard_it = std::find(
+      notify_guard_conditions_.begin(),
+      notify_guard_conditions_.end(),
+      remove_guard_condition);
+    if (guard_it != notify_guard_conditions_.end()) {
       notify_guard_conditions_.erase(guard_it);
     }
   }

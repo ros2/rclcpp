@@ -32,16 +32,37 @@ namespace rclcpp
 namespace executors
 {
 
+/// Structure to represent a single entity's entry in a collection
 template<typename EntityValueType>
 struct CollectionEntry
 {
+  /// Weak pointer to entity type
   using EntityWeakPtr = typename EntityValueType::WeakPtr;
+  /// Shared pointer to entity type
   using EntitySharedPtr = typename EntityValueType::SharedPtr;
 
+  /// The entity
   EntityWeakPtr entity;
+
+  /// If relevant, the entity's corresponding callback_group
   rclcpp::CallbackGroup::WeakPtr callback_group;
 };
 
+/// Update a collection based on another collection
+/*
+ * Iterates update_from and update_to to see which entities have been added/removed between
+ * the two collections.
+ *
+ * For each new entry (in update_from, but not in update_to),
+ *   add the entity and fire the on_added callback
+ * For each removed entry (in update_to, but not in update_from),
+ *   remove the entity and fire the on_removed callback.
+ *
+ *  \param[in] update_from The collection representing the next iteration's state
+ *  \param[inout] update_to The collection representing the current iteration's state
+ *  \param[in] on_added Callback fired when a new entity is detected
+ *  \param[in] on_removed Callback fired when an entity is removed
+ */
 template<typename CollectionType>
 void update_entities(
   const CollectionType & update_from,
@@ -71,15 +92,31 @@ void update_entities(
     }
   }
 }
+
+/// A collection of entities, indexed by their corresponding handles
 template<typename EntityKeyType, typename EntityValueType>
 class EntityCollection
   : public std::unordered_map<const EntityKeyType *, CollectionEntry<EntityValueType>>
 {
 public:
+  /// Key type of the map
   using Key = const EntityKeyType *;
+
+  /// Weak pointer to entity type
   using EntityWeakPtr = typename EntityValueType::WeakPtr;
+
+  /// Shared pointer to entity type
   using EntitySharedPtr = typename EntityValueType::SharedPtr;
 
+  /// Update this collection based on the contents of another collection
+  /**
+   * Update the internal state of this collection, firing callbacks when entities have been
+   * added or removed.
+   *
+   * \param[in] other Collection to compare to
+   * \param[in] on_added Callback for when entities have been added
+   * \param[in] on_removed Callback for when entities have been removed
+   */
   void update(
     const EntityCollection<EntityKeyType, EntityValueType> & other,
     std::function<void(EntitySharedPtr)> on_added,
@@ -96,40 +133,72 @@ public:
  */
 struct ExecutorEntitiesCollection
 {
-  /// Entity entries for timers
+  /// Collection type for timer entities
   using TimerCollection = EntityCollection<rcl_timer_t, rclcpp::TimerBase>;
 
-  /// Entity entries for subscriptions
+  /// Collection type for subscription entities
   using SubscriptionCollection = EntityCollection<rcl_subscription_t, rclcpp::SubscriptionBase>;
 
-  /// Entity entries for clients
+  /// Collection type for client entities
   using ClientCollection = EntityCollection<rcl_client_t, rclcpp::ClientBase>;
 
-  /// Entity entries for services
+  /// Collection type for service entities
   using ServiceCollection = EntityCollection<rcl_service_t, rclcpp::ServiceBase>;
 
-  /// Entity entries for waitables
+  /// Collection type for waitable entities
   using WaitableCollection = EntityCollection<rclcpp::Waitable, rclcpp::Waitable>;
 
-  /// Entity entries for guard conditions
+  /// Collection type for guard condition entities
   using GuardConditionCollection = EntityCollection<rcl_guard_condition_t, rclcpp::GuardCondition>;
 
+  /// Collection of timers currently in use by the executor.
   TimerCollection timers;
+
+  /// Collection of subscriptions currently in use by the executor.
   SubscriptionCollection subscriptions;
+
+  /// Collection of clients currently in use by the executor.
   ClientCollection clients;
+
+  /// Collection of services currently in use by the executor.
   ServiceCollection services;
+
+  /// Collection of guard conditions currently in use by the executor.
   GuardConditionCollection guard_conditions;
+
+  /// Collection of waitables currently in use by the executor.
   WaitableCollection waitables;
 
+  /// Check if the entities collection is empty
+  /**
+   * \return true if all member collections are empty, false otherwise
+  */
   bool empty() const;
+
+  /// Clear the entities collection
   void clear();
 };
 
+/// Build an entities collection from callback groups
+/**
+ * Iterates a list of callback groups and adds entities from each valid group
+ *
+ * \param[in] callback_groups List of callback groups to check for entities
+ * \param[inout] colletion Entities collection to populate with found entities
+ */
 void
 build_entities_collection(
   const std::vector<rclcpp::CallbackGroup::WeakPtr> & callback_groups,
   ExecutorEntitiesCollection & collection);
 
+/// Build a queue of executables ready to be executed
+/**
+ * Iterates a list of entities and adds them to a queue if they are ready.
+ *
+ * \param[in] collection Collection of entities corresponding to the current wait set.
+ * \param[in] wait_result Result of rclcpp::WaitSet::wait corresponding to the collection.
+ * \return A queue of executables that have been marked ready by the waitset.
+ */
 std::deque<rclcpp::AnyExecutable>
 ready_executables(
   const ExecutorEntitiesCollection & collection,

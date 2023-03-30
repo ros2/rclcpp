@@ -33,16 +33,20 @@ ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
 {
   std::lock_guard<std::mutex> guard{mutex_};
 
-  for (auto weak_node_it = weak_nodes_.begin(); weak_node_it != weak_nodes_.end();) {
+  for (auto weak_node_it = weak_nodes_.begin(); weak_node_it != weak_nodes_.end(); ) {
     weak_node_it = remove_weak_node(weak_node_it);
   }
 
-  for (auto weak_group_it = automatically_added_groups_.begin(); weak_group_it != automatically_added_groups_.end(); ) {
-    weak_group_it= remove_weak_callback_group(weak_group_it, automatically_added_groups_);
+  for (auto weak_group_it = automatically_added_groups_.begin();
+    weak_group_it != automatically_added_groups_.end(); )
+  {
+    weak_group_it = remove_weak_callback_group(weak_group_it, automatically_added_groups_);
   }
 
-  for (auto weak_group_it = manually_added_groups_.begin(); weak_group_it != manually_added_groups_.end(); ) {
-    weak_group_it= remove_weak_callback_group(weak_group_it, manually_added_groups_);
+  for (auto weak_group_it = manually_added_groups_.begin();
+    weak_group_it != manually_added_groups_.end(); )
+  {
+    weak_group_it = remove_weak_callback_group(weak_group_it, manually_added_groups_);
   }
 }
 
@@ -86,13 +90,12 @@ ExecutorEntitiesCollector::remove_node(
   }
 
   for (auto group_it = automatically_added_groups_.begin();
-       group_it != automatically_added_groups_.end();)
+    group_it != automatically_added_groups_.end(); )
   {
     auto group_ptr = group_it->lock();
     if (node_ptr->callback_group_in_node(group_ptr)) {
       group_it = remove_weak_callback_group(group_it, automatically_added_groups_);
-    }
-    else {
+    } else {
       ++group_it;
     }
   }
@@ -168,8 +171,7 @@ ExecutorEntitiesCollector::remove_weak_node(NodeCollection::iterator weak_node)
 {
   // Disassociate the guard condition from the executor notify waitable
   auto guard_condition_it = weak_nodes_to_guard_conditions_.find(*weak_node);
-  if (guard_condition_it != weak_nodes_to_guard_conditions_.end())
-  {
+  if (guard_condition_it != weak_nodes_to_guard_conditions_.end()) {
     this->notify_waitable_->remove_guard_condition(guard_condition_it->second);
     weak_nodes_to_guard_conditions_.erase(guard_condition_it);
   }
@@ -193,8 +195,7 @@ ExecutorEntitiesCollector::remove_weak_callback_group(
 {
   // Disassociate the guard condition from the executor notify waitable
   auto guard_condition_it = weak_groups_to_guard_conditions_.find(*weak_group_it);
-  if (guard_condition_it != weak_groups_to_guard_conditions_.end())
-  {
+  if (guard_condition_it != weak_groups_to_guard_conditions_.end()) {
     this->notify_waitable_->remove_guard_condition(guard_condition_it->second);
     weak_groups_to_guard_conditions_.erase(guard_condition_it);
   }
