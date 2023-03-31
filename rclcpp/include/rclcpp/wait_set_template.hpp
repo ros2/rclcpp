@@ -516,7 +516,7 @@ public:
    * the waitable to be removed, but it will cause the associated entity pointer
    * to be nullptr when introspecting this waitable after waiting.
    *
-   * Note that rclcpp::QOSEventHandlerBase are just a special case of
+   * Note that rclcpp::EventHandlerBase is just a special case of
    * rclcpp::Waitable and can be added with this function.
    *
    * \param[in] waitable Waitable to be added.

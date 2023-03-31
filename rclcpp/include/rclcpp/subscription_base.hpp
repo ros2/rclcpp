@@ -37,7 +37,7 @@
 #include "rclcpp/message_info.hpp"
 #include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_content_filter_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -115,7 +115,7 @@ public:
   /** \return The map of QoS event handlers. */
   RCLCPP_PUBLIC
   const
-  std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+  std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
   get_event_handlers() const;
 
   /// Get the actual QoS settings, after the defaults have been determined.
@@ -457,7 +457,7 @@ public:
    * If you want more information available in the callback, like the qos event
    * or other information, you may use a lambda with captures or std::bind.
    *
-   * \sa rclcpp::QOSEventHandlerBase::set_on_ready_callback
+   * \sa rclcpp::EventHandlerBase::set_on_ready_callback
    *
    * \param[in] callback functor to be called when a new event occurs
    * \param[in] event_type identifier for the qos event we want to attach the callback to
@@ -542,7 +542,7 @@ protected:
     const EventCallbackT & callback,
     const rcl_subscription_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+    auto handler = std::make_shared<EventHandler<EventCallbackT,
         std::shared_ptr<rcl_subscription_t>>>(
       callback,
       rcl_subscription_event_init,
@@ -554,6 +554,9 @@ protected:
 
   RCLCPP_PUBLIC
   void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info) const;
+
+  RCLCPP_PUBLIC
+  void default_incompatible_type_callback(IncompatibleTypeInfo & info) const;
 
   RCLCPP_PUBLIC
   bool
@@ -571,7 +574,7 @@ protected:
   rclcpp::Logger node_logger_;
 
   std::unordered_map<rcl_subscription_event_type_t,
-    std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
+    std::shared_ptr<rclcpp::EventHandlerBase>> event_handlers_;
 
   bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;
@@ -588,7 +591,7 @@ private:
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
-  std::unordered_map<rclcpp::QOSEventHandlerBase *,
+  std::unordered_map<rclcpp::EventHandlerBase *,
     std::atomic<bool>> qos_events_in_use_by_wait_set_;
 
   std::recursive_mutex callback_mutex_;

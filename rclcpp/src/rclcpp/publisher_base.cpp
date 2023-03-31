@@ -37,7 +37,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 
 using rclcpp::PublisherBase;
 
@@ -145,21 +145,48 @@ PublisherBase::bind_event_callbacks(
       event_callbacks.liveliness_callback,
       RCL_PUBLISHER_LIVELINESS_LOST);
   }
+
+  QOSOfferedIncompatibleQoSCallbackType incompatible_qos_cb;
   if (event_callbacks.incompatible_qos_callback) {
-    this->add_event_handler(
-      event_callbacks.incompatible_qos_callback,
-      RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    incompatible_qos_cb = event_callbacks.incompatible_qos_callback;
   } else if (use_default_callbacks) {
     // Register default callback when not specified
-    try {
-      this->add_event_handler(
-        [this](QOSOfferedIncompatibleQoSInfo & info) {
-          this->default_incompatible_qos_callback(info);
-        },
-        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
-    } catch (UnsupportedEventTypeException & /*exc*/) {
-      // pass
+    incompatible_qos_cb = [this](QOSOfferedIncompatibleQoSInfo & info) {
+        this->default_incompatible_qos_callback(info);
+      };
+  }
+  try {
+    if (incompatible_qos_cb) {
+      this->add_event_handler(incompatible_qos_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
     }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible qos; wrong callback type");
+  }
+
+  IncompatibleTypeCallbackType incompatible_type_cb;
+  if (event_callbacks.incompatible_type_callback) {
+    incompatible_type_cb = event_callbacks.incompatible_type_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    incompatible_type_cb = [this](IncompatibleTypeInfo & info) {
+        this->default_incompatible_type_callback(info);
+      };
+  }
+  try {
+    if (incompatible_type_cb) {
+      this->add_event_handler(incompatible_type_cb, RCL_PUBLISHER_INCOMPATIBLE_TYPE);
+    }
+  } catch (UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible type; wrong callback type");
+  }
+  if (event_callbacks.matched_callback) {
+    this->add_event_handler(
+      event_callbacks.matched_callback,
+      RCL_PUBLISHER_MATCHED);
   }
 }
 
@@ -195,7 +222,7 @@ PublisherBase::get_publisher_handle() const
 }
 
 const
-std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
 PublisherBase::get_event_handlers() const
 {
   return event_handlers_;
@@ -309,6 +336,17 @@ PublisherBase::default_incompatible_qos_callback(
     "Last incompatible policy: %s",
     get_topic_name(),
     policy_name.c_str());
+}
+
+void
+PublisherBase::default_incompatible_type_callback(
+  rclcpp::IncompatibleTypeInfo & event) const
+{
+  (void)event;
+
+  RCLCPP_WARN(
+    rclcpp::get_logger(rcl_node_get_logger_name(rcl_node_handle_.get())),
+    "Incompatible type on topic '%s', no messages will be sent to it.", get_topic_name());
 }
 
 std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoints() const

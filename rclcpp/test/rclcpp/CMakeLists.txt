@@ -444,17 +444,23 @@ function(test_generic_pubsub_for_rmw_implementation)
   endif()
 endfunction()
 call_for_each_rmw_implementation(test_generic_pubsub_for_rmw_implementation)
-ament_add_gtest(test_qos_event test_qos_event.cpp)
-if(TARGET test_qos_event)
-  ament_target_dependencies(test_qos_event
-    "rmw"
-    "test_msgs"
+
+function(test_qos_event_for_rmw_implementation)
+  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+  ament_add_gmock(test_qos_event${target_suffix} test_qos_event.cpp
+    ENV ${rmw_implementation_env_var}
   )
-  target_link_libraries(test_qos_event
-    ${PROJECT_NAME}
-    mimick
-  )
-endif()
+  if(TARGET test_qos_event${target_suffix})
+    target_link_libraries(test_qos_event${target_suffix} ${PROJECT_NAME} mimick)
+    ament_target_dependencies(test_qos_event${target_suffix}
+      "rmw"
+      "rosidl_typesupport_cpp"
+      "test_msgs"
+    )
+  endif()
+endfunction()
+call_for_each_rmw_implementation(test_qos_event_for_rmw_implementation)
+
 ament_add_gmock(test_qos_overriding_options test_qos_overriding_options.cpp)
 if(TARGET test_qos_overriding_options)
   target_link_libraries(test_qos_overriding_options
