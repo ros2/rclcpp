@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include "rclcpp/executors/executor_notify_waitable.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/executors/executor_entities_collector.hpp"
 
@@ -34,7 +35,8 @@ public:
 };
 
 TEST_F(TestExecutorEntitiesCollector, add_remove_node) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
   auto node2 = std::make_shared<rclcpp::Node>("node2", "ns");
@@ -78,7 +80,8 @@ TEST_F(TestExecutorEntitiesCollector, add_remove_node) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, add_callback_group) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node = std::make_shared<rclcpp::Node>("node1", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
@@ -91,7 +94,8 @@ TEST_F(TestExecutorEntitiesCollector, add_callback_group) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, add_node_default_callback_group) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node = std::make_shared<rclcpp::Node>("node1", "ns");
   entities_collector.add_node(node->get_node_base_interface());
@@ -102,7 +106,8 @@ TEST_F(TestExecutorEntitiesCollector, add_node_default_callback_group) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, add_callback_group_after_add_node) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node = std::make_shared<rclcpp::Node>("node1", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
@@ -115,7 +120,8 @@ TEST_F(TestExecutorEntitiesCollector, add_callback_group_after_add_node) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, add_callback_group_twice) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node = std::make_shared<rclcpp::Node>("node1", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
@@ -133,7 +139,8 @@ TEST_F(TestExecutorEntitiesCollector, add_callback_group_twice) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, remove_callback_group_after_node) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node = std::make_shared<rclcpp::Node>("node1", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
@@ -154,7 +161,8 @@ TEST_F(TestExecutorEntitiesCollector, remove_callback_group_after_node) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, remove_callback_group_twice) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node = std::make_shared<rclcpp::Node>("node1", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
@@ -173,7 +181,8 @@ TEST_F(TestExecutorEntitiesCollector, remove_callback_group_twice) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, remove_node_opposite_order) {
-  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector();
+  auto notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
+  auto entities_collector = rclcpp::executors::ExecutorEntitiesCollector(notify_waitable);
 
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
   EXPECT_NO_THROW(entities_collector.add_node(node1->get_node_base_interface()));

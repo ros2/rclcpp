@@ -24,8 +24,8 @@ namespace executors
 {
 
 ExecutorEntitiesCollector::ExecutorEntitiesCollector(
-  std::function<void(void)> on_notify_waitable_callback)
-: notify_waitable_(std::make_shared<ExecutorNotifyWaitable>(on_notify_waitable_callback))
+  std::shared_ptr<ExecutorNotifyWaitable> notify_waitable)
+: notify_waitable_(notify_waitable)
 {
 }
 
@@ -150,12 +150,6 @@ ExecutorEntitiesCollector::get_automatically_added_callback_groups()
     groups.push_back(group_ptr);
   }
   return groups;
-}
-
-std::shared_ptr<ExecutorNotifyWaitable>
-ExecutorEntitiesCollector::get_notify_waitable()
-{
-  return this->notify_waitable_;
 }
 
 void

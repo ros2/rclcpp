@@ -64,7 +64,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit ExecutorEntitiesCollector(
-    std::function<void(void)> on_notify_waitable_callback = {});
+    std::shared_ptr<ExecutorNotifyWaitable> notify_waitable);
 
   /// Destructor
   RCLCPP_PUBLIC
@@ -144,9 +144,6 @@ public:
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_automatically_added_callback_groups();
 
-  RCLCPP_PUBLIC
-  std::shared_ptr<ExecutorNotifyWaitable> get_notify_waitable();
-
   /// Update the underlying collections
   /**
    * This will prune nodes and callback groups that are no longer valid as well
@@ -225,7 +222,7 @@ protected:
 
   WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
-  std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_;
 };
 }  // namespace executors
 }  // namespace rclcpp
