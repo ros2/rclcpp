@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
+#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
+#include <rosidl_dynamic_typesupport/types.h>
+
 #include <memory>
 #include <string>
+
+#include "rcl/types.h"
+#include "rcutils/logging_macros.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rcl/types.h"
-#include "rcutils/logging_macros.h"
 
-#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
-#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
-#include <rosidl_dynamic_typesupport/types.h>
 
 using rclcpp::dynamic_typesupport::DynamicMessage;
 using rclcpp::dynamic_typesupport::DynamicMessageType;
@@ -93,8 +95,8 @@ DynamicMessage::DynamicMessage(const DynamicMessageType::SharedPtr dynamic_type)
     rosidl_dynamic_type, &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error(
-      std::string("could not create new dynamic data object from dynamic type") +
-      rcl_get_error_string().str);
+            std::string("could not create new dynamic data object from dynamic type") +
+            rcl_get_error_string().str);
   }
 
   rosidl_dynamic_data_.reset(
@@ -173,7 +175,7 @@ DynamicMessage::DynamicMessage(
   if (serialization_support_) {
     if (!match_serialization_support_(*serialization_support_, *rosidl_loaned_data)) {
       throw std::runtime_error(
-          "serialization support library identifier does not match loaned dynamic data's!");
+              "serialization support library identifier does not match loaned dynamic data's!");
     }
   }
 
@@ -281,11 +283,14 @@ DynamicMessage::get_name() const
   size_t buf_length;
   const char * buf;
   if (
-    rosidl_dynamic_typesupport_dynamic_data_get_name(get_rosidl_dynamic_data(), &buf, &buf_length)
-    != RCUTILS_RET_OK) {
-      throw std::runtime_error(
-          std::string("could not get name for dynamic data") + rcl_get_error_string().str);
-    }
+    rosidl_dynamic_typesupport_dynamic_data_get_name(
+      get_rosidl_dynamic_data(), &buf,
+      &buf_length) !=
+    RCUTILS_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("could not get name for dynamic data") + rcl_get_error_string().str);
+  }
   return std::string(buf, buf_length);
 }
 
@@ -402,7 +407,7 @@ DynamicMessage::clone() const
     get_rosidl_dynamic_data(), &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error(
-      std::string("could not clone dynamic data: ") + rcl_get_error_string().str);
+            std::string("could not clone dynamic data: ") + rcl_get_error_string().str);
   }
   return DynamicMessage(serialization_support_, rosidl_dynamic_data);
 }
@@ -416,7 +421,7 @@ DynamicMessage::clone_shared() const
     get_rosidl_dynamic_data(), &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error(
-      std::string("could not clone dynamic data: ") + rcl_get_error_string().str);
+            std::string("could not clone dynamic data: ") + rcl_get_error_string().str);
   }
   return DynamicMessage::make_shared(serialization_support_, rosidl_dynamic_data);
 }
@@ -472,7 +477,7 @@ DynamicMessage::loan_value(rosidl_dynamic_typesupport_member_id_t id)
     get_rosidl_dynamic_data(), id, &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error(
-      std::string("could not loan dynamic data: ") + rcl_get_error_string().str);
+            std::string("could not loan dynamic data: ") + rcl_get_error_string().str);
   }
   return DynamicMessage::make_shared(shared_from_this(), rosidl_dynamic_data);
 }
@@ -552,7 +557,7 @@ DynamicMessage::serialize(rcl_serialized_message_t * buffer)
     rosidl_dynamic_typesupport_dynamic_data_serialize(get_rosidl_dynamic_data(), buffer, &success);
   if (ret != RCUTILS_RET_OK || !success) {
     throw std::runtime_error(
-      std::string("could serialize loan dynamic data: ") + rcl_get_error_string().str);
+            std::string("could serialize loan dynamic data: ") + rcl_get_error_string().str);
   }
   return success;
 }
@@ -563,10 +568,12 @@ DynamicMessage::deserialize(rcl_serialized_message_t * buffer)
 {
   bool success;
   rcutils_ret_t ret =
-    rosidl_dynamic_typesupport_dynamic_data_deserialize(get_rosidl_dynamic_data(), buffer, &success);
+    rosidl_dynamic_typesupport_dynamic_data_deserialize(
+    get_rosidl_dynamic_data(), buffer,
+    &success);
   if (ret != RCUTILS_RET_OK || !success) {
     throw std::runtime_error(
-      std::string("could deserialize loan dynamic data: ") + rcl_get_error_string().str);
+            std::string("could deserialize loan dynamic data: ") + rcl_get_error_string().str);
   }
   return success;
 }

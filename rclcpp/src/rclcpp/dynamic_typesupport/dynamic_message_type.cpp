@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
+#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
+#include <rosidl_dynamic_typesupport/types.h>
+
 #include <memory>
 #include <string>
+
+#include "rcutils/logging_macros.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rcutils/logging_macros.h"
 
-#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
-#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
-#include <rosidl_dynamic_typesupport/types.h>
 
 using rclcpp::dynamic_typesupport::DynamicMessage;
 using rclcpp::dynamic_typesupport::DynamicMessageType;
@@ -192,7 +194,7 @@ DynamicMessageType::match_serialization_support_(
 
   // TODO(methylDragon): Can I do this?? Is it portable?
   if (serialization_support.get_rosidl_serialization_support() !=
-      rosidl_dynamic_type.serialization_support)
+    rosidl_dynamic_type.serialization_support)
   {
     RCUTILS_LOG_ERROR(
       "serialization support pointer does not match dynamic type's");
@@ -229,7 +231,7 @@ DynamicMessageType::get_member_count() const
     rosidl_dynamic_type_.get(), &out);
   if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
-      std::string("could not get member count: ") + rcl_get_error_string().str);
+            std::string("could not get member count: ") + rcl_get_error_string().str);
   }
   return out;
 }
@@ -288,7 +290,7 @@ DynamicMessageType::clone() const
     get_rosidl_dynamic_type(), &rosidl_dynamic_type);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error(
-      std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
+            std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
   }
   return DynamicMessageType(serialization_support_, rosidl_dynamic_type);
 }
@@ -302,7 +304,7 @@ DynamicMessageType::clone_shared() const
     get_rosidl_dynamic_type(), &rosidl_dynamic_type);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error(
-      std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
+            std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
   }
   return DynamicMessageType::make_shared(serialization_support_, rosidl_dynamic_type);
 }
@@ -319,7 +321,7 @@ DynamicMessageType::equals(const DynamicMessageType & other) const
     get_rosidl_dynamic_type(), other.get_rosidl_dynamic_type(), &out);
   if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
-      std::string("could not equate dynamic message types: ") + rcl_get_error_string().str);
+            std::string("could not equate dynamic message types: ") + rcl_get_error_string().str);
   }
   return out;
 }

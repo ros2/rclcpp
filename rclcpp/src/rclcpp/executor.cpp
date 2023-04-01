@@ -605,7 +605,6 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   message_info.get_rmw_message_info().from_intra_process = false;
 
   switch (subscription->get_subscription_type()) {
-
     // Take ROS message
     case rclcpp::SubscriptionType::ROS_MESSAGE:
       {
@@ -639,10 +638,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
               subscription->get_subscription_handle().get(), loaned_msg);
             if (RCL_RET_OK != ret) {
               RCLCPP_ERROR(
-                rclcpp::get_logger(
-                  "rclcpp"),
-                "rcl_return_loaned_message_from_subscription() failed for subscription on topic '%s':"
-                " %s",
+                rclcpp::get_logger("rclcpp"),
+                "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
+                "'%s': %s",
                 subscription->get_topic_name(), rcl_get_error_string().str);
             }
             loaned_msg = nullptr;

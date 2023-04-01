@@ -12,28 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rosidl_dynamic_typesupport/types.h>
+#include <rosidl_runtime_c/message_type_support_struct.h>
+#include <rosidl_runtime_c/type_description_utils.h>
+#include <rosidl_runtime_c/type_description/type_description__functions.h>
+#include <rosidl_runtime_c/type_description/type_description__struct.h>
+
 #include <memory>
 #include <string>
 
-#include "rmw/dynamic_message_typesupport.h"
-
-#include "rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp"
-
 #include "rcl/rcl_dynamic_typesupport_c/message_introspection.h"
+#include "rcutils/logging_macros.h"
+#include "rmw/dynamic_message_typesupport.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rcutils/logging_macros.h"
 
-#include <rosidl_dynamic_typesupport/types.h>
-#include <rosidl_runtime_c/message_type_support_struct.h>
-#include "rosidl_runtime_c/type_description_utils.h"
-#include <rosidl_runtime_c/type_description/type_description__functions.h>
-#include <rosidl_runtime_c/type_description/type_description__struct.h>
 
 using rclcpp::dynamic_typesupport::DynamicMessage;
 using rclcpp::dynamic_typesupport::DynamicMessageType;
@@ -168,11 +167,12 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     [](rosidl_runtime_c__type_description__TypeDescription * description) -> void {
       rosidl_runtime_c__type_description__TypeDescription__destroy(description);
     });
-  if (!description_)
-  {
+  if (!description_) {
     throw std::runtime_error("could not init type description.");
   }
-  if (!rosidl_runtime_c__type_description__TypeDescription__copy(&description, description_.get()))
+  if (!rosidl_runtime_c__type_description__TypeDescription__copy(
+      &description,
+      description_.get()))
   {
     throw std::runtime_error("could not copy type description.");
   }
@@ -292,11 +292,11 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
   rosidl_message_type_support_.reset(
     new rosidl_message_type_support_t{
-      rmw_dynamic_typesupport_c__identifier,              // typesupport_identifier
-      ts_impl,                                            // data
-      get_message_typesupport_handle_function,            // func
-      nullptr  // TODO(methylDragon): Populate type hash  // type_hash
-    },
+    rmw_dynamic_typesupport_c__identifier,                // typesupport_identifier
+    ts_impl,                                              // data
+    get_message_typesupport_handle_function,              // func
+    nullptr    // TODO(methylDragon): Populate type hash  // type_hash
+  },
     [](rosidl_message_type_support_t * ts) -> void {
       delete static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
       delete ts->type_hash;  // Only because we should've allocated it here

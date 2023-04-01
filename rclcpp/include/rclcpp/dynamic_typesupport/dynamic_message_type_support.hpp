@@ -15,6 +15,10 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_SUPPORT_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_SUPPORT_HPP_
 
+#include <rosidl_dynamic_typesupport/types.h>
+#include <rosidl_runtime_c/message_type_support_struct.h>
+#include <rosidl_runtime_c/type_description/type_description__struct.h>
+
 #include <memory>
 #include <string>
 
@@ -25,9 +29,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include <rosidl_dynamic_typesupport/types.h>
-#include <rosidl_runtime_c/message_type_support_struct.h>
-#include <rosidl_runtime_c/type_description/type_description__struct.h>
 
 namespace rclcpp
 {
@@ -195,9 +196,10 @@ private:
   void
   init_dynamic_message_(DynamicMessageType::SharedPtr dynamic_type);
 
+  // By aggregation
   RCLCPP_PUBLIC
   void
-  init_rosidl_message_type_support_(  // by aggregation
+  init_rosidl_message_type_support_(
     DynamicSerializationSupport::SharedPtr serialization_support,
     DynamicMessageType::SharedPtr dynamic_message_type,
     DynamicMessage::SharedPtr dynamic_message,

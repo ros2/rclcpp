@@ -15,14 +15,14 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_BUILDER_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_BUILDER_HPP_
 
+#include <rosidl_dynamic_typesupport/types.h>
+
 #include <memory>
 #include <string>
 
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
-
-#include <rosidl_dynamic_typesupport/types.h>
 
 
 namespace rclcpp
@@ -348,7 +348,8 @@ public:
   void
   add_complex_bounded_sequence_member(
     rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-    DynamicMessageType & nested_type, size_t sequence_bound, const std::string & default_value = "");
+    DynamicMessageType & nested_type, size_t sequence_bound,
+    const std::string & default_value = "");
 
   RCLCPP_PUBLIC
   void

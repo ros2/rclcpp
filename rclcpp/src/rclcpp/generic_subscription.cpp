@@ -78,28 +78,28 @@ rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
 GenericSubscription::get_shared_dynamic_message_type()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "get_shared_dynamic_message_type is not implemented for GenericSubscription");
+          "get_shared_dynamic_message_type is not implemented for GenericSubscription");
 }
 
 rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
 GenericSubscription::get_shared_dynamic_message()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "get_shared_dynamic_message is not implemented for GenericSubscription");
+          "get_shared_dynamic_message is not implemented for GenericSubscription");
 }
 
 rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
 GenericSubscription::get_shared_dynamic_serialization_support()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "get_shared_dynamic_serialization_support is not implemented for GenericSubscription");
+          "get_shared_dynamic_serialization_support is not implemented for GenericSubscription");
 }
 
 rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
 GenericSubscription::create_dynamic_message()
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "create_dynamic_message is not implemented for GenericSubscription");
+          "create_dynamic_message is not implemented for GenericSubscription");
 }
 
 void
@@ -108,7 +108,7 @@ GenericSubscription::return_dynamic_message(
 {
   (void) message;
   throw rclcpp::exceptions::UnimplementedError(
-    "return_dynamic_message is not implemented for GenericSubscription");
+          "return_dynamic_message is not implemented for GenericSubscription");
 }
 
 void
@@ -119,7 +119,7 @@ GenericSubscription::handle_dynamic_message(
   (void) message;
   (void) message_info;
   throw rclcpp::exceptions::UnimplementedError(
-    "handle_dynamic_message is not implemented for GenericSubscription");
+          "handle_dynamic_message is not implemented for GenericSubscription");
 }
 
 }  // namespace rclcpp

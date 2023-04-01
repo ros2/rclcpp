@@ -64,7 +64,8 @@ public:
       node_base,
       *(type_support->get_rosidl_message_type_support()),
       topic_name,
-      options.to_rcl_subscription_options(qos),
+      options.to_rcl_subscription_options(
+        qos),
       options.event_callbacks,
       options.use_default_callbacks,
       use_take_dynamic_message ? SubscriptionType::DYNAMIC_MESSAGE_DIRECT : SubscriptionType::DYNAMIC_MESSAGE_FROM_SERIALIZED),  // NOLINT
@@ -159,9 +160,9 @@ private:
 
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
   std::function<void(
-    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-    std::shared_ptr<const rosidl_runtime_c__type_description__TypeDescription>
-  )> callback_;
+      rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
+      std::shared_ptr<const rosidl_runtime_c__type_description__TypeDescription>
+    )> callback_;
 
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;
   rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message_;

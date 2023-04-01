@@ -54,11 +54,12 @@ SubscriptionBase::SubscriptionBase(
   type_support_(type_support_handle),
   subscription_type_(subscription_type)
 {
-  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE)
-    && subscription_type == rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT)
+  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE) &&
+    subscription_type == rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT)
   {
     throw std::runtime_error(
-      "Cannot set subscription to take dynamic message directly, feature not supported in rmw");
+            "Cannot set subscription to take dynamic message directly, feature not supported in rmw"
+    );
   }
 
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)

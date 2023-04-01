@@ -15,13 +15,14 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DETAIL__DYNAMIC_MESSAGE_IMPL_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DETAIL__DYNAMIC_MESSAGE_IMPL_HPP_
 
+#include <rosidl_dynamic_typesupport/types.h>
+#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
+
 #include <cstdint>
 #include <cstddef>
 #include <memory>
 #include <string>
 
-#include <rosidl_dynamic_typesupport/types.h>
-#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
 #include "rclcpp/exceptions.hpp"
 
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_HPP_

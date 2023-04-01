@@ -589,7 +589,6 @@ public:
     rclcpp::MessageInfo & message_info_out);
   // ===============================================================================================
 
-
 protected:
   template<typename EventCallbackT>
   void

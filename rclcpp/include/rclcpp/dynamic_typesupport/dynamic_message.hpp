@@ -15,6 +15,8 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_HPP_
 
+#include <rcl/types.h>
+#include <rosidl_dynamic_typesupport/types.h>
 
 #include <memory>
 #include <string>
@@ -23,9 +25,6 @@
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
-
-#include <rcl/types.h>
-#include <rosidl_dynamic_typesupport/types.h>
 
 
 namespace rclcpp
@@ -413,7 +412,9 @@ protected:
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> rosidl_dynamic_data_;
 
   bool is_loaned_;
-  DynamicMessage::SharedPtr parent_data_;  // Used for returning the loaned value, and lifetime management
+
+  // Used for returning the loaned value, and lifetime management
+  DynamicMessage::SharedPtr parent_data_;
 
 private:
   RCLCPP_PUBLIC

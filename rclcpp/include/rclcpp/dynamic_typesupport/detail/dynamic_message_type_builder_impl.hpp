@@ -15,13 +15,14 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DETAIL__DYNAMIC_MESSAGE_TYPE_BUILDER_IMPL_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DETAIL__DYNAMIC_MESSAGE_TYPE_BUILDER_IMPL_HPP_
 
+#include <rosidl_dynamic_typesupport/types.h>
+#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
+
 #include <cstdint>
 #include <cstddef>
 #include <memory>
 #include <string>
 
-#include <rosidl_dynamic_typesupport/types.h>
-#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
 #include "rclcpp/exceptions.hpp"
 
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_BUILDER_HPP_
@@ -135,7 +136,7 @@ DynamicMessageTypeBuilder::add_member(
   const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "add_member is not implemented for input type");
+          "add_member is not implemented for input type");
 }
 
 
@@ -147,7 +148,7 @@ DynamicMessageTypeBuilder::add_array_member(
   size_t array_length, const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "add_array_member is not implemented for input type");
+          "add_array_member is not implemented for input type");
 }
 
 
@@ -159,7 +160,7 @@ DynamicMessageTypeBuilder::add_unbounded_sequence_member(
   const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "add_unbounded_sequence_member is not implemented for input type");
+          "add_unbounded_sequence_member is not implemented for input type");
 }
 
 
@@ -172,7 +173,7 @@ DynamicMessageTypeBuilder::add_bounded_sequence_member(
   const std::string & default_value)
 {
   throw rclcpp::exceptions::UnimplementedError(
-    "add_bounded_sequence_member is not implemented for input type");
+          "add_bounded_sequence_member is not implemented for input type");
 }
 
 

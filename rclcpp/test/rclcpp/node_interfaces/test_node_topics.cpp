@@ -85,10 +85,15 @@ public:
 
   DynamicMessageType::SharedPtr get_shared_dynamic_message_type() override {return nullptr;}
   DynamicMessage::SharedPtr get_shared_dynamic_message() override {return nullptr;}
-  DynamicSerializationSupport::SharedPtr get_shared_dynamic_serialization_support() override {return nullptr;}
+  DynamicSerializationSupport::SharedPtr get_shared_dynamic_serialization_support() override
+  {
+    return nullptr;
+  }
   DynamicMessage::SharedPtr create_dynamic_message() override {return nullptr;}
   void return_dynamic_message(DynamicMessage::SharedPtr &) override {}
-  void handle_dynamic_message(const DynamicMessage::SharedPtr &, const rclcpp::MessageInfo &) override {}
+  void handle_dynamic_message(
+    const DynamicMessage::SharedPtr &,
+    const rclcpp::MessageInfo &) override {}
 };
 
 class TestNodeTopics : public ::testing::Test

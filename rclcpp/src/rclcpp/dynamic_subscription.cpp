@@ -74,33 +74,33 @@ rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
 DynamicSubscription::get_shared_dynamic_message_type()
 {
   return dynamic_message_type_;
-};
+}
 
 // Does not clone
 rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
 DynamicSubscription::get_shared_dynamic_message()
 {
   return dynamic_message_;
-};
+}
 
 rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
 DynamicSubscription::get_shared_dynamic_serialization_support()
 {
   return serialization_support_;
-};
+}
 
 rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
 DynamicSubscription::create_dynamic_message()
 {
   return dynamic_message_->init_from_type_shared(*dynamic_message_type_);
-};
+}
 
 void
 DynamicSubscription::return_dynamic_message(
   rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message)
 {
   message.reset();
-};
+}
 
 void DynamicSubscription::handle_dynamic_message(
   const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,

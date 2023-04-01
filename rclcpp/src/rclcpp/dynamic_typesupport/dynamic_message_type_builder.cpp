@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
+#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
+#include <rosidl_dynamic_typesupport/types.h>
+
 #include <memory>
 #include <string>
+
+#include "rcutils/logging_macros.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rcutils/logging_macros.h"
 
-#include <rosidl_dynamic_typesupport/api/dynamic_data.h>
-#include <rosidl_dynamic_typesupport/api/dynamic_type.h>
-#include <rosidl_dynamic_typesupport/types.h>
 
 using rclcpp::dynamic_typesupport::DynamicMessage;
 using rclcpp::dynamic_typesupport::DynamicMessageType;
@@ -189,7 +191,7 @@ DynamicMessageTypeBuilder::init_from_serialization_support_(
     &rosidl_dynamic_type_builder);
   if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
-      std::string("could not init dynamic type builder: ") + rcl_get_error_string().str);
+            std::string("could not init dynamic type builder: ") + rcl_get_error_string().str);
   }
   if (!rosidl_dynamic_type_builder) {
     throw std::runtime_error("could not init dynamic type builder object");
@@ -313,7 +315,7 @@ DynamicMessageTypeBuilder::clone() const
     get_rosidl_dynamic_type_builder(), &rosidl_dynamic_type_builder);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
     throw std::runtime_error(
-      std::string("could not clone dynamic type builder: ") + rcl_get_error_string().str);
+            std::string("could not clone dynamic type builder: ") + rcl_get_error_string().str);
   }
   return DynamicMessageTypeBuilder(serialization_support_, rosidl_dynamic_type_builder);
 }
@@ -327,7 +329,7 @@ DynamicMessageTypeBuilder::clone_shared() const
     get_rosidl_dynamic_type_builder(), &rosidl_dynamic_type_builder);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
     throw std::runtime_error(
-      std::string("could not clone dynamic type builder: ") + rcl_get_error_string().str);
+            std::string("could not clone dynamic type builder: ") + rcl_get_error_string().str);
   }
   return DynamicMessageTypeBuilder::make_shared(
     serialization_support_, rosidl_dynamic_type_builder);
@@ -339,7 +341,8 @@ DynamicMessageTypeBuilder::clear()
 {
   if (!serialization_support_) {
     throw std::runtime_error(
-      "cannot call clear() on a dynamic type builder with uninitialized serialization support");
+            "cannot call clear() on a dynamic type builder with uninitialized serialization support"
+    );
   }
 
   const std::string & name = get_name();
@@ -640,7 +643,8 @@ DynamicMessageTypeBuilder::add_complex_member_builder(
 void
 DynamicMessageTypeBuilder::add_complex_array_member_builder(
   rosidl_dynamic_typesupport_member_id_t id, const std::string & name,
-  DynamicMessageTypeBuilder & nested_type_builder, size_t array_length, const std::string & default_value)
+  DynamicMessageTypeBuilder & nested_type_builder, size_t array_length,
+  const std::string & default_value)
 {
   rosidl_dynamic_typesupport_dynamic_type_builder_add_complex_array_member_builder(
     get_rosidl_dynamic_type_builder(),

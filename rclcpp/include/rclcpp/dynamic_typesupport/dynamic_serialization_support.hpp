@@ -15,13 +15,13 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_SERIALIZATION_SUPPORT_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_SERIALIZATION_SUPPORT_HPP_
 
+#include <rosidl_dynamic_typesupport/types.h>
+
 #include <memory>
 #include <string>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
-
-#include <rosidl_dynamic_typesupport/types.h>
 
 
 namespace rclcpp
