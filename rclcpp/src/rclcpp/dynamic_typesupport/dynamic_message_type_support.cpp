@@ -109,11 +109,12 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
 
   rosidl_message_type_support_t * ts = nullptr;
 
-  ts = rmw_dynamic_message_typesupport_handle_init(
+  rmw_ret_t ret = rmw_dynamic_message_typesupport_handle_init(
     serialization_support->get_rosidl_serialization_support(),
     rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY),
-    &description);
-  if (!ts) {
+    &description,
+    &ts);
+  if (ret != RMW_RET_OK || !ts) {
     throw std::runtime_error("could not init rosidl message type support");
   }
   if (!ts->data) {

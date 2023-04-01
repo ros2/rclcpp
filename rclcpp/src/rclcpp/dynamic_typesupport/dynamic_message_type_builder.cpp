@@ -152,10 +152,10 @@ DynamicMessageTypeBuilder::init_from_description(
   }
 
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
-  rosidl_dynamic_type_builder =
-    rosidl_dynamic_typesupport_dynamic_type_builder_init_from_description(
-    serialization_support_->get_rosidl_serialization_support(), &description);
-  if (!rosidl_dynamic_type_builder) {
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_init_from_description(
+    serialization_support_->get_rosidl_serialization_support(), &description,
+    &rosidl_dynamic_type_builder);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
     throw std::runtime_error("could not create new dynamic type builder object");
   }
 
@@ -183,11 +183,16 @@ DynamicMessageTypeBuilder::init_from_serialization_support_(
 
 
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
-  rosidl_dynamic_type_builder = rosidl_dynamic_typesupport_dynamic_type_builder_init(
-    serialization_support->get_rosidl_serialization_support(), name.c_str(), name.size());
-
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_init(
+    serialization_support->get_rosidl_serialization_support(),
+    name.c_str(), name.size(),
+    &rosidl_dynamic_type_builder);
+  if (ret != RCUTILS_RET_OK) {
+    throw std::runtime_error(
+      std::string("could not init dynamic type builder: ") + rcl_get_error_string().str);
+  }
   if (!rosidl_dynamic_type_builder) {
-    throw std::runtime_error("could not create new dynamic type builder object");
+    throw std::runtime_error("could not init dynamic type builder object");
   }
 
   rosidl_dynamic_type_builder_.reset(
@@ -240,8 +245,9 @@ const std::string
 DynamicMessageTypeBuilder::get_name() const
 {
   size_t buf_length;
-  const char * buf = rosidl_dynamic_typesupport_dynamic_type_builder_get_name(
-    get_rosidl_dynamic_type_builder(), &buf_length);
+  const char * buf;
+  rosidl_dynamic_typesupport_dynamic_type_builder_get_name(
+    get_rosidl_dynamic_type_builder(), &buf, &buf_length);
   return std::string(buf, buf_length);
 }
 
@@ -302,18 +308,29 @@ DynamicMessageTypeBuilder::set_name(const std::string & name)
 DynamicMessageTypeBuilder
 DynamicMessageTypeBuilder::clone() const
 {
-  return DynamicMessageTypeBuilder(
-    serialization_support_,
-    rosidl_dynamic_typesupport_dynamic_type_builder_clone(get_rosidl_dynamic_type_builder()));
+  rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_clone(
+    get_rosidl_dynamic_type_builder(), &rosidl_dynamic_type_builder);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
+    throw std::runtime_error(
+      std::string("could not clone dynamic type builder: ") + rcl_get_error_string().str);
+  }
+  return DynamicMessageTypeBuilder(serialization_support_, rosidl_dynamic_type_builder);
 }
 
 
 DynamicMessageTypeBuilder::SharedPtr
 DynamicMessageTypeBuilder::clone_shared() const
 {
+  rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_clone(
+    get_rosidl_dynamic_type_builder(), &rosidl_dynamic_type_builder);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
+    throw std::runtime_error(
+      std::string("could not clone dynamic type builder: ") + rcl_get_error_string().str);
+  }
   return DynamicMessageTypeBuilder::make_shared(
-    serialization_support_,
-    rosidl_dynamic_typesupport_dynamic_type_builder_clone(get_rosidl_dynamic_type_builder()));
+    serialization_support_, rosidl_dynamic_type_builder);
 }
 
 

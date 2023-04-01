@@ -19,6 +19,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/dynamic_message_typesupport.h"
+#include "rmw/ret_types.h"
 
 #include <rosidl_dynamic_typesupport/api/serialization_support.h>
 
@@ -30,15 +31,16 @@ DynamicSerializationSupport::DynamicSerializationSupport(
 : rosidl_serialization_support_(nullptr)
 {
   rosidl_dynamic_typesupport_serialization_support_t * rosidl_serialization_support = nullptr;
+  rmw_ret_t ret = RMW_RET_ERROR;
 
   if (serialization_library_name.empty()) {
-    rosidl_serialization_support = rmw_get_serialization_support(NULL);
+    ret = rmw_get_serialization_support(NULL, &rosidl_serialization_support);
   } else {
-    rosidl_serialization_support =
-      rmw_get_serialization_support(serialization_library_name.c_str());
+    ret = rmw_get_serialization_support(
+      serialization_library_name.c_str(), &rosidl_serialization_support);
   }
 
-  if (!rosidl_serialization_support) {
+  if (ret != RMW_RET_OK || !rosidl_serialization_support) {
     throw std::runtime_error("could not create new serialization support object");
   }
 

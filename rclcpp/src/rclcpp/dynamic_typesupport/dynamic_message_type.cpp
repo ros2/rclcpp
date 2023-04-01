@@ -48,9 +48,9 @@ DynamicMessageType::DynamicMessageType(DynamicMessageTypeBuilder::SharedPtr dyna
   }
 
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
-  rosidl_dynamic_type = rosidl_dynamic_typesupport_dynamic_type_init_from_dynamic_type_builder(
-    rosidl_dynamic_type_builder);
-  if (!rosidl_dynamic_type) {
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_init_from_dynamic_type_builder(
+    rosidl_dynamic_type_builder, &rosidl_dynamic_type);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error("could not create new dynamic type object");
   }
 
@@ -159,10 +159,9 @@ DynamicMessageType::init_from_description(
   }
 
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
-  rosidl_dynamic_type =
-    rosidl_dynamic_typesupport_dynamic_type_init_from_description(
-    serialization_support_->get_rosidl_serialization_support(), &description);
-  if (!rosidl_dynamic_type) {
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_init_from_description(
+    serialization_support_->get_rosidl_serialization_support(), &description, &rosidl_dynamic_type);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error("could not create new dynamic type object");
   }
 
@@ -216,8 +215,8 @@ const std::string
 DynamicMessageType::get_name() const
 {
   size_t buf_length;
-  const char * buf = rosidl_dynamic_typesupport_dynamic_type_get_name(
-    get_rosidl_dynamic_type(), &buf_length);
+  const char * buf;
+  rosidl_dynamic_typesupport_dynamic_type_get_name(get_rosidl_dynamic_type(), &buf, &buf_length);
   return std::string(buf, buf_length);
 }
 
@@ -225,7 +224,14 @@ DynamicMessageType::get_name() const
 size_t
 DynamicMessageType::get_member_count() const
 {
-  return rosidl_dynamic_typesupport_dynamic_type_get_member_count(rosidl_dynamic_type_.get());
+  size_t out;
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_get_member_count(
+    rosidl_dynamic_type_.get(), &out);
+  if (ret != RCUTILS_RET_OK) {
+    throw std::runtime_error(
+      std::string("could not get member count: ") + rcl_get_error_string().str);
+  }
+  return out;
 }
 
 
@@ -277,18 +283,28 @@ DynamicMessageType::get_shared_dynamic_serialization_support() const
 DynamicMessageType
 DynamicMessageType::clone() const
 {
-  return DynamicMessageType(
-    serialization_support_,
-    rosidl_dynamic_typesupport_dynamic_type_clone(get_rosidl_dynamic_type()));
+  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_clone(
+    get_rosidl_dynamic_type(), &rosidl_dynamic_type);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
+    throw std::runtime_error(
+      std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
+  }
+  return DynamicMessageType(serialization_support_, rosidl_dynamic_type);
 }
 
 
 DynamicMessageType::SharedPtr
 DynamicMessageType::clone_shared() const
 {
-  return DynamicMessageType::make_shared(
-    serialization_support_,
-    rosidl_dynamic_typesupport_dynamic_type_clone(get_rosidl_dynamic_type()));
+  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_clone(
+    get_rosidl_dynamic_type(), &rosidl_dynamic_type);
+  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
+    throw std::runtime_error(
+      std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
+  }
+  return DynamicMessageType::make_shared(serialization_support_, rosidl_dynamic_type);
 }
 
 
@@ -298,8 +314,14 @@ DynamicMessageType::equals(const DynamicMessageType & other) const
   if (get_library_identifier() != other.get_library_identifier()) {
     throw std::runtime_error("library identifiers don't match");
   }
-  return rosidl_dynamic_typesupport_dynamic_type_equals(
-    get_rosidl_dynamic_type(), other.get_rosidl_dynamic_type());
+  bool out;
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_equals(
+    get_rosidl_dynamic_type(), other.get_rosidl_dynamic_type(), &out);
+  if (ret != RCUTILS_RET_OK) {
+    throw std::runtime_error(
+      std::string("could not equate dynamic message types: ") + rcl_get_error_string().str);
+  }
+  return out;
 }
 
 
