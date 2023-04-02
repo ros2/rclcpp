@@ -315,7 +315,17 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     rmw_dynamic_typesupport_c__identifier,                // typesupport_identifier
     ts_impl,                                              // data
     get_message_typesupport_handle_function,              // func
-    type_hash.get()                                       // type_hash
+    type_hash.get(),                                      // type_hash
+    // get_type_description_func
+    // TODO(methylDragon): Await altering of function signature to return description
+    []() -> const rosidl_runtime_c__type_description__TypeDescription * {
+      return nullptr;
+    },
+    // get_type_description_sources_func
+    []() -> const rosidl_runtime_c__type_description__TypeSource__Sequence * {
+      static const rosidl_runtime_c__type_description__TypeSource__Sequence sources = {NULL, 0, 0};
+      return &sources;
+    }
   },
     [](rosidl_message_type_support_t * ts) -> void {
       delete static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
