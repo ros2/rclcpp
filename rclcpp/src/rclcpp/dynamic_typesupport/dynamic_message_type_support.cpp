@@ -22,6 +22,8 @@
 #include <string>
 
 #include "rcl/rcl_dynamic_typesupport_c/message_introspection.h"
+#include "rcl/type_hash.h"
+#include "rcl/types.h"
 #include "rcutils/logging_macros.h"
 #include "rmw/dynamic_message_typesupport.h"
 
@@ -108,10 +110,20 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
 
   rosidl_message_type_support_t * ts = nullptr;
 
+  auto type_hash = std::make_unique<rosidl_type_hash_t>();
+  rcutils_ret_t hash_ret = rcl_calculate_type_hash(
+    // TODO(methylDragon): Swap this out with the conversion function when it is ready
+    reinterpret_cast<const type_description_interfaces__msg__TypeDescription *>(&description),
+    type_hash.get());
+  if (hash_ret != RCL_RET_OK || !type_hash) {
+    throw std::runtime_error("failed to get type hash");
+  }
+
   rmw_ret_t ret = rmw_dynamic_message_typesupport_handle_init(
     serialization_support->get_rosidl_serialization_support(),
     rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY),
     &description,
+    type_hash.get(),
     &ts);
   if (ret != RMW_RET_OK || !ts) {
     throw std::runtime_error("could not init rosidl message type support");
@@ -137,6 +149,8 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   if (!rosidl_message_type_support_) {
     throw std::runtime_error("could not init rosidl message type support.");
   }
+
+  type_hash.release();
 }
 
 
@@ -263,15 +277,14 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   DynamicMessage::SharedPtr dynamic_message,
   rosidl_runtime_c__type_description__TypeDescription * description)
 {
-  bool middleware_supports_type_discovery =
-    rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY);
+  bool middleware_supports_type_discovery = rmw_feature_supported(
+    RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY);
 
   if (!middleware_supports_type_discovery && !description) {
-    RCUTILS_LOG_ERROR_NAMED(
-      rmw_dynamic_typesupport_c__identifier,
-      "Middleware does not support type discovery! Deferred dynamic type"
-      "message type support will never be populated! You must provide a type "
-      "description.");
+    throw std::runtime_error(
+            "Middleware does not support type discovery! Deferred dynamic type"
+            "message type support will never be populated! You must provide a type "
+            "description.");
     return;
   }
 
@@ -282,10 +295,17 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     dynamic_message->get_rosidl_dynamic_data()                  // dynamic_message
   };
   if (!ts_impl) {
-    RCUTILS_LOG_ERROR_NAMED(
-      rmw_dynamic_typesupport_c__identifier,
-      "Could not allocate rmw_dynamic_message_typesupport_impl_t struct");
+    throw std::runtime_error("Could not allocate rmw_dynamic_message_typesupport_impl_t struct");
     return;
+  }
+
+  auto type_hash = std::make_unique<rosidl_type_hash_t>();
+  rcutils_ret_t hash_ret = rcl_calculate_type_hash(
+    // TODO(methylDragon): Swap this out with the conversion function when it is ready
+    reinterpret_cast<type_description_interfaces__msg__TypeDescription *>(description),
+    type_hash.get());
+  if (hash_ret != RCL_RET_OK || !type_hash) {
+    throw std::runtime_error("failed to get type hash");
   }
 
   // NOTE(methylDragon): We don't finalize the rosidl_message_type_support->data since its members
@@ -295,7 +315,7 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     rmw_dynamic_typesupport_c__identifier,                // typesupport_identifier
     ts_impl,                                              // data
     get_message_typesupport_handle_function,              // func
-    nullptr    // TODO(methylDragon): Populate type hash  // type_hash
+    type_hash.get()                                       // type_hash
   },
     [](rosidl_message_type_support_t * ts) -> void {
       delete static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
@@ -304,12 +324,12 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   );
 
   if (!rosidl_message_type_support_) {
-    RCUTILS_LOG_ERROR_NAMED(
-      rmw_dynamic_typesupport_c__identifier,
-      "Could not allocate rosidl_message_type_support_t struct");
+    throw std::runtime_error("Could not allocate rosidl_message_type_support_t struct");
     delete ts_impl;
     return;
   }
+
+  type_hash.release();
 }
 
 
