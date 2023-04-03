@@ -174,37 +174,76 @@ protected:
     rclcpp::GuardCondition::WeakPtr,
     std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
 
+  /// Implementation of removing a node from the collector.
+  /**
+   * This will disassociate the node from the collector and remove any
+   * automatically-added callback groups
+   *
+   * This takes and returns an iterator so it may be used as:
+   *
+   * it = remove_weak_node(it);
+   *
+   * \param[in] weak_node iterator to the weak node to be removed
+   * \return Valid updated iterator in the same collection
+   */
   RCLCPP_PUBLIC
   NodeCollection::iterator
   remove_weak_node(NodeCollection::iterator weak_node);
 
+  /// Implementation of removing a callback gruop from the collector.
+  /**
+   * This will disassociate the callback group from the collector
+   *
+   * This takes and returns an iterator so it may be used as:
+   *
+   * it = remove_weak_callback_group(it);
+   *
+   * \param[in] weak_group_it iterator to the weak group to be removed
+   * \param[in] collection the collection to remove the group from
+   *   (manually or automatically added)
+   * \return Valid updated iterator in the same collection
+   */
   RCLCPP_PUBLIC
   CallbackGroupCollection::iterator
   remove_weak_callback_group(
     CallbackGroupCollection::iterator weak_group_it,
     CallbackGroupCollection & collection);
 
+  /// Implementation of adding a callback group
+  /**
+   * \param[in] group_ptr the group to add
+   * \param[in] collection the collection to add the group to
+   */
   RCLCPP_PUBLIC
   void
   add_callback_group_to_collection(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     CallbackGroupCollection & collection);
 
+  /// Implementation of removing a callback group
+  /**
+   * \param[in] group_ptr the group to remove
+   * \param[in] collection the collection to remove the group from
+   */
   RCLCPP_PUBLIC
   void
   remove_callback_group_from_collection(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     CallbackGroupCollection & collection);
 
+  /// Iterate over queued added/remove nodes and callback_groups
   RCLCPP_PUBLIC
   void
   process_queues();
 
+  /// Check a collection of nodes and add any new callback_groups that
+  /// are set to be automatically associated via the node.
   RCLCPP_PUBLIC
   void
   add_automatically_associated_callback_groups(
     const NodeCollection & nodes_to_check);
 
+  /// Check all nodes and group for expired weak pointers and remove them.
   RCLCPP_PUBLIC
   void
   prune_invalid_nodes_and_groups();
@@ -218,15 +257,28 @@ protected:
   /// nodes that are associated with the executor
   NodeCollection weak_nodes_;
 
+  /// mutex to protect pending queues
   std::mutex pending_mutex_;
+
+  /// nodes that have been added since the last update.
   NodeCollection pending_added_nodes_;
+
+  /// nodes that have been removed since the last update.
   NodeCollection pending_removed_nodes_;
+
+  /// callback groups that have been added since the last update.
   CallbackGroupCollection pending_manually_added_groups_;
+
+  /// callback groups that have been removed since the last update.
   CallbackGroupCollection pending_manually_removed_groups_;
 
+  /// Track guard conditions associated with added nodes
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+
+  /// Track guard conditions associated with added callback groups
   WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_;
 
+  /// Waitable to add guard conditions to
   std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_;
 };
 }  // namespace executors

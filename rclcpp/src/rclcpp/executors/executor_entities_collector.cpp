@@ -295,7 +295,7 @@ ExecutorEntitiesCollector::process_queues()
 {
   std::lock_guard pending_lock(pending_mutex_);
 
-  for (auto weak_node_ptr: pending_added_nodes_) {
+  for (auto weak_node_ptr : pending_added_nodes_) {
     auto node_ptr = weak_node_ptr.lock();
     if (!node_ptr) {
       continue;
@@ -310,7 +310,7 @@ ExecutorEntitiesCollector::process_queues()
   }
   pending_added_nodes_.clear();
 
-  for (auto weak_node_ptr: pending_removed_nodes_) {
+  for (auto weak_node_ptr : pending_removed_nodes_) {
     auto node_it = weak_nodes_.find(weak_node_ptr);
     if (node_it != weak_nodes_.end()) {
       remove_weak_node(node_it);
@@ -334,7 +334,7 @@ ExecutorEntitiesCollector::process_queues()
   }
   pending_removed_nodes_.clear();
 
-  for (auto weak_group_ptr: pending_manually_added_groups_) {
+  for (auto weak_group_ptr : pending_manually_added_groups_) {
     auto group_ptr = weak_group_ptr.lock();
     if (group_ptr) {
       this->add_callback_group_to_collection(group_ptr, manually_added_groups_);
@@ -342,7 +342,7 @@ ExecutorEntitiesCollector::process_queues()
   }
   pending_manually_added_groups_.clear();
 
-  for (auto weak_group_ptr: pending_manually_removed_groups_) {
+  for (auto weak_group_ptr : pending_manually_removed_groups_) {
     auto group_ptr = weak_group_ptr.lock();
     if (group_ptr) {
       this->remove_callback_group_from_collection(group_ptr, manually_added_groups_);
