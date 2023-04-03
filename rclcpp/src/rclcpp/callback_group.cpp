@@ -142,6 +142,11 @@ rclcpp::GuardCondition::SharedPtr
 CallbackGroup::get_notify_guard_condition()
 {
   std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
+
+  if (!this->get_context_) {
+    throw std::runtime_error("Callback group was created without context and not passed context");
+  }
+
   auto context_ptr = this->get_context_();
   if (context_ptr && context_ptr->is_valid()) {
     std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
@@ -151,14 +156,10 @@ CallbackGroup::get_notify_guard_condition()
       }
       notify_guard_condition_ = nullptr;
     }
-
     if (!notify_guard_condition_) {
       notify_guard_condition_ = std::make_shared<rclcpp::GuardCondition>(context_ptr);
     }
-
     return notify_guard_condition_;
-  } else {
-    throw std::runtime_error("Couldn't get guard condition from invalid context");
   }
   return nullptr;
 }
