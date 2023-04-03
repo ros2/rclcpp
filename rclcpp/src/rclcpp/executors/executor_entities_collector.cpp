@@ -306,7 +306,7 @@ ExecutorEntitiesCollector::process_queues()
     this->add_automatically_associated_callback_groups({weak_node_ptr});
 
     // Store node guard condition in map and add it to the notify waitable
-    auto node_guard_condition = node_ptr->get_notify_guard_condition();
+    auto node_guard_condition = node_ptr->get_shared_notify_guard_condition();
     weak_nodes_to_guard_conditions_.insert({weak_node_ptr, node_guard_condition});
     this->notify_waitable_->add_guard_condition(node_guard_condition);
   }

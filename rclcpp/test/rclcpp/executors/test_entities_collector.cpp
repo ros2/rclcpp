@@ -28,7 +28,8 @@ public:
     rclcpp::init(0, nullptr);
 
     notify_waitable = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>();
-    entities_collector = std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable);
+    entities_collector = std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(
+      notify_waitable);
   }
 
   void TearDown()
@@ -41,7 +42,6 @@ public:
 };
 
 TEST_F(TestExecutorEntitiesCollector, add_remove_node) {
-
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
 
   // Add a node
@@ -54,7 +54,6 @@ TEST_F(TestExecutorEntitiesCollector, add_remove_node) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, add_node_twice) {
-
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
 
   EXPECT_NO_THROW(entities_collector->add_node(node1->get_node_base_interface()));
@@ -67,7 +66,6 @@ TEST_F(TestExecutorEntitiesCollector, add_node_twice) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, add_associated_node) {
-
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
 
   // Simulate node being associated somewhere else
@@ -83,7 +81,6 @@ TEST_F(TestExecutorEntitiesCollector, add_associated_node) {
 }
 
 TEST_F(TestExecutorEntitiesCollector, remove_unassociated_node) {
-
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
 
   // Add an already-associated node

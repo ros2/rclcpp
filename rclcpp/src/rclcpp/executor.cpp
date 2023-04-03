@@ -276,7 +276,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       }
     });
 
-  const auto gc = node_ptr->get_notify_guard_condition();
+  const auto gc = node_ptr->get_shared_notify_guard_condition();
   weak_nodes_to_guard_conditions_[node_ptr] = gc.get();
   // Add the node's notify condition to the guard condition handles
   memory_strategy_->add_guard_condition(*gc);
@@ -384,7 +384,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
     }
   }
 
-  memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition().get());
+  memory_strategy_->remove_guard_condition(node_ptr->get_shared_notify_guard_condition().get());
   weak_nodes_to_guard_conditions_.erase(node_ptr);
 
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
