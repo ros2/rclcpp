@@ -107,7 +107,9 @@ ExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   if (!node_ptr->get_associated_with_executor_atomic().load()) {
-    throw std::runtime_error("Node needs to be associated with an executor.");
+    throw std::runtime_error(
+            std::string("Node '") + node_ptr->get_fully_qualified_name() +
+            "' needs to be associated with an executor.");
   }
 
   std::lock_guard<std::mutex> pending_lock(pending_mutex_);
@@ -151,6 +153,10 @@ ExecutorEntitiesCollector::remove_callback_group(rclcpp::CallbackGroup::SharedPt
     throw std::runtime_error("Callback group needs to be associated with an executor.");
   }
 
+  if (!group_ptr->has_valid_node()) {
+    throw std::runtime_error("Node must not be deleted before its callback group(s).");
+  }
+
   auto weak_group_ptr = rclcpp::CallbackGroup::WeakPtr(group_ptr);
 
   std::lock_guard<std::mutex> pending_lock(pending_mutex_);
@@ -158,7 +164,7 @@ ExecutorEntitiesCollector::remove_callback_group(rclcpp::CallbackGroup::SharedPt
   bool add_queued = pending_manually_added_groups_.count(group_ptr) != 0;
   bool remove_queued = pending_manually_removed_groups_.count(group_ptr) != 0;
 
-  if ((associated || add_queued) && !remove_queued) {
+  if (!(associated || add_queued) || remove_queued) {
     throw std::runtime_error("Callback group needs to be associated with this executor.");
   }
 
@@ -360,6 +366,10 @@ ExecutorEntitiesCollector::add_automatically_associated_callback_groups(
           if (!group_ptr->get_associated_with_executor_atomic().load() &&
           group_ptr->automatically_add_to_executor_with_node())
           {
+            std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+            if (has_executor.exchange(true)) {
+              throw std::runtime_error("Callback group has already been added to an executor.");
+            }
             this->add_callback_group_to_collection(group_ptr, this->automatically_added_groups_);
           }
         });
