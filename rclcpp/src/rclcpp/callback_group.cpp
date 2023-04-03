@@ -146,10 +146,8 @@ CallbackGroup::get_notify_guard_condition()
   if (!this->get_context_) {
     throw std::runtime_error("Callback group was created without context and not passed context");
   }
-
   auto context_ptr = this->get_context_();
   if (context_ptr && context_ptr->is_valid()) {
-    std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
     if (notify_guard_condition_ && context_ptr != notify_guard_condition_->get_context()) {
       if (associated_with_executor_) {
         trigger_notify_guard_condition();
