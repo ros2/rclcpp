@@ -637,8 +637,9 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rclcpp::GuardCondition interrupt_guard_condition_;
+  std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;
 
+  /// Guard condition for signaling the rmw layer to wake up for system shutdown. 
   std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
 
   /// Wait set for managing entities that the rmw layer waits on.

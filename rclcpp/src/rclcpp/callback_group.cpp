@@ -43,8 +43,8 @@ CallbackGroup::~CallbackGroup()
 {
   trigger_notify_guard_condition();
 }
-
 bool
+
 CallbackGroup::has_valid_node()
 {
   return nullptr != this->get_context_();
