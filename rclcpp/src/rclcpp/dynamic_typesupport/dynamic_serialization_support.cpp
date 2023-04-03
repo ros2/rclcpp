@@ -18,7 +18,7 @@
 #include <string>
 
 #include "rcutils/logging_macros.h"
-#include "rmw/dynamic_message_typesupport.h"
+#include "rmw/dynamic_message_type_support.h"
 #include "rmw/ret_types.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"

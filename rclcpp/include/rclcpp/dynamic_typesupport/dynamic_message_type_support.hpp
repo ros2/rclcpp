@@ -40,10 +40,10 @@ namespace dynamic_typesupport
 /**
  *
  * NOTE: This class is the recommended way to obtain the dynamic message type
- *       support struct, instead of rcl_dynamic_message_typesupport_handle_init,
+ *       support struct, instead of rcl_dynamic_message_type_support_handle_init,
  *       because this class will manage the lifetimes for you.
  *
- *       Do NOT call rcl_dynamic_message_typesupport_handle_fini!!
+ *       Do NOT call rcl_dynamic_message_type_support_handle_fini!!
  *
  * This class:
  * - Manages the lifetime of the raw pointer.
@@ -63,7 +63,7 @@ public:
   // CONSTRUCTION ==================================================================================
   /// From description
   /// Does NOT take ownership of the description (copies instead.)
-  /// Constructs type support top-down (calling rcl_dynamic_message_typesupport_handle_init)
+  /// Constructs type support top-down (calling rcl_dynamic_message_type_support_handle_init)
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
     const rosidl_runtime_c__type_description__TypeDescription & description,
@@ -71,7 +71,7 @@ public:
 
   /// From description, for provided serialization support
   /// Does NOT take ownership of the description (copies instead.)
-  /// Constructs type support top-down (calling rmw_dynamic_message_typesupport_handle_init)
+  /// Constructs type support top-down (calling rmw_dynamic_message_type_support_handle_init)
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
     DynamicSerializationSupport::SharedPtr serialization_support,

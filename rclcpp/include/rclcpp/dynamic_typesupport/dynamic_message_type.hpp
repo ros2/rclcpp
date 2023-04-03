@@ -52,7 +52,7 @@ class DynamicMessageTypeBuilder;
  *       rosidl_dynamic_typesupport_dynamic_type_builder_t.
  *
  *       The usual method of obtaining a DynamicMessageType is through construction of
- *       rosidl_message_type_support_t via rcl_dynamic_message_typesupport_handle_init(), then
+ *       rosidl_message_type_support_t via rcl_dynamic_message_type_support_handle_init(), then
  *       taking ownership of its contents. But DynamicMessageTypeBuilder can also be used to obtain
  *       DynamicMessageType by constructing it bottom-up instead, since it exposes the lower_level
  *       rosidl methods.

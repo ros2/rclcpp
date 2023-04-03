@@ -25,7 +25,7 @@
 #include "rcl/type_hash.h"
 #include "rcl/types.h"
 #include "rcutils/logging_macros.h"
-#include "rmw/dynamic_message_typesupport.h"
+#include "rmw/dynamic_message_type_support.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
@@ -56,9 +56,9 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   rcl_ret_t ret;
 
   if (serialization_library_name.empty()) {
-    ret = rcl_dynamic_message_typesupport_handle_init(nullptr, &description, &ts);
+    ret = rcl_dynamic_message_type_support_handle_init(nullptr, &description, &ts);
   } else {
-    ret = rcl_dynamic_message_typesupport_handle_init(
+    ret = rcl_dynamic_message_type_support_handle_init(
       serialization_library_name.c_str(), &description, &ts);
   }
   if (ret != RCL_RET_OK) {
@@ -76,10 +76,10 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
 
   // NOTE(methylDragon): Not technically const correct, but since it's a const void *,
   //                     we do it anyway...
-  auto ts_impl = static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
+  auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
 
   manage_rosidl_message_type_support_(ts);
-  manage_description_(ts_impl->description);
+  manage_description_(ts_impl->type_description);
   serialization_support_ = DynamicSerializationSupport::make_shared(ts_impl->serialization_support);
 
   dynamic_message_type_ = DynamicMessageType::make_shared(
@@ -119,11 +119,12 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     throw std::runtime_error("failed to get type hash");
   }
 
-  rmw_ret_t ret = rmw_dynamic_message_typesupport_handle_init(
+  rmw_ret_t ret = rmw_dynamic_message_type_support_handle_init(
     serialization_support->get_rosidl_serialization_support(),
     rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY),
-    &description,
-    type_hash.get(),
+    type_hash.get(),  // type_hash
+    &description,     // type_description
+    nullptr,          // type_description_sources (not implemented for dynamic types)
     &ts);
   if (ret != RMW_RET_OK || !ts) {
     throw std::runtime_error("could not init rosidl message type support");
@@ -135,10 +136,10 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     throw std::runtime_error("rosidl message type support is of the wrong type");
   }
 
-  auto ts_impl = static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
+  auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
 
   manage_rosidl_message_type_support_(ts);
-  manage_description_(ts_impl->description);
+  manage_description_(ts_impl->type_description);
 
   dynamic_message_type_ = DynamicMessageType::make_shared(
     get_shared_dynamic_serialization_support(), ts_impl->dynamic_message_type);
@@ -245,8 +246,9 @@ DynamicMessageTypeSupport::manage_rosidl_message_type_support_(
   rosidl_message_type_support_.reset(
     rosidl_message_type_support,
     [](rosidl_message_type_support_t * ts) -> void {
-      delete static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
-      delete ts->type_hash;  // Only because we should've allocated it here
+      auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
+      delete ts_impl->type_hash;  // Only because we should've allocated it here
+      delete ts_impl;
       delete ts;
     }
   );
@@ -268,7 +270,7 @@ DynamicMessageTypeSupport::manage_description_(
 }
 
 
-// NOTE(methylDragon): This looks like rmw_dynamic_message_typesupport_handle_init, but instead
+// NOTE(methylDragon): This looks like rmw_dynamic_message_type_support_handle_init, but instead
 //                     just aggregates already initialized objects
 void
 DynamicMessageTypeSupport::init_rosidl_message_type_support_(
@@ -288,17 +290,6 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     return;
   }
 
-  rmw_dynamic_message_typesupport_impl_t * ts_impl = new rmw_dynamic_message_typesupport_impl_t{
-    description,                                                // description
-    serialization_support->get_rosidl_serialization_support(),  // serialization_support
-    dynamic_message_type->get_rosidl_dynamic_type(),            // dynamic_message_type
-    dynamic_message->get_rosidl_dynamic_data()                  // dynamic_message
-  };
-  if (!ts_impl) {
-    throw std::runtime_error("Could not allocate rmw_dynamic_message_typesupport_impl_t struct");
-    return;
-  }
-
   auto type_hash = std::make_unique<rosidl_type_hash_t>();
   rcutils_ret_t hash_ret = rcl_calculate_type_hash(
     // TODO(methylDragon): Swap this out with the conversion function when it is ready
@@ -308,6 +299,19 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     throw std::runtime_error("failed to get type hash");
   }
 
+  rmw_dynamic_message_type_support_impl_t * ts_impl = new rmw_dynamic_message_type_support_impl_t{
+    type_hash.get(),                                            // type_hash
+    description,                                                // type_description
+    nullptr,  // NOTE(methylDragon): Not supported for now      // type_description_sources
+    serialization_support->get_rosidl_serialization_support(),  // serialization_support
+    dynamic_message_type->get_rosidl_dynamic_type(),            // dynamic_message_type
+    dynamic_message->get_rosidl_dynamic_data()                  // dynamic_message
+  };
+  if (!ts_impl) {
+    throw std::runtime_error("Could not allocate rmw_dynamic_message_type_support_impl_t struct");
+    return;
+  }
+
   // NOTE(methylDragon): We don't finalize the rosidl_message_type_support->data since its members
   //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
   rosidl_message_type_support_.reset(
@@ -315,21 +319,17 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     rmw_dynamic_typesupport_c__identifier,                // typesupport_identifier
     ts_impl,                                              // data
     get_message_typesupport_handle_function,              // func
-    type_hash.get(),                                      // type_hash
+     // get_type_hash_func
+    rmw_dynamic_message_type_support_get_type_hash_function,
     // get_type_description_func
-    // TODO(methylDragon): Await altering of function signature to return description
-    []() -> const rosidl_runtime_c__type_description__TypeDescription * {
-      return nullptr;
-    },
+    rmw_dynamic_message_type_support_get_type_description_function,
     // get_type_description_sources_func
-    []() -> const rosidl_runtime_c__type_description__TypeSource__Sequence * {
-      static const rosidl_runtime_c__type_description__TypeSource__Sequence sources = {NULL, 0, 0};
-      return &sources;
-    }
+    rmw_dynamic_message_type_support_get_type_description_sources_function
   },
     [](rosidl_message_type_support_t * ts) -> void {
-      delete static_cast<const rmw_dynamic_message_typesupport_impl_t *>(ts->data);
-      delete ts->type_hash;  // Only because we should've allocated it here
+      auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
+      delete ts_impl->type_hash;  // Only because we should've allocated it here
+      delete ts_impl;
     }
   );
 
