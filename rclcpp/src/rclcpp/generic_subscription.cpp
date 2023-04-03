@@ -52,7 +52,7 @@ GenericSubscription::handle_serialized_message(
 }
 
 void GenericSubscription::handle_loaned_message(
-  void * message, const rclcpp::MessageInfo & message_info)
+  const void * message, const rclcpp::MessageInfo & message_info)
 {
   (void) message;
   (void) message_info;

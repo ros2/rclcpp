@@ -487,9 +487,13 @@ public:
   }
 
   // Dispatch when input is a ros message and the output could be anything.
-  void
+  template<typename MaybeConstROSMessageType>
+  typename std::enable_if<std::is_same<ROSMessageType,
+    typename std::remove_const<MaybeConstROSMessageType>::type
+    >::value
+  >::type
   dispatch(
-    std::shared_ptr<ROSMessageType> message,
+    std::shared_ptr<MaybeConstROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, static_cast<const void *>(this), false);
@@ -505,6 +509,7 @@ public:
       [&message, &message_info, this](auto && callback) {
         using T = std::decay_t<decltype(callback)>;
         static constexpr bool is_ta = rclcpp::TypeAdapter<MessageT>::is_specialized::value;
+        static constexpr bool is_const = std::is_const<MaybeConstROSMessageType>::value;
 
         // conditions for output is custom message
         if constexpr (is_ta && std::is_same_v<T, ConstRefCallback>) {
@@ -548,6 +553,10 @@ public:
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message));
         } else if constexpr (std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>) {
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message), message_info);
+        } else if constexpr (is_const && std::is_same_v<T, SharedPtrROSMessageCallback>) {
+          callback(std::make_shared<ROSMessageType>(*message));
+        } else if constexpr (is_const && std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>) {
+          callback(std::make_shared<ROSMessageType>(*message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrROSMessageCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>||

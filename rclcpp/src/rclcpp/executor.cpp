@@ -618,7 +618,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
     // This is the case where a loaned message is taken from the middleware via
     // inter-process communication, given to the user for their callback,
     // and then returned.
-    void * loaned_msg = nullptr;
+    const void * loaned_msg = nullptr;
     // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
     //   is extened to support subscriptions as well.
     take_and_do_error_handling(
