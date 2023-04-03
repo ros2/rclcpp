@@ -261,10 +261,6 @@ ExecutorEntitiesCollector::add_callback_group_to_collection(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
   CallbackGroupCollection & collection)
 {
-  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
-  if (has_executor.exchange(true)) {
-    throw std::runtime_error("Callback group has already been added to an executor.");
-  }
   auto iter = collection.insert(group_ptr);
   if (iter.second == false) {
     throw std::runtime_error("Callback group has already been added to this executor.");
