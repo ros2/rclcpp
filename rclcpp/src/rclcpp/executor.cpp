@@ -558,13 +558,14 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 }
 
+template<typename Taker, typename Handler>
 static
 void
 take_and_do_error_handling(
   const char * action_description,
   const char * topic_or_service_name,
-  std::function<bool()> take_action,
-  std::function<void()> handle_action)
+  Taker take_action,
+  Handler handle_action)
 {
   bool taken = false;
   try {
