@@ -70,6 +70,8 @@ public:
   RCLCPP_PUBLIC
   ~ExecutorEntitiesCollector();
 
+  bool has_pending();
+
   /// Add a node to the entity collector
   /**
    * \param[in] node_ptr a shared pointer that points to a node base interface
@@ -164,63 +166,66 @@ protected:
 
   using WeakNodesToGuardConditionsMap = std::map<
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    const rclcpp::GuardCondition *,
+    rclcpp::GuardCondition::WeakPtr,
     std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>;
 
   using WeakGroupsToGuardConditionsMap = std::map<
     rclcpp::CallbackGroup::WeakPtr,
-    const rclcpp::GuardCondition *,
+    rclcpp::GuardCondition::WeakPtr,
     std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
 
   RCLCPP_PUBLIC
   NodeCollection::iterator
-  remove_weak_node(NodeCollection::iterator weak_node) RCPPUTILS_TSA_REQUIRES(mutex_);
+  remove_weak_node(NodeCollection::iterator weak_node);
 
   RCLCPP_PUBLIC
   CallbackGroupCollection::iterator
   remove_weak_callback_group(
     CallbackGroupCollection::iterator weak_group_it,
-    CallbackGroupCollection & collection) RCPPUTILS_TSA_REQUIRES(mutex_);
+    CallbackGroupCollection & collection);
 
   RCLCPP_PUBLIC
   void
   add_callback_group_to_collection(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
-    CallbackGroupCollection & collection) RCPPUTILS_TSA_REQUIRES(mutex_);
+    CallbackGroupCollection & collection);
 
   RCLCPP_PUBLIC
   void
   remove_callback_group_from_collection(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
-    CallbackGroupCollection & collection) RCPPUTILS_TSA_REQUIRES(mutex_);
+    CallbackGroupCollection & collection);
+
+  RCLCPP_PUBLIC
+  void
+  process_queues();
 
   RCLCPP_PUBLIC
   void
   add_automatically_associated_callback_groups(
-    const NodeCollection & nodes_to_check)
-  RCPPUTILS_TSA_REQUIRES(mutex_);
+    const NodeCollection & nodes_to_check);
 
   RCLCPP_PUBLIC
   void
-  prune_invalid_nodes_and_groups() RCPPUTILS_TSA_REQUIRES(mutex_);
-
-  mutable std::mutex mutex_;
+  prune_invalid_nodes_and_groups();
 
   /// Callback groups that were added via `add_callback_group`
-  CallbackGroupCollection
-  manually_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  CallbackGroupCollection manually_added_groups_;
 
   /// Callback groups that were added by their association with added nodes
-  CallbackGroupCollection
-  automatically_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  CallbackGroupCollection automatically_added_groups_;
 
   /// nodes that are associated with the executor
-  NodeCollection
-  weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  NodeCollection weak_nodes_;
 
-  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::mutex pending_mutex_;
+  NodeCollection pending_added_nodes_;
+  NodeCollection pending_removed_nodes_;
+  CallbackGroupCollection pending_manually_added_groups_;
+  CallbackGroupCollection pending_manually_removed_groups_;
 
-  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_;
 
   std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_;
 };

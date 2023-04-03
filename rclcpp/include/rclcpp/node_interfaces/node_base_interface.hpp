@@ -152,8 +152,13 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  rclcpp::GuardCondition &
+  rclcpp::GuardCondition::SharedPtr
   get_notify_guard_condition() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  trigger_notify_guard_condition() = 0;
 
   /// Return the default preference for using intra process communication.
   RCLCPP_PUBLIC

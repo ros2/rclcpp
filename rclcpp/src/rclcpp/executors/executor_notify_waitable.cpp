@@ -27,20 +27,39 @@ ExecutorNotifyWaitable::ExecutorNotifyWaitable(std::function<void(void)> on_exec
 {
 }
 
+ExecutorNotifyWaitable::ExecutorNotifyWaitable(const ExecutorNotifyWaitable & other)
+: ExecutorNotifyWaitable(other.execute_callback_)
+{
+  this->notify_guard_conditions_ = other.notify_guard_conditions_;
+}
+
+ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(const ExecutorNotifyWaitable & other)
+{
+  if (this != &other) {
+    this->execute_callback_ = other.execute_callback_;
+    this->notify_guard_conditions_ = other.notify_guard_conditions_;
+  }
+  return *this;
+}
+
 void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  for (auto guard_condition : this->notify_guard_conditions_) {
-    auto rcl_guard_condition = guard_condition->get_rcl_guard_condition();
 
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(
-      wait_set,
-      &rcl_guard_condition, NULL);
+  for (auto weak_guard_condition : this->notify_guard_conditions_) {
+    auto guard_condition = weak_guard_condition.lock();
+    if (guard_condition) {
+      auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
 
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "failed to add guard condition to wait set");
+      rcl_ret_t ret = rcl_wait_set_add_guard_condition(
+        wait_set,
+        rcl_guard_condition, NULL);
+
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "failed to add guard condition to wait set");
+      }
     }
   }
 }
@@ -49,20 +68,22 @@ bool
 ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+
+  bool any_ready = false;
   for (size_t ii = 0; ii < wait_set->size_of_guard_conditions; ++ii) {
     auto rcl_guard_condition = wait_set->guard_conditions[ii];
 
     if (nullptr == rcl_guard_condition) {
       continue;
     }
-
-    for (auto guard_condition : this->notify_guard_conditions_) {
-      if (&guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
-        return true;
+    for (auto weak_guard_condition : this->notify_guard_conditions_) {
+      auto guard_condition = weak_guard_condition.lock();
+      if (guard_condition && &guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
+        any_ready = true;
       }
     }
   }
-  return false;
+  return any_ready;
 }
 
 void
@@ -79,52 +100,27 @@ ExecutorNotifyWaitable::take_data()
 }
 
 void
-ExecutorNotifyWaitable::add_guard_condition(const rclcpp::GuardCondition * guard_condition)
+ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition)
 {
-  if (guard_condition == nullptr) {
-    throw std::runtime_error("Attempting to add null guard condition.");
-  }
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  to_add_.push_back(guard_condition);
+  if (notify_guard_conditions_.count(guard_condition) == 0) {
+    notify_guard_conditions_.insert(guard_condition);
+  }
 }
 
 void
-ExecutorNotifyWaitable::remove_guard_condition(const rclcpp::GuardCondition * guard_condition)
+ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition)
 {
-  if (guard_condition == nullptr) {
-    throw std::runtime_error("Attempting to remove null guard condition.");
-  }
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  to_remove_.push_back(guard_condition);
+  if (notify_guard_conditions_.count(guard_condition) != 0) {
+    notify_guard_conditions_.erase(guard_condition);
+  }
 }
 
 size_t
 ExecutorNotifyWaitable::get_number_of_ready_guard_conditions()
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-
-  for (auto add_guard_condition : to_add_) {
-    auto guard_it = std::find(
-      notify_guard_conditions_.begin(),
-      notify_guard_conditions_.end(),
-      add_guard_condition);
-    if (guard_it == notify_guard_conditions_.end()) {
-      notify_guard_conditions_.push_back(add_guard_condition);
-    }
-  }
-  to_add_.clear();
-
-  for (auto remove_guard_condition : to_remove_) {
-    auto guard_it = std::find(
-      notify_guard_conditions_.begin(),
-      notify_guard_conditions_.end(),
-      remove_guard_condition);
-    if (guard_it != notify_guard_conditions_.end()) {
-      notify_guard_conditions_.erase(guard_it);
-    }
-  }
-  to_remove_.clear();
-
   return notify_guard_conditions_.size();
 }
 

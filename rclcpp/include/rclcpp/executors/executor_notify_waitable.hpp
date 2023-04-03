@@ -17,6 +17,7 @@
 
 #include <list>
 #include <memory>
+#include <set>
 
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/waitable.hpp"
@@ -33,6 +34,7 @@ class ExecutorNotifyWaitable : public rclcpp::Waitable
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ExecutorNotifyWaitable)
 
+
   // Constructor
   /**
    * \param[in] on_execute_callback Callback to execute when one of the conditions
@@ -44,6 +46,13 @@ public:
   // Destructor
   RCLCPP_PUBLIC
   ~ExecutorNotifyWaitable() override = default;
+
+  RCLCPP_PUBLIC
+  ExecutorNotifyWaitable(const ExecutorNotifyWaitable & other);
+
+
+  RCLCPP_PUBLIC
+  ExecutorNotifyWaitable & operator=(const ExecutorNotifyWaitable & other);
 
   /// Add conditions to the wait set
   /**
@@ -85,7 +94,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_guard_condition(const rclcpp::GuardCondition * guard_condition);
+  add_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition);
 
   /// Remove a guard condition from being waited on.
   /**
@@ -93,7 +102,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_guard_condition(const rclcpp::GuardCondition * guard_condition);
+  remove_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition);
 
   /// Get the number of ready guard_conditions
   /**
@@ -107,17 +116,11 @@ private:
   /// Callback to run when waitable executes
   std::function<void(void)> execute_callback_;
 
-  /// The collection of guard conditions to be waited on.
   std::mutex guard_condition_mutex_;
 
   /// The collection of guard conditions to be waited on.
-  std::list<const rclcpp::GuardCondition *> notify_guard_conditions_;
-
-  /// The collection of guard conditions to be waited on.
-  std::list<const rclcpp::GuardCondition *> to_add_;
-
-  /// The collection of guard conditions to be waited on.
-  std::list<const rclcpp::GuardCondition *> to_remove_;
+  std::set<rclcpp::GuardCondition::WeakPtr,
+    std::owner_less<rclcpp::GuardCondition::WeakPtr>> notify_guard_conditions_;
 };
 
 }  // namespace executors
