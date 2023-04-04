@@ -26,22 +26,18 @@ using rclcpp::NodeBuiltinExecutor;
 class NodeBuiltinExecutor::NodeBuiltinExecutorImpl
 {
 public:
-  RCLCPP_PUBLIC
   explicit NodeBuiltinExecutorImpl(
     node_interfaces::NodeBaseInterface::SharedPtr node_base,
     node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const NodeOptions & node_options);
 
-  RCLCPP_PUBLIC
   ~NodeBuiltinExecutorImpl();
 
 private:
-  RCLCPP_LOCAL
   void
   add_logger_services();
 
-  RCLCPP_LOCAL
   rclcpp::CallbackGroup::SharedPtr
   get_callback_group();
 
@@ -70,7 +66,9 @@ NodeBuiltinExecutor::NodeBuiltinExecutor(
       node_topics,
       node_services,
       node_options
-))
+    ), [](NodeBuiltinExecutorImpl * impl) {
+      delete impl;
+    })
 {}
 
 NodeBuiltinExecutor::NodeBuiltinExecutorImpl::NodeBuiltinExecutorImpl(

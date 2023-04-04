@@ -29,7 +29,7 @@ namespace rclcpp
 class NodeBuiltinExecutor
 {
 public:
-  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBuiltinExecutor)
+  RCLCPP_UNIQUE_PTR_DEFINITIONS(NodeBuiltinExecutor)
 
   RCLCPP_PUBLIC
   explicit NodeBuiltinExecutor(
@@ -44,7 +44,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeBuiltinExecutor)
   class NodeBuiltinExecutorImpl;
-  std::shared_ptr<NodeBuiltinExecutorImpl> impl_;
+  std::unique_ptr<NodeBuiltinExecutorImpl, std::function<void(NodeBuiltinExecutorImpl *)>> impl_;
 };
 
 }  // namespace rclcpp
