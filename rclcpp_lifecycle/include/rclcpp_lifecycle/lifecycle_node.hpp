@@ -63,6 +63,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_options.hpp"
+#include "rclcpp/node_builtin_executor.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
@@ -1078,14 +1079,16 @@ private:
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
+
+  rclcpp::NodeBuiltinExecutor::UniquePtr node_builtin_executor_;
 
   const rclcpp::NodeOptions node_options_;
 

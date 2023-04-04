@@ -34,6 +34,7 @@
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_builtin_executor.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
@@ -76,14 +77,10 @@ LifecycleNode::LifecycleNode(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(
-      node_base_,
-      node_services_,
-      options.enable_log_service()
-    )),
   node_clock_(new rclcpp::node_interfaces::NodeClock(
       node_base_,
       node_topics_,
@@ -118,6 +115,12 @@ LifecycleNode::LifecycleNode(
       options.use_clock_thread()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
+  node_builtin_executor_(new rclcpp::NodeBuiltinExecutor(
+      node_base_,
+      node_topics_,
+      node_services_,
+      options
+  )),
   node_options_(options),
   impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
 {
@@ -146,6 +149,7 @@ LifecycleNode::LifecycleNode(
 LifecycleNode::~LifecycleNode()
 {
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
+  node_builtin_executor_.reset();
   node_waitables_.reset();
   node_time_source_.reset();
   node_parameters_.reset();

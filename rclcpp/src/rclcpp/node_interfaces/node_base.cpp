@@ -140,11 +140,6 @@ NodeBase::NodeBase(
 
   // Indicate the notify_guard_condition is now valid.
   notify_guard_condition_is_valid_ = true;
-
-  // Create internal executor thread
-  rclcpp::ExecutorOptions exec_options;
-  exec_options.context = context_;
-  executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>(exec_options);
 }
 
 NodeBase::~NodeBase()
@@ -231,45 +226,6 @@ NodeBase::create_callback_group(
     this->trigger_notify_guard_condition();
   }
   return group;
-}
-
-RCLCPP_PUBLIC
-rclcpp::CallbackGroup::SharedPtr
-NodeBase::get_builtin_callback_group()
-{
-  if (!executor_callback_group_) {
-    executor_callback_group_ = create_callback_group(
-      rclcpp::CallbackGroupType::MutuallyExclusive,
-      false);
-    executor_->add_callback_group(executor_callback_group_, shared_from_this());
-  }
-  return executor_callback_group_;
-}
-
-RCLCPP_PUBLIC
-void
-NodeBase::start_builtin_executor_thread()
-{
-  if (!thread_.joinable()) {
-    executor_promise_ = std::promise<void>{};
-    thread_ = std::thread(
-      [this]() {
-        auto future = executor_promise_.get_future();
-        executor_->spin_until_future_complete(future);
-      }
-    );
-  }
-}
-
-RCLCPP_PUBLIC
-void
-NodeBase::stop_builtin_executor_thread()
-{
-  if (thread_.joinable()) {
-    executor_promise_.set_value();
-    executor_->cancel();
-    thread_.join();
-  }
 }
 
 rclcpp::CallbackGroup::SharedPtr

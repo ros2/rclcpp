@@ -25,7 +25,7 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
-#include "rclcpp/node_interfaces/node_base.hpp"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 
 
@@ -137,6 +137,10 @@ public:
   /// Set whether to use a separate clock thread or not
   RCLCPP_PUBLIC
   void set_use_clock_thread(bool use_clock_thread);
+
+  /// Check if the clock thread is joinable
+  RCLCPP_PUBLIC
+  bool clock_thread_is_joinable();
 
   /// TimeSource Destructor
   RCLCPP_PUBLIC
