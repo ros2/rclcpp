@@ -51,7 +51,7 @@ EventsExecutor::EventsExecutor(
     std::make_shared<rclcpp::experimental::TimersManager>(context_, timer_on_ready_cb);
 
   notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
-    [this](){
+    [this]() {
       // This callback is invoked when:
       // - the interrupt or shutdown guard condition is triggered:
       //    ---> we need to wake up the executor so that it can terminate
@@ -69,7 +69,7 @@ EventsExecutor::EventsExecutor(
 
   auto notify_waitable_entity_id = notify_waitable_.get();
   notify_waitable_->set_on_ready_callback(
-    [this, notify_waitable_entity_id](size_t num_events, int gen_entity_id){
+    [this, notify_waitable_entity_id](size_t num_events, int gen_entity_id) {
       // The notify waitable has a special callback.
       // We don't care about how many events as when we wake up the executor we are going to
       // process everything regardless.
@@ -85,10 +85,11 @@ EventsExecutor::EventsExecutor(
       this->events_queue_->enqueue(event);
     });
 
-  this->entities_collector_ = std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(
-    notify_waitable_);
+  this->entities_collector_ =
+    std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable_);
 
-  this->current_entities_collection_ = std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
+  this->current_entities_collection_ =
+    std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
 }
 
 EventsExecutor::~EventsExecutor()
@@ -385,75 +386,80 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   rclcpp::executors::ExecutorEntitiesCollection new_collection;
   rclcpp::executors::build_entities_collection(callback_groups, new_collection);
 
-  // TODO: this may be implemented in a better way.
+  // TODO(alsora): this may be implemented in a better way.
   // We need the notify waitable to be included in the executor "current_collection"
   // because we need to be able to retrieve events for it.
   // We could explicitly check for the notify waitable ID when we receive a waitable event
   // but I think that it's better if the waitable was in the collection and it could be
   // retrieved in the "standard" way.
-  // To do it, we need to add the notify waitable as an entry in both the new and current collections
-  // such that it's neither added or removed.
+  // To do it, we need to add the notify waitable as an entry in both the new and
+  // current collections such that it's neither added or removed.
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr;
   new_collection.waitables.insert(
-    {
-      this->notify_waitable_.get(),
-      {this->notify_waitable_, weak_group_ptr}
-    });
+  {
+    this->notify_waitable_.get(),
+    {this->notify_waitable_, weak_group_ptr}
+  });
 
   this->current_entities_collection_->waitables.insert(
-    {
-      this->notify_waitable_.get(),
-      {this->notify_waitable_, weak_group_ptr}
-    });
+  {
+    this->notify_waitable_.get(),
+    {this->notify_waitable_, weak_group_ptr}
+  });
 
   this->refresh_current_collection(new_collection);
 }
 
 void
-EventsExecutor::refresh_current_collection(const rclcpp::executors::ExecutorEntitiesCollection & new_collection)
+EventsExecutor::refresh_current_collection(
+  const rclcpp::executors::ExecutorEntitiesCollection & new_collection)
 {
-  current_entities_collection_->timers.update(new_collection.timers,
-    [this](rclcpp::TimerBase::SharedPtr timer){timers_manager_->add_timer(timer);},
-    [this](rclcpp::TimerBase::SharedPtr timer){timers_manager_->remove_timer(timer);});
+  current_entities_collection_->timers.update(
+    new_collection.timers,
+    [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->add_timer(timer);},
+    [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->remove_timer(timer);});
 
-  current_entities_collection_->subscriptions.update(new_collection.subscriptions,
-    [this](auto subscription){
+  current_entities_collection_->subscriptions.update(
+    new_collection.subscriptions,
+    [this](auto subscription) {
       subscription->set_on_new_message_callback(
         this->create_entity_callback(
           subscription->get_subscription_handle().get(), ExecutorEventType::SUBSCRIPTION_EVENT));
     },
-    [](auto subscription){subscription->clear_on_new_message_callback();});
+    [](auto subscription) {subscription->clear_on_new_message_callback();});
 
-  current_entities_collection_->clients.update(new_collection.clients,
-    [this](auto client){
+  current_entities_collection_->clients.update(
+    new_collection.clients,
+    [this](auto client) {
       client->set_on_new_response_callback(
         this->create_entity_callback(
           client->get_client_handle().get(), ExecutorEventType::CLIENT_EVENT));
     },
-    [](auto client){client->clear_on_new_response_callback();});
+    [](auto client) {client->clear_on_new_response_callback();});
 
-
-  current_entities_collection_->services.update(new_collection.services,
-    [this](auto service){
+  current_entities_collection_->services.update(
+    new_collection.services,
+    [this](auto service) {
       service->set_on_new_request_callback(
         this->create_entity_callback(
           service->get_service_handle().get(), ExecutorEventType::SERVICE_EVENT));
     },
-    [](auto service){service->clear_on_new_request_callback();});
+    [](auto service) {service->clear_on_new_request_callback();});
 
   // DO WE NEED THIS? WE ARE NOT DOING ANYTHING WITH GUARD CONDITIONS
   /*
   current_entities_collection_->guard_conditions.update(new_collection.guard_conditions,
-    [](auto guard_condition){(void)guard_condition;},
-    [](auto guard_condition){guard_condition->set_on_trigger_callback(nullptr);});
+    [](auto guard_condition) {(void)guard_condition;},
+    [](auto guard_condition) {guard_condition->set_on_trigger_callback(nullptr);});
   */
 
-  current_entities_collection_->waitables.update(new_collection.waitables,
-    [this](auto waitable){
+  current_entities_collection_->waitables.update(
+    new_collection.waitables,
+    [this](auto waitable) {
       waitable->set_on_ready_callback(
         this->create_waitable_callback(waitable.get()));
     },
-    [](auto waitable){waitable->clear_on_ready_callback();});
+    [](auto waitable) {waitable->clear_on_ready_callback();});
 }
 
 std::function<void(size_t)>

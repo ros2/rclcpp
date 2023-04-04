@@ -476,7 +476,7 @@ TEST_F(TestEventsExecutor, destroy_entities)
   spinner.join();
 }
 
-//Testing construction of a subscriptions with QoS event callback functions.
+// Testing construction of a subscriptions with QoS event callback functions.
 std::string * g_pub_log_msg;
 std::string * g_sub_log_msg;
 std::promise<void> * g_log_msgs_promise;

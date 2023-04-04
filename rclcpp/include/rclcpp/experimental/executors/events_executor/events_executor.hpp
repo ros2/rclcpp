@@ -247,7 +247,7 @@ private:
   retrieve_entity(typename CollectionType::Key entity_id, CollectionType & collection)
   {
     // Check if the entity_id is in the collection
-    auto it = collection.find(entity_id);    
+    auto it = collection.find(entity_id);
     if (it == collection.end()) {
       return nullptr;
     }
