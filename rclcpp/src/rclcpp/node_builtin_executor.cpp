@@ -14,7 +14,6 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node_builtin_executor.hpp"
-#include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
 
@@ -127,11 +126,10 @@ NodeBuiltinExecutor::NodeBuiltinExecutorImpl::add_logger_services()
       const std::shared_ptr<rcl_interfaces::srv::GetLoggerLevels::Request> request,
       std::shared_ptr<rcl_interfaces::srv::GetLoggerLevels::Response> response)
     {
-      int ret = 0;
       for (auto & name : request->names) {
         rcl_interfaces::msg::LoggerLevel logger_level;
         logger_level.name = name;
-        ret = rcutils_logging_get_logger_level(name.c_str());
+        auto ret = rcutils_logging_get_logger_level(name.c_str());
         if (ret < 0) {
           logger_level.level = 0;
         } else {
@@ -150,10 +148,9 @@ NodeBuiltinExecutor::NodeBuiltinExecutorImpl::add_logger_services()
       const std::shared_ptr<rcl_interfaces::srv::SetLoggerLevels::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetLoggerLevels::Response> response)
     {
-      int ret = 0;
-      auto result = rcl_interfaces::msg::SetLoggerLevelsResult();
+      rcl_interfaces::msg::SetLoggerLevelsResult result;
       for (auto & level : request->levels) {
-        ret = rcutils_logging_set_logger_level(level.name.c_str(), level.level);
+        auto ret = rcutils_logging_set_logger_level(level.name.c_str(), level.level);
         if (ret != RCUTILS_RET_OK) {
           result.successful = false;
           result.reason = rcutils_get_error_string().str;
