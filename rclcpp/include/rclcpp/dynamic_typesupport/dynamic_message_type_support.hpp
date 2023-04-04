@@ -43,7 +43,7 @@ namespace dynamic_typesupport
  *       support struct, instead of rcl_dynamic_message_type_support_handle_init,
  *       because this class will manage the lifetimes for you.
  *
- *       Do NOT call rcl_dynamic_message_type_support_handle_fini!!
+ *       Do NOT call rcl_dynamic_message_type_support_handle_destroy!!
  *
  * This class:
  * - Manages the lifetime of the raw pointer.
@@ -177,10 +177,6 @@ protected:
 private:
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport();
-
-  RCLCPP_PUBLIC
-  void
-  manage_rosidl_message_type_support_(rosidl_message_type_support_t * rosidl_message_type_support);
 
   RCLCPP_PUBLIC
   void

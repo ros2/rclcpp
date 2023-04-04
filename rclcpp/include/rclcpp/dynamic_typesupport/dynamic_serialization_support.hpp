@@ -46,9 +46,12 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(DynamicSerializationSupport)
 
   // CONSTRUCTION ==================================================================================
+  RCLCPP_PUBLIC
+  DynamicSerializationSupport();
+
   /// Get the rmw middleware implementation specific serialization support (configured by name)
   RCLCPP_PUBLIC
-  explicit DynamicSerializationSupport(const std::string & serialization_library_name = "");
+  explicit DynamicSerializationSupport(const std::string & serialization_library_name);
 
   /// Assume ownership of raw pointer
   RCLCPP_PUBLIC
@@ -97,10 +100,6 @@ protected:
   RCLCPP_DISABLE_COPY(DynamicSerializationSupport)
 
   std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> rosidl_serialization_support_;
-
-private:
-  RCLCPP_PUBLIC
-  DynamicSerializationSupport();
 };
 
 

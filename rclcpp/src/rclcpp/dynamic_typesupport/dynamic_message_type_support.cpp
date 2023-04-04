@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "rcl/allocator.h"
 #include "rcl/dynamic_message_type_support.h"
 #include "rcl/type_hash.h"
 #include "rcl/types.h"
@@ -76,9 +77,24 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
 
   // NOTE(methylDragon): Not technically const correct, but since it's a const void *,
   //                     we do it anyway...
-  auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
+  auto ts_impl = static_cast<const rosidl_dynamic_message_type_support_impl_t *>(ts->data);
 
-  manage_rosidl_message_type_support_(ts);
+  // NOTE(methylDragon): We don't destroy the rosidl_message_type_support->data since its members
+  //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
+  rosidl_message_type_support_.reset(
+    ts,
+    [](rosidl_message_type_support_t * ts) -> void {
+      auto ts_impl = static_cast<const rosidl_dynamic_message_type_support_impl_t *>(ts->data);
+      auto allocator = rcl_get_default_allocator();
+
+      // These are all C allocated
+      allocator.deallocate(ts_impl->type_hash, &allocator.state);
+      allocator.deallocate(
+        const_cast<rosidl_dynamic_message_type_support_impl_t *>(ts_impl), &allocator.state);
+      allocator.deallocate(ts, &allocator.state);
+    }
+  );
+
   manage_description_(ts_impl->type_description);
   serialization_support_ = DynamicSerializationSupport::make_shared(ts_impl->serialization_support);
 
@@ -136,9 +152,21 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     throw std::runtime_error("rosidl message type support is of the wrong type");
   }
 
-  auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
+  auto ts_impl = static_cast<const rosidl_dynamic_message_type_support_impl_t *>(ts->data);
 
-  manage_rosidl_message_type_support_(ts);
+  // NOTE(methylDragon): We don't finalize the rosidl_message_type_support->data since its members
+  //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
+  rosidl_message_type_support_.reset(
+    ts,
+    [](rosidl_message_type_support_t * ts) -> void {
+      auto ts_impl = static_cast<const rosidl_dynamic_message_type_support_impl_t *>(ts->data);
+
+      // These are allocated with new
+      delete ts_impl->type_hash;  // Only because we should've allocated it here
+      delete ts_impl;
+      delete ts;
+    }
+  );
   manage_description_(ts_impl->type_description);
 
   dynamic_message_type_ = DynamicMessageType::make_shared(
@@ -238,24 +266,6 @@ DynamicMessageTypeSupport::~DynamicMessageTypeSupport() {}
 
 
 void
-DynamicMessageTypeSupport::manage_rosidl_message_type_support_(
-  rosidl_message_type_support_t * rosidl_message_type_support)
-{
-  // NOTE(methylDragon): We don't finalize the rosidl_message_type_support->data since its members
-  //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
-  rosidl_message_type_support_.reset(
-    rosidl_message_type_support,
-    [](rosidl_message_type_support_t * ts) -> void {
-      auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
-      delete ts_impl->type_hash;  // Only because we should've allocated it here
-      delete ts_impl;
-      delete ts;
-    }
-  );
-}
-
-
-void
 DynamicMessageTypeSupport::manage_description_(
   rosidl_runtime_c__type_description__TypeDescription * description)
 {
@@ -299,16 +309,18 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     throw std::runtime_error("failed to get type hash");
   }
 
-  rmw_dynamic_message_type_support_impl_t * ts_impl = new rmw_dynamic_message_type_support_impl_t{
-    type_hash.get(),                                            // type_hash
-    description,                                                // type_description
-    nullptr,  // NOTE(methylDragon): Not supported for now      // type_description_sources
-    serialization_support->get_rosidl_serialization_support(),  // serialization_support
-    dynamic_message_type->get_rosidl_dynamic_type(),            // dynamic_message_type
-    dynamic_message->get_rosidl_dynamic_data()                  // dynamic_message
+  rosidl_dynamic_message_type_support_impl_t * ts_impl =
+    new rosidl_dynamic_message_type_support_impl_t {
+    type_hash.get(),                                              // type_hash
+    description,                                                  // type_description
+    nullptr,    // NOTE(methylDragon): Not supported for now      // type_description_sources
+    serialization_support->get_rosidl_serialization_support(),    // serialization_support
+    dynamic_message_type->get_rosidl_dynamic_type(),              // dynamic_message_type
+    dynamic_message->get_rosidl_dynamic_data()                    // dynamic_message
   };
   if (!ts_impl) {
-    throw std::runtime_error("Could not allocate rmw_dynamic_message_type_support_impl_t struct");
+    throw std::runtime_error(
+            "Could not allocate rosidl_dynamic_message_type_support_impl_t struct");
     return;
   }
 
@@ -320,15 +332,17 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
     ts_impl,                                              // data
     get_message_typesupport_handle_function,              // func
     // get_type_hash_func
-    rmw_dynamic_message_type_support_get_type_hash_function,
+    rosidl_get_dynamic_message_type_support_type_hash_function,
     // get_type_description_func
-    rmw_dynamic_message_type_support_get_type_description_function,
+    rosidl_get_dynamic_message_type_support_type_description_function,
     // get_type_description_sources_func
-    rmw_dynamic_message_type_support_get_type_description_sources_function
+    rosidl_get_dynamic_message_type_support_type_description_sources_function
   },
     [](rosidl_message_type_support_t * ts) -> void {
-      auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(ts->data);
-      delete ts_impl->type_hash;  // Only because we should've allocated it here
+      auto ts_impl = static_cast<const rosidl_dynamic_message_type_support_impl_t *>(ts->data);
+      auto allocator = rcl_get_default_allocator();
+      // Only because we should've allocated it here (also it's C allocated)
+      allocator.deallocate(ts_impl->type_hash, &allocator.state);
       delete ts_impl;
     }
   );

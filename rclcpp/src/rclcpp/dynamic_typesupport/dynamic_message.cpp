@@ -68,8 +68,7 @@ DynamicMessage::DynamicMessage(const DynamicMessageTypeBuilder::SharedPtr dynami
     rosidl_dynamic_data,
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
-      rosidl_dynamic_typesupport_dynamic_data_fini(rosidl_dynamic_data);
-      delete rosidl_dynamic_data;
+      rosidl_dynamic_typesupport_dynamic_data_destroy(rosidl_dynamic_data);
     });
 }
 
@@ -103,8 +102,7 @@ DynamicMessage::DynamicMessage(const DynamicMessageType::SharedPtr dynamic_type)
     rosidl_dynamic_data,
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
-      rosidl_dynamic_typesupport_dynamic_data_fini(rosidl_dynamic_data);
-      delete rosidl_dynamic_data;
+      rosidl_dynamic_typesupport_dynamic_data_destroy(rosidl_dynamic_data);
     });
 }
 
@@ -131,8 +129,7 @@ DynamicMessage::DynamicMessage(
     rosidl_dynamic_data,
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data)->void {
-      rosidl_dynamic_typesupport_dynamic_data_fini(rosidl_dynamic_data);
-      delete rosidl_dynamic_data;
+      rosidl_dynamic_typesupport_dynamic_data_destroy(rosidl_dynamic_data);
     });
 }
 

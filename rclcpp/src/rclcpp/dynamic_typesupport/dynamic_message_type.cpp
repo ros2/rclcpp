@@ -60,8 +60,7 @@ DynamicMessageType::DynamicMessageType(DynamicMessageTypeBuilder::SharedPtr dyna
     rosidl_dynamic_type,
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
-      rosidl_dynamic_typesupport_dynamic_type_fini(rosidl_dynamic_type);
-      delete rosidl_dynamic_type;
+      rosidl_dynamic_typesupport_dynamic_type_destroy(rosidl_dynamic_type);
     });
 }
 
@@ -85,8 +84,7 @@ DynamicMessageType::DynamicMessageType(
     rosidl_dynamic_type,
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
-      rosidl_dynamic_typesupport_dynamic_type_fini(rosidl_dynamic_type);
-      delete rosidl_dynamic_type;
+      rosidl_dynamic_typesupport_dynamic_type_destroy(rosidl_dynamic_type);
     });
 }
 
@@ -171,8 +169,7 @@ DynamicMessageType::init_from_description(
     rosidl_dynamic_type,
     // Custom deleter
     [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
-      rosidl_dynamic_typesupport_dynamic_type_fini(rosidl_dynamic_type);
-      delete rosidl_dynamic_type;
+      rosidl_dynamic_typesupport_dynamic_type_destroy(rosidl_dynamic_type);
     });
 }
 
