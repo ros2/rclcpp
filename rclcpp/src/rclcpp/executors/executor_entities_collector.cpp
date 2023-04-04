@@ -68,7 +68,8 @@ ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
   pending_manually_removed_groups_.clear();
 }
 
-bool ExecutorEntitiesCollector::has_pending()
+bool
+ExecutorEntitiesCollector::has_pending() const
 {
   std::lock_guard<std::mutex> pending_lock(pending_mutex_);
   return pending_manually_added_groups_.size() != 0 ||
@@ -172,7 +173,7 @@ ExecutorEntitiesCollector::remove_callback_group(rclcpp::CallbackGroup::SharedPt
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-ExecutorEntitiesCollector::get_all_callback_groups()
+ExecutorEntitiesCollector::get_all_callback_groups() const
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
 
@@ -186,7 +187,7 @@ ExecutorEntitiesCollector::get_all_callback_groups()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-ExecutorEntitiesCollector::get_manually_added_callback_groups()
+ExecutorEntitiesCollector::get_manually_added_callback_groups() const
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
   for (const auto & group_ptr : manually_added_groups_) {
@@ -196,7 +197,7 @@ ExecutorEntitiesCollector::get_manually_added_callback_groups()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-ExecutorEntitiesCollector::get_automatically_added_callback_groups()
+ExecutorEntitiesCollector::get_automatically_added_callback_groups() const
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
   for (auto const & group_ptr : automatically_added_groups_) {

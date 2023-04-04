@@ -15,9 +15,9 @@
 #ifndef RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTOR_HPP_
 #define RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
-#include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -58,9 +58,8 @@ class ExecutorEntitiesCollector
 public:
   /// Constructor
   /**
-   * \param[in] on_notify_waitable Callback to execute when one of the associated
-   *   nodes or callback groups trigger their guard condition, indicating that their
-   *   corresponding entities have changed.
+   * \param[in] notify_waitable Waitable that is used to signal to the executor
+   *   when nodes or callback groups have been added or removed.
    */
   RCLCPP_PUBLIC
   explicit ExecutorEntitiesCollector(
@@ -70,7 +69,11 @@ public:
   RCLCPP_PUBLIC
   ~ExecutorEntitiesCollector();
 
-  bool has_pending();
+  /// Indicate if the entities collector has pending additions or removals.
+  /**
+   * \return true if there are pending additions or removals
+   */
+  bool has_pending() const;
 
   /// Add a node to the entity collector
   /**
@@ -90,15 +93,6 @@ public:
   RCLCPP_PUBLIC
   void
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
-
-  /// Check if a node is associated with this executor/collector.
-  /**
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \return true if the node is tracked in this collector, false otherwise
-   */
-  RCLCPP_PUBLIC
-  bool
-  has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
   /// Add a callback group to the entity collector
   /**
@@ -126,7 +120,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_all_callback_groups();
+  get_all_callback_groups() const;
 
   /// Get manually-added callback groups known to this entity collector
   /**
@@ -135,7 +129,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_manually_added_callback_groups();
+  get_manually_added_callback_groups() const;
 
   /// Get automatically-added callback groups known to this entity collector
   /**
@@ -144,12 +138,12 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_automatically_added_callback_groups();
+  get_automatically_added_callback_groups() const;
 
   /// Update the underlying collections
   /**
    * This will prune nodes and callback groups that are no longer valid as well
-   * as adding new callback groups from any associated nodes.
+   * as add new callback groups from any associated nodes.
    */
   RCLCPP_PUBLIC
   void
@@ -190,7 +184,7 @@ protected:
   NodeCollection::iterator
   remove_weak_node(NodeCollection::iterator weak_node);
 
-  /// Implementation of removing a callback gruop from the collector.
+  /// Implementation of removing a callback group from the collector.
   /**
    * This will disassociate the callback group from the collector
    *
@@ -248,6 +242,9 @@ protected:
   void
   prune_invalid_nodes_and_groups();
 
+  /// mutex to protect pending queues
+  mutable std::mutex pending_mutex_;
+
   /// Callback groups that were added via `add_callback_group`
   CallbackGroupCollection manually_added_groups_;
 
@@ -257,8 +254,11 @@ protected:
   /// nodes that are associated with the executor
   NodeCollection weak_nodes_;
 
-  /// mutex to protect pending queues
-  std::mutex pending_mutex_;
+  /// Track guard conditions associated with added nodes
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+
+  /// Track guard conditions associated with added callback groups
+  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_;
 
   /// nodes that have been added since the last update.
   NodeCollection pending_added_nodes_;
@@ -271,12 +271,6 @@ protected:
 
   /// callback groups that have been removed since the last update.
   CallbackGroupCollection pending_manually_removed_groups_;
-
-  /// Track guard conditions associated with added nodes
-  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
-
-  /// Track guard conditions associated with added callback groups
-  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_;
 
   /// Waitable to add guard conditions to
   std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_;

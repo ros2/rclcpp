@@ -104,24 +104,23 @@ void check_ready(
   typename EntityCollectionType::EntitySharedPtr &)> fill_executable)
 {
   for (size_t ii = 0; ii < size_of_waited_entities; ++ii) {
-    if (waited_entities[ii]) {
-      auto entity_iter = collection.find(waited_entities[ii]);
-      if (entity_iter != collection.end()) {
-        auto entity = entity_iter->second.entity.lock();
-        if (!entity) {
-          continue;
-        }
+    if (!waited_entities[ii]) {continue;}
+    auto entity_iter = collection.find(waited_entities[ii]);
+    if (entity_iter != collection.end()) {
+      auto entity = entity_iter->second.entity.lock();
+      if (!entity) {
+        continue;
+      }
 
-        auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from().load()) {
-          continue;
-        }
-        rclcpp::AnyExecutable exec;
+      auto callback_group = entity_iter->second.callback_group.lock();
+      if (callback_group && !callback_group->can_be_taken_from().load()) {
+        continue;
+      }
+      rclcpp::AnyExecutable exec;
 
-        exec.callback_group = callback_group;
-        if (fill_executable(exec, entity)) {
-          executables.push_back(exec);
-        }
+      exec.callback_group = callback_group;
+      if (fill_executable(exec, entity)) {
+        executables.push_back(exec);
       }
     }
   }
