@@ -56,8 +56,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/dynamic_typesupport/dynamic_serialization_support.cpp
   src/rclcpp/event.cpp
   src/rclcpp/exceptions/exceptions.cpp
-  src/rclcpp/experimental/executors/events_executor/events_executor.cpp
-  src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
@@ -69,6 +67,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
+  src/rclcpp/experimental/executors/events_executor/events_executor.cpp
+  src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/future_return_code.cpp
   src/rclcpp/generic_publisher.cpp
   src/rclcpp/generic_subscription.cpp
