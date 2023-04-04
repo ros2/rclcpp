@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "rcl/rcl_dynamic_typesupport_c/message_introspection.h"
+#include "rcl/dynamic_message_type_support.h"
 #include "rcl/type_hash.h"
 #include "rcl/types.h"
 #include "rcutils/logging_macros.h"
@@ -70,7 +70,7 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   if (!ts->data) {
     throw std::runtime_error("could not init rosidl message type support impl");
   }
-  if (ts->typesupport_identifier != rmw_dynamic_typesupport_c__identifier) {
+  if (ts->typesupport_identifier != rmw_get_dynamic_typesupport_identifier()) {
     throw std::runtime_error("rosidl message type support is of the wrong type");
   }
 
@@ -132,7 +132,7 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   if (!ts->data) {
     throw std::runtime_error("could not init rosidl message type support impl");
   }
-  if (ts->typesupport_identifier != rmw_dynamic_typesupport_c__identifier) {
+  if (ts->typesupport_identifier != rmw_get_dynamic_typesupport_identifier()) {
     throw std::runtime_error("rosidl message type support is of the wrong type");
   }
 
@@ -316,10 +316,10 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
   rosidl_message_type_support_.reset(
     new rosidl_message_type_support_t{
-    rmw_dynamic_typesupport_c__identifier,                // typesupport_identifier
+    rmw_get_dynamic_typesupport_identifier(),             // typesupport_identifier
     ts_impl,                                              // data
     get_message_typesupport_handle_function,              // func
-     // get_type_hash_func
+    // get_type_hash_func
     rmw_dynamic_message_type_support_get_type_hash_function,
     // get_type_description_func
     rmw_dynamic_message_type_support_get_type_description_function,

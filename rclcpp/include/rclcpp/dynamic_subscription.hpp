@@ -80,7 +80,7 @@ public:
     }
 
     if (type_support->get_rosidl_message_type_support()->typesupport_identifier !=
-      rmw_dynamic_typesupport_c__identifier)
+      rmw_get_dynamic_typesupport_identifier())
     {
       throw std::runtime_error(
               "DynamicSubscription must use dynamic type introspection type support!");
