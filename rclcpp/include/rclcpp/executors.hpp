@@ -20,6 +20,7 @@
 
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/executors/static_single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -49,9 +50,6 @@ spin(rclcpp::Node::SharedPtr node_ptr);
 
 namespace executors
 {
-
-using rclcpp::executors::MultiThreadedExecutor;
-using rclcpp::executors::SingleThreadedExecutor;
 
 /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
 /**

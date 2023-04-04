@@ -193,6 +193,7 @@ ready_executables(
       rclcpp::AnyExecutable exec;
       exec.waitable = waitable;
       exec.callback_group = group;
+      exec.data = waitable->take_data();
       ret.push_back(exec);
     }
   }

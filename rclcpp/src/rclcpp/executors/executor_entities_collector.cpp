@@ -105,7 +105,8 @@ void
 ExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
-  if (!node_ptr->get_associated_with_executor_atomic().load()) {
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+  if (!has_executor.exchange(false)) {
     throw std::runtime_error(
             std::string("Node '") + node_ptr->get_fully_qualified_name() +
             "' needs to be associated with an executor.");
@@ -338,7 +339,7 @@ ExecutorEntitiesCollector::process_queues()
         remove_weak_callback_group(group_it, manually_added_groups_);
       } else {
         throw std::runtime_error(
-          "Attempting to remove a callback group not added to this executor.");
+                "Attempting to remove a callback group not added to this executor.");
       }
     }
   }

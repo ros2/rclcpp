@@ -553,7 +553,7 @@ protected:
   rclcpp::executors::ExecutorEntitiesCollection current_collection_;
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> current_notify_waitable_;
 
-  std::shared_ptr<rclcpp::WaitSet> wait_set_;
+  rclcpp::WaitSet wait_set_;
   std::deque<rclcpp::AnyExecutable> ready_executables_;
 
   /// shutdown callback handle registered to Context

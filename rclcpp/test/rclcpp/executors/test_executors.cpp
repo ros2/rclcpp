@@ -130,7 +130,6 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
   {
     ExecutorType executor;
     executor.add_node(this->node);
-    std::cout << "here" << std::endl;
   }
   {
     ExecutorType executor;

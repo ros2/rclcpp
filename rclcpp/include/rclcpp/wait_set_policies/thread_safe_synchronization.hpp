@@ -279,11 +279,9 @@ protected:
         // storage wait sets since they cannot be changed after construction.
         // This will also clear the wait set and re-add all the entities, which
         // prepares it to be waited on again.
-        std::cout << "rebuild_rcl_wait_set" << std::endl;
         rebuild_rcl_wait_set();
       }
 
-      std::cout << "get_rcl_wait_set" << std::endl;
       rcl_wait_set_t & rcl_wait_set = get_rcl_wait_set();
 
       // Wait unconditionally until timeout condition occurs since we assume
@@ -299,7 +297,6 @@ protected:
       // It is ok to wait while not having the lock acquired, because the state
       // in the rcl wait set will not be updated until this method calls
       // rebuild_rcl_wait_set().
-      std::cout << "rcl_wait" << std::endl;
       rcl_ret_t ret = rcl_wait(&rcl_wait_set, time_left_to_wait_ns.count());
       if (RCL_RET_OK == ret) {
         // Something has become ready in the wait set, first check if it was
