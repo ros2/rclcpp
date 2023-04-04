@@ -18,7 +18,6 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
-#include <queue>
 #include <vector>
 
 #include "rclcpp/executor.hpp"
@@ -184,6 +183,10 @@ public:
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     bool notify = true) override;
 
+  /// Get callback groups that belong to executor.
+  /**
+   * \sa rclcpp::Executor::get_all_callback_groups()
+   */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_all_callback_groups() override;
@@ -205,10 +208,12 @@ public:
   get_automatically_added_callback_groups_from_nodes() override;
 
 protected:
+  /// Internal implementation of spin_once
   RCLCPP_PUBLIC
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
 
+  /// Internal implementation of spin_some
   RCLCPP_PUBLIC
   void
   spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
@@ -216,49 +221,59 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
-  // Execute a single event
+  /// Execute a provided executor event if its associated entities are available
   void
   execute_event(const ExecutorEvent & event);
 
+  /// Collect entities from callback groups and refresh the current collection with them
   void
   refresh_current_collection_from_callback_groups();
 
+  /// Refresh the current collection using the provided new_collection
   void
   refresh_current_collection(const rclcpp::executors::ExecutorEntitiesCollection & new_collection);
 
+  /// Create a listener callback function for the provided entity
   std::function<void(size_t)>
   create_entity_callback(void * exec_entity_id, ExecutorEventType type);
 
+  /// Create a listener callback function for the provided waitable entity
   std::function<void(size_t, int)>
   create_waitable_callback(void * waitable_id);
 
+  /// Searches for the provided entity_id in the collection and returns the entity if valid
   template<typename CollectionType>
   typename CollectionType::EntitySharedPtr
   retrieve_entity(typename CollectionType::Key entity_id, CollectionType & collection)
   {
+    // Check if the entity_id is in the collection
     auto it = collection.find(entity_id);    
     if (it == collection.end()) {
       return nullptr;
     }
 
+    // Check if the entity associated with the entity_id is valid
+    // and remove it from the collection if it isn't
     auto entity = it->second.entity.lock();
     if (!entity) {
       collection.erase(it);
     }
 
+    // Return the retrieved entity (this can be a nullptr if the entity was not valid)
     return entity;
   }
 
-  // Queue where entities can push events
+  /// Queue where entities can push events
   rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue_;
 
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollector> entities_collector_;
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
+  /// Flag used to reduce the number of unnecessary waitable events
   std::atomic<bool> notify_waitable_event_pushed_ {false};
 
-  // Timers manager
+  /// Timers manager used to track and/or execute associated timers
   std::shared_ptr<rclcpp::experimental::TimersManager> timers_manager_;
 };
 

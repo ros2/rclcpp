@@ -15,14 +15,10 @@
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 
 #include <memory>
-#include <queue>
-#include <string>
 #include <utility>
 #include <vector>
 
 #include "rcpputils/scope_exit.hpp"
-
-#include "rclcpp/exceptions/exceptions.hpp"
 
 using namespace std::chrono_literals;
 
@@ -41,6 +37,9 @@ EventsExecutor::EventsExecutor(
   events_queue_ = std::move(events_queue);
 
   // Create timers manager
+  // The timers manager can be used either to only track timers (in this case an expired
+  // timer will generate an executor event and then it will be executed by the executor thread)
+  // or it can also take care of executing expired timers in its dedicated thread.
   std::function<void(void *)> timer_on_ready_cb = nullptr;
   if (execute_timers_separate_thread) {
     timer_on_ready_cb = [this](const void * timer_id) {
@@ -386,6 +385,14 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   rclcpp::executors::ExecutorEntitiesCollection new_collection;
   rclcpp::executors::build_entities_collection(callback_groups, new_collection);
 
+  // TODO: this may be implemented in a better way.
+  // We need the notify waitable to be included in the executor "current_collection"
+  // because we need to be able to retrieve events for it.
+  // We could explicitly check for the notify waitable ID when we receive a waitable event
+  // but I think that it's better if the waitable was in the collection and it could be
+  // retrieved in the "standard" way.
+  // To do it, we need to add the notify waitable as an entry in both the new and current collections
+  // such that it's neither added or removed.
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr;
   new_collection.waitables.insert(
     {

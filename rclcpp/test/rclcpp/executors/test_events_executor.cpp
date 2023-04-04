@@ -188,8 +188,6 @@ TEST_F(TestEventsExecutor, spin_once_max_duration_timeout)
   EXPECT_TRUE(std::chrono::steady_clock::now() - start < 200ms);
 }
 
-// FIX THIS TEST! The entities collector is being called too many times!
-/*
 TEST_F(TestEventsExecutor, spin_once_max_duration_timer)
 {
   // rmw_connextdds doesn't support events-executor
@@ -225,7 +223,6 @@ TEST_F(TestEventsExecutor, spin_once_max_duration_timer)
   EXPECT_EQ(1u, t_runs);
   EXPECT_TRUE(std::chrono::steady_clock::now() - start < 200ms);
 }
-*/
 
 TEST_F(TestEventsExecutor, spin_some_max_duration)
 {
