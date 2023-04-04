@@ -56,6 +56,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/dynamic_typesupport/dynamic_serialization_support.cpp
   src/rclcpp/event.cpp
   src/rclcpp/exceptions/exceptions.cpp
+  src/rclcpp/experimental/executors/events_executor/events_executor.cpp
+  src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp

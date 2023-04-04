@@ -92,7 +92,8 @@ using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
+  rclcpp::executors::StaticSingleThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
 
 class ExecutorTypeNames
 {
@@ -113,6 +114,10 @@ public:
       return "StaticSingleThreadedExecutor";
     }
 
+    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
+      return "EventsExecutor";
+    }
+
     return "";
   }
 };
@@ -126,12 +131,22 @@ TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor>;
+  rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
 TYPED_TEST_SUITE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
-TYPED_TEST(TestExecutors, detachOnDestruction) {
+TYPED_TEST(TestExecutors, detachOnDestruction)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   {
     ExecutorType executor;
     executor.add_node(this->node);
@@ -145,8 +160,17 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
 // Make sure that the executor can automatically remove expired nodes correctly
 // Currently fails for StaticSingleThreadedExecutor so it is being skipped, see:
 // https://github.com/ros2/rclcpp/issues/1231
-TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
+TYPED_TEST(TestExecutorsStable, addTemporaryNode)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
 
   {
@@ -163,9 +187,37 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   spinner.join();
 }
 
-// Check executor throws properly if the same node is added a second time
-TYPED_TEST(TestExecutors, addNodeTwoExecutors) {
+// Make sure that a spinning empty executor can be cancelled
+TYPED_TEST(TestExecutors, emptyExecutor)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  ExecutorType executor;
+  std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+  std::this_thread::sleep_for(50ms);
+  executor.cancel();
+  spinner.join();
+}
+
+// Check executor throws properly if the same node is added a second time
+TYPED_TEST(TestExecutors, addNodeTwoExecutors)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor1;
   ExecutorType executor2;
   EXPECT_NO_THROW(executor1.add_node(this->node));
@@ -174,8 +226,17 @@ TYPED_TEST(TestExecutors, addNodeTwoExecutors) {
 }
 
 // Check simple spin example
-TYPED_TEST(TestExecutors, spinWithTimer) {
+TYPED_TEST(TestExecutors, spinWithTimer)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
 
   bool timer_completed = false;
@@ -196,8 +257,17 @@ TYPED_TEST(TestExecutors, spinWithTimer) {
   executor.remove_node(this->node, true);
 }
 
-TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
+TYPED_TEST(TestExecutors, spinWhileAlreadySpinning)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   executor.add_node(this->node);
 
@@ -222,8 +292,17 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
 }
 
 // Check executor exits immediately if future is complete.
-TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
+TYPED_TEST(TestExecutors, testSpinUntilFutureComplete)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   executor.add_node(this->node);
 
@@ -244,8 +323,17 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
 }
 
 // Same test, but uses a shared future.
-TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
+TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   executor.add_node(this->node);
 
@@ -267,8 +355,17 @@ TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
 }
 
 // For a longer running future that should require several iterations of spin_once
-TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
+TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   executor.add_node(this->node);
 
@@ -313,8 +410,17 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
 }
 
 // Check spin_until_future_complete timeout works as expected
-TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
+TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   executor.add_node(this->node);
 
@@ -380,12 +486,34 @@ public:
     return nullptr;
   }
 
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override
+  {
+    (void) id;
+    return nullptr;
+  }
+
   void
   execute(std::shared_ptr<void> & data) override
   {
     (void) data;
     count_++;
     std::this_thread::sleep_for(3ms);
+  }
+
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override
+  {
+    auto gc_callback = [callback](size_t count) {
+        callback(count, 0);
+      };
+    gc_.set_on_trigger_callback(gc_callback);
+  }
+
+  void
+  clear_on_ready_callback() override
+  {
+    gc_.set_on_trigger_callback(nullptr);
   }
 
   size_t
@@ -402,8 +530,17 @@ private:
   rclcpp::GuardCondition gc_;
 };
 
-TYPED_TEST(TestExecutors, spinAll) {
+TYPED_TEST(TestExecutors, spinAll)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   auto waitable_interfaces = this->node->get_node_waitables_interface();
   auto my_waitable = std::make_shared<TestWaitable>();
@@ -443,8 +580,17 @@ TYPED_TEST(TestExecutors, spinAll) {
   spinner.join();
 }
 
-TYPED_TEST(TestExecutors, spinSome) {
+TYPED_TEST(TestExecutors, spinSome)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   auto waitable_interfaces = this->node->get_node_waitables_interface();
   auto my_waitable = std::make_shared<TestWaitable>();
@@ -472,8 +618,9 @@ TYPED_TEST(TestExecutors, spinSome) {
     this->publisher->publish(test_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
   }
-
-  EXPECT_EQ(1u, my_waitable->get_count());
+  // The count of "execute" depends on whether the executor starts spinning before (1) or after (0)
+  // the first iteration of the while loop
+  EXPECT_LE(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
   EXPECT_TRUE(spin_exited);
   // Cancel if it hasn't exited already.
@@ -483,8 +630,17 @@ TYPED_TEST(TestExecutors, spinSome) {
 }
 
 // Check spin_node_until_future_complete with node base pointer
-TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodeBasePtr) {
+TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodeBasePtr)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
 
   std::promise<bool> promise;
@@ -498,8 +654,17 @@ TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodeBasePtr) {
 }
 
 // Check spin_node_until_future_complete with node pointer
-TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodePtr) {
+TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodePtr)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
 
   std::promise<bool> promise;
@@ -513,8 +678,17 @@ TYPED_TEST(TestExecutors, testSpinNodeUntilFutureCompleteNodePtr) {
 }
 
 // Check spin_until_future_complete can be properly interrupted.
-TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
+TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted)
+{
   using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
   executor.add_node(this->node);
 
@@ -556,7 +730,8 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
 }
 
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)
-TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
+TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr)
+{
   rclcpp::init(0, nullptr);
 
   {
@@ -576,7 +751,8 @@ TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr) {
 }
 
 // Check spin_until_future_complete with node pointer (instantiates its own executor)
-TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr) {
+TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr)
+{
   rclcpp::init(0, nullptr);
 
   {
