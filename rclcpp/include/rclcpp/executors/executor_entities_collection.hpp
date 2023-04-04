@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTION_HPP_
 
 #include <deque>
+#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -67,8 +68,8 @@ template<typename CollectionType>
 void update_entities(
   const CollectionType & update_from,
   CollectionType & update_to,
-  std::function<void(typename CollectionType::EntitySharedPtr)> on_added,
-  std::function<void(typename CollectionType::EntitySharedPtr)> on_removed
+  std::function<void(const typename CollectionType::EntitySharedPtr &)> on_added,
+  std::function<void(const typename CollectionType::EntitySharedPtr &)> on_removed
 )
 {
   for (auto it = update_to.begin(); it != update_to.end(); ) {
@@ -119,8 +120,8 @@ public:
    */
   void update(
     const EntityCollection<EntityKeyType, EntityValueType> & other,
-    std::function<void(EntitySharedPtr)> on_added,
-    std::function<void(EntitySharedPtr)> on_removed)
+    std::function<void(const EntitySharedPtr &)> on_added,
+    std::function<void(const EntitySharedPtr &)> on_removed)
   {
     update_entities(other, *this, on_added, on_removed);
   }

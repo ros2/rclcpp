@@ -15,9 +15,9 @@
 #ifndef RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTOR_HPP_
 #define RCLCPP__EXECUTORS__EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
-#include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -58,9 +58,8 @@ class ExecutorEntitiesCollector
 public:
   /// Constructor
   /**
-   * \param[in] on_notify_waitable Callback to execute when one of the associated
-   *   nodes or callback groups trigger their guard condition, indicating that their
-   *   corresponding entities have changed.
+   * \param[in] notify_waitable Waitable that is used to signal to the executor
+   *   when nodes or callback groups have been added or removed.
    */
   RCLCPP_PUBLIC
   explicit ExecutorEntitiesCollector(
@@ -70,7 +69,11 @@ public:
   RCLCPP_PUBLIC
   ~ExecutorEntitiesCollector();
 
-  bool has_pending();
+  /// Indicate if the entities collector has pending additions or removals.
+  /**
+   * \return true if there are pending additions or removals
+   */
+  bool has_pending() const;
 
   /// Add a node to the entity collector
   /**
@@ -90,15 +93,6 @@ public:
   RCLCPP_PUBLIC
   void
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
-
-  /// Check if a node is associated with this executor/collector.
-  /**
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \return true if the node is tracked in this collector, false otherwise
-   */
-  RCLCPP_PUBLIC
-  bool
-  has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
   /// Add a callback group to the entity collector
   /**
@@ -126,7 +120,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_all_callback_groups();
+  get_all_callback_groups() const;
 
   /// Get manually-added callback groups known to this entity collector
   /**
@@ -135,7 +129,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_manually_added_callback_groups();
+  get_manually_added_callback_groups() const;
 
   /// Get automatically-added callback groups known to this entity collector
   /**
@@ -144,12 +138,12 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_automatically_added_callback_groups();
+  get_automatically_added_callback_groups() const;
 
   /// Update the underlying collections
   /**
    * This will prune nodes and callback groups that are no longer valid as well
-   * as adding new callback groups from any associated nodes.
+   * as add new callback groups from any associated nodes.
    */
   RCLCPP_PUBLIC
   void
@@ -188,9 +182,9 @@ protected:
    */
   RCLCPP_PUBLIC
   NodeCollection::iterator
-  remove_weak_node(NodeCollection::iterator weak_node);
+  remove_weak_node(NodeCollection::iterator weak_node) RCPPUTILS_TSA_REQUIRES(mutex_);
 
-  /// Implementation of removing a callback gruop from the collector.
+  /// Implementation of removing a callback group from the collector.
   /**
    * This will disassociate the callback group from the collector
    *
@@ -207,7 +201,7 @@ protected:
   CallbackGroupCollection::iterator
   remove_weak_callback_group(
     CallbackGroupCollection::iterator weak_group_it,
-    CallbackGroupCollection & collection);
+    CallbackGroupCollection & collection) RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Implementation of adding a callback group
   /**
@@ -218,65 +212,54 @@ protected:
   void
   add_callback_group_to_collection(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
-    CallbackGroupCollection & collection);
-
-  /// Implementation of removing a callback group
-  /**
-   * \param[in] group_ptr the group to remove
-   * \param[in] collection the collection to remove the group from
-   */
-  RCLCPP_PUBLIC
-  void
-  remove_callback_group_from_collection(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    CallbackGroupCollection & collection);
+    CallbackGroupCollection & collection)  RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Iterate over queued added/remove nodes and callback_groups
   RCLCPP_PUBLIC
   void
-  process_queues();
+  process_queues() RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Check a collection of nodes and add any new callback_groups that
   /// are set to be automatically associated via the node.
   RCLCPP_PUBLIC
   void
   add_automatically_associated_callback_groups(
-    const NodeCollection & nodes_to_check);
+    const NodeCollection & nodes_to_check) RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Check all nodes and group for expired weak pointers and remove them.
   RCLCPP_PUBLIC
   void
-  prune_invalid_nodes_and_groups();
+  prune_invalid_nodes_and_groups() RCPPUTILS_TSA_REQUIRES(mutex_);
+
+  /// mutex to protect collections and pending queues
+  mutable std::mutex mutex_;
 
   /// Callback groups that were added via `add_callback_group`
-  CallbackGroupCollection manually_added_groups_;
+  CallbackGroupCollection manually_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Callback groups that were added by their association with added nodes
-  CallbackGroupCollection automatically_added_groups_;
+  CallbackGroupCollection automatically_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// nodes that are associated with the executor
-  NodeCollection weak_nodes_;
-
-  /// mutex to protect pending queues
-  std::mutex pending_mutex_;
-
-  /// nodes that have been added since the last update.
-  NodeCollection pending_added_nodes_;
-
-  /// nodes that have been removed since the last update.
-  NodeCollection pending_removed_nodes_;
-
-  /// callback groups that have been added since the last update.
-  CallbackGroupCollection pending_manually_added_groups_;
-
-  /// callback groups that have been removed since the last update.
-  CallbackGroupCollection pending_manually_removed_groups_;
+  NodeCollection weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Track guard conditions associated with added nodes
-  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Track guard conditions associated with added callback groups
-  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_;
+  WeakGroupsToGuardConditionsMap weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// nodes that have been added since the last update.
+  NodeCollection pending_added_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// nodes that have been removed since the last update.
+  NodeCollection pending_removed_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// callback groups that have been added since the last update.
+  CallbackGroupCollection pending_manually_added_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// callback groups that have been removed since the last update.
+  CallbackGroupCollection pending_manually_removed_groups_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Waitable to add guard conditions to
   std::shared_ptr<ExecutorNotifyWaitable> notify_waitable_;

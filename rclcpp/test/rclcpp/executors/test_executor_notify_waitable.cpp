@@ -61,8 +61,9 @@ TEST_F(TestExecutorNotifyWaitable, add_remove_guard_conditions) {
     std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(on_execute_callback);
 
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-  auto notify_guard_condition = node->get_node_base_interface()->get_notify_guard_condition();
+  auto notify_guard_condition =
 
+    node->get_node_base_interface()->get_shared_notify_guard_condition();
   EXPECT_NO_THROW(waitable->add_guard_condition(notify_guard_condition));
   EXPECT_NO_THROW(waitable->remove_guard_condition(notify_guard_condition));
 }
@@ -75,7 +76,8 @@ TEST_F(TestExecutorNotifyWaitable, wait) {
     std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(on_execute_callback);
 
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-  auto notify_guard_condition = node->get_node_base_interface()->get_notify_guard_condition();
+  auto notify_guard_condition =
+    node->get_node_base_interface()->get_shared_notify_guard_condition();
   EXPECT_NO_THROW(waitable->add_guard_condition(notify_guard_condition));
 
   auto default_cbg = node->get_node_base_interface()->get_default_callback_group();

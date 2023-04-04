@@ -15,8 +15,9 @@
 #ifndef RCLCPP__EXECUTORS__EXECUTOR_NOTIFY_WAITABLE_HPP_
 #define RCLCPP__EXECUTORS__EXECUTOR_NOTIFY_WAITABLE_HPP_
 
-#include <list>
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
 
 #include "rclcpp/guard_condition.hpp"
