@@ -27,7 +27,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/node_builtin_executor.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
@@ -168,7 +167,7 @@ Node::Node(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_)),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
@@ -208,12 +207,6 @@ Node::Node(
       options.use_clock_thread()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
-  node_builtin_executor_(new rclcpp::NodeBuiltinExecutor(
-      node_base_,
-      node_topics_,
-      node_services_,
-      options
-    )),
   node_options_(options),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
@@ -232,6 +225,10 @@ Node::Node(
     node_topics_->resolve_topic_name("/parameter_events"),
     options.parameter_event_qos(),
     rclcpp::detail::PublisherQosParametersTraits{});
+
+  if (options.enable_logger_service()) {
+    node_logging_->create_logger_services(node_services_);
+  }
 }
 
 Node::Node(
@@ -275,7 +272,6 @@ Node::Node(
 Node::~Node()
 {
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
-  node_builtin_executor_.reset();
   node_waitables_.reset();
   node_time_source_.reset();
   node_parameters_.reset();
