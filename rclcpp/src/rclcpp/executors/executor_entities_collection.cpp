@@ -94,93 +94,106 @@ build_entities_collection(
   }
 }
 
-template<typename EntityCollectionType>
-void check_ready(
-  EntityCollectionType & collection,
-  std::deque<rclcpp::AnyExecutable> & executables,
-  size_t size_of_waited_entities,
-  typename EntityCollectionType::Key * waited_entities,
-  std::function<bool(rclcpp::AnyExecutable &,
-  typename EntityCollectionType::EntitySharedPtr &)> fill_executable)
+size_t
+ready_executables(
+  const ExecutorEntitiesCollection & collection,
+  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
+  std::deque<rclcpp::AnyExecutable> & executables
+)
 {
-  for (size_t ii = 0; ii < size_of_waited_entities; ++ii) {
-    if (!waited_entities[ii]) {continue;}
-    auto entity_iter = collection.find(waited_entities[ii]);
-    if (entity_iter != collection.end()) {
+  if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
+    return 0;
+  }
+
+  size_t added = 0;
+  auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
+
+  for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
+    if (!rcl_wait_set.timers[ii]) {continue;}
+    auto entity_iter = collection.timers.find(rcl_wait_set.timers[ii]);
+    if (entity_iter != collection.timers.end()) {
       auto entity = entity_iter->second.entity.lock();
       if (!entity) {
         continue;
       }
-
       auto callback_group = entity_iter->second.callback_group.lock();
       if (callback_group && !callback_group->can_be_taken_from().load()) {
         continue;
       }
-      rclcpp::AnyExecutable exec;
-
-      exec.callback_group = callback_group;
-      if (fill_executable(exec, entity)) {
-        executables.push_back(exec);
+      if (!entity->call()) {
+        continue;
       }
+
+      rclcpp::AnyExecutable exec;
+      exec.timer = entity;
+      exec.callback_group = callback_group;
+      executables.push_back(exec);
+      added++;
     }
   }
-}
 
-std::deque<rclcpp::AnyExecutable>
-ready_executables(
-  const ExecutorEntitiesCollection & collection,
-  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result
-)
-{
-  std::deque<rclcpp::AnyExecutable> ret;
-
-  if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
-    return ret;
-  }
-  auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
-  check_ready(
-    collection.timers,
-    ret,
-    rcl_wait_set.size_of_timers,
-    rcl_wait_set.timers,
-    [](rclcpp::AnyExecutable & exec, auto timer) {
-      if (!timer->call()) {
-        return false;
+  for (size_t ii = 0; ii < rcl_wait_set.size_of_subscriptions; ++ii) {
+    if (!rcl_wait_set.subscriptions[ii]) {continue;}
+    auto entity_iter = collection.subscriptions.find(rcl_wait_set.subscriptions[ii]);
+    if (entity_iter != collection.subscriptions.end()) {
+      auto entity = entity_iter->second.entity.lock();
+      if (!entity) {
+        continue;
       }
-      exec.timer = timer;
-      return true;
-    });
+      auto callback_group = entity_iter->second.callback_group.lock();
+      if (callback_group && !callback_group->can_be_taken_from().load()) {
+        continue;
+      }
 
-  check_ready(
-    collection.subscriptions,
-    ret,
-    rcl_wait_set.size_of_subscriptions,
-    rcl_wait_set.subscriptions,
-    [](rclcpp::AnyExecutable & exec, auto subscription) {
-      exec.subscription = subscription;
-      return true;
-    });
+      rclcpp::AnyExecutable exec;
+      exec.subscription = entity;
+      exec.callback_group = callback_group;
+      executables.push_back(exec);
+      added++;
+    }
+  }
 
+  for (size_t ii = 0; ii < rcl_wait_set.size_of_services; ++ii) {
+    if (!rcl_wait_set.services[ii]) {continue;}
+    auto entity_iter = collection.services.find(rcl_wait_set.services[ii]);
+    if (entity_iter != collection.services.end()) {
+      auto entity = entity_iter->second.entity.lock();
+      if (!entity) {
+        continue;
+      }
+      auto callback_group = entity_iter->second.callback_group.lock();
+      if (callback_group && !callback_group->can_be_taken_from().load()) {
+        continue;
+      }
 
-  check_ready(
-    collection.services,
-    ret,
-    rcl_wait_set.size_of_services,
-    rcl_wait_set.services,
-    [](rclcpp::AnyExecutable & exec, auto service) {
-      exec.service = service;
-      return true;
-    });
+      rclcpp::AnyExecutable exec;
+      exec.service = entity;
+      exec.callback_group = callback_group;
+      executables.push_back(exec);
+      added++;
+    }
+  }
 
-  check_ready(
-    collection.clients,
-    ret,
-    rcl_wait_set.size_of_clients,
-    rcl_wait_set.clients,
-    [](rclcpp::AnyExecutable & exec, auto client) {
-      exec.client = client;
-      return true;
-    });
+  for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
+    if (!rcl_wait_set.clients[ii]) {continue;}
+    auto entity_iter = collection.clients.find(rcl_wait_set.clients[ii]);
+    if (entity_iter != collection.clients.end()) {
+      auto entity = entity_iter->second.entity.lock();
+      if (!entity) {
+        continue;
+      }
+      auto callback_group = entity_iter->second.callback_group.lock();
+      if (callback_group && !callback_group->can_be_taken_from().load()) {
+        continue;
+      }
+
+      rclcpp::AnyExecutable exec;
+      exec.client = entity;
+      exec.callback_group = callback_group;
+      executables.push_back(exec);
+      added++;
+    }
+  }
 
   for (auto & [handle, entry] : collection.waitables) {
     auto waitable = entry.entity.lock();
@@ -194,10 +207,11 @@ ready_executables(
       exec.waitable = waitable;
       exec.callback_group = group;
       exec.data = waitable->take_data();
-      ret.push_back(exec);
+      executables.push_back(exec);
+      added++;
     }
   }
-  return ret;
+  return added;
 }
 
 }  // namespace executors

@@ -72,7 +72,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
 
 Executor::~Executor()
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(wait_set_mutex_);
 
   notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
   notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
@@ -115,7 +115,6 @@ Executor::~Executor()
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_all_callback_groups()
 {
-  std::lock_guard<std::mutex> lock(mutex_);
   this->collector_.update_collections();
   return this->collector_.get_all_callback_groups();
 }
@@ -123,7 +122,6 @@ Executor::get_all_callback_groups()
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_manually_added_callback_groups()
 {
-  std::lock_guard<std::mutex> lock(mutex_);
   this->collector_.update_collections();
   return this->collector_.get_manually_added_callback_groups();
 }
@@ -131,7 +129,6 @@ Executor::get_manually_added_callback_groups()
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_automatically_added_callback_groups_from_nodes()
 {
-  std::lock_guard<std::mutex> lock(mutex_);
   this->collector_.update_collections();
   return this->collector_.get_automatically_added_callback_groups();
 }
@@ -507,7 +504,6 @@ Executor::execute_client(
 void
 Executor::collect_entities()
 {
-  std::lock_guard<std::mutex> guard(mutex_);
   rclcpp::executors::ExecutorEntitiesCollection collection;
   this->collector_.update_collections();
   auto callback_groups = this->collector_.get_all_callback_groups();
@@ -521,6 +517,8 @@ Executor::collect_entities()
     auto notify_waitable = std::static_pointer_cast<rclcpp::Waitable>(current_notify_waitable_);
     collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
   }
+
+  std::lock_guard<std::mutex> waitset_guard{wait_set_mutex_};
 
   current_collection_.timers.update(
     collection.timers,
@@ -564,10 +562,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
 
-  if (current_collection_.empty() || this->collector_.has_pending()) {
+  if (current_collection_.empty()) {
     this->collect_entities();
   }
 
+  std::lock_guard<std::mutex> waitset_guard{wait_set_mutex_};
   auto wait_result = wait_set_.wait(timeout);
 
   if (wait_result.kind() == WaitResultKind::Empty) {
@@ -576,15 +575,15 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       "empty wait set received in wait(). This should never happen.");
   }
 
-  std::lock_guard<std::mutex> guard{mutex_};
-  ready_executables_ = rclcpp::executors::ready_executables(current_collection_, wait_result);
+  std::lock_guard<std::mutex> guard{ready_executables_mutex_};
+  rclcpp::executors::ready_executables(current_collection_, wait_result, ready_executables_);
 }
 
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
   TRACEPOINT(rclcpp_executor_get_next_ready);
-  std::lock_guard<std::mutex> guard{mutex_};
+  std::lock_guard<std::mutex> guard{ready_executables_mutex_};
 
   if (ready_executables_.size() == 0) {
     return false;
