@@ -43,8 +43,8 @@ CallbackGroup::~CallbackGroup()
 {
   trigger_notify_guard_condition();
 }
-bool
 
+bool
 CallbackGroup::has_valid_node()
 {
   return nullptr != this->get_context_();
@@ -60,6 +60,13 @@ const CallbackGroupType &
 CallbackGroup::type() const
 {
   return type_;
+}
+
+size_t
+CallbackGroup::size() const
+{
+  return subscription_ptrs_.size() + service_ptrs_.size() + client_ptrs_.size() + timer_ptrs_.size() + waitable_ptrs_.size();
+
 }
 
 void CallbackGroup::collect_all_ptrs(

@@ -78,37 +78,29 @@ Executor::~Executor()
   notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
 
   current_collection_.timers.update(
-    {},
-    [this](auto timer) {wait_set_.add_timer(timer);},
+    {}, {},
     [this](auto timer) {wait_set_.remove_timer(timer);});
 
   current_collection_.subscriptions.update(
-    {},
-    [this](auto subscription) {
-      wait_set_.add_subscription(subscription, kDefaultSubscriptionMask);
-    },
+    {}, {},
     [this](auto subscription) {
       wait_set_.remove_subscription(subscription, kDefaultSubscriptionMask);
     });
 
   current_collection_.clients.update(
-    {},
-    [this](auto client) {wait_set_.add_client(client);},
+    {}, {},
     [this](auto client) {wait_set_.remove_client(client);});
 
   current_collection_.services.update(
-    {},
-    [this](auto service) {wait_set_.add_service(service);},
+    {}, {},
     [this](auto service) {wait_set_.remove_service(service);});
 
   current_collection_.guard_conditions.update(
-    {},
-    [this](auto guard_condition) {wait_set_.add_guard_condition(guard_condition);},
+    {}, {},
     [this](auto guard_condition) {wait_set_.remove_guard_condition(guard_condition);});
 
   current_collection_.waitables.update(
-    {},
-    [this](auto waitable) {wait_set_.add_waitable(waitable);},
+    {}, {},
     [this](auto waitable) {wait_set_.remove_waitable(waitable);});
 
   // Remove shutdown callback handle registered to Context
@@ -153,8 +145,9 @@ Executor::add_callback_group(
   (void) node_ptr;
   this->collector_.add_callback_group(group_ptr);
 
-  if (notify) {
-    // Interrupt waiting to handle removed callback group
+  if (!spinning.load()) {
+    this->collect_entities();
+  } else if (notify ){
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
@@ -170,14 +163,15 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 {
   this->collector_.add_node(node_ptr);
 
-  if (notify) {
-    // Interrupt waiting to handle removed callback group
+  if (!spinning.load()) {
+    this->collect_entities();
+  } else if (notify ){
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
       throw std::runtime_error(
               std::string(
-                "Failed to trigger guard condition on callback group remove: ") + ex.what());
+                "Failed to trigger guard condition on callback group add: ") + ex.what());
     }
   }
 }
@@ -189,14 +183,15 @@ Executor::remove_callback_group(
 {
   this->collector_.remove_callback_group(group_ptr);
 
-  if (notify) {
-    // Interrupt waiting to handle removed callback group
+  if (!spinning.load()) {
+    this->collect_entities();
+  } else if (notify ){
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
       throw std::runtime_error(
               std::string(
-                "Failed to trigger guard condition on callback group remove: ") + ex.what());
+                "Failed to trigger guard condition on callback group add: ") + ex.what());
     }
   }
 }
@@ -211,10 +206,10 @@ void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   this->collector_.remove_node(node_ptr);
-  this->collect_entities();
 
-  if (notify) {
-    // Interrupt waiting to handle removed callback group
+  if (!spinning.load()) {
+    this->collect_entities();
+  } else if (notify ){
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {

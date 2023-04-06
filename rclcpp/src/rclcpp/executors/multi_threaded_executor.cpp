@@ -99,6 +99,19 @@ MultiThreadedExecutor::run(size_t this_thread_number)
 
     execute_any_executable(any_exec);
 
+    if (any_exec.callback_group &&
+        any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive &&
+        any_exec.callback_group->size() > 1)
+    {
+      try {
+        interrupt_guard_condition_->trigger();
+      } catch (const rclcpp::exceptions::RCLError & ex) {
+        throw std::runtime_error(
+                std::string(
+                  "Failed to trigger guard condition on callback group change: ") + ex.what());
+      }
+    }
+
     // Clear the callback_group to prevent the AnyExecutable destructor from
     // resetting the callback group `can_be_taken_from`
     any_exec.callback_group.reset();
