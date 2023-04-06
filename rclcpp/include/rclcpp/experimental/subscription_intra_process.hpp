@@ -118,6 +118,10 @@ public:
         return nullptr;
       }
     }
+
+    if (this->buffer_->has_data())
+      this->trigger_guard_condition();
+
     return std::static_pointer_cast<void>(
       std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
         std::pair<ConstMessageSharedPtr, MessageUniquePtr>(
