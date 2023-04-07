@@ -539,13 +539,6 @@ DynamicMessage::remove_sequence_data(rosidl_dynamic_typesupport_member_id_t inde
 }
 
 
-void
-DynamicMessage::print() const
-{
-  rosidl_dynamic_typesupport_dynamic_data_print(get_rosidl_dynamic_data());
-}
-
-
 bool
 DynamicMessage::serialize(rcl_serialized_message_t * buffer)
 {

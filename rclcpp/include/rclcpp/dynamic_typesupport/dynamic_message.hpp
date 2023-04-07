@@ -231,10 +231,6 @@ public:
   remove_sequence_data(rosidl_dynamic_typesupport_member_id_t index);
 
   RCLCPP_PUBLIC
-  void
-  print() const;
-
-  RCLCPP_PUBLIC
   bool
   serialize(rcl_serialized_message_t * buffer);
 

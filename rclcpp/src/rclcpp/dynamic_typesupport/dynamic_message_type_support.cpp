@@ -461,14 +461,3 @@ DynamicMessageTypeSupport::get_shared_dynamic_message() const
 {
   return dynamic_message_;
 }
-
-
-// METHODS =========================================================================================
-void
-DynamicMessageTypeSupport::print_description() const
-{
-  if (!description_) {
-    RCUTILS_LOG_ERROR("Can't print description, no bound description.");
-  }
-  rosidl_runtime_c_type_description_utils_print_type_description(description_.get());
-}

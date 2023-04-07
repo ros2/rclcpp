@@ -158,12 +158,6 @@ public:
   DynamicMessage::ConstSharedPtr
   get_shared_dynamic_message() const;
 
-
-  // METHODS =======================================================================================
-  RCLCPP_PUBLIC
-  void
-  print_description() const;
-
 protected:
   RCLCPP_DISABLE_COPY(DynamicMessageTypeSupport)
 
