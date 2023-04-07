@@ -29,7 +29,7 @@ using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 
 // CONSTRUCTION ====================================================================================
 DynamicSerializationSupport::DynamicSerializationSupport()
-: DynamicSerializationSupport::DynamicSerializationSupport("") {};
+: DynamicSerializationSupport::DynamicSerializationSupport("") {}
 
 DynamicSerializationSupport::DynamicSerializationSupport(
   const std::string & serialization_library_name)

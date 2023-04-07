@@ -58,7 +58,7 @@ DynamicMessage::DynamicMessage(const DynamicMessageTypeBuilder::SharedPtr dynami
   }
 
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type_builder(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_create_from_dynamic_type_builder(
     rosidl_dynamic_type_builder, &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error("could not create new dynamic data object from dynamic type builder");
@@ -90,7 +90,7 @@ DynamicMessage::DynamicMessage(const DynamicMessageType::SharedPtr dynamic_type)
   }
 
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_create_from_dynamic_type(
     rosidl_dynamic_type, &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error(
@@ -428,7 +428,7 @@ DynamicMessage
 DynamicMessage::init_from_type(DynamicMessageType & type) const
 {
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_create_from_dynamic_type(
     type.get_rosidl_dynamic_type(), &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error("could not create new dynamic data object from dynamic type");
@@ -441,7 +441,7 @@ DynamicMessage::SharedPtr
 DynamicMessage::init_from_type_shared(DynamicMessageType & type) const
 {
   rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_data_create_from_dynamic_type(
     type.get_rosidl_dynamic_type(), &rosidl_dynamic_data);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_data) {
     throw std::runtime_error("could not create new dynamic data object from dynamic type");

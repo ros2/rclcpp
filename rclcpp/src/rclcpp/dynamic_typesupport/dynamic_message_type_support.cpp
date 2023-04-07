@@ -57,9 +57,9 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   rcl_ret_t ret;
 
   if (serialization_library_name.empty()) {
-    ret = rcl_dynamic_message_type_support_handle_init(nullptr, &description, &ts);
+    ret = rcl_dynamic_message_type_support_handle_create(nullptr, &description, &ts);
   } else {
-    ret = rcl_dynamic_message_type_support_handle_init(
+    ret = rcl_dynamic_message_type_support_handle_create(
       serialization_library_name.c_str(), &description, &ts);
   }
   if (ret != RCL_RET_OK) {
@@ -135,7 +135,7 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     throw std::runtime_error("failed to get type hash");
   }
 
-  rmw_ret_t ret = rmw_dynamic_message_type_support_handle_init(
+  rmw_ret_t ret = rmw_dynamic_message_type_support_handle_create(
     serialization_support->get_rosidl_serialization_support(),
     rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY),
     type_hash.get(),  // type_hash
@@ -280,8 +280,8 @@ DynamicMessageTypeSupport::manage_description_(
 }
 
 
-// NOTE(methylDragon): This looks like rmw_dynamic_message_type_support_handle_init, but instead
-//                     just aggregates already initialized objects
+// This looks like rmw_`dynamic_message_type_support_handle_create()`, but instead just aggregates
+// already initialized objects
 void
 DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   DynamicSerializationSupport::SharedPtr serialization_support,

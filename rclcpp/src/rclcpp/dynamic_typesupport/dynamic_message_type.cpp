@@ -50,7 +50,7 @@ DynamicMessageType::DynamicMessageType(DynamicMessageTypeBuilder::SharedPtr dyna
   }
 
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_init_from_dynamic_type_builder(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_create_from_dynamic_type_builder(
     rosidl_dynamic_type_builder, &rosidl_dynamic_type);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error("could not create new dynamic type object");
@@ -159,7 +159,7 @@ DynamicMessageType::init_from_description(
   }
 
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_init_from_description(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_create_from_description(
     serialization_support_->get_rosidl_serialization_support(), &description, &rosidl_dynamic_type);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error("could not create new dynamic type object");

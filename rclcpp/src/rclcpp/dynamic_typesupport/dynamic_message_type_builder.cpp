@@ -40,7 +40,7 @@ using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 #endif
 
 
-// CONSTRUCTION ==================================================================================
+// CONSTRUCTION ====================================================================================
 DynamicMessageTypeBuilder::DynamicMessageTypeBuilder(
   DynamicSerializationSupport::SharedPtr serialization_support, const std::string & name)
 : serialization_support_(serialization_support), rosidl_dynamic_type_builder_(nullptr)
@@ -153,7 +153,7 @@ DynamicMessageTypeBuilder::init_from_description(
   }
 
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_init_from_description(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_create_from_description(
     serialization_support_->get_rosidl_serialization_support(), &description,
     &rosidl_dynamic_type_builder);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
@@ -183,7 +183,7 @@ DynamicMessageTypeBuilder::init_from_serialization_support_(
 
 
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_init(
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_create(
     serialization_support->get_rosidl_serialization_support(),
     name.c_str(), name.size(),
     &rosidl_dynamic_type_builder);

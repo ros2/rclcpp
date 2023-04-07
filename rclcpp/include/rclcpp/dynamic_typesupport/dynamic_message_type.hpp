@@ -34,7 +34,7 @@ namespace dynamic_typesupport
 class DynamicMessage;
 class DynamicMessageTypeBuilder;
 
-/// Utility wrapper class for rosidl_dynamic_typesupport_dynamic_type_t *
+/// Utility wrapper class for `rosidl_dynamic_typesupport_dynamic_type_t *`
 /**
  * This class:
  * - Manages the lifetime of the raw pointer.
@@ -42,20 +42,21 @@ class DynamicMessageTypeBuilder;
  * - Exposes the underlying serialization support API
  *
  * Ownership:
- * - This class borrows the rosidl_dynamic_typesupport_serialization_support_t stored in the passed
- *   DynamicSerializationSupport. So it cannot outlive the DynamicSerializationSupport.
- * - The DynamicSerializationSupport's rosidl_dynamic_typesupport_serialization_support_t pointer
- *   must point to the same location in memory as the stored raw pointer!
+ * - This class borrows the `rosidl_dynamic_typesupport_serialization_support_t` stored in the
+ *   passed `DynamicSerializationSupport`.
+ *   So it cannot outlive the `DynamicSerializationSupport`.
+ * - The `DynamicSerializationSupport`'s `rosidl_dynamic_typesupport_serialization_support_t`
+ *   pointer must point to the same location in memory as the stored raw pointer!
  *
- * Note: This class is meant to map to the lower level rosidl_dynamic_typesupport_dynamic_type_t,
- *       which can be constructed via DynamicMessageTypeBuilder, which maps to
- *       rosidl_dynamic_typesupport_dynamic_type_builder_t.
+ * This class is meant to map to the lower level `rosidl_dynamic_typesupport_dynamic_type_t`,
+ * which can be constructed via `DynamicMessageTypeBuilder`, which maps to
+ * `rosidl_dynamic_typesupport_dynamic_type_builder_t`.
  *
- *       The usual method of obtaining a DynamicMessageType is through construction of
- *       rosidl_message_type_support_t via rcl_dynamic_message_type_support_handle_init(), then
- *       taking ownership of its contents. But DynamicMessageTypeBuilder can also be used to obtain
- *       DynamicMessageType by constructing it bottom-up instead, since it exposes the lower_level
- *       rosidl methods.
+ *  The usual method of obtaining a `DynamicMessageType` is through construction of
+ *  `rosidl_message_type_support_t` via `rcl_dynamic_message_type_support_handle_create()`, then
+ *  taking ownership of its contents. But `DynamicMessageTypeBuilder` can also be used to obtain
+ *  `DynamicMessageType` by constructing it bottom-up instead, since it exposes the lower_level
+ *  rosidl methods.
  */
 class DynamicMessageType : public std::enable_shared_from_this<DynamicMessageType>
 {
@@ -63,14 +64,14 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(DynamicMessageType)
 
   // CONSTRUCTION ==================================================================================
-  // Most constructors require a passed in DynamicSerializationSupport::SharedPtr, to extend the
+  // Most constructors require a passed in `DynamicSerializationSupport::SharedPtr`, to extend the
   // lifetime of the serialization support (if the constructor cannot otherwise get it from args).
   //
   // In cases where a dynamic type pointer is passed, the serialization support composed by
-  // the type should be the exact same object managed by the DynamicSerializationSupport,
+  // the type should be the exact same object managed by the `DynamicSerializationSupport`,
   // otherwise the lifetime management will not work properly.
 
-  /// Construct a new DynamicMessageType with the provided dynamic type builder
+  /// Construct a new `DynamicMessageType` with the provided dynamic type builder
   RCLCPP_PUBLIC
   explicit DynamicMessageType(std::shared_ptr<DynamicMessageTypeBuilder> dynamic_type_builder);
 
@@ -111,7 +112,7 @@ public:
   RCLCPP_PUBLIC
   virtual ~DynamicMessageType();
 
-  /// Swaps the serialization support if serialization_support is populated
+  /// Swaps the serialization support if `serialization_support` is populated
   RCLCPP_PUBLIC
   void
   init_from_description(
@@ -183,7 +184,7 @@ protected:
   // It isn't actually used by the builder since the builder should compose its own support
   //
   // ... Though ideally it should be the exact same support as the one stored in the
-  // DynamicSerializationSupport
+  // `DynamicSerializationSupport`
   DynamicSerializationSupport::SharedPtr serialization_support_;
 
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t> rosidl_dynamic_type_;

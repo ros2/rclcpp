@@ -33,7 +33,7 @@ namespace dynamic_typesupport
 class DynamicMessage;
 class DynamicMessageType;
 
-/// Utility wrapper class for rosidl_dynamic_typesupport_dynamic_type_builder_t *
+/// Utility wrapper class for `rosidl_dynamic_typesupport_dynamic_type_builder_t *`
 /**
  * This class:
  * - Manages the lifetime of the raw pointer.
@@ -42,18 +42,19 @@ class DynamicMessageType;
  *
  * Ownership:
  * - This class borrows the rosidl_dynamic_typesupport_serialization_support_t stored in the passed
- *   DynamicSerializationSupport. So it cannot outlive the DynamicSerializationSupport.
- * - The DynamicSerializationSupport's rosidl_dynamic_typesupport_serialization_support_t pointer
- *   must point to the same location in memory as the stored raw pointer!
+ *   `DynamicSerializationSupport`.
+ *   So it cannot outlive the `DynamicSerializationSupport`.
+ * - The `DynamicSerializationSupport`'s `rosidl_dynamic_typesupport_serialization_support_t`
+ *   pointer must point to the same location in memory as the stored raw pointer!
  *
- * Note: This class is meant to map to rosidl_dynamic_typesupport_dynamic_type_builder_t,
- *       facilitating the construction of dynamic types bottom-up in the C++ layer.
+ * This class is meant to map to rosidl_dynamic_typesupport_dynamic_type_builder_t, facilitating the
+ * construction of dynamic types bottom-up in the C++ layer.
  *
- *       The usual method of obtaining a DynamicMessageType is through construction of
- *       rosidl_message_type_support_t via rcl_dynamic_message_type_support_handle_init(), then taking
- *       ownership of its contents. But DynamicMessageTypeBuilder can also be used to obtain
- *       DynamicMessageType by constructing it bottom-up instead, since it exposes the lower_level
- *       rosidl methods.
+ * The usual method of obtaining a `DynamicMessageType` is through construction of
+ * `rosidl_message_type_support_t` via `rcl_dynamic_message_type_support_handle_create()`, then
+ * taking ownership of its contents.
+ * But `DynamicMessageTypeBuilder` can also be used to obtain `DynamicMessageType` by constructing
+ * it bottom-up instead, since it exposes the lower_level rosidl methods.
  */
 class DynamicMessageTypeBuilder : public std::enable_shared_from_this<DynamicMessageTypeBuilder>
 {
@@ -61,14 +62,14 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(DynamicMessageTypeBuilder)
 
   // CONSTRUCTION ==================================================================================
-  // All constructors require a passed in DynamicSerializationSupport::SharedPtr, to extend the
+  // All constructors require a passed in `DynamicSerializationSupport::SharedPtr`, to extend the
   // lifetime of the serialization support.
   //
   // In cases where a dynamic type builder pointer is passed, the serialization support composed by
-  // the builder should be the exact same object managed by the DynamicSerializationSupport,
+  // the builder should be the exact same object managed by the `DynamicSerializationSupport`,
   // otherwise the lifetime management will not work properly.
 
-  /// Construct a new DynamicMessageTypeBuilder with the provided serialization support
+  /// Construct a new `DynamicMessageTypeBuilder` with the provided serialization support
   RCLCPP_PUBLIC
   DynamicMessageTypeBuilder(
     DynamicSerializationSupport::SharedPtr serialization_support,
@@ -383,7 +384,7 @@ protected:
   // It isn't actually used by the builder since the builder should compose its own support
   //
   // ... Though ideally it should be the exact same support as the one stored in the
-  // DynamicSerializationSupport
+  // `DynamicSerializationSupport`
   DynamicSerializationSupport::SharedPtr serialization_support_;
 
   std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_builder_t> rosidl_dynamic_type_builder_;
