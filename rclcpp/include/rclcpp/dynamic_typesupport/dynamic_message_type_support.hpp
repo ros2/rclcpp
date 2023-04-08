@@ -15,6 +15,7 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_SUPPORT_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_TYPE_SUPPORT_HPP_
 
+#include <rosidl_dynamic_typesupport/dynamic_message_type_support_struct.h>
 #include <rosidl_dynamic_typesupport/types.h>
 #include <rosidl_runtime_c/message_type_support_struct.h>
 #include <rosidl_runtime_c/type_description/type_description__struct.h>
@@ -71,7 +72,8 @@ public:
 
   /// From description, for provided serialization support
   /// Does NOT take ownership of the description (copies instead.)
-  /// Constructs type support top-down (calling `rmw_dynamic_message_type_support_handle_create()`)
+  /// Constructs type support top-down (calling
+  /// `rosidl_dynamic_message_type_support_handle_create()`)
   RCLCPP_PUBLIC
   DynamicMessageTypeSupport(
     DynamicSerializationSupport::SharedPtr serialization_support,

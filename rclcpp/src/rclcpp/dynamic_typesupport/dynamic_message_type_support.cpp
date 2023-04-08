@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rosidl_dynamic_typesupport/identifier.h>
 #include <rosidl_dynamic_typesupport/types.h>
 #include <rosidl_runtime_c/message_type_support_struct.h>
 #include <rosidl_runtime_c/type_description_utils.h>
@@ -26,6 +27,7 @@
 #include "rcl/type_hash.h"
 #include "rcl/types.h"
 #include "rcutils/logging_macros.h"
+#include "rcutils/types/rcutils_ret.h"
 #include "rmw/dynamic_message_type_support.h"
 
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
@@ -71,7 +73,7 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   if (!ts->data) {
     throw std::runtime_error("could not init rosidl message type support impl");
   }
-  if (ts->typesupport_identifier != rmw_get_dynamic_typesupport_identifier()) {
+  if (ts->typesupport_identifier != rosidl_get_dynamic_typesupport_identifier()) {
     throw std::runtime_error("rosidl message type support is of the wrong type");
   }
 
@@ -135,20 +137,19 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     throw std::runtime_error("failed to get type hash");
   }
 
-  rmw_ret_t ret = rmw_dynamic_message_type_support_handle_create(
+  rcutils_ret_t ret = rosidl_dynamic_message_type_support_handle_create(
     serialization_support->get_rosidl_serialization_support(),
-    rmw_feature_supported(RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY),
     type_hash.get(),  // type_hash
     &description,     // type_description
     nullptr,          // type_description_sources (not implemented for dynamic types)
     &ts);
-  if (ret != RMW_RET_OK || !ts) {
+  if (ret != RCUTILS_RET_OK || !ts) {
     throw std::runtime_error("could not init rosidl message type support");
   }
   if (!ts->data) {
     throw std::runtime_error("could not init rosidl message type support impl");
   }
-  if (ts->typesupport_identifier != rmw_get_dynamic_typesupport_identifier()) {
+  if (ts->typesupport_identifier != rosidl_get_dynamic_typesupport_identifier()) {
     throw std::runtime_error("rosidl message type support is of the wrong type");
   }
 
@@ -303,6 +304,7 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   auto type_hash = std::make_unique<rosidl_type_hash_t>();
   rcutils_ret_t hash_ret = rcl_calculate_type_hash(
     // TODO(methylDragon): Swap this out with the conversion function when it is ready
+    //   from https://github.com/ros2/rcl/pull/1052
     reinterpret_cast<type_description_interfaces__msg__TypeDescription *>(description),
     type_hash.get());
   if (hash_ret != RCL_RET_OK || !type_hash) {
@@ -328,7 +330,7 @@ DynamicMessageTypeSupport::init_rosidl_message_type_support_(
   //                     are managed by the passed in SharedPtr wrapper classes. We just delete it.
   rosidl_message_type_support_.reset(
     new rosidl_message_type_support_t{
-    rmw_get_dynamic_typesupport_identifier(),             // typesupport_identifier
+    rosidl_get_dynamic_typesupport_identifier(),          // typesupport_identifier
     ts_impl,                                              // data
     get_message_typesupport_handle_function,              // func
     // get_type_hash_func

@@ -15,6 +15,8 @@
 #ifndef RCLCPP__DYNAMIC_SUBSCRIPTION_HPP_
 #define RCLCPP__DYNAMIC_SUBSCRIPTION_HPP_
 
+#include <rosidl_dynamic_typesupport/identifier.h>
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -80,7 +82,7 @@ public:
     }
 
     if (type_support->get_rosidl_message_type_support()->typesupport_identifier !=
-      rmw_get_dynamic_typesupport_identifier())
+      rosidl_get_dynamic_typesupport_identifier())
     {
       throw std::runtime_error(
               "DynamicSubscription must use dynamic type introspection type support!");
