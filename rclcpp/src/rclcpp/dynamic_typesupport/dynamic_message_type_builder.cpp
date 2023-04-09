@@ -211,7 +211,7 @@ DynamicMessageTypeBuilder::match_serialization_support_(
 {
   bool out = true;
 
-  if (serialization_support.get_library_identifier() != std::string(
+  if (serialization_support.get_serialization_library_identifier() != std::string(
       rosidl_dynamic_type_builder.serialization_support->library_identifier))
   {
     RCUTILS_LOG_ERROR(
@@ -234,7 +234,7 @@ DynamicMessageTypeBuilder::match_serialization_support_(
 
 // GETTERS =======================================================================================
 const std::string
-DynamicMessageTypeBuilder::get_library_identifier() const
+DynamicMessageTypeBuilder::get_serialization_library_identifier() const
 {
   return std::string(rosidl_dynamic_type_builder_->serialization_support->library_identifier);
 }

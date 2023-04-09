@@ -78,7 +78,7 @@ public:
   // GETTERS =======================================================================================
   RCLCPP_PUBLIC
   const std::string
-  get_library_identifier() const;
+  get_serialization_library_identifier() const;
 
   RCLCPP_PUBLIC
   rosidl_dynamic_typesupport_serialization_support_t *

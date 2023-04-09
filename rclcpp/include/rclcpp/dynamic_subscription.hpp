@@ -58,13 +58,13 @@ public:
     const rclcpp::QoS & qos,
     std::function<void(
       rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-      std::shared_ptr<const rosidl_runtime_c__type_description__TypeDescription>
+      const rosidl_runtime_c__type_description__TypeDescription &
     )> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
     bool use_take_dynamic_message = true)
   : SubscriptionBase(
       node_base,
-      *(type_support->get_rosidl_message_type_support()),
+      type_support->get_const_rosidl_message_type_support(),
       topic_name,
       options.to_rcl_subscription_options(
         qos),
@@ -81,7 +81,7 @@ public:
       throw std::runtime_error("DynamicMessageTypeSupport cannot be nullptr!");
     }
 
-    if (type_support->get_rosidl_message_type_support()->typesupport_identifier !=
+    if (type_support->get_const_rosidl_message_type_support().typesupport_identifier !=
       rosidl_get_dynamic_typesupport_identifier())
     {
       throw std::runtime_error(
@@ -163,7 +163,7 @@ private:
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
   std::function<void(
       rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-      std::shared_ptr<const rosidl_runtime_c__type_description__TypeDescription>
+      const rosidl_runtime_c__type_description__TypeDescription &
     )> callback_;
 
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;

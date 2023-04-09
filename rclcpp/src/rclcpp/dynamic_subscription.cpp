@@ -107,7 +107,7 @@ void DynamicSubscription::handle_dynamic_message(
   const rclcpp::MessageInfo & message_info)
 {
   (void) message_info;
-  callback_(message, ts_->get_shared_rosidl_runtime_c_type_description());
+  callback_(message, ts_->get_rosidl_runtime_c_type_description());
 }
 
 }  // namespace rclcpp

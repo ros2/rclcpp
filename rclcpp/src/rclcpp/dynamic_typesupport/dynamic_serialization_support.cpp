@@ -98,7 +98,7 @@ DynamicSerializationSupport::~DynamicSerializationSupport() {}
 
 // GETTERS =========================================================================================
 const std::string
-DynamicSerializationSupport::get_library_identifier() const
+DynamicSerializationSupport::get_serialization_library_identifier() const
 {
   return std::string(
     rosidl_dynamic_typesupport_serialization_support_get_library_identifier(

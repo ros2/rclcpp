@@ -181,7 +181,7 @@ DynamicMessageType::match_serialization_support_(
 {
   bool out = true;
 
-  if (serialization_support.get_library_identifier() != std::string(
+  if (serialization_support.get_serialization_library_identifier() != std::string(
       rosidl_dynamic_type.serialization_support->library_identifier))
   {
     RCUTILS_LOG_ERROR(
@@ -204,7 +204,7 @@ DynamicMessageType::match_serialization_support_(
 
 // GETTERS =========================================================================================
 const std::string
-DynamicMessageType::get_library_identifier() const
+DynamicMessageType::get_serialization_library_identifier() const
 {
   return std::string(rosidl_dynamic_type_->serialization_support->library_identifier);
 }
@@ -310,7 +310,7 @@ DynamicMessageType::clone_shared() const
 bool
 DynamicMessageType::equals(const DynamicMessageType & other) const
 {
-  if (get_library_identifier() != other.get_library_identifier()) {
+  if (get_serialization_library_identifier() != other.get_serialization_library_identifier()) {
     throw std::runtime_error("library identifiers don't match");
   }
   bool out;
