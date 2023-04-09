@@ -98,7 +98,8 @@ public:
    * to the actual rclcpp Publisher base class
    */
   virtual void
-  publish(rclcpp::LoanedMessage<typename rclcpp::Publisher<MessageT, Alloc>::ROSMessageType, Alloc> && loaned_msg)
+  publish(rclcpp::LoanedMessage<typename rclcpp::Publisher<MessageT,
+		  		Alloc>::ROSMessageType, Alloc> && loaned_msg)
   {
     if (!this->is_activated()) {
       log_publisher_not_enabled();

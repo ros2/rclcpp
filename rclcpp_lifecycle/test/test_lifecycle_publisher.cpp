@@ -129,6 +129,10 @@ TEST_P(TestLifecyclePublisher, publish_managed_by_node) {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
     EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
   }
+  {
+    auto loaned_msg = node_->publisher()->borrow_loaned_message();
+    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
+  }
   node_->trigger_transition(
     rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE), ret);
   ASSERT_EQ(success, ret);
@@ -142,6 +146,10 @@ TEST_P(TestLifecyclePublisher, publish_managed_by_node) {
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
     EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
+  }
+  {
+    auto loaned_msg = node_->publisher()->borrow_loaned_message();
+    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
   }
 }
 
@@ -157,6 +165,10 @@ TEST_P(TestLifecyclePublisher, publish) {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
     EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
   }
+  {
+    auto loaned_msg = node_->publisher()->borrow_loaned_message();
+    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
+  }
   node_->publisher()->on_activate();
   EXPECT_TRUE(node_->publisher()->is_activated());
   {
@@ -166,6 +178,10 @@ TEST_P(TestLifecyclePublisher, publish) {
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
     EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
+  }
+  {
+    auto loaned_msg = node_->publisher()->borrow_loaned_message();
+    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
   }
 }
 
