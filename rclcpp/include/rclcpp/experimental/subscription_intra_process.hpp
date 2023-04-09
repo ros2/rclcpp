@@ -87,7 +87,7 @@ public:
       buffer_type),
     any_callback_(callback)
   {
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_callback_added,
       static_cast<const void *>(this),
       static_cast<const void *>(&any_callback_));
