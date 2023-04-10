@@ -14,6 +14,7 @@
 
 #include <rosidl_dynamic_typesupport/api/dynamic_type.h>
 #include <rosidl_dynamic_typesupport/api/dynamic_data.h>
+#include <rosidl_dynamic_typesupport/api/serialization_support.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
 #include <memory>
@@ -248,17 +249,9 @@ DynamicMessage::match_serialization_support_(
   bool out = true;
 
   if (serialization_support.get_serialization_library_identifier() != std::string(
-      rosidl_dynamic_type_data.serialization_support->library_identifier))
+      rosidl_dynamic_type_data.serialization_support->serialization_library_identifier))
   {
     RCUTILS_LOG_ERROR("serialization support library identifier does not match dynamic data's");
-    out = false;
-  }
-
-  // TODO(methylDragon): Can I do this?? Is it portable?
-  if (serialization_support.get_rosidl_serialization_support() !=
-    rosidl_dynamic_type_data.serialization_support)
-  {
-    RCUTILS_LOG_ERROR("serialization support pointer does not match dynamic data's");
     out = false;
   }
 
@@ -270,7 +263,7 @@ DynamicMessage::match_serialization_support_(
 const std::string
 DynamicMessage::get_serialization_library_identifier() const
 {
-  return std::string(rosidl_dynamic_data_->serialization_support->library_identifier);
+  return std::string(rosidl_dynamic_data_->serialization_support->serialization_library_identifier);
 }
 
 

@@ -15,6 +15,8 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_SERIALIZATION_SUPPORT_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_SERIALIZATION_SUPPORT_HPP_
 
+#include <rcl/allocator.h>
+#include <rosidl_dynamic_typesupport/api/serialization_support.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
 #include <memory>
@@ -47,21 +49,18 @@ public:
 
   // CONSTRUCTION ==================================================================================
   RCLCPP_PUBLIC
-  DynamicSerializationSupport();
+  explicit DynamicSerializationSupport(rcl_allocator_t allocator = rcl_get_default_allocator());
 
   /// Get the rmw middleware implementation specific serialization support (configured by name)
   RCLCPP_PUBLIC
-  explicit DynamicSerializationSupport(const std::string & serialization_library_name);
+  DynamicSerializationSupport(
+    const std::string & serialization_library_name,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
-  /// Assume ownership of raw pointer
+  /// Assume ownership of reference
   RCLCPP_PUBLIC
   explicit DynamicSerializationSupport(
-    rosidl_dynamic_typesupport_serialization_support_t * rosidl_serialization_support);
-
-  /// Copy shared pointer
-  RCLCPP_PUBLIC
-  DynamicSerializationSupport(
-    std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> serialization_support);
+    rosidl_dynamic_typesupport_serialization_support_t && rosidl_serialization_support);
 
   /// Move constructor
   RCLCPP_PUBLIC
@@ -81,25 +80,18 @@ public:
   get_serialization_library_identifier() const;
 
   RCLCPP_PUBLIC
-  rosidl_dynamic_typesupport_serialization_support_t *
+  rosidl_dynamic_typesupport_serialization_support_t &
   get_rosidl_serialization_support();
 
   RCLCPP_PUBLIC
-  const rosidl_dynamic_typesupport_serialization_support_t *
+  const rosidl_dynamic_typesupport_serialization_support_t &
   get_rosidl_serialization_support() const;
-
-  RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t>
-  get_shared_rosidl_serialization_support();
-
-  RCLCPP_PUBLIC
-  std::shared_ptr<const rosidl_dynamic_typesupport_serialization_support_t>
-  get_shared_rosidl_serialization_support() const;
 
 protected:
   RCLCPP_DISABLE_COPY(DynamicSerializationSupport)
 
-  std::shared_ptr<rosidl_dynamic_typesupport_serialization_support_t> rosidl_serialization_support_;
+private:
+  rosidl_dynamic_typesupport_serialization_support_t rosidl_serialization_support_;
 };
 
 

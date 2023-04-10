@@ -14,6 +14,7 @@
 
 #include <rosidl_dynamic_typesupport/api/dynamic_data.h>
 #include <rosidl_dynamic_typesupport/api/dynamic_type.h>
+#include <rosidl_dynamic_typesupport/api/serialization_support.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
 #include <memory>
@@ -154,7 +155,8 @@ DynamicMessageTypeBuilder::init_from_description(
 
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_create_from_description(
-    serialization_support_->get_rosidl_serialization_support(), &description,
+    &serialization_support_->get_rosidl_serialization_support(),
+    &description,
     &rosidl_dynamic_type_builder);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type_builder) {
     throw std::runtime_error("could not create new dynamic type builder object");
@@ -177,14 +179,14 @@ DynamicMessageTypeBuilder::init_from_serialization_support_(
   if (!serialization_support) {
     throw std::runtime_error("serialization support cannot be nullptr!");
   }
-  if (!serialization_support->get_rosidl_serialization_support()) {
+  if (!&serialization_support->get_rosidl_serialization_support()) {
     throw std::runtime_error("serialization support raw pointer cannot be nullptr!");
   }
 
 
   rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder = nullptr;
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_builder_create(
-    serialization_support->get_rosidl_serialization_support(),
+    &serialization_support->get_rosidl_serialization_support(),
     name.c_str(), name.size(),
     &rosidl_dynamic_type_builder);
   if (ret != RCUTILS_RET_OK) {
@@ -212,19 +214,10 @@ DynamicMessageTypeBuilder::match_serialization_support_(
   bool out = true;
 
   if (serialization_support.get_serialization_library_identifier() != std::string(
-      rosidl_dynamic_type_builder.serialization_support->library_identifier))
+      rosidl_dynamic_type_builder.serialization_support->serialization_library_identifier))
   {
     RCUTILS_LOG_ERROR(
       "serialization support library identifier does not match dynamic type builder's");
-    out = false;
-  }
-
-  // TODO(methylDragon): Can I do this?? Is it portable?
-  if (serialization_support.get_rosidl_serialization_support() !=
-    rosidl_dynamic_type_builder.serialization_support)
-  {
-    RCUTILS_LOG_ERROR(
-      "serialization support pointer does not match dynamic type builder's");
     out = false;
   }
 
@@ -236,7 +229,7 @@ DynamicMessageTypeBuilder::match_serialization_support_(
 const std::string
 DynamicMessageTypeBuilder::get_serialization_library_identifier() const
 {
-  return std::string(rosidl_dynamic_type_builder_->serialization_support->library_identifier);
+  return std::string(rosidl_dynamic_type_builder_->serialization_support->serialization_library_identifier);
 }
 
 

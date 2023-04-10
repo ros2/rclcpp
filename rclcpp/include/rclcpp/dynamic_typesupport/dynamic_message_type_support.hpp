@@ -37,19 +37,18 @@ namespace rclcpp
 namespace dynamic_typesupport
 {
 
-/// Utility wrapper class for `rosidl_message_type_support_t *` containing managed
+/// Utility wrapper class for `rosidl_message_type_support_t` containing managed
 /// instances of the typesupport handle impl.
 /**
  *
  * NOTE: This class is the recommended way to obtain the dynamic message type
- *       support struct, instead of `rcl_dynamic_message_type_support_handle_create()`,
+ *       support struct, instead of `rcl_dynamic_message_type_support_handle_init()`,
  *       because this class will manage the lifetimes for you.
  *
  *       Do NOT call rcl_dynamic_message_type_support_handle_fini!!
  *
  * This class:
- * - Manages the lifetime of the raw pointer.
- * - Exposes getter methods to get the raw pointer and shared pointers
+ * - Exposes getter methods for the struct
  * - Stores shared pointers to wrapper classes that expose the underlying
  *   serialization support API
  *

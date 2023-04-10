@@ -14,6 +14,7 @@
 
 #include <rosidl_dynamic_typesupport/api/dynamic_data.h>
 #include <rosidl_dynamic_typesupport/api/dynamic_type.h>
+#include <rosidl_dynamic_typesupport/api/serialization_support.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
 #include <memory>
@@ -160,7 +161,9 @@ DynamicMessageType::init_from_description(
 
   rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_create_from_description(
-    serialization_support_->get_rosidl_serialization_support(), &description, &rosidl_dynamic_type);
+    &serialization_support_->get_rosidl_serialization_support(),
+    &description,
+    &rosidl_dynamic_type);
   if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
     throw std::runtime_error("could not create new dynamic type object");
   }
@@ -182,19 +185,12 @@ DynamicMessageType::match_serialization_support_(
   bool out = true;
 
   if (serialization_support.get_serialization_library_identifier() != std::string(
-      rosidl_dynamic_type.serialization_support->library_identifier))
+      rosidl_dynamic_type.serialization_support->serialization_library_identifier))
   {
     RCUTILS_LOG_ERROR(
-      "serialization support library identifier does not match dynamic type's");
-    out = false;
-  }
-
-  // TODO(methylDragon): Can I do this?? Is it portable?
-  if (serialization_support.get_rosidl_serialization_support() !=
-    rosidl_dynamic_type.serialization_support)
-  {
-    RCUTILS_LOG_ERROR(
-      "serialization support pointer does not match dynamic type's");
+      "serialization support library identifier does not match dynamic type's (%s vs %s)",
+      serialization_support.get_serialization_library_identifier().c_str(),
+      rosidl_dynamic_type.serialization_support->serialization_library_identifier);
     out = false;
   }
 
@@ -206,7 +202,7 @@ DynamicMessageType::match_serialization_support_(
 const std::string
 DynamicMessageType::get_serialization_library_identifier() const
 {
-  return std::string(rosidl_dynamic_type_->serialization_support->library_identifier);
+  return std::string(rosidl_dynamic_type_->serialization_support->serialization_library_identifier);
 }
 
 
