@@ -39,9 +39,9 @@ DynamicSerializationSupport::DynamicSerializationSupport(
   rmw_ret_t ret = RMW_RET_ERROR;
 
   if (serialization_library_name.empty()) {
-    ret = rmw_init_serialization_support(NULL, &allocator, &rosidl_serialization_support_);
+    ret = rmw_serialization_support_init(NULL, &allocator, &rosidl_serialization_support_);
   } else {
-    ret = rmw_init_serialization_support(
+    ret = rmw_serialization_support_init(
       serialization_library_name.c_str(), &allocator, &rosidl_serialization_support_);
   }
   if (ret != RCL_RET_OK) {
