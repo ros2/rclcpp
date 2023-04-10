@@ -37,7 +37,7 @@
   { \
     ValueT out; \
     rosidl_dynamic_typesupport_dynamic_data_get_ ## FunctionT ## _value( \
-      rosidl_dynamic_data_.get(), id, &out); \
+      &rosidl_dynamic_data_, id, &out); \
     return out; \
   }
 
@@ -55,7 +55,7 @@
   DynamicMessage::set_value<ValueT>(rosidl_dynamic_typesupport_member_id_t id, ValueT value) \
   { \
     rosidl_dynamic_typesupport_dynamic_data_set_ ## FunctionT ## _value( \
-      rosidl_dynamic_data_.get(), id, value); \
+      &rosidl_dynamic_data_, id, value); \
   }
 
 #define __DYNAMIC_MESSAGE_SET_VALUE_BY_NAME_FN(ValueT, FunctionT) \
@@ -73,7 +73,7 @@
   { \
     rosidl_dynamic_typesupport_member_id_t out; \
     rosidl_dynamic_typesupport_dynamic_data_insert_ ## FunctionT ## _value( \
-      rosidl_dynamic_data_.get(), value, &out); \
+      &rosidl_dynamic_data_, value, &out); \
     return out; \
   }
 
@@ -127,7 +127,7 @@ std::byte
 DynamicMessage::get_value<std::byte>(rosidl_dynamic_typesupport_member_id_t id)
 {
   unsigned char out;
-  rosidl_dynamic_typesupport_dynamic_data_get_byte_value(get_rosidl_dynamic_data(), id, &out);
+  rosidl_dynamic_typesupport_dynamic_data_get_byte_value(&get_rosidl_dynamic_data(), id, &out);
   return static_cast<std::byte>(out);
 }
 
@@ -146,7 +146,7 @@ DynamicMessage::set_value<std::byte>(
   rosidl_dynamic_typesupport_member_id_t id, const std::byte value)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_byte_value(
-    rosidl_dynamic_data_.get(), id, static_cast<unsigned char>(value));
+    &rosidl_dynamic_data_, id, static_cast<unsigned char>(value));
 }
 
 
@@ -164,7 +164,7 @@ DynamicMessage::insert_value<std::byte>(const std::byte value)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_byte_value(
-    rosidl_dynamic_data_.get(), static_cast<unsigned char>(value), &out);
+    &rosidl_dynamic_data_, static_cast<unsigned char>(value), &out);
   return out;
 }
 
@@ -177,7 +177,7 @@ DynamicMessage::get_value<std::string>(rosidl_dynamic_typesupport_member_id_t id
   size_t buf_length;
   char * buf = nullptr;
   rosidl_dynamic_typesupport_dynamic_data_get_string_value(
-    get_rosidl_dynamic_data(), id, &buf, &buf_length);
+    &get_rosidl_dynamic_data(), id, &buf, &buf_length);
   auto out = std::string(buf, buf_length);
   delete buf;
   return out;
@@ -191,7 +191,7 @@ DynamicMessage::get_value<std::u16string>(rosidl_dynamic_typesupport_member_id_t
   size_t buf_length;
   char16_t * buf = nullptr;
   rosidl_dynamic_typesupport_dynamic_data_get_wstring_value(
-    get_rosidl_dynamic_data(), id, &buf, &buf_length);
+    &get_rosidl_dynamic_data(), id, &buf, &buf_length);
   auto out = std::u16string(buf, buf_length);
   delete buf;
   return out;
@@ -220,7 +220,7 @@ DynamicMessage::set_value<std::string>(
   rosidl_dynamic_typesupport_member_id_t id, const std::string value)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_string_value(
-    rosidl_dynamic_data_.get(), id, value.c_str(), value.size());
+    &rosidl_dynamic_data_, id, value.c_str(), value.size());
 }
 
 
@@ -230,7 +230,7 @@ DynamicMessage::set_value<std::u16string>(
   rosidl_dynamic_typesupport_member_id_t id, const std::u16string value)
 {
   rosidl_dynamic_typesupport_dynamic_data_set_wstring_value(
-    rosidl_dynamic_data_.get(), id, value.c_str(), value.size());
+    &rosidl_dynamic_data_, id, value.c_str(), value.size());
 }
 
 
@@ -256,7 +256,7 @@ DynamicMessage::insert_value<std::string>(const std::string value)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_string_value(
-    rosidl_dynamic_data_.get(), value.c_str(), value.size(), &out);
+    &rosidl_dynamic_data_, value.c_str(), value.size(), &out);
   return out;
 }
 
@@ -267,7 +267,7 @@ DynamicMessage::insert_value<std::u16string>(const std::u16string value)
 {
   rosidl_dynamic_typesupport_member_id_t out;
   rosidl_dynamic_typesupport_dynamic_data_insert_wstring_value(
-    rosidl_dynamic_data_.get(), value.c_str(), value.size(), &out);
+    &rosidl_dynamic_data_, value.c_str(), value.size(), &out);
   return out;
 }
 

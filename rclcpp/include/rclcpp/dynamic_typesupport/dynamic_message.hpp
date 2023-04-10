@@ -15,6 +15,7 @@
 #ifndef RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_HPP_
 #define RCLCPP__DYNAMIC_TYPESUPPORT__DYNAMIC_MESSAGE_HPP_
 
+#include <rcl/allocator.h>
 #include <rcl/types.h>
 #include <rosidl_dynamic_typesupport/types.h>
 
@@ -26,21 +27,18 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-
 namespace rclcpp
 {
 namespace dynamic_typesupport
 {
 
-
 class DynamicMessageType;
 class DynamicMessageTypeBuilder;
 
-/// Utility wrapper class for rosidl_dynamic_typesupport_dynamic_data_t *
+/// Utility wrapper class for rosidl_dynamic_typesupport_dynamic_data_t
 /**
  * This class:
- * - Manages the lifetime of the raw pointer.
- * - Exposes getter methods to get the raw pointer and shared pointers
+ * - Exposes getter methods for the struct
  * - Exposes the underlying serialization support API
  *
  * Ownership:
@@ -67,49 +65,47 @@ public:
   // the data should be the exact same object managed by the DynamicSerializationSupport,
   // otherwise the lifetime management will not work properly.
 
-  /// Construct a new DynamicMessage with the provided dynamic type builder
+  /// Construct a new DynamicMessage with the provided dynamic type builder, using its allocator
   RCLCPP_PUBLIC
   explicit DynamicMessage(std::shared_ptr<DynamicMessageTypeBuilder> dynamic_type_builder);
 
-  /// Construct a new DynamicMessage with the provided dynamic type
+  /// Construct a new DynamicMessage with the provided dynamic type builder and allocator
+  RCLCPP_PUBLIC
+  DynamicMessage(
+    std::shared_ptr<DynamicMessageTypeBuilder> dynamic_type_builder,
+    rcl_allocator_t allocator);
+
+  /// Construct a new DynamicMessage with the provided dynamic type, using its allocator
   RCLCPP_PUBLIC
   explicit DynamicMessage(std::shared_ptr<DynamicMessageType> dynamic_type);
 
-  /// Assume ownership of raw pointer
+  /// Construct a new DynamicMessage with the provided dynamic type and allocator
   RCLCPP_PUBLIC
   DynamicMessage(
-    DynamicSerializationSupport::SharedPtr serialization_support,
-    rosidl_dynamic_typesupport_dynamic_data_t * rosidl_dynamic_data);
+    std::shared_ptr<DynamicMessageType> dynamic_type,
+    rcl_allocator_t allocator);
 
-  /// Copy shared pointer
+  /// Assume ownership of struct
   RCLCPP_PUBLIC
   DynamicMessage(
     DynamicSerializationSupport::SharedPtr serialization_support,
-    std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> rosidl_dynamic_data);
+    rosidl_dynamic_typesupport_dynamic_data_t && rosidl_dynamic_data);
 
   /// Loaning constructor
-  /// Must only be called with raw ptr obtained from loaning!
+  /// Must only be called with a rosidl dynaimc data object obtained from loaning!
   // NOTE(methylDragon): I'd put this in protected, but I need this exposed to
   //                     enable_shared_from_this...
   RCLCPP_PUBLIC
   DynamicMessage(
     DynamicMessage::SharedPtr parent_data,
-    rosidl_dynamic_typesupport_dynamic_data_t * rosidl_loaned_data);
+    rosidl_dynamic_typesupport_dynamic_data_t && rosidl_loaned_data);
 
   // NOTE(methylDragon): Deliberately no constructor from description to nudge users towards using
   //                     construction from dynamic type/builder, which is more efficient
 
-  /// Copy constructor
-  RCLCPP_PUBLIC
-  DynamicMessage(const DynamicMessage & other);
-
   /// Move constructor
   RCLCPP_PUBLIC
   DynamicMessage(DynamicMessage && other) noexcept;
-
-  /// Copy assignment
-  RCLCPP_PUBLIC
-  DynamicMessage & operator=(const DynamicMessage & other);
 
   /// Move assignment
   RCLCPP_PUBLIC
@@ -129,20 +125,12 @@ public:
   get_name() const;
 
   RCLCPP_PUBLIC
-  rosidl_dynamic_typesupport_dynamic_data_t *
+  rosidl_dynamic_typesupport_dynamic_data_t &
   get_rosidl_dynamic_data();
 
   RCLCPP_PUBLIC
-  const rosidl_dynamic_typesupport_dynamic_data_t *
+  const rosidl_dynamic_typesupport_dynamic_data_t &
   get_rosidl_dynamic_data() const;
-
-  RCLCPP_PUBLIC
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t>
-  get_shared_rosidl_dynamic_data();
-
-  RCLCPP_PUBLIC
-  std::shared_ptr<const rosidl_dynamic_typesupport_dynamic_data_t>
-  get_shared_rosidl_dynamic_data() const;
 
   RCLCPP_PUBLIC
   DynamicSerializationSupport::SharedPtr
@@ -176,19 +164,21 @@ public:
   // METHODS =======================================================================================
   RCLCPP_PUBLIC
   DynamicMessage
-  clone() const;
+  clone(rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   DynamicMessage::SharedPtr
-  clone_shared() const;
+  clone_shared(rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   DynamicMessage
-  init_from_type(DynamicMessageType & type) const;
+  init_from_type(
+    DynamicMessageType & type, rcl_allocator_t allocator = rcl_get_default_allocator()) const;
 
   RCLCPP_PUBLIC
   DynamicMessage::SharedPtr
-  init_from_type_shared(DynamicMessageType & type) const;
+  init_from_type_shared(
+    DynamicMessageType & type, rcl_allocator_t allocator = rcl_get_default_allocator()) const;
 
   RCLCPP_PUBLIC
   bool
@@ -196,11 +186,15 @@ public:
 
   RCLCPP_PUBLIC
   DynamicMessage::SharedPtr
-  loan_value(rosidl_dynamic_typesupport_member_id_t id);
+  loan_value(
+    rosidl_dynamic_typesupport_member_id_t id,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   DynamicMessage::SharedPtr
-  loan_value(const std::string & name);
+  loan_value(
+    const std::string & name,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   void
@@ -232,11 +226,11 @@ public:
 
   RCLCPP_PUBLIC
   bool
-  serialize(rcl_serialized_message_t * buffer);
+  serialize(rcl_serialized_message_t & buffer);
 
   RCLCPP_PUBLIC
   bool
-  deserialize(rcl_serialized_message_t * buffer);
+  deserialize(rcl_serialized_message_t & buffer);
 
 
   // MEMBER ACCESS TEMPLATES =======================================================================
@@ -366,19 +360,27 @@ public:
   // NESTED MEMBER ACCESS ==========================================================================
   RCLCPP_PUBLIC
   DynamicMessage
-  get_complex_value(rosidl_dynamic_typesupport_member_id_t id);
+  get_complex_value(
+    rosidl_dynamic_typesupport_member_id_t id,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   DynamicMessage
-  get_complex_value(const std::string & name);
+  get_complex_value(
+    const std::string & name,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   DynamicMessage::SharedPtr
-  get_complex_value_shared(rosidl_dynamic_typesupport_member_id_t id);
+  get_complex_value_shared(
+    rosidl_dynamic_typesupport_member_id_t id,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   DynamicMessage::SharedPtr
-  get_complex_value_shared(const std::string & name);
+  get_complex_value_shared(
+    const std::string & name,
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   RCLCPP_PUBLIC
   void
@@ -405,14 +407,15 @@ protected:
   // DynamicSerializationSupport
   DynamicSerializationSupport::SharedPtr serialization_support_;
 
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_data_t> rosidl_dynamic_data_;
-
+  rosidl_dynamic_typesupport_dynamic_data_t rosidl_dynamic_data_;
   bool is_loaned_;
 
   // Used for returning the loaned value, and lifetime management
   DynamicMessage::SharedPtr parent_data_;
 
 private:
+  RCLCPP_DISABLE_COPY(DynamicMessage)
+
   RCLCPP_PUBLIC
   DynamicMessage();
 
@@ -422,7 +425,6 @@ private:
     const DynamicSerializationSupport & serialization_support,
     const rosidl_dynamic_typesupport_dynamic_data_t & dynamic_data);
 };
-
 
 }  // namespace dynamic_typesupport
 }  // namespace rclcpp

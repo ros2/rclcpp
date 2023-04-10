@@ -25,17 +25,15 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-
 namespace rclcpp
 {
 namespace dynamic_typesupport
 {
 
-/// Utility wrapper class for rosidl_dynamic_typesupport_serialization_support_t *
+/// Utility wrapper class for rosidl_dynamic_typesupport_serialization_support_t
 /**
  * This class:
- * - Manages the lifetime of the raw pointer.
- * - Exposes getter methods to get the raw pointer and shared pointers
+ * - Exposes getter methods for the struct
  * - Exposes the underlying serialization support API
  *
  * Ownership:
@@ -57,7 +55,7 @@ public:
     const std::string & serialization_library_name,
     rcl_allocator_t allocator = rcl_get_default_allocator());
 
-  /// Assume ownership of reference
+  /// Assume ownership of struct
   RCLCPP_PUBLIC
   explicit DynamicSerializationSupport(
     rosidl_dynamic_typesupport_serialization_support_t && rosidl_serialization_support);
@@ -93,7 +91,6 @@ protected:
 private:
   rosidl_dynamic_typesupport_serialization_support_t rosidl_serialization_support_;
 };
-
 
 }  // namespace dynamic_typesupport
 }  // namespace rclcpp

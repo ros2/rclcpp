@@ -716,7 +716,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
           [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
           [&]()
           {
-            bool ret = dynamic_message->deserialize(&serialized_msg->get_rcl_serialized_message());
+            bool ret = dynamic_message->deserialize(serialized_msg->get_rcl_serialized_message());
             if (!ret) {
               throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
             }

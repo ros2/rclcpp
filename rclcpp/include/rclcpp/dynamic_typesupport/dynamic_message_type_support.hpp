@@ -45,7 +45,7 @@ namespace dynamic_typesupport
  *       support struct, instead of `rcl_dynamic_message_type_support_handle_init()`,
  *       because this class will manage the lifetimes for you.
  *
- *       Do NOT call rcl_dynamic_message_type_support_handle_fini!!
+ *       Do NOT call rcl_dynamic_message_type_support_handle_fini
  *
  * This class:
  * - Exposes getter methods for the struct

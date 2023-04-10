@@ -39,7 +39,7 @@
     const std::string & default_value) \
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _member( \
-      rosidl_dynamic_type_builder_.get(), \
+      &rosidl_dynamic_type_builder_, \
       id, name.c_str(), name.size(), default_value.c_str(), default_value.size()); \
   }
 
@@ -52,7 +52,7 @@
     const std::string & default_value) \
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _array_member( \
-      rosidl_dynamic_type_builder_.get(), \
+      &rosidl_dynamic_type_builder_, \
       id, name.c_str(), name.size(), default_value.c_str(), default_value.size(), \
       array_length); \
   }
@@ -67,7 +67,7 @@
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## \
     _unbounded_sequence_member( \
-      rosidl_dynamic_type_builder_.get(), \
+      &rosidl_dynamic_type_builder_, \
       id, name.c_str(), name.size(), default_value.c_str(), default_value.size()); \
   }
 
@@ -81,7 +81,7 @@
     const std::string & default_value) \
   { \
     rosidl_dynamic_typesupport_dynamic_type_builder_add_ ## FunctionT ## _bounded_sequence_member( \
-      rosidl_dynamic_type_builder_.get(), \
+      &rosidl_dynamic_type_builder_, \
       id, name.c_str(), name.size(), default_value.c_str(), default_value.size(), \
       sequence_bound); \
   }

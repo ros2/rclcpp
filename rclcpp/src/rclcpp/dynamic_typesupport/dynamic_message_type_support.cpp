@@ -82,10 +82,10 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     std::move(ts_impl->serialization_support));
 
   dynamic_message_type_ = DynamicMessageType::make_shared(
-    get_shared_dynamic_serialization_support(), std::move(ts_impl->dynamic_message_type));
+    get_shared_dynamic_serialization_support(), std::move(*ts_impl->dynamic_message_type));
 
   dynamic_message_ = DynamicMessage::make_shared(
-    get_shared_dynamic_serialization_support(), std::move(ts_impl->dynamic_message));
+    get_shared_dynamic_serialization_support(), std::move(*ts_impl->dynamic_message));
 }
 
 DynamicMessageTypeSupport::DynamicMessageTypeSupport(
@@ -131,10 +131,10 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
     rosidl_message_type_support_.data);
 
   dynamic_message_type_ = DynamicMessageType::make_shared(
-    get_shared_dynamic_serialization_support(), ts_impl->dynamic_message_type);
+    get_shared_dynamic_serialization_support(), std::move(*ts_impl->dynamic_message_type));
 
   dynamic_message_ = DynamicMessage::make_shared(
-    get_shared_dynamic_serialization_support(), ts_impl->dynamic_message);
+    get_shared_dynamic_serialization_support(), std::move(*ts_impl->dynamic_message));
 }
 
 DynamicMessageTypeSupport::DynamicMessageTypeSupport(
@@ -204,8 +204,8 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
   // ts_impl->type_description_sources  = // Not used
 
   ts_impl->serialization_support = serialization_support->get_rosidl_serialization_support();
-  ts_impl->dynamic_message_type = dynamic_message_type->get_rosidl_dynamic_type();
-  ts_impl->dynamic_message = dynamic_message->get_rosidl_dynamic_data();
+  ts_impl->dynamic_message_type = &dynamic_message_type->get_rosidl_dynamic_type();
+  ts_impl->dynamic_message = &dynamic_message->get_rosidl_dynamic_data();
 
   rosidl_message_type_support_ = {
     rosidl_get_dynamic_typesupport_identifier(),            // typesupport_identifier
@@ -222,6 +222,12 @@ DynamicMessageTypeSupport::DynamicMessageTypeSupport(
 
 DynamicMessageTypeSupport::~DynamicMessageTypeSupport()
 {
+  // These must go first
+  serialization_support_.reset();
+  dynamic_message_type_.reset();
+  dynamic_message_.reset();
+
+  // Early return if type support isn't populated to avoid segfaults
   if (!rosidl_message_type_support_.data) {
     return;
   }

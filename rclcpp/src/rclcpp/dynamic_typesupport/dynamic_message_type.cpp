@@ -37,69 +37,39 @@ using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 
 // CONSTRUCTION ====================================================================================
 DynamicMessageType::DynamicMessageType(DynamicMessageTypeBuilder::SharedPtr dynamic_type_builder)
+: DynamicMessageType::DynamicMessageType(
+    dynamic_type_builder, dynamic_type_builder->get_rosidl_dynamic_type_builder().allocator) {}
+
+
+DynamicMessageType::DynamicMessageType(
+  DynamicMessageTypeBuilder::SharedPtr dynamic_type_builder,
+  rcl_allocator_t allocator)
 : serialization_support_(dynamic_type_builder->get_shared_dynamic_serialization_support()),
-  rosidl_dynamic_type_(nullptr)
+  rosidl_dynamic_type_(rosidl_dynamic_typesupport_get_zero_initialized_dynamic_type())
 {
   if (!serialization_support_) {
     throw std::runtime_error("dynamic type could not bind serialization support!");
   }
 
-  rosidl_dynamic_typesupport_dynamic_type_builder_t * rosidl_dynamic_type_builder =
+  rosidl_dynamic_typesupport_dynamic_type_builder_t rosidl_dynamic_type_builder =
     dynamic_type_builder->get_rosidl_dynamic_type_builder();
-  if (!rosidl_dynamic_type_builder) {
-    throw std::runtime_error("dynamic type builder cannot be nullptr!");
-  }
 
-  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_create_from_dynamic_type_builder(
-    rosidl_dynamic_type_builder, &rosidl_dynamic_type);
-  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
-    throw std::runtime_error("could not create new dynamic type object");
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_init_from_dynamic_type_builder(
+    &rosidl_dynamic_type_builder, &allocator, &get_rosidl_dynamic_type());
+  if (ret != RCUTILS_RET_OK) {
+    throw std::runtime_error("could not init new dynamic type object");
   }
-
-  rosidl_dynamic_type_.reset(
-    rosidl_dynamic_type,
-    // Custom deleter
-    [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
-      rosidl_dynamic_typesupport_dynamic_type_destroy(rosidl_dynamic_type);
-    });
 }
 
 
 DynamicMessageType::DynamicMessageType(
   DynamicSerializationSupport::SharedPtr serialization_support,
-  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)
-: serialization_support_(serialization_support), rosidl_dynamic_type_(nullptr)
+  rosidl_dynamic_typesupport_dynamic_type_t && rosidl_dynamic_type)
+: serialization_support_(serialization_support),
+  rosidl_dynamic_type_(std::move(rosidl_dynamic_type))
 {
-  if (!rosidl_dynamic_type) {
-    throw std::runtime_error("rosidl dynamic type cannot be nullptr!");
-  }
   if (serialization_support) {
-    if (!match_serialization_support_(*serialization_support, *rosidl_dynamic_type)) {
-      throw std::runtime_error(
-              "serialization support library identifier does not match dynamic type's!");
-    }
-  }
-
-  rosidl_dynamic_type_.reset(
-    rosidl_dynamic_type,
-    // Custom deleter
-    [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
-      rosidl_dynamic_typesupport_dynamic_type_destroy(rosidl_dynamic_type);
-    });
-}
-
-
-DynamicMessageType::DynamicMessageType(
-  DynamicSerializationSupport::SharedPtr serialization_support,
-  std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t> rosidl_dynamic_type)
-: serialization_support_(serialization_support), rosidl_dynamic_type_(rosidl_dynamic_type)
-{
-  if (!rosidl_dynamic_type) {
-    throw std::runtime_error("rosidl dynamic type cannot be nullptr!");
-  }
-  if (serialization_support) {
-    if (!match_serialization_support_(*serialization_support, *rosidl_dynamic_type)) {
+    if (!match_serialization_support_(*serialization_support, rosidl_dynamic_type)) {
       throw std::runtime_error(
               "serialization support library identifier does not match dynamic type's!");
     }
@@ -109,32 +79,20 @@ DynamicMessageType::DynamicMessageType(
 
 DynamicMessageType::DynamicMessageType(
   DynamicSerializationSupport::SharedPtr serialization_support,
-  const rosidl_runtime_c__type_description__TypeDescription & description)
-: serialization_support_(serialization_support), rosidl_dynamic_type_(nullptr)
+  const rosidl_runtime_c__type_description__TypeDescription & description,
+  rcl_allocator_t allocator)
+: serialization_support_(serialization_support),
+  rosidl_dynamic_type_(rosidl_dynamic_typesupport_get_zero_initialized_dynamic_type())
 {
-  init_from_description(description, serialization_support);
-}
-
-
-DynamicMessageType::DynamicMessageType(const DynamicMessageType & other)
-: enable_shared_from_this(), serialization_support_(nullptr), rosidl_dynamic_type_(nullptr)
-{
-  DynamicMessageType out = other.clone();
-  std::swap(serialization_support_, out.serialization_support_);
-  std::swap(rosidl_dynamic_type_, out.rosidl_dynamic_type_);
+  init_from_description(description, allocator, serialization_support);
 }
 
 
 DynamicMessageType::DynamicMessageType(DynamicMessageType && other) noexcept
 : serialization_support_(std::exchange(other.serialization_support_, nullptr)),
-  rosidl_dynamic_type_(std::exchange(other.rosidl_dynamic_type_, nullptr)) {}
-
-
-DynamicMessageType &
-DynamicMessageType::operator=(const DynamicMessageType & other)
-{
-  return *this = DynamicMessageType(other);
-}
+  rosidl_dynamic_type_(std::exchange(
+      other.rosidl_dynamic_type_, rosidl_dynamic_typesupport_get_zero_initialized_dynamic_type()))
+{}
 
 
 DynamicMessageType &
@@ -146,12 +104,18 @@ DynamicMessageType::operator=(DynamicMessageType && other) noexcept
 }
 
 
-DynamicMessageType::~DynamicMessageType() {}
+DynamicMessageType::~DynamicMessageType()
+{
+  if (rosidl_dynamic_typesupport_dynamic_type_fini(&get_rosidl_dynamic_type()) != RCUTILS_RET_OK) {
+    RCUTILS_LOG_ERROR("could not fini rosidl dynamic type");
+  }
+}
 
 
 void
 DynamicMessageType::init_from_description(
   const rosidl_runtime_c__type_description__TypeDescription & description,
+  rcl_allocator_t allocator,
   DynamicSerializationSupport::SharedPtr serialization_support)
 {
   if (serialization_support) {
@@ -159,21 +123,18 @@ DynamicMessageType::init_from_description(
     serialization_support_ = serialization_support;
   }
 
-  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
-  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_create_from_description(
+  rosidl_dynamic_typesupport_dynamic_type_t rosidl_dynamic_type =
+    rosidl_dynamic_typesupport_get_zero_initialized_dynamic_type();
+  rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_init_from_description(
     &serialization_support_->get_rosidl_serialization_support(),
     &description,
+    &allocator,
     &rosidl_dynamic_type);
-  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
-    throw std::runtime_error("could not create new dynamic type object");
+  if (ret != RCUTILS_RET_OK) {
+    throw std::runtime_error("could not init new dynamic type object");
   }
 
-  rosidl_dynamic_type_.reset(
-    rosidl_dynamic_type,
-    // Custom deleter
-    [](rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type)->void {
-      rosidl_dynamic_typesupport_dynamic_type_destroy(rosidl_dynamic_type);
-    });
+  rosidl_dynamic_type_ = std::move(rosidl_dynamic_type);
 }
 
 
@@ -182,8 +143,6 @@ DynamicMessageType::match_serialization_support_(
   const DynamicSerializationSupport & serialization_support,
   const rosidl_dynamic_typesupport_dynamic_type_t & rosidl_dynamic_type)
 {
-  bool out = true;
-
   if (serialization_support.get_serialization_library_identifier() != std::string(
       rosidl_dynamic_type.serialization_support->serialization_library_identifier))
   {
@@ -191,10 +150,9 @@ DynamicMessageType::match_serialization_support_(
       "serialization support library identifier does not match dynamic type's (%s vs %s)",
       serialization_support.get_serialization_library_identifier().c_str(),
       rosidl_dynamic_type.serialization_support->serialization_library_identifier);
-    out = false;
+    return false;
   }
-
-  return out;
+  return true;
 }
 
 
@@ -202,7 +160,8 @@ DynamicMessageType::match_serialization_support_(
 const std::string
 DynamicMessageType::get_serialization_library_identifier() const
 {
-  return std::string(rosidl_dynamic_type_->serialization_support->serialization_library_identifier);
+  return std::string(
+    get_rosidl_dynamic_type().serialization_support->serialization_library_identifier);
 }
 
 
@@ -211,7 +170,7 @@ DynamicMessageType::get_name() const
 {
   size_t buf_length;
   const char * buf;
-  rosidl_dynamic_typesupport_dynamic_type_get_name(get_rosidl_dynamic_type(), &buf, &buf_length);
+  rosidl_dynamic_typesupport_dynamic_type_get_name(&get_rosidl_dynamic_type(), &buf, &buf_length);
   return std::string(buf, buf_length);
 }
 
@@ -221,7 +180,7 @@ DynamicMessageType::get_member_count() const
 {
   size_t out;
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_get_member_count(
-    rosidl_dynamic_type_.get(), &out);
+    &get_rosidl_dynamic_type(), &out);
   if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
             std::string("could not get member count: ") + rcl_get_error_string().str);
@@ -230,33 +189,17 @@ DynamicMessageType::get_member_count() const
 }
 
 
-rosidl_dynamic_typesupport_dynamic_type_t *
+rosidl_dynamic_typesupport_dynamic_type_t &
 DynamicMessageType::get_rosidl_dynamic_type()
 {
-  return rosidl_dynamic_type_.get();
+  return rosidl_dynamic_type_;
 }
 
 
-const rosidl_dynamic_typesupport_dynamic_type_t *
+const rosidl_dynamic_typesupport_dynamic_type_t &
 DynamicMessageType::get_rosidl_dynamic_type() const
 {
-  return rosidl_dynamic_type_.get();
-}
-
-
-std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>
-DynamicMessageType::get_shared_rosidl_dynamic_type()
-{
-  return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>(
-    shared_from_this(), rosidl_dynamic_type_.get());
-}
-
-
-std::shared_ptr<const rosidl_dynamic_typesupport_dynamic_type_t>
-DynamicMessageType::get_shared_rosidl_dynamic_type() const
-{
-  return std::shared_ptr<rosidl_dynamic_typesupport_dynamic_type_t>(
-    shared_from_this(), rosidl_dynamic_type_.get());
+  return rosidl_dynamic_type_;
 }
 
 
@@ -276,30 +219,34 @@ DynamicMessageType::get_shared_dynamic_serialization_support() const
 
 // METHODS =========================================================================================
 DynamicMessageType
-DynamicMessageType::clone() const
+DynamicMessageType::clone(rcl_allocator_t allocator)
 {
-  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
+  rosidl_dynamic_typesupport_dynamic_type_t rosidl_dynamic_type =
+    rosidl_dynamic_typesupport_get_zero_initialized_dynamic_type();
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_clone(
-    get_rosidl_dynamic_type(), &rosidl_dynamic_type);
-  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
+    &get_rosidl_dynamic_type(), &allocator, &rosidl_dynamic_type);
+  if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
             std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
   }
-  return DynamicMessageType(serialization_support_, rosidl_dynamic_type);
+  return DynamicMessageType(
+    get_shared_dynamic_serialization_support(), std::move(rosidl_dynamic_type));
 }
 
 
 DynamicMessageType::SharedPtr
-DynamicMessageType::clone_shared() const
+DynamicMessageType::clone_shared(rcl_allocator_t allocator)
 {
-  rosidl_dynamic_typesupport_dynamic_type_t * rosidl_dynamic_type = nullptr;
+  rosidl_dynamic_typesupport_dynamic_type_t rosidl_dynamic_type =
+    rosidl_dynamic_typesupport_get_zero_initialized_dynamic_type();
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_clone(
-    get_rosidl_dynamic_type(), &rosidl_dynamic_type);
-  if (ret != RCUTILS_RET_OK || !rosidl_dynamic_type) {
+    &get_rosidl_dynamic_type(), &allocator, &rosidl_dynamic_type);
+  if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
             std::string("could not clone dynamic type: ") + rcl_get_error_string().str);
   }
-  return DynamicMessageType::make_shared(serialization_support_, rosidl_dynamic_type);
+  return DynamicMessageType::make_shared(
+    get_shared_dynamic_serialization_support(), std::move(rosidl_dynamic_type));
 }
 
 
@@ -311,7 +258,7 @@ DynamicMessageType::equals(const DynamicMessageType & other) const
   }
   bool out;
   rcutils_ret_t ret = rosidl_dynamic_typesupport_dynamic_type_equals(
-    get_rosidl_dynamic_type(), other.get_rosidl_dynamic_type(), &out);
+    &get_rosidl_dynamic_type(), &other.get_rosidl_dynamic_type(), &out);
   if (ret != RCUTILS_RET_OK) {
     throw std::runtime_error(
             std::string("could not equate dynamic message types: ") + rcl_get_error_string().str);
@@ -321,14 +268,14 @@ DynamicMessageType::equals(const DynamicMessageType & other) const
 
 
 DynamicMessage
-DynamicMessageType::build_dynamic_message()
+DynamicMessageType::build_dynamic_message(rcl_allocator_t allocator)
 {
-  return DynamicMessage(shared_from_this());
+  return DynamicMessage(shared_from_this(), allocator);
 }
 
 
 DynamicMessage::SharedPtr
-DynamicMessageType::build_dynamic_message_shared()
+DynamicMessageType::build_dynamic_message_shared(rcl_allocator_t allocator)
 {
-  return DynamicMessage::make_shared(shared_from_this());
+  return DynamicMessage::make_shared(shared_from_this(), allocator);
 }
