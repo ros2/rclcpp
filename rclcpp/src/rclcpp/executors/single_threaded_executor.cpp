@@ -32,7 +32,6 @@ SingleThreadedExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-
   while (rclcpp::ok(this->context_) && spinning.load()) {
     wait_for_work();
 
@@ -44,7 +43,9 @@ SingleThreadedExecutor::spin()
       this->ready_executables_.clear();
     }
 
+    // Execute all available executables before return to wait for work
     for (auto & exec : to_exec) {
+      // Block mutually exclusive callback group
       if (exec.callback_group &&
         exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
       {

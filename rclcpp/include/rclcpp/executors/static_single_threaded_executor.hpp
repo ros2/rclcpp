@@ -15,7 +15,12 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 
+#include <atomic>
+#include <chrono>
+#include <memory>
+
 #include "rclcpp/executor.hpp"
+#include "rclcpp/executors/executor_entities_collection.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 
 namespace rclcpp
@@ -39,7 +44,6 @@ namespace executors
  * exec.spin();
  * exec.remove_node(node);
  */
-
 class StaticSingleThreadedExecutor : public rclcpp::Executor
 {
 public:
@@ -104,11 +108,14 @@ public:
 protected:
   /**
    * @brief Executes ready executables from wait set.
+   * @param collection entities to evaluate for ready executables.
+   * @param wait_result result to check for ready executables.
    * @param spin_once if true executes only the first ready executable.
    * @return true if any executable was ready.
    */
   RCLCPP_PUBLIC
-  bool execute_ready_executables(
+  bool
+  execute_ready_executables(
     const rclcpp::executors::ExecutorEntitiesCollection & collection,
     rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
     bool spin_once);
