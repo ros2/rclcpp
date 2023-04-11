@@ -49,7 +49,7 @@ SingleThreadedExecutor::spin()
       if (exec.callback_group &&
         exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
       {
-        assert(any_executable.callback_group->can_be_taken_from().load());
+        assert(exec.callback_group->can_be_taken_from().load());
         exec.callback_group->can_be_taken_from().store(false);
       }
       execute_any_executable(exec);
