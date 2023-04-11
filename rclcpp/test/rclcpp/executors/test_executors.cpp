@@ -665,10 +665,13 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   EXPECT_EQ(0, this->callback_count.load());
   this->publisher->publish(test_msgs::msg::Empty());
 
+  // Wait for up to 5 seconds for the first message to come available.
   const std::chrono::milliseconds sleep_per_loop(10);
-  while (1u != this->callback_count.load()) {
+  int loops = 0;
+  while (1u != this->callback_count.load() && loops < 500) {
     rclcpp::sleep_for(sleep_per_loop);
     executor.spin_some();
+    loops++;
   }
   EXPECT_EQ(1u, this->callback_count.load());
 
@@ -678,9 +681,16 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   for (size_t ii = 0; ii < kNumMessages; ++ii) {
     this->publisher->publish(test_msgs::msg::Empty());
   }
+
+  // Fire a timer every 10ms up to 5 seconds waiting for subscriptions to be read.
+  loops = 0;
   auto timer = this->node->create_wall_timer(
-    std::chrono::milliseconds(250), [&executor]() {
-      executor.cancel();
+    std::chrono::milliseconds(10), [this, &executor, &loops]() {
+      loops++;
+      if (kNumMessages == this->callback_count.load() ||
+          loops == 500) {
+        executor.cancel();
+      }
     });
   executor.spin();
   EXPECT_EQ(kNumMessages, this->callback_count.load());
