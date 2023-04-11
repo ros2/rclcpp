@@ -45,7 +45,7 @@ CallbackGroup::~CallbackGroup()
 }
 bool
 
-CallbackGroup::has_valid_node()
+CallbackGroup::has_valid_node() const
 {
   return nullptr != this->get_context_();
 }

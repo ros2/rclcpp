@@ -35,7 +35,6 @@ class ExecutorNotifyWaitable : public rclcpp::Waitable
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ExecutorNotifyWaitable)
 
-
   // Constructor
   /**
    * \param[in] on_execute_callback Callback to execute when one of the conditions

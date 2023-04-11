@@ -338,7 +338,7 @@ ExecutorEntitiesCollector::process_queues()
         remove_weak_callback_group(group_it, manually_added_groups_);
       } else {
         throw std::runtime_error(
-          "Attempting to remove a callback group not added to this executor.");
+                "Attempting to remove a callback group not added to this executor.");
       }
     }
   }
