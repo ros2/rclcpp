@@ -190,7 +190,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  has_valid_node();
+  has_valid_node() const;
 
   /// Get the total number of entities in this callback group.
   /**
