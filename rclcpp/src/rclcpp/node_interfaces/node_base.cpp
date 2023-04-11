@@ -208,6 +208,7 @@ NodeBase::create_callback_group(
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
+  this->trigger_notify_guard_condition();
   return group;
 }
 

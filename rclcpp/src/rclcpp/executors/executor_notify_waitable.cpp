@@ -46,9 +46,11 @@ void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  for (auto guard_condition : this->notify_guard_conditions_) {
-    auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
+  for (auto weak_guard_condition : this->notify_guard_conditions_) {
+    auto guard_condition = weak_guard_condition.lock();
+    if (!guard_condition) continue;
 
+    auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
     rcl_ret_t ret = rcl_wait_set_add_guard_condition(
       wait_set,
       rcl_guard_condition, NULL);
@@ -64,6 +66,7 @@ bool
 ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+
   bool any_ready = false;
   for (size_t ii = 0; ii < wait_set->size_of_guard_conditions; ++ii) {
     auto rcl_guard_condition = wait_set->guard_conditions[ii];
@@ -71,7 +74,8 @@ ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
     if (nullptr == rcl_guard_condition) {
       continue;
     }
-    for (auto guard_condition : this->notify_guard_conditions_) {
+    for (auto weak_guard_condition : this->notify_guard_conditions_) {
+      auto guard_condition = weak_guard_condition.lock();
       if (guard_condition && &guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
         any_ready = true;
       }
@@ -97,9 +101,8 @@ void
 ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  auto guard_condition = weak_guard_condition.lock();
-  if (guard_condition && notify_guard_conditions_.count(guard_condition) == 0) {
-    notify_guard_conditions_.insert(guard_condition);
+  if (notify_guard_conditions_.count(weak_guard_condition) == 0) {
+    notify_guard_conditions_.insert(weak_guard_condition);
   }
 }
 
@@ -107,9 +110,8 @@ void
 ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  auto guard_condition = weak_guard_condition.lock();
-  if (notify_guard_conditions_.count(guard_condition) != 0) {
-    notify_guard_conditions_.erase(guard_condition);
+  if (notify_guard_conditions_.count(weak_guard_condition) != 0) {
+    notify_guard_conditions_.erase(weak_guard_condition);
   }
 }
 

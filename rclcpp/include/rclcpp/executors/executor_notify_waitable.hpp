@@ -120,8 +120,8 @@ private:
   std::mutex guard_condition_mutex_;
 
   /// The collection of guard conditions to be waited on.
-  std::set<rclcpp::GuardCondition::SharedPtr,
-    std::owner_less<rclcpp::GuardCondition::SharedPtr>> notify_guard_conditions_;
+  std::set<rclcpp::GuardCondition::WeakPtr,
+    std::owner_less<rclcpp::GuardCondition::WeakPtr>> notify_guard_conditions_;
 };
 
 }  // namespace executors

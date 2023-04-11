@@ -191,17 +191,17 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
-    2s, timer_callback, cb_grp);
+    1s, timer_callback, cb_grp);
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   auto timer2_callback = []() {};
   rclcpp::TimerBase::SharedPtr timer2_ = node->create_wall_timer(
-    2s, timer2_callback, cb_grp2);
+    1s, timer2_callback, cb_grp2);
   rclcpp::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, true);
   auto timer3_callback = []() {};
   rclcpp::TimerBase::SharedPtr timer3_ = node->create_wall_timer(
-    2s, timer3_callback, cb_grp3);
+    1s, timer3_callback, cb_grp3);
   executor.spin();
 }
 
