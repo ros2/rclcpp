@@ -679,53 +679,16 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       }
 
     // DYNAMIC SUBSCRIPTION ========================================================================
-    // If a subscription is dynamic, then it will use its serialization-specific dynamic data.
-    //
-    // Two cases:
-    // - Dynamic type subscription using dynamic type stored in its own internal type support struct
-    // - Non-dynamic type subscription with no stored dynamic type
-    //   - Subscriptions of this type must be able to lookup the local message description to
-    //     generate a dynamic type at runtime!
-    //   - TODO(methylDragon): I won't be handling this case yet
-
     // Take dynamic message directly from the middleware
     case rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT:
       {
-        DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
-        take_and_do_error_handling(
-          "taking a dynamic message from topic",
-          subscription->get_topic_name(),
-          // This modifies the stored dynamic data in the DynamicMessage in-place
-          [&]() {return subscription->take_dynamic_message(*dynamic_message, message_info);},
-          [&]() {subscription->handle_dynamic_message(dynamic_message, message_info);});
-        subscription->return_dynamic_message(dynamic_message);
-        break;
+        throw std::runtime_error("Unimplemented");
       }
 
     // Take serialized and then convert to dynamic message
     case rclcpp::SubscriptionType::DYNAMIC_MESSAGE_FROM_SERIALIZED:
       {
-        std::shared_ptr<SerializedMessage> serialized_msg =
-          subscription->create_serialized_message();
-
-        // NOTE(methylDragon): Is this clone necessary? If I'm following the pattern, it seems so.
-        DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
-        take_and_do_error_handling(
-          "taking a serialized message from topic",
-          subscription->get_topic_name(),
-          [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
-          [&]()
-          {
-            bool ret = dynamic_message->deserialize(serialized_msg->get_rcl_serialized_message());
-            if (!ret) {
-              throw_from_rcl_error(ret, "Couldn't convert serialized message to dynamic data!");
-            }
-            subscription->handle_dynamic_message(dynamic_message, message_info);
-          }
-        );
-        subscription->return_serialized_message(serialized_msg);
-        subscription->return_dynamic_message(dynamic_message);
-        break;
+        throw std::runtime_error("Unimplemented");
       }
   }
   return;

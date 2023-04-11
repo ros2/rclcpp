@@ -129,9 +129,6 @@
  * - Dynamic typesupport
  *   - rclcpp::dynamic_typesupport::DynamicMessageTypeSupport
  *   - rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp
- * - Dynamic subscription
- *   - rclcpp::DynamicSubscription
- *   - rclcpp/dynamic_subscription.hpp
  * - Generic publisher
  *   - rclcpp::Node::create_generic_publisher()
  *   - rclcpp::GenericPublisher
@@ -181,7 +178,5 @@
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
 #include "rclcpp/wait_set.hpp"
-
-#include "rclcpp/dynamic_subscription.hpp"
 
 #endif  // RCLCPP__RCLCPP_HPP_

@@ -266,6 +266,15 @@ SubscriptionBase::get_message_type_support_handle() const
   return type_support_;
 }
 
+bool
+SubscriptionBase::is_serialized() const
+{
+  RCLCPP_WARN(
+    rclcpp::get_logger(
+      "rclcpp"), "is_serialized() is deprecated, use get_subscription_type() instead.");
+  return subscription_type_ == rclcpp::SubscriptionType::SERIALIZED_MESSAGE;
+}
+
 rclcpp::SubscriptionType
 SubscriptionBase::get_subscription_type() const
 {
@@ -528,21 +537,11 @@ SubscriptionBase::get_content_filter() const
 
 
 // DYNAMIC TYPE ==================================================================================
-// TODO(methylDragon): Reorder later
 bool
 SubscriptionBase::take_dynamic_message(
   rclcpp::dynamic_typesupport::DynamicMessage & message_out,
   rclcpp::MessageInfo & message_info_out)
 {
-  rcl_ret_t ret = rcl_take_dynamic_message(
-    this->get_subscription_handle().get(),
-    &message_out.get_rosidl_dynamic_data(),
-    &message_info_out.get_rmw_message_info(),
-    nullptr);
-  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-    return false;
-  } else if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  return true;
+  RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "take_dynamic_message stubbed out for now.");
+  return false;
 }

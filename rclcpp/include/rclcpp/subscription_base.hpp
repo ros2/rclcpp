@@ -238,6 +238,11 @@ public:
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
+  /// DEPRECATED: Check if subscription takes and handles serialized messages
+  RCLCPP_PUBLIC
+  bool
+  is_serialized() const;
+
   /// Return the type of the subscription.
   /**
    * \return `SubscriptionType`, which adjusts how messages are received and delivered.

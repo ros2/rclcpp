@@ -28,71 +28,14 @@ using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 
 // CONSTRUCTION ====================================================================================
 DynamicSerializationSupport::DynamicSerializationSupport(rcl_allocator_t allocator)
-: DynamicSerializationSupport::DynamicSerializationSupport("", allocator) {}
+: DynamicSerializationSupport::DynamicSerializationSupport("", allocator) {}  // STUBBED
 
 DynamicSerializationSupport::DynamicSerializationSupport(
   const std::string & serialization_library_name,
   rcl_allocator_t allocator)
 : rosidl_serialization_support_(
     rosidl_dynamic_typesupport_get_zero_initialized_serialization_support())
-{
-  rmw_ret_t ret = RMW_RET_ERROR;
-
-  if (serialization_library_name.empty()) {
-    ret = rmw_serialization_support_init(NULL, &allocator, &rosidl_serialization_support_);
-  } else {
-    ret = rmw_serialization_support_init(
-      serialization_library_name.c_str(), &allocator, &rosidl_serialization_support_);
-  }
-  if (ret != RCL_RET_OK) {
-    std::string error_msg =
-      std::string("could not initialize new serialization support object: ") +
-      rcl_get_error_string().str;
-    rcl_reset_error();
-    throw std::runtime_error(error_msg);
-  }
-}
-
-DynamicSerializationSupport::DynamicSerializationSupport(
-  rosidl_dynamic_typesupport_serialization_support_t && rosidl_serialization_support)
-: rosidl_serialization_support_(std::move(rosidl_serialization_support)) {}
-
-DynamicSerializationSupport::DynamicSerializationSupport(
-  DynamicSerializationSupport && other) noexcept
-: rosidl_serialization_support_(std::exchange(
-      other.rosidl_serialization_support_,
-      rosidl_dynamic_typesupport_get_zero_initialized_serialization_support())) {}
-
-DynamicSerializationSupport &
-DynamicSerializationSupport::operator=(DynamicSerializationSupport && other) noexcept
-{
-  std::swap(rosidl_serialization_support_, other.rosidl_serialization_support_);
-  return *this;
-}
+{}  // STUBBED
 
 DynamicSerializationSupport::~DynamicSerializationSupport()
-{
-  rosidl_dynamic_typesupport_serialization_support_fini(&rosidl_serialization_support_);
-}
-
-
-// GETTERS =========================================================================================
-const std::string
-DynamicSerializationSupport::get_serialization_library_identifier() const
-{
-  return std::string(
-    rosidl_dynamic_typesupport_serialization_support_get_library_identifier(
-      &rosidl_serialization_support_));
-}
-
-rosidl_dynamic_typesupport_serialization_support_t &
-DynamicSerializationSupport::get_rosidl_serialization_support()
-{
-  return rosidl_serialization_support_;
-}
-
-const rosidl_dynamic_typesupport_serialization_support_t &
-DynamicSerializationSupport::get_rosidl_serialization_support() const
-{
-  return rosidl_serialization_support_;
-}
+{}  // STUBBED
