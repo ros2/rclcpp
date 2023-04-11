@@ -37,8 +37,8 @@ SingleThreadedExecutor::spin()
 
     wait_for_work();
 
+    /// Get the ready executables in a thread-safe way.
     std::deque<rclcpp::AnyExecutable> to_exec;
-
     {
       std::lock_guard<std::mutex> guard(mutex_);
       to_exec = this->ready_executables_;
@@ -55,7 +55,5 @@ SingleThreadedExecutor::spin()
       }
       execute_any_executable(exec);
     }
-
-    FrameMark;
   }
 }

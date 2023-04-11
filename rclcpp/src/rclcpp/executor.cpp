@@ -41,6 +41,8 @@ using namespace std::chrono_literals;
 
 using rclcpp::Executor;
 
+/// Mask to indicate to the waitset to only add the subscription.
+/// The events and intraprocess waitable are already added via the callback group.
 static constexpr rclcpp::SubscriptionWaitSetMask kDefaultSubscriptionMask = {true, false, false};
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
@@ -52,8 +54,8 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
         this->collect_entities();
       })),
   collector_(notify_waitable_),
-  current_notify_waitable_(notify_waitable_),
-  wait_set_({}, {}, {}, {}, {}, {}, options.context)
+  wait_set_({}, {}, {}, {}, {}, {}, options.context),
+  current_notify_waitable_(notify_waitable_)
 {
   // Store the context for later use.
   context_ = options.context;
@@ -76,7 +78,6 @@ Executor::~Executor()
 
   notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
   notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
-
   current_collection_.timers.update(
     {}, {},
     [this](auto timer) {wait_set_.remove_timer(timer);});
@@ -504,22 +505,27 @@ Executor::execute_client(
 void
 Executor::collect_entities()
 {
-
+  // Get the current list of available waitables from the collector.
   rclcpp::executors::ExecutorEntitiesCollection collection;
   this->collector_.update_collections();
   auto callback_groups = this->collector_.get_all_callback_groups();
   rclcpp::executors::build_entities_collection(callback_groups, collection);
 
+  std::lock_guard<std::mutex> guard(mutex_);
+
+  // Make a copy of notify waitable so we can continue to mutate the original
+  // one outside of the execute loop.
+  // This prevents the collection of guard conditions in the waitable from changing
+  // while we are waiting on it.
   if (notify_waitable_) {
-    // Make a copy of notify waitable so we can continue to mutate the original
-    // one outside of the execute loop.
     *current_notify_waitable_.get() = *notify_waitable_.get();
 
     auto notify_waitable = std::static_pointer_cast<rclcpp::Waitable>(current_notify_waitable_);
     collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
   }
 
-  std::lock_guard<std::mutex> guard(mutex_);
+  // Update each of the groups of entities in the current collection, adding or removing
+  // from the wait set as necessary.
   current_collection_.timers.update(
     collection.timers,
     [this](auto timer) {wait_set_.add_timer(timer);},
@@ -573,7 +579,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
   }
-  rclcpp::executors::ready_executables(current_collection_, wait_result, ready_executables_);
+  ready_executables_ = rclcpp::executors::ready_executables(current_collection_, wait_result);
 }
 
 bool
@@ -609,7 +615,6 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
   // If there are none
   if (!success) {
     // Wait for subscriptions or timers to work on
-    std::cout << "wait_for_work" << std::endl;
     wait_for_work(timeout);
     if (!spinning.load()) {
       return false;

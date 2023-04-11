@@ -485,6 +485,7 @@ protected:
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+  /// Gather all of the waitable entities from associated nodes and callback groups.
   RCLCPP_PUBLIC
   void
   collect_entities();
@@ -547,14 +548,29 @@ protected:
   virtual void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
+  /// Waitable containing guard conditions controlling the executor flow.
+  /**
+   * This waitable contains the interrupt and shutdown guard condition, as well
+   * as the guard condition associated with each node and callback group.
+   * By default, if any change is detected in the monitored entities, the notify
+   * waitable will awake the executor and rebuild  the collections.
+   */
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
+
+  /// Collector used to associate executable entities from nodes and guard conditions
   rclcpp::executors::ExecutorEntitiesCollector collector_;
 
-  rclcpp::executors::ExecutorEntitiesCollection current_collection_;
-  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> current_notify_waitable_;
+  /// Waitset to be waited on.
+  rclcpp::WaitSet wait_set_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
-  rclcpp::WaitSet wait_set_;
-  std::deque<rclcpp::AnyExecutable> ready_executables_;
+  /// Hold the current state of the collection being waited on by the waitset
+  rclcpp::executors::ExecutorEntitiesCollection current_collection_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// Hold the current state of the notify waitable being waited on by the waitset
+  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> current_notify_waitable_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// Hold the list of executables currently available to be executed.
+  std::deque<rclcpp::AnyExecutable> ready_executables_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// shutdown callback handle registered to Context
   rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;

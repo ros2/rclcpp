@@ -54,13 +54,81 @@ public:
   RCLCPP_PUBLIC
   virtual ~StaticSingleThreadedExecutor();
 
-  /// Single-threaded implementation of spin.
+  /// Static executor implementation of spin.
+  /**
+   * This function will block until work comes in, execute it, and keep blocking.
+   * It will only be interrupted by a CTRL-C (managed by the global signal handler).
+   * \throws std::runtime_error when spin() called while already spinning
+   */
   RCLCPP_PUBLIC
   void
   spin() override;
 
+  /// Static executor implementation of spin some
+  /**
+   * This non-blocking function will execute entities that
+   * were ready when this API was called, until timeout or no
+   * more work available. Entities that got ready while
+   * executing work, won't be taken into account here.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_some();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
+   */
+  RCLCPP_PUBLIC
+  void
+  spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0)) override;
+
+  /// Static executor implementation of spin all
+  /**
+   * This non-blocking function will execute entities until timeout (must be >= 0)
+   * or no more work available.
+   * If timeout is `0`, potentially it blocks forever until no more work is available.
+   * If new entities get ready while executing work available, they will be executed
+   * as long as the timeout hasn't expired.
+   *
+   * Example:
+   *   while(condition) {
+   *     spin_all();
+   *     sleep(); // User should have some sync work or
+   *              // sleep to avoid a 100% CPU usage
+   *   }
+   */
+  RCLCPP_PUBLIC
+  void
+  spin_all(std::chrono::nanoseconds max_duration) override;
+
+  RCLCPP_PUBLIC
+  bool execute_ready_executables(
+    const rclcpp::executors::ExecutorEntitiesCollection & collection,
+    rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
+    bool spin_once);
+
+protected:
+/**
+ * @brief Executes ready executables from wait set.
+ * @param spin_once if true executes only the first ready executable.
+ * @return true if any executable was ready.
+ */
+RCLCPP_PUBLIC
+bool
+execute_ready_executables(bool spin_once = false);
+
+RCLCPP_PUBLIC
+void
+spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
+
+RCLCPP_PUBLIC
+void
+spin_once_impl(std::chrono::nanoseconds timeout) override;
+
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
+
+  std::atomic_bool entities_need_rebuild;
 };
 
 }  // namespace executors

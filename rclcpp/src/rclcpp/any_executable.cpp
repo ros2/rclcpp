@@ -17,55 +17,17 @@
 using rclcpp::AnyExecutable;
 
 RCLCPP_PUBLIC
-AnyExecutable::AnyExecutable() = default;
-
-RCLCPP_PUBLIC
-AnyExecutable::AnyExecutable(
-    const rclcpp::SubscriptionBase::SharedPtr & subscription,
-    const rclcpp::CallbackGroup::SharedPtr & callback_group):
-  subscription(subscription),
-  callback_group(callback_group)
+AnyExecutable::AnyExecutable()
+: subscription(nullptr),
+  timer(nullptr),
+  service(nullptr),
+  client(nullptr),
+  waitable(nullptr),
+  callback_group(nullptr),
+  node_base(nullptr),
+  data(nullptr)
 {
 }
-
-RCLCPP_PUBLIC
-AnyExecutable::AnyExecutable(
-    const rclcpp::TimerBase::SharedPtr & timer,
-    const rclcpp::CallbackGroup::SharedPtr & callback_group):
-  timer(timer),
-  callback_group(callback_group)
-{
-}
-
-RCLCPP_PUBLIC
-AnyExecutable::AnyExecutable(
-    const rclcpp::ServiceBase::SharedPtr & service,
-    const rclcpp::CallbackGroup::SharedPtr & callback_group):
-  service(service),
-  callback_group(callback_group)
-{
-
-}
-
-RCLCPP_PUBLIC
-AnyExecutable::AnyExecutable(
-    const rclcpp::ClientBase::SharedPtr & client,
-    const rclcpp::CallbackGroup::SharedPtr & callback_group):
-  client(client),
-  callback_group(callback_group)
-{
-}
-
-RCLCPP_PUBLIC
-AnyExecutable::AnyExecutable(
-    const rclcpp::Waitable::SharedPtr & waitable,
-    const rclcpp::CallbackGroup::SharedPtr & callback_group,
-    const std::shared_ptr<void> & data):
-  waitable(waitable),
-  callback_group(callback_group),
-  data(data)
-{}
-
 
 AnyExecutable::~AnyExecutable()
 {
