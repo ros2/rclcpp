@@ -685,10 +685,11 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   // Fire a timer every 10ms up to 5 seconds waiting for subscriptions to be read.
   loops = 0;
   auto timer = this->node->create_wall_timer(
-    std::chrono::milliseconds(10), [this, &executor, &loops]() {
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
       loops++;
       if (kNumMessages == this->callback_count.load() ||
-          loops == 500) {
+      loops == 500)
+      {
         executor.cancel();
       }
     });
