@@ -51,7 +51,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   notify_waitable_(std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
       [this]() {
-        this->collect_entities();
+        this->entities_need_rebuild_.store(true);
       })),
   collector_(notify_waitable_),
   wait_set_({}, {}, {}, {}, {}, {}, options.context),
@@ -144,6 +144,7 @@ Executor::add_callback_group(
   this->collector_.add_callback_group(group_ptr);
 
   if (!spinning.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
     this->collect_entities();
   }
 
@@ -164,6 +165,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   this->collector_.add_node(node_ptr);
 
   if (!spinning.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
     this->collect_entities();
   }
 
@@ -186,6 +188,7 @@ Executor::remove_callback_group(
   this->collector_.remove_callback_group(group_ptr);
 
   if (!spinning.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
     this->collect_entities();
   }
   if (notify) {
@@ -211,6 +214,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   this->collector_.remove_node(node_ptr);
 
   if (!spinning.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
     this->collect_entities();
   }
 
@@ -518,8 +522,6 @@ Executor::collect_entities()
   auto callback_groups = this->collector_.get_all_callback_groups();
   rclcpp::executors::build_entities_collection(callback_groups, collection);
 
-  std::lock_guard<std::mutex> guard(mutex_);
-
   // Make a copy of notify waitable so we can continue to mutate the original
   // one outside of the execute loop.
   // This prevents the collection of guard conditions in the waitable from changing
@@ -568,6 +570,8 @@ Executor::collect_entities()
       wait_set_.add_waitable(waitable);
     },
     [this](auto waitable) {wait_set_.remove_waitable(waitable);});
+
+  this->entities_need_rebuild_.store(false);
 }
 
 void
@@ -575,11 +579,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
 
-  if (current_collection_.empty()) {
+  std::lock_guard<std::mutex> guard(mutex_);
+  if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
     this->collect_entities();
   }
 
-  std::lock_guard<std::mutex> guard(mutex_);
   auto wait_result = wait_set_.wait(timeout);
   if (wait_result.kind() == WaitResultKind::Empty) {
     RCUTILS_LOG_WARN_NAMED(

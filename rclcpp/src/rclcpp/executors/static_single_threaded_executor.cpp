@@ -24,12 +24,6 @@ using rclcpp::executors::StaticSingleThreadedExecutor;
 StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
-  notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
-    [this]() {
-      this->entities_need_rebuild.store(true);
-    });
-  notify_waitable_->add_guard_condition(interrupt_guard_condition_);
-  notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 }
 
 StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor() {}
@@ -42,15 +36,17 @@ StaticSingleThreadedExecutor::spin()
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
+  // This is essentially the contents of the rclcpp::Executor::wait_for_work method,
+  // except we need to keep the wait result to reproduce the StaticSingleThreadedExecutor
+  // behavior.
   while (rclcpp::ok(this->context_) && spinning.load()) {
     std::deque<rclcpp::AnyExecutable> to_exec;
 
-    if (current_collection_.empty() || this->entities_need_rebuild.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
       this->collect_entities();
-      this->entities_need_rebuild.store(false);
     }
 
-    std::lock_guard<std::mutex> guard(mutex_);
     auto wait_result = wait_set_.wait(std::chrono::nanoseconds(-1));
     if (wait_result.kind() == WaitResultKind::Empty) {
       RCUTILS_LOG_WARN_NAMED(
@@ -105,12 +101,11 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     // Get executables that are ready now
-    if (current_collection_.empty() || this->entities_need_rebuild.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
       this->collect_entities();
-      this->entities_need_rebuild.store(false);
     }
 
-    std::lock_guard<std::mutex> guard(mutex_);
     auto wait_result = wait_set_.wait(std::chrono::nanoseconds(0));
     if (wait_result.kind() == WaitResultKind::Empty) {
       RCUTILS_LOG_WARN_NAMED(
@@ -131,12 +126,11 @@ void
 StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
   if (rclcpp::ok(context_) && spinning.load()) {
-    if (current_collection_.empty() || this->entities_need_rebuild.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
       this->collect_entities();
-      this->entities_need_rebuild.store(false);
     }
 
-    std::lock_guard<std::mutex> guard(mutex_);
     auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
     if (wait_result.kind() == WaitResultKind::Empty) {
       RCUTILS_LOG_WARN_NAMED(
@@ -150,6 +144,8 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
   }
 }
 
+// This preserves the "scheduling semantics" of the StaticSingleThreadedExecutor
+// from the original implementation.
 bool StaticSingleThreadedExecutor::execute_ready_executables(
   const rclcpp::executors::ExecutorEntitiesCollection & collection,
   rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,

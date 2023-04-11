@@ -189,14 +189,16 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
   ExecutorType executor;
   executor.add_node(this->node);
 
-  bool timer_completed = false;
-  auto timer = this->node->create_wall_timer(1ms, [&]() {timer_completed = true;});
+  std::atomic_bool timer_completed = false;
+  auto timer = this->node->create_wall_timer(1ms, [&]() {
+      timer_completed.store(true);
+  });
 
   std::thread spinner([&]() {executor.spin();});
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.
 
   auto start = std::chrono::steady_clock::now();
-  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 10s) {
+  while (!timer_completed.load() && (std::chrono::steady_clock::now() - start) < 10s) {
     std::this_thread::sleep_for(1ms);
   }
 

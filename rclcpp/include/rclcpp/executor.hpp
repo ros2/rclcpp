@@ -557,6 +557,8 @@ protected:
    */
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
+  std::atomic_bool entities_need_rebuild_;
+
   /// Collector used to associate executable entities from nodes and guard conditions
   rclcpp::executors::ExecutorEntitiesCollector collector_;
 

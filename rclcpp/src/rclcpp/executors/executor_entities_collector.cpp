@@ -278,6 +278,7 @@ ExecutorEntitiesCollector::add_callback_group_to_collection(
   // Store node guard condition in map and add it to the notify waitable
   auto group_guard_condition = group_ptr->get_notify_guard_condition();
   weak_groups_to_guard_conditions_.insert({group_ptr, group_guard_condition});
+
   this->notify_waitable_->add_guard_condition(group_guard_condition);
 }
 

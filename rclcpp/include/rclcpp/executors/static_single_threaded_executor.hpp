@@ -130,8 +130,6 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
-
-  std::atomic_bool entities_need_rebuild;
 };
 
 }  // namespace executors
