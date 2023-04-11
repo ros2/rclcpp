@@ -31,8 +31,6 @@
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
 #include "rclcpp/waitable.hpp"
 
-#include "tracy/Tracy.hpp"
-
 namespace rclcpp
 {
 namespace wait_set_policies
@@ -206,8 +204,6 @@ public:
   void
   storage_rebuild_rcl_wait_set(const ArrayOfExtraGuardConditions & extra_guard_conditions)
   {
-    ZoneScoped;
-
     this->storage_acquire_ownerships();
 
     this->storage_rebuild_rcl_wait_set_with_sets(
@@ -402,7 +398,6 @@ public:
   void
   storage_acquire_ownerships()
   {
-    ZoneScoped;
     if (++ownership_reference_counter_ > 1) {
       // Avoid redundant locking.
       return;

@@ -14,8 +14,6 @@
 
 #include "rclcpp/executors/executor_entities_collection.hpp"
 
-#include "tracy/Tracy.hpp"
-
 namespace rclcpp
 {
 namespace executors
@@ -46,7 +44,6 @@ build_entities_collection(
   const std::vector<rclcpp::CallbackGroup::WeakPtr> & callback_groups,
   ExecutorEntitiesCollection & collection)
 {
-  ZoneScoped;
   collection.clear();
 
   for (auto weak_group_ptr : callback_groups) {
@@ -104,7 +101,6 @@ ready_executables(
   std::deque<rclcpp::AnyExecutable> & executables
 )
 {
-  ZoneScoped;
   if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
     return 0;
   }
@@ -133,8 +129,6 @@ ready_executables(
   };
 
 
-  {
-  ZoneScopedN("timers");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
     if (nullptr == rcl_wait_set.timers[ii]) {continue;}
     auto entity_iter = collection.timers.find(rcl_wait_set.timers[ii]);
@@ -155,10 +149,7 @@ ready_executables(
       added++;
     }
   }
-  }
 
-  {
-  ZoneScopedN("subscriptions");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_subscriptions; ++ii) {
     if (nullptr == rcl_wait_set.subscriptions[ii]) {continue;}
     auto entity_iter = collection.subscriptions.find(rcl_wait_set.subscriptions[ii]);
@@ -177,10 +168,7 @@ ready_executables(
       added++;
     }
   }
-  }
 
-  {
-  ZoneScopedN("services");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_services; ++ii) {
     if (nullptr == rcl_wait_set.services[ii]) {continue;}
     auto entity_iter = collection.services.find(rcl_wait_set.services[ii]);
@@ -196,11 +184,8 @@ ready_executables(
       executables.push_back({entity, callback_group});
     }
   }
-  }
 
 
-  {
-  ZoneScopedN("clients");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
     if (nullptr == rcl_wait_set.clients[ii]) {continue;}
     auto entity_iter = collection.clients.find(rcl_wait_set.clients[ii]);
@@ -219,10 +204,7 @@ ready_executables(
       added++;
     }
   }
-  }
 
-  {
-  ZoneScopedN("waitables");
   for (auto & [handle, entry] : collection.waitables) {
     auto waitable = entry.entity.lock();
     if (!waitable) {
@@ -240,7 +222,6 @@ ready_executables(
 
     executables.push_back({waitable, group_info.ptr, waitable->take_data()});
     added++;
-  }
   }
   return added;
 }

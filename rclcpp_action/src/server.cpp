@@ -30,8 +30,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp_action/server.hpp"
 
-#include "tracy/Tracy.hpp"
-
 using rclcpp_action::ServerBase;
 using rclcpp_action::GoalUUID;
 
@@ -169,7 +167,6 @@ ServerBase::get_number_of_ready_guard_conditions()
 void
 ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  ZoneScoped;
   std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_wait_set_add_action_server(
     wait_set, pimpl_->action_server_.get(), NULL);

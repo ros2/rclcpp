@@ -37,8 +37,6 @@
 
 #include "tracetools/tracetools.h"
 
-#include "tracy/Tracy.hpp"
-
 using namespace std::chrono_literals;
 
 using rclcpp::Executor;
@@ -335,7 +333,6 @@ Executor::cancel()
 void
 Executor::execute_any_executable(AnyExecutable & any_exec)
 {
-  ZoneScoped;
   if (!spinning.load()) {
     return;
   }
@@ -407,7 +404,6 @@ take_and_do_error_handling(
 void
 Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
-  ZoneScoped;
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
@@ -477,14 +473,12 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 void
 Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
 {
-  ZoneScoped;
   timer->execute_callback();
 }
 
 void
 Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 {
-  ZoneScoped;
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
   take_and_do_error_handling(
@@ -498,7 +492,6 @@ void
 Executor::execute_client(
   rclcpp::ClientBase::SharedPtr client)
 {
-  ZoneScoped;
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
   take_and_do_error_handling(
@@ -511,7 +504,6 @@ Executor::execute_client(
 void
 Executor::collect_entities()
 {
-  ZoneScoped;
 
   rclcpp::executors::ExecutorEntitiesCollection collection;
   this->collector_.update_collections();
@@ -568,7 +560,6 @@ Executor::collect_entities()
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
-  ZoneScoped;
   TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
 
   if (current_collection_.empty()) {
@@ -583,13 +574,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       "empty wait set received in wait(). This should never happen.");
   }
   rclcpp::executors::ready_executables(current_collection_, wait_result, ready_executables_);
-  TracyPlot("added", static_cast<int64_t>(ready_executables_.size()));
 }
 
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
-  ZoneScoped;
   TRACEPOINT(rclcpp_executor_get_next_ready);
 
   std::lock_guard<std::mutex> guard(mutex_);
@@ -613,7 +602,6 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 bool
 Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
 {
-  ZoneScoped;
   bool success = false;
   // Check to see if there are any subscriptions or timers needing service
   // TODO(wjwwood): improve run to run efficiency of this function

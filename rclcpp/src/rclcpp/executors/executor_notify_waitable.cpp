@@ -17,8 +17,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors/executor_notify_waitable.hpp"
 
-#include "tracy/Tracy.hpp"
-
 namespace rclcpp
 {
 namespace executors
@@ -47,7 +45,6 @@ ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(const ExecutorNotifyW
 void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  ZoneScoped;
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
   for (auto guard_condition : this->notify_guard_conditions_) {
     auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
