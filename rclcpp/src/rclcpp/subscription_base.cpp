@@ -22,6 +22,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
@@ -32,6 +33,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rosidl_dynamic_typesupport/types.h"
+
 using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
@@ -41,7 +44,7 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
-  bool is_serialized)
+  SubscriptionType subscription_type)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
@@ -49,8 +52,16 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  is_serialized_(is_serialized)
+  subscription_type_(subscription_type)
 {
+  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE) &&
+    subscription_type == rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT)
+  {
+    throw std::runtime_error(
+            "Cannot set subscription to take dynamic message directly, feature not supported in rmw"
+    );
+  }
+
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
       if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {
@@ -255,10 +266,10 @@ SubscriptionBase::get_message_type_support_handle() const
   return type_support_;
 }
 
-bool
-SubscriptionBase::is_serialized() const
+rclcpp::SubscriptionType
+SubscriptionBase::get_subscription_type() const
 {
-  return is_serialized_;
+  return subscription_type_;
 }
 
 size_t
@@ -442,8 +453,7 @@ SubscriptionBase::set_content_filter(
   rcl_subscription_content_filter_options_t options =
     rcl_get_zero_initialized_subscription_content_filter_options();
 
-  std::vector<const char *> cstrings =
-    get_c_vector_string(expression_parameters);
+  std::vector<const char *> cstrings = get_c_vector_string(expression_parameters);
   rcl_ret_t ret = rcl_subscription_content_filter_options_init(
     subscription_handle_.get(),
     get_c_string(filter_expression),
@@ -514,4 +524,25 @@ SubscriptionBase::get_content_filter() const
   }
 
   return ret_options;
+}
+
+
+// DYNAMIC TYPE ==================================================================================
+// TODO(methylDragon): Reorder later
+bool
+SubscriptionBase::take_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage & message_out,
+  rclcpp::MessageInfo & message_info_out)
+{
+  rcl_ret_t ret = rcl_take_dynamic_message(
+    this->get_subscription_handle().get(),
+    &message_out.get_rosidl_dynamic_data(),
+    &message_info_out.get_rmw_message_info(),
+    nullptr);
+  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+    return false;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  return true;
 }

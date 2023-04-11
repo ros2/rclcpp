@@ -43,8 +43,7 @@ void GenericSubscription::handle_message(
           "handle_message is not implemented for GenericSubscription");
 }
 
-void
-GenericSubscription::handle_serialized_message(
+void GenericSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo &)
 {
@@ -70,6 +69,57 @@ void GenericSubscription::return_serialized_message(
   std::shared_ptr<rclcpp::SerializedMessage> & message)
 {
   message.reset();
+}
+
+
+// DYNAMIC TYPE ====================================================================================
+// TODO(methylDragon): Reorder later
+rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+GenericSubscription::get_shared_dynamic_message_type()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+          "get_shared_dynamic_message_type is not implemented for GenericSubscription");
+}
+
+rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+GenericSubscription::get_shared_dynamic_message()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+          "get_shared_dynamic_message is not implemented for GenericSubscription");
+}
+
+rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+GenericSubscription::get_shared_dynamic_serialization_support()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+          "get_shared_dynamic_serialization_support is not implemented for GenericSubscription");
+}
+
+rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+GenericSubscription::create_dynamic_message()
+{
+  throw rclcpp::exceptions::UnimplementedError(
+          "create_dynamic_message is not implemented for GenericSubscription");
+}
+
+void
+GenericSubscription::return_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message)
+{
+  (void) message;
+  throw rclcpp::exceptions::UnimplementedError(
+          "return_dynamic_message is not implemented for GenericSubscription");
+}
+
+void
+GenericSubscription::handle_dynamic_message(
+  const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+  const rclcpp::MessageInfo & message_info)
+{
+  (void) message;
+  (void) message_info;
+  throw rclcpp::exceptions::UnimplementedError(
+          "handle_dynamic_message is not implemented for GenericSubscription");
 }
 
 }  // namespace rclcpp
