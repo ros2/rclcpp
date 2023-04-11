@@ -145,7 +145,9 @@ Executor::add_callback_group(
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify) {
+  }
+
+  if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
@@ -163,13 +165,15 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify) {
+  }
+
+  if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
       throw std::runtime_error(
               std::string(
-                "Failed to trigger guard condition on callback group add: ") + ex.what());
+                "Failed to trigger guard condition on node add: ") + ex.what());
     }
   }
 }
@@ -183,13 +187,14 @@ Executor::remove_callback_group(
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify) {
+  }
+  if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
       throw std::runtime_error(
               std::string(
-                "Failed to trigger guard condition on callback group add: ") + ex.what());
+                "Failed to trigger guard condition on callback group remove: ") + ex.what());
     }
   }
 }
@@ -207,13 +212,15 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify) {
+  }
+
+  if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
       throw std::runtime_error(
               std::string(
-                "Failed to trigger guard condition on callback group add: ") + ex.what());
+                "Failed to trigger guard condition on node remove: ") + ex.what());
     }
   }
 }

@@ -304,7 +304,11 @@ ExecutorEntitiesCollector::process_queues()
     if (node_it != weak_nodes_.end()) {
       remove_weak_node(node_it);
     } else {
-      throw std::runtime_error("Node needs to be associated with this executor.");
+      // The node may have been destroyed and removed from the colletion before
+      // we processed the queues.  Don't throw if the pointer is already expired.
+      if (!weak_node_ptr.expired()) {
+        throw std::runtime_error("Node needs to be associated with this executor.");
+      }
     }
 
     auto node_ptr = weak_node_ptr.lock();

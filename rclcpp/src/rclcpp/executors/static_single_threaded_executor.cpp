@@ -28,6 +28,8 @@ StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(const rclcpp::Executo
     [this]() {
       this->entities_need_rebuild.store(true);
     });
+  notify_waitable_->add_guard_condition(interrupt_guard_condition_);
+  notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 }
 
 StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor() {}

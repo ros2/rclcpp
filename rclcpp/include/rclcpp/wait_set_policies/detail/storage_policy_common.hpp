@@ -221,7 +221,7 @@ protected:
         events_from_waitables
       );
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't resize the wait set");
       }
       was_resized = true;
       // Assumption: the calling code ensures this function is not called
@@ -237,7 +237,7 @@ protected:
     if (!was_resized) {
       rcl_ret_t ret = rcl_wait_set_clear(&rcl_wait_set_);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't clear the wait set");
       }
     }
 
@@ -260,7 +260,7 @@ protected:
         subscription_entry.subscription->get_subscription_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
       }
     }
 
@@ -285,7 +285,7 @@ protected:
             &guard_condition->get_rcl_guard_condition(),
             nullptr);
           if (RCL_RET_OK != ret) {
-            rclcpp::exceptions::throw_from_rcl_error(ret);
+            rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
           }
         }
       };
@@ -314,7 +314,7 @@ protected:
         timer->get_timer_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
       }
     }
 
@@ -359,7 +359,7 @@ protected:
         service->get_service_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
       }
     }
 

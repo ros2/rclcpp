@@ -173,7 +173,7 @@ TEST_F(TestExecutor, remove_node_not_associated) {
 
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_node(node->get_node_base_interface(), false),
-    std::runtime_error("Node needs to be associated with an executor."));
+    std::runtime_error("Node '/ns/node' needs to be associated with an executor."));
 }
 
 TEST_F(TestExecutor, remove_node_associated_with_different_executor) {
@@ -187,7 +187,7 @@ TEST_F(TestExecutor, remove_node_associated_with_different_executor) {
 
   RCLCPP_EXPECT_THROW_EQ(
     dummy2.remove_node(node1->get_node_base_interface(), false),
-    std::runtime_error("Node needs to be associated with this executor."));
+    std::runtime_error("Node '/ns/node1' needs to be associated with this executor."));
 }
 
 TEST_F(TestExecutor, spin_node_once_nanoseconds) {
@@ -304,24 +304,14 @@ TEST_F(TestExecutor, cancel_failed_trigger_guard_condition) {
     std::runtime_error("Failed to trigger guard condition in cancel: error not set"));
 }
 
-TEST_F(TestExecutor, spin_once_failed_trigger_guard_condition) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  auto timer =
-    node->create_wall_timer(std::chrono::milliseconds(1), [&]() {});
-
-  dummy.add_node(node);
-  // Wait for the wall timer to have expired.
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
+TEST_F(TestExecutor, create_executor_fail_wait_set_clear) {
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
-    dummy.spin_once(std::chrono::milliseconds(1)),
-    std::runtime_error(
-      "Failed to trigger guard condition from execute_any_executable: error not set"));
+    DummyExecutor dummy,
+    std::runtime_error("Couldn't clear the wait set: error not set"));
 }
 
-TEST_F(TestExecutor, spin_some_fail_wait_set_clear) {
+TEST_F(TestExecutor, spin_all_fail_wait_set_clear) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   auto timer =
@@ -329,9 +319,10 @@ TEST_F(TestExecutor, spin_some_fail_wait_set_clear) {
 
   dummy.add_node(node);
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
+
   RCLCPP_EXPECT_THROW_EQ(
-    dummy.spin_some(std::chrono::milliseconds(1)),
-    std::runtime_error("Couldn't clear wait set: error not set"));
+    dummy.spin_all(std::chrono::milliseconds(1)),
+    std::runtime_error("Couldn't clear the wait set: error not set"));
 }
 
 TEST_F(TestExecutor, spin_some_fail_wait_set_resize) {
@@ -359,7 +350,7 @@ TEST_F(TestExecutor, spin_some_fail_add_handles_to_wait_set) {
     RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_some(std::chrono::milliseconds(1)),
-    std::runtime_error("Couldn't fill wait set"));
+    std::runtime_error("Couldn't fill wait set: error not set"));
 }
 
 TEST_F(TestExecutor, spin_some_fail_wait) {

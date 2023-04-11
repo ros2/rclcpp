@@ -83,8 +83,6 @@ public:
   int callback_count;
 };
 
-// spin_all and spin_some are not implemented correctly in StaticSingleThreadedExecutor, see:
-// https://github.com/ros2/rclcpp/issues/1219 for tracking
 template<typename T>
 class TestExecutorsStable : public TestExecutors<T> {};
 
@@ -121,14 +119,6 @@ public:
 // is updated.
 TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 
-// StaticSingleThreadedExecutor is not included in these tests for now, due to:
-// https://github.com/ros2/rclcpp/issues/1219
-using StandardExecutors =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor>;
-TYPED_TEST_SUITE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
-
 // Make sure that executors detach from nodes when destructing
 TYPED_TEST(TestExecutors, detachOnDestruction) {
   using ExecutorType = TypeParam;
@@ -143,9 +133,7 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
 }
 
 // Make sure that the executor can automatically remove expired nodes correctly
-// Currently fails for StaticSingleThreadedExecutor so it is being skipped, see:
-// https://github.com/ros2/rclcpp/issues/1231
-TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
+TYPED_TEST(TestExecutors, addTemporaryNode) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
 
