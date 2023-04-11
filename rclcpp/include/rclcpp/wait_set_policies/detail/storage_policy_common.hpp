@@ -28,6 +28,8 @@
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace rclcpp
 {
 namespace wait_set_policies
@@ -192,9 +194,8 @@ protected:
       size_t clients_from_waitables = 0;
       size_t services_from_waitables = 0;
       size_t events_from_waitables = 0;
-      for (const auto & waitable_entry : waitables) {
-        auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
-        if (nullptr == waitable_ptr_pair.second) {
+      for (const auto & waitable_entry: waitables) {
+        if (!waitable_entry.waitable) {
           // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
           if (HasStrongOwnership) {
             // This will not happen in fixed sized storage, as it holds
@@ -205,13 +206,13 @@ protected:
           needs_pruning_ = true;
           continue;
         }
-        rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
-        subscriptions_from_waitables += waitable.get_number_of_ready_subscriptions();
-        guard_conditions_from_waitables += waitable.get_number_of_ready_guard_conditions();
-        timers_from_waitables += waitable.get_number_of_ready_timers();
-        clients_from_waitables += waitable.get_number_of_ready_clients();
-        services_from_waitables += waitable.get_number_of_ready_services();
-        events_from_waitables += waitable.get_number_of_ready_events();
+        const auto & waitable = waitable_entry.waitable;
+        subscriptions_from_waitables += waitable->get_number_of_ready_subscriptions();
+        guard_conditions_from_waitables += waitable->get_number_of_ready_guard_conditions();
+        timers_from_waitables += waitable->get_number_of_ready_timers();
+        clients_from_waitables += waitable->get_number_of_ready_clients();
+        services_from_waitables += waitable->get_number_of_ready_services();
+        events_from_waitables += waitable->get_number_of_ready_events();
       }
       rcl_ret_t ret = rcl_wait_set_resize(
         &rcl_wait_set_,
@@ -234,6 +235,7 @@ protected:
       needs_resize_ = false;
     }
 
+
     // Now clear the wait set, but only if it was not resized, as resizing also
     // clears the wait set.
     if (!was_resized) {
@@ -244,26 +246,28 @@ protected:
     }
 
     // Add subscriptions.
-    for (const auto & subscription_entry : subscriptions) {
-      auto subscription_ptr_pair =
-        get_raw_pointer_from_smart_pointer(subscription_entry.subscription);
-      if (nullptr == subscription_ptr_pair.second) {
-        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
-        if (HasStrongOwnership) {
-          // This will not happen in fixed sized storage, as it holds
-          // shared ownership the whole time and is never in need of pruning.
-          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+    {
+      ZoneScopedN("add_subscriptions");
+      for (const auto & subscription_entry: subscriptions) {
+        if (!subscription_entry.subscription) {
+          // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+          if (HasStrongOwnership) {
+            // This will not happen in fixed sized storage, as it holds
+            // shared ownership the whole time and is never in need of pruning.
+            throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+          }
+          // Flag for pruning.
+          needs_pruning_ = true;
+          continue;
         }
-        // Flag for pruning.
-        needs_pruning_ = true;
-        continue;
-      }
-      rcl_ret_t ret = rcl_wait_set_add_subscription(
-        &rcl_wait_set_,
-        subscription_ptr_pair.second->get_subscription_handle().get(),
-        nullptr);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+
+        rcl_ret_t ret = rcl_wait_set_add_subscription(
+            &rcl_wait_set_,
+            subscription_entry.subscription->get_subscription_handle().get(),
+            nullptr);
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
       }
     }
 
@@ -272,8 +276,7 @@ protected:
       [this](const auto & inner_guard_conditions)
       {
         for (const auto & guard_condition : inner_guard_conditions) {
-          auto guard_condition_ptr_pair = get_raw_pointer_from_smart_pointer(guard_condition);
-          if (nullptr == guard_condition_ptr_pair.second) {
+          if (!guard_condition) {
             // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
             if (HasStrongOwnership) {
               // This will not happen in fixed sized storage, as it holds
@@ -286,7 +289,7 @@ protected:
           }
           rcl_ret_t ret = rcl_wait_set_add_guard_condition(
             &rcl_wait_set_,
-            &guard_condition_ptr_pair.second->get_rcl_guard_condition(),
+            &guard_condition->get_rcl_guard_condition(),
             nullptr);
           if (RCL_RET_OK != ret) {
             rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -294,97 +297,108 @@ protected:
         }
       };
 
-    // Add guard conditions.
-    add_guard_conditions(guard_conditions);
+    {
+      ZoneScopedN("add_guard_conditions");
+      // Add guard conditions.
+      add_guard_conditions(guard_conditions);
 
-    // Add extra guard conditions.
-    add_guard_conditions(extra_guard_conditions);
+      // Add extra guard conditions.
+      add_guard_conditions(extra_guard_conditions);
+    }
 
     // Add timers.
-    for (const auto & timer : timers) {
-      auto timer_ptr_pair = get_raw_pointer_from_smart_pointer(timer);
-      if (nullptr == timer_ptr_pair.second) {
-        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
-        if (HasStrongOwnership) {
-          // This will not happen in fixed sized storage, as it holds
-          // shared ownership the whole time and is never in need of pruning.
-          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+    {
+      ZoneScopedN("add_timers");
+      for (const auto & timer : timers) {
+        if (!timer) {
+          // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+          if (HasStrongOwnership) {
+            // This will not happen in fixed sized storage, as it holds
+            // shared ownership the whole time and is never in need of pruning.
+            throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+          }
+          // Flag for pruning.
+          needs_pruning_ = true;
+          continue;
         }
-        // Flag for pruning.
-        needs_pruning_ = true;
-        continue;
-      }
-      rcl_ret_t ret = rcl_wait_set_add_timer(
-        &rcl_wait_set_,
-        timer_ptr_pair.second->get_timer_handle().get(),
-        nullptr);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rcl_ret_t ret = rcl_wait_set_add_timer(
+          &rcl_wait_set_,
+          timer->get_timer_handle().get(),
+          nullptr);
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
       }
     }
 
     // Add clients.
-    for (const auto & client : clients) {
-      auto client_ptr_pair = get_raw_pointer_from_smart_pointer(client);
-      if (nullptr == client_ptr_pair.second) {
-        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
-        if (HasStrongOwnership) {
-          // This will not happen in fixed sized storage, as it holds
-          // shared ownership the whole time and is never in need of pruning.
-          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+    {
+      ZoneScopedN("add_clients");
+      for (const auto & client : clients) {
+        if (!client) {
+          // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+          if (HasStrongOwnership) {
+            // This will not happen in fixed sized storage, as it holds
+            // shared ownership the whole time and is never in need of pruning.
+            throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+          }
+          // Flag for pruning.
+          needs_pruning_ = true;
+          continue;
         }
-        // Flag for pruning.
-        needs_pruning_ = true;
-        continue;
-      }
-      rcl_ret_t ret = rcl_wait_set_add_client(
-        &rcl_wait_set_,
-        client_ptr_pair.second->get_client_handle().get(),
-        nullptr);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rcl_ret_t ret = rcl_wait_set_add_client(
+          &rcl_wait_set_,
+          client->get_client_handle().get(),
+          nullptr);
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
       }
     }
 
-    // Add services.
-    for (const auto & service : services) {
-      auto service_ptr_pair = get_raw_pointer_from_smart_pointer(service);
-      if (nullptr == service_ptr_pair.second) {
-        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
-        if (HasStrongOwnership) {
-          // This will not happen in fixed sized storage, as it holds
-          // shared ownership the whole time and is never in need of pruning.
-          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+
+    {
+      ZoneScopedN("add_services");
+      // Add services.
+      for (const auto & service : services) {
+        if (!service) {
+          // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+          if (HasStrongOwnership) {
+            // This will not happen in fixed sized storage, as it holds
+            // shared ownership the whole time and is never in need of pruning.
+            throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+          }
+          // Flag for pruning.
+          needs_pruning_ = true;
+          continue;
         }
-        // Flag for pruning.
-        needs_pruning_ = true;
-        continue;
-      }
-      rcl_ret_t ret = rcl_wait_set_add_service(
-        &rcl_wait_set_,
-        service_ptr_pair.second->get_service_handle().get(),
-        nullptr);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rcl_ret_t ret = rcl_wait_set_add_service(
+          &rcl_wait_set_,
+          service->get_service_handle().get(),
+          nullptr);
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
       }
     }
 
-    // Add waitables.
-    for (auto & waitable_entry : waitables) {
-      auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
-      if (nullptr == waitable_ptr_pair.second) {
-        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
-        if (HasStrongOwnership) {
-          // This will not happen in fixed sized storage, as it holds
-          // shared ownership the whole time and is never in need of pruning.
-          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+    {
+      ZoneScopedN("add_waitables");
+      // Add waitables.
+      for (auto & waitable_entry: waitables) {
+        if (!waitable_entry.waitable) {
+          // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+          if (HasStrongOwnership) {
+            // This will not happen in fixed sized storage, as it holds
+            // shared ownership the whole time and is never in need of pruning.
+            throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+          }
+          // Flag for pruning.
+          needs_pruning_ = true;
+          continue;
         }
-        // Flag for pruning.
-        needs_pruning_ = true;
-        continue;
+        waitable_entry.waitable->add_to_wait_set(&rcl_wait_set_);
       }
-      rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
-      waitable.add_to_wait_set(&rcl_wait_set_);
     }
   }
 

@@ -17,6 +17,8 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors/executor_notify_waitable.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace rclcpp
 {
 namespace executors
@@ -45,21 +47,18 @@ ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(const ExecutorNotifyW
 void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
+  ZoneScoped;
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  for (auto guard_condition : this->notify_guard_conditions_) {
+    auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
 
-  for (auto weak_guard_condition : this->notify_guard_conditions_) {
-    auto guard_condition = weak_guard_condition.lock();
-    if (guard_condition) {
-      auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(
+      wait_set,
+      rcl_guard_condition, NULL);
 
-      rcl_ret_t ret = rcl_wait_set_add_guard_condition(
-        wait_set,
-        rcl_guard_condition, NULL);
-
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(
-          ret, "failed to add guard condition to wait set");
-      }
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "failed to add guard condition to wait set");
     }
   }
 }
@@ -75,8 +74,7 @@ ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
     if (nullptr == rcl_guard_condition) {
       continue;
     }
-    for (auto weak_guard_condition : this->notify_guard_conditions_) {
-      auto guard_condition = weak_guard_condition.lock();
+    for (auto guard_condition : this->notify_guard_conditions_) {
       if (guard_condition && &guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
         any_ready = true;
       }
@@ -103,15 +101,16 @@ ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
   auto guard_condition = weak_guard_condition.lock();
-  if (guard_condition && notify_guard_conditions_.count(weak_guard_condition) == 0) {
-    notify_guard_conditions_.insert(weak_guard_condition);
+  if (guard_condition && notify_guard_conditions_.count(guard_condition) == 0) {
+    notify_guard_conditions_.insert(guard_condition);
   }
 }
 
 void
-ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition)
+ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+  auto guard_condition = weak_guard_condition.lock();
   if (notify_guard_conditions_.count(guard_condition) != 0) {
     notify_guard_conditions_.erase(guard_condition);
   }

@@ -35,6 +35,8 @@
 #include "rclcpp/wait_result.hpp"
 #include "rclcpp/waitable.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace rclcpp
 {
 
@@ -600,6 +602,7 @@ public:
   void
   prune_deleted_entities()
   {
+    ZoneScoped;
     // this method comes from the SynchronizationPolicy
     this->sync_prune_deleted_entities(
       [this]() {
@@ -655,6 +658,7 @@ public:
   WaitResult<WaitSetTemplate>
   wait(std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
   {
+    ZoneScoped;
     auto time_to_wait_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_to_wait);
 
     // ensure the ownership of the entities in the wait set is shared for the duration of wait
@@ -712,6 +716,7 @@ private:
   void
   wait_result_acquire()
   {
+    ZoneScoped;
     if (wait_result_holding_) {
       throw std::runtime_error("wait_result_acquire() called while already holding");
     }
@@ -731,6 +736,7 @@ private:
   void
   wait_result_release()
   {
+    ZoneScoped;
     if (!wait_result_holding_) {
       throw std::runtime_error("wait_result_release() called while not holding");
     }

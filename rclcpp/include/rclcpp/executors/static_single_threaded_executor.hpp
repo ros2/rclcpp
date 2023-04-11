@@ -40,7 +40,28 @@ namespace executors
  * exec.remove_node(node);
  */
 
-using StaticSingleThreadedExecutor = SingleThreadedExecutor;
+class StaticSingleThreadedExecutor : public rclcpp::Executor
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor)
+
+  /// Default constructor. See the default constructor for Executor.
+  RCLCPP_PUBLIC
+  explicit StaticSingleThreadedExecutor(
+    const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
+
+  /// Default destructor.
+  RCLCPP_PUBLIC
+  virtual ~StaticSingleThreadedExecutor();
+
+  /// Single-threaded implementation of spin.
+  RCLCPP_PUBLIC
+  void
+  spin() override;
+
+private:
+  RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
+};
 
 }  // namespace executors
 }  // namespace rclcpp

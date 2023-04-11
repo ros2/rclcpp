@@ -34,6 +34,8 @@
 #include "rclcpp/wait_set_policies/detail/synchronization_policy_common.hpp"
 #include "rclcpp/waitable.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace rclcpp
 {
 namespace wait_set_policies
@@ -252,6 +254,8 @@ protected:
     // which calls this function, by acquiring shared ownership of the entites
     // for the duration of this function.
 
+    ZoneScoped;
+
     // Setup looping predicate.
     auto start = std::chrono::steady_clock::now();
     std::function<bool()> should_loop = this->create_loop_predicate(time_to_wait_ns, start);
@@ -277,20 +281,30 @@ protected:
       auto time_left_to_wait_ns = this->calculate_time_left_to_wait(time_to_wait_ns, start);
 
       // Then wait for entities to become ready.
-      rcl_ret_t ret = rcl_wait(&rcl_wait_set, time_left_to_wait_ns.count());
-      if (RCL_RET_OK == ret) {
-        // Something has become ready in the wait set, and since this class
-        // did not add anything to it, it is a user entity that is ready.
-        return create_wait_result(WaitResultKind::Ready);
-      } else if (RCL_RET_TIMEOUT == ret) {
-        // The wait set timed out, exit the loop.
-        break;
-      } else if (RCL_RET_WAIT_SET_EMPTY == ret) {
-        // Wait set was empty, return Empty.
-        return create_wait_result(WaitResultKind::Empty);
-      } else {
-        // Some other error case, throw.
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+      {
+        rcl_ret_t ret;
+        {
+          ZoneScopedN("rcl_wait");
+          ret = rcl_wait(&rcl_wait_set, time_left_to_wait_ns.count());
+        }
+
+        if (RCL_RET_OK == ret) {
+          // Something has become ready in the wait set, and since this class
+          // did not add anything to it, it is a user entity that is ready.
+          {
+            ZoneScopedN("create_wait_result");
+            return create_wait_result(WaitResultKind::Ready);
+          }
+        } else if (RCL_RET_TIMEOUT == ret) {
+          // The wait set timed out, exit the loop.
+          break;
+        } else if (RCL_RET_WAIT_SET_EMPTY == ret) {
+          // Wait set was empty, return Empty.
+          return create_wait_result(WaitResultKind::Empty);
+        } else {
+          // Some other error case, throw.
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
       }
     } while (should_loop());
 

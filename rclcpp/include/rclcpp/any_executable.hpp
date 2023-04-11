@@ -36,18 +36,45 @@ struct AnyExecutable
   AnyExecutable();
 
   RCLCPP_PUBLIC
+  AnyExecutable(
+      const rclcpp::SubscriptionBase::SharedPtr & subscription,
+      const rclcpp::CallbackGroup::SharedPtr & callback_group);
+
+  RCLCPP_PUBLIC
+  AnyExecutable(
+      const rclcpp::TimerBase::SharedPtr & timer,
+      const rclcpp::CallbackGroup::SharedPtr & callback_group);
+
+  RCLCPP_PUBLIC
+  AnyExecutable(
+      const rclcpp::ServiceBase::SharedPtr & service,
+      const rclcpp::CallbackGroup::SharedPtr & callback_group);
+
+  RCLCPP_PUBLIC
+  AnyExecutable(
+      const rclcpp::ClientBase::SharedPtr & client,
+      const rclcpp::CallbackGroup::SharedPtr & callback_group);
+
+  RCLCPP_PUBLIC
+  AnyExecutable(
+      const rclcpp::Waitable::SharedPtr & waitable,
+      const rclcpp::CallbackGroup::SharedPtr & callback_group,
+      const std::shared_ptr<void> & data);
+
+
+  RCLCPP_PUBLIC
   virtual ~AnyExecutable();
 
   // Only one of the following pointers will be set.
-  rclcpp::SubscriptionBase::SharedPtr subscription;
-  rclcpp::TimerBase::SharedPtr timer;
-  rclcpp::ServiceBase::SharedPtr service;
-  rclcpp::ClientBase::SharedPtr client;
-  rclcpp::Waitable::SharedPtr waitable;
+  rclcpp::SubscriptionBase::SharedPtr subscription = nullptr;
+  rclcpp::TimerBase::SharedPtr timer = nullptr;
+  rclcpp::ServiceBase::SharedPtr service = nullptr;
+  rclcpp::ClientBase::SharedPtr client = nullptr;
+  rclcpp::Waitable::SharedPtr waitable = nullptr;
   // These are used to keep the scope on the containing items
-  rclcpp::CallbackGroup::SharedPtr callback_group;
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base;
-  std::shared_ptr<void> data;
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base = nullptr;
+  std::shared_ptr<void> data = nullptr;
 };
 
 }  // namespace rclcpp

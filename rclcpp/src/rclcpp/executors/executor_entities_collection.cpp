@@ -14,6 +14,8 @@
 
 #include "rclcpp/executors/executor_entities_collection.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace rclcpp
 {
 namespace executors
@@ -44,6 +46,7 @@ build_entities_collection(
   const std::vector<rclcpp::CallbackGroup::WeakPtr> & callback_groups,
   ExecutorEntitiesCollection & collection)
 {
+  ZoneScoped;
   collection.clear();
 
   for (auto weak_group_ptr : callback_groups) {
@@ -101,6 +104,7 @@ ready_executables(
   std::deque<rclcpp::AnyExecutable> & executables
 )
 {
+  ZoneScoped;
   if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
     return 0;
   }
@@ -108,108 +112,135 @@ ready_executables(
   size_t added = 0;
   auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
 
+  struct CachedCallbackGroup
+  {
+    rclcpp::CallbackGroup::SharedPtr ptr = nullptr;
+    bool can_be_taken_from = false;
+  };
+
+  std::map<rclcpp::CallbackGroup::WeakPtr, CachedCallbackGroup, std::owner_less<rclcpp::CallbackGroup::WeakPtr>> group_map;
+  auto group_cache = [&group_map](const rclcpp::CallbackGroup::WeakPtr & weak_cbg_ptr) -> const CachedCallbackGroup &
+  {
+    if (group_map.count(weak_cbg_ptr) == 0)
+    {
+      CachedCallbackGroup temp;
+      temp.ptr = weak_cbg_ptr.lock();
+      if (temp.ptr)
+        temp.can_be_taken_from = temp.ptr->can_be_taken_from().load();
+      group_map.insert({weak_cbg_ptr, temp});
+    }
+    return group_map.find(weak_cbg_ptr)->second;
+  };
+
+
+  {
+  ZoneScopedN("timers");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
-    if (!rcl_wait_set.timers[ii]) {continue;}
+    if (nullptr == rcl_wait_set.timers[ii]) {continue;}
     auto entity_iter = collection.timers.find(rcl_wait_set.timers[ii]);
     if (entity_iter != collection.timers.end()) {
       auto entity = entity_iter->second.entity.lock();
       if (!entity) {
         continue;
       }
-      auto callback_group = entity_iter->second.callback_group.lock();
-      if (callback_group && !callback_group->can_be_taken_from().load()) {
+      auto group_info = group_cache(entity_iter->second.callback_group);
+      if (group_info.ptr && !group_info.can_be_taken_from) {
         continue;
       }
+
       if (!entity->call()) {
         continue;
       }
-
-      rclcpp::AnyExecutable exec;
-      exec.timer = entity;
-      exec.callback_group = callback_group;
-      executables.push_back(exec);
+      executables.push_back({entity, group_info.ptr});
       added++;
     }
   }
+  }
 
+  {
+  ZoneScopedN("subscriptions");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_subscriptions; ++ii) {
-    if (!rcl_wait_set.subscriptions[ii]) {continue;}
+    if (nullptr == rcl_wait_set.subscriptions[ii]) {continue;}
     auto entity_iter = collection.subscriptions.find(rcl_wait_set.subscriptions[ii]);
     if (entity_iter != collection.subscriptions.end()) {
       auto entity = entity_iter->second.entity.lock();
       if (!entity) {
         continue;
       }
-      auto callback_group = entity_iter->second.callback_group.lock();
-      if (callback_group && !callback_group->can_be_taken_from().load()) {
+
+      auto group_info = group_cache(entity_iter->second.callback_group);
+      if (group_info.ptr && !group_info.can_be_taken_from) {
         continue;
       }
 
-      rclcpp::AnyExecutable exec;
-      exec.subscription = entity;
-      exec.callback_group = callback_group;
-      executables.push_back(exec);
+      executables.push_back({entity, group_info.ptr});
       added++;
     }
   }
+  }
 
+  {
+  ZoneScopedN("services");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_services; ++ii) {
-    if (!rcl_wait_set.services[ii]) {continue;}
+    if (nullptr == rcl_wait_set.services[ii]) {continue;}
     auto entity_iter = collection.services.find(rcl_wait_set.services[ii]);
     if (entity_iter != collection.services.end()) {
       auto entity = entity_iter->second.entity.lock();
       if (!entity) {
         continue;
       }
-      auto callback_group = entity_iter->second.callback_group.lock();
-      if (callback_group && !callback_group->can_be_taken_from().load()) {
+      const auto & [callback_group, can_be_taken_from] = group_cache(entity_iter->second.callback_group);
+      if (callback_group && !can_be_taken_from) {
         continue;
       }
-
-      rclcpp::AnyExecutable exec;
-      exec.service = entity;
-      exec.callback_group = callback_group;
-      executables.push_back(exec);
-      added++;
+      executables.push_back({entity, callback_group});
     }
   }
+  }
 
+
+  {
+  ZoneScopedN("clients");
   for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
-    if (!rcl_wait_set.clients[ii]) {continue;}
+    if (nullptr == rcl_wait_set.clients[ii]) {continue;}
     auto entity_iter = collection.clients.find(rcl_wait_set.clients[ii]);
     if (entity_iter != collection.clients.end()) {
       auto entity = entity_iter->second.entity.lock();
       if (!entity) {
         continue;
       }
-      auto callback_group = entity_iter->second.callback_group.lock();
-      if (callback_group && !callback_group->can_be_taken_from().load()) {
+
+      auto group_info = group_cache(entity_iter->second.callback_group);
+      if (group_info.ptr && !group_info.can_be_taken_from) {
         continue;
       }
 
-      rclcpp::AnyExecutable exec;
-      exec.client = entity;
-      exec.callback_group = callback_group;
-      executables.push_back(exec);
+      executables.push_back({entity, group_info.ptr});
       added++;
     }
   }
+  }
 
+  {
+  ZoneScopedN("waitables");
   for (auto & [handle, entry] : collection.waitables) {
     auto waitable = entry.entity.lock();
-    if (waitable && waitable->is_ready(&rcl_wait_set)) {
-      auto group = entry.callback_group.lock();
-      if (group && !group->can_be_taken_from().load()) {
-        continue;
-      }
-
-      rclcpp::AnyExecutable exec;
-      exec.waitable = waitable;
-      exec.callback_group = group;
-      exec.data = waitable->take_data();
-      executables.push_back(exec);
-      added++;
+    if (!waitable) {
+      continue;
     }
+
+    if (!waitable->is_ready(&rcl_wait_set)) {
+      continue;
+    }
+
+    auto group_info = group_cache(entry.callback_group);
+    if (group_info.ptr && !group_info.can_be_taken_from) {
+      continue;
+    }
+
+    executables.push_back({waitable, group_info.ptr, waitable->take_data()});
+    added++;
+  }
   }
   return added;
 }
