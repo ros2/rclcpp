@@ -15,7 +15,6 @@
 #ifndef RCLCPP__WAIT_SET_POLICIES__DETAIL__STORAGE_POLICY_COMMON_HPP_
 #define RCLCPP__WAIT_SET_POLICIES__DETAIL__STORAGE_POLICY_COMMON_HPP_
 
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <utility>

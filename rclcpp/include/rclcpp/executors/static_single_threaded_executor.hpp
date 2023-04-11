@@ -43,7 +43,7 @@ namespace executors
 class StaticSingleThreadedExecutor : public rclcpp::Executor
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor)
+  RCLCPP_SMART_PTR_DEFINITIONS(StaticSingleThreadedExecutor)
 
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
@@ -101,29 +101,26 @@ public:
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
 
+
+protected:
+  /**
+   * @brief Executes ready executables from wait set.
+   * @param spin_once if true executes only the first ready executable.
+   * @return true if any executable was ready.
+   */
   RCLCPP_PUBLIC
   bool execute_ready_executables(
     const rclcpp::executors::ExecutorEntitiesCollection & collection,
     rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
     bool spin_once);
 
-protected:
-/**
- * @brief Executes ready executables from wait set.
- * @param spin_once if true executes only the first ready executable.
- * @return true if any executable was ready.
- */
-RCLCPP_PUBLIC
-bool
-execute_ready_executables(bool spin_once = false);
+  RCLCPP_PUBLIC
+  void
+  spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
 
-RCLCPP_PUBLIC
-void
-spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
-
-RCLCPP_PUBLIC
-void
-spin_once_impl(std::chrono::nanoseconds timeout) override;
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout) override;
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)

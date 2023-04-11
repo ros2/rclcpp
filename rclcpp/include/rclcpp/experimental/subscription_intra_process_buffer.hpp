@@ -167,7 +167,6 @@ protected:
   void
   trigger_guard_condition() override
   {
-    std::cout << "trigger_guard_condition" << std::endl;
     this->gc_.trigger();
   }
 

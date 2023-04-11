@@ -281,9 +281,7 @@ protected:
       if (RCL_RET_OK == ret) {
         // Something has become ready in the wait set, and since this class
         // did not add anything to it, it is a user entity that is ready.
-        {
-          return create_wait_result(WaitResultKind::Ready);
-        }
+        return create_wait_result(WaitResultKind::Ready);
       } else if (RCL_RET_TIMEOUT == ret) {
         // The wait set timed out, exit the loop.
         break;

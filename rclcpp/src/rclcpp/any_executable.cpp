@@ -26,8 +26,7 @@ AnyExecutable::AnyExecutable()
   callback_group(nullptr),
   node_base(nullptr),
   data(nullptr)
-{
-}
+{}
 
 AnyExecutable::~AnyExecutable()
 {
