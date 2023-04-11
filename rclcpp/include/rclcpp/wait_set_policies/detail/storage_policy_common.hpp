@@ -191,7 +191,7 @@ protected:
       size_t clients_from_waitables = 0;
       size_t services_from_waitables = 0;
       size_t events_from_waitables = 0;
-      for (const auto & waitable_entry: waitables) {
+      for (const auto & waitable_entry : waitables) {
         if (!waitable_entry.waitable) {
           // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
           if (HasStrongOwnership) {
@@ -232,7 +232,6 @@ protected:
       needs_resize_ = false;
     }
 
-
     // Now clear the wait set, but only if it was not resized, as resizing also
     // clears the wait set.
     if (!was_resized) {
@@ -243,7 +242,7 @@ protected:
     }
 
     // Add subscriptions.
-    for (const auto & subscription_entry: subscriptions) {
+    for (const auto & subscription_entry : subscriptions) {
       if (!subscription_entry.subscription) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
@@ -365,7 +364,7 @@ protected:
     }
 
     // Add waitables.
-    for (auto & waitable_entry: waitables) {
+    for (auto & waitable_entry : waitables) {
       if (!waitable_entry.waitable) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {

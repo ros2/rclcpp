@@ -518,7 +518,8 @@ Executor::collect_entities()
   // This prevents the collection of guard conditions in the waitable from changing
   // while we are waiting on it.
   if (notify_waitable_) {
-    current_notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(*notify_waitable_);
+    current_notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
+      *notify_waitable_);
     auto notify_waitable = std::static_pointer_cast<rclcpp::Waitable>(current_notify_waitable_);
     collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
   }

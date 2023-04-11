@@ -34,7 +34,6 @@ SingleThreadedExecutor::spin()
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
   while (rclcpp::ok(this->context_) && spinning.load()) {
-
     wait_for_work();
 
     /// Get the ready executables in a thread-safe way.
@@ -45,7 +44,7 @@ SingleThreadedExecutor::spin()
       this->ready_executables_.clear();
     }
 
-    for (auto & exec: to_exec) {
+    for (auto & exec : to_exec) {
       if (exec.callback_group &&
         exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
       {
