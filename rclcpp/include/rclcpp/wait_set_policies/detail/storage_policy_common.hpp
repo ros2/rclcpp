@@ -257,9 +257,9 @@ protected:
       }
 
       rcl_ret_t ret = rcl_wait_set_add_subscription(
-          &rcl_wait_set_,
-          subscription_entry.subscription->get_subscription_handle().get(),
-          nullptr);
+        &rcl_wait_set_,
+        subscription_entry.subscription->get_subscription_handle().get(),
+        nullptr);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }

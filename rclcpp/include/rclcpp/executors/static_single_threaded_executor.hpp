@@ -101,7 +101,6 @@ public:
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
 
-
 protected:
   /**
    * @brief Executes ready executables from wait set.

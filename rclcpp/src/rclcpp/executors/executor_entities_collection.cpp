@@ -110,16 +110,15 @@ ready_executables(
 
   // Cache shared pointers to groups to avoid extra work re-locking them
   std::map<rclcpp::CallbackGroup::WeakPtr,
-           rclcpp::CallbackGroup::SharedPtr,
-           std::owner_less<rclcpp::CallbackGroup::WeakPtr>> group_map;
+    rclcpp::CallbackGroup::SharedPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> group_map;
   auto group_cache = [&group_map](const rclcpp::CallbackGroup::WeakPtr & weak_cbg_ptr)
-  {
-    if (group_map.count(weak_cbg_ptr) == 0)
     {
-      group_map.insert({weak_cbg_ptr, weak_cbg_ptr.lock()});
-    }
-    return group_map.find(weak_cbg_ptr)->second;
-  };
+      if (group_map.count(weak_cbg_ptr) == 0) {
+        group_map.insert({weak_cbg_ptr, weak_cbg_ptr.lock()});
+      }
+      return group_map.find(weak_cbg_ptr)->second;
+    };
 
 
   for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {

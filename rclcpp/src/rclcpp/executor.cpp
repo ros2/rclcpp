@@ -145,7 +145,7 @@ Executor::add_callback_group(
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify ){
+  } else if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
@@ -163,7 +163,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify ){
+  } else if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
@@ -183,7 +183,7 @@ Executor::remove_callback_group(
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify ){
+  } else if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
@@ -207,7 +207,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 
   if (!spinning.load()) {
     this->collect_entities();
-  } else if (notify ){
+  } else if (notify) {
     try {
       interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {

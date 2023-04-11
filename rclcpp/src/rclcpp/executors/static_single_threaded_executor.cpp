@@ -24,9 +24,10 @@ using rclcpp::executors::StaticSingleThreadedExecutor;
 StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
-  notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>([this](){
+  notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
+    [this]() {
       this->entities_need_rebuild.store(true);
-  });
+    });
 }
 
 StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor() {}
@@ -148,9 +149,9 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 }
 
 bool StaticSingleThreadedExecutor::execute_ready_executables(
-    const rclcpp::executors::ExecutorEntitiesCollection & collection,
-    rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
-    bool spin_once)
+  const rclcpp::executors::ExecutorEntitiesCollection & collection,
+  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
+  bool spin_once)
 {
   bool any_ready_executable = false;
 
@@ -172,8 +173,9 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
         continue;
       }
       execute_timer(entity);
-      if (spin_once)
+      if (spin_once) {
         return true;
+      }
       any_ready_executable = true;
     }
   }
@@ -187,8 +189,9 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
         continue;
       }
       execute_subscription(entity);
-      if (spin_once)
+      if (spin_once) {
         return true;
+      }
       any_ready_executable = true;
     }
   }
@@ -202,8 +205,9 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
         continue;
       }
       execute_service(entity);
-      if (spin_once)
+      if (spin_once) {
         return true;
+      }
       any_ready_executable = true;
     }
   }
@@ -217,8 +221,9 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
         continue;
       }
       execute_client(entity);
-      if (spin_once)
+      if (spin_once) {
         return true;
+      }
       any_ready_executable = true;
     }
   }
@@ -234,8 +239,9 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
 
     auto data = waitable->take_data();
     waitable->execute(data);
-    if (spin_once)
+    if (spin_once) {
       return true;
+    }
     any_ready_executable = true;
   }
   return any_ready_executable;

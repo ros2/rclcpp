@@ -45,8 +45,7 @@ SingleThreadedExecutor::spin()
       this->ready_executables_.clear();
     }
 
-    for (auto & exec: to_exec)
-    {
+    for (auto & exec: to_exec) {
       if (exec.callback_group &&
         exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
       {
