@@ -153,12 +153,7 @@ ExecutorEntitiesCollector::remove_callback_group(rclcpp::CallbackGroup::SharedPt
     throw std::runtime_error("Callback group needs to be associated with an executor.");
   }
 
-  if (!group_ptr->has_valid_node()) {
-    throw std::runtime_error("Node must not be deleted before its callback group(s).");
-  }
-
   auto weak_group_ptr = rclcpp::CallbackGroup::WeakPtr(group_ptr);
-
   std::lock_guard<std::mutex> lock(mutex_);
   bool associated = manually_added_groups_.count(group_ptr) != 0;
   bool add_queued = pending_manually_added_groups_.count(group_ptr) != 0;
@@ -254,9 +249,6 @@ ExecutorEntitiesCollector::remove_weak_callback_group(
   auto group_ptr = weak_group_it->lock();
 
   if (group_ptr) {
-    if (!group_ptr->has_valid_node()) {
-      throw std::runtime_error("Node must not be deleted before its callback group(s).");
-    }
     std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
     has_executor.store(false);
   }
