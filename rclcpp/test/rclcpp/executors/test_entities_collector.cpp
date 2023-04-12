@@ -239,11 +239,14 @@ TEST_F(TestExecutorEntitiesCollector, remove_callback_group_after_node) {
 
   node.reset();
 
-  ASSERT_FALSE(cb_group->has_valid_node());
-
+  /**
+   * TODO(mjcarroll): Assert this when we are enforcing that nodes must be destroyed
+   * after their created callback groups.
   RCLCPP_EXPECT_THROW_EQ(
     entities_collector.remove_callback_group(cb_group),
     std::runtime_error("Node must not be deleted before its callback group(s)."));
+  */
+  EXPECT_NO_THROW(entities_collector.update_collections());
 }
 
 TEST_F(TestExecutorEntitiesCollector, remove_callback_group_after_node2) {
@@ -269,11 +272,15 @@ TEST_F(TestExecutorEntitiesCollector, remove_callback_group_after_node2) {
   EXPECT_NO_THROW(entities_collector.remove_callback_group(cb_group));
 
   node.reset();
-  ASSERT_FALSE(cb_group->has_valid_node());
 
+  /**
+   * TODO(mjcarroll): Assert this when we are enforcing that nodes must be destroyed
+   * after their created callback groups.
   RCLCPP_EXPECT_THROW_EQ(
-    entities_collector.update_collections(),
+    entities_collector.remove_callback_group(cb_group),
     std::runtime_error("Node must not be deleted before its callback group(s)."));
+  */
+  EXPECT_NO_THROW(entities_collector.update_collections());
 }
 
 TEST_F(TestExecutorEntitiesCollector, remove_callback_group_twice) {

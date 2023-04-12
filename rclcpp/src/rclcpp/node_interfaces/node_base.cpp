@@ -129,6 +129,15 @@ NodeBase::NodeBase(
       delete node;
     });
 
+  // Create the default callback group, if needed.
+  if (nullptr == default_callback_group_) {
+    using rclcpp::CallbackGroupType;
+    // Default callback group is mutually exclusive and automatically associated with
+    // any executors that this node is added to.
+    default_callback_group_ =
+      NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive, true);
+  }
+
   // Indicate the notify_guard_condition is now valid.
   notify_guard_condition_is_valid_ = true;
 }
@@ -195,16 +204,15 @@ NodeBase::create_callback_group(
   rclcpp::CallbackGroupType group_type,
   bool automatically_add_to_executor_with_node)
 {
-  auto weak_ptr = this->weak_from_this();
+  auto weak_context = this->get_context()->weak_from_this();
+
+  auto get_node_context = [weak_context]() -> rclcpp::Context::SharedPtr {
+      return weak_context.lock();
+    };
+
   auto group = std::make_shared<rclcpp::CallbackGroup>(
     group_type,
-    [weak_ptr]() -> rclcpp::Context::SharedPtr {
-      auto node_ptr = weak_ptr.lock();
-      if (node_ptr) {
-        return node_ptr->get_context();
-      }
-      return nullptr;
-    },
+    get_node_context,
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
@@ -215,13 +223,6 @@ NodeBase::create_callback_group(
 rclcpp::CallbackGroup::SharedPtr
 NodeBase::get_default_callback_group()
 {
-  // Create the default callback group, if needed.
-  if (nullptr == default_callback_group_) {
-    using rclcpp::CallbackGroupType;
-    default_callback_group_ =
-      NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive);
-  }
-
   return default_callback_group_;
 }
 

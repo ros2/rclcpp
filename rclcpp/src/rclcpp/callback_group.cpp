@@ -44,12 +44,6 @@ CallbackGroup::~CallbackGroup()
   trigger_notify_guard_condition();
 }
 
-bool
-CallbackGroup::has_valid_node() const
-{
-  return nullptr != this->get_context_();
-}
-
 std::atomic_bool &
 CallbackGroup::can_be_taken_from()
 {
@@ -152,7 +146,6 @@ rclcpp::GuardCondition::SharedPtr
 CallbackGroup::get_notify_guard_condition()
 {
   std::lock_guard<std::recursive_mutex> lock(notify_guard_condition_mutex_);
-
   if (!this->get_context_) {
     throw std::runtime_error("Callback group was created without context and not passed context");
   }

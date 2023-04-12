@@ -180,18 +180,6 @@ public:
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
-  /// Return if the node that created this callback group still exists
-  /**
-   * As nodes can share ownership of callback groups with an executor, this
-   * may be used to ensure that the executor doesn't operate on a callback
-   * group that has outlived it's creating node.
-   *
-   * \return true if the creating node still exists, otherwise false
-   */
-  RCLCPP_PUBLIC
-  bool
-  has_valid_node() const;
-
   /// Get the total number of entities in this callback group.
   /**
    * \return the number of entities in the callback group.
@@ -208,6 +196,7 @@ public:
    * allow a second take (eg mutual exclusion)
    * \return a reference to the flag
    */
+
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
