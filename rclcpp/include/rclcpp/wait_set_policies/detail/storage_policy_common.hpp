@@ -104,7 +104,7 @@ protected:
       // TODO(wjwwood): support custom allocator, maybe restrict to polymorphic allocator
       rcl_get_default_allocator());
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+      rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to create wait set");
     }
 
     // (Re)build the wait set for the first time.

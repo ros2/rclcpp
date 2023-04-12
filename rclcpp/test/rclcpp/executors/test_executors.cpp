@@ -190,9 +190,10 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
   executor.add_node(this->node);
 
   std::atomic_bool timer_completed = false;
-  auto timer = this->node->create_wall_timer(1ms, [&]() {
+  auto timer = this->node->create_wall_timer(
+    1ms, [&]() {
       timer_completed.store(true);
-  });
+    });
 
   std::thread spinner([&]() {executor.spin();});
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.

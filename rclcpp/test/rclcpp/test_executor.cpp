@@ -113,7 +113,7 @@ TEST_F(TestExecutor, constructor_bad_wait_set_init) {
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_init, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     static_cast<void>(std::make_unique<DummyExecutor>()),
-    std::runtime_error("Failed to create wait set in Executor constructor: error not set"));
+    std::runtime_error("Failed to create wait set: error not set"));
 }
 
 TEST_F(TestExecutor, add_callback_group_twice) {
