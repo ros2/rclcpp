@@ -89,9 +89,9 @@ public:
     T2 message;
     write_message(data, message);
 
-    rclcpp::Serialization<T2> serialization_support;
+    rclcpp::Serialization<T2> ser;
     SerializedMessage result;
-    serialization_support.serialize_message(&message, &result);
+    ser.serialize_message(&message, &result);
     return result;
   }
 
