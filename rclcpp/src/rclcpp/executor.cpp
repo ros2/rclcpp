@@ -690,6 +690,11 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       {
         throw std::runtime_error("Unimplemented");
       }
+
+    default:
+      {
+        throw std::runtime_error("Subscription type is not supported");
+      }
   }
   return;
 }

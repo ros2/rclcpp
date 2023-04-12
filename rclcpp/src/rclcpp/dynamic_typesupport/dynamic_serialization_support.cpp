@@ -31,8 +31,8 @@ DynamicSerializationSupport::DynamicSerializationSupport(rcl_allocator_t allocat
 : DynamicSerializationSupport::DynamicSerializationSupport("", allocator) {}  // STUBBED
 
 DynamicSerializationSupport::DynamicSerializationSupport(
-  const std::string & serialization_library_name,
-  rcl_allocator_t allocator)
+  const std::string & /*serialization_library_name*/,
+  rcl_allocator_t /*allocator*/)
 : rosidl_serialization_support_(
     rosidl_dynamic_typesupport_get_zero_initialized_serialization_support())
 {}  // STUBBED

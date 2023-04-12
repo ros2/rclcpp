@@ -539,8 +539,8 @@ SubscriptionBase::get_content_filter() const
 // DYNAMIC TYPE ==================================================================================
 bool
 SubscriptionBase::take_dynamic_message(
-  rclcpp::dynamic_typesupport::DynamicMessage & message_out,
-  rclcpp::MessageInfo & message_info_out)
+  rclcpp::dynamic_typesupport::DynamicMessage & /*message_out*/,
+  rclcpp::MessageInfo & /*message_info_out*/)
 {
   RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "take_dynamic_message stubbed out for now.");
   return false;

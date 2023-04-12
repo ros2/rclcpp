@@ -65,6 +65,7 @@ class IntraProcessManager;
 
 enum class SubscriptionType : uint8_t
 {
+  INVALID = 0,  // The subscription type is most likely uninitialized
   ROS_MESSAGE = 1,  // take message as ROS message and handle as ROS message
   SERIALIZED_MESSAGE = 2,  // take message as serialized and handle as serialized
   DYNAMIC_MESSAGE_DIRECT = 3,  // take message as DynamicMessage and handle as DynamicMessage

@@ -25,17 +25,20 @@
 namespace rclcpp
 {
 
-std::shared_ptr<void> GenericSubscription::create_message()
+std::shared_ptr<void>
+GenericSubscription::create_message()
 {
   return create_serialized_message();
 }
 
-std::shared_ptr<rclcpp::SerializedMessage> GenericSubscription::create_serialized_message()
+std::shared_ptr<rclcpp::SerializedMessage>
+GenericSubscription::create_serialized_message()
 {
   return std::make_shared<rclcpp::SerializedMessage>(0);
 }
 
-void GenericSubscription::handle_message(
+void
+GenericSubscription::handle_message(
   std::shared_ptr<void> &,
   const rclcpp::MessageInfo &)
 {
@@ -43,14 +46,16 @@ void GenericSubscription::handle_message(
           "handle_message is not implemented for GenericSubscription");
 }
 
-void GenericSubscription::handle_serialized_message(
+void
+GenericSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo &)
 {
   callback_(message);
 }
 
-void GenericSubscription::handle_loaned_message(
+void
+GenericSubscription::handle_loaned_message(
   void * message, const rclcpp::MessageInfo & message_info)
 {
   (void) message;
@@ -59,13 +64,15 @@ void GenericSubscription::handle_loaned_message(
           "handle_loaned_message is not implemented for GenericSubscription");
 }
 
-void GenericSubscription::return_message(std::shared_ptr<void> & message)
+void
+GenericSubscription::return_message(std::shared_ptr<void> & message)
 {
   auto typed_message = std::static_pointer_cast<rclcpp::SerializedMessage>(message);
   return_serialized_message(typed_message);
 }
 
-void GenericSubscription::return_serialized_message(
+void
+GenericSubscription::return_serialized_message(
   std::shared_ptr<rclcpp::SerializedMessage> & message)
 {
   message.reset();
