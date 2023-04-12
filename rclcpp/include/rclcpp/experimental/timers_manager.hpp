@@ -69,8 +69,10 @@ public:
    *
    * @param context custom context to be used.
    * Shared ownership of the context is held until destruction.
-   * @param on_ready_callback The timers on ready callback. if not callable,
-   * this object will directly execute timers when they are ready.
+   * @param on_ready_callback The timers on ready callback. When a timer is ready,
+   * if this function is callable, it will be invoked instead of the timer callback.
+   * If this on_ready_callback is not callable, then the TimersManager will
+   * directly execute timers when they are ready.
    */
   RCLCPP_PUBLIC
   TimersManager(
@@ -233,6 +235,11 @@ public:
       return removed;
     }
 
+    /**
+     * @brief Retrieve the timer identified by the key
+     * @param timer_id The ID of the timer to retrieve.
+     * @return TimerPtr if there's a timer associated with the ID, nullptr otherwise
+     */
     TimerPtr get_timer(const void * timer_id)
     {
       for (auto & weak_timer : weak_heap_) {
@@ -455,7 +462,10 @@ public:
       std::make_heap(owned_heap_.begin(), owned_heap_.end(), timer_greater);
     }
 
-    void clear_callbacks()
+    /**
+     * @brief Helper function to clear the "on_reset_callback" on all associated timers.
+     */
+    void clear_timers_on_reset_callbacks()
     {
       for (TimerPtr & t : owned_heap_) {
         t->clear_on_reset_callback();
@@ -481,7 +491,7 @@ private:
      */
     static bool timer_greater(TimerPtr a, TimerPtr b)
     {
-      // FIXME!
+      // TODO(alsora): this can cause an error if timers are using different clocks
       return a->time_until_trigger() > b->time_until_trigger();
     }
 

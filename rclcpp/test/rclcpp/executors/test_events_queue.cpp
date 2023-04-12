@@ -75,8 +75,8 @@ TEST(TestEventsQueue, SimpleQueueTest)
   simple_queue->enqueue(push_event);
   ret = simple_queue->dequeue(event);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(push_event.exec_entity_id, event.exec_entity_id);
-  EXPECT_EQ(push_event.gen_entity_id, event.gen_entity_id);
+  EXPECT_EQ(push_event.entity_key, event.entity_key);
+  EXPECT_EQ(push_event.waitable_data, event.waitable_data);
   EXPECT_EQ(push_event.type, event.type);
   EXPECT_EQ(push_event.num_events, event.num_events);
 }

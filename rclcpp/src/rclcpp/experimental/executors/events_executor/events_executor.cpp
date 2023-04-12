@@ -69,7 +69,7 @@ EventsExecutor::EventsExecutor(
 
   auto notify_waitable_entity_id = notify_waitable_.get();
   notify_waitable_->set_on_ready_callback(
-    [this, notify_waitable_entity_id](size_t num_events, int gen_entity_id) {
+    [this, notify_waitable_entity_id](size_t num_events, int waitable_data) {
       // The notify waitable has a special callback.
       // We don't care about how many events as when we wake up the executor we are going to
       // process everything regardless.
@@ -81,7 +81,7 @@ EventsExecutor::EventsExecutor(
       }
 
       ExecutorEvent event =
-      {notify_waitable_entity_id, gen_entity_id, ExecutorEventType::WAITABLE_EVENT, 1};
+      {notify_waitable_entity_id, waitable_data, ExecutorEventType::WAITABLE_EVENT, 1};
       this->events_queue_->enqueue(event);
     });
 
@@ -270,7 +270,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
     case ExecutorEventType::CLIENT_EVENT:
       {
         auto client = this->retrieve_entity(
-          static_cast<const rcl_client_t *>(event.exec_entity_id),
+          static_cast<const rcl_client_t *>(event.entity_key),
           current_entities_collection_->clients);
 
         if (client) {
@@ -284,7 +284,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
     case ExecutorEventType::SUBSCRIPTION_EVENT:
       {
         auto subscription = this->retrieve_entity(
-          static_cast<const rcl_subscription_t *>(event.exec_entity_id),
+          static_cast<const rcl_subscription_t *>(event.entity_key),
           current_entities_collection_->subscriptions);
         if (subscription) {
           for (size_t i = 0; i < event.num_events; i++) {
@@ -296,7 +296,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
     case ExecutorEventType::SERVICE_EVENT:
       {
         auto service = this->retrieve_entity(
-          static_cast<const rcl_service_t *>(event.exec_entity_id),
+          static_cast<const rcl_service_t *>(event.entity_key),
           current_entities_collection_->services);
 
         if (service) {
@@ -309,17 +309,17 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       }
     case ExecutorEventType::TIMER_EVENT:
       {
-        timers_manager_->execute_ready_timer(event.exec_entity_id);
+        timers_manager_->execute_ready_timer(event.entity_key);
         break;
       }
     case ExecutorEventType::WAITABLE_EVENT:
       {
         auto waitable = this->retrieve_entity(
-          static_cast<const rclcpp::Waitable *>(event.exec_entity_id),
+          static_cast<const rclcpp::Waitable *>(event.entity_key),
           current_entities_collection_->waitables);
         if (waitable) {
           for (size_t i = 0; i < event.num_events; i++) {
-            auto data = waitable->take_data_by_entity_id(event.gen_entity_id);
+            auto data = waitable->take_data_by_entity_id(event.waitable_data);
             waitable->execute(data);
           }
         }
@@ -464,23 +464,23 @@ EventsExecutor::refresh_current_collection(
 
 std::function<void(size_t)>
 EventsExecutor::create_entity_callback(
-  void * exec_entity_id, ExecutorEventType event_type)
+  void * entity_key, ExecutorEventType event_type)
 {
   std::function<void(size_t)>
-  callback = [this, exec_entity_id, event_type](size_t num_events) {
-      ExecutorEvent event = {exec_entity_id, -1, event_type, num_events};
+  callback = [this, entity_key, event_type](size_t num_events) {
+      ExecutorEvent event = {entity_key, -1, event_type, num_events};
       this->events_queue_->enqueue(event);
     };
   return callback;
 }
 
 std::function<void(size_t, int)>
-EventsExecutor::create_waitable_callback(void * exec_entity_id)
+EventsExecutor::create_waitable_callback(void * entity_key)
 {
   std::function<void(size_t, int)>
-  callback = [this, exec_entity_id](size_t num_events, int gen_entity_id) {
+  callback = [this, entity_key](size_t num_events, int waitable_data) {
       ExecutorEvent event =
-      {exec_entity_id, gen_entity_id, ExecutorEventType::WAITABLE_EVENT, num_events};
+      {entity_key, waitable_data, ExecutorEventType::WAITABLE_EVENT, num_events};
       this->events_queue_->enqueue(event);
     };
   return callback;

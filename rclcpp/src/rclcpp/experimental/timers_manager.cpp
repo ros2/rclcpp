@@ -21,6 +21,8 @@
 #include <memory>
 #include <stdexcept>
 
+#include "rcpputils/scope_exit.hpp"
+
 using rclcpp::experimental::TimersManager;
 
 TimersManager::TimersManager(
@@ -246,6 +248,10 @@ void TimersManager::execute_ready_timers_unsafe()
 
 void TimersManager::run_timers()
 {
+  // Make sure the running flag is set to false when we exit from this function
+  // to allow restarting the timers thread.
+  RCPPUTILS_SCOPE_EXIT(this->running_.store(false); );
+
   while (rclcpp::ok(context_) && running_) {
     // Lock mutex
     std::unique_lock<std::mutex> lock(timers_mutex_);
@@ -269,10 +275,6 @@ void TimersManager::run_timers()
     // Execute timers
     this->execute_ready_timers_unsafe();
   }
-
-  // Make sure the running flag is set to false when we exit from this function
-  // to allow restarting the timers thread.
-  running_ = false;
 }
 
 void TimersManager::clear()
@@ -282,7 +284,7 @@ void TimersManager::clear()
     std::unique_lock<std::mutex> lock(timers_mutex_);
 
     TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
-    locked_heap.clear_callbacks();
+    locked_heap.clear_timers_on_reset_callbacks();
 
     weak_timers_heap_.clear();
 

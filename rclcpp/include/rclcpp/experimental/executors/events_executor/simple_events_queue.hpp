@@ -121,7 +121,7 @@ public:
 private:
   // The underlying queue implementation
   std::queue<rclcpp::experimental::executors::ExecutorEvent> event_queue_;
-  // Mutex to protect the insertion/extraction of events in the queue
+  // Mutex to protect read/write access to the queue
   mutable std::mutex mutex_;
   // Variable used to notify when an event is added to the queue
   std::condition_variable events_queue_cv_;

@@ -40,7 +40,9 @@ namespace executors
 /**
  * This executor uses an events queue and a timers manager to execute entities from its
  * associated nodes and callback groups.
- * The RMW listener APIs are used to collect new events.
+ * ROS 2 entities allow to set callback functions that are invoked when the entity is triggered
+ * or has work to do. The events-executor sets these callbacks such that they push an
+ * event into its queue.
  *
  * This executor tries to reduce as much as possible the amount of maintenance operations.
  * This allows to use customized `EventsQueue` classes to achieve different goals such
@@ -235,7 +237,7 @@ private:
 
   /// Create a listener callback function for the provided entity
   std::function<void(size_t)>
-  create_entity_callback(void * exec_entity_id, ExecutorEventType type);
+  create_entity_callback(void * entity_key, ExecutorEventType type);
 
   /// Create a listener callback function for the provided waitable entity
   std::function<void(size_t, int)>

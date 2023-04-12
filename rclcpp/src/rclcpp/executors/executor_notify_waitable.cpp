@@ -109,7 +109,7 @@ ExecutorNotifyWaitable::take_data_by_entity_id(size_t id)
 void
 ExecutorNotifyWaitable::set_on_ready_callback(std::function<void(size_t, int)> callback)
 {
-  // The second argument of the callback should identify which guard condition
+  // The second argument of the callback could be used to identify which guard condition
   // triggered the event.
   // We could indicate which of the guard conditions was triggered, but the executor
   // is already going to check that.
