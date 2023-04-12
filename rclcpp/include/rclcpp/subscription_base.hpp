@@ -239,7 +239,10 @@ public:
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
-  /// DEPRECATED: Check if subscription takes and handles serialized messages
+  /// Return if the subscription is serialized
+  /**
+   * \return `true` if the subscription is serialized, `false` otherwise
+   */
   RCLCPP_PUBLIC
   bool
   is_serialized() const;

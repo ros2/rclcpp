@@ -269,9 +269,6 @@ SubscriptionBase::get_message_type_support_handle() const
 bool
 SubscriptionBase::is_serialized() const
 {
-  RCLCPP_WARN(
-    rclcpp::get_logger(
-      "rclcpp"), "is_serialized() is deprecated, use get_subscription_type() instead.");
   return subscription_type_ == rclcpp::SubscriptionType::SERIALIZED_MESSAGE;
 }
 
@@ -542,6 +539,6 @@ SubscriptionBase::take_dynamic_message(
   rclcpp::dynamic_typesupport::DynamicMessage & /*message_out*/,
   rclcpp::MessageInfo & /*message_info_out*/)
 {
-  RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "take_dynamic_message stubbed out for now.");
+  throw std::runtime_error("Unimplemented");
   return false;
 }

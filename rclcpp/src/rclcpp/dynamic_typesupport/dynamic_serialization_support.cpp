@@ -28,14 +28,19 @@ using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
 
 // CONSTRUCTION ====================================================================================
 DynamicSerializationSupport::DynamicSerializationSupport(rcl_allocator_t allocator)
-: DynamicSerializationSupport::DynamicSerializationSupport("", allocator) {}  // STUBBED
+: DynamicSerializationSupport::DynamicSerializationSupport("", allocator)
+{
+  throw std::runtime_error("Unimplemented");
+}
 
 DynamicSerializationSupport::DynamicSerializationSupport(
   const std::string & /*serialization_library_name*/,
   rcl_allocator_t /*allocator*/)
 : rosidl_serialization_support_(
     rosidl_dynamic_typesupport_get_zero_initialized_serialization_support())
-{}  // STUBBED
+{
+  throw std::runtime_error("Unimplemented");
+}
 
 DynamicSerializationSupport::~DynamicSerializationSupport()
 {}  // STUBBED

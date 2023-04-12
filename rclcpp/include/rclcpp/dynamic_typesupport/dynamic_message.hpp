@@ -32,9 +32,6 @@ namespace rclcpp
 namespace dynamic_typesupport
 {
 
-class DynamicMessageType;
-class DynamicMessageTypeBuilder;
-
 /// Utility wrapper class for rosidl_dynamic_typesupport_dynamic_data_t
 /// STUBBED OUT
 class DynamicMessage : public std::enable_shared_from_this<DynamicMessage>

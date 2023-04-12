@@ -125,7 +125,6 @@ public:
 
 
   // DYNAMIC TYPE ==================================================================================
-  // TODO(methylDragon): Reorder later
   RCLCPP_PUBLIC
   rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr get_shared_dynamic_message_type()
   override;

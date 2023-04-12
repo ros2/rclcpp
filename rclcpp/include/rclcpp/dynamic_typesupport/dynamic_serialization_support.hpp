@@ -31,15 +31,6 @@ namespace dynamic_typesupport
 {
 
 /// Utility wrapper class for rosidl_dynamic_typesupport_serialization_support_t
-/**
- * This class:
- * - Exposes getter methods for the struct
- * - Exposes the underlying serialization support API
- *
- * Ownership:
- * - This class, similarly to the rosidl_dynamic_typesupport_serialization_support_t, must outlive
- *   all downstream usages of the serialization support.
- */
 class DynamicSerializationSupport : public std::enable_shared_from_this<DynamicSerializationSupport>
 {
 public:
