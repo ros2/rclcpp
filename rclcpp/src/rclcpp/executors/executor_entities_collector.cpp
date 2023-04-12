@@ -151,13 +151,18 @@ ExecutorEntitiesCollector::remove_callback_group(rclcpp::CallbackGroup::SharedPt
   if (!group_ptr->get_associated_with_executor_atomic().load()) {
     throw std::runtime_error("Callback group needs to be associated with an executor.");
   }
-
+  /**
+   * TODO(mjcarroll): The callback groups, being created by a node, should never outlive
+   * the node. Since we haven't historically enforced this, turning this on may cause
+   * previously-functional code to fail.
+   * Consider re-enablng this check (along with corresponding CallbackGroup::has_valid_node),
+   * when we can guarantee node/group lifetimes.
   if (!group_ptr->has_valid_node()) {
     throw std::runtime_error("Node must not be deleted before its callback group(s).");
   }
+  */
 
   auto weak_group_ptr = rclcpp::CallbackGroup::WeakPtr(group_ptr);
-
   std::lock_guard<std::mutex> lock(mutex_);
   bool associated = manually_added_groups_.count(group_ptr) != 0;
   bool add_queued = pending_manually_added_groups_.count(group_ptr) != 0;
@@ -251,11 +256,17 @@ ExecutorEntitiesCollector::remove_weak_callback_group(
 
   // Mark the node as disassociated (if the group is still valid)
   auto group_ptr = weak_group_it->lock();
-
   if (group_ptr) {
+    /**
+     * TODO(mjcarroll): The callback groups, being created by a node, should never outlive
+     * the node. Since we haven't historically enforced this, turning this on may cause
+     * previously-functional code to fail.
+     * Consider re-enablng this check (along with corresponding CallbackGroup::has_valid_node),
+     * when we can guarantee node/group lifetimes.
     if (!group_ptr->has_valid_node()) {
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
+    */
     std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
     has_executor.store(false);
   }
