@@ -216,6 +216,13 @@ NodeBase::create_callback_group(
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
+
+  // If this is creating the default callback group, then the
+  // notify guard condition won't be ready or needed yet.
+  if (notify_guard_condition_is_valid_) {
+    this->trigger_notify_guard_condition();
+  }
+
   return group;
 }
 
