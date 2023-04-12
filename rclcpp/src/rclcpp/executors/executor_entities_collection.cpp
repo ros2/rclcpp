@@ -94,19 +94,19 @@ build_entities_collection(
   }
 }
 
-std::deque<rclcpp::AnyExecutable>
+size_t
 ready_executables(
   const ExecutorEntitiesCollection & collection,
-  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result
+  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
+  std::deque<rclcpp::AnyExecutable> & executables
 )
 {
-  std::deque<rclcpp::AnyExecutable> executables;
-
   if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
-    return executables;
+    return 0;
   }
 
   auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
+  size_t added = 0;
 
   // Cache shared pointers to groups to avoid extra work re-locking them
   std::map<rclcpp::CallbackGroup::WeakPtr,
@@ -140,6 +140,7 @@ ready_executables(
       exec.timer = entity;
       exec.callback_group = group_info;
       executables.push_back(exec);
+      added++;
     }
   }
 
@@ -159,6 +160,7 @@ ready_executables(
       exec.subscription = entity;
       exec.callback_group = group_info;
       executables.push_back(exec);
+      added++;
     }
   }
 
@@ -178,6 +180,7 @@ ready_executables(
       exec.service = entity;
       exec.callback_group = group_info;
       executables.push_back(exec);
+      added++;
     }
   }
 
@@ -197,6 +200,7 @@ ready_executables(
       exec.client = entity;
       exec.callback_group = group_info;
       executables.push_back(exec);
+      added++;
     }
   }
 
@@ -217,8 +221,9 @@ ready_executables(
     exec.callback_group = group_info;
     exec.data = waitable->take_data();
     executables.push_back(exec);
+    added++;
   }
-  return executables;
+  return added;
 }
 
 }  // namespace executors

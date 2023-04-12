@@ -294,19 +294,26 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
   bool work_available = false;
+
+
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
+
+    {
+      std::lock_guard<std::mutex> guard(mutex_);
+      work_available = ready_executables_.size() > 0;
+    }
+
     if (!work_available) {
       wait_for_work(std::chrono::milliseconds::zero());
     }
+
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
-      work_available = true;
     } else {
       if (!work_available || !exhaustive) {
         break;
       }
-      work_available = false;
     }
   }
 }
@@ -590,7 +597,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
   }
-  ready_executables_ = rclcpp::executors::ready_executables(current_collection_, wait_result);
+  rclcpp::executors::ready_executables(current_collection_, wait_result, ready_executables_);
 }
 
 bool
