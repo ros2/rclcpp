@@ -49,10 +49,13 @@ namespace experimental
  * Because of this, they have a not-negligible impact on the performance.
  *
  * Timers execution
- * The most efficient implementation consists in letting a TimersManager object
- * to spawn a thread where timers are monitored and periodically executed.
- * Besides this, other APIs allow to either execute a single timer or all the
- * currently ready ones.
+ * The most efficient use of this class consists in letting a TimersManager object
+ * to spawn a thread where timers are monitored and optionally executed.
+ * This can be controlled via the `start` and `stop` methods.
+ * Ready timers can either be executed or an on_ready_callback can be used to notify
+ * other entities that they are ready and need to be executed.
+ * Other APIs allow to directly execute a given timer.
+ *
  * This class assumes that the `execute_callback()` API of the stored timers is never
  * called by other entities, but it can only be called from here.
  * If this assumption is not respected, the heap property may be invalidated,
@@ -69,15 +72,21 @@ public:
    *
    * @param context custom context to be used.
    * Shared ownership of the context is held until destruction.
-   * @param on_ready_callback The timers on ready callback. When a timer is ready,
-   * if this function is callable, it will be invoked instead of the timer callback.
-   * If this on_ready_callback is not callable, then the TimersManager will
+   * @param on_ready_callback The timers on ready callback. The presence of this function
+   * indicates what to do when the TimersManager is running and a timer becomes ready.
+   * The TimersManager is considered "running" when the `start` method has been called.
+   * If it's callable, it will be invoked instead of the timer callback.
+   * If it's not callable, then the TimersManager will
    * directly execute timers when they are ready.
+   * All the methods that execute a given timer (e.g. `execute_head_timer` 
+   * or `execute_ready_timer`) without the TimersManager being `running`, i.e. 
+   * without actually explicitly waiting for the timer to become ready, will ignore this
+   * callback.
    */
   RCLCPP_PUBLIC
   TimersManager(
     std::shared_ptr<rclcpp::Context> context,
-    std::function<void(void *)> on_ready_callback = nullptr);
+    std::function<void(const rclcpp::TimerBase *)> on_ready_callback = nullptr);
 
   /**
    * @brief Destruct the TimersManager object making sure to stop thread and release memory.
@@ -127,15 +136,6 @@ public:
   void stop();
 
   /**
-   * @brief Executes all the timers currently ready when the function was invoked.
-   * This function will lock all the stored timers throughout its duration.
-   * This function is thread safe.
-   * @throws std::runtime_error if the timers thread was already running.
-   */
-  RCLCPP_PUBLIC
-  void execute_ready_timers();
-
-  /**
    * @brief Get the number of timers that are currently ready.
    * This function is thread safe.
    *
@@ -148,6 +148,8 @@ public:
   /**
    * @brief Executes head timer if ready.
    * This function is thread safe.
+   * This function will try to execute the timer callback regardless of whether
+   * the TimersManager on_ready_callback was passed during construction.
    *
    * @return true if head timer was ready.
    * @throws std::runtime_error if the timers thread was already running.
@@ -158,11 +160,13 @@ public:
   /**
    * @brief Executes timer identified by its ID.
    * This function is thread safe.
+   * This function will try to execute the timer callback regardless of whether
+   * the TimersManager on_ready_callback was passed during construction.
    *
    * @param timer_id the timer ID of the timer to execute
    */
   RCLCPP_PUBLIC
-  void execute_ready_timer(const void * timer_id);
+  void execute_ready_timer(const rclcpp::TimerBase * timer_id);
 
   /**
    * @brief Get the amount of time before the next timer triggers.
@@ -240,7 +244,7 @@ public:
      * @param timer_id The ID of the timer to retrieve.
      * @return TimerPtr if there's a timer associated with the ID, nullptr otherwise
      */
-    TimerPtr get_timer(const void * timer_id)
+    TimerPtr get_timer(const rclcpp::TimerBase * timer_id)
     {
       for (auto & weak_timer : weak_heap_) {
         auto timer = weak_timer.lock();
@@ -523,7 +527,7 @@ private:
   void execute_ready_timers_unsafe();
 
   // Callback to be called when timer is ready
-  std::function<void(void *)> on_ready_callback_ = nullptr;
+  std::function<void(const rclcpp::TimerBase *)> on_ready_callback_ = nullptr;
 
   // Thread used to run the timers execution task
   std::thread timers_thread_;

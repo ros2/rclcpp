@@ -42,6 +42,14 @@ public:
   }
 };
 
+static void execute_all_ready_timers(std::shared_ptr<TimersManager> timers_manager)
+{
+  bool head_was_ready = false;
+  do {
+    head_was_ready = timers_manager->execute_head_timer();
+  } while (head_was_ready);
+}
+
 TEST_F(TestTimersManager, empty_manager)
 {
   auto timers_manager = std::make_shared<TimersManager>(
@@ -49,7 +57,6 @@ TEST_F(TestTimersManager, empty_manager)
 
   EXPECT_EQ(std::chrono::nanoseconds::max(), timers_manager->get_head_timeout());
   EXPECT_FALSE(timers_manager->execute_head_timer());
-  EXPECT_NO_THROW(timers_manager->execute_ready_timers());
   EXPECT_NO_THROW(timers_manager->clear());
   EXPECT_NO_THROW(timers_manager->start());
   EXPECT_NO_THROW(timers_manager->stop());
@@ -59,7 +66,7 @@ TEST_F(TestTimersManager, add_run_remove_timer)
 {
   size_t t_runs = 0;
   auto t = TimerT::make_shared(
-    1ms,
+    10ms,
     [&t_runs]() {
       t_runs++;
     },
@@ -72,10 +79,10 @@ TEST_F(TestTimersManager, add_run_remove_timer)
   timers_manager->add_timer(t);
 
   // Sleep for more 3 times the timer period
-  std::this_thread::sleep_for(3ms);
+  std::this_thread::sleep_for(30ms);
 
   // The timer is executed only once, even if we slept 3 times the period
-  timers_manager->execute_ready_timers();
+  execute_all_ready_timers(timers_manager);
   EXPECT_EQ(1u, t_runs);
 
   // Remove the timer from the manager
@@ -136,13 +143,11 @@ TEST_F(TestTimersManager, timers_thread_exclusive_usage)
 
   EXPECT_THROW(timers_manager->start(), std::exception);
   EXPECT_THROW(timers_manager->get_head_timeout(), std::exception);
-  EXPECT_THROW(timers_manager->execute_ready_timers(), std::exception);
   EXPECT_THROW(timers_manager->execute_head_timer(), std::exception);
 
   timers_manager->stop();
 
   EXPECT_NO_THROW(timers_manager->get_head_timeout());
-  EXPECT_NO_THROW(timers_manager->execute_ready_timers());
   EXPECT_NO_THROW(timers_manager->execute_head_timer());
 }
 
@@ -221,19 +226,19 @@ TEST_F(TestTimersManager, timers_order)
   timers_manager->add_timer(t1);
 
   std::this_thread::sleep_for(10ms);
-  timers_manager->execute_ready_timers();
+  execute_all_ready_timers(timers_manager);
   EXPECT_EQ(1u, t1_runs);
   EXPECT_EQ(0u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
   std::this_thread::sleep_for(30ms);
-  timers_manager->execute_ready_timers();
+  execute_all_ready_timers(timers_manager);
   EXPECT_EQ(2u, t1_runs);
   EXPECT_EQ(1u, t2_runs);
   EXPECT_EQ(0u, t3_runs);
 
   std::this_thread::sleep_for(100ms);
-  timers_manager->execute_ready_timers();
+  execute_all_ready_timers(timers_manager);
   EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(2u, t2_runs);
   EXPECT_EQ(1u, t3_runs);
@@ -241,7 +246,7 @@ TEST_F(TestTimersManager, timers_order)
   timers_manager->remove_timer(t1);
 
   std::this_thread::sleep_for(30ms);
-  timers_manager->execute_ready_timers();
+  execute_all_ready_timers(timers_manager);
   EXPECT_EQ(3u, t1_runs);
   EXPECT_EQ(3u, t2_runs);
   EXPECT_EQ(1u, t3_runs);
@@ -404,23 +409,11 @@ TEST_F(TestTimersManager, infinite_loop)
   timers_manager->add_timer(t1);
   timers_manager->add_timer(t2);
 
-  // Sleep for enough time to trigger timers
-  std::this_thread::sleep_for(3ms);
-  timers_manager->execute_ready_timers();
-  EXPECT_EQ(1u, t1_runs);
-  EXPECT_EQ(1u, t2_runs);
-
-  // Due to the long execution of timer callbacks, timers are already ready
-  bool ret = timers_manager->execute_head_timer();
-  EXPECT_TRUE(ret);
-  EXPECT_EQ(3u, t1_runs + t2_runs);
-
-  // Start a timers thread
+  // Start a timers thread and make sure that we can stop it later
   timers_manager->start();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(50ms);
   timers_manager->stop();
 
-  EXPECT_LT(3u, t1_runs + t2_runs);
-  EXPECT_LT(1u, t1_runs);
-  EXPECT_LT(1u, t2_runs);
+  EXPECT_LT(0u, t1_runs);
+  EXPECT_LT(0u, t2_runs);
 }

@@ -241,7 +241,7 @@ private:
 
   /// Create a listener callback function for the provided waitable entity
   std::function<void(size_t, int)>
-  create_waitable_callback(void * waitable_id);
+  create_waitable_callback(const rclcpp::Waitable * waitable_id);
 
   /// Searches for the provided entity_id in the collection and returns the entity if valid
   template<typename CollectionType>

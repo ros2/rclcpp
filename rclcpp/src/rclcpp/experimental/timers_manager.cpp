@@ -27,7 +27,7 @@ using rclcpp::experimental::TimersManager;
 
 TimersManager::TimersManager(
   std::shared_ptr<rclcpp::Context> context,
-  std::function<void(void *)> on_ready_callback)
+  std::function<void(const rclcpp::TimerBase *)> on_ready_callback)
 {
   context_ = context;
   on_ready_callback_ = on_ready_callback;
@@ -125,18 +125,6 @@ size_t TimersManager::get_number_ready_timers()
   return locked_heap.get_number_ready_timers();
 }
 
-void TimersManager::execute_ready_timers()
-{
-  // Do not allow to interfere with the thread running
-  if (running_) {
-    throw std::runtime_error(
-            "execute_ready_timers() can't be used while timers thread is running");
-  }
-
-  std::unique_lock<std::mutex> lock(timers_mutex_);
-  this->execute_ready_timers_unsafe();
-}
-
 bool TimersManager::execute_head_timer()
 {
   // Do not allow to interfere with the thread running
@@ -158,12 +146,10 @@ bool TimersManager::execute_head_timer()
 
   const bool timer_ready = head_timer->is_ready();
   if (timer_ready) {
+    // NOTE: here we always execute the timer, regardless of whether the
+    // on_ready_callback is set or not.
     head_timer->call();
-    if (on_ready_callback_) {
-      on_ready_callback_(head_timer.get());
-    } else {
-      head_timer->execute_callback();
-    }
+    head_timer->execute_callback();
     timers_heap.heapify_root();
     weak_timers_heap_.store(timers_heap);
   }
@@ -171,7 +157,7 @@ bool TimersManager::execute_head_timer()
   return timer_ready;
 }
 
-void TimersManager::execute_ready_timer(const void * timer_id)
+void TimersManager::execute_ready_timer(const rclcpp::TimerBase * timer_id)
 {
   TimerPtr ready_timer;
   {

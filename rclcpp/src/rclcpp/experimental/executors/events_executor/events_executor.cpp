@@ -40,9 +40,9 @@ EventsExecutor::EventsExecutor(
   // The timers manager can be used either to only track timers (in this case an expired
   // timer will generate an executor event and then it will be executed by the executor thread)
   // or it can also take care of executing expired timers in its dedicated thread.
-  std::function<void(void *)> timer_on_ready_cb = nullptr;
-  if (execute_timers_separate_thread) {
-    timer_on_ready_cb = [this](const void * timer_id) {
+  std::function<void(const rclcpp::TimerBase *)> timer_on_ready_cb = nullptr;
+  if (!execute_timers_separate_thread) {
+    timer_on_ready_cb = [this](const rclcpp::TimerBase * timer_id) {
         ExecutorEvent event = {timer_id, -1, ExecutorEventType::TIMER_EVENT, 1};
         this->events_queue_->enqueue(event);
       };
@@ -309,7 +309,8 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       }
     case ExecutorEventType::TIMER_EVENT:
       {
-        timers_manager_->execute_ready_timer(event.entity_key);
+        timers_manager_->execute_ready_timer(
+          static_cast<const rclcpp::TimerBase *>(event.entity_key));
         break;
       }
     case ExecutorEventType::WAITABLE_EVENT:
@@ -475,7 +476,7 @@ EventsExecutor::create_entity_callback(
 }
 
 std::function<void(size_t, int)>
-EventsExecutor::create_waitable_callback(void * entity_key)
+EventsExecutor::create_waitable_callback(const rclcpp::Waitable * entity_key)
 {
   std::function<void(size_t, int)>
   callback = [this, entity_key](size_t num_events, int waitable_data) {
