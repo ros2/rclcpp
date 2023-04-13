@@ -39,6 +39,7 @@
   <depend>rcpputils</depend>
   <depend>rcutils</depend>
   <depend>rmw</depend>
+  <depend>rosidl_dynamic_typesupport</depend>
   <depend>statistics_msgs</depend>
   <depend>tracetools</depend>
 
