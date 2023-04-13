@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/executors/executor_entities_collection.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
@@ -33,26 +32,9 @@ SingleThreadedExecutor::spin()
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
   while (rclcpp::ok(this->context_) && spinning.load()) {
-    wait_for_work();
-
-    /// Get the ready executables in a thread-safe way.
-    std::deque<rclcpp::AnyExecutable> to_exec;
-    {
-      std::lock_guard<std::mutex> guard(mutex_);
-      to_exec = this->ready_executables_;
-      this->ready_executables_.clear();
-    }
-
-    // Execute all available executables before return to wait for work
-    for (auto & exec : to_exec) {
-      // Block mutually exclusive callback group
-      if (exec.callback_group &&
-        exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
-      {
-        assert(exec.callback_group->can_be_taken_from().load());
-        exec.callback_group->can_be_taken_from().store(false);
-      }
-      execute_any_executable(exec);
+    rclcpp::AnyExecutable any_executable;
+    if (get_next_executable(any_executable)) {
+      execute_any_executable(any_executable);
     }
   }
 }
