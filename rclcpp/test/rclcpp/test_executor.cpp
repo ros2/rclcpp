@@ -151,9 +151,15 @@ TEST_F(TestExecutor, remove_callback_group_null_node) {
 
   node.reset();
 
+
+  /**
+   * TODO(mjcarroll): Assert this when we are enforcing that nodes must be destroyed
+   * after their created callback groups.
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_callback_group(cb_group, false),
     std::runtime_error("Node must not be deleted before its callback group(s)."));
+   */
+  EXPECT_NO_THROW(dummy.remove_callback_group(cb_group, false));
 }
 
 TEST_F(TestExecutor, remove_callback_group_failed_trigger_guard_condition) {

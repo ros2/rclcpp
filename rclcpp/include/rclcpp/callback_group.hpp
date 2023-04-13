@@ -196,7 +196,6 @@ public:
    * allow a second take (eg mutual exclusion)
    * \return a reference to the flag
    */
-
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();

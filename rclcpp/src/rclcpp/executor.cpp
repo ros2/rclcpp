@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <chrono>
 #include <iterator>
 #include <memory>
 #include <map>
@@ -293,28 +294,44 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-  bool work_available = false;
 
+  size_t work_in_queue = 0;
+  bool has_waited = false;
+
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    work_in_queue = ready_executables_.size();
+  }
+  // The logic below is to guarantee that we:
+  // a) run all of the work in the queue before we spin the first time
+  // b) spin at least once
+  // c) run all of the work in the queue after we spin
 
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
-
-    {
-      std::lock_guard<std::mutex> guard(mutex_);
-      work_available = ready_executables_.size() > 0;
-    }
-
-    if (!work_available) {
-      wait_for_work(std::chrono::milliseconds::zero());
-    }
-
-    if (get_next_ready_executable(any_exec)) {
-      execute_any_executable(any_exec);
-    } else {
-      if (!work_available || !exhaustive) {
+    if (work_in_queue > 0) {
+      // If there is work in the queue, then execute it
+      // This covers the case that there are things left in the queue from a
+      // previous spin.
+      if (get_next_ready_executable(any_exec)) {
+        execute_any_executable(any_exec);
+      }
+    } else if (!has_waited && !work_in_queue) {
+      // Once the ready queue is empty, then we need to wait at least once.
+      wait_for_work(std::chrono::milliseconds(0));
+      has_waited = true;
+    } else if (has_waited && !work_in_queue) {
+      // Once we have emptied the ready queue, but have already waited:
+      if (!exhaustive) {
+        // In the case of spin some, then we can exit
         break;
+      } else {
+        // In the case of spin all, then we will allow ourselves to wait again.
+        has_waited = false;
       }
     }
+    std::lock_guard<std::mutex> lock(mutex_);
+    work_in_queue = ready_executables_.size();
   }
 }
 
