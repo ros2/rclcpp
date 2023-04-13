@@ -605,8 +605,8 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   message_info.get_rmw_message_info().from_intra_process = false;
 
   switch (subscription->get_subscription_type()) {
-    // Take ROS message
-    case rclcpp::SubscriptionType::ROS_MESSAGE:
+    // Deliver ROS message
+    case rclcpp::DeliveredMessageKind::ROS_MESSAGE:
       {
         if (subscription->can_loan_messages()) {
           // This is the case where a loaned message is taken from the middleware via
@@ -659,8 +659,8 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         break;
       }
 
-    // Take serialized message
-    case rclcpp::SubscriptionType::SERIALIZED_MESSAGE:
+    // Deliver serialized message
+    case rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE:
       {
         // This is the case where a copy of the serialized message is taken from
         // the middleware via inter-process communication.
@@ -679,21 +679,15 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       }
 
     // DYNAMIC SUBSCRIPTION ========================================================================
-    // Take dynamic message directly from the middleware
-    case rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT:
-      {
-        throw std::runtime_error("Unimplemented");
-      }
-
-    // Take serialized and then convert to dynamic message
-    case rclcpp::SubscriptionType::DYNAMIC_MESSAGE_FROM_SERIALIZED:
+    // Deliver dynamic message
+    case rclcpp::DeliveredMessageKind::DYNAMIC_MESSAGE:
       {
         throw std::runtime_error("Unimplemented");
       }
 
     default:
       {
-        throw std::runtime_error("Subscription type is not supported");
+        throw std::runtime_error("Delivered message kind is not supported");
       }
   }
   return;
