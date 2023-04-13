@@ -651,7 +651,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
   }
   if (!parameter_info->second.descriptor.dynamic_typing) {
     throw rclcpp::exceptions::InvalidParameterTypeException{
-            name, "cannot undeclare an statically typed parameter"};
+            name, "cannot undeclare a statically typed parameter"};
   }
 
   parameters_.erase(parameter_info);
@@ -824,7 +824,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
         if (!it->second.descriptor.dynamic_typing) {
-          result.reason = "cannot undeclare an statically typed parameter";
+          result.reason = "cannot undeclare a statically typed parameter";
           result.successful = false;
           return result;
         }

@@ -28,6 +28,7 @@
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rcutils/strdup.h"
+#include "test_msgs/msg/empty.h"
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"
 
@@ -598,6 +599,18 @@ TEST_F(TestNodeGraph, get_info_by_topic)
 
   rclcpp::QoS const_actual_qos = const_publisher_endpoint_info.qos_profile();
   EXPECT_EQ(const_actual_qos.reliability(), rclcpp::ReliabilityPolicy::Reliable);
+
+  const rosidl_type_hash_t expected_type_hash = *test_msgs__msg__Empty__get_type_hash(nullptr);
+  EXPECT_EQ(
+    0, memcmp(
+      &publisher_endpoint_info.topic_type_hash(),
+      &expected_type_hash,
+      sizeof(rosidl_type_hash_t)));
+  EXPECT_EQ(
+    0, memcmp(
+      &const_publisher_endpoint_info.topic_type_hash(),
+      &expected_type_hash,
+      sizeof(rosidl_type_hash_t)));
 
   auto endpoint_gid = publisher_endpoint_info.endpoint_gid();
   auto const_endpoint_gid = const_publisher_endpoint_info.endpoint_gid();
