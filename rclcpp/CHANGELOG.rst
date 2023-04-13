@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+20.0.0 (2023-04-13)
+-------------------
 * applied tracepoints for ring_buffer (`#2091 <https://github.com/ros2/rclcpp/issues/2091>`_)
 * Dynamic Subscription (REP-2011 Subset): Stubs for rclcpp (`#2165 <https://github.com/ros2/rclcpp/issues/2165>`_)
 * Add type_hash to cpp TopicEndpointInfo (`#2137 <https://github.com/ros2/rclcpp/issues/2137>`_)
