@@ -19,7 +19,7 @@
 #include "rclcpp/rate.hpp"
 
 /*
-   Basic tests for the Rate and WallRate classes.
+   Basic tests for the Rate, WallRate and ROSRate classes.
  */
 TEST(TestRate, rate_basics) {
   rclcpp::init(0, nullptr);
@@ -32,6 +32,7 @@ TEST(TestRate, rate_basics) {
   auto start = std::chrono::system_clock::now();
   rclcpp::Rate r(period);
   EXPECT_EQ(rclcpp::Duration(period), r.period());
+  ASSERT_FALSE(r.is_steady());
   ASSERT_EQ(RCL_SYSTEM_TIME, r.get_type());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
@@ -76,6 +77,7 @@ TEST(TestRate, wall_rate_basics) {
   auto start = std::chrono::steady_clock::now();
   rclcpp::WallRate r(period);
   EXPECT_EQ(rclcpp::Duration(period), r.period());
+  ASSERT_TRUE(r.is_steady());
   ASSERT_EQ(RCL_STEADY_TIME, r.get_type());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::steady_clock::now();
@@ -122,6 +124,7 @@ TEST(TestRate, ros_rate_basics) {
   auto start = clock.now();
   rclcpp::ROSRate r(period);
   EXPECT_EQ(rclcpp::Duration(period), r.period());
+  ASSERT_FALSE(r.is_steady());
   ASSERT_EQ(RCL_ROS_TIME, r.get_type());
   ASSERT_TRUE(r.sleep());
   auto one = clock.now();
@@ -155,10 +158,126 @@ TEST(TestRate, ros_rate_basics) {
   rclcpp::shutdown();
 }
 
+/*
+   Basic test for the deprecated GenericRate class.
+ */
+TEST(TestRate, generic_rate) {
+  auto period = std::chrono::milliseconds(100);
+  auto offset = std::chrono::milliseconds(50);
+  auto epsilon = std::chrono::milliseconds(1);
+  double overrun_ratio = 1.5;
+
+  {
+    auto start = std::chrono::system_clock::now();
+
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+    rclcpp::GenericRate<std::chrono::system_clock> gr(period);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
+    EXPECT_EQ(period, gr.period());
+    ASSERT_FALSE(gr.is_steady());
+    ASSERT_TRUE(gr.sleep());
+    auto one = std::chrono::system_clock::now();
+    auto delta = one - start;
+    EXPECT_LT(period, delta + epsilon);
+    EXPECT_GT(period * overrun_ratio, delta);
+
+    rclcpp::sleep_for(offset);
+    ASSERT_TRUE(gr.sleep());
+    auto two = std::chrono::system_clock::now();
+    delta = two - start;
+    EXPECT_LT(2 * period, delta);
+    EXPECT_GT(2 * period * overrun_ratio, delta);
+
+    rclcpp::sleep_for(offset);
+    auto two_offset = std::chrono::system_clock::now();
+    gr.reset();
+    ASSERT_TRUE(gr.sleep());
+    auto three = std::chrono::system_clock::now();
+    delta = three - two_offset;
+    EXPECT_LT(period, delta + epsilon);
+    EXPECT_GT(period * overrun_ratio, delta);
+
+    rclcpp::sleep_for(offset + period);
+    auto four = std::chrono::system_clock::now();
+    ASSERT_FALSE(gr.sleep());
+    auto five = std::chrono::system_clock::now();
+    delta = five - four;
+    ASSERT_TRUE(epsilon > delta);
+  }
+
+  {
+    auto start = std::chrono::steady_clock::now();
+
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+    rclcpp::GenericRate<std::chrono::steady_clock> gr(period);
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
+    EXPECT_EQ(period, gr.period());
+    ASSERT_TRUE(gr.is_steady());
+    ASSERT_TRUE(gr.sleep());
+    auto one = std::chrono::steady_clock::now();
+    auto delta = one - start;
+    EXPECT_LT(period, delta);
+    EXPECT_GT(period * overrun_ratio, delta);
+
+    rclcpp::sleep_for(offset);
+    ASSERT_TRUE(gr.sleep());
+    auto two = std::chrono::steady_clock::now();
+    delta = two - start;
+    EXPECT_LT(2 * period, delta + epsilon);
+    EXPECT_GT(2 * period * overrun_ratio, delta);
+
+    rclcpp::sleep_for(offset);
+    auto two_offset = std::chrono::steady_clock::now();
+    gr.reset();
+    ASSERT_TRUE(gr.sleep());
+    auto three = std::chrono::steady_clock::now();
+    delta = three - two_offset;
+    EXPECT_LT(period, delta);
+    EXPECT_GT(period * overrun_ratio, delta);
+
+    rclcpp::sleep_for(offset + period);
+    auto four = std::chrono::steady_clock::now();
+    ASSERT_FALSE(gr.sleep());
+    auto five = std::chrono::steady_clock::now();
+    delta = five - four;
+    EXPECT_GT(epsilon, delta);
+  }
+}
+
 TEST(TestRate, from_double) {
   {
     rclcpp::Rate rate(1.0);
-    EXPECT_EQ(rclcpp::Duration(std::chrono::milliseconds(1000)), rate.period());
+    EXPECT_EQ(rclcpp::Duration(std::chrono::seconds(1)), rate.period());
   }
   {
     rclcpp::WallRate rate(2.0);
@@ -166,7 +285,7 @@ TEST(TestRate, from_double) {
   }
   {
     rclcpp::WallRate rate(0.5);
-    EXPECT_EQ(rclcpp::Duration(std::chrono::milliseconds(2000)), rate.period());
+    EXPECT_EQ(rclcpp::Duration(std::chrono::seconds(2)), rate.period());
   }
   {
     rclcpp::ROSRate rate(4.0);
@@ -177,64 +296,17 @@ TEST(TestRate, from_double) {
 TEST(TestRate, clock_types) {
   {
     rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME));
+    EXPECT_FALSE(rate.is_steady());
     EXPECT_EQ(RCL_SYSTEM_TIME, rate.get_type());
   }
   {
     rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME));
+    EXPECT_TRUE(rate.is_steady());
     EXPECT_EQ(RCL_STEADY_TIME, rate.get_type());
   }
   {
     rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_ROS_TIME));
+    EXPECT_FALSE(rate.is_steady());
     EXPECT_EQ(RCL_ROS_TIME, rate.get_type());
-  }
-}
-
-TEST(TestRate, generic_rate_api) {
-  {
-// suppress deprecated function warning
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-
-    rclcpp::GenericRate<std::chrono::system_clock> gr(1.0);
-
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
-
-    ASSERT_FALSE(gr.sleep());
-    ASSERT_FALSE(gr.is_steady());
-    ASSERT_EQ(std::chrono::seconds(1), gr.period());
-  }
-
-  {
-// suppress deprecated function warning
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-
-    rclcpp::GenericRate<std::chrono::steady_clock> gr(std::chrono::seconds(1));
-
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
-
-    ASSERT_FALSE(gr.sleep());
-    ASSERT_FALSE(gr.is_steady());
-    ASSERT_EQ(std::chrono::seconds(1), gr.period());
   }
 }
