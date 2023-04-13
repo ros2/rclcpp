@@ -118,6 +118,13 @@ public:
         return nullptr;
       }
     }
+
+    if (this->buffer_->has_data()) {
+      // If there is data still to be processed, indicate to the
+      // executor or waitset by triggering the guard condition.
+      this->trigger_guard_condition();
+    }
+
     return std::static_pointer_cast<void>(
       std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
         std::pair<ConstMessageSharedPtr, MessageUniquePtr>(
