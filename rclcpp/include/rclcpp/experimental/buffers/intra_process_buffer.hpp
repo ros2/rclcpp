@@ -24,6 +24,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/macros.hpp"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -94,6 +95,10 @@ public:
 
     buffer_ = std::move(buffer_impl);
 
+    TRACEPOINT(
+      rclcpp_buffer_to_ipb,
+      static_cast<const void *>(buffer_.get()),
+      static_cast<const void *>(this));
     if (!allocator) {
       message_allocator_ = std::make_shared<MessageAlloc>();
     } else {
