@@ -63,10 +63,18 @@ namespace experimental
 class IntraProcessManager;
 }  // namespace experimental
 
-/// The kind of message that the subscription delivers in its callback.
+/// The kind of message that the subscription delivers in its callback, used by the executor
 /**
+ * This enum needs to exist because the callback handle is not accessible to the executor's scope.
+ *
  * "Kind" is used since what is being delivered is a category of messages, for example, there are
- * different ROS message types that can be delivered, but they're all ROS messages
+ * different ROS message types that can be delivered, but they're all ROS messages.
+ *
+ * As a concrete example, all of the following callbacks will be considered ROS_MESSAGE for
+ * DeliveredMessageKind:
+ *   - void callback(const std_msgs::msg::String &)
+ *   - void callback(const std::string &)  // type adaption
+ *   - void callback(std::unique_ptr<std_msgs::msg::String>)
  */
 enum class DeliveredMessageKind : uint8_t
 {
@@ -92,7 +100,8 @@ public:
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options Options for the subscription.
-   * \param[in] delivered_message_kind Enum flag to change how the message will be received and delivered
+   * \param[in] delivered_message_kind Enum flag to change how the message will be received and
+   *            delivered
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
