@@ -152,7 +152,9 @@ ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak
   auto guard_condition = weak_guard_condition.lock();
   if (guard_condition && notify_guard_conditions_.count(weak_guard_condition) == 0) {
     notify_guard_conditions_.insert(weak_guard_condition);
-    guard_condition->set_on_trigger_callback(on_ready_callback_);
+    if (on_ready_callback_) {
+      guard_condition->set_on_trigger_callback(on_ready_callback_);
+    }
   }
 }
 
@@ -163,7 +165,8 @@ ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr w
   if (notify_guard_conditions_.count(weak_guard_condition) != 0) {
     notify_guard_conditions_.erase(weak_guard_condition);
     auto guard_condition = weak_guard_condition.lock();
-    if (guard_condition) {
+    // If this notify waitable doesn't have an on_ready_callback, then there's nothing to unset
+    if (guard_condition && on_ready_callback_) {
       guard_condition->set_on_trigger_callback(nullptr);
     }
   }
