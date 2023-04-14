@@ -44,7 +44,7 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
-  SubscriptionType subscription_type)
+  DeliveredMessageKind delivered_message_kind)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
@@ -52,16 +52,8 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  subscription_type_(subscription_type)
+  delivered_message_type_(delivered_message_kind)
 {
-  if (!rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE) &&
-    subscription_type == rclcpp::SubscriptionType::DYNAMIC_MESSAGE_DIRECT)
-  {
-    throw std::runtime_error(
-            "Cannot set subscription to take dynamic message directly, feature not supported in rmw"
-    );
-  }
-
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
       if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {
@@ -269,13 +261,13 @@ SubscriptionBase::get_message_type_support_handle() const
 bool
 SubscriptionBase::is_serialized() const
 {
-  return subscription_type_ == rclcpp::SubscriptionType::SERIALIZED_MESSAGE;
+  return delivered_message_type_ == rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE;
 }
 
-rclcpp::SubscriptionType
+rclcpp::DeliveredMessageKind
 SubscriptionBase::get_subscription_type() const
 {
-  return subscription_type_;
+  return delivered_message_type_;
 }
 
 size_t
