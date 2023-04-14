@@ -42,9 +42,8 @@ NodeWaitables::add_waitable(
   group->add_waitable(waitable_ptr);
 
   // Notify the executor that a new waitable was created using the parent Node.
-  auto & node_gc = node_base_->get_notify_guard_condition();
   try {
-    node_gc.trigger();
+    node_base_->trigger_notify_guard_condition();
     group->trigger_notify_guard_condition();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(

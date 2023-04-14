@@ -42,9 +42,8 @@ NodeTimers::add_timer(
   }
   callback_group->add_timer(timer);
 
-  auto & node_gc = node_base_->get_notify_guard_condition();
   try {
-    node_gc.trigger();
+    node_base_->trigger_notify_guard_condition();
     callback_group->trigger_notify_guard_condition();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(

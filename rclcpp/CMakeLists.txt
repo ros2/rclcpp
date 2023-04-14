@@ -59,6 +59,9 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
+  src/rclcpp/executors/executor_entities_collection.cpp
+  src/rclcpp/executors/executor_entities_collector.cpp
+  src/rclcpp/executors/executor_notify_waitable.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/executors/static_executor_entities_collector.cpp

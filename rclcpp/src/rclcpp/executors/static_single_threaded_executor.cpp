@@ -139,7 +139,7 @@ StaticSingleThreadedExecutor::add_callback_group(
   bool is_new_node = entities_collector_->add_callback_group(group_ptr, node_ptr);
   if (is_new_node && notify) {
     // Interrupt waiting to handle new node
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   }
 }
 
@@ -150,7 +150,7 @@ StaticSingleThreadedExecutor::add_node(
   bool is_new_node = entities_collector_->add_node(node_ptr);
   if (is_new_node && notify) {
     // Interrupt waiting to handle new node
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   }
 }
 
@@ -167,7 +167,7 @@ StaticSingleThreadedExecutor::remove_callback_group(
   bool node_removed = entities_collector_->remove_callback_group(group_ptr);
   // If the node was matched and removed, interrupt waiting
   if (node_removed && notify) {
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   }
 }
 
@@ -181,7 +181,7 @@ StaticSingleThreadedExecutor::remove_node(
   }
   // If the node was matched and removed, interrupt waiting
   if (notify) {
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   }
 }
 

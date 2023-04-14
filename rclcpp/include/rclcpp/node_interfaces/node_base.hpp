@@ -121,9 +121,18 @@ public:
   std::atomic_bool &
   get_associated_with_executor_atomic() override;
 
+  [[deprecated("Use get_shared_notify_guard_condition or trigger_notify_guard_condition instead")]]
   RCLCPP_PUBLIC
   rclcpp::GuardCondition &
   get_notify_guard_condition() override;
+
+  RCLCPP_PUBLIC
+  rclcpp::GuardCondition::SharedPtr
+  get_shared_notify_guard_condition() override;
+
+  RCLCPP_PUBLIC
+  void
+  trigger_notify_guard_condition() override;
 
   RCLCPP_PUBLIC
   bool
@@ -153,7 +162,7 @@ private:
 
   /// Guard condition for notifying the Executor of changes to this node.
   mutable std::recursive_mutex notify_guard_condition_mutex_;
-  rclcpp::GuardCondition notify_guard_condition_;
+  std::shared_ptr<rclcpp::GuardCondition> notify_guard_condition_;
   bool notify_guard_condition_is_valid_;
 };
 

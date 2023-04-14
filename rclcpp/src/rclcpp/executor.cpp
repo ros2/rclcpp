@@ -39,14 +39,11 @@
 using namespace std::chrono_literals;
 
 using rclcpp::exceptions::throw_from_rcl_error;
-using rclcpp::AnyExecutable;
 using rclcpp::Executor;
-using rclcpp::ExecutorOptions;
-using rclcpp::FutureReturnCode;
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
-  interrupt_guard_condition_(options.context),
+  interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   memory_strategy_(options.memory_strategy)
 {
@@ -66,7 +63,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   memory_strategy_->add_guard_condition(*shutdown_guard_condition_.get());
 
   // Put the executor's guard condition in
-  memory_strategy_->add_guard_condition(interrupt_guard_condition_);
+  memory_strategy_->add_guard_condition(*interrupt_guard_condition_.get());
   rcl_allocator_t allocator = memory_strategy_->get_allocator();
 
   rcl_ret_t ret = rcl_wait_set_init(
@@ -128,7 +125,7 @@ Executor::~Executor()
   }
   // Remove and release the sigint guard condition
   memory_strategy_->remove_guard_condition(shutdown_guard_condition_.get());
-  memory_strategy_->remove_guard_condition(&interrupt_guard_condition_);
+  memory_strategy_->remove_guard_condition(interrupt_guard_condition_.get());
 
   // Remove shutdown callback handle registered to Context
   if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
@@ -223,8 +220,7 @@ Executor::add_callback_group_to_map(
   weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
 
   if (node_ptr->get_context()->is_valid()) {
-    auto callback_group_guard_condition =
-      group_ptr->get_notify_guard_condition(node_ptr->get_context());
+    auto callback_group_guard_condition = group_ptr->get_notify_guard_condition();
     weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition.get();
     // Add the callback_group's notify condition to the guard condition handles
     memory_strategy_->add_guard_condition(*callback_group_guard_condition);
@@ -233,7 +229,7 @@ Executor::add_callback_group_to_map(
   if (notify) {
     // Interrupt waiting to handle new node
     try {
-      interrupt_guard_condition_.trigger();
+      interrupt_guard_condition_->trigger();
     } catch (const rclcpp::exceptions::RCLError & ex) {
       throw std::runtime_error(
               std::string(
@@ -281,10 +277,10 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       }
     });
 
-  const auto & gc = node_ptr->get_notify_guard_condition();
-  weak_nodes_to_guard_conditions_[node_ptr] = &gc;
+  const auto gc = node_ptr->get_shared_notify_guard_condition();
+  weak_nodes_to_guard_conditions_[node_ptr] = gc.get();
   // Add the node's notify condition to the guard condition handles
-  memory_strategy_->add_guard_condition(gc);
+  memory_strategy_->add_guard_condition(*gc);
   weak_nodes_.push_back(node_ptr);
 }
 
@@ -321,7 +317,7 @@ Executor::remove_callback_group_from_map(
 
     if (notify) {
       try {
-        interrupt_guard_condition_.trigger();
+        interrupt_guard_condition_->trigger();
       } catch (const rclcpp::exceptions::RCLError & ex) {
         throw std::runtime_error(
                 std::string(
@@ -389,7 +385,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
     }
   }
 
-  memory_strategy_->remove_guard_condition(&node_ptr->get_notify_guard_condition());
+  memory_strategy_->remove_guard_condition(node_ptr->get_shared_notify_guard_condition().get());
   weak_nodes_to_guard_conditions_.erase(node_ptr);
 
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
@@ -502,7 +498,7 @@ Executor::cancel()
 {
   spinning.store(false);
   try {
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("Failed to trigger guard condition in cancel: ") + ex.what());
@@ -551,7 +547,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
   try {
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string(

@@ -70,9 +70,8 @@ NodeTopics::add_publisher(
   }
 
   // Notify the executor that a new publisher was created using the parent Node.
-  auto & node_gc = node_base_->get_notify_guard_condition();
   try {
-    node_gc.trigger();
+    node_base_->trigger_notify_guard_condition();
     callback_group->trigger_notify_guard_condition();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
@@ -119,9 +118,8 @@ NodeTopics::add_subscription(
   }
 
   // Notify the executor that a new subscription was created using the parent Node.
-  auto & node_gc = node_base_->get_notify_guard_condition();
   try {
-    node_gc.trigger();
+    node_base_->trigger_notify_guard_condition();
     callback_group->trigger_notify_guard_condition();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
