@@ -28,6 +28,11 @@
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
+using rclcpp::dynamic_typesupport::DynamicMessage;
+using rclcpp::dynamic_typesupport::DynamicMessageType;
+using rclcpp::dynamic_typesupport::DynamicSerializationSupport;
+
+
 namespace
 {
 
@@ -77,6 +82,18 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> &, const rclcpp::MessageInfo &) override {}
   void return_message(std::shared_ptr<void> &) override {}
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> &) override {}
+
+  DynamicMessageType::SharedPtr get_shared_dynamic_message_type() override {return nullptr;}
+  DynamicMessage::SharedPtr get_shared_dynamic_message() override {return nullptr;}
+  DynamicSerializationSupport::SharedPtr get_shared_dynamic_serialization_support() override
+  {
+    return nullptr;
+  }
+  DynamicMessage::SharedPtr create_dynamic_message() override {return nullptr;}
+  void return_dynamic_message(DynamicMessage::SharedPtr &) override {}
+  void handle_dynamic_message(
+    const DynamicMessage::SharedPtr &,
+    const rclcpp::MessageInfo &) override {}
 };
 
 class TestNodeTopics : public ::testing::Test

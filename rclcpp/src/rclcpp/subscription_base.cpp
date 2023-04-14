@@ -22,6 +22,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
@@ -32,6 +33,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rosidl_dynamic_typesupport/types.h"
+
 using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
@@ -41,7 +44,7 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
-  bool is_serialized)
+  DeliveredMessageKind delivered_message_kind)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
@@ -49,7 +52,7 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  is_serialized_(is_serialized)
+  delivered_message_type_(delivered_message_kind)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
@@ -258,7 +261,13 @@ SubscriptionBase::get_message_type_support_handle() const
 bool
 SubscriptionBase::is_serialized() const
 {
-  return is_serialized_;
+  return delivered_message_type_ == rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE;
+}
+
+rclcpp::DeliveredMessageKind
+SubscriptionBase::get_subscription_type() const
+{
+  return delivered_message_type_;
 }
 
 size_t
@@ -442,8 +451,7 @@ SubscriptionBase::set_content_filter(
   rcl_subscription_content_filter_options_t options =
     rcl_get_zero_initialized_subscription_content_filter_options();
 
-  std::vector<const char *> cstrings =
-    get_c_vector_string(expression_parameters);
+  std::vector<const char *> cstrings = get_c_vector_string(expression_parameters);
   rcl_ret_t ret = rcl_subscription_content_filter_options_init(
     subscription_handle_.get(),
     get_c_string(filter_expression),
@@ -514,4 +522,15 @@ SubscriptionBase::get_content_filter() const
   }
 
   return ret_options;
+}
+
+
+// DYNAMIC TYPE ==================================================================================
+bool
+SubscriptionBase::take_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage & /*message_out*/,
+  rclcpp::MessageInfo & /*message_info_out*/)
+{
+  throw std::runtime_error("Unimplemented");
+  return false;
 }

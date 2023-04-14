@@ -144,7 +144,7 @@ public:
       // NOTE(methylDragon): Passing these args separately is necessary for event binding
       options.event_callbacks,
       options.use_default_callbacks,
-      callback.is_serialized_message_callback()),
+      callback.is_serialized_message_callback() ? DeliveredMessageKind::SERIALIZED_MESSAGE : DeliveredMessageKind::ROS_MESSAGE),  // NOLINT
     any_callback_(callback),
     options_(options),
     message_memory_strategy_(message_memory_strategy)
@@ -386,6 +386,57 @@ public:
   use_take_shared_method() const
   {
     return any_callback_.use_take_shared_method();
+  }
+
+  // DYNAMIC TYPE ==================================================================================
+  // TODO(methylDragon): Reorder later
+  // TODO(methylDragon): Implement later...
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+  get_shared_dynamic_message_type() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "get_shared_dynamic_message_type is not implemented for Subscription");
+  }
+
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  get_shared_dynamic_message() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "get_shared_dynamic_message is not implemented for Subscription");
+  }
+
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "get_shared_dynamic_serialization_support is not implemented for Subscription");
+  }
+
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  create_dynamic_message() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "create_dynamic_message is not implemented for Subscription");
+  }
+
+  void
+  return_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override
+  {
+    (void) message;
+    throw rclcpp::exceptions::UnimplementedError(
+            "return_dynamic_message is not implemented for Subscription");
+  }
+
+  void
+  handle_dynamic_message(
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+    const rclcpp::MessageInfo & message_info) override
+  {
+    (void) message;
+    (void) message_info;
+    throw rclcpp::exceptions::UnimplementedError(
+            "handle_dynamic_message is not implemented for Subscription");
   }
 
 private:

@@ -31,6 +31,8 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 
+#include "tracetools/tracetools.h"
+
 namespace rclcpp
 {
 namespace experimental
@@ -91,6 +93,10 @@ public:
       buffer_type,
       qos_profile,
       std::make_shared<Alloc>(subscribed_type_allocator_));
+    TRACEPOINT(
+      rclcpp_ipb_to_subscription,
+      static_cast<const void *>(buffer_.get()),
+      static_cast<const void *>(this));
   }
 
   bool

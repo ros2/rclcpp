@@ -31,6 +31,9 @@
 
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
@@ -60,6 +63,27 @@ namespace experimental
 class IntraProcessManager;
 }  // namespace experimental
 
+/// The kind of message that the subscription delivers in its callback, used by the executor
+/**
+ * This enum needs to exist because the callback handle is not accessible to the executor's scope.
+ *
+ * "Kind" is used since what is being delivered is a category of messages, for example, there are
+ * different ROS message types that can be delivered, but they're all ROS messages.
+ *
+ * As a concrete example, all of the following callbacks will be considered ROS_MESSAGE for
+ * DeliveredMessageKind:
+ *   - void callback(const std_msgs::msg::String &)
+ *   - void callback(const std::string &)  // type adaption
+ *   - void callback(std::unique_ptr<std_msgs::msg::String>)
+ */
+enum class DeliveredMessageKind : uint8_t
+{
+  INVALID = 0,
+  ROS_MESSAGE = 1,  // The subscription delivers a ROS message to its callback
+  SERIALIZED_MESSAGE = 2,  // The subscription delivers a serialized message to its callback
+  DYNAMIC_MESSAGE = 3,  // The subscription delivers a dynamic message to its callback
+};
+
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
 class SubscriptionBase : public std::enable_shared_from_this<SubscriptionBase>
@@ -76,7 +100,8 @@ public:
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options Options for the subscription.
-   * \param[in] is_serialized is true if the message will be delivered still serialized
+   * \param[in] delivered_message_kind Enum flag to change how the message will be received and
+   *            delivered
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
@@ -86,7 +111,7 @@ public:
     const rcl_subscription_options_t & subscription_options,
     const SubscriptionEventCallbacks & event_callbacks,
     bool use_default_callbacks,
-    bool is_serialized = false);
+    DeliveredMessageKind delivered_message_kind = DeliveredMessageKind::ROS_MESSAGE);
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -234,6 +259,14 @@ public:
   RCLCPP_PUBLIC
   bool
   is_serialized() const;
+
+  /// Return the type of the subscription.
+  /**
+   * \return `DeliveredMessageKind`, which adjusts how messages are received and delivered.
+   */
+  RCLCPP_PUBLIC
+  DeliveredMessageKind
+  get_subscription_type() const;
 
   /// Get matching publisher count.
   /** \return The number of publishers on this topic. */
@@ -535,6 +568,49 @@ public:
   rclcpp::ContentFilterOptions
   get_content_filter() const;
 
+  // DYNAMIC TYPE ==================================================================================
+  // TODO(methylDragon): Reorder later
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+  get_shared_dynamic_message_type() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  get_shared_dynamic_message() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() = 0;
+
+  /// Borrow a new serialized message (this clones!)
+  /** \return Shared pointer to a rclcpp::dynamic_typesupport::DynamicMessage. */
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  create_dynamic_message() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  return_dynamic_message(rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  handle_dynamic_message(
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+    const rclcpp::MessageInfo & message_info) = 0;
+
+  RCLCPP_PUBLIC
+  bool
+  take_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage & message_out,
+    rclcpp::MessageInfo & message_info_out);
+  // ===============================================================================================
+
 protected:
   template<typename EventCallbackT>
   void
@@ -587,7 +663,7 @@ private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 
   rosidl_message_type_support_t type_support_;
-  bool is_serialized_;
+  DeliveredMessageKind delivered_message_type_;
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};

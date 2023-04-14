@@ -84,7 +84,7 @@ public:
       options.to_rcl_subscription_options(qos),
       options.event_callbacks,
       options.use_default_callbacks,
-      true),
+      DeliveredMessageKind::SERIALIZED_MESSAGE),
     callback_(callback),
     ts_lib_(ts_lib)
   {}
@@ -122,6 +122,31 @@ public:
 
   RCLCPP_PUBLIC
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override;
+
+
+  // DYNAMIC TYPE ==================================================================================
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr get_shared_dynamic_message_type()
+  override;
+
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr get_shared_dynamic_message() override;
+
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override;
+
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr create_dynamic_message() override;
+
+  RCLCPP_PUBLIC
+  void return_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override;
+
+  RCLCPP_PUBLIC
+  void handle_dynamic_message(
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+    const rclcpp::MessageInfo & message_info) override;
 
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)

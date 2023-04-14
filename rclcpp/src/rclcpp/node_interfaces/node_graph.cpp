@@ -789,3 +789,15 @@ rclcpp::TopicEndpointInfo::qos_profile() const
 {
   return qos_profile_;
 }
+
+rosidl_type_hash_t &
+rclcpp::TopicEndpointInfo::topic_type_hash()
+{
+  return topic_type_hash_;
+}
+
+const rosidl_type_hash_t &
+rclcpp::TopicEndpointInfo::topic_type_hash() const
+{
+  return topic_type_hash_;
+}
