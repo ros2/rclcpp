@@ -88,22 +88,37 @@ public:
   std::shared_ptr<void>
   take_data() override;
 
-  /// Add a guard condition to be waited on.
+  /// Take the data from an entity ID so that it can be consumed with `execute`.
   /**
-   * \param[in] guard_condition The guard condition to add.
+   * \param[in] id ID of the entity to take data from.
+   * \return If available, data to be used, otherwise nullptr
+   * \sa rclcpp::Waitable::take_data_by_entity_id
    */
   RCLCPP_PUBLIC
   std::shared_ptr<void>
   take_data_by_entity_id(size_t id) override;
 
+  /// Set a callback to be called whenever the waitable becomes ready.
+  /**
+   * \param[in] callback callback to set
+   * \sa rclcpp::Waitable::set_on_ready_callback
+   */
   RCLCPP_PUBLIC
   void
   set_on_ready_callback(std::function<void(size_t, int)> callback) override;
 
+  /// Add a guard condition to be waited on.
+  /**
+   * \param[in] guard_condition The guard condition to add.
+   */
   RCLCPP_PUBLIC
   void
   add_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition);
 
+  /// Unset any callback registered via set_on_ready_callback.
+  /**
+   * \sa rclcpp::Waitable::clear_on_ready_callback
+   */
   RCLCPP_PUBLIC
   void
   clear_on_ready_callback() override;

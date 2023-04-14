@@ -78,8 +78,8 @@ public:
    * If it's callable, it will be invoked instead of the timer callback.
    * If it's not callable, then the TimersManager will
    * directly execute timers when they are ready.
-   * All the methods that execute a given timer (e.g. `execute_head_timer` 
-   * or `execute_ready_timer`) without the TimersManager being `running`, i.e. 
+   * All the methods that execute a given timer (e.g. `execute_head_timer`
+   * or `execute_ready_timer`) without the TimersManager being `running`, i.e.
    * without actually explicitly waiting for the timer to become ready, will ignore this
    * callback.
    */
