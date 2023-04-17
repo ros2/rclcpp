@@ -180,6 +180,13 @@ public:
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
+  /// Get the total number of entities in this callback group.
+  /**
+   * \return the number of entities in the callback group.
+   */
+  RCLCPP_PUBLIC
+  size_t size() const;
+
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
