@@ -99,6 +99,52 @@ ExecutorNotifyWaitable::take_data()
   return nullptr;
 }
 
+std::shared_ptr<void>
+ExecutorNotifyWaitable::take_data_by_entity_id(size_t id)
+{
+  (void) id;
+  return nullptr;
+}
+
+void
+ExecutorNotifyWaitable::set_on_ready_callback(std::function<void(size_t, int)> callback)
+{
+  // The second argument of the callback could be used to identify which guard condition
+  // triggered the event.
+  // We could indicate which of the guard conditions was triggered, but the executor
+  // is already going to check that.
+  auto gc_callback = [callback](size_t count) {
+      callback(count, 0);
+    };
+
+  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+
+  on_ready_callback_ = gc_callback;
+  for (auto weak_gc : notify_guard_conditions_) {
+    auto gc = weak_gc.lock();
+    if (!gc) {
+      continue;
+    }
+    gc->set_on_trigger_callback(on_ready_callback_);
+  }
+}
+
+RCLCPP_PUBLIC
+void
+ExecutorNotifyWaitable::clear_on_ready_callback()
+{
+  std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+
+  on_ready_callback_ = nullptr;
+  for (auto weak_gc : notify_guard_conditions_) {
+    auto gc = weak_gc.lock();
+    if (!gc) {
+      continue;
+    }
+    gc->set_on_trigger_callback(nullptr);
+  }
+}
+
 void
 ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
@@ -106,15 +152,23 @@ ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak
   auto guard_condition = weak_guard_condition.lock();
   if (guard_condition && notify_guard_conditions_.count(weak_guard_condition) == 0) {
     notify_guard_conditions_.insert(weak_guard_condition);
+    if (on_ready_callback_) {
+      guard_condition->set_on_trigger_callback(on_ready_callback_);
+    }
   }
 }
 
 void
-ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition)
+ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  if (notify_guard_conditions_.count(guard_condition) != 0) {
-    notify_guard_conditions_.erase(guard_condition);
+  if (notify_guard_conditions_.count(weak_guard_condition) != 0) {
+    notify_guard_conditions_.erase(weak_guard_condition);
+    auto guard_condition = weak_guard_condition.lock();
+    // If this notify waitable doesn't have an on_ready_callback, then there's nothing to unset
+    if (guard_condition && on_ready_callback_) {
+      guard_condition->set_on_trigger_callback(nullptr);
+    }
   }
 }
 
