@@ -205,8 +205,8 @@ size_t
 ready_executables(
   const ExecutorEntitiesCollection & collection,
   rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
-  std::deque<rclcpp::AnyExecutable> & executables);
-
+  std::deque<rclcpp::AnyExecutable> & executables
+);
 }  // namespace executors
 }  // namespace rclcpp
 

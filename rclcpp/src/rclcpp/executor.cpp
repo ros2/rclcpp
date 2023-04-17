@@ -42,6 +42,7 @@
 using namespace std::chrono_literals;
 
 using rclcpp::Executor;
+class rclcpp::ExecutorImplementation {};
 
 /// Mask to indicate to the waitset to only add the subscription.
 /// The events and intraprocess waitable are already added via the callback group.
@@ -57,7 +58,8 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
       })),
   collector_(notify_waitable_),
   wait_set_({}, {}, {}, {}, {}, {}, options.context),
-  current_notify_waitable_(notify_waitable_)
+  current_notify_waitable_(notify_waitable_),
+  impl_(std::make_unique<rclcpp::ExecutorImplementation>())
 {
   // Store the context for later use.
   context_ = options.context;
