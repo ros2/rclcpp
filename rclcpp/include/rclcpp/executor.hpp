@@ -51,6 +51,7 @@ typedef std::map<rclcpp::CallbackGroup::WeakPtr,
 
 // Forward declaration is used in convenience method signature.
 class Node;
+class ExecutorImplementation;
 
 /// Coordinate the order and timing of available communication tasks.
 /**
@@ -697,6 +698,9 @@ protected:
 
   /// shutdown callback handle registered to Context
   rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
+
+  /// Pointer to implementation
+  std::unique_ptr<ExecutorImplementation> impl_;
 };
 
 }  // namespace rclcpp

@@ -41,11 +41,14 @@ using namespace std::chrono_literals;
 using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::Executor;
 
+class rclcpp::ExecutorImplementation {};
+
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
-  memory_strategy_(options.memory_strategy)
+  memory_strategy_(options.memory_strategy),
+  impl_(std::make_unique<rclcpp::ExecutorImplementation>())
 {
   // Store the context for later use.
   context_ = options.context;

@@ -198,14 +198,15 @@ build_entities_collection(
  *
  * \param[in] collection Collection of entities corresponding to the current wait set.
  * \param[in] wait_result Result of rclcpp::WaitSet::wait corresponding to the collection.
- * \return A queue of executables that have been marked ready by the waitset.
+ * \param[inout] queue of executables to append new ready executables to
+ * \return number of new ready executables
  */
-std::deque<rclcpp::AnyExecutable>
+size_t
 ready_executables(
   const ExecutorEntitiesCollection & collection,
-  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result
+  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
+  std::deque<rclcpp::AnyExecutable> & executables
 );
-
 }  // namespace executors
 }  // namespace rclcpp
 

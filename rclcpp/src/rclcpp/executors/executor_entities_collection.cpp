@@ -20,12 +20,13 @@ namespace executors
 {
 bool ExecutorEntitiesCollection::empty() const
 {
-  return subscriptions.empty() &&
-         timers.empty() &&
-         guard_conditions.empty() &&
-         clients.empty() &&
-         services.empty() &&
-         waitables.empty();
+  return
+    subscriptions.empty() &&
+    timers.empty() &&
+    guard_conditions.empty() &&
+    clients.empty() &&
+    services.empty() &&
+    waitables.empty();
 }
 
 void ExecutorEntitiesCollection::clear()
@@ -37,7 +38,6 @@ void ExecutorEntitiesCollection::clear()
   services.clear();
   waitables.clear();
 }
-
 
 void
 build_entities_collection(
@@ -94,7 +94,7 @@ build_entities_collection(
   }
 }
 
-size_t 
+size_t
 ready_executables(
   const ExecutorEntitiesCollection & collection,
   rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
