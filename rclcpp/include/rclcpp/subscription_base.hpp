@@ -63,13 +63,25 @@ namespace experimental
 class IntraProcessManager;
 }  // namespace experimental
 
-enum class SubscriptionType : uint8_t
+/// The kind of message that the subscription delivers in its callback, used by the executor
+/**
+ * This enum needs to exist because the callback handle is not accessible to the executor's scope.
+ *
+ * "Kind" is used since what is being delivered is a category of messages, for example, there are
+ * different ROS message types that can be delivered, but they're all ROS messages.
+ *
+ * As a concrete example, all of the following callbacks will be considered ROS_MESSAGE for
+ * DeliveredMessageKind:
+ *   - void callback(const std_msgs::msg::String &)
+ *   - void callback(const std::string &)  // type adaption
+ *   - void callback(std::unique_ptr<std_msgs::msg::String>)
+ */
+enum class DeliveredMessageKind : uint8_t
 {
-  INVALID = 0,  // The subscription type is most likely uninitialized
-  ROS_MESSAGE = 1,  // take message as ROS message and handle as ROS message
-  SERIALIZED_MESSAGE = 2,  // take message as serialized and handle as serialized
-  DYNAMIC_MESSAGE_DIRECT = 3,  // take message as DynamicMessage and handle as DynamicMessage
-  DYNAMIC_MESSAGE_FROM_SERIALIZED = 4  // take message as serialized and handle as DynamicMessage
+  INVALID = 0,
+  ROS_MESSAGE = 1,  // The subscription delivers a ROS message to its callback
+  SERIALIZED_MESSAGE = 2,  // The subscription delivers a serialized message to its callback
+  DYNAMIC_MESSAGE = 3,  // The subscription delivers a dynamic message to its callback
 };
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
@@ -88,7 +100,8 @@ public:
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options Options for the subscription.
-   * \param[in] subscription_type Enum flag to change how the message will be received and delivered
+   * \param[in] delivered_message_kind Enum flag to change how the message will be received and
+   *            delivered
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
@@ -98,7 +111,7 @@ public:
     const rcl_subscription_options_t & subscription_options,
     const SubscriptionEventCallbacks & event_callbacks,
     bool use_default_callbacks,
-    SubscriptionType subscription_type = SubscriptionType::ROS_MESSAGE);
+    DeliveredMessageKind delivered_message_kind = DeliveredMessageKind::ROS_MESSAGE);
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -249,10 +262,10 @@ public:
 
   /// Return the type of the subscription.
   /**
-   * \return `SubscriptionType`, which adjusts how messages are received and delivered.
+   * \return `DeliveredMessageKind`, which adjusts how messages are received and delivered.
    */
   RCLCPP_PUBLIC
-  SubscriptionType
+  DeliveredMessageKind
   get_subscription_type() const;
 
   /// Get matching publisher count.
@@ -650,7 +663,7 @@ private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 
   rosidl_message_type_support_t type_support_;
-  SubscriptionType subscription_type_;
+  DeliveredMessageKind delivered_message_type_;
 
   std::atomic<bool> subscription_in_use_by_wait_set_{false};
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};

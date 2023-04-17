@@ -144,7 +144,7 @@ public:
       // NOTE(methylDragon): Passing these args separately is necessary for event binding
       options.event_callbacks,
       options.use_default_callbacks,
-      callback.is_serialized_message_callback() ? SubscriptionType::SERIALIZED_MESSAGE : SubscriptionType::ROS_MESSAGE),  // NOLINT
+      callback.is_serialized_message_callback() ? DeliveredMessageKind::SERIALIZED_MESSAGE : DeliveredMessageKind::ROS_MESSAGE),  // NOLINT
     any_callback_(callback),
     options_(options),
     message_memory_strategy_(message_memory_strategy)

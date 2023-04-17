@@ -101,7 +101,8 @@ void
 ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  if (notify_guard_conditions_.count(weak_guard_condition) == 0) {
+  auto guard_condition = weak_guard_condition.lock();
+  if (guard_condition && notify_guard_conditions_.count(weak_guard_condition) == 0) {
     notify_guard_conditions_.insert(weak_guard_condition);
   }
 }

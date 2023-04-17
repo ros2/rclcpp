@@ -225,6 +225,5 @@ ready_executables(
   }
   return added;
 }
-
 }  // namespace executors
 }  // namespace rclcpp
