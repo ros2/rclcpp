@@ -66,6 +66,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
+  src/rclcpp/experimental/executors/events_executor/events_executor.cpp
+  src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/future_return_code.cpp
   src/rclcpp/generic_publisher.cpp
   src/rclcpp/generic_subscription.cpp

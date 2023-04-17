@@ -88,6 +88,25 @@ public:
   std::shared_ptr<void>
   take_data() override;
 
+  /// Take the data from an entity ID so that it can be consumed with `execute`.
+  /**
+   * \param[in] id ID of the entity to take data from.
+   * \return If available, data to be used, otherwise nullptr
+   * \sa rclcpp::Waitable::take_data_by_entity_id
+   */
+  RCLCPP_PUBLIC
+  std::shared_ptr<void>
+  take_data_by_entity_id(size_t id) override;
+
+  /// Set a callback to be called whenever the waitable becomes ready.
+  /**
+   * \param[in] callback callback to set
+   * \sa rclcpp::Waitable::set_on_ready_callback
+   */
+  RCLCPP_PUBLIC
+  void
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override;
+
   /// Add a guard condition to be waited on.
   /**
    * \param[in] guard_condition The guard condition to add.
@@ -96,13 +115,21 @@ public:
   void
   add_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition);
 
-  /// Remove a guard condition from being waited on.
+  /// Unset any callback registered via set_on_ready_callback.
   /**
-   * \param[in] guard_condition The guard condition to remove.
+   * \sa rclcpp::Waitable::clear_on_ready_callback
    */
   RCLCPP_PUBLIC
   void
-  remove_guard_condition(rclcpp::GuardCondition::WeakPtr guard_condition);
+  clear_on_ready_callback() override;
+
+  /// Remove a guard condition from being waited on.
+  /**
+   * \param[in] weak_guard_condition The guard condition to remove.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition);
 
   /// Get the number of ready guard_conditions
   /**
@@ -117,6 +144,8 @@ private:
   std::function<void(void)> execute_callback_;
 
   std::mutex guard_condition_mutex_;
+
+  std::function<void(size_t)> on_ready_callback_;
 
   /// The collection of guard conditions to be waited on.
   std::set<rclcpp::GuardCondition::WeakPtr,
