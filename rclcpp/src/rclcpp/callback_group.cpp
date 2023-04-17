@@ -59,11 +59,12 @@ CallbackGroup::type() const
 size_t
 CallbackGroup::size() const
 {
-  return subscription_ptrs_.size() +
-         service_ptrs_.size() +
-         client_ptrs_.size() +
-         timer_ptrs_.size() +
-         waitable_ptrs_.size();
+  return (
+    subscription_ptrs_.size() +
+    service_ptrs_.size() +
+    client_ptrs_.size() +
+    timer_ptrs_.size() +
+    waitable_ptrs_.size());
 }
 
 void CallbackGroup::collect_all_ptrs(

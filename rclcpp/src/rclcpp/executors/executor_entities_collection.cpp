@@ -101,17 +101,17 @@ ready_executables(
   std::deque<rclcpp::AnyExecutable> & executables
 )
 {
-  if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
-    return 0;
-  }
-
-  auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
   size_t added = 0;
+  if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
+    return added;
+  }
+  auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
 
   // Cache shared pointers to groups to avoid extra work re-locking them
   std::map<rclcpp::CallbackGroup::WeakPtr,
     rclcpp::CallbackGroup::SharedPtr,
     std::owner_less<rclcpp::CallbackGroup::WeakPtr>> group_map;
+
   auto group_cache = [&group_map](const rclcpp::CallbackGroup::WeakPtr & weak_cbg_ptr)
     {
       if (group_map.count(weak_cbg_ptr) == 0) {
@@ -119,7 +119,6 @@ ready_executables(
       }
       return group_map.find(weak_cbg_ptr)->second;
     };
-
 
   for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
     if (nullptr == rcl_wait_set.timers[ii]) {continue;}
