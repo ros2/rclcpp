@@ -82,31 +82,46 @@ Executor::~Executor()
 
   notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
   notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
+
+  std::cout << "Executor::~Executor" << std::endl;
+
   current_collection_.timers.update(
     {}, {},
-    [this](auto timer) {wait_set_.remove_timer(timer);});
+    [this](auto timer) {
+      std::cout << "remove_timer(" << timer.get() << ")" << std::endl;
+      wait_set_.remove_timer(timer);
+    });
 
   current_collection_.subscriptions.update(
     {}, {},
     [this](auto subscription) {
+      std::cout << "remove_subscription(" << subscription.get() << ")" << std::endl;
       wait_set_.remove_subscription(subscription, kDefaultSubscriptionMask);
     });
 
   current_collection_.clients.update(
     {}, {},
-    [this](auto client) {wait_set_.remove_client(client);});
+    [this](auto client) {
+      std::cout << "remove_client(" << client.get() << ")" << std::endl;
+      wait_set_.remove_client(client);});
 
   current_collection_.services.update(
     {}, {},
-    [this](auto service) {wait_set_.remove_service(service);});
+    [this](auto service) {
+      std::cout << "remove_service(" << service.get() << ")" << std::endl;
+      wait_set_.remove_service(service);});
 
   current_collection_.guard_conditions.update(
     {}, {},
-    [this](auto guard_condition) {wait_set_.remove_guard_condition(guard_condition);});
+    [this](auto guard_condition) {
+      std::cout << "remove_guard_condition(" << guard_condition.get() << ")" << std::endl;
+        wait_set_.remove_guard_condition(guard_condition);});
 
   current_collection_.waitables.update(
     {}, {},
-    [this](auto waitable) {wait_set_.remove_waitable(waitable);});
+    [this](auto waitable) {
+      std::cout << "remove_waitable(" << waitable.get() << ")" << std::endl;
+      wait_set_.remove_waitable(waitable);});
 
   // Remove shutdown callback handle registered to Context
   if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
@@ -589,19 +604,29 @@ Executor::collect_entities()
     collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
   }
 
+  std::cout << "current_collection.timers: " << current_collection_.timers.size() << std::endl;
+  std::cout << "next_collection.timers: " << collection.timers.size() << std::endl;
   // Update each of the groups of entities in the current collection, adding or removing
   // from the wait set as necessary.
   current_collection_.timers.update(
     collection.timers,
-    [this](auto timer) {wait_set_.add_timer(timer);},
-    [this](auto timer) {wait_set_.remove_timer(timer);});
+    [this](auto timer) {
+        std::cout << "add_timer(" << timer << ")" << std::endl;
+        wait_set_.add_timer(timer);},
+    [this](auto timer) {
+        std::cout << "remove_timer(" << timer << ")" << std::endl;
+        wait_set_.remove_timer(timer);});
 
+  std::cout << "current_collection.subscriptions: " << current_collection_.subscriptions.size() << std::endl;
+  std::cout << "next_collection.subscriptions: " << collection.subscriptions.size() << std::endl;
   current_collection_.subscriptions.update(
     collection.subscriptions,
     [this](auto subscription) {
+      std::cout << "add_subscription(" << subscription << ")" << std::endl;
       wait_set_.add_subscription(subscription, kDefaultSubscriptionMask);
     },
     [this](auto subscription) {
+      std::cout << "remove_subscription(" << subscription << ")" << std::endl;
       wait_set_.remove_subscription(subscription, kDefaultSubscriptionMask);
     });
 
