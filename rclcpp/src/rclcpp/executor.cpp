@@ -627,6 +627,9 @@ Executor::collect_entities()
     },
     [this](auto waitable) {wait_set_.remove_waitable(waitable);});
 
+  // In the case that an entity already has an expired weak pointer
+  // before being removed from the waitset, additionally prune the waitset.
+  this->wait_set_.prune_deleted_entities();
   this->entities_need_rebuild_.store(false);
 }
 
