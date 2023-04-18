@@ -23,6 +23,9 @@
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rcl_interfaces/srv/get_logger_levels.hpp"
+#include "rcl_interfaces/srv/set_logger_levels.hpp"
+
 namespace rclcpp
 {
 namespace node_interfaces
@@ -35,7 +38,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeLoggingInterface)
 
   RCLCPP_PUBLIC
-  explicit NodeLogging(rclcpp::node_interfaces::NodeBaseInterface * node_base);
+  explicit NodeLogging(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base);
 
   RCLCPP_PUBLIC
   virtual
@@ -49,13 +52,21 @@ public:
   const char *
   get_logger_name() const override;
 
+  RCLCPP_PUBLIC
+  void
+  create_logger_services(
+    node_interfaces::NodeServicesInterface::SharedPtr node_services) override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeLogging)
 
   /// Handle to the NodeBaseInterface given in the constructor.
-  rclcpp::node_interfaces::NodeBaseInterface * node_base_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
 
   rclcpp::Logger logger_;
+
+  rclcpp::Service<rcl_interfaces::srv::GetLoggerLevels>::SharedPtr get_loggers_service_;
+  rclcpp::Service<rcl_interfaces::srv::SetLoggerLevels>::SharedPtr set_loggers_service_;
 };
 
 }  // namespace node_interfaces

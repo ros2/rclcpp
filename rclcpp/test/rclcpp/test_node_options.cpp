@@ -266,6 +266,11 @@ TEST(TestNodeOptions, bool_setters_and_getters) {
   EXPECT_FALSE(options.automatically_declare_parameters_from_overrides());
   options.automatically_declare_parameters_from_overrides(true);
   EXPECT_TRUE(options.automatically_declare_parameters_from_overrides());
+
+  options.enable_logger_service(false);
+  EXPECT_FALSE(options.enable_logger_service());
+  options.enable_logger_service(true);
+  EXPECT_TRUE(options.enable_logger_service());
 }
 
 TEST(TestNodeOptions, parameter_event_qos) {
