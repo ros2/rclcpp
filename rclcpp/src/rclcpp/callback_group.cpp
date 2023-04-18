@@ -56,6 +56,16 @@ CallbackGroup::type() const
   return type_;
 }
 
+size_t
+CallbackGroup::size() const
+{
+  return
+    subscription_ptrs_.size() +
+    service_ptrs_.size() +
+    client_ptrs_.size() +
+    timer_ptrs_.size() +
+    waitable_ptrs_.size();
+}
 void CallbackGroup::collect_all_ptrs(
   std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
   std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
