@@ -3,6 +3,12 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+21.0.0 (2023-04-18)
+-------------------
+* Add support for logging service. (`#2122 <https://github.com/ros2/rclcpp/issues/2122>`_)
+* Support publishing loaned messages in LifecyclePublisher (`#2159 <https://github.com/ros2/rclcpp/issues/2159>`_)
+* Contributors: Lei Liu, Michael Babenko
+
 20.0.0 (2023-04-13)
 -------------------
 * Fixes to silence some clang warnings. (`#2127 <https://github.com/ros2/rclcpp/issues/2127>`_)

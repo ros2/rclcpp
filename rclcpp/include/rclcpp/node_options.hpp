@@ -50,6 +50,7 @@ public:
    *   - clock_type = RCL_ROS_TIME
    *   - clock_qos = rclcpp::ClockQoS()
    *   - use_clock_thread = true
+   *   - enable_logger_service = false
    *   - rosout_qos = rclcpp::RosoutQoS()
    *   - parameter_event_qos = rclcpp::ParameterEventQoS
    *     - with history setting and depth from rmw_qos_profile_parameter_events
@@ -231,6 +232,24 @@ public:
   RCLCPP_PUBLIC
   NodeOptions &
   start_parameter_services(bool start_parameter_services);
+
+  /// Return the enable_logger_service flag.
+  RCLCPP_PUBLIC
+  bool
+  enable_logger_service() const;
+
+  /// Set the enable_logger_service flag, return this for logger idiom.
+  /**
+   * If true, ROS services are created to allow external nodes to get
+   * and set logger levels of this node.
+   *
+   * If false, loggers will still be configured and set logger levels locally,
+   * but logger levels cannot be changed remotely .
+   *
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  enable_logger_service(bool enable_log_service);
 
   /// Return the start_parameter_event_publisher flag.
   RCLCPP_PUBLIC
@@ -420,6 +439,8 @@ private:
   rclcpp::QoS clock_qos_ = rclcpp::ClockQoS();
 
   bool use_clock_thread_ {true};
+
+  bool enable_logger_service_ {false};
 
   rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)

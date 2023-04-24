@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+21.0.0 (2023-04-18)
+-------------------
+* Add support for logging service. (`#2122 <https://github.com/ros2/rclcpp/issues/2122>`_)
+* Picking ABI-incompatible executor changes (`#2170 <https://github.com/ros2/rclcpp/issues/2170>`_)
+* add events-executor and timers-manager in rclcpp (`#2155 <https://github.com/ros2/rclcpp/issues/2155>`_)
+* Create common structures for executors to use (`#2143 <https://github.com/ros2/rclcpp/issues/2143>`_)
+* Implement deliver message kind (`#2168 <https://github.com/ros2/rclcpp/issues/2168>`_)
+* Contributors: Alberto Soragna, Lei Liu, Michael Carroll, methylDragon
+
 20.0.0 (2023-04-13)
 -------------------
 * applied tracepoints for ring_buffer (`#2091 <https://github.com/ros2/rclcpp/issues/2091>`_)

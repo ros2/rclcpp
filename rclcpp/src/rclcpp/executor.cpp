@@ -48,6 +48,8 @@ class rclcpp::ExecutorImplementation {};
 /// The events and intraprocess waitable are already added via the callback group.
 static constexpr rclcpp::SubscriptionWaitSetMask kDefaultSubscriptionMask = {true, false, false};
 
+class rclcpp::ExecutorImplementation {};
+
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
