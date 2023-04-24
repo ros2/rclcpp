@@ -169,6 +169,11 @@ public:
     return buffer_->use_take_shared_method();
   }
 
+  size_t available_capacity() const override
+  {
+    return buffer_->available_capacity();
+  }
+
 protected:
   void
   trigger_guard_condition() override

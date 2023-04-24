@@ -148,6 +148,18 @@ public:
     return is_full_();
   }
 
+  /// Get the remaining capacity to store messages
+  /**
+   * This member function is thread-safe.
+   *
+   * \return the number of free capacity for new messages
+   */
+  size_t available_capacity() const
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return available_capacity_();
+  }
+
   void clear()
   {
     TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
@@ -187,6 +199,17 @@ private:
   inline bool is_full_() const
   {
     return size_ == capacity_;
+  }
+
+  /// Get the remaining capacity to store messages
+  /**
+   * This member function is not thread-safe.
+   *
+   * \return the number of free capacity for new messages
+   */
+  inline size_t available_capacity_() const
+  {
+    return capacity_ - size_;
   }
 
   size_t capacity_;
