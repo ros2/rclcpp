@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.4 (2023-04-25)
+-------------------
+* use allocator via init_options argument. (`#2129 <https://github.com/ros2/rclcpp/issues/2129>`_) (`#2131 <https://github.com/ros2/rclcpp/issues/2131>`_)
+* Contributors: mergify[bot]
+
 16.0.3 (2023-01-10)
 -------------------
 * Fix SharedFuture from async_send_request never becomes valid (`#2044 <https://github.com/ros2/rclcpp/issues/2044>`_) (`#2076 <https://github.com/ros2/rclcpp/issues/2076>`_)

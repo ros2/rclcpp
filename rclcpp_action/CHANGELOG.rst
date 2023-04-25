@@ -3,6 +3,13 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.4 (2023-04-25)
+-------------------
+* Revert "Revert "extract the result response before the callback is issued. (`#2133 <https://github.com/ros2/rclcpp/issues/2133>`_)" (`#2148 <https://github.com/ros2/rclcpp/issues/2148>`_)" (`#2152 <https://github.com/ros2/rclcpp/issues/2152>`_)
+* Revert "extract the result response before the callback is issued. (`#2133 <https://github.com/ros2/rclcpp/issues/2133>`_)" (`#2148 <https://github.com/ros2/rclcpp/issues/2148>`_)
+* extract the result response before the callback is issued. (`#2133 <https://github.com/ros2/rclcpp/issues/2133>`_)
+* Contributors: Tomoya Fujita
+
 16.0.3 (2023-01-10)
 -------------------
 
