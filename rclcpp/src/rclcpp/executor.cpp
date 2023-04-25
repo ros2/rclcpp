@@ -42,7 +42,6 @@
 using namespace std::chrono_literals;
 
 using rclcpp::Executor;
-class rclcpp::ExecutorImplementation {};
 
 /// Mask to indicate to the waitset to only add the subscription.
 /// The events and intraprocess waitable are already added via the callback group.
