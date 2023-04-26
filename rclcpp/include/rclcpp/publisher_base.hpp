@@ -218,8 +218,8 @@ public:
   /// Return the lowest available capacity for all subscription buffers.
   /**
    * For intraprocess communication return the lowest buffer capacity for all subscriptions.
-   * If intraprocess is disabled or no intraprocess subscriptions present return maximum of size_t.
-   * On failure returns 0.
+   * If intraprocess is disabled or no intraprocess subscriptions present, return maximum of size_t.
+   * On failure return 0.
    * \return lowest buffer capacity for all subscriptions
    */
   RCLCPP_PUBLIC

@@ -738,7 +738,7 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
    - Creates 1 publisher.
    - The available buffer capacity should be at least history size.
    - Add 2 subscribers.
-     Add everything to the intra-process manager.
+   - Add everything to the intra-process manager.
    - All the entities are expected to have different ids.
    - Check the subscriptions count for the publisher.
    - The available buffer capacity should be the history size.
