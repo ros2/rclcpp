@@ -235,7 +235,7 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     // Publisher is either invalid or no longer exists.
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
-      "Calling get_subscription_count for invalid or no longer existing publisher id");
+      "Calling lowest_available_capacity for invalid or no longer existing publisher id");
     return 0;
   }
 
