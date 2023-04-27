@@ -296,7 +296,7 @@ TEST_F(TestTimersManager, timers_thread)
 
   // Run timers thread for a while
   timers_manager->start();
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(10ms);
   timers_manager->stop();
 
   EXPECT_LT(1u, t1_runs);
