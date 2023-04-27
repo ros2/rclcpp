@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+21.1.0 (2023-04-27)
+-------------------
+
 21.0.0 (2023-04-18)
 -------------------
 * Add support for logging service. (`#2122 <https://github.com/ros2/rclcpp/issues/2122>`_)
