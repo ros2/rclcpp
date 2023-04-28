@@ -528,9 +528,30 @@ SubscriptionBase::get_content_filter() const
 // DYNAMIC TYPE ==================================================================================
 bool
 SubscriptionBase::take_dynamic_message(
-  rclcpp::dynamic_typesupport::DynamicMessage & /*message_out*/,
-  rclcpp::MessageInfo & /*message_info_out*/)
+  rclcpp::dynamic_typesupport::DynamicMessage & message_out,
+  rclcpp::MessageInfo & message_info_out)
 {
-  throw std::runtime_error("Unimplemented");
-  return false;
+  if (rmw_feature_supported(RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE)) {
+    rcl_ret_t ret = rcl_take_dynamic_message(
+      this->get_subscription_handle().get(),
+      &message_out.get_rosidl_dynamic_data(),
+      &message_info_out.get_rmw_message_info(),
+      nullptr);
+    if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+      return false;
+    } else if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "Error when taking dynamic message");
+    }
+  } else {  // Fall back to serialized conversion if direct dynamic message taking isn't supported
+    std::shared_ptr<rclcpp::SerializedMessage> serialized_msg = this->create_serialized_message();
+    if (!this->take_serialized(*serialized_msg.get(), message_info_out)) {
+      std::runtime_error("Couldn't take serialized message when attempting to take dynamic data!");
+    }
+    bool ret = message_out.deserialize(serialized_msg->get_rcl_serialized_message());
+    if (!ret) {
+      throw std::runtime_error("Couldn't convert serialized message to dynamic data!");
+    }
+    this->return_serialized_message(serialized_msg);
+  }
+  return true;
 }

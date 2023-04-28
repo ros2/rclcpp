@@ -644,6 +644,10 @@ protected:
 
   rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
+  // TODO(methylDragon): Remove if we don't need this
+  // rclcpp::node_interfaces::NodeGraphInterface * const node_graph_;
+  // rclcpp::node_interfaces::NodeServicesInterface * const node_services_;
+
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
