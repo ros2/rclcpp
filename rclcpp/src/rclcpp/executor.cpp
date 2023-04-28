@@ -603,7 +603,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
-  switch (subscription->get_subscription_type()) {
+  switch (subscription->get_delivered_message_kind()) {
     // Deliver ROS message
     case rclcpp::DeliveredMessageKind::ROS_MESSAGE:
       {
