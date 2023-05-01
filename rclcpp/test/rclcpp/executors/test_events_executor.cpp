@@ -479,6 +479,74 @@ TEST_F(TestEventsExecutor, destroy_entities)
   spinner.join();
 }
 
+// This test verifies that the add_node operation is robust wrt race conditions.
+// The initial implementation of the events-executor contained a bug where the executor
+// would end up in an inconsistent state and stop processing interrupt/shutdown notifications.
+// Manually adding a node to the executor results in a) producing a notify waitable event
+// and b) refreshing the executor collections.
+// The inconsistent state would happen if the event was processed before the collections were
+// finished to be refreshed: the executor would pick up the event but be unable to process it.
+// This would leave the `notify_waitable_event_pushed_` flag to true, preventing additional
+// notify waitable events to be pushed.
+// The behavior is observable only under heavy load, so this test spawns several worker
+// threads. Due to the nature of the bug, this test may still succeed even if the
+// bug is present. However repeated runs will show its flakiness nature and indicate
+// an eventual regression.
+TEST_F(TestEventsExecutor, testRaceConditionAddNode)
+{
+  // rmw_connextdds doesn't support events-executor
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP();
+  }
+
+  // Spawn some threads to do some heavy work
+  std::atomic<bool> should_cancel = false;
+  std::vector<std::thread> stress_threads;
+  for (size_t i = 0; i < 5 * std::thread::hardware_concurrency(); i++) {
+    stress_threads.emplace_back([&should_cancel, i]() {
+      // This is just some arbitrary heavy work
+      size_t total = 0;
+      for (size_t k = 0; k < 549528914167; k++) {
+        if (should_cancel) {
+          break;
+        }
+        total += k * (i + 42);
+      }
+      // Do something with the total to avoid the thread's work being optimized away
+      std::cout<<"The dummy total is: "<< total<<std::endl;
+    });
+  }
+
+  // Create an executor
+  auto executor = std::make_shared<EventsExecutor>();
+  // Start spinning
+  auto executor_thread = std::thread([executor]() {
+    executor->spin();
+  });
+  // Add a node to the executor
+  auto node_options = ros2_test::unit_test_node_options();
+  auto node = std::make_shared<rclcpp::Node>("my_node", node_options);
+  executor->add_node(node->get_node_base_interface());
+
+  // Cancel the executor (make sure that it's already spinning first)
+  while (!executor->is_spinning() && rclcpp::ok())
+  {
+    continue;
+  }
+  executor->cancel();
+
+  // Try to join the thread after cancelling the executor
+  // This is the "test". We want to make sure that we can still cancel the executor
+  // regardless of the presence of race conditions
+  executor_thread.join();
+
+  // The test is now completed: we can join the stress threads
+  should_cancel = true;
+  for (auto & t : stress_threads) {
+    t.join();
+  }
+}
+
 // Testing construction of a subscriptions with QoS event callback functions.
 std::string * g_pub_log_msg;
 std::string * g_sub_log_msg;
