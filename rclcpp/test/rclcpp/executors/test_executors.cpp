@@ -761,30 +761,31 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
   std::atomic<bool> should_cancel = false;
   std::vector<std::thread> stress_threads;
   for (size_t i = 0; i < 5 * std::thread::hardware_concurrency(); i++) {
-    stress_threads.emplace_back([&should_cancel, i]() {
-      // This is just some arbitrary heavy work
-      volatile size_t total = 0;
-      for (size_t k = 0; k < 549528914167; k++) {
-        if (should_cancel) {
-          break;
+    stress_threads.emplace_back(
+      [&should_cancel, i]() {
+        // This is just some arbitrary heavy work
+        size_t total = 0;
+        for (size_t k = 0; k < 549528914167; k++) {
+          if (should_cancel) {
+            break;
+          }
+          total += k * (i + 42);
         }
-        total += k * (i + 42);
-      }
-    });
+      });
   }
 
   // Create an executor
   auto executor = std::make_shared<ExecutorType>();
   // Start spinning
-  auto executor_thread = std::thread([executor]() {
-    executor->spin();
-  });
+  auto executor_thread = std::thread(
+    [executor]() {
+      executor->spin();
+    });
   // Add a node to the executor
   executor->add_node(this->node);
 
   // Cancel the executor (make sure that it's already spinning first)
-  while (!executor->is_spinning() && rclcpp::ok())
-  {
+  while (!executor->is_spinning() && rclcpp::ok()) {
     continue;
   }
   executor->cancel();
