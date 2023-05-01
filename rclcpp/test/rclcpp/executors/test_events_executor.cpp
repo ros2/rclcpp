@@ -524,8 +524,7 @@ TEST_F(TestEventsExecutor, testRaceConditionAddNode)
     executor->spin();
   });
   // Add a node to the executor
-  auto node_options = ros2_test::unit_test_node_options();
-  auto node = std::make_shared<rclcpp::Node>("my_node", node_options);
+  auto node = std::make_shared<rclcpp::Node>("my_node");
   executor->add_node(node->get_node_base_interface());
 
   // Cancel the executor (make sure that it's already spinning first)
