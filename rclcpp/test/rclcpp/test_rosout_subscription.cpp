@@ -70,7 +70,7 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_getchild) {
     // before calling get_child of Logger
     {
       RCLCPP_INFO(
-        rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+        rclcpp::get_logger(logger_name), "%s", this->rosout_msg_data.c_str());
       auto future = received_msg_promise.get_future();
       auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
       ASSERT_EQ(rclcpp::FutureReturnCode::TIMEOUT, return_code);
@@ -83,7 +83,7 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_getchild) {
     // after calling get_child of Logger
     // 1. use child_logger directly
     {
-      RCLCPP_INFO(child_logger, this->rosout_msg_data.c_str());
+      RCLCPP_INFO(child_logger, "%s", this->rosout_msg_data.c_str());
       auto future = received_msg_promise.get_future();
       auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
       ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
@@ -93,7 +93,7 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_getchild) {
 
     // 2. use rclcpp::get_logger
     {
-      RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+      RCLCPP_INFO(rclcpp::get_logger(logger_name), "%s", this->rosout_msg_data.c_str());
       auto future = received_msg_promise.get_future();
       auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
       ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
@@ -104,7 +104,7 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_getchild) {
 
   // `child_logger` is end of life, there is no sublogger
   {
-    RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+    RCLCPP_INFO(rclcpp::get_logger(logger_name), "%s", this->rosout_msg_data.c_str());
     auto future = received_msg_promise.get_future();
     auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
     ASSERT_EQ(rclcpp::FutureReturnCode::TIMEOUT, return_code);
@@ -119,7 +119,7 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_parent_log) {
 
   rclcpp::Logger logger = this->node->get_logger();
   ASSERT_EQ(logger.get_name(), logger_name);
-  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+  RCLCPP_INFO(logger, "%s", this->rosout_msg_data.c_str());
   auto future = received_msg_promise.get_future();
   auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
@@ -133,14 +133,14 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_child_log) {
   this->rosout_msg_name = logger_name;
 
   rclcpp::Logger logger = this->node->get_logger();
-  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+  RCLCPP_INFO(logger, "%s", this->rosout_msg_data.c_str());
   auto future = received_msg_promise.get_future();
   auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
   ASSERT_EQ(rclcpp::FutureReturnCode::TIMEOUT, return_code);
   received_msg_promise = {};
 
   logger = this->node->get_logger().get_child("child1");
-  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+  RCLCPP_INFO(logger, "%s", this->rosout_msg_data.c_str());
   future = received_msg_promise.get_future();
   return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
@@ -148,14 +148,14 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_child_log) {
   received_msg_promise = {};
 
   logger = this->node->get_logger().get_child("child2");
-  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+  RCLCPP_INFO(logger, "%s", this->rosout_msg_data.c_str());
   future = received_msg_promise.get_future();
   return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
   ASSERT_EQ(rclcpp::FutureReturnCode::TIMEOUT, return_code);
   received_msg_promise = {};
 
   this->rosout_msg_name = "ns.test_rosout_subscription.child2";
-  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+  RCLCPP_INFO(logger, "%s", this->rosout_msg_data.c_str());
   future = received_msg_promise.get_future();
   return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
@@ -171,7 +171,7 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_getchild_hierarchy) {
   rclcpp::Logger grandchild_logger =
     this->node->get_logger().get_child("child").get_child("grandchild");
   ASSERT_EQ(grandchild_logger.get_name(), logger_name);
-  RCLCPP_INFO(grandchild_logger, this->rosout_msg_data.c_str());
+  RCLCPP_INFO(grandchild_logger, "%s", this->rosout_msg_data.c_str());
   auto future = received_msg_promise.get_future();
   auto return_code = rclcpp::spin_until_future_complete(this->node, future, 3s);
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
