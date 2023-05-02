@@ -405,7 +405,7 @@ public:
         RCUTILS_LOG_ERROR(
           "Unable to change state for state machine for %s: %s",
           node_base_interface_->get_name(), rcl_get_error_string().str);
-          return RCL_RET_ERROR;
+        return RCL_RET_ERROR;
       }
       // keep the initial state to pass to a transition callback
       initial_state = State(state_machine_.current_state);
