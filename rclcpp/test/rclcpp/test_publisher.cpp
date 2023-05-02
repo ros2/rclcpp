@@ -653,14 +653,14 @@ TEST_F(TestPublisher, lowest_available_ipm_capacity) {
     do_nothing);
 
   ASSERT_EQ(1, pub_ipm_enabled->get_intra_process_subscription_count());
-  ASSERT_LE(history_depth, pub_ipm_disabled->lowest_available_ipm_capacity());
+  ASSERT_EQ(0, pub_ipm_disabled->lowest_available_ipm_capacity());
   ASSERT_EQ(history_depth, pub_ipm_enabled->lowest_available_ipm_capacity());
 
   auto msg = std::make_shared<test_msgs::msg::Strings>();
   ASSERT_NO_THROW(pub_ipm_disabled->publish(*msg));
   ASSERT_NO_THROW(pub_ipm_enabled->publish(*msg));
 
-  ASSERT_LE(history_depth, pub_ipm_disabled->lowest_available_ipm_capacity());
+  ASSERT_EQ(0, pub_ipm_disabled->lowest_available_ipm_capacity());
   ASSERT_EQ(history_depth - 1u, pub_ipm_enabled->lowest_available_ipm_capacity());
 }
 
