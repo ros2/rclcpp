@@ -52,7 +52,7 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  delivered_message_type_(delivered_message_kind)
+  delivered_message_kind_(delivered_message_kind)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
@@ -261,13 +261,13 @@ SubscriptionBase::get_message_type_support_handle() const
 bool
 SubscriptionBase::is_serialized() const
 {
-  return delivered_message_type_ == rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE;
+  return delivered_message_kind_ == rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE;
 }
 
 rclcpp::DeliveredMessageKind
-SubscriptionBase::get_subscription_type() const
+SubscriptionBase::get_delivered_message_kind() const
 {
-  return delivered_message_type_;
+  return delivered_message_kind_;
 }
 
 size_t
