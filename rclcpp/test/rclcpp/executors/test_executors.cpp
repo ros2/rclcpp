@@ -764,7 +764,7 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
     stress_threads.emplace_back(
       [&should_cancel, i]() {
         // This is just some arbitrary heavy work
-        size_t total = 0;
+        volatile size_t total = 0;
         for (size_t k = 0; k < 549528914167; k++) {
           if (should_cancel) {
             break;
