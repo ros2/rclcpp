@@ -236,7 +236,14 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
       "Calling lowest_available_capacity for invalid or no longer existing publisher id");
-    return 0;
+    return 0u;
+  }
+
+  if (publisher_it->second.take_shared_subscriptions.empty() &&
+    publisher_it->second.take_ownership_subscriptions.empty())
+  {
+    // no subscriptions available
+    return 0u;
   }
 
   for (const auto sub_id : publisher_it->second.take_shared_subscriptions) {
