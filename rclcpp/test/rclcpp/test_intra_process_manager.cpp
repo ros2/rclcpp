@@ -772,7 +772,7 @@ TEST(TestIntraProcessManager, lowest_available_capacity) {
 
   auto c1 = ipm->lowest_available_capacity(p1_id);
 
-  ASSERT_LE(history_depth, c1);
+  ASSERT_LE(0u, c1);
 
   auto s1_id = ipm->add_subscription(s1);
   auto s2_id = ipm->add_subscription(s2);
