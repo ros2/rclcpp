@@ -388,7 +388,7 @@ std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoin
 size_t PublisherBase::lowest_available_ipm_capacity() const
 {
   if (!intra_process_is_enabled_) {
-    return std::numeric_limits<size_t>::max();
+    return 0u;
   }
 
   auto ipm = weak_ipm_.lock();
