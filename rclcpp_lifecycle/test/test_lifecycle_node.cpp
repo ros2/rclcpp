@@ -377,6 +377,28 @@ TEST_F(TestDefaultStateMachine, call_transitions_without_code) {
   EXPECT_EQ(finalized.id(), State::PRIMARY_STATE_FINALIZED);
 }
 
+TEST_F(TestDefaultStateMachine, get_current_state_thread_safety) {
+  auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+  test_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+
+  const auto check_state_fn = [](std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node)
+    {
+      std::size_t count = 0;
+      while (count < 100000) {
+        node->get_current_state().id();
+        count++;
+      }
+    };
+
+  // Call get_current_state() on the same node repeatedly from two different threads.
+  std::thread thread_object_1(check_state_fn, test_node);
+  std::thread thread_object_2(check_state_fn, test_node);
+
+  // Test has succeeded if both threads finish without exceptions.
+  thread_object_1.join();
+  thread_object_2.join();
+}
+
 TEST_F(TestDefaultStateMachine, good_mood) {
   auto test_node = std::make_shared<MoodyLifecycleNode<GoodMood>>("testnode");
 
