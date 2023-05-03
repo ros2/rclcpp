@@ -172,6 +172,15 @@ public:
   const char *
   get_namespace() const;
 
+  /// Get the fully-qualified name of the node.
+  /**
+   * The fully-qualified name includes the local namespace and name of the node.
+   * \return fully-qualified name of the node.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  const char *
+  get_fully_qualified_name() const;
+
   /// Get the logger of the node.
   /**
    * \return The logger of the node.
@@ -839,7 +848,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  get_current_state();
+  get_current_state() const;
 
   /// Return a list with the available states.
   /**
@@ -847,7 +856,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<State>
-  get_available_states();
+  get_available_states() const;
 
   /// Return a list with the current available transitions.
   /**
@@ -855,7 +864,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>
-  get_available_transitions();
+  get_available_transitions() const;
 
   /// Return a list with all the transitions.
   /**
@@ -863,7 +872,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>
-  get_transition_graph();
+  get_transition_graph() const;
 
   /// Trigger the specified transition.
   /*

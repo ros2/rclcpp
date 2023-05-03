@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
@@ -847,4 +848,73 @@ TEST_F(TestClockSleep, sleep_for_basic_ros) {
 
   sleep_thread.join();
   EXPECT_TRUE(sleep_succeeded);
+}
+
+class TestClockStarted : public ::testing::Test
+{
+protected:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestClockStarted, started) {
+  // rclcpp::Clock ros_clock(RCL_ROS_TIME);
+  // auto ros_clock_handle = ros_clock.get_clock_handle();
+  //
+  // // At this point, the ROS clock is reading system time since the ROS time override isn't on
+  // // So we expect it to be started (it's extremely unlikely that system time is at epoch start)
+  // EXPECT_TRUE(ros_clock.started());
+  // EXPECT_TRUE(ros_clock.wait_until_started());
+  // EXPECT_TRUE(ros_clock.wait_until_started(rclcpp::Duration(0, static_cast<uint32_t>(1e7))));
+  // EXPECT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(ros_clock_handle));
+  // EXPECT_TRUE(ros_clock.ros_time_is_active());
+  // EXPECT_FALSE(ros_clock.started());
+  // EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(ros_clock_handle, 1));
+  // EXPECT_TRUE(ros_clock.started());
+  //
+  // rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
+  // EXPECT_TRUE(system_clock.started());
+  // EXPECT_TRUE(system_clock.wait_until_started());
+  // EXPECT_TRUE(system_clock.wait_until_started(rclcpp::Duration(0, static_cast<uint32_t>(1e7))));
+  //
+  // rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+  // EXPECT_TRUE(steady_clock.started());
+  // EXPECT_TRUE(steady_clock.wait_until_started());
+  // EXPECT_TRUE(steady_clock.wait_until_started(rclcpp::Duration(0, static_cast<uint32_t>(1e7))));
+  //
+  // rclcpp::Clock uninit_clock(RCL_CLOCK_UNINITIALIZED);
+  // RCLCPP_EXPECT_THROW_EQ(
+  //   uninit_clock.started(), std::runtime_error("clock is not rcl_clock_valid"));
+  // RCLCPP_EXPECT_THROW_EQ(
+  //   uninit_clock.wait_until_started(rclcpp::Duration(0, static_cast<uint32_t>(1e7))),
+  //   std::runtime_error("clock cannot be waited on as it is not rcl_clock_valid"));
+}
+
+TEST_F(TestClockStarted, started_timeout) {
+  rclcpp::Clock ros_clock(RCL_ROS_TIME);
+  auto ros_clock_handle = ros_clock.get_clock_handle();
+
+  EXPECT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(ros_clock_handle));
+  EXPECT_TRUE(ros_clock.ros_time_is_active());
+
+  EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(ros_clock_handle, 0));
+
+  EXPECT_FALSE(ros_clock.started());
+  EXPECT_FALSE(ros_clock.wait_until_started(rclcpp::Duration(0, static_cast<uint32_t>(1e7))));
+
+  std::thread t([]() {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      rclcpp::shutdown();
+    });
+
+  // Test rclcpp shutdown escape hatch (otherwise this waits indefinitely)
+  EXPECT_FALSE(ros_clock.wait_until_started());
+  t.join();
 }

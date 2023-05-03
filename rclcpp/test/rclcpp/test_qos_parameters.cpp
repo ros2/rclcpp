@@ -255,3 +255,9 @@ TEST(TestQosParameters, internal_functions_failure_modes) {
       nullptr, rclcpp::QosPolicyKind::Reliability),
     std::invalid_argument);
 }
+
+TEST(TestQosParameters, keep_last_zero) {
+  rclcpp::KeepLast keep_last(0);
+
+  EXPECT_EQ(keep_last.depth, RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT);
+}

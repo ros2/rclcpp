@@ -19,6 +19,7 @@
 
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
+#include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
 
 namespace rclcpp_lifecycle
 {
@@ -53,7 +54,7 @@ public:
 
   /// Callback function for configure transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -61,7 +62,7 @@ public:
 
   /// Callback function for cleanup transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -69,7 +70,7 @@ public:
 
   /// Callback function for shutdown transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -77,7 +78,7 @@ public:
 
   /// Callback function for activate transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -85,7 +86,7 @@ public:
 
   /// Callback function for deactivate transition
   /*
-   * \return true by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -93,7 +94,7 @@ public:
 
   /// Callback function for errorneous transition
   /*
-   * \return false by default
+   * \return SUCCESS by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
@@ -106,4 +107,8 @@ public:
 
 }  // namespace node_interfaces
 }  // namespace rclcpp_lifecycle
+
+RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface, lifecycle_node)
+
 #endif  // RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_

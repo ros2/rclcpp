@@ -65,8 +65,11 @@ using PreShutdownCallbackHandle = ShutdownCallbackHandle;
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
  * A context also represents the lifecycle between init and shutdown of rclcpp.
- * It is often used in conjunction with rclcpp::init, or rclcpp::init_local,
- * and rclcpp::shutdown.
+ * Nodes may be attached to a particular context by passing to the rclcpp::Node
+ * constructor a rclcpp::NodeOptions instance in which the Context is set via
+ * rclcpp::NodeOptions::context.
+ * Nodes will be automatically removed from the context when destructed.
+ * Contexts may be shutdown by calling rclcpp::shutdown.
  */
 class Context : public std::enable_shared_from_this<Context>
 {
@@ -376,10 +379,10 @@ private:
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
 
-  std::unordered_set<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
+  std::vector<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
   mutable std::mutex on_shutdown_callbacks_mutex_;
 
-  std::unordered_set<std::shared_ptr<PreShutdownCallback>> pre_shutdown_callbacks_;
+  std::vector<std::shared_ptr<PreShutdownCallback>> pre_shutdown_callbacks_;
   mutable std::mutex pre_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
@@ -398,20 +401,22 @@ private:
 
   using ShutdownCallback = ShutdownCallbackHandle::ShutdownCallbackType;
 
+  template<ShutdownType shutdown_type>
   RCLCPP_LOCAL
   ShutdownCallbackHandle
   add_shutdown_callback(
-    ShutdownType shutdown_type,
     ShutdownCallback callback);
 
+  template<ShutdownType shutdown_type>
   RCLCPP_LOCAL
   bool
   remove_shutdown_callback(
-    ShutdownType shutdown_type,
     const ShutdownCallbackHandle & callback_handle);
 
+  template<ShutdownType shutdown_type>
+  RCLCPP_LOCAL
   std::vector<rclcpp::Context::ShutdownCallback>
-  get_shutdown_callback(ShutdownType shutdown_type) const;
+  get_shutdown_callback() const;
 };
 
 /// Return a copy of the list of context shared pointers.

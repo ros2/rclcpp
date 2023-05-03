@@ -77,6 +77,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->enable_topic_statistics_ = other.enable_topic_statistics_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->start_parameter_event_publisher_ = other.start_parameter_event_publisher_;
+    this->clock_type_ = other.clock_type_;
     this->clock_qos_ = other.clock_qos_;
     this->use_clock_thread_ = other.use_clock_thread_;
     this->parameter_event_qos_ = other.parameter_event_qos_;
@@ -248,6 +249,19 @@ NodeOptions::start_parameter_services(bool start_parameter_services)
 }
 
 bool
+NodeOptions::enable_logger_service() const
+{
+  return this->enable_logger_service_;
+}
+
+NodeOptions &
+NodeOptions::enable_logger_service(bool enable_logger_service)
+{
+  this->enable_logger_service_ = enable_logger_service;
+  return *this;
+}
+
+bool
 NodeOptions::start_parameter_event_publisher() const
 {
   return this->start_parameter_event_publisher_;
@@ -257,6 +271,19 @@ NodeOptions &
 NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publisher)
 {
   this->start_parameter_event_publisher_ = start_parameter_event_publisher;
+  return *this;
+}
+
+const rcl_clock_type_t &
+NodeOptions::clock_type() const
+{
+  return this->clock_type_;
+}
+
+NodeOptions &
+NodeOptions::clock_type(const rcl_clock_type_t & clock_type)
+{
+  this->clock_type_ = clock_type;
   return *this;
 }
 

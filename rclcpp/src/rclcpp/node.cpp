@@ -167,7 +167,7 @@ Node::Node(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_)),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
@@ -176,7 +176,8 @@ Node::Node(
       node_topics_,
       node_graph_,
       node_services_,
-      node_logging_
+      node_logging_,
+      options.clock_type()
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
@@ -224,6 +225,10 @@ Node::Node(
     node_topics_->resolve_topic_name("/parameter_events"),
     options.parameter_event_qos(),
     rclcpp::detail::PublisherQosParametersTraits{});
+
+  if (options.enable_logger_service()) {
+    node_logging_->create_logger_services(node_services_);
+  }
 }
 
 Node::Node(

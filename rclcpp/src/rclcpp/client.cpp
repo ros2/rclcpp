@@ -23,9 +23,11 @@
 #include "rcl/graph.h"
 #include "rcl/node.h"
 #include "rcl/wait.h"
+
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/logging.hpp"
 
@@ -241,7 +243,6 @@ ClientBase::set_on_new_response_callback(rcl_event_callback_t callback, const vo
     user_data);
 
   if (RCL_RET_OK != ret) {
-    using rclcpp::exceptions::throw_from_rcl_error;
     throw_from_rcl_error(ret, "failed to set the on new response callback for client");
   }
 }

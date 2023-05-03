@@ -3,6 +3,51 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+21.1.0 (2023-04-27)
+-------------------
+
+21.0.0 (2023-04-18)
+-------------------
+* Add support for logging service. (`#2122 <https://github.com/ros2/rclcpp/issues/2122>`_)
+* Support publishing loaned messages in LifecyclePublisher (`#2159 <https://github.com/ros2/rclcpp/issues/2159>`_)
+* Contributors: Lei Liu, Michael Babenko
+
+20.0.0 (2023-04-13)
+-------------------
+* Fixes to silence some clang warnings. (`#2127 <https://github.com/ros2/rclcpp/issues/2127>`_)
+* Update all rclcpp packages to C++17. (`#2121 <https://github.com/ros2/rclcpp/issues/2121>`_)
+* Use the correct macro for LifecycleNode::get_fully_qualified_name (`#2117 <https://github.com/ros2/rclcpp/issues/2117>`_)
+* add get_fully_qualified_name to rclcpp_lifecycle (`#2115 <https://github.com/ros2/rclcpp/issues/2115>`_)
+* Contributors: Chris Lalancette, Steve Macenski
+
+19.3.0 (2023-03-01)
+-------------------
+
+19.2.0 (2023-02-24)
+-------------------
+
+19.1.0 (2023-02-14)
+-------------------
+
+19.0.0 (2023-01-30)
+-------------------
+
+18.0.0 (2022-12-29)
+-------------------
+* Implement Unified Node Interface (NodeInterfaces class) (`#2041 <https://github.com/ros2/rclcpp/issues/2041>`_)
+* Add clock type to node_options (`#1982 <https://github.com/ros2/rclcpp/issues/1982>`_)
+* Update maintainers (`#2043 <https://github.com/ros2/rclcpp/issues/2043>`_)
+* Contributors: Audrow Nash, Jeffery Hsu, methylDragon
+
+17.1.0 (2022-11-02)
+-------------------
+* LifecycleNode on_configure doc fix. (`#2034 <https://github.com/ros2/rclcpp/issues/2034>`_)
+* Bugfix 20210810 get current state (`#1756 <https://github.com/ros2/rclcpp/issues/1756>`_)
+* Make lifecycle impl get_current_state() const. (`#2031 <https://github.com/ros2/rclcpp/issues/2031>`_)
+* Cleanup the lifecycle implementation (`#2027 <https://github.com/ros2/rclcpp/issues/2027>`_)
+* Cleanup the rclcpp_lifecycle dependencies. (`#2021 <https://github.com/ros2/rclcpp/issues/2021>`_)
+* Contributors: Chris Lalancette, Tomoya Fujita
+
 17.0.0 (2022-09-13)
 -------------------
 * Revert "Revert "Add a create_timer method to Node and `LifecycleNode` classes (`#1975 <https://github.com/ros2/rclcpp/issues/1975>`_)" (`#2009 <https://github.com/ros2/rclcpp/issues/2009>`_) (`#2010 <https://github.com/ros2/rclcpp/issues/2010>`_)

@@ -100,15 +100,20 @@ if(TARGET test_create_subscription)
     "test_msgs"
   )
 endif()
-ament_add_gtest(test_add_callback_groups_to_executor
-  test_add_callback_groups_to_executor.cpp
-  TIMEOUT 120)
-if(TARGET test_add_callback_groups_to_executor)
-  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME})
-  ament_target_dependencies(test_add_callback_groups_to_executor
-    "test_msgs"
+function(test_add_callback_groups_to_executor_for_rmw_implementation)
+  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+  ament_add_gmock(test_add_callback_groups_to_executor${target_suffix} test_add_callback_groups_to_executor.cpp
+    ENV ${rmw_implementation_env_var}
+    TIMEOUT 120
   )
-endif()
+  if(TARGET test_add_callback_groups_to_executor${target_suffix})
+    target_link_libraries(test_add_callback_groups_to_executor${target_suffix} ${PROJECT_NAME})
+    ament_target_dependencies(test_add_callback_groups_to_executor${target_suffix}
+      "test_msgs"
+    )
+  endif()
+endfunction()
+call_for_each_rmw_implementation(test_add_callback_groups_to_executor_for_rmw_implementation)
 ament_add_gtest(test_expand_topic_or_service_name test_expand_topic_or_service_name.cpp)
 if(TARGET test_expand_topic_or_service_name)
   ament_target_dependencies(test_expand_topic_or_service_name
@@ -229,6 +234,11 @@ if(TARGET test_node_interfaces__node_graph)
     "test_msgs")
   target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_node_interfaces__node_interfaces
+  node_interfaces/test_node_interfaces.cpp)
+if(TARGET test_node_interfaces__node_interfaces)
+  target_link_libraries(test_node_interfaces__node_interfaces ${PROJECT_NAME} mimick)
+endif()
 ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
 if(TARGET test_node_interfaces__node_parameters)
@@ -256,6 +266,11 @@ ament_add_gtest(test_node_interfaces__node_waitables
   node_interfaces/test_node_waitables.cpp)
 if(TARGET test_node_interfaces__node_waitables)
   target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME} mimick)
+endif()
+ament_add_gtest(test_node_interfaces__test_template_utils  # Compile time test
+  node_interfaces/detail/test_template_utils.cpp)
+if(TARGET test_node_interfaces__test_template_utils)
+  target_link_libraries(test_node_interfaces__test_template_utils ${PROJECT_NAME})
 endif()
 
 # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
@@ -429,17 +444,23 @@ function(test_generic_pubsub_for_rmw_implementation)
   endif()
 endfunction()
 call_for_each_rmw_implementation(test_generic_pubsub_for_rmw_implementation)
-ament_add_gtest(test_qos_event test_qos_event.cpp)
-if(TARGET test_qos_event)
-  ament_target_dependencies(test_qos_event
-    "rmw"
-    "test_msgs"
+
+function(test_qos_event_for_rmw_implementation)
+  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+  ament_add_gmock(test_qos_event${target_suffix} test_qos_event.cpp
+    ENV ${rmw_implementation_env_var}
   )
-  target_link_libraries(test_qos_event
-    ${PROJECT_NAME}
-    mimick
-  )
-endif()
+  if(TARGET test_qos_event${target_suffix})
+    target_link_libraries(test_qos_event${target_suffix} ${PROJECT_NAME} mimick)
+    ament_target_dependencies(test_qos_event${target_suffix}
+      "rmw"
+      "rosidl_typesupport_cpp"
+      "test_msgs"
+    )
+  endif()
+endfunction()
+call_for_each_rmw_implementation(test_qos_event_for_rmw_implementation)
+
 ament_add_gmock(test_qos_overriding_options test_qos_overriding_options.cpp)
 if(TARGET test_qos_overriding_options)
   target_link_libraries(test_qos_overriding_options
@@ -492,6 +513,17 @@ if(TARGET test_service)
     "test_msgs"
   )
   target_link_libraries(test_service ${PROJECT_NAME} mimick)
+endif()
+ament_add_gmock(test_service_introspection test_service_introspection.cpp)
+if(TARGET test_service)
+  ament_target_dependencies(test_service_introspection
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  target_link_libraries(test_service_introspection ${PROJECT_NAME} mimick)
 endif()
 # Creating and destroying nodes is slow with Connext, so this needs larger timeout.
 ament_add_gtest(test_subscription test_subscription.cpp TIMEOUT 120)
@@ -567,6 +599,9 @@ target_link_libraries(test_logger ${PROJECT_NAME})
 ament_add_gmock(test_logging test_logging.cpp)
 target_link_libraries(test_logging ${PROJECT_NAME})
 
+ament_add_gmock(test_context test_context.cpp)
+target_link_libraries(test_context ${PROJECT_NAME})
+
 ament_add_gtest(test_time test_time.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_time)
@@ -581,6 +616,14 @@ if(TARGET test_timer)
   ament_target_dependencies(test_timer
     "rcl")
   target_link_libraries(test_timer ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_timers_manager test_timers_manager.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_timers_manager)
+  ament_target_dependencies(test_timers_manager
+    "rcl")
+  target_link_libraries(test_timers_manager ${PROJECT_NAME} mimick)
 endif()
 
 ament_add_gtest(test_time_source test_time_source.cpp
@@ -604,6 +647,13 @@ if(TARGET test_wait_for_message)
   ament_target_dependencies(test_wait_for_message
     "test_msgs")
   target_link_libraries(test_wait_for_message ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(test_logger_service test_logger_service.cpp)
+if(TARGET test_logger_service)
+  ament_target_dependencies(test_logger_service
+    "rcl_interfaces")
+  target_link_libraries(test_logger_service ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_interface_traits test_interface_traits.cpp
@@ -651,6 +701,39 @@ if(TARGET test_static_executor_entities_collector)
     "rcl"
     "test_msgs")
   target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_entities_collector executors/test_entities_collector.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
+if(TARGET test_entities_collector)
+  ament_target_dependencies(test_entities_collector
+    "rcl"
+    "test_msgs")
+  target_link_libraries(test_entities_collector ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_executor_notify_waitable executors/test_executor_notify_waitable.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
+if(TARGET test_executor_notify_waitable)
+  ament_target_dependencies(test_executor_notify_waitable
+    "rcl"
+    "test_msgs")
+  target_link_libraries(test_executor_notify_waitable ${PROJECT_NAME} mimick)
+endif()
+
+ament_add_gtest(test_events_executor executors/test_events_executor.cpp TIMEOUT 5)
+if(TARGET test_events_executor)
+  ament_target_dependencies(test_events_executor
+    "test_msgs")
+  target_link_libraries(test_events_executor ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(test_events_queue executors/test_events_queue.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_queue)
+  ament_target_dependencies(test_events_queue
+    "test_msgs")
+  target_link_libraries(test_events_queue ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_guard_condition test_guard_condition.cpp
@@ -719,6 +802,12 @@ ament_add_gtest(test_rosout_qos test_rosout_qos.cpp)
 if(TARGET test_rosout_qos)
   ament_target_dependencies(test_rosout_qos "rcl")
   target_link_libraries(test_rosout_qos ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(test_rosout_subscription test_rosout_subscription.cpp)
+if(TARGET test_rosout_subscription)
+  ament_target_dependencies(test_rosout_subscription "rcl")
+  target_link_libraries(test_rosout_subscription ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_executor test_executor.cpp

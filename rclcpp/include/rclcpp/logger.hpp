@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -122,6 +123,7 @@ private:
   : name_(new std::string(name)) {}
 
   std::shared_ptr<const std::string> name_;
+  std::shared_ptr<std::pair<std::string, std::string>> logger_sublogger_pairname_ = nullptr;
 
 public:
   RCLCPP_PUBLIC
@@ -157,13 +159,7 @@ public:
    */
   RCLCPP_PUBLIC
   Logger
-  get_child(const std::string & suffix)
-  {
-    if (!name_) {
-      return Logger();
-    }
-    return Logger(*name_ + "." + suffix);
-  }
+  get_child(const std::string & suffix);
 
   /// Set level for current logger.
   /**
@@ -174,6 +170,24 @@ public:
   RCLCPP_PUBLIC
   void
   set_level(Level level);
+
+  /// Get effective level for current logger.
+  /**
+   * The effective level is determined as the severity level of
+   * the logger if it is set, otherwise it is the first specified severity
+   * level of the logger's ancestors, starting with its closest ancestor.
+   * The ancestor hierarchy is signified by logger names being separated by dots:
+   * a logger named `x` is an ancestor of `x.y`, and both `x` and `x.y` are
+   * ancestors of `x.y.z`, etc.
+   * If the level has not been set for the logger nor any of its
+   * ancestors, the default level is used.
+   *
+   * \throws rclcpp::exceptions::RCLError if any error happens.
+   * \return Level for the current logger.
+   */
+  RCLCPP_PUBLIC
+  Level
+  get_effective_level() const;
 };
 
 }  // namespace rclcpp

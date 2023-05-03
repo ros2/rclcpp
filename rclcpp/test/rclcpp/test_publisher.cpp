@@ -245,10 +245,9 @@ const rosidl_message_type_support_t EmptyTypeSupport()
   return *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Empty>();
 }
 
-const rcl_publisher_options_t PublisherOptions()
+const rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> PublisherOptions()
 {
-  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
-         to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>();
 }
 
 class TestPublisherBase : public rclcpp::PublisherBase
@@ -256,7 +255,9 @@ class TestPublisherBase : public rclcpp::PublisherBase
 public:
   explicit TestPublisherBase(rclcpp::Node * node)
   : rclcpp::PublisherBase(
-      node->get_node_base_interface().get(), "topic", EmptyTypeSupport(), PublisherOptions()) {}
+      node->get_node_base_interface().get(), "topic", EmptyTypeSupport(),
+      PublisherOptions().to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10)),
+      PublisherOptions().event_callbacks, PublisherOptions().use_default_callbacks) {}
 };
 
 /*
@@ -408,9 +409,7 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
   std::allocator<void> allocator;
   {
     rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
-    RCLCPP_EXPECT_THROW_EQ(
-      publisher->publish(std::move(loaned_msg)),
-      std::runtime_error("storing loaned messages in intra process is not supported yet"));
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
   }
 
   {

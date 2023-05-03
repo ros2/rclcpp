@@ -109,8 +109,8 @@ StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
   std::lock_guard<std::mutex> guard{new_nodes_mutex_};
   for (const auto & weak_node : new_nodes_) {
     if (auto node_ptr = weak_node.lock()) {
-      const auto & gc = node_ptr->get_notify_guard_condition();
-      weak_nodes_to_guard_conditions_[node_ptr] = &gc;
+      weak_nodes_to_guard_conditions_[node_ptr] =
+        node_ptr->get_shared_notify_guard_condition().get();
     }
   }
   new_nodes_.clear();

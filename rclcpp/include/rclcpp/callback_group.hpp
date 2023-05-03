@@ -16,11 +16,14 @@
 #define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
+#include <functional>
+#include <memory>
 #include <mutex>
-#include <string>
 #include <vector>
 
 #include "rclcpp/client.hpp"
+#include "rclcpp/context.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
@@ -90,10 +93,57 @@ public:
    *   determines whether a callback group is automatically added to an executor
    *   with the node with which it is associated.
    */
+  [[deprecated("Use CallbackGroup constructor with context function argument")]]
   RCLCPP_PUBLIC
   explicit CallbackGroup(
     CallbackGroupType group_type,
     bool automatically_add_to_executor_with_node = true);
+
+  /// Constructor for CallbackGroup.
+  /**
+   * Callback Groups have a type, either 'Mutually Exclusive' or 'Reentrant'
+   * and when creating one the type must be specified.
+   *
+   * Callbacks in Reentrant Callback Groups must be able to:
+   *   - run at the same time as themselves (reentrant)
+   *   - run at the same time as other callbacks in their group
+   *   - run at the same time as other callbacks in other groups
+   *
+   * Callbacks in Mutually Exclusive Callback Groups:
+   *   - will not be run multiple times simultaneously (non-reentrant)
+   *   - will not be run at the same time as other callbacks in their group
+   *   - but must run at the same time as callbacks in other groups
+   *
+   * Additionally, callback groups have a property which determines whether or
+   * not they are added to an executor with their associated node automatically.
+   * When creating a callback group the automatically_add_to_executor_with_node
+   * argument determines this behavior, and if true it will cause the newly
+   * created callback group to be added to an executor with the node when the
+   * Executor::add_node method is used.
+   * If false, this callback group will not be added automatically and would
+   * have to be added to an executor manually using the
+   * Executor::add_callback_group method.
+   *
+   * Whether the node was added to the executor before creating the callback
+   * group, or after, is irrelevant; the callback group will be automatically
+   * added to the executor in either case.
+   *
+   * \param[in] group_type The type of the callback group.
+   * \param[in] get_node_context Lambda to retrieve the node context when
+   *   checking that the creating node is valid and using the guard condition.
+   * \param[in] automatically_add_to_executor_with_node A boolean that
+   *   determines whether a callback group is automatically added to an executor
+   *   with the node with which it is associated.
+   */
+  RCLCPP_PUBLIC
+  explicit CallbackGroup(
+    CallbackGroupType group_type,
+    std::function<rclcpp::Context::SharedPtr(void)> get_node_context,
+    bool automatically_add_to_executor_with_node = true);
+
+  /// Default destructor.
+  RCLCPP_PUBLIC
+  ~CallbackGroup();
 
   template<typename Function>
   rclcpp::SubscriptionBase::SharedPtr
@@ -129,6 +179,13 @@ public:
   {
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
+
+  /// Get the total number of entities in this callback group.
+  /**
+   * \return the number of entities in the callback group.
+   */
+  RCLCPP_PUBLIC
+  size_t size() const;
 
   RCLCPP_PUBLIC
   std::atomic_bool &
@@ -170,6 +227,29 @@ public:
   RCLCPP_PUBLIC
   bool
   automatically_add_to_executor_with_node() const;
+
+  /// Retrieve the guard condition used to signal changes to this callback group.
+  /**
+   * \param[in] context_ptr context to use when creating the guard condition
+   * \return guard condition if it is valid, otherwise nullptr.
+   */
+  [[deprecated("Use get_notify_guard_condition() without arguments")]]
+  RCLCPP_PUBLIC
+  rclcpp::GuardCondition::SharedPtr
+  get_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr);
+
+  /// Retrieve the guard condition used to signal changes to this callback group.
+  /**
+   * \return guard condition if it is valid, otherwise nullptr.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::GuardCondition::SharedPtr
+  get_notify_guard_condition();
+
+  /// Trigger the notify guard condition.
+  RCLCPP_PUBLIC
+  void
+  trigger_notify_guard_condition();
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
@@ -213,6 +293,11 @@ protected:
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
   const bool automatically_add_to_executor_with_node_;
+  // defer the creation of the guard condition
+  std::shared_ptr<rclcpp::GuardCondition> notify_guard_condition_ = nullptr;
+  std::recursive_mutex notify_guard_condition_mutex_;
+
+  std::function<rclcpp::Context::SharedPtr(void)> get_context_;
 
 private:
   template<typename TypeT, typename Function>

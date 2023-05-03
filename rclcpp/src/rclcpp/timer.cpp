@@ -19,9 +19,12 @@
 #include <memory>
 #include <thread>
 
-#include "rclcpp/contexts/default_context.hpp"
-#include "rclcpp/exceptions.hpp"
+#include "rmw/impl/cpp/demangle.hpp"
 
+#include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/detail/cpp_callback_trampoline.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 #include "rcutils/logging_macros.h"
 
 using rclcpp::TimerBase;
@@ -71,7 +74,9 @@ TimerBase::TimerBase(
 }
 
 TimerBase::~TimerBase()
-{}
+{
+  clear_on_reset_callback();
+}
 
 void
 TimerBase::cancel()
@@ -96,7 +101,11 @@ TimerBase::is_canceled()
 void
 TimerBase::reset()
 {
-  rcl_ret_t ret = rcl_timer_reset(timer_handle_.get());
+  rcl_ret_t ret = RCL_RET_OK;
+  {
+    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    ret = rcl_timer_reset(timer_handle_.get());
+  }
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't reset timer");
   }
@@ -137,4 +146,74 @@ bool
 TimerBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
+}
+
+void
+TimerBase::set_on_reset_callback(std::function<void(size_t)> callback)
+{
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_reset_callback "
+            "is not callable.");
+  }
+
+  auto new_callback =
+    [callback, this](size_t reset_calls) {
+      try {
+        callback(reset_calls);
+      } catch (const std::exception & exception) {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("rclcpp"),
+          "rclcpp::TimerBase@" << this <<
+            " caught " << rmw::impl::cpp::demangle(exception) <<
+            " exception in user-provided callback for the 'on reset' callback: " <<
+            exception.what());
+      } catch (...) {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("rclcpp"),
+          "rclcpp::TimerBase@" << this <<
+            " caught unhandled exception in user-provided callback " <<
+            "for the 'on reset' callback");
+      }
+    };
+
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+
+  // Set it temporarily to the new callback, while we replace the old one.
+  // This two-step setting, prevents a gap where the old std::function has
+  // been replaced but rcl hasn't been told about the new one yet.
+  set_on_reset_callback(
+    rclcpp::detail::cpp_callback_trampoline<
+      decltype(new_callback), const void *, size_t>,
+    static_cast<const void *>(&new_callback));
+
+  // Store the std::function to keep it in scope, also overwrites the existing one.
+  on_reset_callback_ = new_callback;
+
+  // Set it again, now using the permanent storage.
+  set_on_reset_callback(
+    rclcpp::detail::cpp_callback_trampoline<
+      decltype(on_reset_callback_), const void *, size_t>,
+    static_cast<const void *>(&on_reset_callback_));
+}
+
+void
+TimerBase::clear_on_reset_callback()
+{
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+
+  if (on_reset_callback_) {
+    set_on_reset_callback(nullptr, nullptr);
+    on_reset_callback_ = nullptr;
+  }
+}
+
+void
+TimerBase::set_on_reset_callback(rcl_event_callback_t callback, const void * user_data)
+{
+  rcl_ret_t ret = rcl_timer_set_on_reset_callback(timer_handle_.get(), callback, user_data);
+
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to set timer on reset callback");
+  }
 }

@@ -33,7 +33,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rcpputils/time.hpp"
@@ -78,10 +78,17 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rosidl_message_type_support_t & type_support,
-    const rcl_publisher_options_t & publisher_options);
+    const rcl_publisher_options_t & publisher_options,
+    const PublisherEventCallbacks & event_callbacks,
+    bool use_default_callbacks);
 
   RCLCPP_PUBLIC
   virtual ~PublisherBase();
+
+  /// Add event handlers for passed in event_callbacks.
+  RCLCPP_PUBLIC
+  void
+  bind_event_callbacks(const PublisherEventCallbacks & event_callbacks, bool use_default_callbacks);
 
   /// Get the topic that this publisher publishes on.
   /** \return The topic name. */
@@ -117,7 +124,7 @@ public:
   /** \return The map of QoS event handlers. */
   RCLCPP_PUBLIC
   const
-  std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+  std::unordered_map<rcl_publisher_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
   get_event_handlers() const;
 
   /// Get subscription count
@@ -269,7 +276,7 @@ public:
    * If you want more information available in the callback, like the qos event
    * or other information, you may use a lambda with captures or std::bind.
    *
-   * \sa rclcpp::QOSEventHandlerBase::set_on_ready_callback
+   * \sa rclcpp::EventHandlerBase::set_on_ready_callback
    *
    * \param[in] callback functor to be called when a new event occurs
    * \param[in] event_type identifier for the qos event we want to attach the callback to
@@ -320,7 +327,7 @@ protected:
     const EventCallbackT & callback,
     const rcl_publisher_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+    auto handler = std::make_shared<EventHandler<EventCallbackT,
         std::shared_ptr<rcl_publisher_t>>>(
       callback,
       rcl_publisher_event_init,
@@ -332,12 +339,15 @@ protected:
   RCLCPP_PUBLIC
   void default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & info) const;
 
+  RCLCPP_PUBLIC
+  void default_incompatible_type_callback(IncompatibleTypeInfo & info) const;
+
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   std::shared_ptr<rcl_publisher_t> publisher_handle_;
 
   std::unordered_map<rcl_publisher_event_type_t,
-    std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
+    std::shared_ptr<rclcpp::EventHandlerBase>> event_handlers_;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
@@ -348,6 +358,8 @@ protected:
   rmw_gid_t rmw_gid_;
 
   const rosidl_message_type_support_t type_support_;
+
+  const PublisherEventCallbacks event_callbacks_;
 };
 
 }  // namespace rclcpp
