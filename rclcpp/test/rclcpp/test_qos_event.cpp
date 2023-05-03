@@ -314,11 +314,6 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
-  // rmw_connextdds doesn't support rmw_event_set_callback() interface
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
-    GTEST_SKIP();
-  }
-
   auto offered_deadline = rclcpp::Duration(std::chrono::milliseconds(1));
   auto requested_deadline = rclcpp::Duration(std::chrono::milliseconds(2));
 
@@ -360,11 +355,6 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 {
-  // rmw_connextdds doesn't support rmw_event_set_callback() interface
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
-    GTEST_SKIP();
-  }
-
   auto pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
   auto dummy_cb = [](size_t count_events) {(void)count_events;};
@@ -439,11 +429,6 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 {
-  // rmw_connextdds doesn't support rmw_event_set_callback() interface
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
-    GTEST_SKIP();
-  }
-
   std::atomic_size_t matched_count = 0;
 
   rclcpp::PublisherOptions pub_options;
@@ -483,11 +468,6 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
 {
-  // rmw_connextdds doesn't support rmw_event_set_callback() interface
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
-    GTEST_SKIP();
-  }
-
   std::atomic_size_t matched_count = 0;
 
   rclcpp::SubscriptionOptions sub_options;
