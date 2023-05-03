@@ -45,18 +45,10 @@ template<typename T>
 class TestExecutors : public ::testing::Test
 {
 public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  static void TearDownTestCase()
-  {
-    rclcpp::shutdown();
-  }
-
   void SetUp()
   {
+    rclcpp::init(0, nullptr);
+
     const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
     std::stringstream test_name;
     test_name << test_info->test_case_name() << "_" << test_info->name();
@@ -77,6 +69,8 @@ public:
     publisher.reset();
     subscription.reset();
     node.reset();
+
+    rclcpp::shutdown();
   }
 
   rclcpp::Node::SharedPtr node;
