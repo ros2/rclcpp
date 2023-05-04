@@ -26,6 +26,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <stdexcept>
 
 #include "rcl/context.h"
 #include "rcl/guard_condition.h"
