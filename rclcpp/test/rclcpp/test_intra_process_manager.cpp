@@ -751,6 +751,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
      as the other subscriber still has not freed its buffer.
    - The other subscriber receives one message.
    - The available buffer capacity should increase by 1.
+   - One subscription goes out of scope.
+   - The available buffer capacity should not change.
  */
 TEST(TestIntraProcessManager, lowest_available_capacity) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -809,6 +811,11 @@ TEST(TestIntraProcessManager, lowest_available_capacity) {
   ASSERT_EQ(history_depth - 2u, c1);
 
   s2->pop();
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  ASSERT_EQ(history_depth - 1u, c1);
+
+  ipm->get_subscription_intra_process(s1_id).reset();
 
   c1 = ipm->lowest_available_capacity(p1_id);
   ASSERT_EQ(history_depth - 1u, c1);
