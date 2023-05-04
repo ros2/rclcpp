@@ -311,11 +311,6 @@ public:
   size_t
   lowest_available_capacity(const uint64_t intra_process_publisher_id) const;
 
-  /// Return the available capacity for a given subscription id.
-  RCLCPP_PUBLIC
-  size_t
-  available_capacity(const uint64_t intra_process_subscription_id) const;
-
 private:
   struct SplittedSubscriptions
   {

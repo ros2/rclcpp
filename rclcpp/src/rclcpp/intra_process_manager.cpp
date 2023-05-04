@@ -246,34 +246,31 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     return 0u;
   }
 
+  auto available_capacity = [this, &capacity](const uint64_t intra_process_subscription_id)
+    {
+      auto subscription_it = subscriptions_.find(intra_process_subscription_id);
+      if (subscription_it != subscriptions_.end()) {
+        auto subscription = subscription_it->second.lock();
+        if (subscription) {
+          capacity = std::min(capacity, subscription->available_capacity());
+        }
+      } else {
+        // Subscription is either invalid or no longer exists.
+        RCLCPP_WARN(
+          rclcpp::get_logger("rclcpp"),
+          "Calling available_capacity for invalid or no longer existing subscription id");
+      }
+    };
+
   for (const auto sub_id : publisher_it->second.take_shared_subscriptions) {
-    capacity = std::min(capacity, available_capacity(sub_id));
+    available_capacity(sub_id);
   }
 
   for (const auto sub_id : publisher_it->second.take_ownership_subscriptions) {
-    capacity = std::min(capacity, available_capacity(sub_id));
+    available_capacity(sub_id);
   }
 
   return capacity;
-}
-
-size_t
-IntraProcessManager::available_capacity(const uint64_t intra_process_subscription_id) const
-{
-  auto subscription_it = subscriptions_.find(intra_process_subscription_id);
-  if (subscription_it != subscriptions_.end()) {
-    auto subscription = subscription_it->second.lock();
-    if (subscription) {
-      return subscription->available_capacity();
-    }
-  }
-
-  // Subscription is either invalid or no longer exists.
-  RCLCPP_WARN(
-    rclcpp::get_logger("rclcpp"),
-    "Calling available_capacity for invalid or no longer existing subscription id");
-
-  return 0;
 }
 }  // namespace experimental
 }  // namespace rclcpp
