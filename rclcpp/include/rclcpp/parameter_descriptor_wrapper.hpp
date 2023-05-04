@@ -60,10 +60,10 @@ public:
         return *this;
     }
 
-    ParameterDescription& SetIntegerPointDescriptionRange(int min = 0, int max = 1, int step = 0);
+    ParameterDescription& SetIntegerDescriptionRange(int min = 0, int max = 1, int step = 0);
     // We will again need access to the current development node to declare its parameters
     template<typename ParameterType>
-    ParameterDescription& SetIntegerPointDescriptionRange(std::unique_ptr<rclcpp::Node> currentNode, const std::string& name, ParameterType default_value, int min = 0, int max = 1, int step = 0)
+    ParameterDescription& SetIntegerDescriptionRange(std::unique_ptr<rclcpp::Node> currentNode, const std::string& name, ParameterType default_value, int min = 0, int max = 1, int step = 0)
     {
         parameter_descriptor.integer_range.resize(1);
         parameter_descriptor.integer_range.at(0).from_value = min;
