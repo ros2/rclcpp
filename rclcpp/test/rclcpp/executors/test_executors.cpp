@@ -796,6 +796,76 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
   }
 }
 
+// This test verifies the thread-safety of adding and removing a node
+// while the executor is spinning and events are ready.
+// This test does not contain expectations, but rather it verifies that
+// we can run a "stressful routine" without crashing.
+TYPED_TEST(TestExecutors, stressAddRemoveNode)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  // Spawn some threads to do some heavy work
+  std::atomic<bool> should_cancel = false;
+  std::vector<std::thread> stress_threads;
+  for (size_t i = 0; i < 5 * std::thread::hardware_concurrency(); i++) {
+    stress_threads.emplace_back(
+      [&should_cancel, i]() {
+        // This is just some arbitrary heavy work
+        volatile size_t total = 0;
+        for (size_t k = 0; k < 549528914167; k++) {
+          if (should_cancel) {
+            break;
+          }
+          total += k * (i + 42);
+        }
+      });
+  }
+
+  ExecutorType executor;
+
+  // A timer that is "always" ready (the timer callback doesn't do anything)
+  auto timer = this->node->create_wall_timer(std::chrono::nanoseconds(1), []() {});
+
+  // This thread spins the executor until it's cancelled
+  std::thread spinner_thread([&]() {
+      executor.spin();
+    });
+
+  // This thread publishes data in a busy loop (the node has a subscription)
+  std::thread publisher_thread([&]() {
+      for (size_t i = 0; i < 10000; i++) {
+        this->publisher->publish(test_msgs::msg::Empty());
+      }
+    });
+
+  // This thread adds/remove the node that contains the entities in a busy loop
+  std::thread add_remove_thread([&]() {
+      for (size_t i = 0; i < 10000; i++) {
+        executor.add_node(this->node);
+        executor.remove_node(this->node);
+      }
+    });
+
+  // Wait for the threads that do real work to finish
+  publisher_thread.join();
+  add_remove_thread.join();
+
+  // The test is now completed: we can join the threads
+  should_cancel = true;
+  for (auto & t : stress_threads) {
+    t.join();
+  }
+  executor.cancel();
+  spinner_thread.join();
+}
+
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)
 TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr)
 {

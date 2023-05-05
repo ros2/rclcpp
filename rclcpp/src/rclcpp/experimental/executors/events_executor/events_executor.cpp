@@ -386,10 +386,14 @@ EventsExecutor::get_automatically_added_callback_groups_from_nodes()
 void
 EventsExecutor::refresh_current_collection_from_callback_groups()
 {
+  // Build the new collection
   this->entities_collector_->update_collections();
   auto callback_groups = this->entities_collector_->get_all_callback_groups();
   rclcpp::executors::ExecutorEntitiesCollection new_collection;
   rclcpp::executors::build_entities_collection(callback_groups, new_collection);
+
+  // Acquire lock before modifying the current collection
+  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
 
   // TODO(alsora): this may be implemented in a better way.
   // We need the notify waitable to be included in the executor "current_collection"
