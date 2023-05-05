@@ -50,6 +50,9 @@ EventsExecutor::EventsExecutor(
   timers_manager_ =
     std::make_shared<rclcpp::experimental::TimersManager>(context_, timer_on_ready_cb);
 
+  this->current_entities_collection_ =
+    std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
+
   notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
     [this]() {
       // This callback is invoked when:
@@ -60,6 +63,10 @@ EventsExecutor::EventsExecutor(
       notify_waitable_event_pushed_ = false;
       this->refresh_current_collection_from_callback_groups();
     });
+
+  // Make sure that the notify waitable is immediately added to the collection
+  // to avoid missing events
+  this->add_notify_waitable_to_collection(current_entities_collection_->waitables);
 
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
@@ -87,9 +94,6 @@ EventsExecutor::EventsExecutor(
 
   this->entities_collector_ =
     std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable_);
-
-  this->current_entities_collection_ =
-    std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
 }
 
 EventsExecutor::~EventsExecutor()
@@ -395,18 +399,8 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   // retrieved in the "standard" way.
   // To do it, we need to add the notify waitable as an entry in both the new and
   // current collections such that it's neither added or removed.
-  rclcpp::CallbackGroup::WeakPtr weak_group_ptr;
-  new_collection.waitables.insert(
-  {
-    this->notify_waitable_.get(),
-    {this->notify_waitable_, weak_group_ptr}
-  });
-
-  this->current_entities_collection_->waitables.insert(
-  {
-    this->notify_waitable_.get(),
-    {this->notify_waitable_, weak_group_ptr}
-  });
+  this->add_notify_waitable_to_collection(new_collection.waitables);
+  this->add_notify_waitable_to_collection(current_entities_collection_->waitables);
 
   this->refresh_current_collection(new_collection);
 }
@@ -485,4 +479,17 @@ EventsExecutor::create_waitable_callback(const rclcpp::Waitable * entity_key)
       this->events_queue_->enqueue(event);
     };
   return callback;
+}
+
+void
+EventsExecutor::add_notify_waitable_to_collection(
+  rclcpp::executors::ExecutorEntitiesCollection::WaitableCollection & collection)
+{
+  // The notify waitable is not associated to any group, so use an invalid one
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr;
+  collection.insert(
+  {
+    this->notify_waitable_.get(),
+    {this->notify_waitable_, weak_group_ptr}
+  });
 }

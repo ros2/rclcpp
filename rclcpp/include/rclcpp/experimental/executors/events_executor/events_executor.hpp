@@ -243,6 +243,11 @@ private:
   std::function<void(size_t, int)>
   create_waitable_callback(const rclcpp::Waitable * waitable_id);
 
+  /// Utility to add the notify waitable to an entities collection
+  void
+  add_notify_waitable_to_collection(
+    rclcpp::executors::ExecutorEntitiesCollection::WaitableCollection & collection);
+
   /// Searches for the provided entity_id in the collection and returns the entity if valid
   template<typename CollectionType>
   typename CollectionType::EntitySharedPtr
