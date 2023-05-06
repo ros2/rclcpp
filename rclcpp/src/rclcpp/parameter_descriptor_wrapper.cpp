@@ -13,6 +13,7 @@ ParameterDescription::ParameterDescription(){}
 // First the build methods to connect to the base class in the builder
 ParameterDescription ParameterDescription::build() const
 {
+    // Return some some sort message
     return ParameterDescription(m_name, parameter_descriptor.type, m_description, m_additional_constraints, m_read_only, m_dynamic_typing)
 }
 
@@ -51,43 +52,6 @@ ParameterDescription& ParameterDescription::SetReadOnly(bool read_only)
 ParameterDescription& ParameterDescription::SetDynamicTyping(bool dynamic_typing)
 {
     m_dynamic_typing = dynamic_typing;
-    return *this;
-}
-
-// These are the extension for this class that don't have access in the main class so we'll initialize here
-ParameterDescription& ParameterDescription::SetMin(float min)
-{
-    m_min_float = min;
-    return *this;
-}
-
-ParameterDescription& ParameterDescription::SetMax(float max)
-{
-    m_max_float = max;
-    return *this;
-}
-
-ParameterDescription& ParameterDescription::SetStep(float step)
-{
-    m_step_float = step;
-    return *this;
-}
-
-ParameterDescription& ParameterDescription::SetMin(int min)
-{
-    m_min_int = min;
-    return *this;
-}
-
-ParameterDescription& ParameterDescription::SetMax(int max)
-{
-    m_max_int = max;
-    return *this;
-}
-
-ParameterDescription& ParameterDescription::SetStep(int step)
-{
-    m_step_int = step;
     return *this;
 }
 
