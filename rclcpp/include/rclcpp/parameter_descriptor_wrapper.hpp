@@ -9,7 +9,14 @@
 // Additional ROS libraries needed
 #include "node.hpp"
 #include "rcl_interfaces/msg/describe_parameters.hpp"
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/context.hpp"
+#include "macros.hpp"
 #include "rclcpp/node.hpp"
+#include "node_interfaces/node_base_interface.hpp"
+#include "node_interfaces/node_base.hpp"
+#include "rcl_interfaces/srv/list_parameters.hpp"
+#include "rclcpp_lifecycle/include/rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace rclcpp
 {
@@ -33,11 +40,18 @@ public:
     ParameterDescription& SetReadOnly(bool read_only);
     ParameterDescription& SetDynamicTyping(bool dynamic_typing);
 
-    // Need the current node in order to begin the configuraiton state forit via the declare_parameter function which setups up the Node
+    // Need the current node in order to begin the configuraiton state for it via the declare_parameter function which setups up the Node
     template<typename ParameterType>
-    ParameterDescription& DeclareParameter<ParameterType>(ParameterType default_value, std::unique_ptr<rclcpp::Node> required_node)
+    ParameterDescription& DeclareParameter(ParameterType default_value, rclcpp::Node::SharedPtr required_node_ptr)
 {
-    required_node->declare_parameter<ParameterType>(m_name, default_value, parameter_descriptor);
+    required_node_ptr->declare_parameter<ParameterType>(m_name, default_value, parameter_descriptor);
+    return *this;
+}
+
+    template<typename ParameterType>
+    ParameterDescription& DeclareParameter(ParameterType default_value, rclcpp_lifecycle::LifecycleNode::SharedPtr required_node_ptr)
+{
+    required_node_ptr->declare_parameter<ParameterType>(m_name, default_value, parameter_descriptor);
     return *this;
 }
 
@@ -47,7 +61,21 @@ public:
     ParameterDescription& SetFloatingPointDescriptionRange(float min = 0.0f, float max = 1.0f, float step = 0.0f);
     // We will again need access to the current development node to declare its parameters
     template<typename ParameterType>
-    ParameterDescription& SetFloatingPointDescriptionRange(std::unique_ptr<rclcpp::Node> currentNode, const std::string& name, ParameterType default_value, float min = 0.0f, float max = 1.0f, float step = 0.0f)
+    ParameterDescription& SetFloatingPointDescriptionRange(rclcpp::Node::SharedPtr currentNode, const std::string& name, ParameterType default_value, float min = 0.0f, float max = 1.0f, float step = 0.0f)
+    {
+        parameter_descriptor.floating_point_range.resize(1);
+        parameter_descriptor.floating_point_range.at(0).from_value = min;
+        parameter_descriptor.floating_point_range.at(0).to_value = max;
+        parameter_descriptor.floating_point_range.at(0).step = step;
+
+        // For this version of the function we can outright declare the parameters using the specified type
+        currentNode->declare_parameter<ParameterType>(name, default_value, parameter_descriptor);
+
+        return *this;
+    }
+
+    template<typename ParameterType>
+    ParameterDescription& SetFloatingPointDescriptionRange(rclcpp_lifecycle::LifecycleNode::SharedPtr currentNode, const std::string& name, ParameterType default_value, float min = 0.0f, float max = 1.0f, float step = 0.0f)
     {
         parameter_descriptor.floating_point_range.resize(1);
         parameter_descriptor.floating_point_range.at(0).from_value = min;
@@ -63,7 +91,7 @@ public:
     ParameterDescription& SetIntegerDescriptionRange(int min = 0, int max = 1, int step = 0);
     // We will again need access to the current development node to declare its parameters
     template<typename ParameterType>
-    ParameterDescription& SetIntegerDescriptionRange(std::unique_ptr<rclcpp::Node> currentNode, const std::string& name, ParameterType default_value, int min = 0, int max = 1, int step = 0)
+    ParameterDescription& SetIntegerDescriptionRange(rclcpp::Node::SharedPtr currentNode, const std::string& name, ParameterType default_value, int min = 0, int max = 1, int step = 0)
     {
         parameter_descriptor.integer_range.resize(1);
         parameter_descriptor.integer_range.at(0).from_value = min;
@@ -76,15 +104,20 @@ public:
         return *this;
     }
 
-    // Extended build methods specific to the ranges, but with overloaded versions
-    ParameterDescription& SetMin(float min);
-    ParameterDescription& SetMax(float max);
-    ParameterDescription& SetStep(float step);
+    // We will again need access to the current development node to declare its parameters
+    template<typename ParameterType>
+    ParameterDescription& SetIntegerDescriptionRange(rclcpp_lifecycle::LifecycleNode currentNode, const std::string& name, ParameterType default_value, int min = 0, int max = 1, int step = 0)
+    {
+        parameter_descriptor.integer_range.resize(1);
+        parameter_descriptor.integer_range.at(0).from_value = min;
+        parameter_descriptor.integer_range.at(0).to_value = max;
+        parameter_descriptor.integer_range.at(0).step = step;
 
-    ParameterDescription& SetMin(int min);
-    ParameterDescription& SetMax(int max);
-    ParameterDescription& SetStep(int step);
+        // For this version of the function we can outright declare the parameters using the specified type
+        currentNode->declare_parameter<ParameterType>(name, default_value, parameter_descriptor);
 
+        return *this;
+    }
 private:
     // The main descriptor object we're meant to initialize and adjust
     rcl_interfaces::msg::ParameterDescriptor parameter_descriptor = {};
@@ -99,15 +132,6 @@ private:
     bool m_read_only;
     bool m_dynamic_typing;
 
-    // This is a floating point so we'll use floating points in the range
-    float m_min_float  {0.0f};
-    float m_max_float  {1.0f};
-    float m_step_float {0.0f};
-
-    // Now here is the integer version so we'll use ints in the range
-    int  m_min_int  {0};
-    int  m_max_int  {1};
-    int  m_step_int {0};
 };
 
 } // namespace rclcpp
