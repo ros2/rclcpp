@@ -69,6 +69,10 @@ public:
 
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
+  get_action_names_and_types(rclcpp::Node action_node) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
   get_service_names_and_types_by_node(
     const std::string & node_name,
     const std::string & namespace_) const override;
@@ -76,6 +80,20 @@ public:
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_action_client_names_and_types_by_node(
+    rclcpp::Node node,
+    const std::string & node_name,
+    const std::string & namespace_) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_action_server_names_and_types_by_node(
+    rclcpp::Node node,
     const std::string & node_name,
     const std::string & namespace_) const override;
 
@@ -98,7 +116,7 @@ public:
   get_node_names() const override;
 
   RCLCPP_PUBLIC
-  std::vector<std::tuple<std::string, std::string, std::string>>
+  setd::vector<std::tuple<std::string, std::string, std::string>>
   get_node_names_with_enclaves() const override;
 
   RCLCPP_PUBLIC
