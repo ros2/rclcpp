@@ -97,7 +97,7 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
 }
 
 std::map<std::string, std::vector<std::string>>
-NodeGraph::get_action_names_and_types(rclcpp::Node action_node) const
+NodeGraph::get_action_names_and_types() const
 {
   rcl_names_and_types_t action_names_and_types = rcl_get_zero_initialized_names_and_types();
 
@@ -115,7 +115,7 @@ NodeGraph::get_action_names_and_types(rclcpp::Node action_node) const
         rcl_get_error_string().str;
       rcl_reset_error();
     }
-    throw std::runtime_error(error_msg);
+    throw_from_rcl_error(ret, error_msg);
   }
 
   std::map<std::string, std::vector<std::string>> actions_and_types;
@@ -129,8 +129,8 @@ NodeGraph::get_action_names_and_types(rclcpp::Node action_node) const
   ret = rcl_names_and_types_fini(&action_names_and_types);
   if (ret != RCL_RET_OK) {
     // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not destroy action names and types: ") + rcl_get_error_string().str);
+    std::string destroy_error = std::string("could not destroy action names and types") + rcl_get_error_string().str;
+    throw_from_rcl_error(ret, destroy_error);
     // *INDENT-ON*
   }
 
@@ -258,11 +258,18 @@ NodeGraph::get_client_names_and_types_by_node(
 
 std::map<std::string, std::vector<std::string>>
 NodeGraph::get_action_client_names_and_types_by_node(
-    rclcpp::Node node,
     const std::string & node_name,
     const std::string & namespace_) const
 {
   rcl_names_and_types_t action_names_and_types = rcl_get_zero_initialized_names_and_types();
+
+  auto rcl_names_and_types_finalizer = rcpputils::make_scope_exit(
+    [&service_names_and_types]() {
+      if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "could not destroy service names and types");
+      }
+    });
 
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_action_get_client_names_and_types_by_node(
@@ -288,11 +295,18 @@ NodeGraph::get_action_client_names_and_types_by_node(
 
 std::map<std::string, std::vector<std::string>>
 NodeGraph::get_action_server_names_and_types_by_node(
-    rclcpp::Node node,
     const std::string & node_name,
     const std::string & namespace_) const
 {
   rcl_names_and_types_t action_names_and_types = rcl_get_zero_initialized_names_and_types();
+
+  auto rcl_names_and_types_finalizer = rcpputils::make_scope_exit(
+    [&service_names_and_types]() {
+      if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "could not destroy service names and types");
+      }
+    });
 
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_action_get_server_names_and_types_by_node(
