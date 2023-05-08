@@ -147,6 +147,19 @@ public:
     // Setup continues in the post construction method, post_init_setup().
   }
 
+  Publisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  : Publisher(
+      node_base,
+      topic,
+      qos,
+      options,
+      rclcpp::get_message_type_support_handle<MessageT>())
+  {}
+
   /// Called post construction, so that construction may continue after shared_from_this() works.
   virtual
   void
@@ -418,10 +431,6 @@ public:
     if (!loaned_msg.is_valid()) {
       throw std::runtime_error("loaned message is not valid");
     }
-    if (intra_process_is_enabled_) {
-      // TODO(Karsten1987): support loaned message passed by intraprocess
-      throw std::runtime_error("storing loaned messages in intra process is not supported yet");
-    }
 
     // verify that publisher supports loaned messages
     // TODO(Karsten1987): This case separation has to be done in rclcpp
@@ -435,7 +444,7 @@ public:
     } else {
       // we don't release the ownership, let the middleware copy the ros message
       // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
-      this->do_inter_process_publish(loaned_msg.get());
+      this->publish(loaned_msg.get());
     }
   }
 
