@@ -135,9 +135,6 @@ private:
   std::shared_future<WrappedResult>
   async_get_result();
 
-  std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel();
-
   /// Returns the previous value of awareness
   bool
   set_result_awareness(bool awareness);
