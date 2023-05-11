@@ -727,3 +727,28 @@ TEST_F(TestNodeGraph, get_info_by_topic_endpoint_info_array_fini_error)
     node_graph()->get_publishers_info_by_topic("topic", false),
     rclcpp::exceptions::RCLError);
 }
+
+TEST_F(TestNodeGraph, get_action_names_and_types)
+{
+    ASSERT_LT(0u, node_graph()->get_action_names_and_types().size());
+}
+
+TEST_F(TestNodeGraph, get_action_names_and_types_rcl_error)
+{
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_action_get_names_and_types, RCL_RET_ERROR);
+    rclcpp::exceptions::RCLError);
+  auto mock_info_array_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+  EXPECT_THROW(
+    node_graph()->get_action_names_and_types("action", false),
+    rclcpp::exceptions::RCLError);
+
+TEST_F(TestNodeGraph, get_action_names_and_types_rcl_fini_error)
+{
+  auto mock_info_array_fini = mocking_utils::patch_and_return(
+    "lib:rclcpp", rcl_names_and_types_fini, RCL_RET_ERROR);
+  EXPECT_THROW(
+    node_graph()->get_action_names_and_types("action", false),
+    rclcpp::exceptions::RCLError);
+}
