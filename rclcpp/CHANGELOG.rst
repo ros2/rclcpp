@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.1.1 (2023-05-11)
+-------------------
 * Fix race condition in events-executor (`#2177 <https://github.com/ros2/rclcpp/issues/2177>`_)
 * Add missing stdexcept include (`#2186 <https://github.com/ros2/rclcpp/issues/2186>`_)
 * Fix a format-security warning when building with clang (`#2171 <https://github.com/ros2/rclcpp/issues/2171>`_)
