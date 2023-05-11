@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix delivered message kind (`#2175 <https://github.com/ros2/rclcpp/issues/2175>`_) (`#2178 <https://github.com/ros2/rclcpp/issues/2178>`_)
+* Contributors: mergify[bot]
+
 21.0.0 (2023-04-18)
 -------------------
 * Add support for logging service. (`#2122 <https://github.com/ros2/rclcpp/issues/2122>`_)
