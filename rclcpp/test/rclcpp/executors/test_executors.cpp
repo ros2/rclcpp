@@ -811,23 +811,6 @@ TYPED_TEST(TestExecutors, stressAddRemoveNode)
     GTEST_SKIP();
   }
 
-  // Spawn some threads to do some heavy work
-  std::atomic<bool> should_cancel = false;
-  std::vector<std::thread> stress_threads;
-  for (size_t i = 0; i < 5 * std::thread::hardware_concurrency(); i++) {
-    stress_threads.emplace_back(
-      [&should_cancel, i]() {
-        // This is just some arbitrary heavy work
-        volatile size_t total = 0;
-        for (size_t k = 0; k < 549528914167; k++) {
-          if (should_cancel) {
-            break;
-          }
-          total += k * (i + 42);
-        }
-      });
-  }
-
   ExecutorType executor;
 
   // A timer that is "always" ready (the timer callback doesn't do anything)
@@ -839,29 +822,30 @@ TYPED_TEST(TestExecutors, stressAddRemoveNode)
     });
 
   // This thread publishes data in a busy loop (the node has a subscription)
-  std::thread publisher_thread([&]() {
-      for (size_t i = 0; i < 10000; i++) {
+  std::thread publisher_thread1([&]() {
+      for (size_t i = 0; i < 100000; i++) {
+        this->publisher->publish(test_msgs::msg::Empty());
+      }
+    });
+  std::thread publisher_thread2([&]() {
+      for (size_t i = 0; i < 100000; i++) {
         this->publisher->publish(test_msgs::msg::Empty());
       }
     });
 
   // This thread adds/remove the node that contains the entities in a busy loop
   std::thread add_remove_thread([&]() {
-      for (size_t i = 0; i < 10000; i++) {
+      for (size_t i = 0; i < 100000; i++) {
         executor.add_node(this->node);
         executor.remove_node(this->node);
       }
     });
 
   // Wait for the threads that do real work to finish
-  publisher_thread.join();
+  publisher_thread1.join();
+  publisher_thread2.join();
   add_remove_thread.join();
 
-  // The test is now completed: we can join the threads
-  should_cancel = true;
-  for (auto & t : stress_threads) {
-    t.join();
-  }
   executor.cancel();
   spinner_thread.join();
 }
