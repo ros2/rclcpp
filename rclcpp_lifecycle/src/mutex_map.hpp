@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -57,7 +58,7 @@ private:
   std::map<const State *, std::unique_ptr<std::recursive_mutex>> mutex_map_;
 
   /// @brief Controls access to mutex_map_.
-  mutable std::mutex map_access_mutex_;
+  mutable std::shared_mutex map_access_mutex_;
 };
 }  // namespace rclcpp_lifecycle
 

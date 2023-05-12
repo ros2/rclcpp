@@ -18,19 +18,22 @@ namespace rclcpp_lifecycle
 {
 void MutexMap::add(const State * key)
 {
-  std::scoped_lock lock(map_access_mutex_);
+  // Adding a new mutex to the map requires exclusive access
+  std::unique_lock lock(map_access_mutex_);
   mutex_map_.emplace(key, std::make_unique<std::recursive_mutex>());
 }
 
 std::recursive_mutex & MutexMap::getMutex(const State * key)
 {
-  std::lock_guard<std::mutex> lock(map_access_mutex_);
+  // Multiple threads can retrieve mutexes from the map at the same time
+  std::shared_lock lock(map_access_mutex_);
   return *(mutex_map_.at(key));
 }
 
 void MutexMap::remove(const State * key)
 {
-  std::lock_guard<std::mutex> lock(map_access_mutex_);
+  // Removing a mutex from the map requires exclusive access
+  std::unique_lock lock(map_access_mutex_);
   mutex_map_.erase(key);
 }
 }  // namespace rclcpp_lifecycle
