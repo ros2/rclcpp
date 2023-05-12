@@ -181,4 +181,5 @@ State::reset() noexcept
       "rcl_lifecycle_transition_fini did not complete successfully, leaking memory");
   }
 }
+
 }  // namespace rclcpp_lifecycle
