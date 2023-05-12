@@ -41,7 +41,7 @@ public:
    * \param key Raw pointer to an instance of State.
    * \return A reference to the mutex associated with the key.
    */
-  std::recursive_mutex & getMutex(const State * key);
+  std::recursive_mutex & getMutex(const State * key) const;
 
   /// \brief Remove the mutex for an instance of State.
   /**

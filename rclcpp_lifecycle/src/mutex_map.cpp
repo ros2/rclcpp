@@ -23,7 +23,7 @@ void MutexMap::add(const State * key)
   mutex_map_.emplace(key, std::make_unique<std::recursive_mutex>());
 }
 
-std::recursive_mutex & MutexMap::getMutex(const State * key)
+std::recursive_mutex & MutexMap::getMutex(const State * key) const
 {
   // Multiple threads can retrieve mutexes from the map at the same time
   std::shared_lock lock(map_access_mutex_);
