@@ -296,7 +296,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
           subscription = this->retrieve_entity(
             static_cast<const rcl_subscription_t *>(event.entity_key),
             current_entities_collection_->subscriptions);
-        } 
+        }
         if (subscription) {
           for (size_t i = 0; i < event.num_events; i++) {
             execute_subscription(subscription);
