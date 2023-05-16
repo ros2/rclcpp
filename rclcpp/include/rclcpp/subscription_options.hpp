@@ -99,10 +99,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result = rcl_subscription_get_default_options();
-    using AllocatorTraits = std::allocator_traits<Allocator>;
-    using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-    auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
-    result.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc);
+    result.allocator = this->get_rcl_allocator();
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
 
@@ -123,6 +120,28 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     }
     return this->allocator;
   }
+
+private:
+  using PlainAllocator =
+    typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
+
+  rcl_allocator_t
+  get_rcl_allocator() const
+  {
+    if (!plain_allocator_storage_) {
+      plain_allocator_storage_ =
+        std::make_shared<PlainAllocator>(*this->get_allocator());
+    }
+    return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
+  }
+
+  // This is a temporal workaround, to make sure that get_allocator()
+  // always returns a copy of the same allocator.
+  mutable std::shared_ptr<Allocator> allocator_storage_;
+
+  // This is a temporal workaround, to keep the plain allocator that backs
+  // up the rcl allocator returned in rcl_subscription_options_t alive.
+  mutable std::shared_ptr<PlainAllocator> plain_allocator_storage_;
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;

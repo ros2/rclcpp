@@ -72,10 +72,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result = rcl_publisher_get_default_options();
-    using AllocatorTraits = std::allocator_traits<Allocator>;
-    using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
-    auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
-    result.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc);
+    result.allocator = this->get_rcl_allocator();
     result.qos = qos.get_rmw_qos_profile();
 
     // Apply payload to rcl_publisher_options if necessary.
@@ -96,6 +93,28 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
     }
     return this->allocator;
   }
+
+private:
+  using PlainAllocator =
+    typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
+
+  rcl_allocator_t
+  get_rcl_allocator() const
+  {
+    if (!plain_allocator_storage_) {
+      plain_allocator_storage_ =
+        std::make_shared<PlainAllocator>(*this->get_allocator());
+    }
+    return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
+  }
+
+  // This is a temporal workaround, to make sure that get_allocator()
+  // always returns a copy of the same allocator.
+  mutable std::shared_ptr<Allocator> allocator_storage_;
+
+  // This is a temporal workaround, to keep the plain allocator that backs
+  // up the rcl allocator returned in rcl_publisher_options_t alive.
+  mutable std::shared_ptr<PlainAllocator> plain_allocator_storage_;
 };
 
 using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;
