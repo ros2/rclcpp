@@ -37,6 +37,13 @@
 namespace rclcpp
 {
 
+typedef std::variant<
+    std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr)>,
+    std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr, const MessageInfo &)>,
+    std::function<void (std::shared_ptr<SerializedMessage>)>,
+    std::function<void (std::shared_ptr<SerializedMessage>, const MessageInfo &)>
+> AnyDynamicSubscriptionCallback;
+
 /// %Subscription for messages whose type descriptions are obtained at runtime.
 /**
  * Since the type is not known at compile time, this is not a template, and the dynamic library
@@ -56,10 +63,7 @@ public:
     rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr type_support,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    std::function<void(
-      rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-      const rosidl_runtime_c__type_description__TypeDescription &
-    )> callback,
+    AnyDynamicSubscriptionCallback callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   : SubscriptionBase(
       node_base,
@@ -69,6 +73,8 @@ public:
         qos),
       options.event_callbacks,
       options.use_default_callbacks,
+      is_callback_serialized(callback) ?
+      DeliveredMessageKind::SERIALIZED_MESSAGE :
       DeliveredMessageKind::DYNAMIC_MESSAGE),
     ts_(type_support),
     callback_(callback),
@@ -159,11 +165,10 @@ public:
 private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
+  static bool is_callback_serialized(const rclcpp::AnyDynamicSubscriptionCallback &);
+
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
-  std::function<void(
-      rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-      const rosidl_runtime_c__type_description__TypeDescription &
-    )> callback_;
+  rclcpp::AnyDynamicSubscriptionCallback callback_;
 
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;
   rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message_;

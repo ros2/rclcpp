@@ -41,10 +41,17 @@ void DynamicSubscription::handle_message(std::shared_ptr<void> &, const rclcpp::
 }
 
 void DynamicSubscription::handle_serialized_message(
-  const std::shared_ptr<rclcpp::SerializedMessage> &, const rclcpp::MessageInfo &)
+  const std::shared_ptr<rclcpp::SerializedMessage> & message,
+  const rclcpp::MessageInfo & message_info)
 {
-  throw rclcpp::exceptions::UnimplementedError(
-          "handle_serialized_message is not implemented for DynamicSubscription");
+  using PlainCallback = std::function<void (std::shared_ptr<SerializedMessage>)>;
+  using InfoCallback = std::function<
+    void (std::shared_ptr<SerializedMessage>, const MessageInfo &)>;
+  if (std::holds_alternative<PlainCallback>(callback_)) {
+    std::get<PlainCallback>(callback_)(message);
+  } else {
+    std::get<InfoCallback>(callback_)(message, message_info);
+  }
 }
 
 void DynamicSubscription::handle_loaned_message(void *, const rclcpp::MessageInfo &)
@@ -106,8 +113,25 @@ void DynamicSubscription::handle_dynamic_message(
   const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
   const rclcpp::MessageInfo & message_info)
 {
-  (void) message_info;
-  callback_(message, ts_->get_rosidl_runtime_c_type_description());
+  using PlainCallback = std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr)>;
+  using InfoCallback = std::function<
+    void (dynamic_typesupport::DynamicMessage::SharedPtr, const MessageInfo &)>;
+  if (std::holds_alternative<PlainCallback>(callback_)) {
+    std::get<PlainCallback>(callback_)(message);
+  } else {
+    std::get<InfoCallback>(callback_)(message, message_info);
+  }
+}
+
+bool DynamicSubscription::is_callback_serialized(
+  const rclcpp::AnyDynamicSubscriptionCallback & callback)
+{
+  using PlainCallback = std::function<void (std::shared_ptr<SerializedMessage>)>;
+  using InfoCallback =
+    std::function<void (std::shared_ptr<SerializedMessage>, const MessageInfo &)>;
+  return
+    std::holds_alternative<PlainCallback>(callback) ||
+    std::holds_alternative<InfoCallback>(callback);
 }
 
 }  // namespace rclcpp
