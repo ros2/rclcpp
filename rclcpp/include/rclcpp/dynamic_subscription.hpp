@@ -37,13 +37,6 @@
 namespace rclcpp
 {
 
-typedef std::variant<
-    std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr)>,
-    std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr, const MessageInfo &)>,
-    std::function<void (std::shared_ptr<SerializedMessage>)>,
-    std::function<void (std::shared_ptr<SerializedMessage>, const MessageInfo &)>
-> AnyDynamicSubscriptionCallback;
-
 /// %Subscription for messages whose type descriptions are obtained at runtime.
 /**
  * Since the type is not known at compile time, this is not a template, and the dynamic library
@@ -54,6 +47,18 @@ typedef std::variant<
 class DynamicSubscription : public rclcpp::SubscriptionBase
 {
 public:
+  typedef std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr)> DynamicCallback;
+  typedef std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr,
+      const MessageInfo &)> DynamicInfoCallback;
+  typedef std::function<void (std::shared_ptr<SerializedMessage>)> SerializedCallback;
+  typedef std::function<void (std::shared_ptr<SerializedMessage>,
+      const MessageInfo &)> SerializedInfoCallback;
+
+  typedef std::variant<
+      DynamicCallback, DynamicInfoCallback, SerializedCallback, SerializedInfoCallback
+  > AnyCallback;
+
+
   // cppcheck-suppress unknownMacro
   RCLCPP_SMART_PTR_DEFINITIONS(DynamicSubscription)
 
@@ -63,7 +68,7 @@ public:
     rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr type_support,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    AnyDynamicSubscriptionCallback callback,
+    AnyCallback callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   : SubscriptionBase(
       node_base,
@@ -165,10 +170,10 @@ public:
 private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
-  static bool is_callback_serialized(const rclcpp::AnyDynamicSubscriptionCallback &);
+  static bool is_callback_serialized(const AnyCallback &);
 
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
-  rclcpp::AnyDynamicSubscriptionCallback callback_;
+  AnyCallback callback_;
 
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;
   rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message_;

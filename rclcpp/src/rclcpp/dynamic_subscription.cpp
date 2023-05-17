@@ -44,13 +44,10 @@ void DynamicSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo & message_info)
 {
-  using PlainCallback = std::function<void (std::shared_ptr<SerializedMessage>)>;
-  using InfoCallback = std::function<
-    void (std::shared_ptr<SerializedMessage>, const MessageInfo &)>;
-  if (std::holds_alternative<PlainCallback>(callback_)) {
-    std::get<PlainCallback>(callback_)(message);
+  if (std::holds_alternative<DynamicSubscription::SerializedCallback>(callback_)) {
+    std::get<DynamicSubscription::SerializedCallback>(callback_)(message);
   } else {
-    std::get<InfoCallback>(callback_)(message, message_info);
+    std::get<DynamicSubscription::SerializedInfoCallback>(callback_)(message, message_info);
   }
 }
 
@@ -113,25 +110,19 @@ void DynamicSubscription::handle_dynamic_message(
   const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
   const rclcpp::MessageInfo & message_info)
 {
-  using PlainCallback = std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr)>;
-  using InfoCallback = std::function<
-    void (dynamic_typesupport::DynamicMessage::SharedPtr, const MessageInfo &)>;
-  if (std::holds_alternative<PlainCallback>(callback_)) {
-    std::get<PlainCallback>(callback_)(message);
+  if (std::holds_alternative<DynamicSubscription::DynamicCallback>(callback_)) {
+    std::get<DynamicSubscription::DynamicCallback>(callback_)(message);
   } else {
-    std::get<InfoCallback>(callback_)(message, message_info);
+    std::get<DynamicSubscription::DynamicInfoCallback>(callback_)(message, message_info);
   }
 }
 
 bool DynamicSubscription::is_callback_serialized(
-  const rclcpp::AnyDynamicSubscriptionCallback & callback)
+  const DynamicSubscription::AnyCallback & callback)
 {
-  using PlainCallback = std::function<void (std::shared_ptr<SerializedMessage>)>;
-  using InfoCallback =
-    std::function<void (std::shared_ptr<SerializedMessage>, const MessageInfo &)>;
   return
-    std::holds_alternative<PlainCallback>(callback) ||
-    std::holds_alternative<InfoCallback>(callback);
+    std::holds_alternative<DynamicSubscription::SerializedCallback>(callback) ||
+    std::holds_alternative<DynamicSubscription::SerializedInfoCallback>(callback);
 }
 
 }  // namespace rclcpp
