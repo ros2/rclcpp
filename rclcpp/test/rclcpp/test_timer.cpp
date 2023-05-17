@@ -319,6 +319,23 @@ TEST_P(TestTimer, test_failures_with_exceptions)
   }
 }
 
+/// Create a timer that starts as canceled
+TEST_P(TestTimer, test_start_canceled)
+{
+  // Store the timer type for use in TEST_P declarations.
+  constexpr bool START_CANCELED = true;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      timer = test_node->create_wall_timer(0ms, []() {}, nullptr, START_CANCELED);
+      break;
+    case TimerType::GENERIC_TIMER:
+      timer = test_node->create_timer(0ms, []() {}, nullptr, START_CANCELED);
+      break;
+  }
+
+  EXPECT_TRUE(canceled_timer->is_canceled());
+}
+
 INSTANTIATE_TEST_SUITE_P(
   PerTimerType, TestTimer,
   ::testing::Values(TimerType::WALL_TIMER, TimerType::GENERIC_TIMER),

@@ -110,14 +110,16 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  bool start_canceled = false)
 {
   return rclcpp::create_wall_timer(
     period,
     std::move(callback),
     group,
     this->node_base_.get(),
-    this->node_timers_.get());
+    this->node_timers_.get(),
+    start_canceled);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
@@ -125,7 +127,8 @@ typename rclcpp::GenericTimer<CallbackT>::SharedPtr
 Node::create_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  bool start_canceled = false)
 {
   return rclcpp::create_timer(
     this->get_clock(),
@@ -133,7 +136,8 @@ Node::create_timer(
     std::move(callback),
     group,
     this->node_base_.get(),
-    this->node_timers_.get());
+    this->node_timers_.get(),
+    start_canceled);
 }
 
 template<typename ServiceT>
