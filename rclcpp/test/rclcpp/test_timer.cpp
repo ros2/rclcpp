@@ -333,7 +333,7 @@ TEST_P(TestTimer, test_start_canceled)
       break;
   }
 
-  EXPECT_TRUE(canceled_timer->is_canceled());
+  EXPECT_TRUE(timer->is_canceled());
 }
 
 INSTANTIATE_TEST_SUITE_P(
