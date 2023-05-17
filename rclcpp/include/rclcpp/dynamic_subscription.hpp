@@ -170,7 +170,12 @@ public:
 private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
-  static bool is_callback_serialized(const AnyCallback &);
+  constexpr bool is_callback_serialized(const AnyCallback & callback)
+  {
+    return
+      std::holds_alternative<SerializedCallback>(callback) ||
+      std::holds_alternative<SerializedInfoCallback>(callback);
+  }
 
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
   AnyCallback callback_;

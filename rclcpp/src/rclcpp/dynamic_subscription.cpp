@@ -117,12 +117,4 @@ void DynamicSubscription::handle_dynamic_message(
   }
 }
 
-bool DynamicSubscription::is_callback_serialized(
-  const DynamicSubscription::AnyCallback & callback)
-{
-  return
-    std::holds_alternative<DynamicSubscription::SerializedCallback>(callback) ||
-    std::holds_alternative<DynamicSubscription::SerializedInfoCallback>(callback);
-}
-
 }  // namespace rclcpp
