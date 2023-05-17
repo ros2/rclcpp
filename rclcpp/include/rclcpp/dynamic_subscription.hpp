@@ -47,6 +47,18 @@ namespace rclcpp
 class DynamicSubscription : public rclcpp::SubscriptionBase
 {
 public:
+  typedef std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr)> DynamicCallback;
+  typedef std::function<void (dynamic_typesupport::DynamicMessage::SharedPtr,
+      const MessageInfo &)> DynamicInfoCallback;
+  typedef std::function<void (std::shared_ptr<SerializedMessage>)> SerializedCallback;
+  typedef std::function<void (std::shared_ptr<SerializedMessage>,
+      const MessageInfo &)> SerializedInfoCallback;
+
+  typedef std::variant<
+      DynamicCallback, DynamicInfoCallback, SerializedCallback, SerializedInfoCallback
+  > AnyCallback;
+
+
   // cppcheck-suppress unknownMacro
   RCLCPP_SMART_PTR_DEFINITIONS(DynamicSubscription)
 
@@ -56,10 +68,7 @@ public:
     rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr type_support,
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    std::function<void(
-      rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-      const rosidl_runtime_c__type_description__TypeDescription &
-    )> callback,
+    AnyCallback callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   : SubscriptionBase(
       node_base,
@@ -69,6 +78,8 @@ public:
         qos),
       options.event_callbacks,
       options.use_default_callbacks,
+      is_callback_serialized(callback) ?
+      DeliveredMessageKind::SERIALIZED_MESSAGE :
       DeliveredMessageKind::DYNAMIC_MESSAGE),
     ts_(type_support),
     callback_(callback),
@@ -159,11 +170,15 @@ public:
 private:
   RCLCPP_DISABLE_COPY(DynamicSubscription)
 
+  constexpr bool is_callback_serialized(const AnyCallback & callback)
+  {
+    return
+      std::holds_alternative<SerializedCallback>(callback) ||
+      std::holds_alternative<SerializedInfoCallback>(callback);
+  }
+
   rclcpp::dynamic_typesupport::DynamicMessageTypeSupport::SharedPtr ts_;
-  std::function<void(
-      rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr,
-      const rosidl_runtime_c__type_description__TypeDescription &
-    )> callback_;
+  AnyCallback callback_;
 
   rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr serialization_support_;
   rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr dynamic_message_;

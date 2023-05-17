@@ -41,10 +41,14 @@ void DynamicSubscription::handle_message(std::shared_ptr<void> &, const rclcpp::
 }
 
 void DynamicSubscription::handle_serialized_message(
-  const std::shared_ptr<rclcpp::SerializedMessage> &, const rclcpp::MessageInfo &)
+  const std::shared_ptr<rclcpp::SerializedMessage> & message,
+  const rclcpp::MessageInfo & message_info)
 {
-  throw rclcpp::exceptions::UnimplementedError(
-          "handle_serialized_message is not implemented for DynamicSubscription");
+  if (std::holds_alternative<DynamicSubscription::SerializedCallback>(callback_)) {
+    std::get<DynamicSubscription::SerializedCallback>(callback_)(message);
+  } else {
+    std::get<DynamicSubscription::SerializedInfoCallback>(callback_)(message, message_info);
+  }
 }
 
 void DynamicSubscription::handle_loaned_message(void *, const rclcpp::MessageInfo &)
@@ -106,8 +110,11 @@ void DynamicSubscription::handle_dynamic_message(
   const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
   const rclcpp::MessageInfo & message_info)
 {
-  (void) message_info;
-  callback_(message, ts_->get_rosidl_runtime_c_type_description());
+  if (std::holds_alternative<DynamicSubscription::DynamicCallback>(callback_)) {
+    std::get<DynamicSubscription::DynamicCallback>(callback_)(message);
+  } else {
+    std::get<DynamicSubscription::DynamicInfoCallback>(callback_)(message, message_info);
+  }
 }
 
 }  // namespace rclcpp
