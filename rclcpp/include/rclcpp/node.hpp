@@ -254,7 +254,7 @@ public:
   create_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
     bool start_canceled = false);
 
   /// Create and return a Client.
