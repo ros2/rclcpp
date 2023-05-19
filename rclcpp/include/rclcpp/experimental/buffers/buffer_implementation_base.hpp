@@ -33,6 +33,7 @@ public:
 
   virtual void clear() = 0;
   virtual bool has_data() const = 0;
+  virtual size_t available_capacity() const = 0;
 };
 
 }  // namespace buffers

@@ -215,6 +215,17 @@ public:
   std::vector<rclcpp::NetworkFlowEndpoint>
   get_network_flow_endpoints() const;
 
+  /// Return the lowest available capacity for all subscription buffers.
+  /**
+   * For intraprocess communication return the lowest buffer capacity for all subscriptions.
+   * If intraprocess is disabled or no intraprocess subscriptions present, return maximum of size_t.
+   * On failure return 0.
+   * \return lowest buffer capacity for all subscriptions
+   */
+  RCLCPP_PUBLIC
+  size_t
+  lowest_available_ipm_capacity() const;
+
   /// Wait until all published messages are acknowledged or until the specified timeout elapses.
   /**
    * This method waits until all published messages are acknowledged by all matching

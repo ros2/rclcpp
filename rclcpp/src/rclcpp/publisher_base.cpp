@@ -384,3 +384,22 @@ std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoin
 
   return network_flow_endpoint_vector;
 }
+
+size_t PublisherBase::lowest_available_ipm_capacity() const
+{
+  if (!intra_process_is_enabled_) {
+    return 0u;
+  }
+
+  auto ipm = weak_ipm_.lock();
+
+  if (!ipm) {
+    // TODO(ivanpauno): should this raise an error?
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Intra process manager died for a publisher.");
+    return 0u;
+  }
+
+  return ipm->lowest_available_capacity(intra_process_publisher_id_);
+}
