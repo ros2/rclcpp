@@ -361,6 +361,22 @@ public:
     }
   }
 
+  // Take the loaned message
+  /*
+   * \param loaned_message : message that the user wants to take
+   */
+  void
+  take_loaded_message(
+    void * loaned_message,
+    const rclcpp::MessageInfo & message_info) override
+  {
+      rcl_ret_t ret = rcl_take_loaned_message(
+      get_subscription_handle().get(),
+      *loaned_messge,
+      **message_info,
+      nullptr);
+  }
+
   /// Return the borrowed message.
   /**
    * \param[inout] message message to be returned
