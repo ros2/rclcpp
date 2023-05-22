@@ -617,21 +617,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
           take_and_do_error_handling(
             "taking a loaned message from topic",
             subscription->get_topic_name(),
-            [&]()
-            {
-              rcl_ret_t ret = rcl_take_loaned_message(
-                subscription->get_subscription_handle().get(),
-                &loaned_msg,
-                &message_info.get_rmw_message_info(),
-                nullptr);
-              if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-                return false;
-              } else if (RCL_RET_OK != ret) {
-                rclcpp::exceptions::throw_from_rcl_error(ret);
-              }
-              return true;
-            },
-            [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
+            [&]() {subscription->take_loaned_message(loaned_msg, message_info);},
+            [&]() {subscription->handle_loaned_message(loaned_msg, message_info);}
+            );
           if (nullptr != loaned_msg) {
             rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
               subscription->get_subscription_handle().get(), loaned_msg);

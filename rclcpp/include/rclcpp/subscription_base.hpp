@@ -236,8 +236,8 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  void
-  take_loaded_message(
+  bool
+  take_loaned_message(
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) = 0;
 

@@ -365,16 +365,23 @@ public:
   /*
    * \param loaned_message : message that the user wants to take
    */
-  void
-  take_loaded_message(
+  bool
+  take_loaned_message(
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
       rcl_ret_t ret = rcl_take_loaned_message(
       get_subscription_handle().get(),
-      *loaned_messge,
-      **message_info,
+      &loaned_messge,
+      &&message_info,
       nullptr);
+
+      if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+          return false;
+      } else if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+      return true;
   }
 
   /// Return the borrowed message.
