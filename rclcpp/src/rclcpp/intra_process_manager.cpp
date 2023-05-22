@@ -238,9 +238,12 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     return 0u;
   }
 
-  if (publisher_it->second.take_shared_subscriptions.empty() &&
-    publisher_it->second.take_ownership_subscriptions.empty())
-  {
+  size_t count = 0u;
+  for (auto i = 0u; i < SplittedSubscriptions::IndexNum; ++i) {
+    count += publisher_it->second.take_subscriptions[i].size();
+  }
+
+  if (count == 0u) {
     // no subscriptions available
     return 0u;
   }
@@ -261,12 +264,10 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
       }
     };
 
-  for (const auto sub_id : publisher_it->second.take_shared_subscriptions) {
-    available_capacity(sub_id);
-  }
-
-  for (const auto sub_id : publisher_it->second.take_ownership_subscriptions) {
-    available_capacity(sub_id);
+  for (auto i = 0u; i < SplittedSubscriptions::IndexNum; ++i) {
+    for (const auto sub_id : publisher_it->second.take_subscriptions[i]) {
+      available_capacity(sub_id);
+    }
   }
 
   return capacity;
