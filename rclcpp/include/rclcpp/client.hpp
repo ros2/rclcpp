@@ -20,13 +20,13 @@
 #include <future>
 #include <memory>
 #include <mutex>
-#include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
+#include <optional>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
-#include <variant>  // NOLINT
+#include <variant>
 #include <vector>
 
 #include "rcl/client.h"
