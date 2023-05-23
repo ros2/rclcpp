@@ -301,6 +301,25 @@ SubscriptionBase::can_loan_messages() const
   return rcl_subscription_can_loan_messages(subscription_handle_.get());
 }
 
+bool
+SubscriptionBase::take_loaned_message(
+  void * loaned_message,
+  rclcpp::MessageInfo & message_info) override
+{
+      rcl_ret_t ret = rcl_take_loaned_message(
+      get_subscription_handle().get(),
+      &loaned_messge,
+      &&message_info,
+      nullptr);
+
+      if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+          return false;
+      } else if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+      return true;
+  }
+
 rclcpp::Waitable::SharedPtr
 SubscriptionBase::get_intra_process_waitable() const
 {

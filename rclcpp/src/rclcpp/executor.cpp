@@ -617,7 +617,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
           take_and_do_error_handling(
             "taking a loaned message from topic",
             subscription->get_topic_name(),
-            [&]() {subscription->take_loaned_message(loaned_msg, message_info);},
+            [&]() {return subscription->take_loaned_message(loaned_msg, message_info);},
             [&]() {subscription->handle_loaned_message(loaned_msg, message_info);}
             );
           if (nullptr != loaned_msg) {

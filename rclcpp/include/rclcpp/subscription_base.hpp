@@ -234,12 +234,17 @@ public:
   void
   handle_loaned_message(void * loaned_message, const rclcpp::MessageInfo & message_info) = 0;
 
+// Take the loaned message
+/*
+ * Similar to take_type_erased, but this is a zero copy method that doesn't rely on the pointers on the stack, and doesn't use messages[out]
+ *
+ * \param[in] loaned_message : message that the user wants to take
+ * \param[in] message_info : the detailed description of the message that the loaned message should own
+ * returns a boolean that determines if the subscription can take the loaned message, if it can then it fails it returns false, if it can't take the message then the function can throw an error in rclcpp::exceptions::throw_from_rcl_error, otherwise it returns true
+ */
   RCLCPP_PUBLIC
-  virtual
   bool
-  take_loaned_message(
-    void * loaned_message,
-    const rclcpp::MessageInfo & message_info) = 0;
+  take_loaned_message(void * loaned_message, rclcpp::MessageInfo & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
