@@ -384,7 +384,6 @@ EventsExecutor::get_automatically_added_callback_groups_from_nodes()
 void
 EventsExecutor::refresh_current_collection_from_callback_groups()
 {
-  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
 
   // Build the new collection
   this->entities_collector_->update_collections();
@@ -403,6 +402,7 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   this->add_notify_waitable_to_collection(new_collection.waitables);
 
   // Acquire lock before modifying the current collection
+  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
   this->add_notify_waitable_to_collection(current_entities_collection_->waitables);
 
   this->refresh_current_collection(new_collection);
