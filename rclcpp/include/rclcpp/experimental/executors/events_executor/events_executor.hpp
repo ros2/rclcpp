@@ -253,6 +253,8 @@ private:
   typename CollectionType::EntitySharedPtr
   retrieve_entity(typename CollectionType::Key entity_id, CollectionType & collection)
   {
+    std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
+
     // Check if the entity_id is in the collection
     auto it = collection.find(entity_id);
     if (it == collection.end()) {
