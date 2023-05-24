@@ -98,6 +98,7 @@ EventsExecutor::EventsExecutor(
 
 EventsExecutor::~EventsExecutor()
 {
+  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
   spinning.store(false);
   notify_waitable_->clear_on_ready_callback();
   this->refresh_current_collection({});
@@ -273,13 +274,9 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
   switch (event.type) {
     case ExecutorEventType::CLIENT_EVENT:
       {
-        rclcpp::ClientBase::SharedPtr client;
-        {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-          client = this->retrieve_entity(
-            static_cast<const rcl_client_t *>(event.entity_key),
-            current_entities_collection_->clients);
-        }
+        auto client = this->retrieve_entity(
+          static_cast<const rcl_client_t *>(event.entity_key),
+          current_entities_collection_->clients);
         if (client) {
           for (size_t i = 0; i < event.num_events; i++) {
             execute_client(client);
@@ -290,13 +287,9 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       }
     case ExecutorEventType::SUBSCRIPTION_EVENT:
       {
-        rclcpp::SubscriptionBase::SharedPtr subscription;
-        {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-          subscription = this->retrieve_entity(
-            static_cast<const rcl_subscription_t *>(event.entity_key),
-            current_entities_collection_->subscriptions);
-        }
+        auto subscription = this->retrieve_entity(
+          static_cast<const rcl_subscription_t *>(event.entity_key),
+          current_entities_collection_->subscriptions);
         if (subscription) {
           for (size_t i = 0; i < event.num_events; i++) {
             execute_subscription(subscription);
@@ -306,13 +299,9 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       }
     case ExecutorEventType::SERVICE_EVENT:
       {
-        rclcpp::ServiceBase::SharedPtr service;
-        {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-          service = this->retrieve_entity(
-            static_cast<const rcl_service_t *>(event.entity_key),
-            current_entities_collection_->services);
-        }
+        auto service = this->retrieve_entity(
+          static_cast<const rcl_service_t *>(event.entity_key),
+          current_entities_collection_->services);
         if (service) {
           for (size_t i = 0; i < event.num_events; i++) {
             execute_service(service);
@@ -329,13 +318,9 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       }
     case ExecutorEventType::WAITABLE_EVENT:
       {
-        rclcpp::Waitable::SharedPtr waitable;
-        {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-          waitable = this->retrieve_entity(
-            static_cast<const rclcpp::Waitable *>(event.entity_key),
-            current_entities_collection_->waitables);
-        }
+        auto waitable = this->retrieve_entity(
+          static_cast<const rclcpp::Waitable *>(event.entity_key),
+          current_entities_collection_->waitables);
         if (waitable) {
           for (size_t i = 0; i < event.num_events; i++) {
             auto data = waitable->take_data_by_entity_id(event.waitable_data);
@@ -400,6 +385,8 @@ EventsExecutor::get_automatically_added_callback_groups_from_nodes()
 void
 EventsExecutor::refresh_current_collection_from_callback_groups()
 {
+  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
+
   // Build the new collection
   this->entities_collector_->update_collections();
   auto callback_groups = this->entities_collector_->get_all_callback_groups();
@@ -416,8 +403,6 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   // current collections such that it's neither added or removed.
   this->add_notify_waitable_to_collection(new_collection.waitables);
 
-  // Acquire lock before modifying the current collection
-  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
   this->add_notify_waitable_to_collection(current_entities_collection_->waitables);
 
   this->refresh_current_collection(new_collection);
@@ -427,9 +412,6 @@ void
 EventsExecutor::refresh_current_collection(
   const rclcpp::executors::ExecutorEntitiesCollection & new_collection)
 {
-  // Acquire lock before modifying the current collection
-  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-
   current_entities_collection_->timers.update(
     new_collection.timers,
     [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->add_timer(timer);},
