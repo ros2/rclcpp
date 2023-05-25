@@ -185,6 +185,20 @@ public:
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const = 0;
 
+  /// Return a map of existing action names to list of action types.
+  /**
+   * An action is considered to exist when at least one action server or
+   * action client exists for it, whether they be local or remote to this
+   * process.
+   * The returned names are the actual names of the actions, either announced by another nodes or by this one.
+   * Attempting to create clients or actions using names returned by this function may not result in
+   * the desired action name being used depending on the remap rules in use.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_action_names_and_types() const = 0;
+
   /// Return a map of existing service names to list of service types for a specific node.
   /**
    * This function only considers services - not clients.
@@ -195,6 +209,7 @@ public:
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
    */
+
   RCLCPP_PUBLIC
   virtual
   std::map<std::string, std::vector<std::string>>
@@ -207,7 +222,7 @@ public:
    * This function only considers clients - not service servers.
    * The returned names are the actual names after remap rules applied.
    * Attempting to create service servers using names returned by this function may not
-   * result in the desired service name being used depending on the remap rules in use.
+   * result in the desired seervice name being used depending on the remap rules in use.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
@@ -216,6 +231,41 @@ public:
   virtual
   std::map<std::string, std::vector<std::string>>
   get_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const = 0;
+
+  /// Return a map of existing action client names and types with a specific node.
+  /**
+   * This function only considers clients - not action servers.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create action servers using names returned by this function may not
+   * result in the desired action name being used depending on the remap rules in use.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_action_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const = 0;
+
+
+  /// Return a map of existing action server names and types with a specific node.
+  /**
+   * This function only considers servers - not action clients.
+   * The returned names are the actual names after remap rules applied.
+   * Attempting to create action clients using names returned by this function may not
+   * result in the desired action name being used depending on the remap rules in use.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_action_server_names_and_types_by_node(
     const std::string & node_name,
     const std::string & namespace_) const = 0;
 

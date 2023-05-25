@@ -111,7 +111,8 @@ NodeGraph::get_action_names_and_types() const
       rcl_get_error_string().str;
     rcl_reset_error();
     if (rcl_names_and_types_fini(&action_names_and_types) != RCL_RET_OK) {
-      error_msg += std::string(", failed also to cleanup action names and types, leaking memory: ") +
+      error_msg +=
+        std::string(", failed also to cleanup action names and types, leaking memory: ") +
         rcl_get_error_string().str;
       rcl_reset_error();
     }
@@ -129,7 +130,8 @@ NodeGraph::get_action_names_and_types() const
   ret = rcl_names_and_types_fini(&action_names_and_types);
   if (ret != RCL_RET_OK) {
     // *INDENT-OFF*
-    std::string destroy_error = std::string("could not destroy action names and types") + rcl_get_error_string().str;
+    std::string destroy_error =
+      std::string("could not destroy action names and types") + rcl_get_error_string().str;
     throw_from_rcl_error(ret, destroy_error);
     // *INDENT-ON*
   }
@@ -258,16 +260,16 @@ NodeGraph::get_client_names_and_types_by_node(
 
 std::map<std::string, std::vector<std::string>>
 NodeGraph::get_action_client_names_and_types_by_node(
-    const std::string & node_name,
-    const std::string & namespace_) const
+  const std::string & node_name,
+  const std::string & namespace_) const
 {
   rcl_names_and_types_t action_names_and_types = rcl_get_zero_initialized_names_and_types();
 
   auto rcl_names_and_types_finalizer = rcpputils::make_scope_exit(
-    [&service_names_and_types]() {
-      if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+    [&action_names_and_types]() {
+      if (rcl_names_and_types_fini(&action_names_and_types) != RCL_RET_OK) {
         RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"), "could not destroy service names and types");
+          rclcpp::get_logger("rclcpp"), "could not destroy action client names and types");
       }
     });
 
@@ -285,6 +287,16 @@ NodeGraph::get_action_client_names_and_types_by_node(
   std::map<std::string, std::vector<std::string>> actions_and_types;
   for (size_t i = 0; i < action_names_and_types.names.size; ++i) {
     std::string action_name = action_names_and_types.names.data[i];
+    /// Return a map of existing action names and types with a specific node.
+    /**
+     * This function only considers clients - not action servers.
+     * The returned names are the actual names after remap rules applied.
+     * Attempting to create action servers using names returned by this function may not
+     * result in the desired action name being used depending on the remap rules in use.
+     *
+     * \param[in] node_name name of the node
+     * \param[in] namespace_ namespace of the node
+     */
     for (size_t j = 0; j < action_names_and_types.types[i].size; ++j) {
       actions_and_types[action_name].emplace_back(action_names_and_types.types[i].data[j]);
     }
@@ -295,16 +307,16 @@ NodeGraph::get_action_client_names_and_types_by_node(
 
 std::map<std::string, std::vector<std::string>>
 NodeGraph::get_action_server_names_and_types_by_node(
-    const std::string & node_name,
-    const std::string & namespace_) const
+  const std::string & node_name,
+  const std::string & namespace_) const
 {
   rcl_names_and_types_t action_names_and_types = rcl_get_zero_initialized_names_and_types();
 
   auto rcl_names_and_types_finalizer = rcpputils::make_scope_exit(
-    [&service_names_and_types]() {
-      if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+    [&action_names_and_types]() {
+      if (rcl_names_and_types_fini(&action_names_and_types) != RCL_RET_OK) {
         RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"), "could not destroy service names and types");
+          rclcpp::get_logger("rclcpp"), "could not destroy action server names and types");
       }
     });
 
