@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Do not attempt to use void allocators for memory allocation. (backport `#1657 <https://github.com/ros2/rclcpp/issues/1657>`_) (`#2004 <https://github.com/ros2/rclcpp/issues/2004>`_)
+* Contributors: Michel Hidalgo
+
 2.4.2 (2022-07-25)
 ------------------
 * Add statistics for handle_loaned_message (`#1927 <https://github.com/ros2/rclcpp/issues/1927>`_) (`#1934 <https://github.com/ros2/rclcpp/issues/1934>`_)
