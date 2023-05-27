@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.4.3 (2023-05-27)
+------------------
 * Do not attempt to use void allocators for memory allocation. (backport `#1657 <https://github.com/ros2/rclcpp/issues/1657>`_) (`#2004 <https://github.com/ros2/rclcpp/issues/2004>`_)
 * Contributors: Michel Hidalgo
 

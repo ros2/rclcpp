@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+2.4.3 (2023-05-27)
+------------------
 * Revert "Revert "extract the result response before the callback is is… (backport `#2152 <https://github.com/ros2/rclcpp/issues/2152>`_) (`#2153 <https://github.com/ros2/rclcpp/issues/2153>`_)
 * Contributors: Tomoya Fujita
 
