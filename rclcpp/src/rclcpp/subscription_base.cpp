@@ -304,12 +304,12 @@ SubscriptionBase::can_loan_messages() const
 bool
 SubscriptionBase::take_loaned_message(
   void * loaned_message,
-  rclcpp::MessageInfo & message_info) override
+  rclcpp::MessageInfo & message_info) const
 {
       rcl_ret_t ret = rcl_take_loaned_message(
       get_subscription_handle().get(),
-      &loaned_messge,
-      &&message_info,
+      &loaned_message,
+      &message_info.get_rmw_message_info(),
       nullptr);
 
       if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {

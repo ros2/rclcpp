@@ -244,7 +244,7 @@ public:
  */
   RCLCPP_PUBLIC
   bool
-  take_loaned_message(void * loaned_message, rclcpp::MessageInfo & message_info) = 0;
+  take_loaned_message(void * loaned_message, rclcpp::MessageInfo & message_info) const;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
