@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <stdexcept>
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node_interfaces/get_node_base_interface.hpp"

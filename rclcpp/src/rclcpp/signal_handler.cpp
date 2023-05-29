@@ -19,6 +19,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <stdexcept>
 
 // includes for semaphore notification code
 #if defined(_WIN32)

@@ -20,6 +20,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <stdexcept>
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
