@@ -3,25 +3,27 @@
 #include "../../include/rclcpp/parameter_descriptor_wrapper.hpp"
 
 namespace rclcpp {
-// We use initializer lists in order to promote safety in uninitialzied state
-    ParameterDescription::ParameterDescription(std::string name, std::uint8 type, std::string description, std::string additional_constraints, bool read_only. bool dynamic_typing) : m_name{name}, parameter_descriptor.type{type}, m_description{description}, m_additional_constraints{additional_constraints}, read_only{read_only}, dyanmic_typing{m_dyanmic_typing}
-{}
 
-ParameterDescription::ParameterDescription(){}
+ParameterDescription::ParameterDescription()
+{
+    // Copies all the information in ParameterDescriptor.msg - https://github.com/ros2/rcl_interfaces/blob/rolling/rcl_interfaces/msg/ParameterDescriptor.msg
+    // Need to set this in the constructor, but it doesn't necessarily need to be used
+    parameter_descriptor.type{rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET};
+}
 
 // ParameterDescription - ParameterDescription
 // First the build methods to connect to the base class in the builder
-ParameterDescription ParameterDescription::build() const
+rcl_interfaces::msg::ParameterDescriptor ParameterDescription::build() const
 {
     // Return some some sort message
-    return ParameterDescription(m_name, parameter_descriptor.type, m_description, m_additional_constraints, m_read_only, m_dynamic_typing)
+    return parameter_descriptor;
 }
 
 // Builder methods which set up the original class
 // They all follow the same format of initing the value given within the base class, then returning this current class
 ParameterDescription& ParameterDescription::SetName(const std::string& name)
 {
-    m_name = name;
+    parameter_descriptor.name = name;
     return *this;
 }
 
@@ -33,25 +35,25 @@ ParameterDescription& ParameterDescription::SetType(std::uint8_t type)
 
 ParameterDescription& ParameterDescription::SetDescriptionText(const std::string& description)
 {
-    m_description = description;
+    parameter_descriptor.description = description;
     return *this;
 }
 
 ParameterDescription& ParameterDescription::SetAdditionalConstraints(const std::string& constraints)
 {
-    m_additional_constraints = constraints;
+    parameter_descriptor.constraints = constraints;
     return *this;
 }
 
 ParameterDescription& ParameterDescription::SetReadOnly(bool read_only)
 {
-    m_read_only = read_only;
+    parameter_descriptor.read_only = read_only;
     return *this;
 }
 
 ParameterDescription& ParameterDescription::SetDynamicTyping(bool dynamic_typing)
 {
-    m_dynamic_typing = dynamic_typing;
+    parameter_descriptor.dynamic_typing = dynamic_typing;
     return *this;
 }
 
