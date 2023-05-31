@@ -7,8 +7,10 @@
 #include <memory>
 
 // Additional ROS libraries needed
-#include "node.hpp"
-#include "rcl_interfaces/msg/describe_parameters.hpp"
+#include "rcl_interfaces/msg/list_parameters_result.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
 #include "macros.hpp"
@@ -25,12 +27,11 @@ namespace rclcpp
 class ParameterDescription
 {
 public:
-    ParameterDescription(const std::string& name, std::uint8_t type, std::string description, std::string additional_constraints, bool read_only. bool dynamic_typing) : m_name{name}, parameter_descriptor.type{type}, m_description{description}, m_additional_constraints{additional_constraints}, read_only{read_only}, dyanmic_typing{m_dyanmic_typing}{};
     // List of classes the builder manages
     ParameterDescription();
 
     // Our Main build methods which will construct the base class
-    ParameterDescription build() const;
+    rcl_interfaces::msg::ParameterDescriptor build() const;
 
     //Builder Methods - Describes the instances in a parameter_descriptionobject
     ParameterDescription& SetName(const std::string& name);
@@ -121,17 +122,6 @@ public:
 private:
     // The main descriptor object we're meant to initialize and adjust
     rcl_interfaces::msg::ParameterDescriptor parameter_descriptor = {};
-
-    // Copies all the information in ParameterDescriptor.msg - https://github.com/ros2/rcl_interfaces/blob/rolling/rcl_interfaces/msg/ParameterDescriptor.msg
-    std::string m_name;
-    std::string m_description;
-    parameter_descriptor.type{rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET};
-
-    // Parameter Constraints
-    std::string m_additional_constraints;
-    bool m_read_only;
-    bool m_dynamic_typing;
-
 };
 
 } // namespace rclcpp
