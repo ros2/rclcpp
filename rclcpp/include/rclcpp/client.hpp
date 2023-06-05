@@ -20,13 +20,13 @@
 #include <future>
 #include <memory>
 #include <mutex>
-#include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
+#include <optional>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
-#include <variant>  // NOLINT
+#include <variant>
 #include <vector>
 
 #include "rcl/client.h"
@@ -363,12 +363,16 @@ protected:
   std::shared_ptr<rclcpp::Context> context_;
   rclcpp::Logger node_logger_;
 
+  std::recursive_mutex callback_mutex_;
+  // It is important to declare on_new_response_callback_ before
+  // client_handle_, so on destruction the client is
+  // destroyed first. Otherwise, the rmw client callback
+  // would point briefly to a destroyed function.
+  std::function<void(size_t)> on_new_response_callback_{nullptr};
+  // Declare client_handle_ after callback
   std::shared_ptr<rcl_client_t> client_handle_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
-
-  std::recursive_mutex callback_mutex_;
-  std::function<void(size_t)> on_new_response_callback_{nullptr};
 };
 
 template<typename ServiceT>

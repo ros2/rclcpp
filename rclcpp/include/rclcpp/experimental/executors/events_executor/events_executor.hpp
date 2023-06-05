@@ -243,6 +243,11 @@ private:
   std::function<void(size_t, int)>
   create_waitable_callback(const rclcpp::Waitable * waitable_id);
 
+  /// Utility to add the notify waitable to an entities collection
+  void
+  add_notify_waitable_to_collection(
+    rclcpp::executors::ExecutorEntitiesCollection::WaitableCollection & collection);
+
   /// Searches for the provided entity_id in the collection and returns the entity if valid
   template<typename CollectionType>
   typename CollectionType::EntitySharedPtr
@@ -269,8 +274,11 @@ private:
   rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue_;
 
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollector> entities_collector_;
-  std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
+
+  /// Mutex to protect the current_entities_collection_
+  std::recursive_mutex collection_mutex_;
+  std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
 
   /// Flag used to reduce the number of unnecessary waitable events
   std::atomic<bool> notify_waitable_event_pushed_ {false};

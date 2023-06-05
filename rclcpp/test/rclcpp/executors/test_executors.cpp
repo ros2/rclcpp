@@ -20,12 +20,14 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <limits>
 #include <memory>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
@@ -43,18 +45,10 @@ template<typename T>
 class TestExecutors : public ::testing::Test
 {
 public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  static void TearDownTestCase()
-  {
-    rclcpp::shutdown();
-  }
-
   void SetUp()
   {
+    rclcpp::init(0, nullptr);
+
     const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
     std::stringstream test_name;
     test_name << test_info->test_case_name() << "_" << test_info->name();
@@ -75,6 +69,8 @@ public:
     publisher.reset();
     subscription.reset();
     node.reset();
+
+    rclcpp::shutdown();
   }
 
   rclcpp::Node::SharedPtr node;
@@ -716,6 +712,131 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted)
 
   EXPECT_TRUE(spin_exited);
   spinner.join();
+}
+
+// This test verifies that the add_node operation is robust wrt race conditions.
+// It's mostly meant to prevent regressions in the events-executor, but the operation should be
+// thread-safe in all executor implementations.
+// The initial implementation of the events-executor contained a bug where the executor
+// would end up in an inconsistent state and stop processing interrupt/shutdown notifications.
+// Manually adding a node to the executor results in a) producing a notify waitable event
+// and b) refreshing the executor collections.
+// The inconsistent state would happen if the event was processed before the collections were
+// finished to be refreshed: the executor would pick up the event but be unable to process it.
+// This would leave the `notify_waitable_event_pushed_` flag to true, preventing additional
+// notify waitable events to be pushed.
+// The behavior is observable only under heavy load, so this test spawns several worker
+// threads. Due to the nature of the bug, this test may still succeed even if the
+// bug is present. However repeated runs will show its flakiness nature and indicate
+// an eventual regression.
+TYPED_TEST(TestExecutors, testRaceConditionAddNode)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  // Spawn some threads to do some heavy work
+  std::atomic<bool> should_cancel = false;
+  std::vector<std::thread> stress_threads;
+  for (size_t i = 0; i < 5 * std::thread::hardware_concurrency(); i++) {
+    stress_threads.emplace_back(
+      [&should_cancel, i]() {
+        // This is just some arbitrary heavy work
+        volatile size_t total = 0;
+        for (size_t k = 0; k < 549528914167; k++) {
+          if (should_cancel) {
+            break;
+          }
+          total += k * (i + 42);
+        }
+      });
+  }
+
+  // Create an executor
+  auto executor = std::make_shared<ExecutorType>();
+  // Start spinning
+  auto executor_thread = std::thread(
+    [executor]() {
+      executor->spin();
+    });
+  // Add a node to the executor
+  executor->add_node(this->node);
+
+  // Cancel the executor (make sure that it's already spinning first)
+  while (!executor->is_spinning() && rclcpp::ok()) {
+    continue;
+  }
+  executor->cancel();
+
+  // Try to join the thread after cancelling the executor
+  // This is the "test". We want to make sure that we can still cancel the executor
+  // regardless of the presence of race conditions
+  executor_thread.join();
+
+  // The test is now completed: we can join the stress threads
+  should_cancel = true;
+  for (auto & t : stress_threads) {
+    t.join();
+  }
+}
+
+// This test verifies the thread-safety of adding and removing a node
+// while the executor is spinning and events are ready.
+// This test does not contain expectations, but rather it verifies that
+// we can run a "stressful routine" without crashing.
+TYPED_TEST(TestExecutors, stressAddRemoveNode)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  ExecutorType executor;
+
+  // A timer that is "always" ready (the timer callback doesn't do anything)
+  auto timer = this->node->create_wall_timer(std::chrono::nanoseconds(1), []() {});
+
+  // This thread spins the executor until it's cancelled
+  std::thread spinner_thread([&]() {
+      executor.spin();
+    });
+
+  // This thread publishes data in a busy loop (the node has a subscription)
+  std::thread publisher_thread1([&]() {
+      for (size_t i = 0; i < 100000; i++) {
+        this->publisher->publish(test_msgs::msg::Empty());
+      }
+    });
+  std::thread publisher_thread2([&]() {
+      for (size_t i = 0; i < 100000; i++) {
+        this->publisher->publish(test_msgs::msg::Empty());
+      }
+    });
+
+  // This thread adds/remove the node that contains the entities in a busy loop
+  std::thread add_remove_thread([&]() {
+      for (size_t i = 0; i < 100000; i++) {
+        executor.add_node(this->node);
+        executor.remove_node(this->node);
+      }
+    });
+
+  // Wait for the threads that do real work to finish
+  publisher_thread1.join();
+  publisher_thread2.join();
+  add_remove_thread.join();
+
+  executor.cancel();
+  spinner_thread.join();
 }
 
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)

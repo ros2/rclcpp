@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include <variant>  // NOLINT[build/include_order]
+#include <variant>
 
 #include "rosidl_runtime_cpp/traits.hpp"
 #include "tracetools/tracetools.h"
