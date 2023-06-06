@@ -18,10 +18,12 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include <set>
 #include <thread>
 #include <unordered_map>
 
+#include "rcl_yaml_param_parser/types.h"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -85,6 +87,7 @@ private:
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
+  rcl_thread_attrs_t * thread_attributes_;
 };
 
 }  // namespace executors

@@ -23,6 +23,7 @@
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/threads.hpp"
 
 using rclcpp::executors::MultiThreadedExecutor;
 
@@ -33,13 +34,34 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   std::chrono::nanoseconds next_exec_timeout)
 : rclcpp::Executor(options),
   yield_before_execute_(yield_before_execute),
-  next_exec_timeout_(next_exec_timeout)
+  next_exec_timeout_(next_exec_timeout),
+  thread_attributes_(nullptr)
 {
+  bool has_number_of_threads_arg = number_of_threads > 0;
+  rcl_ret_t ret;
+
   number_of_threads_ = number_of_threads > 0 ?
     number_of_threads :
     std::max(std::thread::hardware_concurrency(), 2U);
 
-  if (number_of_threads_ == 1) {
+  ret = rcl_arguments_get_thread_attrs(
+    &options.context->get_rcl_context()->global_arguments,
+    &thread_attributes_);
+  if (ret != RCL_RET_OK) {
+    ret = rcl_context_get_thread_attrs(
+      options.context->get_rcl_context().get(),
+      &thread_attributes_);
+  }
+
+  if (has_number_of_threads_arg && thread_attributes_ &&
+    thread_attributes_->num_attributes != number_of_threads)
+  {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "The number of threads argument passed to the MultiThreadedExecutor"
+      " is different from the number of thread attributes.\n"
+      "The executor runs using the thread attributes and ignores the former.");
+  } else if (number_of_threads_ == 1) {
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
       "MultiThreadedExecutor is used with a single thread.\n"
@@ -56,17 +78,35 @@ MultiThreadedExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-  std::vector<std::thread> threads;
+  std::vector<rclcpp::Thread> threads;
   size_t thread_id = 0;
-  {
-    std::lock_guard wait_lock{wait_mutex_};
-    for (; thread_id < number_of_threads_ - 1; ++thread_id) {
-      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
-      threads.emplace_back(func);
+
+  if (thread_attributes_) {
+    rclcpp::detail::ThreadAttribute thread_attr;
+    {
+      std::lock_guard wait_lock{wait_mutex_};
+      for (; thread_id < thread_attributes_->num_attributes - 1; ++thread_id) {
+        thread_attr.set_thread_attribute(
+          thread_attributes_->attributes[thread_id]);
+        auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
+        threads.emplace_back(rclcpp::Thread(thread_attr, func));
+      }
     }
+    thread_attr.set_thread_attribute(
+      thread_attributes_->attributes[thread_id]);
+    this_thread::run_with_thread_attribute(
+      thread_attr, &MultiThreadedExecutor::run, this, thread_id);
+  } else {
+    {
+      std::lock_guard wait_lock{wait_mutex_};
+      for (; thread_id < number_of_threads_ - 1; ++thread_id) {
+        auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
+        threads.emplace_back(func);
+      }
+    }
+    run(thread_id);
   }
 
-  run(thread_id);
   for (auto & thread : threads) {
     thread.join();
   }
@@ -75,7 +115,11 @@ MultiThreadedExecutor::spin()
 size_t
 MultiThreadedExecutor::get_number_of_threads()
 {
-  return number_of_threads_;
+  if (thread_attributes_) {
+    return thread_attributes_->num_attributes;
+  } else {
+    return number_of_threads_;
+  }
 }
 
 void

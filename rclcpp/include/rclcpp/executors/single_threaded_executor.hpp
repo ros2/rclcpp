@@ -22,6 +22,7 @@
 #include <memory>
 #include <vector>
 
+#include "rcl_yaml_param_parser/types.h"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -65,8 +66,14 @@ public:
   void
   spin() override;
 
+protected:
+  RCLCPP_PUBLIC
+  void
+  run();
+
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
+  rcl_thread_attrs_t * thread_attributes_;
 };
 
 }  // namespace executors

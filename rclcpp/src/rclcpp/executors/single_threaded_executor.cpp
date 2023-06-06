@@ -16,16 +16,49 @@
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/any_executable.hpp"
+#include "rclcpp/threads.hpp"
 
 using rclcpp::executors::SingleThreadedExecutor;
 
 SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::ExecutorOptions & options)
-: rclcpp::Executor(options) {}
+: rclcpp::Executor(options),
+  thread_attributes_(nullptr)
+{
+  rcl_ret_t ret;
+
+  ret = rcl_arguments_get_thread_attrs(
+    &options.context->get_rcl_context()->global_arguments,
+    &thread_attributes_);
+  if (ret != RCL_RET_OK) {
+    ret = rcl_context_get_thread_attrs(
+      options.context->get_rcl_context().get(),
+      &thread_attributes_);
+  }
+  if (thread_attributes_ && thread_attributes_->num_attributes != 1) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Specified thread attributes contains multiple configurations.\n"
+      "The executor runs only using first configuration.");
+  }
+}
 
 SingleThreadedExecutor::~SingleThreadedExecutor() {}
 
 void
 SingleThreadedExecutor::spin()
+{
+  if (thread_attributes_) {
+    rclcpp::detail::ThreadAttribute thread_attr;
+    thread_attr.set_thread_attribute(
+      thread_attributes_->attributes[0]);
+    rclcpp::this_thread::run_with_thread_attribute(thread_attr, &SingleThreadedExecutor::run, this);
+  } else {
+    run();
+  }
+}
+
+void
+SingleThreadedExecutor::run()
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
