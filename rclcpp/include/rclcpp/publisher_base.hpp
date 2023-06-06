@@ -133,6 +133,12 @@ public:
   size_t
   get_subscription_count() const;
 
+  /// Get non local subscription count
+  /** \return The number of non local subscriptions. */
+  RCLCPP_PUBLIC
+  size_t
+  get_non_local_subscription_count() const;
+
   /// Get intraprocess subscription count
   /** \return The number of intraprocess subscriptions. */
   RCLCPP_PUBLIC

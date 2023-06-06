@@ -254,6 +254,33 @@ PublisherBase::get_subscription_count() const
 }
 
 size_t
+PublisherBase::get_non_local_subscription_count() const
+{
+  size_t inter_process_non_local_subscription_count = 0;
+
+  rcl_ret_t status = rcl_publisher_get_non_local_subscription_count(
+    publisher_handle_.get(),
+    &inter_process_non_local_subscription_count);
+
+  if (RCL_RET_PUBLISHER_INVALID == status) {
+    rcl_reset_error();  /* next call will reset error message if not context */
+    if (rcl_publisher_is_valid_except_context(publisher_handle_.get())) {
+      rcl_context_t * context = rcl_publisher_get_context(publisher_handle_.get());
+      if (nullptr != context && !rcl_context_is_valid(context)) {
+        /* publisher is invalid due to context being shutdown */
+        return 0;
+      }
+    }
+  }
+  if (RCL_RET_OK != status) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      status,
+      "failed to get get non local subscription count");
+  }
+  return inter_process_non_local_subscription_count;
+}
+
+size_t
 PublisherBase::get_intra_process_subscription_count() const
 {
   auto ipm = weak_ipm_.lock();
