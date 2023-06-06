@@ -237,7 +237,7 @@ public:
     // It's not possible to do that with an unique_ptr,
     // as do_intra_process_publish takes the ownership of the message.
     bool inter_process_publish_needed =
-      get_subscription_count() > get_intra_process_subscription_count();
+      get_non_local_subscription_count() > 0;
 
     if (inter_process_publish_needed) {
       auto shared_msg =
@@ -306,7 +306,7 @@ public:
     }
 
     bool inter_process_publish_needed =
-      get_subscription_count() > get_intra_process_subscription_count();
+      get_non_local_subscription_count() > 0;
 
     if (inter_process_publish_needed) {
       ROSMessageType ros_msg;
