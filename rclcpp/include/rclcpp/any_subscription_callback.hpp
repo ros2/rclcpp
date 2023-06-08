@@ -492,7 +492,7 @@ public:
     std::shared_ptr<ROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -583,7 +583,7 @@ public:
           static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
-    TRACEPOINT(callback_end, static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   // Dispatch when input is a serialized message and the output could be anything.
@@ -592,7 +592,7 @@ public:
     std::shared_ptr<rclcpp::SerializedMessage> serialized_message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -663,7 +663,7 @@ public:
           static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
-    TRACEPOINT(callback_end, static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   void
@@ -671,7 +671,7 @@ public:
     std::shared_ptr<const SubscribedType> message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -793,7 +793,7 @@ public:
           static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
-    TRACEPOINT(callback_end, static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   void
@@ -801,7 +801,7 @@ public:
     std::unique_ptr<SubscribedType, SubscribedTypeDeleter> message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -927,7 +927,7 @@ public:
           static_assert(always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
-    TRACEPOINT(callback_end, static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   constexpr
@@ -965,9 +965,9 @@ public:
 #ifndef TRACETOOLS_DISABLED
     std::visit(
       [this](auto && callback) {
-        if (TRACEPOINT_ENABLED(rclcpp_callback_register)) {
+        if (TRACETOOLS_TRACEPOINT_ENABLED(rclcpp_callback_register)) {
           char * symbol = tracetools::get_symbol(callback);
-          DO_TRACEPOINT(
+          TRACETOOLS_DO_TRACEPOINT(
             rclcpp_callback_register,
             static_cast<const void *>(this),
             symbol);
