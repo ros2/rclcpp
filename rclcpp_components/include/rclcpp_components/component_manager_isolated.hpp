@@ -38,6 +38,16 @@ class ComponentManagerIsolated : public rclcpp_components::ComponentManager
   {
     std::shared_ptr<rclcpp::Executor> executor;
     std::thread thread;
+    std::atomic_bool thread_initialized;
+
+    /// Constructor for the wrapper.
+    /// This is necessary as atomic variables don't have copy/move operators
+    /// implemented so this structure is not copyable/movable by default
+    explicit DedicatedExecutorWrapper(std::shared_ptr<rclcpp::Executor> exec)
+    : executor(exec),
+      thread_initialized(false)
+    {
+    }
   };
 
 public:
@@ -59,15 +69,19 @@ protected:
   void
   add_node_to_executor(uint64_t node_id) override
   {
-    DedicatedExecutorWrapper executor_wrapper;
     auto exec = std::make_shared<ExecutorT>();
     exec->add_node(node_wrappers_[node_id].get_node_base_interface());
-    executor_wrapper.executor = exec;
-    executor_wrapper.thread = std::thread(
-      [exec]() {
+
+    // Emplace rather than std::move since move operations are deleted for atomics
+    auto result = dedicated_executor_wrappers_.emplace(std::make_pair(node_id, exec));
+    DedicatedExecutorWrapper & wrapper = result.first->second;
+    wrapper.executor = exec;
+    auto & thread_initialized = wrapper.thread_initialized;
+    wrapper.thread = std::thread(
+      [exec, &thread_initialized]() {
+        thread_initialized = true;
         exec->spin();
       });
-    dedicated_executor_wrappers_[node_id] = std::move(executor_wrapper);
   }
   /// Remove component node from executor model, it's invoked in on_unload_node()
   /**
@@ -90,15 +104,21 @@ private:
    */
   void cancel_executor(DedicatedExecutorWrapper & executor_wrapper)
   {
-    // We can't immediately call the cancel() API on an executor because if it is not
-    // already spinning, this operation will have no effect.
-    // We rely on the assumption that this class creates executors and then immediately makes them
-    // spin in a separate thread, i.e. the time gap between when the executor is created and when
-    // it starts to spin is small (although it's not negligible).
+    // Verify that the executor thread has begun spinning.
+    // If it has not, then wait until the thread starts to ensure
+    // that cancel() will fully stop the execution
+    //
+    // This prevents a previous race condition that occurs between the
+    // creation of the executor spin thread and cancelling an executor
 
-    while (!executor_wrapper.executor->is_spinning()) {
-      // This is an arbitrarily small delay to avoid busy looping
-      rclcpp::sleep_for(std::chrono::milliseconds(1));
+    if (!executor_wrapper.thread_initialized) {
+      auto context = this->get_node_base_interface()->get_context();
+
+      // Guarantee that either the executor is spinning or we are shutting down.
+      while (!executor_wrapper.executor->is_spinning() && rclcpp::ok(context)) {
+        // This is an arbitrarily small delay to avoid busy looping
+        rclcpp::sleep_for(std::chrono::milliseconds(1));
+      }
     }
 
     // After the while loop we are sure that the executor is now spinning, so

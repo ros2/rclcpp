@@ -81,45 +81,13 @@ public:
       node_base,
       *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
       topic_name,
-      options.template to_rcl_subscription_options<rclcpp::SerializedMessage>(qos),
-      true),
+      options.to_rcl_subscription_options(qos),
+      options.event_callbacks,
+      options.use_default_callbacks,
+      DeliveredMessageKind::SERIALIZED_MESSAGE),
     callback_(callback),
     ts_lib_(ts_lib)
-  {
-    // This is unfortunately duplicated with the code in subscription.hpp.
-    // TODO(nnmm): Deduplicate by moving this into SubscriptionBase.
-    if (options.event_callbacks.deadline_callback) {
-      this->add_event_handler(
-        options.event_callbacks.deadline_callback,
-        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
-    }
-    if (options.event_callbacks.liveliness_callback) {
-      this->add_event_handler(
-        options.event_callbacks.liveliness_callback,
-        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
-    }
-    if (options.event_callbacks.incompatible_qos_callback) {
-      this->add_event_handler(
-        options.event_callbacks.incompatible_qos_callback,
-        RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-    } else if (options.use_default_callbacks) {
-      // Register default callback when not specified
-      try {
-        this->add_event_handler(
-          [this](QOSRequestedIncompatibleQoSInfo & info) {
-            this->default_incompatible_qos_callback(info);
-          },
-          RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-      } catch (UnsupportedEventTypeException & /*exc*/) {
-        // pass
-      }
-    }
-    if (options.event_callbacks.message_lost_callback) {
-      this->add_event_handler(
-        options.event_callbacks.message_lost_callback,
-        RCL_SUBSCRIPTION_MESSAGE_LOST);
-    }
-  }
+  {}
 
   RCLCPP_PUBLIC
   virtual ~GenericSubscription() = default;
@@ -154,6 +122,31 @@ public:
 
   RCLCPP_PUBLIC
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override;
+
+
+  // DYNAMIC TYPE ==================================================================================
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr get_shared_dynamic_message_type()
+  override;
+
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr get_shared_dynamic_message() override;
+
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override;
+
+  RCLCPP_PUBLIC
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr create_dynamic_message() override;
+
+  RCLCPP_PUBLIC
+  void return_dynamic_message(
+    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override;
+
+  RCLCPP_PUBLIC
+  void handle_dynamic_message(
+    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+    const rclcpp::MessageInfo & message_info) override;
 
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)

@@ -24,6 +24,7 @@
 #include "rcl/error_handling.h"
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/guard_condition.hpp"
@@ -38,16 +39,16 @@
 using namespace std::chrono_literals;
 
 using rclcpp::exceptions::throw_from_rcl_error;
-using rclcpp::AnyExecutable;
 using rclcpp::Executor;
-using rclcpp::ExecutorOptions;
-using rclcpp::FutureReturnCode;
+
+class rclcpp::ExecutorImplementation {};
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
-  interrupt_guard_condition_(options.context),
+  interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
-  memory_strategy_(options.memory_strategy)
+  memory_strategy_(options.memory_strategy),
+  impl_(std::make_unique<rclcpp::ExecutorImplementation>())
 {
   // Store the context for later use.
   context_ = options.context;
@@ -65,7 +66,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   memory_strategy_->add_guard_condition(*shutdown_guard_condition_.get());
 
   // Put the executor's guard condition in
-  memory_strategy_->add_guard_condition(interrupt_guard_condition_);
+  memory_strategy_->add_guard_condition(*interrupt_guard_condition_.get());
   rcl_allocator_t allocator = memory_strategy_->get_allocator();
 
   rcl_ret_t ret = rcl_wait_set_init(
@@ -106,6 +107,12 @@ Executor::~Executor()
   weak_groups_associated_with_executor_to_nodes_.clear();
   weak_groups_to_nodes_associated_with_executor_.clear();
   weak_groups_to_nodes_.clear();
+  for (const auto & pair : weak_groups_to_guard_conditions_) {
+    auto guard_condition = pair.second;
+    memory_strategy_->remove_guard_condition(guard_condition);
+  }
+  weak_groups_to_guard_conditions_.clear();
+
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto guard_condition = pair.second;
     memory_strategy_->remove_guard_condition(guard_condition);
@@ -121,7 +128,7 @@ Executor::~Executor()
   }
   // Remove and release the sigint guard condition
   memory_strategy_->remove_guard_condition(shutdown_guard_condition_.get());
-  memory_strategy_->remove_guard_condition(&interrupt_guard_condition_);
+  memory_strategy_->remove_guard_condition(interrupt_guard_condition_.get());
 
   // Remove shutdown callback handle registered to Context
   if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
@@ -204,8 +211,7 @@ Executor::add_callback_group_to_map(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Callback group has already been added to an executor.");
   }
-  bool is_new_node = !has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
-    !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_);
+
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
   auto insert_info =
     weak_groups_to_nodes.insert(std::make_pair(weak_group_ptr, node_ptr));
@@ -215,21 +221,23 @@ Executor::add_callback_group_to_map(
   }
   // Also add to the map that contains all callback groups
   weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
-  if (is_new_node) {
-    const auto & gc = node_ptr->get_notify_guard_condition();
-    weak_nodes_to_guard_conditions_[node_ptr] = &gc;
-    if (notify) {
-      // Interrupt waiting to handle new node
-      try {
-        interrupt_guard_condition_.trigger();
-      } catch (const rclcpp::exceptions::RCLError & ex) {
-        throw std::runtime_error(
-                std::string(
-                  "Failed to trigger guard condition on callback group add: ") + ex.what());
-      }
+
+  if (node_ptr->get_context()->is_valid()) {
+    auto callback_group_guard_condition = group_ptr->get_notify_guard_condition();
+    weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition.get();
+    // Add the callback_group's notify condition to the guard condition handles
+    memory_strategy_->add_guard_condition(*callback_group_guard_condition);
+  }
+
+  if (notify) {
+    // Interrupt waiting to handle new node
+    try {
+      interrupt_guard_condition_->trigger();
+    } catch (const rclcpp::exceptions::RCLError & ex) {
+      throw std::runtime_error(
+              std::string(
+                "Failed to trigger guard condition on callback group add: ") + ex.what());
     }
-    // Add the node's notify condition to the guard condition handles
-    memory_strategy_->add_guard_condition(gc);
   }
 }
 
@@ -272,6 +280,10 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       }
     });
 
+  const auto gc = node_ptr->get_shared_notify_guard_condition();
+  weak_nodes_to_guard_conditions_[node_ptr] = gc.get();
+  // Add the node's notify condition to the guard condition handles
+  memory_strategy_->add_guard_condition(*gc);
   weak_nodes_.push_back(node_ptr);
 }
 
@@ -300,17 +312,21 @@ Executor::remove_callback_group_from_map(
   if (!has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
     !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_))
   {
-    weak_nodes_to_guard_conditions_.erase(node_ptr);
+    auto iter = weak_groups_to_guard_conditions_.find(weak_group_ptr);
+    if (iter != weak_groups_to_guard_conditions_.end()) {
+      memory_strategy_->remove_guard_condition(iter->second);
+    }
+    weak_groups_to_guard_conditions_.erase(weak_group_ptr);
+
     if (notify) {
       try {
-        interrupt_guard_condition_.trigger();
+        interrupt_guard_condition_->trigger();
       } catch (const rclcpp::exceptions::RCLError & ex) {
         throw std::runtime_error(
                 std::string(
                   "Failed to trigger guard condition on callback group remove: ") + ex.what());
       }
     }
-    memory_strategy_->remove_guard_condition(&node_ptr->get_notify_guard_condition());
   }
 }
 
@@ -371,6 +387,9 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
         notify);
     }
   }
+
+  memory_strategy_->remove_guard_condition(node_ptr->get_shared_notify_guard_condition().get());
+  weak_nodes_to_guard_conditions_.erase(node_ptr);
 
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
@@ -482,7 +501,7 @@ Executor::cancel()
 {
   spinning.store(false);
   try {
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("Failed to trigger guard condition in cancel: ") + ex.what());
@@ -531,7 +550,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
   try {
-    interrupt_guard_condition_.trigger();
+    interrupt_guard_condition_->trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string(
@@ -539,13 +558,14 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 }
 
+template<typename Taker, typename Handler>
 static
 void
 take_and_do_error_handling(
   const char * action_description,
   const char * topic_or_service_name,
-  std::function<bool()> take_action,
-  std::function<void()> handle_action)
+  Taker take_action,
+  Handler handle_action)
 {
   bool taken = false;
   try {
@@ -578,70 +598,98 @@ take_and_do_error_handling(
 void
 Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
+  using rclcpp::dynamic_typesupport::DynamicMessage;
+
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
-  if (subscription->is_serialized()) {
-    // This is the case where a copy of the serialized message is taken from
-    // the middleware via inter-process communication.
-    std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
-    take_and_do_error_handling(
-      "taking a serialized message from topic",
-      subscription->get_topic_name(),
-      [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
-      [&]()
+  switch (subscription->get_delivered_message_kind()) {
+    // Deliver ROS message
+    case rclcpp::DeliveredMessageKind::ROS_MESSAGE:
       {
-        subscription->handle_serialized_message(serialized_msg, message_info);
-      });
-    subscription->return_serialized_message(serialized_msg);
-  } else if (subscription->can_loan_messages()) {
-    // This is the case where a loaned message is taken from the middleware via
-    // inter-process communication, given to the user for their callback,
-    // and then returned.
-    void * loaned_msg = nullptr;
-    // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
-    //   is extened to support subscriptions as well.
-    take_and_do_error_handling(
-      "taking a loaned message from topic",
-      subscription->get_topic_name(),
-      [&]()
-      {
-        rcl_ret_t ret = rcl_take_loaned_message(
-          subscription->get_subscription_handle().get(),
-          &loaned_msg,
-          &message_info.get_rmw_message_info(),
-          nullptr);
-        if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-          return false;
-        } else if (RCL_RET_OK != ret) {
-          rclcpp::exceptions::throw_from_rcl_error(ret);
+        if (subscription->can_loan_messages()) {
+          // This is the case where a loaned message is taken from the middleware via
+          // inter-process communication, given to the user for their callback,
+          // and then returned.
+          void * loaned_msg = nullptr;
+          // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
+          //   is extened to support subscriptions as well.
+          take_and_do_error_handling(
+            "taking a loaned message from topic",
+            subscription->get_topic_name(),
+            [&]()
+            {
+              rcl_ret_t ret = rcl_take_loaned_message(
+                subscription->get_subscription_handle().get(),
+                &loaned_msg,
+                &message_info.get_rmw_message_info(),
+                nullptr);
+              if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+                return false;
+              } else if (RCL_RET_OK != ret) {
+                rclcpp::exceptions::throw_from_rcl_error(ret);
+              }
+              return true;
+            },
+            [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
+          if (nullptr != loaned_msg) {
+            rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
+              subscription->get_subscription_handle().get(), loaned_msg);
+            if (RCL_RET_OK != ret) {
+              RCLCPP_ERROR(
+                rclcpp::get_logger("rclcpp"),
+                "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
+                "'%s': %s",
+                subscription->get_topic_name(), rcl_get_error_string().str);
+            }
+            loaned_msg = nullptr;
+          }
+        } else {
+          // This case is taking a copy of the message data from the middleware via
+          // inter-process communication.
+          std::shared_ptr<void> message = subscription->create_message();
+          take_and_do_error_handling(
+            "taking a message from topic",
+            subscription->get_topic_name(),
+            [&]() {return subscription->take_type_erased(message.get(), message_info);},
+            [&]() {subscription->handle_message(message, message_info);});
+          subscription->return_message(message);
         }
-        return true;
-      },
-      [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
-    if (nullptr != loaned_msg) {
-      rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
-        subscription->get_subscription_handle().get(),
-        loaned_msg);
-      if (RCL_RET_OK != ret) {
-        RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"),
-          "rcl_return_loaned_message_from_subscription() failed for subscription on topic '%s': %s",
-          subscription->get_topic_name(), rcl_get_error_string().str);
+        break;
       }
-      loaned_msg = nullptr;
-    }
-  } else {
-    // This case is taking a copy of the message data from the middleware via
-    // inter-process communication.
-    std::shared_ptr<void> message = subscription->create_message();
-    take_and_do_error_handling(
-      "taking a message from topic",
-      subscription->get_topic_name(),
-      [&]() {return subscription->take_type_erased(message.get(), message_info);},
-      [&]() {subscription->handle_message(message, message_info);});
-    subscription->return_message(message);
+
+    // Deliver serialized message
+    case rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE:
+      {
+        // This is the case where a copy of the serialized message is taken from
+        // the middleware via inter-process communication.
+        std::shared_ptr<SerializedMessage> serialized_msg =
+          subscription->create_serialized_message();
+        take_and_do_error_handling(
+          "taking a serialized message from topic",
+          subscription->get_topic_name(),
+          [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
+          [&]()
+          {
+            subscription->handle_serialized_message(serialized_msg, message_info);
+          });
+        subscription->return_serialized_message(serialized_msg);
+        break;
+      }
+
+    // DYNAMIC SUBSCRIPTION ========================================================================
+    // Deliver dynamic message
+    case rclcpp::DeliveredMessageKind::DYNAMIC_MESSAGE:
+      {
+        throw std::runtime_error("Unimplemented");
+      }
+
+    default:
+      {
+        throw std::runtime_error("Delivered message kind is not supported");
+      }
   }
+  return;
 }
 
 void
@@ -720,6 +768,12 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
           weak_groups_associated_with_executor_to_nodes_.end())
           {
             weak_groups_associated_with_executor_to_nodes_.erase(group_ptr);
+          }
+          auto callback_guard_pair = weak_groups_to_guard_conditions_.find(group_ptr);
+          if (callback_guard_pair != weak_groups_to_guard_conditions_.end()) {
+            auto guard_condition = callback_guard_pair->second;
+            weak_groups_to_guard_conditions_.erase(group_ptr);
+            memory_strategy_->remove_guard_condition(guard_condition);
           }
           weak_groups_to_nodes_.erase(group_ptr);
         });

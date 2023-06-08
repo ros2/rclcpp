@@ -81,7 +81,7 @@ void spin_until_time(
 
     executor.spin_once(10ms);
 
-    if (clock->now().nanoseconds() >= end_time.count()) {
+    if (clock->now().nanoseconds() == end_time.count()) {
       return;
     }
   }
@@ -264,6 +264,35 @@ TEST(TimeSource, invalid_sim_time_parameter_override)
     rclcpp::Node("my_node", options),
     std::invalid_argument("Invalid type for parameter 'use_sim_time', should be 'bool'"));
 
+  rclcpp::shutdown();
+}
+
+TEST(TimeSource, valid_clock_type_for_sim_time)
+{
+  rclcpp::init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  auto node = std::make_shared<rclcpp::Node>("my_node", options);
+  EXPECT_TRUE(
+    node->set_parameter(
+      rclcpp::Parameter(
+        "use_sim_time", rclcpp::ParameterValue(
+          true))).successful);
+  rclcpp::shutdown();
+}
+
+TEST(TimeSource, invalid_clock_type_for_sim_time)
+{
+  rclcpp::init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  options.clock_type(RCL_STEADY_TIME);
+  auto node = std::make_shared<rclcpp::Node>("my_node", options);
+  EXPECT_FALSE(
+    node->set_parameter(
+      rclcpp::Parameter(
+        "use_sim_time", rclcpp::ParameterValue(
+          true))).successful);
   rclcpp::shutdown();
 }
 

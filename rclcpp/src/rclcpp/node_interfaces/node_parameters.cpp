@@ -651,7 +651,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
   }
   if (!parameter_info->second.descriptor.dynamic_typing) {
     throw rclcpp::exceptions::InvalidParameterTypeException{
-            name, "cannot undeclare an statically typed parameter"};
+            name, "cannot undeclare a statically typed parameter"};
   }
 
   parameters_.erase(parameter_info);
@@ -824,7 +824,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       auto it = parameters_.find(parameter.get_name());
       if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
         if (!it->second.descriptor.dynamic_typing) {
-          result.reason = "cannot undeclare an statically typed parameter";
+          result.reason = "cannot undeclare a statically typed parameter";
           result.successful = false;
           return result;
         }
@@ -904,22 +904,12 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 std::vector<rclcpp::Parameter>
 NodeParameters::get_parameters(const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<rclcpp::Parameter> results;
   results.reserve(names.size());
 
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto & name : names) {
-    auto found_parameter = parameters_.find(name);
-    if (found_parameter != parameters_.cend()) {
-      // found
-      results.emplace_back(name, found_parameter->second.value);
-    } else if (this->allow_undeclared_) {
-      // not found, but undeclared allowed
-      results.emplace_back(name, rclcpp::ParameterValue());
-    } else {
-      // not found, and undeclared are not allowed
-      throw rclcpp::exceptions::ParameterNotDeclaredException(name);
-    }
+    results.emplace_back(this->get_parameter(name));
   }
   return results;
 }
@@ -930,18 +920,18 @@ NodeParameters::get_parameter(const std::string & name) const
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto param_iter = parameters_.find(name);
-  if (
-    parameters_.end() != param_iter &&
-    (param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
-    param_iter->second.descriptor.dynamic_typing))
-  {
-    return rclcpp::Parameter{name, param_iter->second.value};
-  } else if (this->allow_undeclared_) {
-    return rclcpp::Parameter{};
-  } else if (parameters_.end() == param_iter) {
-    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
-  } else {
+  if (parameters_.end() != param_iter) {
+    if (
+      param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET ||
+      param_iter->second.descriptor.dynamic_typing)
+    {
+      return rclcpp::Parameter{name, param_iter->second.value};
+    }
     throw rclcpp::exceptions::ParameterUninitializedException(name);
+  } else if (this->allow_undeclared_) {
+    return rclcpp::Parameter{name};
+  } else {
+    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
   }
 }
 

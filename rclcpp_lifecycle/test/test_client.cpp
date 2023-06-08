@@ -24,6 +24,7 @@
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 
+#include "rmw/qos_profiles.h"
 
 class TestClient : public ::testing::Test
 {

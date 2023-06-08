@@ -2,6 +2,53 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+21.2.0 (2023-06-07)
+-------------------
+
+21.1.1 (2023-05-11)
+-------------------
+
+21.1.0 (2023-04-27)
+-------------------
+
+21.0.0 (2023-04-18)
+-------------------
+
+20.0.0 (2023-04-13)
+-------------------
+* Update all rclcpp packages to C++17. (`#2121 <https://github.com/ros2/rclcpp/issues/2121>`_)
+* Contributors: Chris Lalancette
+
+19.3.0 (2023-03-01)
+-------------------
+
+19.2.0 (2023-02-24)
+-------------------
+
+19.1.0 (2023-02-14)
+-------------------
+
+19.0.0 (2023-01-30)
+-------------------
+* Improve component_manager_isolated shutdown (`#2085 <https://github.com/ros2/rclcpp/issues/2085>`_)
+* Contributors: Michael Carroll
+
+18.0.0 (2022-12-29)
+-------------------
+* Update maintainers (`#2043 <https://github.com/ros2/rclcpp/issues/2043>`_)
+* Contributors: Audrow Nash
+
+17.1.0 (2022-11-02)
+-------------------
+* use unique ptr and remove unuseful container (`#2013 <https://github.com/ros2/rclcpp/issues/2013>`_)
+* Contributors: Chen Lihui
+
+17.0.0 (2022-09-13)
+-------------------
+* Revert "Introduce executors new spin_for method, replace spin_until_future_complete with spin_until_complete. (`#1821 <https://github.com/ros2/rclcpp/issues/1821>`_) (`#1874 <https://github.com/ros2/rclcpp/issues/1874>`_)" (`#1956 <https://github.com/ros2/rclcpp/issues/1956>`_)
+* Introduce executors new spin_for method, replace spin_until_future_complete with spin_until_complete. (`#1821 <https://github.com/ros2/rclcpp/issues/1821>`_) (`#1874 <https://github.com/ros2/rclcpp/issues/1874>`_)
+* Contributors: Hubert Liberacki, William Woodall
+
 16.2.0 (2022-05-03)
 -------------------
 

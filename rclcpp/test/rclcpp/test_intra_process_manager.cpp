@@ -156,18 +156,26 @@ public:
   {
     message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
     shared_msg = msg;
+    ++num_msgs;
   }
 
   void add(MessageUniquePtr msg)
   {
     message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
     unique_msg = std::move(msg);
+    ++num_msgs;
   }
 
   void pop(std::uintptr_t & msg_ptr)
   {
     msg_ptr = message_ptr;
     message_ptr = 0;
+    --num_msgs;
+  }
+
+  size_t size() const
+  {
+    return num_msgs;
   }
 
   // need to store the messages somewhere otherwise the memory address will be reused
@@ -175,6 +183,8 @@ public:
   MessageUniquePtr unique_msg;
 
   std::uintptr_t message_ptr;
+  // count add and pop
+  size_t num_msgs = 0u;
 };
 
 }  // namespace mock
@@ -220,6 +230,10 @@ public:
   {
     return topic_name.c_str();
   }
+
+  virtual
+  size_t
+  available_capacity() const = 0;
 
   rclcpp::QoS qos_profile;
   std::string topic_name;
@@ -278,6 +292,12 @@ public:
   use_take_shared_method() const
   {
     return take_shared_method;
+  }
+
+  size_t
+  available_capacity() const override
+  {
+    return qos_profile.depth() - buffer->size();
   }
 
   bool take_shared_method;
@@ -711,4 +731,92 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   auto received_message_pointer_11 = s11->pop();
   EXPECT_EQ(original_message_pointer, received_message_pointer_10);
   EXPECT_NE(original_message_pointer, received_message_pointer_11);
+}
+
+/*
+   This tests the method "lowest_available_capacity":
+   - Creates 1 publisher.
+   - The available buffer capacity should be at least history size.
+   - Add 2 subscribers.
+   - Add everything to the intra-process manager.
+   - All the entities are expected to have different ids.
+   - Check the subscriptions count for the publisher.
+   - The available buffer capacity should be the history size.
+   - Publish one message (without receiving it).
+   - The available buffer capacity should decrease by 1.
+   - Publish another message (without receiving it).
+   - The available buffer capacity should decrease by 1.
+   - One subscriber receives one message.
+   - The available buffer capacity should stay the same,
+     as the other subscriber still has not freed its buffer.
+   - The other subscriber receives one message.
+   - The available buffer capacity should increase by 1.
+   - One subscription goes out of scope.
+   - The available buffer capacity should not change.
+ */
+TEST(TestIntraProcessManager, lowest_available_capacity) {
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::experimental::mock::SubscriptionIntraProcess<MessageT>;
+
+  constexpr auto history_depth = 10u;
+
+  auto ipm = std::make_shared<IntraProcessManagerT>();
+
+  auto p1 = std::make_shared<PublisherT>(rclcpp::QoS(history_depth).best_effort());
+
+  auto s1 = std::make_shared<SubscriptionIntraProcessT>(rclcpp::QoS(history_depth).best_effort());
+  auto s2 = std::make_shared<SubscriptionIntraProcessT>(rclcpp::QoS(history_depth).best_effort());
+
+  auto p1_id = ipm->add_publisher(p1);
+  p1->set_intra_process_manager(p1_id, ipm);
+
+  auto c1 = ipm->lowest_available_capacity(p1_id);
+
+  ASSERT_LE(0u, c1);
+
+  auto s1_id = ipm->add_subscription(s1);
+  auto s2_id = ipm->add_subscription(s2);
+
+  bool unique_ids = s1_id != s2_id && p1_id != s1_id;
+  ASSERT_TRUE(unique_ids);
+
+  size_t p1_subs = ipm->get_subscription_count(p1_id);
+  size_t non_existing_pub_subs = ipm->get_subscription_count(42);
+  ASSERT_EQ(2u, p1_subs);
+  ASSERT_EQ(0u, non_existing_pub_subs);
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  auto non_existing_pub_c = ipm->lowest_available_capacity(42);
+
+  ASSERT_EQ(history_depth, c1);
+  ASSERT_EQ(0u, non_existing_pub_c);
+
+  auto unique_msg = std::make_unique<MessageT>();
+  p1->publish(std::move(unique_msg));
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  ASSERT_EQ(history_depth - 1u, c1);
+
+  unique_msg = std::make_unique<MessageT>();
+  p1->publish(std::move(unique_msg));
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  ASSERT_EQ(history_depth - 2u, c1);
+
+  s1->pop();
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  ASSERT_EQ(history_depth - 2u, c1);
+
+  s2->pop();
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  ASSERT_EQ(history_depth - 1u, c1);
+
+  ipm->get_subscription_intra_process(s1_id).reset();
+
+  c1 = ipm->lowest_available_capacity(p1_id);
+  ASSERT_EQ(history_depth - 1u, c1);
 }

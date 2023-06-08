@@ -52,8 +52,22 @@ TEST_F(TestDuration, operators) {
   EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
 
+  rclcpp::Duration addequal = old;
+  addequal += young;
+  EXPECT_EQ(addequal.nanoseconds(), old.nanoseconds() + young.nanoseconds());
+  EXPECT_EQ(addequal, old + young);
+
+  rclcpp::Duration subequal = young;
+  subequal -= old;
+  EXPECT_EQ(subequal.nanoseconds(), young.nanoseconds() - old.nanoseconds());
+  EXPECT_EQ(subequal, young - old);
+
   rclcpp::Duration scale = old * 3;
   EXPECT_EQ(scale.nanoseconds(), old.nanoseconds() * 3);
+
+  rclcpp::Duration scaleequal = old;
+  scaleequal *= 3;
+  EXPECT_EQ(scaleequal.nanoseconds(), old.nanoseconds() * 3);
 
   rclcpp::Duration time = rclcpp::Duration(0, 0);
   rclcpp::Duration copy_constructor_duration(time);

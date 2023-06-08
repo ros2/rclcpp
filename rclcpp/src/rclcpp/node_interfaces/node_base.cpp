@@ -45,7 +45,7 @@ NodeBase::NodeBase(
   node_handle_(nullptr),
   default_callback_group_(default_callback_group),
   associated_with_executor_(false),
-  notify_guard_condition_(context),
+  notify_guard_condition_(std::make_shared<rclcpp::GuardCondition>(context)),
   notify_guard_condition_is_valid_(false)
 {
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
@@ -132,8 +132,10 @@ NodeBase::NodeBase(
   // Create the default callback group, if needed.
   if (nullptr == default_callback_group_) {
     using rclcpp::CallbackGroupType;
+    // Default callback group is mutually exclusive and automatically associated with
+    // any executors that this node is added to.
     default_callback_group_ =
-      NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive);
+      NodeBase::create_callback_group(CallbackGroupType::MutuallyExclusive, true);
   }
 
   // Indicate the notify_guard_condition is now valid.
@@ -202,11 +204,27 @@ NodeBase::create_callback_group(
   rclcpp::CallbackGroupType group_type,
   bool automatically_add_to_executor_with_node)
 {
+  auto weak_context = this->get_context()->weak_from_this();
+  auto get_node_context = [weak_context]() -> rclcpp::Context::SharedPtr {
+      return weak_context.lock();
+    };
+
   auto group = std::make_shared<rclcpp::CallbackGroup>(
     group_type,
+    get_node_context,
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
+
+  // This guard condition is generally used to signal to this node's executor that a callback
+  // group has been added that should be considered for new entities.
+  // If this is creating the default callback group, then the notify guard condition won't be
+  // ready or needed yet, as the node is not done being constructed and therefore cannot be added.
+  // If the callback group is not automatically associated with this node's executors, then
+  // triggering the guard condition is also unnecessary, it will be manually added to an exector.
+  if (notify_guard_condition_is_valid_ && automatically_add_to_executor_with_node) {
+    this->trigger_notify_guard_condition();
+  }
   return group;
 }
 
@@ -253,7 +271,27 @@ NodeBase::get_notify_guard_condition()
   if (!notify_guard_condition_is_valid_) {
     throw std::runtime_error("failed to get notify guard condition because it is invalid");
   }
+  return *notify_guard_condition_;
+}
+
+rclcpp::GuardCondition::SharedPtr
+NodeBase::get_shared_notify_guard_condition()
+{
+  std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
+  if (!notify_guard_condition_is_valid_) {
+    return nullptr;
+  }
   return notify_guard_condition_;
+}
+
+void
+NodeBase::trigger_notify_guard_condition()
+{
+  std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
+  if (!notify_guard_condition_is_valid_) {
+    throw std::runtime_error("failed to trigger notify guard condition because it is invalid");
+  }
+  notify_guard_condition_->trigger();
 }
 
 bool

@@ -20,7 +20,10 @@
 #include <utility>
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 
 #include "rclcpp_lifecycle/managed_entity.hpp"
 
@@ -86,6 +89,24 @@ public:
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
+  }
+
+  /// LifecyclePublisher publish function
+  /**
+   * The publish function checks whether the communication
+   * was enabled or disabled and forwards the message
+   * to the actual rclcpp Publisher base class
+   */
+  virtual void
+  publish(
+    rclcpp::LoanedMessage<typename rclcpp::Publisher<MessageT,
+    Alloc>::ROSMessageType, Alloc> && loaned_msg)
+  {
+    if (!this->is_activated()) {
+      log_publisher_not_enabled();
+      return;
+    }
+    rclcpp::Publisher<MessageT, Alloc>::publish(std::move(loaned_msg));
   }
 
   void

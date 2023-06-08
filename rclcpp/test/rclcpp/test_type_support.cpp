@@ -58,10 +58,9 @@ protected:
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 };
 
-const rcl_publisher_options_t PublisherOptions()
+const rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> PublisherOptions()
 {
-  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
-         to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>();
 }
 
 // Auxiliary classes used to test rosidl_message_type_support_t getters
@@ -77,7 +76,8 @@ public:
       node->get_node_base_interface().get(),
       "topicTSParameterEvent",
       *ts_parameter_event,
-      PublisherOptions()) {}
+      PublisherOptions().to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10)),
+      PublisherOptions().event_callbacks, PublisherOptions().use_default_callbacks) {}
 };
 
 const rosidl_message_type_support_t * ts_set_parameter_result =
@@ -91,7 +91,8 @@ public:
       node->get_node_base_interface().get(),
       "topicTSSetParameterResult",
       *ts_set_parameter_result,
-      PublisherOptions()) {}
+      PublisherOptions().to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10)),
+      PublisherOptions().event_callbacks, PublisherOptions().use_default_callbacks) {}
 };
 
 const rosidl_message_type_support_t * ts_parameter_descriptor =
@@ -105,7 +106,8 @@ public:
       node->get_node_base_interface().get(),
       "topicTSParameterDescriptor",
       *ts_parameter_descriptor,
-      PublisherOptions()) {}
+      PublisherOptions().to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10)),
+      PublisherOptions().event_callbacks, PublisherOptions().use_default_callbacks) {}
 };
 
 const rosidl_message_type_support_t * ts_list_parameter_result =
@@ -119,7 +121,8 @@ public:
       node->get_node_base_interface().get(),
       "topicTSListParametersResult",
       *ts_list_parameter_result,
-      PublisherOptions()) {}
+      PublisherOptions().to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10)),
+      PublisherOptions().event_callbacks, PublisherOptions().use_default_callbacks) {}
 };
 
 /*

@@ -51,6 +51,7 @@ typedef std::map<rclcpp::CallbackGroup::WeakPtr,
 
 // Forward declaration is used in convenience method signature.
 class Node;
+class ExecutorImplementation;
 
 /// Coordinate the order and timing of available communication tasks.
 /**
@@ -315,6 +316,16 @@ public:
   virtual void
   spin_all(std::chrono::nanoseconds max_duration);
 
+
+  /// Collect work once and execute the next available work, optionally within a duration.
+  /**
+   * This function can be overridden.  The default implementation is suitable for
+   * a single-thread model of execution.
+   * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
+   * to block (which may have unintended consequences).
+   * \param[in] timeout The maximum amount of time to spend waiting for work.
+   *   `-1` is potentially block forever waiting for work.
+   */
   RCLCPP_PUBLIC
   virtual void
   spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
@@ -413,12 +424,29 @@ public:
   is_spinning();
 
 protected:
+  /// Add a node to executor, execute the next available unit of work, and remove the node.
+  /**
+   * Implementation of spin_node_once using std::chrono::nanoseconds
+   * \param[in] node Shared pointer to the node to add.
+   * \param[in] timeout How long to wait for work to become available. Negative values cause
+   *   spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
+   *   function to be non-blocking.
+   */
   RCLCPP_PUBLIC
   void
   spin_node_once_nanoseconds(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds timeout);
 
+  /// Collect work and execute available work, optionally within a duration.
+  /**
+   * Implementation of spin_some and spin_all.
+   * The exhaustive flag controls if the function will re-collect available work within the duration.
+   *
+   * \param[in] max_duration The maximum amount of time to spend executing work, or 0 for no limit.
+   * \param[in] exhaustive when set to true, continue to collect work and execute (spin_all)
+   *                       when set to false, return when all collected work is executed (spin_some)
+   */
   RCLCPP_PUBLIC
   void
   spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
@@ -433,30 +461,60 @@ protected:
   void
   execute_any_executable(AnyExecutable & any_exec);
 
+  /// Run subscription executable.
+  /**
+   * Do necessary setup and tear-down as well as executing the subscription.
+   * \param[in] subscription Subscription to execute
+   */
   RCLCPP_PUBLIC
   static void
   execute_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription);
 
+  /// Run timer executable.
+  /**
+   * Do necessary setup and tear-down as well as executing the timer callback.
+   * \param[in] timer Timer to execute
+   */
   RCLCPP_PUBLIC
   static void
   execute_timer(rclcpp::TimerBase::SharedPtr timer);
 
+  /// Run service server executable.
+  /**
+   * Do necessary setup and tear-down as well as executing the service server callback.
+   * \param[in] service Service to execute
+   */
   RCLCPP_PUBLIC
   static void
   execute_service(rclcpp::ServiceBase::SharedPtr service);
 
+  /// Run service client executable.
+  /**
+   * Do necessary setup and tear-down as well as executing the service client callback.
+   * \param[in] service Service to execute
+   */
   RCLCPP_PUBLIC
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+  /// Block until more work becomes avilable or timeout is reached.
   /**
+   * Builds a set of waitable entities, which are passed to the middleware.
+   * After building wait set, waits on middleware to notify.
+   * \param[in] timeout duration to wait for new work to become available.
    * \throws std::runtime_error if the wait set can be cleared
    */
   RCLCPP_PUBLIC
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
+  /// Find node associated with a callback group
+  /**
+   * \param[in] weak_groups_to_nodes map of callback groups to nodes
+   * \param[in] group callback group to find assocatiated node
+   * \return Pointer to associated node if found, else nullptr
+   */
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(
@@ -475,6 +533,11 @@ protected:
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
 
+  /// Find the callback group associated with a timer
+  /**
+   * \param[in] timer Timer to find associated callback group
+   * \return Pointer to callback group node if found, else nullptr
+   */
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
@@ -502,16 +565,54 @@ protected:
     WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
     bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
 
+  /// Check for executable in ready state and populate union structure.
+  /**
+   * \param[out] any_executable populated union structure of ready executable
+   * \return true if an executable was ready and any_executable was populated,
+   *   otherwise false
+   */
   RCLCPP_PUBLIC
   bool
   get_next_ready_executable(AnyExecutable & any_executable);
 
+  /// Check for executable in ready state and populate union structure.
+  /**
+   * This is the implementation of get_next_ready_executable that takes into
+   * account the current state of callback groups' association with nodes and
+   * executors.
+   *
+   * This checks in a particular order for available work:
+   *   * Timers
+   *   * Subscriptions
+   *   * Services
+   *   * Clients
+   *   * Waitable
+   *
+   * If the next executable is not associated with this executor/node pair,
+   * then this method will return false.
+   *
+   * \param[out] any_executable populated union structure of ready executable
+   * \param[in] weak_groups_to_nodes mapping of callback groups to nodes
+   * \return true if an executable was ready and any_executable was populated,
+   *   otherwise false
+   */
   RCLCPP_PUBLIC
   bool
   get_next_ready_executable_from_map(
     AnyExecutable & any_executable,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
+  /// Wait for executable in ready state and populate union structure.
+  /**
+   * If an executable is ready, it will return immediately, otherwise
+   * block based on the timeout for work to become ready.
+   *
+   * \param[out] any_executable populated union structure of ready executable
+   * \param[in] timeout duration of time to wait for work, a negative value
+   *   (the defualt behavior), will make this function block indefinitely
+   * \return true if an executable was ready and any_executable was populated,
+   *   otherwise false
+   */
   RCLCPP_PUBLIC
   bool
   get_next_executable(
@@ -537,8 +638,9 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rclcpp::GuardCondition interrupt_guard_condition_;
+  std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;
 
+  /// Guard condition for signaling the rmw layer to wake up for system shutdown.
   std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
 
   /// Wait set for managing entities that the rmw layer waits on.
@@ -565,9 +667,18 @@ protected:
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
 
+  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+      const rclcpp::GuardCondition *,
+      std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
+    WeakCallbackGroupsToGuardConditionsMap;
+
   /// maps nodes to guard conditions
   WeakNodesToGuardConditionsMap
   weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// maps callback groups to guard conditions
+  WeakCallbackGroupsToGuardConditionsMap
+  weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// maps callback groups associated to nodes
   WeakCallbackGroupsToNodesMap
@@ -587,6 +698,9 @@ protected:
 
   /// shutdown callback handle registered to Context
   rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
+
+  /// Pointer to implementation
+  std::unique_ptr<ExecutorImplementation> impl_;
 };
 
 }  // namespace rclcpp

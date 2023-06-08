@@ -36,6 +36,8 @@
 #ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 #define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -49,13 +51,11 @@
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
-#include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
@@ -82,6 +82,8 @@
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
+
+#include "rmw/types.h"
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
@@ -137,7 +139,7 @@ public:
     const rclcpp::NodeOptions & options = rclcpp::NodeOptions(),
     bool enable_communication_interface = true);
 
-  /// Create a node based on the node name and a rclcpp::Context.
+  /// Create a node based on the node name
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
@@ -169,6 +171,15 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   const char *
   get_namespace() const;
+
+  /// Get the fully-qualified name of the node.
+  /**
+   * The fully-qualified name includes the local namespace and name of the node.
+   * \return fully-qualified name of the node.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  const char *
+  get_fully_qualified_name() const;
 
   /// Get the logger of the node.
   /**
@@ -837,7 +848,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  get_current_state();
+  get_current_state() const;
 
   /// Return a list with the available states.
   /**
@@ -845,7 +856,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<State>
-  get_available_states();
+  get_available_states() const;
 
   /// Return a list with the current available transitions.
   /**
@@ -853,7 +864,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>
-  get_available_transitions();
+  get_available_transitions() const;
 
   /// Return a list with all the transitions.
   /**
@@ -861,7 +872,7 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>
-  get_transition_graph();
+  get_transition_graph() const;
 
   /// Trigger the specified transition.
   /*

@@ -16,23 +16,26 @@
 #define RCLCPP__CLIENT_HPP_
 
 #include <atomic>
+#include <functional>
 #include <future>
-#include <unordered_map>
 #include <memory>
 #include <mutex>
-#include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
+#include <optional>
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
-#include <variant>  // NOLINT
+#include <variant>
 #include <vector>
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
+#include "rcl/service_introspection.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/clock.hpp"
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -130,7 +133,7 @@ public:
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph);
 
   RCLCPP_PUBLIC
-  virtual ~ClientBase();
+  virtual ~ClientBase() = default;
 
   /// Take the next response for this client as a type erased pointer.
   /**
@@ -312,7 +315,7 @@ public:
     // This two-step setting, prevents a gap where the old std::function has
     // been replaced but the middleware hasn't been told about the new one yet.
     set_on_new_response_callback(
-      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
       static_cast<const void *>(&new_callback));
 
     // Store the std::function to keep it in scope, also overwrites the existing one.
@@ -320,7 +323,8 @@ public:
 
     // Set it again, now using the permanent storage.
     set_on_new_response_callback(
-      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      rclcpp::detail::cpp_callback_trampoline<
+        decltype(on_new_response_callback_), const void *, size_t>,
       static_cast<const void *>(&on_new_response_callback_));
   }
 
@@ -359,12 +363,16 @@ protected:
   std::shared_ptr<rclcpp::Context> context_;
   rclcpp::Logger node_logger_;
 
+  std::recursive_mutex callback_mutex_;
+  // It is important to declare on_new_response_callback_ before
+  // client_handle_, so on destruction the client is
+  // destroyed first. Otherwise, the rmw client callback
+  // would point briefly to a destroyed function.
+  std::function<void(size_t)> on_new_response_callback_{nullptr};
+  // Declare client_handle_ after callback
   std::shared_ptr<rcl_client_t> client_handle_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
-
-  std::recursive_mutex callback_mutex_;
-  std::function<void(size_t)> on_new_response_callback_{nullptr};
 };
 
 template<typename ServiceT>
@@ -466,15 +474,13 @@ public:
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
     rcl_client_options_t & client_options)
-  : ClientBase(node_base, node_graph)
+  : ClientBase(node_base, node_graph),
+    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
-    using rosidl_typesupport_cpp::get_service_type_support_handle;
-    auto service_type_support_handle =
-      get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),
-      service_type_support_handle,
+      srv_type_support_handle_,
       service_name.c_str(),
       &client_options);
     if (ret != RCL_RET_OK) {
@@ -769,13 +775,42 @@ public:
     auto old_size = pending_requests_.size();
     for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
       if (it->second.first < time_point) {
-        pruned_requests->push_back(it->first);
+        if (pruned_requests) {
+          pruned_requests->push_back(it->first);
+        }
         it = pending_requests_.erase(it);
       } else {
         ++it;
       }
     }
     return old_size - pending_requests_.size();
+  }
+
+  /// Configure client introspection.
+  /**
+   * \param[in] clock clock to use to generate introspection timestamps
+   * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
+   * \param[in] introspection_state the state to set introspection to
+   */
+  void
+  configure_introspection(
+    Clock::SharedPtr clock, const QoS & qos_service_event_pub,
+    rcl_service_introspection_state_t introspection_state)
+  {
+    rcl_publisher_options_t pub_opts = rcl_publisher_get_default_options();
+    pub_opts.qos = qos_service_event_pub.get_rmw_qos_profile();
+
+    rcl_ret_t ret = rcl_client_configure_service_introspection(
+      client_handle_.get(),
+      node_handle_.get(),
+      clock->get_clock_handle(),
+      srv_type_support_handle_,
+      pub_opts,
+      introspection_state);
+
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure client introspection");
+    }
   }
 
 protected:
@@ -792,16 +827,14 @@ protected:
   async_send_request_impl(const Request & request, CallbackInfoVariant value)
   {
     int64_t sequence_number;
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &request, &sequence_number);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }
-    {
-      std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-      pending_requests_.try_emplace(
-        sequence_number,
-        std::make_pair(std::chrono::system_clock::now(), std::move(value)));
-    }
+    pending_requests_.try_emplace(
+      sequence_number,
+      std::make_pair(std::chrono::system_clock::now(), std::move(value)));
     return sequence_number;
   }
 
@@ -830,6 +863,9 @@ protected:
       CallbackInfoVariant>>
   pending_requests_;
   std::mutex pending_requests_mutex_;
+
+private:
+  const rosidl_service_type_support_t * srv_type_support_handle_;
 };
 
 }  // namespace rclcpp

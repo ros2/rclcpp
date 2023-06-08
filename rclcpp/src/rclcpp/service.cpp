@@ -22,6 +22,7 @@
 
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/qos.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -32,10 +33,6 @@ ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
   node_logger_(rclcpp::get_node_logger(node_handle_.get()))
 {}
 
-ServiceBase::~ServiceBase()
-{
-  clear_on_new_request_callback();
-}
 
 bool
 ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & request_id_out)
@@ -135,7 +132,7 @@ ServiceBase::set_on_new_request_callback(rcl_event_callback_t callback, const vo
     user_data);
 
   if (RCL_RET_OK != ret) {
-    using rclcpp::exceptions::throw_from_rcl_error;
-    throw_from_rcl_error(ret, "failed to set the on new request callback for service");
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to set the on new request callback for service");
   }
 }
