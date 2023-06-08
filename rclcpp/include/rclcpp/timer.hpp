@@ -230,14 +230,14 @@ public:
     amount_of_callbacks_(amount_of_callbacks)
   {
     callbacks_called_ = 0;
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_timer_callback_added,
       static_cast<const void *>(get_timer_handle().get()),
       reinterpret_cast<const void *>(&callback_));
 #ifndef TRACETOOLS_DISABLED
-    if (TRACEPOINT_ENABLED(rclcpp_callback_register)) {
+    if (TRACETOOLS_TRACEPOINT_ENABLED(rclcpp_callback_register)) {
       char * symbol = tracetools::get_symbol(callback_);
-      DO_TRACEPOINT(
+      TRACETOOLS_DO_TRACEPOINT(
         rclcpp_callback_register,
         reinterpret_cast<const void *>(&callback_),
         symbol);
@@ -281,9 +281,9 @@ public:
   void
   execute_callback() override
   {
-    TRACEPOINT(callback_start, reinterpret_cast<const void *>(&callback_), false);
+    TRACETOOLS_TRACEPOINT(callback_start, reinterpret_cast<const void *>(&callback_), false);
     execute_callback_delegate<>();
-    TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
+    TRACETOOLS_TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
     if (amount_of_callbacks_ != 0) {
       if (amount_of_callbacks_ <= ++callbacks_called_) {
         cancel();

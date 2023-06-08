@@ -96,7 +96,7 @@ public:
 
     buffer_ = std::move(buffer_impl);
 
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_buffer_to_ipb,
       static_cast<const void *>(buffer_.get()),
       static_cast<const void *>(this));
