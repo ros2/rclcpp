@@ -1,8 +1,0 @@
-{
-  "package_name": "rclcpp",
-  "non_idl_tuples": [
-    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp:../msg/Header.msg",
-    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp:../msg/MessageWithHeader.msg",
-    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp:../msg/String.msg"
-  ]
-}
