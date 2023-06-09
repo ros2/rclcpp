@@ -619,7 +619,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
             subscription->get_topic_name(),
             [&]() {return subscription->take_loaned_message(loaned_msg, message_info);},
             [&]() {subscription->handle_loaned_message(loaned_msg, message_info);}
-            );
+);
           if (nullptr != loaned_msg) {
             rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
               subscription->get_subscription_handle().get(), loaned_msg);

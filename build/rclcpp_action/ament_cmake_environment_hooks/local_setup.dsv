@@ -1,0 +1,3 @@
+source;share/rclcpp_action/environment/ament_prefix_path.sh
+source;share/rclcpp_action/environment/library_path.sh
+source;share/rclcpp_action/environment/path.sh

@@ -1,0 +1,780 @@
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/src/gmock_main.cc:32:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock.h:61:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-function-mocker.h:39:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-generated-function-mockers.h:47:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-spec-builders.h:75:
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3813:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3842:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3849:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3856:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(internal::EndsWithMatcher<std::string>(suffix));
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3865:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3894:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3901:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3908:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+8 warnings generated.
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/src/gmock-all.cc:39:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock.h:61:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-function-mocker.h:39:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-generated-function-mockers.h:47:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-spec-builders.h:75:
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3813:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3842:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3849:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3856:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(internal::EndsWithMatcher<std::string>(suffix));
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3865:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3894:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3901:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3908:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+8 warnings generated.
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:465:37: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  const auto get_callback_vector = [this](auto & mutex, auto & callback_set) {
+                                    ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:452:10: note: in instantiation of function template specialization 'rclcpp::Context::get_shutdown_callback<rclcpp::Context::ShutdownType::on_shutdown>' requested here
+  return get_shutdown_callback<ShutdownType::on_shutdown>();
+         ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:465:37: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  const auto get_callback_vector = [this](auto & mutex, auto & callback_set) {
+                                    ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:458:10: note: in instantiation of function template specialization 'rclcpp::Context::get_shutdown_callback<rclcpp::Context::ShutdownType::pre_shutdown>' requested here
+  return get_shutdown_callback<ShutdownType::pre_shutdown>();
+         ^
+2 warnings generated.
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/node_interfaces/node_logging.cpp:15:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_impl.hpp:38:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/create_client.hpp:21:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_base_interface.hpp:25:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/callback_group.hpp:24:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/client.hpp:43:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:23:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/node_interfaces/node_logging.cpp:24:11: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+  logger_ = rclcpp::get_logger(NodeLogging::get_logger_name());
+          ^
+1 warning generated.
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/time_source.cpp:26:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:23:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/time_source.cpp:254:13: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+    logger_ = node_logging_->get_logger();
+            ^
+1 warning generated.
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_logger.cpp:22:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_logger.cpp:48:10: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+  logger = rclcpp::get_node_logger(nullptr);
+         ^
+1 warning generated.
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:28:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: note: in instantiation of member function 'mocking_utils::PatchTraits<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::mmkuser_mock_type_stub' requested here
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+               ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:462:43: note: in instantiation of member function 'mocking_utils::PatchTraits<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::mmkuser_mock_type_create' requested here
+      PatchTraits<ID, ReturnT(ArgTs...)>::MMK_MANGLE(mock_type, create);
+                                          ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:95:31: note: expanded from macro 'MMK_MANGLE'
+# define MMK_MANGLE(Id, Name) MMK_MANGLE_(Id, Name)
+                              ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:94:32: note: expanded from macro 'MMK_MANGLE_'
+# define MMK_MANGLE_(Id, Name) mmkuser_ ## Id ## _ ## Name
+                               ^
+<scratch space>:223:1: note: expanded from here
+mmkuser_mock_type_create
+^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:444:5: note: in instantiation of member function 'mocking_utils::Patch<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::replace_with' requested here
+    replace_with(replacement);
+    ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:177:32: note: in instantiation of member function 'mocking_utils::Patch<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::then_call' requested here
+    auto mock = mocking_utils::patch_and_return(
+                               ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:537:3: note: expanded from macro 'patch_and_return'
+  patch(scope, function, [&](auto && ...) {return return_code;})
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:533:34: note: expanded from macro 'patch'
+  prepare_patch(scope, function).then_call(replacement)
+                                 ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:28:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:28:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+4 warnings generated.
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::experimental::executors::EventsExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::experimental::executors::EventsExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types1<rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+                                 typename Types::Tail>::Register(prefix,
+                                                        ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types2<rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types3<rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::StaticSingleThreadedExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::StaticSingleThreadedExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types2<rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+                                 typename Types::Tail>::Register(prefix,
+                                                        ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types3<rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::MultiThreadedExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::MultiThreadedExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types3<rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+                                 typename Types::Tail>::Register(prefix,
+                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::SingleThreadedExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::SingleThreadedExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+4 warnings generated.
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:68:49: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&spin_exited, &executor, this]() {
+                                              ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:84:10: warning: unused variable 'time_msec' [-Wunused-variable]
+    auto time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+         ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:122:49: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&spin_exited, &executor, this]() {
+                                              ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:391:35: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&executor, this]() {executor.spin();});
+                                ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:423:35: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&executor, this]() {executor.spin();});
+                                ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:450:39: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&executor_pub, this]() {executor_pub.spin();});
+                                    ~~^~~~
+6 warnings generated.
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:73:42: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+        rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:73:42: note: treat the string as an argument to avoid this
+        rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                         ^
+                                         "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:86:33: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+      RCLCPP_INFO(child_logger, this->rosout_msg_data.c_str());
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:86:33: note: treat the string as an argument to avoid this
+      RCLCPP_INFO(child_logger, this->rosout_msg_data.c_str());
+                                ^
+                                "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:96:52: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+      RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:96:52: note: treat the string as an argument to avoid this
+      RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                   ^
+                                                   "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:107:50: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+    RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:107:50: note: treat the string as an argument to avoid this
+    RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                 ^
+                                                 "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:122:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:122:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:136:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:136:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:21:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/rclcpp.hpp:167:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executors.hpp:21:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executors/multi_threaded_executor.hpp:25:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executor.hpp:37:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executor_options.hpp:20:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/memory_strategies.hpp:18:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/memory_strategy.hpp:25:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/any_executable.hpp:20:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/callback_group.hpp:24:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/client.hpp:43:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:23:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:142:10: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+  logger = this->node->get_logger().get_child("child1");
+         ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:143:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:143:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:151:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:151:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:158:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:158:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:174:34: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(grandchild_logger, this->rosout_msg_data.c_str());
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:174:34: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(grandchild_logger, this->rosout_msg_data.c_str());
+                                 ^
+                                 "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+11 warnings generated.

@@ -1,0 +1,3 @@
+test_rclcpp_components::TestComponentFoo;/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp_components/libtest_component.dylib
+test_rclcpp_components::TestComponentBar;/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp_components/libtest_component.dylib
+test_rclcpp_components::TestComponentNoNode;/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp_components/libtest_component.dylib

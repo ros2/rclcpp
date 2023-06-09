@@ -1,0 +1,29 @@
+{
+  "package_name": "rclcpp",
+  "output_dir": "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_typesupport_introspection_cpp/rclcpp",
+  "template_dir": "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource",
+  "idl_tuples": [
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/Header.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/MessageWithHeader.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/String.idl"
+  ],
+  "ros_interface_dependencies": [
+    "builtin_interfaces:/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "builtin_interfaces:/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ],
+  "target_dependencies": [
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/lib/rosidl_typesupport_introspection_cpp/rosidl_typesupport_introspection_cpp",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/lib/python3.11/site-packages/rosidl_typesupport_introspection_cpp/__init__.py",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource/idl__rosidl_typesupport_introspection_cpp.hpp.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource/idl__type_support.cpp.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource/msg__rosidl_typesupport_introspection_cpp.hpp.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource/msg__type_support.cpp.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource/srv__rosidl_typesupport_introspection_cpp.hpp.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_typesupport_introspection_cpp/share/rosidl_typesupport_introspection_cpp/resource/srv__type_support.cpp.em",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp/msg/Header.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp/msg/MessageWithHeader.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp/msg/String.idl",
+    "/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ]
+}

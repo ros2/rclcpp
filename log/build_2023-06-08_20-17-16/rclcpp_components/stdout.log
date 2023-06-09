@@ -1,0 +1,120 @@
+-- The C compiler identification is AppleClang 14.0.0.14000029
+-- The CXX compiler identification is AppleClang 14.0.0.14000029
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake_ros: 0.12.0 (/Users/cursedrock17/ros2_rolling/install/ament_cmake_ros/share/ament_cmake_ros/cmake)
+-- Found Python3: /opt/homebrew/Frameworks/Python.framework/Versions/3.11/bin/python3.11 (found version "3.11.3") found components: Interpreter 
+-- Found ament_index_cpp: 1.6.0 (/Users/cursedrock17/ros2_rolling/install/ament_index_cpp/share/ament_index_cpp/cmake)
+-- Found class_loader: 2.6.0 (/Users/cursedrock17/ros2_rolling/install/class_loader/share/class_loader/cmake)
+-- Found composition_interfaces: 1.7.0 (/Users/cursedrock17/ros2_rolling/install/composition_interfaces/share/composition_interfaces/cmake)
+-- Found rosidl_generator_c: 4.1.1 (/Users/cursedrock17/ros2_rolling/install/rosidl_generator_c/share/rosidl_generator_c/cmake)
+-- Found rosidl_generator_cpp: 4.1.1 (/Users/cursedrock17/ros2_rolling/install/rosidl_generator_cpp/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_introspection_c;rosidl_typesupport_fastrtps_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_introspection_cpp;rosidl_typesupport_fastrtps_cpp
+-- Found rclcpp: 21.1.0 (/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake)
+-- Found rmw_implementation_cmake: 7.2.0 (/Users/cursedrock17/ros2_rolling/install/rmw_implementation_cmake/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 7.2.1 (/Users/cursedrock17/ros2_rolling/install/rmw_fastrtps_cpp/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /opt/homebrew/opt/openssl@3/lib/libcrypto.dylib (found version "3.1.1")  
+-- Found FastRTPS: /Users/cursedrock17/ros2_rolling/install/fastrtps/include  
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found ament_lint_auto: 0.15.0 (/Users/cursedrock17/ros2_rolling/install/ament_lint_auto/share/ament_lint_auto/cmake)
+-- Found ament_cmake_google_benchmark: 2.1.0 (/Users/cursedrock17/ros2_rolling/install/ament_cmake_google_benchmark/share/ament_cmake_google_benchmark/cmake)
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Found gtest sources under '/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Performance tests are disabled by default, so Google Benchmark tests will be skipped. To enable these tests, set the CMake variable 'AMENT_RUN_PERFORMANCE_TESTS'.
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: /Users/cursedrock17/ros2_rolling/install/google_benchmark_vendor/include;$<BUILD_INTERFACE:/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp_components/include>
+-- Configured cppcheck exclude dirs and/or files: 
+-- Added test 'cpplint' to check C / C++ code against the Google style
+-- Configured cpplint exclude dirs and/or files: 
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'uncrustify' to check C / C++ code style
+-- Configured uncrustify additional arguments: 
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done (12.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp_components
+[  5%] Building CXX object CMakeFiles/component_manager.dir/src/component_manager.cpp.o
+[ 10%] Building CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[ 15%] Building CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[ 20%] Building CXX object CMakeFiles/test_component.dir/test/components/test_component.cpp.o
+[ 25%] Linking CXX static library libgtest_main.a
+[ 25%] Built target gtest_main
+[ 30%] Linking CXX static library libgtest.a
+[ 30%] Built target gtest
+[ 35%] Linking CXX shared library libtest_component.dylib
+[ 35%] Built target test_component
+[ 40%] Linking CXX shared library libcomponent_manager.dylib
+[ 40%] Built target component_manager
+[ 45%] Building CXX object CMakeFiles/component_container.dir/src/component_container.cpp.o
+[ 50%] Linking CXX executable component_container
+[ 50%] Built target component_container
+[ 55%] Building CXX object CMakeFiles/benchmark_components.dir/test/benchmark/benchmark_components.cpp.o
+[ 60%] Linking CXX executable benchmark_components
+[ 60%] Built target benchmark_components
+[ 65%] Building CXX object CMakeFiles/test_component_manager_api.dir/test/test_component_manager_api.cpp.o
+[ 70%] Linking CXX executable test_component_manager_api
+[ 70%] Built target test_component_manager_api
+[ 75%] Building CXX object CMakeFiles/test_component_manager.dir/test/test_component_manager.cpp.o
+[ 80%] Linking CXX executable test_component_manager
+[ 80%] Built target test_component_manager
+[ 85%] Building CXX object CMakeFiles/component_container_isolated.dir/src/component_container_isolated.cpp.o
+[ 90%] Linking CXX executable component_container_isolated
+[ 90%] Built target component_container_isolated
+[ 95%] Building CXX object CMakeFiles/component_container_mt.dir/src/component_container_mt.cpp.o
+[100%] Linking CXX executable component_container_mt
+[100%] Built target component_container_mt
+-- Install configuration: ""
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/node_main.cpp.in
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/lib/libcomponent_manager.dylib
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/lib/rclcpp_components/component_container
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/lib/rclcpp_components/component_container_mt
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/lib/rclcpp_components/component_container_isolated
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/node_instance_wrapper.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/node_factory_template.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/register_node_macro.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/visibility_control.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/node_factory.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/component_manager_isolated.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/include/rclcpp_components/rclcpp_components/component_manager.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/rclcpp_components_register_nodes.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/rclcpp_components_package_hook.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/rclcpp_components_register_node.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/environment/library_path.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/environment/library_path.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/ament_index/resource_index/package_run_dependencies/rclcpp_components
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/ament_index/resource_index/parent_prefix_path/rclcpp_components
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/environment/ament_prefix_path.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/environment/ament_prefix_path.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/environment/path.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/environment/path.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/local_setup.bash
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/local_setup.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/local_setup.zsh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/local_setup.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/package.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/ament_index/resource_index/packages/rclcpp_components
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/export_rclcpp_componentsExport.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/export_rclcpp_componentsExport-noconfig.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/rclcpp_components-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/rclcpp_componentsConfig.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/cmake/rclcpp_componentsConfig-version.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp_components/share/rclcpp_components/package.xml

@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from rclcpp/../msg/Header.msg
+// generated code does not contain a copyright notice
+
+#include "builtin_interfaces/msg/Time.idl"
+
+module rclcpp {
+  module msg {
+    @verbatim (language="comment", text=
+      "Simple Header message with a timestamp field.")
+    struct Header {
+      builtin_interfaces::msg::Time stamp;
+    };
+  };
+};

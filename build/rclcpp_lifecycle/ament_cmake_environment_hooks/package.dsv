@@ -1,0 +1,4 @@
+source;share/rclcpp_lifecycle/local_setup.bash
+source;share/rclcpp_lifecycle/local_setup.dsv
+source;share/rclcpp_lifecycle/local_setup.sh
+source;share/rclcpp_lifecycle/local_setup.zsh

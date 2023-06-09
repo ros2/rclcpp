@@ -1,0 +1,12 @@
+{
+  "package_name": "rclcpp",
+  "output_dir": "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_generator_type_description/rclcpp",
+  "idl_tuples": [
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/Header.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/MessageWithHeader.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/String.idl"
+  ],
+  "include_paths": [
+    "builtin_interfaces:/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces"
+  ]
+}

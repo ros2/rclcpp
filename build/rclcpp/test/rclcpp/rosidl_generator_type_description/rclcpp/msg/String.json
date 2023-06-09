@@ -1,0 +1,26 @@
+{
+  "type_description_msg": {
+    "type_description": {
+      "type_name": "rclcpp/msg/String",
+      "fields": [
+        {
+          "name": "data",
+          "type": {
+            "type_id": 17,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        }
+      ]
+    },
+    "referenced_type_descriptions": []
+  },
+  "type_hashes": [
+    {
+      "type_name": "rclcpp/msg/String",
+      "hash_string": "RIHS01_55684f5f6f2ffc5b17c36241889bd3a3cc1e6f5af9e321bd8820c74b4a2e31f5"
+    }
+  ]
+}

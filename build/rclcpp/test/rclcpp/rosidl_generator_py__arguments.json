@@ -1,0 +1,34 @@
+{
+  "package_name": "rclcpp",
+  "output_dir": "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_generator_py/rclcpp",
+  "template_dir": "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource",
+  "idl_tuples": [
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/Header.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/MessageWithHeader.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp:msg/String.idl"
+  ],
+  "ros_interface_dependencies": [
+    "builtin_interfaces:/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "builtin_interfaces:/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ],
+  "target_dependencies": [
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../../../lib/rosidl_generator_py/rosidl_generator_py",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/lib/python3.11/site-packages/rosidl_generator_py/__init__.py",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/lib/python3.11/site-packages/rosidl_generator_py/generate_py_impl.py",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_action_pkg_typesupport_entry_point.c.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_action.py.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_idl_pkg_typesupport_entry_point.c.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_idl_support.c.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_idl.py.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_msg_pkg_typesupport_entry_point.c.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_msg_support.c.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_msg.py.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_srv_pkg_typesupport_entry_point.c.em",
+    "/Users/cursedrock17/ros2_rolling/install/rosidl_generator_py/share/rosidl_generator_py/cmake/../resource/_srv.py.em",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp/msg/Header.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp/msg/MessageWithHeader.idl",
+    "/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/test/rclcpp/rosidl_adapter/rclcpp/msg/String.idl",
+    "/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Duration.idl",
+    "/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/msg/Time.idl"
+  ]
+}

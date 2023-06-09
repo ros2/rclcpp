@@ -1,0 +1,1585 @@
+-- Found ament_cmake_ros: 0.12.0 (/Users/cursedrock17/ros2_rolling/install/ament_cmake_ros/share/ament_cmake_ros/cmake)
+-- Found Python3: /opt/homebrew/Frameworks/Python.framework/Versions/3.11/bin/python3.11 (found version "3.11.3") found components: Interpreter 
+-- Found ament_index_cpp: 1.6.0 (/Users/cursedrock17/ros2_rolling/install/ament_index_cpp/share/ament_index_cpp/cmake)
+-- Found builtin_interfaces: 1.7.0 (/Users/cursedrock17/ros2_rolling/install/builtin_interfaces/share/builtin_interfaces/cmake)
+-- Found rosidl_generator_c: 4.1.1 (/Users/cursedrock17/ros2_rolling/install/rosidl_generator_c/share/rosidl_generator_c/cmake)
+-- Found rosidl_generator_cpp: 4.1.1 (/Users/cursedrock17/ros2_rolling/install/rosidl_generator_cpp/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_introspection_c;rosidl_typesupport_fastrtps_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_introspection_cpp;rosidl_typesupport_fastrtps_cpp
+-- Found libstatistics_collector: 1.6.2 (/Users/cursedrock17/ros2_rolling/install/libstatistics_collector/share/libstatistics_collector/cmake)
+-- Found rmw_implementation_cmake: 7.2.0 (/Users/cursedrock17/ros2_rolling/install/rmw_implementation_cmake/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 7.2.1 (/Users/cursedrock17/ros2_rolling/install/rmw_fastrtps_cpp/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /opt/homebrew/opt/openssl@3/lib/libcrypto.dylib (found version "3.1.1")  
+-- Found FastRTPS: /Users/cursedrock17/ros2_rolling/install/fastrtps/include  
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found rosgraph_msgs: 1.7.0 (/Users/cursedrock17/ros2_rolling/install/rosgraph_msgs/share/rosgraph_msgs/cmake)
+-- Found ament_lint_auto: 0.15.0 (/Users/cursedrock17/ros2_rolling/install/ament_lint_auto/share/ament_lint_auto/cmake)
+-- Found rosidl_adapter: 4.1.1 (/Users/cursedrock17/ros2_rolling/install/rosidl_adapter/share/rosidl_adapter/cmake)
+-- Performance tests are disabled by default, so Google Benchmark tests will be skipped. To enable these tests, set the CMake variable 'AMENT_RUN_PERFORMANCE_TESTS'.
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_introspection_c;rosidl_typesupport_fastrtps_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_introspection_cpp;rosidl_typesupport_fastrtps_cpp
+-- Found PythonInterp: /opt/homebrew/bin/python3 (found suitable version "3.11.3", minimum required is "3.6") 
+-- Found python_cmake_module: 0.11.0 (/Users/cursedrock17/ros2_rolling/install/python_cmake_module/share/python_cmake_module/cmake)
+-- Using PythonExtra_INCLUDE_DIRS: /opt/homebrew/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/include/python3.11;/opt/homebrew/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/include/python3.11
+-- Using PythonExtra_LIBRARIES: /opt/homebrew/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/lib/python3.11/config-3.11-darwin/libpython3.11.dylib
+-- Found PythonExtra: .so  
+-- Using numpy include directory: /opt/homebrew/lib/python3.11/site-packages/numpy/core/include
+-- Found gtest sources under '/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Found gmock sources under '/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor': C++ tests using 'Google Mock' will be built
+-- Found gmock sources under '/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor': C++ tests using 'Google Mock' will be built
+-- Found gmock sources under '/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor': C++ tests using 'Google Mock' will be built
+-- Found gmock sources under '/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor': C++ tests using 'Google Mock' will be built
+-- Found gtest sources under '/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: $<BUILD_INTERFACE:/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include>
+-- Configured cppcheck exclude dirs and/or files: 
+-- Added test 'cpplint' to check C / C++ code against the Google style
+-- Configured cpplint exclude dirs and/or files: 
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'uncrustify' to check C / C++ code style
+-- Configured uncrustify additional arguments: 
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done (13.0s)
+-- Generating done (1.0s)
+-- Build files have been written to: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp
+[  0%] Building CXX object gmock/CMakeFiles/gmock.dir/src/gmock-all.cc.o
+[  1%] Building CXX object gmock/CMakeFiles/gmock.dir/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/src/gtest-all.cc.o
+[  1%] Generating rclcpp/version.h
+[  1%] Building CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[  1%] Building CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[  1%] Building CXX object gmock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o
+[  1%] Generating type hashes for ROS interfaces
+[  1%] Built target ament_generate_version_header__rclcpp
+[  1%] Expanding logging.hpp.em
+[  2%] Expanding interface_traits.hpp.em into node_waitables_interface_traits.hpp
+[  2%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_base_interface.hpp.hpp
+[  2%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_clock_interface.hpp.hpp
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/src/gmock_main.cc:32:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock.h:61:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-function-mocker.h:39:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-generated-function-mockers.h:47:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-spec-builders.h:75:
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3813:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3842:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3849:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3856:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(internal::EndsWithMatcher<std::string>(suffix));
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3865:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3894:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3901:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3908:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+[  2%] Built target rclcpp_test_msgs__rosidl_generator_type_description
+[  3%] Linking CXX static library libgtest_main.a
+8 warnings generated.
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/src/gmock-all.cc:39:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock.h:61:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-function-mocker.h:39:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-generated-function-mockers.h:47:
+In file included from /Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-spec-builders.h:75:
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3813:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3842:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3849:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::string>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::string>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3856:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::string>>' requested here
+  return MakePolymorphicMatcher(internal::EndsWithMatcher<std::string>(suffix));
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:721:3: warning: definition of implicit copy constructor for 'StrEqualityMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StrEqualityMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StrEqualityMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3865:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StrEqualityMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:778:3: warning: definition of implicit copy constructor for 'HasSubstrMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(HasSubstrMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::HasSubstrMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3894:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::HasSubstrMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:835:3: warning: definition of implicit copy constructor for 'StartsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(StartsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::StartsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3901:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::StartsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:891:3: warning: definition of implicit copy constructor for 'EndsWithMatcher<std::wstring>' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy]
+  GTEST_DISALLOW_ASSIGN_(EndsWithMatcher);
+  ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-port.h:682:8: note: expanded from macro 'GTEST_DISALLOW_ASSIGN_'
+  void operator=(type const &) = delete
+       ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:456:54: note: in implicit copy constructor for 'testing::internal::EndsWithMatcher<std::wstring>' first required here
+  explicit PolymorphicMatcher(const Impl& an_impl) : impl_(an_impl) {}
+                                                     ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-matchers.h:514:10: note: in instantiation of member function 'testing::PolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>::PolymorphicMatcher' requested here
+  return PolymorphicMatcher<Impl>(impl);
+         ^
+/Users/cursedrock17/ros2_rolling/install/gmock_vendor/src/gmock_vendor/include/gmock/gmock-matchers.h:3908:10: note: in instantiation of function template specialization 'testing::MakePolymorphicMatcher<testing::internal::EndsWithMatcher<std::wstring>>' requested here
+  return MakePolymorphicMatcher(
+         ^
+[  4%] Linking CXX static library libgmock_main.a
+[  4%] Generating C code for ROS interfaces
+[  4%] Generating C++ code for ROS interfaces
+[  4%] Built target gtest_main
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_graph_interface.hpp.hpp
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_logging_interface.hpp.hpp
+[  4%] Built target gmock_main
+8 warnings generated.
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_parameters_interface.hpp.hpp
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_services_interface.hpp.hpp
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_time_source_interface.hpp.hpp
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_timers_interface.hpp.hpp
+[  4%] Linking CXX static library libgmock.a
+[  4%] Linking CXX static library libgtest.a
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_topics_interface.hpp.hpp
+[  4%] Expanding get_interface.hpp.em into get_/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_waitables_interface.hpp.hpp
+[  4%] Built target gmock
+[  5%] Expanding interface_traits.hpp.em into node_clock_interface_traits.hpp
+[  5%] Expanding interface_traits.hpp.em into node_base_interface_traits.hpp
+[  5%] Built target gtest
+[  5%] Expanding interface_traits.hpp.em into node_graph_interface_traits.hpp
+[  6%] Expanding interface_traits.hpp.em into node_logging_interface_traits.hpp
+[  6%] Expanding interface_traits.hpp.em into node_parameters_interface_traits.hpp
+[  6%] Building CXX object test/rclcpp/CMakeFiles/test_function_traits.dir/test_function_traits.cpp.o
+[  6%] Built target rclcpp_test_msgs__cpp
+[  7%] Expanding interface_traits.hpp.em into node_services_interface_traits.hpp
+[  7%] Expanding interface_traits.hpp.em into node_time_source_interface_traits.hpp
+[  8%] Expanding interface_traits.hpp.em into node_timers_interface_traits.hpp
+[  8%] Expanding interface_traits.hpp.em into node_topics_interface_traits.hpp
+[  8%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/header__functions.c.o
+[  8%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/header__type_support.c.o
+[  9%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/header__description.c.o
+[  9%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/message_with_header__description.c.o
+[ 10%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/message_with_header__functions.c.o
+[ 10%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/message_with_header__type_support.c.o
+[ 10%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/string__functions.c.o
+[ 11%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/string__type_support.c.o
+[ 11%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_c.dir/rosidl_generator_c/rclcpp/msg/detail/string__description.c.o
+[ 11%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/any_executable.cpp.o
+[ 11%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/callback_group.cpp.o
+[ 12%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/client.cpp.o
+[ 12%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/clock.cpp.o
+[ 12%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/contexts/default_context.cpp.o
+[ 12%] Linking C shared library librclcpp__rosidl_generator_c.dylib
+[ 12%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/context.cpp.o
+[ 12%] Linking CXX executable test_function_traits
+[ 12%] Built target test_function_traits
+[ 12%] Built target rclcpp_test_msgs__rosidl_generator_c
+[ 13%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/detail/add_guard_condition_to_rcl_wait_set.cpp.o
+[ 13%] Generating C++ type support dispatch for ROS interfaces
+[ 13%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/detail/resolve_parameter_overrides.cpp.o
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:465:37: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  const auto get_callback_vector = [this](auto & mutex, auto & callback_set) {
+                                    ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:452:10: note: in instantiation of function template specialization 'rclcpp::Context::get_shutdown_callback<rclcpp::Context::ShutdownType::on_shutdown>' requested here
+  return get_shutdown_callback<ShutdownType::on_shutdown>();
+         ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:465:37: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  const auto get_callback_vector = [this](auto & mutex, auto & callback_set) {
+                                    ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/context.cpp:458:10: note: in instantiation of function template specialization 'rclcpp::Context::get_shutdown_callback<rclcpp::Context::ShutdownType::pre_shutdown>' requested here
+  return get_shutdown_callback<ShutdownType::pre_shutdown>();
+         ^
+[ 13%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/detail/rmw_implementation_specific_payload.cpp.o
+2 warnings generated.
+[ 13%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/detail/rmw_implementation_specific_publisher_payload.cpp.o
+[ 14%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/detail/rmw_implementation_specific_subscription_payload.cpp.o
+[ 14%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/detail/utilities.cpp.o
+[ 14%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/duration.cpp.o
+[ 14%] Generating C++ type support for eProsima Fast-RTPS
+[ 14%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/dynamic_typesupport/dynamic_message.cpp.o
+[ 14%] Generating C type support for eProsima Fast-RTPS
+[ 15%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/dynamic_typesupport/dynamic_message_type.cpp.o
+[ 15%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/rclcpp/msg/header__type_support.cpp.o
+[ 16%] Generating C introspection for ROS interfaces
+[ 16%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/dynamic_typesupport/dynamic_message_type_builder.cpp.o
+[ 16%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/dynamic_typesupport/dynamic_message_type_support.cpp.o
+[ 16%] Generating C type support dispatch for ROS interfaces
+[ 16%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/rclcpp/msg/message_with_header__type_support.cpp.o
+[ 16%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/dynamic_typesupport/dynamic_serialization_support.cpp.o
+[ 17%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/rclcpp/msg/detail/dds_fastrtps/header__type_support.cpp.o
+[ 17%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/rclcpp/msg/detail/header__type_support_c.cpp.o
+[ 18%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/rclcpp/msg/string__type_support.cpp.o
+[ 19%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/event.cpp.o
+[ 19%] Generating C++ introspection for ROS interfaces
+[ 19%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/exceptions/exceptions.cpp.o
+[ 19%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/rclcpp/msg/detail/header__type_support.c.o
+[ 20%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/rclcpp/msg/header__type_support.cpp.o
+[ 20%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/rclcpp/msg/detail/dds_fastrtps/message_with_header__type_support.cpp.o
+[ 20%] Linking CXX shared library librclcpp__rosidl_typesupport_cpp.dylib
+[ 20%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/rclcpp/msg/detail/message_with_header__type_support.c.o
+[ 21%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/rclcpp/msg/detail/message_with_header__type_support_c.cpp.o
+[ 21%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executable_list.cpp.o
+[ 21%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/rclcpp/msg/message_with_header__type_support.cpp.o
+[ 21%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/rclcpp/msg/detail/string__type_support.c.o
+[ 21%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executor.cpp.o
+[ 21%] Built target rclcpp_test_msgs__rosidl_typesupport_cpp
+[ 21%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/rclcpp/msg/detail/dds_fastrtps/string__type_support.cpp.o
+[ 21%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/rclcpp/msg/string__type_support.cpp.o
+[ 22%] Linking C shared library librclcpp__rosidl_typesupport_introspection_c.dylib
+[ 22%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/rclcpp/msg/detail/string__type_support_c.cpp.o
+[ 23%] Linking CXX shared library librclcpp__rosidl_typesupport_c.dylib
+[ 24%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors.cpp.o
+[ 24%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/rclcpp/msg/detail/header__type_support.cpp.o
+[ 24%] Built target rclcpp_test_msgs__rosidl_typesupport_introspection_c
+[ 24%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/executor_entities_collection.cpp.o
+[ 24%] Built target rclcpp_test_msgs__rosidl_typesupport_c
+[ 24%] Linking CXX shared library librclcpp__rosidl_typesupport_fastrtps_cpp.dylib
+[ 24%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/rclcpp/msg/detail/message_with_header__type_support.cpp.o
+[ 24%] Linking CXX shared library librclcpp__rosidl_typesupport_fastrtps_c.dylib
+[ 24%] Built target rclcpp_test_msgs__rosidl_typesupport_fastrtps_cpp
+[ 25%] Building CXX object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/rclcpp/msg/detail/string__type_support.cpp.o
+[ 25%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/executor_entities_collector.cpp.o
+[ 25%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/executor_notify_waitable.cpp.o
+[ 25%] Built target rclcpp_test_msgs__rosidl_typesupport_fastrtps_c
+[ 26%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/multi_threaded_executor.cpp.o
+[ 26%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/single_threaded_executor.cpp.o
+[ 26%] Linking CXX shared library librclcpp__rosidl_typesupport_introspection_cpp.dylib
+[ 26%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/static_single_threaded_executor.cpp.o
+[ 26%] Built target rclcpp_test_msgs__rosidl_typesupport_introspection_cpp
+[ 26%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/executors/static_executor_entities_collector.cpp.o
+[ 26%] Built target rclcpp_test_msgs
+[ 26%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/experimental/executors/events_executor/events_executor.cpp.o
+[ 27%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/expand_topic_or_service_name.cpp.o
+[ 27%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/experimental/timers_manager.cpp.o
+[ 28%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/future_return_code.cpp.o
+[ 28%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/generic_publisher.cpp.o
+[ 28%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/generic_subscription.cpp.o
+[ 28%] Generating Python code for ROS interfaces
+[ 28%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/graph_listener.cpp.o
+[ 29%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/guard_condition.cpp.o
+[ 29%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/init_options.cpp.o
+[ 29%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/intra_process_manager.cpp.o
+[ 29%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/logger.cpp.o
+[ 30%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/logging_mutex.cpp.o
+[ 30%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/memory_strategy.cpp.o
+[ 30%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/memory_strategies.cpp.o
+[ 30%] Built target rclcpp_test_msgs__py
+[ 30%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_py.dir/rosidl_generator_py/rclcpp/msg/_header_s.c.o
+[ 30%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/message_info.cpp.o
+[ 30%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_py.dir/rosidl_generator_py/rclcpp/msg/_message_with_header_s.c.o
+[ 31%] Building C object test/rclcpp/CMakeFiles/rclcpp_test_msgs__rosidl_generator_py.dir/rosidl_generator_py/rclcpp/msg/_string_s.c.o
+[ 32%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/network_flow_endpoint.cpp.o
+[ 32%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node.cpp.o
+[ 32%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_base.cpp.o
+[ 32%] Linking C shared library rosidl_generator_py/rclcpp/librclcpp_test_msgs__rosidl_generator_py.dylib
+[ 32%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_clock.cpp.o
+[ 32%] Built target rclcpp_test_msgs__rosidl_generator_py
+[ 33%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_logging.cpp.o
+[ 33%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_graph.cpp.o
+[ 33%] Building C object test/rclcpp/CMakeFiles/rclcpp__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/rclcpp/_rclcpp_s.ep.rosidl_typesupport_introspection_c.c.o
+[ 33%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_parameters.cpp.o
+[ 34%] Linking C shared library rosidl_generator_py/rclcpp/rclcpp_s__rosidl_typesupport_introspection_c.cpython-311-darwin.so
+[ 34%] Built target rclcpp__rosidl_typesupport_introspection_c__pyext
+[ 34%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_services.cpp.o
+[ 35%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_time_source.cpp.o
+[ 35%] Building C object test/rclcpp/CMakeFiles/rclcpp__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/rclcpp/_rclcpp_s.ep.rosidl_typesupport_fastrtps_c.c.o
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/node_interfaces/node_logging.cpp:15:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_impl.hpp:38:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/create_client.hpp:21:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/node_interfaces/node_base_interface.hpp:25:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/callback_group.hpp:24:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/client.hpp:43:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:23:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/node_interfaces/node_logging.cpp:24:11: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+  logger_ = rclcpp::get_logger(NodeLogging::get_logger_name());
+          ^
+[ 35%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_timers.cpp.o
+[ 35%] Linking C shared library rosidl_generator_py/rclcpp/rclcpp_s__rosidl_typesupport_fastrtps_c.cpython-311-darwin.so
+[ 35%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_topics.cpp.o
+[ 35%] Built target rclcpp__rosidl_typesupport_fastrtps_c__pyext
+1 warning generated.
+[ 35%] Building C object test/rclcpp/CMakeFiles/rclcpp__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/rclcpp/_rclcpp_s.ep.rosidl_typesupport_c.c.o
+[ 35%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_interfaces/node_waitables.cpp.o
+[ 36%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/node_options.cpp.o
+[ 36%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter.cpp.o
+[ 37%] Linking C shared library rosidl_generator_py/rclcpp/rclcpp_s__rosidl_typesupport_c.cpython-311-darwin.so
+[ 37%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter_client.cpp.o
+[ 37%] Built target rclcpp__rosidl_typesupport_c__pyext
+[ 37%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter_event_handler.cpp.o
+[ 38%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter_events_filter.cpp.o
+[ 38%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter_map.cpp.o
+[ 39%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/serialization.cpp.o
+[ 39%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/serialized_message.cpp.o
+[ 39%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/service.cpp.o
+[ 39%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/signal_handler.cpp.o
+[ 40%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/subscription_base.cpp.o
+[ 40%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/subscription_intra_process_base.cpp.o
+[ 40%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/time.cpp.o
+[ 40%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/time_source.cpp.o
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/time_source.cpp:26:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:23:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/src/rclcpp/time_source.cpp:254:13: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+    logger_ = node_logging_->get_logger();
+            ^
+1 warning generated.
+[ 41%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/timer.cpp.o
+[ 41%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/type_support.cpp.o
+[ 41%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/typesupport_helpers.cpp.o
+[ 41%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/utilities.cpp.o
+[ 42%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/wait_set_policies/detail/write_preferring_read_write_lock.cpp.o
+[ 42%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/waitable.cpp.o
+[ 42%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/qos_overriding_options.cpp.o
+[ 42%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/event_handler.cpp.o
+[ 42%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/qos.cpp.o
+[ 43%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/publisher_base.cpp.o
+[ 43%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter_value.cpp.o
+[ 43%] Building CXX object CMakeFiles/rclcpp.dir/src/rclcpp/parameter_service.cpp.o
+[ 43%] Linking CXX shared library librclcpp.dylib
+[ 43%] Built target rclcpp
+[ 44%] Building CXX object test/CMakeFiles/test_rclcpp_gtest_macros.dir/utils/test_rclcpp_gtest_macros.cpp.o
+[ 44%] Linking CXX executable test_rclcpp_gtest_macros
+[ 44%] Built target test_rclcpp_gtest_macros
+[ 44%] Building CXX object test/benchmark/CMakeFiles/benchmark_service.dir/benchmark_service.cpp.o
+[ 44%] Linking CXX executable benchmark_service
+[ 44%] Built target benchmark_service
+[ 45%] Building CXX object test/rclcpp/CMakeFiles/test_allocator_common.dir/allocator/test_allocator_common.cpp.o
+[ 45%] Linking CXX executable test_allocator_common
+[ 45%] Built target test_allocator_common
+[ 45%] Building CXX object test/rclcpp/CMakeFiles/test_allocator_deleter.dir/allocator/test_allocator_deleter.cpp.o
+[ 45%] Linking CXX executable test_allocator_deleter
+[ 45%] Built target test_allocator_deleter
+[ 46%] Building CXX object test/rclcpp/CMakeFiles/test_exceptions.dir/exceptions/test_exceptions.cpp.o
+[ 46%] Linking CXX executable test_exceptions
+[ 46%] Built target test_exceptions
+[ 47%] Building CXX object test/rclcpp/CMakeFiles/test_allocator_memory_strategy.dir/strategies/test_allocator_memory_strategy.cpp.o
+[ 48%] Building CXX object test/rclcpp/CMakeFiles/test_message_pool_memory_strategy.dir/strategies/test_message_pool_memory_strategy.cpp.o
+[ 48%] Building CXX object test/benchmark/CMakeFiles/benchmark_parameter_client.dir/benchmark_parameter_client.cpp.o
+[ 49%] Linking CXX executable test_message_pool_memory_strategy
+[ 49%] Built target test_message_pool_memory_strategy
+[ 49%] Building CXX object test/benchmark/CMakeFiles/benchmark_node_parameters_interface.dir/benchmark_node_parameters_interface.cpp.o
+[ 50%] Building CXX object test/benchmark/CMakeFiles/benchmark_node.dir/benchmark_node.cpp.o
+[ 50%] Linking CXX executable benchmark_parameter_client
+[ 50%] Built target benchmark_parameter_client
+[ 50%] Building CXX object test/benchmark/CMakeFiles/benchmark_init_shutdown.dir/benchmark_init_shutdown.cpp.o
+[ 50%] Building CXX object test/rclcpp/CMakeFiles/test_any_service_callback.dir/test_any_service_callback.cpp.o
+[ 51%] Building CXX object test/benchmark/CMakeFiles/benchmark_executor.dir/benchmark_executor.cpp.o
+[ 51%] Linking CXX executable test_allocator_memory_strategy
+[ 51%] Linking CXX executable benchmark_node
+[ 51%] Built target test_allocator_memory_strategy
+[ 51%] Linking CXX executable benchmark_node_parameters_interface
+[ 52%] Building CXX object test/rclcpp/CMakeFiles/test_any_subscription_callback.dir/test_any_subscription_callback.cpp.o
+[ 52%] Linking CXX executable test_any_service_callback
+[ 52%] Built target benchmark_node
+[ 52%] Building CXX object test/benchmark/CMakeFiles/benchmark_client.dir/benchmark_client.cpp.o
+[ 52%] Built target benchmark_node_parameters_interface
+[ 52%] Building CXX object test/rclcpp/CMakeFiles/test_client.dir/test_client.cpp.o
+[ 53%] Building CXX object test/rclcpp/CMakeFiles/test_create_timer.dir/test_create_timer.cpp.o
+[ 53%] Built target test_any_service_callback
+[ 53%] Building CXX object test/rclcpp/CMakeFiles/test_add_callback_groups_to_executor__rmw_cyclonedds_cpp.dir/test_add_callback_groups_to_executor.cpp.o
+[ 53%] Building CXX object test/rclcpp/CMakeFiles/test_create_subscription.dir/test_create_subscription.cpp.o
+[ 53%] Linking CXX executable benchmark_init_shutdown
+[ 53%] Built target benchmark_init_shutdown
+[ 54%] Building CXX object test/rclcpp/CMakeFiles/test_add_callback_groups_to_executor__rmw_fastrtps_cpp.dir/test_add_callback_groups_to_executor.cpp.o
+[ 54%] Linking CXX executable benchmark_executor
+[ 54%] Linking CXX executable benchmark_client
+[ 54%] Linking CXX executable test_create_timer
+[ 54%] Built target benchmark_executor
+[ 54%] Built target benchmark_client
+[ 54%] Built target test_create_timer
+[ 55%] Building CXX object test/rclcpp/CMakeFiles/test_expand_topic_or_service_name.dir/test_expand_topic_or_service_name.cpp.o
+[ 55%] Building CXX object test/rclcpp/CMakeFiles/test_add_callback_groups_to_executor__rmw_fastrtps_dynamic_cpp.dir/test_add_callback_groups_to_executor.cpp.o
+[ 56%] Building CXX object test/rclcpp/CMakeFiles/test_future_return_code.dir/test_future_return_code.cpp.o
+[ 56%] Linking CXX executable test_create_subscription
+[ 56%] Linking CXX executable test_future_return_code
+[ 56%] Built target test_create_subscription
+[ 56%] Built target test_future_return_code
+[ 56%] Building CXX object test/rclcpp/CMakeFiles/test_intra_process_manager.dir/test_intra_process_manager.cpp.o
+[ 56%] Building CXX object test/rclcpp/CMakeFiles/test_intra_process_manager_with_allocators.dir/test_intra_process_manager_with_allocators.cpp.o
+[ 56%] Linking CXX executable test_client
+[ 56%] Built target test_client
+[ 57%] Linking CXX executable test_intra_process_manager
+[ 57%] Built target test_intra_process_manager
+[ 57%] Linking CXX executable test_expand_topic_or_service_name
+[ 57%] Built target test_expand_topic_or_service_name
+[ 57%] Linking CXX executable test_add_callback_groups_to_executor__rmw_cyclonedds_cpp
+[ 57%] Built target test_add_callback_groups_to_executor__rmw_cyclonedds_cpp
+[ 57%] Linking CXX executable test_intra_process_manager_with_allocators
+[ 57%] Built target test_intra_process_manager_with_allocators
+[ 57%] Linking CXX executable test_add_callback_groups_to_executor__rmw_fastrtps_cpp
+[ 57%] Built target test_add_callback_groups_to_executor__rmw_fastrtps_cpp
+[ 57%] Linking CXX executable test_any_subscription_callback
+[ 57%] Built target test_any_subscription_callback
+[ 57%] Linking CXX executable test_add_callback_groups_to_executor__rmw_fastrtps_dynamic_cpp
+[ 57%] Built target test_add_callback_groups_to_executor__rmw_fastrtps_dynamic_cpp
+[ 57%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__get_node_interfaces.dir/node_interfaces/test_get_node_interfaces.cpp.o
+[ 58%] Linking CXX executable test_node_interfaces__get_node_interfaces
+[ 58%] Built target test_node_interfaces__get_node_interfaces
+[ 58%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_base.dir/node_interfaces/test_node_base.cpp.o
+[ 58%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_clock.dir/node_interfaces/test_node_clock.cpp.o
+[ 58%] Building CXX object test/rclcpp/CMakeFiles/test_node.dir/test_node.cpp.o
+[ 58%] Linking CXX executable test_node_interfaces__node_base
+[ 58%] Built target test_node_interfaces__node_base
+[ 58%] Building CXX object test/rclcpp/CMakeFiles/test_message_memory_strategy.dir/test_message_memory_strategy.cpp.o
+[ 58%] Building CXX object test/rclcpp/CMakeFiles/test_memory_strategy.dir/test_memory_strategy.cpp.o
+[ 58%] Building CXX object test/rclcpp/CMakeFiles/test_loaned_message.dir/test_loaned_message.cpp.o
+[ 59%] Linking CXX executable test_node_interfaces__node_clock
+[ 59%] Built target test_node_interfaces__node_clock
+[ 59%] Linking CXX executable test_message_memory_strategy
+[ 59%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_graph.dir/node_interfaces/test_node_graph.cpp.o
+[ 59%] Built target test_message_memory_strategy
+[ 59%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_interfaces.dir/node_interfaces/test_node_interfaces.cpp.o
+[ 59%] Building CXX object test/rclcpp/CMakeFiles/test_intra_process_buffer.dir/test_intra_process_buffer.cpp.o
+[ 59%] Building CXX object test/rclcpp/CMakeFiles/test_ring_buffer_implementation.dir/test_ring_buffer_implementation.cpp.o
+[ 59%] Linking CXX executable test_ring_buffer_implementation
+[ 59%] Built target test_ring_buffer_implementation
+[ 59%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_parameters.dir/node_interfaces/test_node_parameters.cpp.o
+[ 59%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_services.dir/node_interfaces/test_node_services.cpp.o
+[ 60%] Linking CXX executable test_node_interfaces__node_interfaces
+[ 60%] Built target test_node_interfaces__node_interfaces
+[ 61%] Linking CXX executable test_loaned_message
+[ 61%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_timers.dir/node_interfaces/test_node_timers.cpp.o
+[ 61%] Built target test_loaned_message
+[ 61%] Linking CXX executable test_intra_process_buffer
+[ 61%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_topics.dir/node_interfaces/test_node_topics.cpp.o
+[ 61%] Built target test_intra_process_buffer
+[ 62%] Linking CXX executable test_memory_strategy
+[ 62%] Built target test_memory_strategy
+[ 63%] Linking CXX executable test_node_interfaces__node_services
+[ 63%] Linking CXX executable test_node_interfaces__node_parameters
+[ 63%] Built target test_node_interfaces__node_services
+[ 63%] Built target test_node_interfaces__node_parameters
+[ 64%] Linking CXX executable test_node
+[ 64%] Linking CXX executable test_node_interfaces__node_timers
+[ 64%] Built target test_node_interfaces__node_timers
+[ 64%] Built target test_node
+[ 65%] Linking CXX executable test_node_interfaces__node_topics
+[ 65%] Built target test_node_interfaces__node_topics
+[ 65%] Linking CXX executable test_node_interfaces__node_graph
+[ 65%] Built target test_node_interfaces__node_graph
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_parameter_service.dir/test_parameter_service.cpp.o
+[ 65%] Linking CXX executable test_parameter_service
+[ 65%] Built target test_parameter_service
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_parameter_events_filter.dir/test_parameter_events_filter.cpp.o
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_parameter_client.dir/test_parameter_client.cpp.o
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_init_options.dir/test_init_options.cpp.o
+[ 65%] Linking CXX executable test_parameter_events_filter
+[ 65%] Built target test_parameter_events_filter
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_parameter.dir/test_parameter.cpp.o
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_node_options.dir/test_node_options.cpp.o
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_node_global_args.dir/test_node_global_args.cpp.o
+[ 65%] Linking CXX executable test_init_options
+[ 65%] Built target test_init_options
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_parameter_event_handler.dir/test_parameter_event_handler.cpp.o
+[ 65%] Linking CXX executable test_node_options
+[ 65%] Built target test_node_options
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__test_template_utils.dir/node_interfaces/detail/test_template_utils.cpp.o
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_parameter_map.dir/test_parameter_map.cpp.o
+[ 65%] Building CXX object test/rclcpp/CMakeFiles/test_node_interfaces__node_waitables.dir/node_interfaces/test_node_waitables.cpp.o
+[ 65%] Linking CXX executable test_node_global_args
+[ 66%] Linking CXX executable test_node_interfaces__test_template_utils
+[ 66%] Built target test_node_global_args
+[ 66%] Building CXX object test/rclcpp/CMakeFiles/test_publisher.dir/test_publisher.cpp.o
+[ 67%] Linking CXX executable test_parameter
+[ 68%] Building CXX object test/rclcpp/CMakeFiles/test_publisher_with_type_adapter.dir/test_publisher_with_type_adapter.cpp.o
+[ 68%] Built target test_node_interfaces__test_template_utils
+[ 69%] Linking CXX executable test_parameter_map
+[ 69%] Built target test_parameter
+[ 69%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_with_type_adapter.dir/test_subscription_with_type_adapter.cpp.o
+[ 70%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_publisher_with_same_type_adapter.dir/test_subscription_publisher_with_same_type_adapter.cpp.o
+[ 70%] Built target test_parameter_map
+[ 70%] Linking CXX executable test_parameter_client
+[ 70%] Building CXX object test/rclcpp/CMakeFiles/test_publisher_subscription_count_api.dir/test_publisher_subscription_count_api.cpp.o
+[ 70%] Built target test_parameter_client
+[ 70%] Building CXX object test/rclcpp/CMakeFiles/test_qos.dir/test_qos.cpp.o
+[ 70%] Linking CXX executable test_node_interfaces__node_waitables
+[ 71%] Linking CXX executable test_parameter_event_handler
+[ 71%] Built target test_node_interfaces__node_waitables
+[ 71%] Linking CXX executable test_qos
+[ 71%] Built target test_parameter_event_handler
+[ 71%] Built target test_qos
+[ 71%] Linking CXX executable test_publisher_with_type_adapter
+[ 71%] Linking CXX executable test_publisher_subscription_count_api
+[ 71%] Built target test_publisher_with_type_adapter
+[ 71%] Built target test_publisher_subscription_count_api
+[ 72%] Linking CXX executable test_publisher
+[ 72%] Built target test_publisher
+[ 72%] Linking CXX executable test_subscription_with_type_adapter
+[ 72%] Built target test_subscription_with_type_adapter
+[ 72%] Linking CXX executable test_subscription_publisher_with_same_type_adapter
+[ 72%] Built target test_subscription_publisher_with_same_type_adapter
+[ 72%] Building CXX object test/rclcpp/CMakeFiles/test_qos_overriding_options.dir/test_qos_overriding_options.cpp.o
+[ 72%] Linking CXX executable test_qos_overriding_options
+[ 72%] Built target test_qos_overriding_options
+[ 73%] Building CXX object test/rclcpp/CMakeFiles/test_qos_parameters.dir/test_qos_parameters.cpp.o
+[ 73%] Linking CXX executable test_qos_parameters
+[ 73%] Built target test_qos_parameters
+[ 73%] Building CXX object test/rclcpp/CMakeFiles/test_rate.dir/test_rate.cpp.o
+[ 73%] Linking CXX executable test_rate
+[ 73%] Built target test_rate
+[ 73%] Building CXX object test/rclcpp/CMakeFiles/test_serialized_message_allocator.dir/test_serialized_message_allocator.cpp.o
+[ 75%] Building CXX object test/rclcpp/CMakeFiles/test_qos_event__rmw_fastrtps_dynamic_cpp.dir/test_qos_event.cpp.o
+[ 75%] Building CXX object test/rclcpp/CMakeFiles/test_serialized_message.dir/test_serialized_message.cpp.o
+[ 75%] Linking CXX executable test_serialized_message_allocator
+[ 76%] Building CXX object test/rclcpp/CMakeFiles/test_qos_event__rmw_fastrtps_cpp.dir/test_qos_event.cpp.o
+[ 76%] Building CXX object test/rclcpp/CMakeFiles/test_qos_event__rmw_cyclonedds_cpp.dir/test_qos_event.cpp.o
+[ 76%] Built target test_serialized_message_allocator
+[ 76%] Building CXX object test/rclcpp/CMakeFiles/test_generic_pubsub__rmw_fastrtps_dynamic_cpp.dir/test_generic_pubsub.cpp.o
+[ 76%] Linking CXX executable test_serialized_message
+[ 76%] Built target test_serialized_message
+[ 77%] Building CXX object test/rclcpp/CMakeFiles/test_service.dir/test_service.cpp.o
+[ 77%] Building CXX object test/rclcpp/CMakeFiles/test_generic_pubsub__rmw_fastrtps_cpp.dir/test_generic_pubsub.cpp.o
+[ 77%] Building CXX object test/rclcpp/CMakeFiles/test_generic_pubsub__rmw_cyclonedds_cpp.dir/test_generic_pubsub.cpp.o
+[ 77%] Building CXX object test/rclcpp/CMakeFiles/test_service_introspection.dir/test_service_introspection.cpp.o
+[ 77%] Linking CXX executable test_qos_event__rmw_fastrtps_dynamic_cpp
+[ 77%] Built target test_qos_event__rmw_fastrtps_dynamic_cpp
+[ 78%] Linking CXX executable test_generic_pubsub__rmw_fastrtps_dynamic_cpp
+[ 78%] Built target test_generic_pubsub__rmw_fastrtps_dynamic_cpp
+[ 78%] Linking CXX executable test_qos_event__rmw_fastrtps_cpp
+[ 78%] Linking CXX executable test_qos_event__rmw_cyclonedds_cpp
+[ 78%] Built target test_qos_event__rmw_cyclonedds_cpp
+[ 78%] Built target test_qos_event__rmw_fastrtps_cpp
+[ 78%] Linking CXX executable test_service
+[ 78%] Linking CXX executable test_generic_pubsub__rmw_fastrtps_cpp
+[ 79%] Linking CXX executable test_generic_pubsub__rmw_cyclonedds_cpp
+[ 79%] Linking CXX executable test_service_introspection
+[ 79%] Built target test_generic_pubsub__rmw_fastrtps_cpp
+[ 79%] Built target test_service
+[ 79%] Built target test_generic_pubsub__rmw_cyclonedds_cpp
+[ 79%] Built target test_service_introspection
+[ 79%] Building CXX object test/rclcpp/CMakeFiles/test_externally_defined_services.dir/test_externally_defined_services.cpp.o
+[ 79%] Linking CXX executable test_externally_defined_services
+[ 79%] Built target test_externally_defined_services
+[ 79%] Building CXX object test/rclcpp/CMakeFiles/test_duration.dir/test_duration.cpp.o
+[ 79%] Linking CXX executable test_duration
+[ 79%] Built target test_duration
+[ 79%] Building CXX object test/rclcpp/CMakeFiles/test_logger.dir/test_logger.cpp.o
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_logger.cpp:22:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_logger.cpp:48:10: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+  logger = rclcpp::get_node_logger(nullptr);
+         ^
+1 warning generated.
+[ 79%] Linking CXX executable test_logger
+[ 79%] Built target test_logger
+[ 79%] Building CXX object test/rclcpp/CMakeFiles/test_logging.dir/test_logging.cpp.o
+[ 79%] Linking CXX executable test_logging
+[ 79%] Built target test_logging
+[ 80%] Building CXX object test/rclcpp/CMakeFiles/test_context.dir/test_context.cpp.o
+[ 80%] Linking CXX executable test_context
+[ 80%] Built target test_context
+[ 80%] Building CXX object test/rclcpp/CMakeFiles/test_time.dir/test_time.cpp.o
+[ 80%] Linking CXX executable test_time
+[ 80%] Built target test_time
+[ 80%] Building CXX object test/rclcpp/CMakeFiles/test_timer.dir/test_timer.cpp.o
+[ 80%] Linking CXX executable test_timer
+[ 80%] Built target test_timer
+[ 81%] Building CXX object test/rclcpp/CMakeFiles/test_timers_manager.dir/test_timers_manager.cpp.o
+[ 81%] Linking CXX executable test_timers_manager
+[ 81%] Built target test_timers_manager
+[ 82%] Building CXX object test/rclcpp/CMakeFiles/test_time_source.dir/test_time_source.cpp.o
+[ 82%] Linking CXX executable test_time_source
+[ 82%] Built target test_time_source
+[ 82%] Building CXX object test/rclcpp/CMakeFiles/test_utilities.dir/test_utilities.cpp.o
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:28:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: note: in instantiation of member function 'mocking_utils::PatchTraits<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::mmkuser_mock_type_stub' requested here
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+               ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:462:43: note: in instantiation of member function 'mocking_utils::PatchTraits<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::mmkuser_mock_type_create' requested here
+      PatchTraits<ID, ReturnT(ArgTs...)>::MMK_MANGLE(mock_type, create);
+                                          ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:95:31: note: expanded from macro 'MMK_MANGLE'
+# define MMK_MANGLE(Id, Name) MMK_MANGLE_(Id, Name)
+                              ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:94:32: note: expanded from macro 'MMK_MANGLE_'
+# define MMK_MANGLE_(Id, Name) mmkuser_ ## Id ## _ ## Name
+                               ^
+<scratch space>:223:1: note: expanded from here
+mmkuser_mock_type_create
+^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:444:5: note: in instantiation of member function 'mocking_utils::Patch<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::replace_with' requested here
+    replace_with(replacement);
+    ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:177:32: note: in instantiation of member function 'mocking_utils::Patch<5, int (const rcl_arguments_s *, const rcutils_allocator_s *, void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **))>::then_call' requested here
+    auto mock = mocking_utils::patch_and_return(
+                               ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:537:3: note: expanded from macro 'patch_and_return'
+  patch(scope, function, [&](auto && ...) {return return_code;})
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:533:34: note: expanded from macro 'patch'
+  prepare_patch(scope, function).then_call(replacement)
+                                 ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:28:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_utilities.cpp:28:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/../mocking_utils/patch.hpp:141:3: warning: ordered comparison of function pointers ('void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)' and 'void (*)(const rcutils_log_location_s *, int, const char *, long long, const char *, char **)') [-Wordered-compare-function-pointers]
+  mmk_mock_define(mock_type, ReturnT, ArgT0, ArgT1, ArgT2);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:434:16: note: expanded from macro 'mmk_mock_define'
+    MMK_EXPAND(MMK_MOCK_DEFINE_IMPL(Id,                     \
+    ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/mock.h:444:9: note: expanded from macro 'MMK_MOCK_DEFINE_IMPL'
+        MMK_MOCK_DEFINE,                                    \
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:604:81: note: expanded from macro 'MMK_COND_VOID'
+# define MMK_COND_VOID(Macro, Params1, Params2, ...) MMK_EXPAND(MMK_VOID_SELECT(Macro, Params1, Params2, __VA_ARGS__))
+                                                                ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: (skipping 48 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+/Users/cursedrock17/ros2_rolling/install/mimick_vendor/include/mimick/preprocess.h:40:24: note: expanded from macro 'MMK_EXPAND'
+# define MMK_EXPAND(x) x
+                       ^
+4 warnings generated.
+[ 82%] Linking CXX executable test_utilities
+[ 82%] Built target test_utilities
+[ 83%] Building CXX object test/rclcpp/CMakeFiles/test_wait_for_message.dir/test_wait_for_message.cpp.o
+[ 83%] Linking CXX executable test_wait_for_message
+[ 83%] Built target test_wait_for_message
+[ 83%] Building CXX object test/rclcpp/CMakeFiles/test_logger_service.dir/test_logger_service.cpp.o
+[ 84%] Linking CXX executable test_logger_service
+[ 84%] Built target test_logger_service
+[ 84%] Building CXX object test/rclcpp/CMakeFiles/test_interface_traits.dir/test_interface_traits.cpp.o
+[ 85%] Linking CXX executable test_interface_traits
+[ 85%] Built target test_interface_traits
+[ 85%] Building CXX object test/rclcpp/CMakeFiles/test_executors.dir/executors/test_executors.cpp.o
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::experimental::executors::EventsExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::experimental::executors::EventsExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types1<rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+                                 typename Types::Tail>::Register(prefix,
+                                                        ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types2<rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types3<rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::StaticSingleThreadedExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::StaticSingleThreadedExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types2<rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+                                 typename Types::Tail>::Register(prefix,
+                                                        ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types3<rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::MultiThreadedExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::MultiThreadedExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:721:57: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types3<rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+                                 typename Types::Tail>::Register(prefix,
+                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:864:63: warning: lambda capture 'kNumMessages' is not required to be captured for this use [-Wunused-lambda-capture]
+    std::chrono::milliseconds(10), [this, &executor, &loops, &kNumMessages]() {
+                                                              ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:460:44: note: in instantiation of member function 'TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::SingleThreadedExecutor>::TestBody' requested here
+  Test* CreateTest() override { return new TestClass; }
+                                           ^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/internal/gtest-internal.h:717:13: note: in instantiation of member function 'testing::internal::TestFactoryImpl<TestIntraprocessExecutors_testIntraprocessRetrigger_Test<rclcpp::executors::SingleThreadedExecutor>>::CreateTest' requested here
+        new TestFactoryImpl<TestClass>);
+            ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_executors.cpp:830:1: note: in instantiation of member function 'testing::internal::TypeParameterizedTest<TestIntraprocessExecutors, testing::internal::TemplateSel<TestIntraprocessExecutors_testIntraprocessRetrigger_Test>, testing::internal::Types4<rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor, rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>>::Register' requested here
+TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
+^
+/Users/cursedrock17/ros2_rolling/install/gtest_vendor/src/gtest_vendor/include/gtest/gtest-typed-test.h:213:27: note: expanded from macro 'TYPED_TEST'
+              CaseName)>::Register("",                                        \
+                          ^
+4 warnings generated.
+[ 85%] Linking CXX executable test_executors
+[ 85%] Built target test_executors
+[ 85%] Building CXX object test/rclcpp/CMakeFiles/test_static_single_threaded_executor.dir/executors/test_static_single_threaded_executor.cpp.o
+[ 85%] Linking CXX executable test_static_single_threaded_executor
+[ 85%] Built target test_static_single_threaded_executor
+[ 85%] Building CXX object test/rclcpp/CMakeFiles/test_multi_threaded_executor.dir/executors/test_multi_threaded_executor.cpp.o
+[ 85%] Linking CXX executable test_multi_threaded_executor
+[ 85%] Built target test_multi_threaded_executor
+[ 86%] Building CXX object test/rclcpp/CMakeFiles/test_static_executor_entities_collector.dir/executors/test_static_executor_entities_collector.cpp.o
+[ 86%] Linking CXX executable test_static_executor_entities_collector
+[ 86%] Built target test_static_executor_entities_collector
+[ 86%] Building CXX object test/rclcpp/CMakeFiles/test_entities_collector.dir/executors/test_entities_collector.cpp.o
+[ 86%] Linking CXX executable test_entities_collector
+[ 86%] Built target test_entities_collector
+[ 87%] Building CXX object test/rclcpp/CMakeFiles/test_executor_notify_waitable.dir/executors/test_executor_notify_waitable.cpp.o
+[ 87%] Linking CXX executable test_executor_notify_waitable
+[ 87%] Built target test_executor_notify_waitable
+[ 88%] Building CXX object test/rclcpp/CMakeFiles/test_events_executor.dir/executors/test_events_executor.cpp.o
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:68:49: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&spin_exited, &executor, this]() {
+                                              ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:84:10: warning: unused variable 'time_msec' [-Wunused-variable]
+    auto time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+         ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:122:49: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&spin_exited, &executor, this]() {
+                                              ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:391:35: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&executor, this]() {executor.spin();});
+                                ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:423:35: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&executor, this]() {executor.spin();});
+                                ~~^~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/executors/test_events_executor.cpp:450:39: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  std::thread spinner([&executor_pub, this]() {executor_pub.spin();});
+                                    ~~^~~~
+6 warnings generated.
+[ 88%] Linking CXX executable test_events_executor
+[ 88%] Built target test_events_executor
+[ 88%] Building CXX object test/rclcpp/CMakeFiles/test_events_queue.dir/executors/test_events_queue.cpp.o
+[ 88%] Linking CXX executable test_events_queue
+[ 88%] Built target test_events_queue
+[ 88%] Building CXX object test/rclcpp/CMakeFiles/test_guard_condition.dir/test_guard_condition.cpp.o
+[ 89%] Linking CXX executable test_guard_condition
+[ 89%] Built target test_guard_condition
+[ 89%] Building CXX object test/rclcpp/CMakeFiles/test_wait_set.dir/test_wait_set.cpp.o
+[ 90%] Building CXX object test/rclcpp/CMakeFiles/test_find_weak_nodes.dir/test_find_weak_nodes.cpp.o
+[ 90%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_topic_statistics.dir/topic_statistics/test_subscription_topic_statistics.cpp.o
+[ 90%] Linking CXX executable test_find_weak_nodes
+[ 90%] Built target test_find_weak_nodes
+[ 91%] Building CXX object test/rclcpp/CMakeFiles/test_typesupport_helpers.dir/test_typesupport_helpers.cpp.o
+[ 91%] Building CXX object test/rclcpp/CMakeFiles/test_type_support.dir/test_type_support.cpp.o
+[ 91%] Linking CXX executable test_typesupport_helpers
+[ 91%] Built target test_typesupport_helpers
+[ 92%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_options.dir/test_subscription_options.cpp.o
+[ 93%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_traits.dir/test_subscription_traits.cpp.o
+[ 94%] Linking CXX executable test_wait_set
+[ 94%] Built target test_wait_set
+[ 94%] Linking CXX executable test_type_support
+[ 95%] Building CXX object test/rclcpp/CMakeFiles/test_dynamic_storage.dir/wait_set_policies/test_dynamic_storage.cpp.o
+[ 95%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_publisher_count_api.dir/test_subscription_publisher_count_api.cpp.o
+[ 95%] Linking CXX executable test_subscription_traits
+[ 95%] Built target test_type_support
+[ 95%] Linking CXX executable test_subscription_options
+[ 95%] Building CXX object test/rclcpp/CMakeFiles/test_storage_policy_common.dir/wait_set_policies/test_storage_policy_common.cpp.o
+[ 95%] Built target test_subscription_traits
+[ 96%] Building CXX object test/rclcpp/CMakeFiles/test_static_storage.dir/wait_set_policies/test_static_storage.cpp.o
+[ 96%] Built target test_subscription_options
+[ 97%] Building CXX object test/rclcpp/CMakeFiles/test_subscription.dir/test_subscription.cpp.o
+[ 98%] Building CXX object test/rclcpp/CMakeFiles/test_thread_safe_synchronization.dir/wait_set_policies/test_thread_safe_synchronization.cpp.o
+[ 98%] Linking CXX executable test_subscription_topic_statistics
+[ 98%] Built target test_subscription_topic_statistics
+[ 99%] Building CXX object test/rclcpp/CMakeFiles/test_rosout_qos.dir/test_rosout_qos.cpp.o
+[ 99%] Building CXX object test/rclcpp/CMakeFiles/test_rosout_subscription.dir/test_rosout_subscription.cpp.o
+[ 99%] Linking CXX executable test_rosout_qos
+[ 99%] Built target test_rosout_qos
+[ 99%] Building CXX object test/rclcpp/CMakeFiles/test_executor.dir/test_executor.cpp.o
+[ 99%] Linking CXX executable test_subscription_publisher_count_api
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:73:42: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+        rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:73:42: note: treat the string as an argument to avoid this
+        rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                         ^
+                                         "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:86:33: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+      RCLCPP_INFO(child_logger, this->rosout_msg_data.c_str());
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:86:33: note: treat the string as an argument to avoid this
+      RCLCPP_INFO(child_logger, this->rosout_msg_data.c_str());
+                                ^
+                                "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:96:52: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+      RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:96:52: note: treat the string as an argument to avoid this
+      RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                   ^
+                                                   "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:107:50: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+    RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:107:50: note: treat the string as an argument to avoid this
+    RCLCPP_INFO(rclcpp::get_logger(logger_name), this->rosout_msg_data.c_str());
+                                                 ^
+                                                 "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:122:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:122:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:136:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:136:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:21:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/rclcpp.hpp:167:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executors.hpp:21:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executors/multi_threaded_executor.hpp:25:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executor.hpp:37:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/executor_options.hpp:20:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/memory_strategies.hpp:18:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/memory_strategy.hpp:25:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/any_executable.hpp:20:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/callback_group.hpp:24:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/client.hpp:43:
+In file included from /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:23:
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/include/rclcpp/logger.hpp:130:3: warning: definition of implicit copy assignment operator for 'Logger' is deprecated because it has a user-declared copy constructor [-Wdeprecated-copy]
+  Logger(const Logger &) = default;
+  ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:142:10: note: in implicit copy assignment operator for 'rclcpp::Logger' first required here
+  logger = this->node->get_logger().get_child("child1");
+         ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:143:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:143:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:151:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:151:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:158:23: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:158:23: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(logger, this->rosout_msg_data.c_str());
+                      ^
+                      "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:174:34: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+  RCLCPP_INFO(grandchild_logger, this->rosout_msg_data.c_str());
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^~~~~~~~~~~
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^~~~~~~~~~~
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/rclcpp/test/rclcpp/test_rosout_subscription.cpp:174:34: note: treat the string as an argument to avoid this
+  RCLCPP_INFO(grandchild_logger, this->rosout_msg_data.c_str());
+                                 ^
+                                 "%s", 
+/Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/build/rclcpp/include/rclcpp/logging.hpp:529:7: note: expanded from macro 'RCLCPP_INFO'
+      __VA_ARGS__); \
+      ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:510:5: note: expanded from macro 'RCUTILS_LOG_INFO_NAMED'
+    __VA_ARGS__)
+    ^
+/Users/cursedrock17/ros2_rolling/install/rcutils/include/rcutils/rcutils/logging_macros.h:79:73: note: expanded from macro 'RCUTILS_LOG_COND_NAMED'
+      rcutils_log_internal(&__rcutils_logging_location, severity, name, __VA_ARGS__); \
+                                                                        ^
+[ 99%] Built target test_subscription_publisher_count_api
+[ 99%] Building CXX object test/rclcpp/CMakeFiles/test_graph_listener.dir/test_graph_listener.cpp.o
+11 warnings generated.
+[ 99%] Linking CXX executable test_rosout_subscription
+[ 99%] Built target test_rosout_subscription
+[ 99%] Linking CXX executable test_dynamic_storage
+[ 99%] Linking CXX executable test_executor
+[ 99%] Linking CXX executable test_graph_listener
+[ 99%] Built target test_dynamic_storage
+[ 99%] Built target test_executor
+[ 99%] Built target test_graph_listener
+[ 99%] Linking CXX executable test_static_storage
+[ 99%] Linking CXX executable test_storage_policy_common
+[ 99%] Linking CXX executable test_thread_safe_synchronization
+[ 99%] Built target test_storage_policy_common
+[ 99%] Built target test_static_storage
+[ 99%] Built target test_thread_safe_synchronization
+[ 99%] Linking CXX executable test_subscription
+[ 99%] Built target test_subscription
+[ 99%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_content_filter__rmw_fastrtps_dynamic_cpp.dir/test_subscription_content_filter.cpp.o
+[ 99%] Linking CXX executable test_subscription_content_filter__rmw_fastrtps_dynamic_cpp
+[ 99%] Built target test_subscription_content_filter__rmw_fastrtps_dynamic_cpp
+[100%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_content_filter__rmw_fastrtps_cpp.dir/test_subscription_content_filter.cpp.o
+[100%] Linking CXX executable test_subscription_content_filter__rmw_fastrtps_cpp
+[100%] Built target test_subscription_content_filter__rmw_fastrtps_cpp
+[100%] Building CXX object test/rclcpp/CMakeFiles/test_subscription_content_filter__rmw_cyclonedds_cpp.dir/test_subscription_content_filter.cpp.o
+[100%] Linking CXX executable test_subscription_content_filter__rmw_cyclonedds_cpp
+[100%] Built target test_subscription_content_filter__rmw_cyclonedds_cpp
+-- Install configuration: ""
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/lib/librclcpp.dylib
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/environment/library_path.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/environment/library_path.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/ament_index/resource_index/package_run_dependencies/rclcpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/ament_index/resource_index/parent_prefix_path/rclcpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/environment/ament_prefix_path.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/environment/ament_prefix_path.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/environment/path.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/environment/path.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/local_setup.bash
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/local_setup.sh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/local_setup.zsh
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/local_setup.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/package.dsv
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/ament_index/resource_index/packages/rclcpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/rclcppExport.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/rclcppExport-noconfig.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/rclcppConfig.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/cmake/rclcppConfig-version.cmake
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/share/rclcpp/package.xml
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_for_message.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/callback_group.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_service.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/event.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/logger.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/subscription_intra_process_buffer.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/create_intra_process_buffer.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/buffers
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/buffers/ring_buffer_implementation.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/buffers/buffer_implementation_base.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/buffers/intra_process_buffer.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executable_list.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/ros_message_intra_process_buffer.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/timers_manager.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/README.md
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executors
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executors/events_executor
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executors/events_executor/simple_events_queue.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executors/events_executor/events_queue.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executors/events_executor/events_executor.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/executors/events_executor/events_executor_event_types.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/subscription_intra_process.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/subscription_intra_process_base.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/experimental/intra_process_manager.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_impl.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/network_flow_endpoint.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/contexts
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/contexts/default_context.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/intra_process_buffer_type.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/any_service_callback.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/memory_strategy.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_publisher.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/graph_listener.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription_base.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/topic_statistics_state.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/rclcpp.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter_client.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/time.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/topic_statistics
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/topic_statistics/subscription_topic_statistics.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter_event_handler.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/time_source.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/init_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/macros.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/publisher_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/strategies
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/strategies/allocator_memory_strategy.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/strategies/message_pool_memory_strategy.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_generic_publisher.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_generic_subscription.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter_events_filter.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_timer.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/service.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/serialized_message.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/serialization.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/qos_overriding_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/expand_topic_or_service_name.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter_map.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_template.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/waitable.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription_factory.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executor_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/event_handler.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/exceptions
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/exceptions/exceptions.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/loaned_message.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/type_adapter.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/is_ros_compatible_type.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/message_info.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/get_message_type_support_handle.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/visibility_control.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/context.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/publisher.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/any_executable.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/resolve_intra_process_buffer_type.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/rmw_implementation_specific_payload.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/subscription_callback_type_helper.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/rmw_implementation_specific_subscription_payload.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/cpp_callback_trampoline.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/resolve_use_intra_process.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/README.md
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/qos_parameters.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/template_contains.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/rmw_implementation_specific_publisher_payload.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/utilities.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/template_unique.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/detail/resolve_enable_topic_statistics.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter_value.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/timer.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_result.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/guard_condition.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/generic_publisher.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/executor_notify_waitable.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/executor_entities_collection.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/static_executor_entities_collector.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/single_threaded_executor.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/static_single_threaded_executor.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executors/executor_entities_collector.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/clock.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/message_memory_strategy.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/allocator
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/allocator/allocator_deleter.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/allocator/allocator_common.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/publisher_base.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/future_return_code.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/intra_process_setting.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/type_support_decl.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/rate.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/utilities.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/exceptions.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/any_subscription_callback.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/memory_strategies.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/executor.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_waitables_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_base.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_time_source.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_timers_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_time_source_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_clock_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_timers.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_topics.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_waitables.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_logging.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_services_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_topics_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/detail
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_graph_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_clock.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_parameters_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_graph.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_logging_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_interfaces.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_parameters.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_base_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_services.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription_wait_set_mask.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_result_kind.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter_service.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/function_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/typesupport_helpers.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/duration.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/qos_event.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/client.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/qos.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/parameter.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/generic_subscription.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/publisher_factory.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/subscription_content_filter_options.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/dynamic_typesupport
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/dynamic_typesupport/dynamic_message.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/dynamic_typesupport/dynamic_message_type.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_client.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/thread_safe_synchronization.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/sequential_synchronization.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/dynamic_storage.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/static_storage.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/detail
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/detail/write_preferring_read_write_lock.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/detail/storage_policy_common.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/wait_set_policies/detail/synchronization_policy_common.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/create_subscription.hpp
+-- Up-to-date: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp
+-- Up-to-date: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp
+-- Up-to-date: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_logging_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_waitables_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_services_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_parameters_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_waitables_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_logging_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_clock_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_base_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_topics_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_services_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_clock_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_time_source_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_timers_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_timers_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_base_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/get_node_graph_interface.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_parameters_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_topics_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_time_source_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/node_interfaces/node_graph_interface_traits.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/logging.hpp
+-- Installing: /Users/cursedrock17/Documents/Coding/CPP/ros2/rclcpp/install/rclcpp/include/rclcpp/rclcpp/version.h

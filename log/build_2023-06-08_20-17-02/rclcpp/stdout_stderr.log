@@ -1,0 +1,33 @@
+-- The C compiler identification is AppleClang 14.0.0.14000029
+-- The CXX compiler identification is AppleClang 14.0.0.14000029
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+CMake Error at CMakeLists.txt:7 (find_package):
+  By not providing "Findament_cmake_ros.cmake" in CMAKE_MODULE_PATH this
+  project has asked CMake to find a package configuration file provided by
+  "ament_cmake_ros", but CMake did not find one.
+
+  Could not find a package configuration file provided by "ament_cmake_ros"
+  with any of the following names:
+
+    ament_cmake_rosConfig.cmake
+    ament_cmake_ros-config.cmake
+
+  Add the installation prefix of "ament_cmake_ros" to CMAKE_PREFIX_PATH or
+  set "ament_cmake_ros_DIR" to a directory containing one of the above files.
+  If "ament_cmake_ros" provides a separate development package or SDK, be
+  sure it has been installed.
+
+
+-- Configuring incomplete, errors occurred!
