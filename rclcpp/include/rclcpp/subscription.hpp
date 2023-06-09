@@ -185,7 +185,7 @@ public:
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
         resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
-      TRACEPOINT(
+      TRACETOOLS_TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
         static_cast<const void *>(subscription_intra_process_.get()));
@@ -201,11 +201,11 @@ public:
       this->subscription_topic_statistics_ = std::move(subscription_topic_statistics);
     }
 
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_init,
       static_cast<const void *>(get_subscription_handle().get()),
       static_cast<const void *>(this));
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_callback_added,
       static_cast<const void *>(this),
       static_cast<const void *>(&any_callback_));
