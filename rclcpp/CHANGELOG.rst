@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+21.2.0 (2023-06-07)
+-------------------
+* remove nolint since ament_cpplint updated for the c++17 header (`#2198 <https://github.com/ros2/rclcpp/issues/2198>`_)
+* Feature/available capacity of ipm (`#2173 <https://github.com/ros2/rclcpp/issues/2173>`_)
+* add mutex to protect events_executor current entity collection (`#2187 <https://github.com/ros2/rclcpp/issues/2187>`_)
+* Declare rclcpp callbacks before the rcl entities (`#2024 <https://github.com/ros2/rclcpp/issues/2024>`_)
+* Contributors: Alberto Soragna, Chen Lihui, DensoADAS, mauropasse
+
 21.1.1 (2023-05-11)
 -------------------
 * Fix race condition in events-executor (`#2177 <https://github.com/ros2/rclcpp/issues/2177>`_)

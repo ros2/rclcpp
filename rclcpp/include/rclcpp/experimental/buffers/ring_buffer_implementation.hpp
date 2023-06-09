@@ -52,7 +52,10 @@ public:
     if (capacity == 0) {
       throw std::invalid_argument("capacity must be a positive, non-zero value");
     }
-    TRACEPOINT(rclcpp_construct_ring_buffer, static_cast<const void *>(this), capacity_);
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_construct_ring_buffer,
+      static_cast<const void *>(this),
+      capacity_);
   }
 
   virtual ~RingBufferImplementation() {}
@@ -69,7 +72,7 @@ public:
 
     write_index_ = next_(write_index_);
     ring_buffer_[write_index_] = std::move(request);
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_ring_buffer_enqueue,
       static_cast<const void *>(this),
       write_index_,
@@ -98,7 +101,7 @@ public:
     }
 
     auto request = std::move(ring_buffer_[read_index_]);
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_ring_buffer_dequeue,
       static_cast<const void *>(this),
       read_index_,
@@ -162,7 +165,7 @@ public:
 
   void clear()
   {
-    TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
   }
 
 private:

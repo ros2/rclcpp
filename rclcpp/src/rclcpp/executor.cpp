@@ -378,13 +378,13 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 
   if (any_exec.timer) {
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_executor_execute,
       static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
     execute_timer(any_exec.timer);
   }
   if (any_exec.subscription) {
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_executor_execute,
       static_cast<const void *>(any_exec.subscription->get_subscription_handle().get()));
     execute_subscription(any_exec.subscription);
@@ -637,11 +637,12 @@ Executor::collect_entities()
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
-  TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
-
-  std::lock_guard<std::mutex> guard(mutex_);
-  if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
-    this->collect_entities();
+  TRACETOOLS_TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+      this->collect_entities();
+    }
   }
 
   auto wait_result = wait_set_.wait(timeout);
@@ -656,7 +657,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
-  TRACEPOINT(rclcpp_executor_get_next_ready);
+  TRACETOOLS_TRACEPOINT(rclcpp_executor_get_next_ready);
 
   std::lock_guard<std::mutex> guard(mutex_);
   if (ready_executables_.size() == 0) {
