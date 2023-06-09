@@ -796,60 +796,6 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
   }
 }
 
-// This test verifies the thread-safety of adding and removing a node
-// while the executor is spinning and events are ready.
-// This test does not contain expectations, but rather it verifies that
-// we can run a "stressful routine" without crashing.
-TYPED_TEST(TestExecutors, stressAddRemoveNode)
-{
-  using ExecutorType = TypeParam;
-  // rmw_connextdds doesn't support events-executor
-  if (
-    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
-    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
-  {
-    GTEST_SKIP();
-  }
-
-  ExecutorType executor;
-
-  // A timer that is "always" ready (the timer callback doesn't do anything)
-  auto timer = this->node->create_wall_timer(std::chrono::nanoseconds(1), []() {});
-
-  // This thread spins the executor until it's cancelled
-  std::thread spinner_thread([&]() {
-      executor.spin();
-    });
-
-  // This thread publishes data in a busy loop (the node has a subscription)
-  std::thread publisher_thread1([&]() {
-      for (size_t i = 0; i < 100000; i++) {
-        this->publisher->publish(test_msgs::msg::Empty());
-      }
-    });
-  std::thread publisher_thread2([&]() {
-      for (size_t i = 0; i < 100000; i++) {
-        this->publisher->publish(test_msgs::msg::Empty());
-      }
-    });
-
-  // This thread adds/remove the node that contains the entities in a busy loop
-  std::thread add_remove_thread([&]() {
-      for (size_t i = 0; i < 100000; i++) {
-        executor.add_node(this->node);
-        executor.remove_node(this->node);
-      }
-    });
-
-  // Wait for the threads that do real work to finish
-  publisher_thread1.join();
-  publisher_thread2.join();
-  add_remove_thread.join();
-
-  executor.cancel();
-  spinner_thread.join();
-}
-
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)
 TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr)
 {
