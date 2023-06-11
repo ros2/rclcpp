@@ -48,7 +48,7 @@ public:
    *
    * Example Usage:
    *
-   * If you have recieved a parameter event and are only interested in parameters foo and
+   * If you have received a parameter event and are only interested in parameters foo and
    * bar being added or changed but don't care about deletion.
    *
    * ```cpp
