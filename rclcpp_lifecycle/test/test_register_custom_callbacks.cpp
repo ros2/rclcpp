@@ -89,6 +89,7 @@ protected:
   // Custom callbacks
 
 public:
+  // Synchronous callbacks
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_custom_configure(const rclcpp_lifecycle::State & previous_state)
   {
@@ -134,7 +135,7 @@ public:
   }
 };
 
-TEST_F(TestRegisterCustomCallbacks, custom_callbacks) {
+TEST_F(TestRegisterCustomCallbacks, custom_synchronous_callbacks) {
   auto test_node = std::make_shared<CustomLifecycleNode>("testnode");
 
   test_node->register_on_configure(
