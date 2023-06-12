@@ -133,6 +133,71 @@ public:
     ++number_of_callbacks;
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
+
+  // Asynchronous callbacks
+  void
+  on_custom_configure_async(
+    const rclcpp_lifecycle::State & previous_state,
+    std::shared_ptr<rclcpp_lifecycle::ChangeStateHandler> change_state_hdl)
+  {
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, previous_state.id());
+    EXPECT_EQ(State::TRANSITION_STATE_CONFIGURING, get_current_state().id());
+    EXPECT_TRUE(change_state_hdl != nullptr);
+    ++number_of_callbacks;
+    change_state_hdl->send_callback_resp(
+      rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS);
+  }
+
+  void
+  on_custom_activate_async(
+    const rclcpp_lifecycle::State & previous_state,
+    std::shared_ptr<rclcpp_lifecycle::ChangeStateHandler> change_state_hdl)
+  {
+    EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
+    EXPECT_EQ(State::TRANSITION_STATE_ACTIVATING, get_current_state().id());
+    EXPECT_TRUE(change_state_hdl != nullptr);
+    ++number_of_callbacks;
+    change_state_hdl->send_callback_resp(
+      rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS);
+  }
+
+  void
+  on_custom_deactivate_async(
+    const rclcpp_lifecycle::State & previous_state,
+    std::shared_ptr<rclcpp_lifecycle::ChangeStateHandler> change_state_hdl)
+  {
+    EXPECT_EQ(State::PRIMARY_STATE_ACTIVE, previous_state.id());
+    EXPECT_EQ(State::TRANSITION_STATE_DEACTIVATING, get_current_state().id());
+    EXPECT_TRUE(change_state_hdl != nullptr);
+    ++number_of_callbacks;
+    change_state_hdl->send_callback_resp(
+      rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS);
+  }
+
+  void
+  on_custom_cleanup_async(
+    const rclcpp_lifecycle::State & previous_state,
+    std::shared_ptr<rclcpp_lifecycle::ChangeStateHandler> change_state_hdl)
+  {
+    EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
+    EXPECT_EQ(State::TRANSITION_STATE_CLEANINGUP, get_current_state().id());
+    EXPECT_TRUE(change_state_hdl != nullptr);
+    ++number_of_callbacks;
+    change_state_hdl->send_callback_resp(
+      rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS);
+  }
+
+  void
+  on_custom_shutdown_async(
+    const rclcpp_lifecycle::State &,
+    std::shared_ptr<rclcpp_lifecycle::ChangeStateHandler> change_state_hdl)
+  {
+    EXPECT_EQ(State::TRANSITION_STATE_SHUTTINGDOWN, get_current_state().id());
+    EXPECT_TRUE(change_state_hdl != nullptr);
+    ++number_of_callbacks;
+    change_state_hdl->send_callback_resp(
+      rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS);
+  }
 };
 
 TEST_F(TestRegisterCustomCallbacks, custom_synchronous_callbacks) {
@@ -158,6 +223,52 @@ TEST_F(TestRegisterCustomCallbacks, custom_synchronous_callbacks) {
     std::bind(
       &CustomLifecycleNode::on_custom_deactivate,
       test_node.get(), std::placeholders::_1));
+
+  EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+  EXPECT_EQ(
+    State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+  EXPECT_EQ(
+    State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+  EXPECT_EQ(
+    State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+  EXPECT_EQ(
+    State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+  EXPECT_EQ(
+    State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN)).id());
+
+  // check if all callbacks were successfully overwritten
+  EXPECT_EQ(5u, test_node->number_of_callbacks);
+}
+
+
+TEST_F(TestRegisterCustomCallbacks, custom_asynchronous_callbacks) {
+  auto test_node = std::make_shared<CustomLifecycleNode>("testnode");
+
+  test_node->register_async_on_configure(
+    std::bind(
+      &CustomLifecycleNode::on_custom_configure_async,
+      test_node.get(), std::placeholders::_1, std::placeholders::_2));
+  test_node->register_async_on_cleanup(
+    std::bind(
+      &CustomLifecycleNode::on_custom_cleanup_async,
+      test_node.get(), std::placeholders::_1, std::placeholders::_2));
+  test_node->register_async_on_shutdown(
+    std::bind(
+      &CustomLifecycleNode::on_custom_shutdown_async,
+      test_node.get(), std::placeholders::_1, std::placeholders::_2));
+  test_node->register_async_on_activate(
+    std::bind(
+      &CustomLifecycleNode::on_custom_activate_async,
+      test_node.get(), std::placeholders::_1, std::placeholders::_2));
+  test_node->register_async_on_deactivate(
+    std::bind(
+      &CustomLifecycleNode::on_custom_deactivate_async,
+      test_node.get(), std::placeholders::_1, std::placeholders::_2));
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(

@@ -22,6 +22,7 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 
 ### CPP High level library
 add_library(rclcpp_lifecycle
+  src/change_state_handler_impl.cpp
   src/lifecycle_node.cpp
   src/lifecycle_node_entities_manager.cpp
   src/lifecycle_node_interface_impl.cpp
@@ -113,6 +114,14 @@ if(BUILD_TESTING)
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 120)
   if(TARGET test_client)
     target_link_libraries(test_client
+      ${PROJECT_NAME}
+      mimick
+      ${rcl_interfaces_TARGETS}
+      rclcpp::rclcpp)
+  endif()
+  ament_add_gtest(test_lifecycle_async_transitions test/test_lifecycle_async_transitions.cpp TIMEOUT 120)
+  if(TARGET test_lifecycle_async_transitions)
+    target_link_libraries(test_lifecycle_async_transitions
       ${PROJECT_NAME}
       mimick
       ${rcl_interfaces_TARGETS}

@@ -156,6 +156,15 @@ LifecycleNode::LifecycleNodeInterfaceImpl::trigger_transition(
   return get_current_state();
 }
 
+bool
+LifecycleNode::LifecycleNodeInterfaceImpl::register_async_callback(
+  std::uint8_t lifecycle_transition,
+  std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> & cb)
+{
+  return state_manager_hdl_->register_async_callback(lifecycle_transition, cb);
+}
+
+
 void
 LifecycleNode::LifecycleNodeInterfaceImpl::add_managed_entity(
   std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface> managed_entity)

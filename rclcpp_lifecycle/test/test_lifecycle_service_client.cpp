@@ -28,6 +28,7 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "lifecycle_msgs/msg/transition.hpp"
 #include "lifecycle_msgs/msg/transition_description.hpp"
+#include "lifecycle_msgs/srv/cancel_transition.hpp"
 #include "lifecycle_msgs/srv/change_state.hpp"
 #include "lifecycle_msgs/srv/get_available_states.hpp"
 #include "lifecycle_msgs/srv/get_available_transitions.hpp"
@@ -54,7 +55,8 @@ constexpr char const * node_get_available_transitions_topic =
   "/lc_talker/get_available_transitions";
 constexpr char const * node_get_transition_graph_topic =
   "/lc_talker/get_transition_graph";
-
+constexpr char const * node_cancel_transition_topic =
+  "/lc_talker/cancel_transition";
 const lifecycle_msgs::msg::State unknown_state = lifecycle_msgs::msg::State();
 
 class EmptyLifecycleNode : public rclcpp_lifecycle::LifecycleNode
@@ -83,6 +85,8 @@ public:
       node_get_state_topic);
     client_change_state_ = this->create_client<lifecycle_msgs::srv::ChangeState>(
       node_change_state_topic);
+    client_cancel_transition_ = this->create_client<lifecycle_msgs::srv::CancelTransition>(
+      node_cancel_transition_topic);
   }
 
   lifecycle_msgs::msg::State
@@ -200,6 +204,24 @@ public:
     return std::vector<lifecycle_msgs::msg::TransitionDescription>();
   }
 
+  bool cancel_transition(std::chrono::seconds time_out = 1s)
+  {
+    auto request = std::make_shared<lifecycle_msgs::srv::CancelTransition::Request>();
+
+    if (!client_cancel_transition_->wait_for_service(time_out)) {
+      return false;
+    }
+
+    auto future_result = client_cancel_transition_->async_send_request(request);
+    auto future_status = future_result.wait_for(time_out);
+
+    if (future_status != std::future_status::ready) {
+      return false;
+    }
+
+    return future_result.get()->success;
+  }
+
 private:
   std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::GetAvailableStates>>
   client_get_available_states_;
@@ -209,6 +231,8 @@ private:
   client_get_transition_graph_;
   std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::GetState>> client_get_state_;
   std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::ChangeState>> client_change_state_;
+  std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::CancelTransition>>
+  client_cancel_transition_;
 };
 
 
@@ -472,6 +496,12 @@ TEST_F(TestLifecycleServiceClientRCLErrors, call_services_rcl_errors) {
 
   // on_get_transition_graph
   lifecycle_client->get_transition_graph();
+  rclcpp::spin_some(lifecycle_client);
+  EXPECT_THROW(
+    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+
+  // on_cancel_transition
+  lifecycle_client->cancel_transition();
   rclcpp::spin_some(lifecycle_client);
   EXPECT_THROW(
     rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);

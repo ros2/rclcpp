@@ -62,6 +62,11 @@ public:
     std::uint8_t lifecycle_transition,
     std::function<node_interfaces::LifecycleNodeInterface::CallbackReturn(const State &)> & cb);
 
+  bool
+  register_async_callback(
+    std::uint8_t lifecycle_transition,
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> & cb);
+
   const State &
   get_current_state() const;
 

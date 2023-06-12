@@ -27,6 +27,7 @@
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 #include "lifecycle_msgs/msg/transition_event.hpp"
+#include "lifecycle_msgs/srv/cancel_transition.hpp"
 #include "lifecycle_msgs/srv/change_state.hpp"
 #include "lifecycle_msgs/srv/get_state.hpp"
 #include "lifecycle_msgs/srv/get_available_states.hpp"
@@ -50,6 +51,7 @@ class LifecycleNodeStateManager
 {
 public:
   using ChangeStateSrv = lifecycle_msgs::srv::ChangeState;
+  using CancelTransitionSrv = lifecycle_msgs::srv::CancelTransition;
 
   void init(
     const std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
@@ -62,6 +64,11 @@ public:
   register_callback(
     std::uint8_t lifecycle_transition,
     std::function<node_interfaces::LifecycleNodeInterface::CallbackReturn(const State &)> & cb);
+
+  bool
+  register_async_callback(
+    std::uint8_t lifecycle_transition,
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> & cb);
 
   const State & get_current_state() const;
 
@@ -84,6 +91,14 @@ public:
 
   void process_callback_resp(
     node_interfaces::LifecycleNodeInterface::CallbackReturn cb_return_code);
+
+  bool is_cancelling_transition() const;
+
+  void cancel_transition(
+    std::function<void(std::string, bool, std::shared_ptr<rmw_request_id_t>)> callback = nullptr,
+    const std::shared_ptr<rmw_request_id_t> header = nullptr);
+
+  void user_handled_transition_cancel(bool success);
 
   /**
    * @brief Gets the transition id prioritizing request->transition.label over
@@ -110,6 +125,9 @@ private:
   std::map<
     std::uint8_t,
     std::function<node_interfaces::LifecycleNodeInterface::CallbackReturn(const State &)>> cb_map_;
+  std::map<
+    std::uint8_t,
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)>> async_cb_map_;
 
   /*ChangeState Members*/
   std::shared_ptr<ChangeStateHandlerImpl> change_state_hdl_;
@@ -136,6 +154,12 @@ private:
   node_interfaces::LifecycleNodeInterface::CallbackReturn
   execute_callback(unsigned int cb_id, const State & previous_state) const;
 
+  bool is_async_callback(unsigned int cb_id) const;
+
+  void execute_async_callback(unsigned int cb_id, const State & previous_state);
+
+  std::shared_ptr<ChangeStateHandler> create_new_change_state_handler();
+
   const char *
   get_label_for_return_code(node_interfaces::LifecycleNodeInterface::CallbackReturn cb_return_code);
 
@@ -148,6 +172,21 @@ private:
   bool in_non_error_transition_state(uint8_t) const;
 
   bool in_error_transition_state(uint8_t) const;
+
+  /*CancelTransition Members*/
+  std::function<void(std::string, bool,
+    std::shared_ptr<rmw_request_id_t>)> send_cancel_transition_resp_cb_;
+  std::shared_ptr<rmw_request_id_t> cancel_transition_header_;
+  std::atomic<bool> is_cancelling_transition_{false};
+
+  /*CancelTransition Helpers*/
+  bool is_running_async_callback() const;
+
+  void invalidate_change_state_handler();
+
+  bool mark_transition_as_cancelled();
+
+  void finalize_cancel_transition(const std::string & error_msg, bool success);
 };
 }  // namespace rclcpp_lifecycle
 #endif  // LIFECYCLE_NODE_STATE_MANAGER_HPP_
