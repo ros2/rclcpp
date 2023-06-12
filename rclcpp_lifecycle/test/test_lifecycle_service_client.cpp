@@ -54,6 +54,7 @@ constexpr char const * node_get_available_transitions_topic =
   "/lc_talker/get_available_transitions";
 constexpr char const * node_get_transition_graph_topic =
   "/lc_talker/get_transition_graph";
+
 const lifecycle_msgs::msg::State unknown_state = lifecycle_msgs::msg::State();
 
 class EmptyLifecycleNode : public rclcpp_lifecycle::LifecycleNode

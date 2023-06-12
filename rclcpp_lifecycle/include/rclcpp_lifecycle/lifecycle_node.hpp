@@ -1004,7 +1004,8 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_configure(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_configure(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
   /// Register the cleanup callback
   /**
@@ -1014,7 +1015,8 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_cleanup(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_cleanup(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
   /// Register the shutdown callback
   /**
@@ -1024,7 +1026,8 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_shutdown(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_shutdown(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
   /// Register the activate callback
   /**
@@ -1034,7 +1037,8 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_activate(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_activate(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
   /// Register the deactivate callback
   /**
@@ -1044,7 +1048,8 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_deactivate(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_deactivate(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
   /// Register the error callback
   /**
@@ -1054,7 +1059,8 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_error(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_error(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
   RCLCPP_LIFECYCLE_PUBLIC
   CallbackReturn
