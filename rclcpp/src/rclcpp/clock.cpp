@@ -183,6 +183,71 @@ Clock::sleep_for(Duration rel_time, Context::SharedPtr context)
 }
 
 bool
+Clock::started()
+{
+  if (!rcl_clock_valid(get_clock_handle())) {
+    throw std::runtime_error("clock is not rcl_clock_valid");
+  }
+  return rcl_clock_time_started(get_clock_handle());
+}
+
+bool
+Clock::wait_until_started(Context::SharedPtr context)
+{
+  if (!context || !context->is_valid()) {
+    throw std::runtime_error("context cannot be slept with because it's invalid");
+  }
+  if (!rcl_clock_valid(get_clock_handle())) {
+    throw std::runtime_error("clock cannot be waited on as it is not rcl_clock_valid");
+  }
+
+  if (started()) {
+    return true;
+  } else {
+    // Wait until the first non-zero time
+    return sleep_until(rclcpp::Time(0, 1, get_clock_type()), context);
+  }
+}
+
+bool
+Clock::wait_until_started(
+  const Duration & timeout,
+  Context::SharedPtr context,
+  const Duration & wait_tick_ns)
+{
+  if (!context || !context->is_valid()) {
+    throw std::runtime_error("context cannot be slept with because it's invalid");
+  }
+  if (!rcl_clock_valid(get_clock_handle())) {
+    throw std::runtime_error("clock cannot be waited on as it is not rcl_clock_valid");
+  }
+
+  Clock timeout_clock = Clock(RCL_STEADY_TIME);
+  Time start = timeout_clock.now();
+
+  // Check if the clock has started every wait_tick_ns nanoseconds
+  // Context check checks for rclcpp::shutdown()
+  while (!started() && context->is_valid()) {
+    if (timeout < wait_tick_ns) {
+      timeout_clock.sleep_for(timeout);
+    } else {
+      Duration time_left = start + timeout - timeout_clock.now();
+      if (time_left > wait_tick_ns) {
+        timeout_clock.sleep_for(Duration(wait_tick_ns));
+      } else {
+        timeout_clock.sleep_for(time_left);
+      }
+    }
+
+    if (timeout_clock.now() - start > timeout) {
+      return started();
+    }
+  }
+  return started();
+}
+
+
+bool
 Clock::ros_time_is_active()
 {
   if (!rcl_clock_valid(&impl_->rcl_clock_)) {
