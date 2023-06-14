@@ -245,10 +245,9 @@ const rosidl_message_type_support_t EmptyTypeSupport()
   return *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Empty>();
 }
 
-const rcl_publisher_options_t PublisherOptions()
+const rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> PublisherOptions()
 {
-  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
-         to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>();
 }
 
 class TestPublisherBase : public rclcpp::PublisherBase
@@ -256,7 +255,9 @@ class TestPublisherBase : public rclcpp::PublisherBase
 public:
   explicit TestPublisherBase(rclcpp::Node * node)
   : rclcpp::PublisherBase(
-      node->get_node_base_interface().get(), "topic", EmptyTypeSupport(), PublisherOptions()) {}
+      node->get_node_base_interface().get(), "topic", EmptyTypeSupport(),
+      PublisherOptions().to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10)),
+      PublisherOptions().event_callbacks, PublisherOptions().use_default_callbacks) {}
 };
 
 /*
@@ -408,9 +409,7 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
   std::allocator<void> allocator;
   {
     rclcpp::LoanedMessage<test_msgs::msg::Empty> loaned_msg(*publisher, allocator);
-    RCLCPP_EXPECT_THROW_EQ(
-      publisher->publish(std::move(loaned_msg)),
-      std::runtime_error("storing loaned messages in intra process is not supported yet"));
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
   }
 
   {
@@ -628,6 +627,41 @@ TEST_P(TestPublisherWaitForAllAcked, check_wait_for_all_acked_with_QosPolicy) {
     ASSERT_NO_THROW(pub->publish(*msg));
   }
   EXPECT_TRUE(pub->wait_for_all_acked(std::chrono::milliseconds(6000)));
+}
+
+TEST_F(TestPublisher, lowest_available_ipm_capacity) {
+  constexpr auto history_depth = 10u;
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options_ipm_disabled;
+  options_ipm_disabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options_ipm_enabled;
+  options_ipm_enabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Strings>) {};
+  auto pub_ipm_disabled = node->create_publisher<test_msgs::msg::Strings>(
+    "topic", history_depth,
+    options_ipm_disabled);
+  auto pub_ipm_enabled = node->create_publisher<test_msgs::msg::Strings>(
+    "topic", history_depth,
+    options_ipm_enabled);
+  auto sub = node->create_subscription<test_msgs::msg::Strings>(
+    "topic",
+    history_depth,
+    do_nothing);
+
+  ASSERT_EQ(1, pub_ipm_enabled->get_intra_process_subscription_count());
+  ASSERT_EQ(0, pub_ipm_disabled->lowest_available_ipm_capacity());
+  ASSERT_EQ(history_depth, pub_ipm_enabled->lowest_available_ipm_capacity());
+
+  auto msg = std::make_shared<test_msgs::msg::Strings>();
+  ASSERT_NO_THROW(pub_ipm_disabled->publish(*msg));
+  ASSERT_NO_THROW(pub_ipm_enabled->publish(*msg));
+
+  ASSERT_EQ(0, pub_ipm_disabled->lowest_available_ipm_capacity());
+  ASSERT_EQ(history_depth - 1u, pub_ipm_enabled->lowest_available_ipm_capacity());
 }
 
 INSTANTIATE_TEST_SUITE_P(

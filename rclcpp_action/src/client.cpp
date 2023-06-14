@@ -136,7 +136,6 @@ ClientBase::ClientBase(
 
 ClientBase::~ClientBase()
 {
-  clear_on_ready_callback();
 }
 
 bool
@@ -319,14 +318,19 @@ ClientBase::handle_result_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
-  const int64_t & sequence_number = response_header.sequence_number;
-  if (pimpl_->pending_result_responses.count(sequence_number) == 0) {
-    RCLCPP_ERROR(pimpl_->logger, "unknown result response, ignoring...");
-    return;
+  std::map<int64_t, ResponseCallback>::node_type pending_result_response;
+  {
+    std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
+    const int64_t & sequence_number = response_header.sequence_number;
+    if (pimpl_->pending_result_responses.count(sequence_number) == 0) {
+      RCLCPP_ERROR(pimpl_->logger, "unknown result response, ignoring...");
+      return;
+    }
+    pending_result_response =
+      pimpl_->pending_result_responses.extract(sequence_number);
   }
-  pimpl_->pending_result_responses[sequence_number](response);
-  pimpl_->pending_result_responses.erase(sequence_number);
+  auto & response_callback = pending_result_response.mapped();
+  response_callback(response);
 }
 
 void
@@ -434,7 +438,7 @@ ClientBase::set_callback_to_entity(
   // been replaced but the middleware hasn't been told about the new one yet.
   set_on_ready_callback(
     entity_type,
-    rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+    rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
     static_cast<const void *>(&new_callback));
 
   std::lock_guard<std::recursive_mutex> lock(listener_mutex_);
@@ -454,7 +458,7 @@ ClientBase::set_callback_to_entity(
     auto & cb = it->second;
     set_on_ready_callback(
       entity_type,
-      rclcpp::detail::cpp_callback_trampoline<const void *, size_t>,
+      rclcpp::detail::cpp_callback_trampoline<decltype(it->second), const void *, size_t>,
       static_cast<const void *>(&cb));
   }
 

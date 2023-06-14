@@ -26,7 +26,7 @@
 #include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 #include "rclcpp/subscription_content_filter_options.hpp"
 #include "rclcpp/topic_statistics_state.hpp"
@@ -110,7 +110,6 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
    * \param qos QoS profile for subcription.
    * \return rcl_subscription_options_t structure based on the rclcpp::QoS
    */
-  template<typename MessageT>
   rcl_subscription_options_t
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {

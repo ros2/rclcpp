@@ -22,15 +22,18 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/qos_event.hpp"
+#include "rclcpp/event_handler.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+
+#include "rosidl_dynamic_typesupport/types.h"
 
 using rclcpp::SubscriptionBase;
 
@@ -39,14 +42,17 @@ SubscriptionBase::SubscriptionBase(
   const rosidl_message_type_support_t & type_support_handle,
   const std::string & topic_name,
   const rcl_subscription_options_t & subscription_options,
-  bool is_serialized)
+  const SubscriptionEventCallbacks & event_callbacks,
+  bool use_default_callbacks,
+  DeliveredMessageKind delivered_message_kind)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
+  event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  is_serialized_(is_serialized)
+  delivered_message_kind_(delivered_message_kind)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
@@ -80,20 +86,14 @@ SubscriptionBase::SubscriptionBase(
         rcl_node_get_name(rcl_node_handle),
         rcl_node_get_namespace(rcl_node_handle));
     }
-
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription");
   }
+
+  bind_event_callbacks(event_callbacks_, use_default_callbacks);
 }
 
 SubscriptionBase::~SubscriptionBase()
 {
-  clear_on_new_message_callback();
-
-  for (const auto & pair : event_handlers_) {
-    rcl_subscription_event_type_t event_type = pair.first;
-    clear_on_new_qos_event_callback(event_type);
-  }
-
   if (!use_intra_process_) {
     return;
   }
@@ -106,6 +106,69 @@ SubscriptionBase::~SubscriptionBase()
     return;
   }
   ipm->remove_subscription(intra_process_subscription_id_);
+}
+
+void
+SubscriptionBase::bind_event_callbacks(
+  const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks)
+{
+  if (event_callbacks.deadline_callback) {
+    this->add_event_handler(
+      event_callbacks.deadline_callback,
+      RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+  }
+
+  if (event_callbacks.liveliness_callback) {
+    this->add_event_handler(
+      event_callbacks.liveliness_callback,
+      RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+  }
+
+  QOSRequestedIncompatibleQoSCallbackType incompatible_qos_cb;
+  if (event_callbacks.incompatible_qos_callback) {
+    incompatible_qos_cb = event_callbacks.incompatible_qos_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    incompatible_qos_cb = [this](QOSRequestedIncompatibleQoSInfo & info) {
+        this->default_incompatible_qos_callback(info);
+      };
+  }
+  // Register default callback when not specified
+  try {
+    if (incompatible_qos_cb) {
+      this->add_event_handler(incompatible_qos_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    // pass
+  }
+
+  IncompatibleTypeCallbackType incompatible_type_cb;
+  if (event_callbacks.incompatible_type_callback) {
+    incompatible_type_cb = event_callbacks.incompatible_type_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    incompatible_type_cb = [this](IncompatibleTypeInfo & info) {
+        this->default_incompatible_type_callback(info);
+      };
+  }
+  try {
+    if (incompatible_type_cb) {
+      this->add_event_handler(incompatible_type_cb, RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE);
+    }
+  } catch (UnsupportedEventTypeException & /*exc*/) {
+    // pass
+  }
+
+  if (event_callbacks.message_lost_callback) {
+    this->add_event_handler(
+      event_callbacks.message_lost_callback,
+      RCL_SUBSCRIPTION_MESSAGE_LOST);
+  }
+  if (event_callbacks.matched_callback) {
+    this->add_event_handler(
+      event_callbacks.matched_callback,
+      RCL_SUBSCRIPTION_MATCHED);
+  }
 }
 
 const char *
@@ -127,7 +190,7 @@ SubscriptionBase::get_subscription_handle() const
 }
 
 const
-std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+std::unordered_map<rcl_subscription_event_type_t, std::shared_ptr<rclcpp::EventHandlerBase>> &
 SubscriptionBase::get_event_handlers() const
 {
   return event_handlers_;
@@ -155,7 +218,7 @@ SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & mes
     &message_info_out.get_rmw_message_info(),
     nullptr  // rmw_subscription_allocation_t is unused here
   );
-  TRACEPOINT(rclcpp_take, static_cast<const void *>(message_out));
+  TRACETOOLS_TRACEPOINT(rclcpp_take, static_cast<const void *>(message_out));
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
     return false;
   } else if (RCL_RET_OK != ret) {
@@ -198,7 +261,13 @@ SubscriptionBase::get_message_type_support_handle() const
 bool
 SubscriptionBase::is_serialized() const
 {
-  return is_serialized_;
+  return delivered_message_kind_ == rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE;
+}
+
+rclcpp::DeliveredMessageKind
+SubscriptionBase::get_delivered_message_kind() const
+{
+  return delivered_message_kind_;
 }
 
 size_t
@@ -263,6 +332,17 @@ SubscriptionBase::default_incompatible_qos_callback(
     "Last incompatible policy: %s",
     get_topic_name(),
     policy_name.c_str());
+}
+
+void
+SubscriptionBase::default_incompatible_type_callback(
+  rclcpp::IncompatibleTypeInfo & event) const
+{
+  (void)event;
+
+  RCLCPP_WARN(
+    rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
+    "Incompatible type on topic '%s', no messages will be sent to it.", get_topic_name());
 }
 
 bool
@@ -371,8 +451,7 @@ SubscriptionBase::set_content_filter(
   rcl_subscription_content_filter_options_t options =
     rcl_get_zero_initialized_subscription_content_filter_options();
 
-  std::vector<const char *> cstrings =
-    get_c_vector_string(expression_parameters);
+  std::vector<const char *> cstrings = get_c_vector_string(expression_parameters);
   rcl_ret_t ret = rcl_subscription_content_filter_options_init(
     subscription_handle_.get(),
     get_c_string(filter_expression),
@@ -443,4 +522,15 @@ SubscriptionBase::get_content_filter() const
   }
 
   return ret_options;
+}
+
+
+// DYNAMIC TYPE ==================================================================================
+bool
+SubscriptionBase::take_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage & /*message_out*/,
+  rclcpp::MessageInfo & /*message_info_out*/)
+{
+  throw std::runtime_error("Unimplemented");
+  return false;
 }

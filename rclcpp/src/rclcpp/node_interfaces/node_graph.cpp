@@ -533,9 +533,8 @@ NodeGraph::notify_graph_change()
     }
   }
   graph_cv_.notify_all();
-  auto & node_gc = node_base_->get_notify_guard_condition();
   try {
-    node_gc.trigger();
+    node_base_->trigger_notify_guard_condition();
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
             std::string("failed to notify wait set on graph change: ") + ex.what());
@@ -788,4 +787,16 @@ const rclcpp::QoS &
 rclcpp::TopicEndpointInfo::qos_profile() const
 {
   return qos_profile_;
+}
+
+rosidl_type_hash_t &
+rclcpp::TopicEndpointInfo::topic_type_hash()
+{
+  return topic_type_hash_;
+}
+
+const rosidl_type_hash_t &
+rclcpp::TopicEndpointInfo::topic_type_hash() const
+{
+  return topic_type_hash_;
 }

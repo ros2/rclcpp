@@ -24,6 +24,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/macros.hpp"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -43,6 +44,7 @@ public:
 
   virtual bool has_data() const = 0;
   virtual bool use_take_shared_method() const = 0;
+  virtual size_t available_capacity() const = 0;
 };
 
 template<
@@ -94,6 +96,10 @@ public:
 
     buffer_ = std::move(buffer_impl);
 
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_buffer_to_ipb,
+      static_cast<const void *>(buffer_.get()),
+      static_cast<const void *>(this));
     if (!allocator) {
       message_allocator_ = std::make_shared<MessageAlloc>();
     } else {
@@ -136,6 +142,11 @@ public:
   bool use_take_shared_method() const override
   {
     return std::is_same<BufferT, MessageSharedPtr>::value;
+  }
+
+  size_t available_capacity() const override
+  {
+    return buffer_->available_capacity();
   }
 
 private:

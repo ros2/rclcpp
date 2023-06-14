@@ -14,14 +14,21 @@
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
-#include <string>
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
-#include <vector>
+#include <stdexcept>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rcl_interfaces/msg/list_parameters_result.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
@@ -69,7 +76,7 @@ LifecycleNode::LifecycleNode(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_)),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
@@ -78,7 +85,8 @@ LifecycleNode::LifecycleNode(
       node_topics_,
       node_graph_,
       node_services_,
-      node_logging_
+      node_logging_,
+      options.clock_type()
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
@@ -155,6 +163,12 @@ const char *
 LifecycleNode::get_namespace() const
 {
   return node_base_->get_namespace();
+}
+
+const char *
+LifecycleNode::get_fully_qualified_name() const
+{
+  return node_base_->get_fully_qualified_name();
 }
 
 rclcpp::Logger
@@ -528,25 +542,25 @@ LifecycleNode::register_on_error(
 }
 
 const State &
-LifecycleNode::get_current_state()
+LifecycleNode::get_current_state() const
 {
   return impl_->get_current_state();
 }
 
 std::vector<State>
-LifecycleNode::get_available_states()
+LifecycleNode::get_available_states() const
 {
   return impl_->get_available_states();
 }
 
 std::vector<Transition>
-LifecycleNode::get_available_transitions()
+LifecycleNode::get_available_transitions() const
 {
   return impl_->get_available_transitions();
 }
 
 std::vector<Transition>
-LifecycleNode::get_transition_graph()
+LifecycleNode::get_transition_graph() const
 {
   return impl_->get_transition_graph();
 }

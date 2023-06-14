@@ -14,6 +14,7 @@
 
 #include "rclcpp_lifecycle/transition.hpp"
 
+#include <stdexcept>
 #include <string>
 
 #include "lifecycle_msgs/msg/transition.hpp"

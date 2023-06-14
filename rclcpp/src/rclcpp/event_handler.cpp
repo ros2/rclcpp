@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
 #include <string>
 
-#include "rclcpp/qos_event.hpp"
+#include "rcl/event.h"
+
+#include "rclcpp/event_handler.hpp"
+#include "rclcpp/exceptions/exceptions.hpp"
 
 namespace rclcpp
 {
@@ -33,11 +37,14 @@ UnsupportedEventTypeException::UnsupportedEventTypeException(
   std::runtime_error(prefix + (prefix.empty() ? "" : ": ") + base_exc.formatted_message)
 {}
 
-QOSEventHandlerBase::~QOSEventHandlerBase()
+EventHandlerBase::~EventHandlerBase()
 {
-  if (on_new_event_callback_) {
-    clear_on_ready_callback();
-  }
+  // Since the rmw event listener holds a reference to
+  // this callback, we need to clear it on destruction of this class.
+  // This clearing is not needed for other rclcpp entities like pub/subs, since
+  // they do own the underlying rmw entities, which are destroyed
+  // on their rclcpp destructors, thus no risk of dangling pointers.
+  clear_on_ready_callback();
 
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
@@ -49,14 +56,14 @@ QOSEventHandlerBase::~QOSEventHandlerBase()
 
 /// Get the number of ready events.
 size_t
-QOSEventHandlerBase::get_number_of_ready_events()
+EventHandlerBase::get_number_of_ready_events()
 {
   return 1;
 }
 
 /// Add the Waitable to a wait set.
 void
-QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+EventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_wait_set_add_event(wait_set, &event_handle_, &wait_set_event_index_);
   if (RCL_RET_OK != ret) {
@@ -66,13 +73,13 @@ QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 
 /// Check if the Waitable is ready.
 bool
-QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
+EventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
 {
   return wait_set->events[wait_set_event_index_] == &event_handle_;
 }
 
 void
-QOSEventHandlerBase::set_on_new_event_callback(
+EventHandlerBase::set_on_new_event_callback(
   rcl_event_callback_t callback,
   const void * user_data)
 {
@@ -83,7 +90,7 @@ QOSEventHandlerBase::set_on_new_event_callback(
 
   if (RCL_RET_OK != ret) {
     using rclcpp::exceptions::throw_from_rcl_error;
-    throw_from_rcl_error(ret, "failed to set the on new message callback for QOS Event");
+    throw_from_rcl_error(ret, "failed to set the on new message callback for Event");
   }
 }
 

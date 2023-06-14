@@ -238,3 +238,75 @@ TEST(TestIntraProcessBuffer, unique_buffer_consume) {
   EXPECT_EQ(original_value, *popped_unique_msg);
   EXPECT_EQ(original_message_pointer, popped_message_pointer);
 }
+
+/*
+  Check the available buffer capacity while storing and consuming data from an intra-process
+  buffer.
+  The initial available buffer capacity should equal the buffer size.
+  Inserting a message should decrease the available buffer capacity by 1.
+  Consuming a message should increase the available buffer capacity by 1.
+ */
+TEST(TestIntraProcessBuffer, available_capacity) {
+  using MessageT = char;
+  using Alloc = std::allocator<void>;
+  using Deleter = std::default_delete<MessageT>;
+  using SharedMessageT = std::shared_ptr<const MessageT>;
+  using UniqueMessageT = std::unique_ptr<MessageT, Deleter>;
+  using UniqueIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, UniqueMessageT>;
+
+  constexpr auto history_depth = 5u;
+
+  auto buffer_impl =
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<UniqueMessageT>>(
+    history_depth);
+
+  UniqueIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
+
+  EXPECT_EQ(history_depth, intra_process_buffer.available_capacity());
+
+  auto original_unique_msg = std::make_unique<char>('a');
+  auto original_message_pointer = reinterpret_cast<std::uintptr_t>(original_unique_msg.get());
+  auto original_value = *original_unique_msg;
+
+  intra_process_buffer.add_unique(std::move(original_unique_msg));
+
+  EXPECT_EQ(history_depth - 1u, intra_process_buffer.available_capacity());
+
+  SharedMessageT popped_shared_msg;
+  popped_shared_msg = intra_process_buffer.consume_shared();
+  auto popped_message_pointer = reinterpret_cast<std::uintptr_t>(popped_shared_msg.get());
+
+  EXPECT_EQ(history_depth, intra_process_buffer.available_capacity());
+  EXPECT_EQ(original_value, *popped_shared_msg);
+  EXPECT_EQ(original_message_pointer, popped_message_pointer);
+
+  original_unique_msg = std::make_unique<char>('b');
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(original_unique_msg.get());
+  original_value = *original_unique_msg;
+
+  intra_process_buffer.add_unique(std::move(original_unique_msg));
+
+  auto second_unique_msg = std::make_unique<char>('c');
+  auto second_message_pointer = reinterpret_cast<std::uintptr_t>(second_unique_msg.get());
+  auto second_value = *second_unique_msg;
+
+  intra_process_buffer.add_unique(std::move(second_unique_msg));
+
+  EXPECT_EQ(history_depth - 2u, intra_process_buffer.available_capacity());
+
+  UniqueMessageT popped_unique_msg;
+  popped_unique_msg = intra_process_buffer.consume_unique();
+  popped_message_pointer = reinterpret_cast<std::uintptr_t>(popped_unique_msg.get());
+
+  EXPECT_EQ(history_depth - 1u, intra_process_buffer.available_capacity());
+  EXPECT_EQ(original_value, *popped_unique_msg);
+  EXPECT_EQ(original_message_pointer, popped_message_pointer);
+
+  popped_unique_msg = intra_process_buffer.consume_unique();
+  popped_message_pointer = reinterpret_cast<std::uintptr_t>(popped_unique_msg.get());
+
+  EXPECT_EQ(history_depth, intra_process_buffer.available_capacity());
+  EXPECT_EQ(second_value, *popped_unique_msg);
+  EXPECT_EQ(second_message_pointer, popped_message_pointer);
+}

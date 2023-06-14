@@ -156,7 +156,7 @@ public:
     const std::shared_ptr<rmw_request_id_t> & request_header,
     std::shared_ptr<typename ServiceT::Request> request)
   {
-    TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     if (std::holds_alternative<std::monostate>(callback_)) {
       // TODO(ivanpauno): Remove the set method, and force the users of this class
       // to pass a callback at construnciton.
@@ -182,7 +182,7 @@ public:
       const auto & cb = std::get<SharedPtrWithRequestHeaderCallback>(callback_);
       cb(request_header, std::move(request), response);
     }
-    TRACEPOINT(callback_end, static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
     return response;
   }
 
@@ -191,10 +191,14 @@ public:
 #ifndef TRACETOOLS_DISABLED
     std::visit(
       [this](auto && arg) {
-        TRACEPOINT(
-          rclcpp_callback_register,
-          static_cast<const void *>(this),
-          tracetools::get_symbol(arg));
+        if (TRACETOOLS_TRACEPOINT_ENABLED(rclcpp_callback_register)) {
+          char * symbol = tracetools::get_symbol(arg);
+          TRACETOOLS_DO_TRACEPOINT(
+            rclcpp_callback_register,
+            static_cast<const void *>(this),
+            symbol);
+          std::free(symbol);
+        }
       }, callback_);
 #endif  // TRACETOOLS_DISABLED
   }

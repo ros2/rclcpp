@@ -81,7 +81,7 @@ void spin_until_time(
 
     executor.spin_once(10ms);
 
-    if (clock->now().nanoseconds() >= end_time.count()) {
+    if (clock->now().nanoseconds() == end_time.count()) {
       return;
     }
   }
@@ -267,6 +267,35 @@ TEST(TimeSource, invalid_sim_time_parameter_override)
   rclcpp::shutdown();
 }
 
+TEST(TimeSource, valid_clock_type_for_sim_time)
+{
+  rclcpp::init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  auto node = std::make_shared<rclcpp::Node>("my_node", options);
+  EXPECT_TRUE(
+    node->set_parameter(
+      rclcpp::Parameter(
+        "use_sim_time", rclcpp::ParameterValue(
+          true))).successful);
+  rclcpp::shutdown();
+}
+
+TEST(TimeSource, invalid_clock_type_for_sim_time)
+{
+  rclcpp::init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  options.clock_type(RCL_STEADY_TIME);
+  auto node = std::make_shared<rclcpp::Node>("my_node", options);
+  EXPECT_FALSE(
+    node->set_parameter(
+      rclcpp::Parameter(
+        "use_sim_time", rclcpp::ParameterValue(
+          true))).successful);
+  rclcpp::shutdown();
+}
+
 TEST_F(TestTimeSource, clock) {
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
@@ -276,7 +305,7 @@ TEST_F(TestTimeSource, clock) {
 
   trigger_clock_changes(node, ros_clock, false);
 
-  // Even now that we've recieved a message, ROS time should still not be active since the
+  // Even now that we've received a message, ROS time should still not be active since the
   // parameter has not been explicitly set.
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
