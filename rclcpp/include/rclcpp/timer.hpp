@@ -54,6 +54,9 @@ public:
    * \param period The interval at which the timer fires
    * \param context node context
    * \param autostart timer state on initialization
+   *
+   * In order to activate a timer that is not started on initialization,
+   * user should call the reset() method.
    */
   RCLCPP_PUBLIC
   explicit TimerBase(
