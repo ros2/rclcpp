@@ -313,13 +313,13 @@ TEST_F(TestSubscription, take) {
     }
     test_msgs::msg::Empty msg;
     rclcpp::MessageInfo msg_info;
-    bool message_recieved = false;
+    bool message_received = false;
     auto start = std::chrono::steady_clock::now();
     do {
-      message_recieved = sub->take(msg, msg_info);
+      message_received = sub->take(msg, msg_info);
       std::this_thread::sleep_for(100ms);
-    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-    EXPECT_TRUE(message_recieved);
+    } while (!message_received && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_received);
   }
   // TODO(wjwwood): figure out a good way to test the intra-process exclusion behavior.
 }
@@ -350,13 +350,13 @@ TEST_F(TestSubscription, take_serialized) {
     }
     std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
     rclcpp::MessageInfo msg_info;
-    bool message_recieved = false;
+    bool message_received = false;
     auto start = std::chrono::steady_clock::now();
     do {
-      message_recieved = sub->take_serialized(*msg, msg_info);
+      message_received = sub->take_serialized(*msg, msg_info);
       std::this_thread::sleep_for(100ms);
-    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-    EXPECT_TRUE(message_recieved);
+    } while (!message_received && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_received);
   }
 }
 
