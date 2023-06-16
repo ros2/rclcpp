@@ -486,6 +486,14 @@ public:
   {
     rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, &response);
 
+    if (ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
+        "failed to send response: %s",
+        rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    }
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
