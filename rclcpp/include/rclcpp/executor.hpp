@@ -637,6 +637,9 @@ protected:
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
+  /// Flag specifying that the executor has been cancelled and should not spin
+  std::atomic_bool executor_canceled{false};
+
   /// Guard condition for signaling the rmw layer to wake up for special events.
   std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;
 

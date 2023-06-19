@@ -41,6 +41,10 @@ StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor()
 void
 StaticSingleThreadedExecutor::spin()
 {
+  if (executor_canceled.exchange(false)) {
+    return;
+  }
+
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }

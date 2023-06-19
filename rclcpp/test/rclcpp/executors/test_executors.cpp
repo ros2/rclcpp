@@ -373,6 +373,25 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout)
   spinner.join();
 }
 
+TYPED_TEST(TestExecutors, testCancel)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  ExecutorType executor;
+
+  auto executor_thread = std::thread([&](){ executor.spin();});
+  executor.cancel();
+  // This should not timeout
+  executor_thread.join();
+}
+
 class TestWaitable : public rclcpp::Waitable
 {
 public:

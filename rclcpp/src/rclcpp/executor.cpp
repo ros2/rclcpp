@@ -500,6 +500,8 @@ void
 Executor::cancel()
 {
   spinning.store(false);
+  executor_canceled.store(true);
+
   try {
     interrupt_guard_condition_->trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
