@@ -22,7 +22,7 @@
 #include <memory>
 #include <vector>
 
-#include "rcl_yaml_param_parser/types.h"
+#include "rcutils/thread_attr.h"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -73,7 +73,7 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
-  rcl_thread_attrs_t * thread_attributes_;
+  rcutils_thread_attrs_t * thread_attributes_;
 };
 
 }  // namespace executors

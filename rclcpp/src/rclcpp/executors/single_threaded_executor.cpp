@@ -13,10 +13,10 @@
 // limitations under the License.
 
 #include "rcpputils/scope_exit.hpp"
+#include "rcpputils/threads.hpp"
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/any_executable.hpp"
-#include "rclcpp/threads.hpp"
 
 using rclcpp::executors::SingleThreadedExecutor;
 
@@ -48,10 +48,11 @@ void
 SingleThreadedExecutor::spin()
 {
   if (thread_attributes_) {
-    rclcpp::detail::ThreadAttribute thread_attr;
+    rcpputils::Thread::Attribute thread_attr;
     thread_attr.set_thread_attribute(
       thread_attributes_->attributes[0]);
-    rclcpp::this_thread::run_with_thread_attribute(thread_attr, &SingleThreadedExecutor::run, this);
+    rcpputils::this_thread::run_with_thread_attribute(
+      thread_attr, &SingleThreadedExecutor::run, this);
   } else {
     run();
   }

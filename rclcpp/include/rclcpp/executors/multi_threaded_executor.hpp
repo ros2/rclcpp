@@ -20,10 +20,9 @@
 #include <mutex>
 #include <vector>
 #include <set>
-#include <thread>
 #include <unordered_map>
 
-#include "rcl_yaml_param_parser/types.h"
+#include "rcutils/thread_attr.h"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -41,7 +40,7 @@ public:
 
   /// Constructor for MultiThreadedExecutor.
   /**
-   * For the yield_before_execute option, when true std::this_thread::yield()
+   * For the yield_before_execute option, when true rcpputils::this_thread::yield()
    * will be called after acquiring work (as an AnyExecutable) and
    * releasing the spinning lock, but before executing the work.
    * This is useful for reproducing some bugs related to taking work more than
@@ -50,7 +49,7 @@ public:
    * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found (minimum of 2)
-   * \param yield_before_execute if true std::this_thread::yield() is called
+   * \param yield_before_execute if true rcpputils::this_thread::yield() is called
    * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
@@ -87,7 +86,7 @@ private:
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
-  rcl_thread_attrs_t * thread_attributes_;
+  rcutils_thread_attrs_t * thread_attributes_;
 };
 
 }  // namespace executors
