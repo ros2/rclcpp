@@ -769,7 +769,7 @@ public:
   rclcpp::Node::SharedPtr node;
   rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
   rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
-  std::atomic_int callback_count;
+  std::atomic_size_t callback_count;
 };
 
 TYPED_TEST_SUITE(TestIntraprocessExecutors, ExecutorTypes, ExecutorTypeNames);
@@ -785,7 +785,7 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   ExecutorType executor;
   executor.add_node(this->node);
 
-  EXPECT_EQ(0, this->callback_count.load());
+  EXPECT_EQ(0u, this->callback_count.load());
   this->publisher->publish(test_msgs::msg::Empty());
 
   // Wait for up to 5 seconds for the first message to come available.
