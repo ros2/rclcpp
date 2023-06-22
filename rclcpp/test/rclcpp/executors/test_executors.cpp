@@ -738,7 +738,7 @@ public:
     test_name << test_info->test_case_name() << "_" << test_info->name();
     node = std::make_shared<rclcpp::Node>("node", test_name.str());
 
-    callback_count = 0;
+    callback_count = 0u;
 
     const std::string topic_name = std::string("topic_") + test_name.str();
 
@@ -747,7 +747,7 @@ public:
     publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, rclcpp::QoS(1), po);
 
     auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {
-        this->callback_count.fetch_add(1);
+        this->callback_count.fetch_add(1u);
       };
 
     rclcpp::SubscriptionOptions so;
@@ -769,7 +769,7 @@ public:
   rclcpp::Node::SharedPtr node;
   rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
   rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
-  std::atomic_int callback_count;
+  std::atomic_size_t callback_count;
 };
 
 TYPED_TEST_SUITE(TestIntraprocessExecutors, ExecutorTypes, ExecutorTypeNames);
@@ -785,7 +785,7 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   ExecutorType executor;
   executor.add_node(this->node);
 
-  EXPECT_EQ(0, this->callback_count.load());
+  EXPECT_EQ(0u, this->callback_count.load());
   this->publisher->publish(test_msgs::msg::Empty());
 
   // Wait for up to 5 seconds for the first message to come available.
@@ -799,7 +799,7 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   EXPECT_EQ(1u, this->callback_count.load());
 
   // reset counter
-  this->callback_count.store(0);
+  this->callback_count.store(0u);
 
   for (size_t ii = 0; ii < kNumMessages; ++ii) {
     this->publisher->publish(test_msgs::msg::Empty());
