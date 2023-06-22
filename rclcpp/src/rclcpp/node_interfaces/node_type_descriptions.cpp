@@ -53,6 +53,11 @@ public:
 
     rclcpp::ParameterValue enable_param;
     if (!node_parameters->has_parameter(enable_param_name)) {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.name = enable_param_name;
+      descriptor.type = rclcpp::PARAMETER_BOOL;
+      descriptor.description = "Enable the ~/get_type_description service for this node.";
+      descriptor.read_only = true;
       enable_param = node_parameters->declare_parameter(
         enable_param_name, rclcpp::ParameterValue(true));
     } else {
