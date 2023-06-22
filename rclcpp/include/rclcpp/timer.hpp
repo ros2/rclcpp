@@ -53,12 +53,17 @@ public:
    * \param clock A clock to use for time and sleeping
    * \param period The interval at which the timer fires
    * \param context node context
+   * \param autostart timer state on initialization
+   *
+   * In order to activate a timer that is not started on initialization,
+   * user should call the reset() method.
    */
   RCLCPP_PUBLIC
   explicit TimerBase(
     Clock::SharedPtr clock,
     std::chrono::nanoseconds period,
-    rclcpp::Context::SharedPtr context);
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true);
 
   /// TimerBase destructor
   RCLCPP_PUBLIC
@@ -220,13 +225,15 @@ public:
    * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
    * \param[in] context custom context to be used.
+   * \param[in] autostart timer state on initialization
    * \param[in] amount_of_callbacks Quantity of times the callback will be triggered.
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
-    rclcpp::Context::SharedPtr context, uint32_t amount_of_callbacks = 0
+    rclcpp::Context::SharedPtr context, bool autostart = true, 
+    uint32_t amount_of_callbacks = 0
   )
-  : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback)),
+  : TimerBase(clock, period, context, autostart), callback_(std::forward<FunctorT>(callback)),
     amount_of_callbacks_(amount_of_callbacks)
   {
     callbacks_called_ = 0;
@@ -348,15 +355,17 @@ public:
    * \param period The interval at which the timer fires
    * \param callback The callback function to execute every interval
    * \param context node context
+   * \param autostart timer state on initialization
    * \param amount_of_callbacks Quantity of times the callback will be triggered.
    */
   WallTimer(
     std::chrono::nanoseconds period,
     FunctorT && callback,
     rclcpp::Context::SharedPtr context,
+    bool autostart = true,
     uint32_t amount_of_callbacks = 0)
   : GenericTimer<FunctorT>(
-      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context,
+      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context, autostart,
       amount_of_callbacks)
   {}
 

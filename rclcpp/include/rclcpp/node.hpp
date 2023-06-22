@@ -232,6 +232,7 @@ public:
    * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
+   * \param[in] autostart The state of the clock on initialization.
    * \param[in] amount_of_callbacks Quantity of times the callback will be triggered.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
@@ -240,6 +241,7 @@ public:
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
     rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    bool autostart = true,
     uint32_t amount_of_callbacks = 0);
 
   /// Create a timer that uses the node clock to drive the callback.

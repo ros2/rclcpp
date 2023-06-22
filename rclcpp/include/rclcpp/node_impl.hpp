@@ -111,6 +111,7 @@ Node::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
   rclcpp::CallbackGroup::SharedPtr group,
+  bool autostart,
   uint32_t amount_of_callbacks)
 {
   return rclcpp::create_wall_timer(
@@ -119,6 +120,7 @@ Node::create_wall_timer(
     group,
     this->node_base_.get(),
     this->node_timers_.get(),
+    autostart,
     amount_of_callbacks);
 }
 

@@ -91,6 +91,7 @@ create_timer(
   rclcpp::Duration period,
   CallbackT && callback,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
+  bool autostart = true,
   uint32_t amount_of_callbacks = 0)
 {
   return create_timer(
@@ -100,6 +101,7 @@ create_timer(
     group,
     node_base.get(),
     node_timers.get(),
+    autostart,
     amount_of_callbacks);
 }
 
@@ -112,6 +114,7 @@ create_timer(
   rclcpp::Duration period,
   CallbackT && callback,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
+  bool autostart = true,
   uint32_t amount_of_callbacks = 0)
 {
   return create_timer(
@@ -121,6 +124,7 @@ create_timer(
     group,
     rclcpp::node_interfaces::get_node_base_interface(node).get(),
     rclcpp::node_interfaces::get_node_timers_interface(node).get(),
+    autostart,
     amount_of_callbacks);
 }
 
@@ -136,6 +140,7 @@ create_timer(
  * \param group callback group
  * \param node_base node base interface
  * \param node_timers node timer interface
+ * \param autostart defines if the timer should start it's countdown on initialization or not.
  * \param amount_of_callbacks Quantity of times the callback will be triggered. The default value is 0
  * that means an infinite amount of callbacks i.e. the clock's default behavior.
  * \return shared pointer to a generic timer
@@ -151,6 +156,7 @@ create_timer(
   rclcpp::CallbackGroup::SharedPtr group,
   node_interfaces::NodeBaseInterface * node_base,
   node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true,
   uint32_t amount_of_callbacks = 0)
 {
   if (clock == nullptr) {
@@ -167,7 +173,7 @@ create_timer(
 
   // Add a new generic timer.
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
-    std::move(clock), period_ns, std::move(callback), node_base->get_context(),
+    std::move(clock), period_ns, std::move(callback), node_base->get_context(), autostart,
     amount_of_callbacks);
   node_timers->add_timer(timer, group);
   return timer;
@@ -196,6 +202,7 @@ create_wall_timer(
   rclcpp::CallbackGroup::SharedPtr group,
   node_interfaces::NodeBaseInterface * node_base,
   node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true,
   uint32_t amount_of_callbacks = 0)
 {
   if (node_base == nullptr) {
@@ -210,7 +217,7 @@ create_wall_timer(
 
   // Add a new wall timer.
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
-    period_ns, std::move(callback), node_base->get_context(), amount_of_callbacks);
+    period_ns, std::move(callback), node_base->get_context(), autostart, amount_of_callbacks);
   node_timers->add_timer(timer, group);
   return timer;
 }
