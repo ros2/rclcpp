@@ -62,6 +62,8 @@ public:
 
   Service<ServiceT>::SharedPtr type_description_srv_;
 
+  std::shared_ptr<rcl_node_t> rcl_node_;
+
 
   NodeTypeDescriptionsImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -99,8 +101,8 @@ public:
     }
 
     if (enabled_) {
-      auto rcl_node = node_base->get_shared_rcl_node_handle();
-      rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_node.get());
+      rcl_node_ = node_base->get_shared_rcl_node_handle();
+      rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_node_.get());
       if (rcl_ret != RCL_RET_OK) {
         RCLCPP_ERROR(
           logger_, "Failed to initialize ~/get_type_description_service: %s",
@@ -110,20 +112,20 @@ public:
       }
 
       rcl_service_t * rcl_srv = NULL;
-      rcl_ret = rcl_node_get_type_description_service(rcl_node.get(), &rcl_srv);
+      rcl_ret = rcl_node_get_type_description_service(rcl_node_.get(), &rcl_srv);
       if (rcl_ret != RCL_RET_OK) {
         throw std::runtime_error(
           "Failed to get initialized ~/get_type_description service from rcl.");
       }
 
       rclcpp::AnyServiceCallback<GetTypeDescriptionC> cb;
-      cb.set([this, &rcl_node]() {
+      cb.set([this]() {
         RCLCPP_WARN(logger_, "SERVICE CALLBACK");
-        rcl_node_type_description_service_on_new_request(rcl_node.get());
+        rcl_node_type_description_service_on_new_request(rcl_node_.get());
       });
 
       type_description_srv_ = std::make_shared<Service<ServiceT>>(
-        rcl_node,
+        rcl_node_,
         rcl_srv,
         cb
         // [this, &rcl_node]() {
