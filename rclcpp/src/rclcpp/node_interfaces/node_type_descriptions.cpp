@@ -16,17 +16,39 @@
 
 #include "rclcpp/parameter_client.hpp"
 
-#include "type_description_interfaces/srv/get_type_description.hpp"
+#include "type_description_interfaces/srv/get_type_description.h"
 
 #include <memory>
 #include <string>
 
 using rclcpp::node_interfaces::NodeTypeDescriptions;
 
+// Even though we just want to use a C service, still need to define a C++-like struct
+// for the Service to use to allocate responses/requests.
+// There is an allocation and deserialization via the Executor callback mechanism, at least
+// of the request, even though we just want to let the C layer take it...
+struct GetTypeDescriptionC
+{
+  using Request = type_description_interfaces__srv__GetTypeDescription_Request;
+  using Response = type_description_interfaces__srv__GetTypeDescription_Response;
+  using Event = type_description_interfaces__srv__GetTypeDescription_Event;
+};
+
+namespace rosidl_typesupport_cpp
+{
+template<>
+rosidl_service_type_support_t const*
+get_service_type_support_handle<GetTypeDescriptionC>()
+{
+  return ROSIDL_GET_SRV_TYPE_SUPPORT(type_description_interfaces, srv, GetTypeDescription);
+}
+}  // namespace rosidl_typesupport_cpp
+
 namespace rclcpp
 {
 
 static constexpr const char * get_type_description_service_name = "get_type_description";
+
 
 class NodeTypeDescriptions::NodeTypeDescriptionsImpl
 {
@@ -35,9 +57,10 @@ public:
   Logger logger_;
   node_interfaces::OnSetParametersCallbackHandle param_callback_;
   std::shared_ptr<rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>> param_sub_;
-  using ServiceT = Service<type_description_interfaces::srv::GetTypeDescription>;
+  // using ServiceT = type_description_interfaces::srv::GetTypeDescription;
+  using ServiceT = GetTypeDescriptionC;
 
-  ServiceT::SharedPtr type_description_srv_;
+  Service<ServiceT>::SharedPtr type_description_srv_;
 
 
   NodeTypeDescriptionsImpl(
@@ -93,16 +116,21 @@ public:
           "Failed to get initialized ~/get_type_description service from rcl.");
       }
 
-      rclcpp::AnyServiceCallback<type_description_interfaces::srv::GetTypeDescription> callback;
-      callback.set(
-        [&rcl_node](
-          std::shared_ptr<rmw_request_id_t> /*header*/,
-          std::shared_ptr<type_description_interfaces::srv::GetTypeDescription::Request> /*request*/
-        ) {
-          rcl_node_type_description_service_on_new_request(rcl_node.get());
-        });
+      rclcpp::AnyServiceCallback<GetTypeDescriptionC> cb;
+      cb.set([this, &rcl_node]() {
+        RCLCPP_WARN(logger_, "SERVICE CALLBACK");
+        rcl_node_type_description_service_on_new_request(rcl_node.get());
+      });
 
-      type_description_srv_ = std::make_shared<ServiceT>(rcl_node, rcl_srv, callback);
+      type_description_srv_ = std::make_shared<Service<ServiceT>>(
+        rcl_node,
+        rcl_srv,
+        cb
+        // [this, &rcl_node]() {
+        //   RCLCPP_ERROR(logger_, "SERBICE");
+        //   // rcl_node_type_description_service_on_new_request(rcl_node.get());
+        // }
+      );
       node_services->add_service(
         std::dynamic_pointer_cast<ServiceBase>(type_description_srv_), nullptr);
     }
@@ -140,6 +168,8 @@ NodeTypeDescriptions::NodeTypeDescriptions(
 }
 
 NodeTypeDescriptions::~NodeTypeDescriptions()
-{}
+{
+  RCUTILS_LOG_WARN("Destroy TDimpl");
+}
 
 }  // namespace rclcpp

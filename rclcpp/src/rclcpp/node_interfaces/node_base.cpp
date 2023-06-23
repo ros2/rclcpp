@@ -20,6 +20,7 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rcl/arguments.h"
+#include "rcl/node_type_cache.h"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/validate_namespace.h"
@@ -112,6 +113,15 @@ NodeBase::NodeBase(
       }
     }
     throw_from_rcl_error(ret, "failed to initialize rcl node");
+  }
+
+  // If type description service will be initialized, it must capture all
+  // built-in services and topics that the node creates, even the ones by NodeParameters,
+  // which must be initialized first to let NodeTypeDescriptions be parameter-enabled
+  ret = rcl_node_type_cache_init(rcl_node.get());
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("It bad!");
+    // TODO(ek)
   }
 
   node_handle_.reset(

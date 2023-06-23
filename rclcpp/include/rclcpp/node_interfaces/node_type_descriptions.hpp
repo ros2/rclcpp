@@ -51,11 +51,6 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeTypeDescriptions)
 
-  // rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  // rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-  // rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
-  // rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
-
   class NodeTypeDescriptionsImpl;
   std::unique_ptr<NodeTypeDescriptionsImpl> impl_;
 };

@@ -116,9 +116,10 @@ LifecycleNode::LifecycleNode(
     )),
   node_type_descriptions_(new rclcpp::node_interfaces::NodeTypeDescriptions(
       node_base_,
-      node_services_,
       node_logging_,
-      node_parameters_
+      node_parameters_,
+      node_services_,
+      node_topics_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),

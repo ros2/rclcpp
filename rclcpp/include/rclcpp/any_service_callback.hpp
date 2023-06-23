@@ -162,6 +162,11 @@ public:
       // to pass a callback at construnciton.
       throw std::runtime_error{"unexpected request without any callback set"};
     }
+    if (std::holds_alternative<FullyDeferredCallback>(callback_)) {
+      const auto & cb = std::get<FullyDeferredCallback>(callback_);
+      cb();
+      return nullptr;
+    }
     if (std::holds_alternative<SharedPtrDeferResponseCallback>(callback_)) {
       const auto & cb = std::get<SharedPtrDeferResponseCallback>(callback_);
       cb(request_header, std::move(request));
@@ -226,13 +231,15 @@ private:
       std::shared_ptr<rmw_request_id_t>,
       std::shared_ptr<typename ServiceT::Request>
     )>;
+  using FullyDeferredCallback = std::function<void()>;
 
   std::variant<
     std::monostate,
     SharedPtrCallback,
     SharedPtrWithRequestHeaderCallback,
     SharedPtrDeferResponseCallback,
-    SharedPtrDeferResponseCallbackWithServiceHandle> callback_;
+    SharedPtrDeferResponseCallbackWithServiceHandle,
+    FullyDeferredCallback> callback_;
 };
 
 }  // namespace rclcpp
