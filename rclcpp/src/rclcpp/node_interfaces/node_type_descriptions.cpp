@@ -57,12 +57,9 @@ public:
   Logger logger_;
   node_interfaces::OnSetParametersCallbackHandle param_callback_;
   std::shared_ptr<rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>> param_sub_;
-  // using ServiceT = type_description_interfaces::srv::GetTypeDescription;
   using ServiceT = GetTypeDescriptionC;
-
   Service<ServiceT>::SharedPtr type_description_srv_;
-
-  std::shared_ptr<rcl_node_t> rcl_node_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
 
 
   NodeTypeDescriptionsImpl(
@@ -72,6 +69,7 @@ public:
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr /* node_topics */)
     : logger_(node_logging->get_logger())
+    , node_base_(node_base)
   {
     const std::string enable_param_name = "enable_type_description_service";
     const std::string service_name = "get_type_description";
@@ -101,8 +99,8 @@ public:
     }
 
     if (enabled_) {
-      rcl_node_ = node_base->get_shared_rcl_node_handle();
-      rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_node_.get());
+      auto rcl_node = node_base->get_rcl_node_handle();
+      rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_node);
       if (rcl_ret != RCL_RET_OK) {
         RCLCPP_ERROR(
           logger_, "Failed to initialize ~/get_type_description_service: %s",
@@ -112,37 +110,31 @@ public:
       }
 
       rcl_service_t * rcl_srv = NULL;
-      rcl_ret = rcl_node_get_type_description_service(rcl_node_.get(), &rcl_srv);
+      rcl_ret = rcl_node_get_type_description_service(rcl_node, &rcl_srv);
       if (rcl_ret != RCL_RET_OK) {
         throw std::runtime_error(
           "Failed to get initialized ~/get_type_description service from rcl.");
       }
 
-      rclcpp::AnyServiceCallback<GetTypeDescriptionC> cb;
-      cb.set([this]() {
+      rclcpp::AnyServiceCallback<ServiceT> cb;
+      cb.set([this](
+          std::shared_ptr<rmw_request_id_t> header,
+          std::shared_ptr<ServiceT::Request> request,
+          std::shared_ptr<ServiceT::Response> response
+      ) {
         RCLCPP_WARN(logger_, "SERVICE CALLBACK");
-        rcl_node_type_description_service_on_new_request(rcl_node_.get());
+        rcl_node_type_description_service_handle_request(
+          node_base_->get_rcl_node_handle(),
+          *header,
+          request.get(),
+          response.get());
       });
 
       type_description_srv_ = std::make_shared<Service<ServiceT>>(
-        rcl_node_,
-        rcl_srv,
-        cb
-        // [this, &rcl_node]() {
-        //   RCLCPP_ERROR(logger_, "SERBICE");
-        //   // rcl_node_type_description_service_on_new_request(rcl_node.get());
-        // }
-      );
+        node_base_->get_shared_rcl_node_handle(), rcl_srv, cb);
       node_services->add_service(
         std::dynamic_pointer_cast<ServiceBase>(type_description_srv_), nullptr);
     }
-
-    // param_callback_ = node_parameters->add_on_set_parameters_callback(
-    //   std::bind(&NodeTypeDescriptionsImpl::on_set_parameters, this, std::placeholders::_1));
-    // // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
-    // param_sub_ = rclcpp::AsyncParametersClient::on_parameter_event(
-    //   node_topics,
-    //   std::bind(&NodeTypeDescriptionsImpl::on_parameter_event, this, std::placeholders::_1));
   }
 };
 
@@ -153,25 +145,15 @@ NodeTypeDescriptions::NodeTypeDescriptions(
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics)
-:
-  // node_base_(node_base),
-  // node_services_(node_services),
-  // node_logging_(node_logging),
-  // node_parameters_(node_parameters)
-  impl_(new NodeTypeDescriptionsImpl(
+: impl_(new NodeTypeDescriptionsImpl(
     node_base,
     node_logging,
     node_parameters,
     node_services,
-    node_topics
-  ))
-{
-  // TODO init rcl node type description service and attach callback
-}
+    node_topics))
+{}
 
 NodeTypeDescriptions::~NodeTypeDescriptions()
-{
-  RCUTILS_LOG_WARN("Destroy TDimpl");
-}
+{}
 
 }  // namespace rclcpp
