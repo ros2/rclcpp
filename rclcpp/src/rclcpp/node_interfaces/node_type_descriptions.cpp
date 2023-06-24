@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <string>
+#include <thread>
+
 #include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 
 #include "rclcpp/parameter_client.hpp"
 
 #include "type_description_interfaces/srv/get_type_description.h"
-
-#include <memory>
-#include <string>
 
 using rclcpp::node_interfaces::NodeTypeDescriptions;
 
@@ -61,6 +62,9 @@ public:
   Service<ServiceT>::SharedPtr type_description_srv_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
 
+  std::thread type_description_service_thread_;
+  rclcpp::CallbackGroup::SharedPtr type_description_service_callback_group_;
+  rclcpp::executors::SingleThreadedExecutor type_description_service_executor_;
 
   NodeTypeDescriptionsImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -68,34 +72,28 @@ public:
     rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr /* node_topics */)
-    : logger_(node_logging->get_logger())
-    , node_base_(node_base)
+    : logger_(node_logging->get_logger()),
+      node_base_(node_base),
+      type_description_service_callback_group_(
+        node_base_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false))
   {
     const std::string enable_param_name = "enable_type_description_service";
     const std::string service_name = "get_type_description";
 
-    rclcpp::ParameterValue enable_param;
-    if (!node_parameters->has_parameter(enable_param_name)) {
-      rcl_interfaces::msg::ParameterDescriptor descriptor;
-      descriptor.name = enable_param_name;
-      descriptor.type = rclcpp::PARAMETER_BOOL;
-      descriptor.description = "Enable the ~/get_type_description service for this node.";
-      descriptor.read_only = true;
-      enable_param = node_parameters->declare_parameter(
-        enable_param_name, rclcpp::ParameterValue(true));
-    } else {
-      enable_param = node_parameters->get_parameter(enable_param_name).get_parameter_value();
-    }
-    if (enable_param.get_type() == rclcpp::PARAMETER_BOOL) {
-      if (enable_param.get<bool>()) {
-        enabled_ = true;
-      }
-    } else {
-      RCLCPP_ERROR(
-        logger_, "Invalid type '%s' for parameter '%s', should be 'bool'",
-        rclcpp::to_string(enable_param.get_type()).c_str(), enable_param_name.c_str());
-      throw std::invalid_argument(
-        "Invalid type for parameter '" + enable_param_name + "', should be bool");
+    bool enabled_;
+    try {
+      auto enable_param = node_parameters->declare_parameter(
+        enable_param_name,
+        rclcpp::ParameterValue(true),
+        rcl_interfaces::msg::ParameterDescriptor()
+          .set__name(enable_param_name)
+          .set__type(rclcpp::PARAMETER_BOOL)
+          .set__description("Enable the ~/get_type_description service for this node.")
+          .set__read_only(true));
+      enabled_ = enable_param.get<bool>();
+    } catch (const rclcpp::exceptions::InvalidParameterTypeException & exc) {
+      RCLCPP_ERROR(logger_, "%s", exc.what());
+      throw;
     }
 
     if (enabled_) {
@@ -109,7 +107,7 @@ public:
           "Failed to initialize ~/get_type_description service.");
       }
 
-      rcl_service_t * rcl_srv = NULL;
+      rcl_service_t * rcl_srv = nullptr;
       rcl_ret = rcl_node_get_type_description_service(rcl_node, &rcl_srv);
       if (rcl_ret != RCL_RET_OK) {
         throw std::runtime_error(
@@ -131,10 +129,25 @@ public:
       });
 
       type_description_srv_ = std::make_shared<Service<ServiceT>>(
-        node_base_->get_shared_rcl_node_handle(), rcl_srv, cb);
+        node_base_->get_shared_rcl_node_handle(),
+        rcl_srv,
+        cb);
       node_services->add_service(
-        std::dynamic_pointer_cast<ServiceBase>(type_description_srv_), nullptr);
+        std::dynamic_pointer_cast<ServiceBase>(type_description_srv_),
+        type_description_service_callback_group_);
+
+      type_description_service_thread_ = std::thread([this]() {
+        type_description_service_executor_.add_callback_group(
+          type_description_service_callback_group_,
+          node_base_);
+        type_description_service_executor_.spin();
+      });
     }
+  }
+
+  virtual ~NodeTypeDescriptionsImpl() {
+    type_description_service_executor_.cancel();
+    type_description_service_thread_.join();
   }
 };
 
