@@ -14,6 +14,10 @@
 
 #include "mutex_map.hpp"
 
+#include <memory>
+#include <shared_mutex>
+#include <thread>
+
 namespace rclcpp_lifecycle
 {
 void MutexMap::add(const State * key)
