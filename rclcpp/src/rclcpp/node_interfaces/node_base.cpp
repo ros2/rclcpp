@@ -115,13 +115,6 @@ NodeBase::NodeBase(
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }
 
-  // To capture all types from builtin topics and services, the type cache needs to be initialized
-  // before any other components are initialized.
-  ret = rcl_node_type_cache_init(rcl_node.get());
-  if (ret != RCL_RET_OK) {
-    throw_from_rcl_error(ret, "failed to initialize type cache");
-  }
-
   node_handle_.reset(
     rcl_node.release(),
     [logging_mutex](rcl_node_t * node) -> void {
