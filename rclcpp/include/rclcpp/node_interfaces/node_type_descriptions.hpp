@@ -15,6 +15,8 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_TYPE_DESCRIPTIONS_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_TYPE_DESCRIPTIONS_HPP_
 
+#include <memory>
+
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
@@ -41,8 +43,7 @@ public:
     NodeBaseInterface::SharedPtr node_base,
     NodeLoggingInterface::SharedPtr node_logging,
     NodeParametersInterface::SharedPtr node_parameters,
-    NodeServicesInterface::SharedPtr node_services,
-    NodeTopicsInterface::SharedPtr node_topics);
+    NodeServicesInterface::SharedPtr node_services);
 
   RCLCPP_PUBLIC
   virtual

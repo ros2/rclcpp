@@ -115,13 +115,11 @@ NodeBase::NodeBase(
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }
 
-  // If type description service will be initialized, it must capture all
-  // built-in services and topics that the node creates, even the ones by NodeParameters,
-  // which must be initialized first to let NodeTypeDescriptions be parameter-enabled
+  // To capture all types from builtin topics and services, the type cache needs to be initialized
+  // before any other components are initialized.
   ret = rcl_node_type_cache_init(rcl_node.get());
   if (ret != RCL_RET_OK) {
-    throw std::runtime_error("It bad!");
-    // TODO(ek)
+    throw_from_rcl_error(ret, "failed to initialize type cache");
   }
 
   node_handle_.reset(

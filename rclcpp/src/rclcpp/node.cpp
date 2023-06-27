@@ -34,9 +34,9 @@
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_time_source.hpp"
-#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 
@@ -211,8 +211,7 @@ Node::Node(
       node_base_,
       node_logging_,
       node_parameters_,
-      node_services_,
-      node_topics_
+      node_services_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
