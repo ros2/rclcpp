@@ -20,6 +20,8 @@ find_package(lifecycle_msgs REQUIRED)
 add_library(rclcpp_lifecycle
   src/lifecycle_node.cpp
   src/managed_entity.cpp
+  src/mutex_map.cpp
+  src/mutex_map.hpp
   src/node_interfaces/lifecycle_node_interface.cpp
   src/state.cpp
   src/transition.cpp

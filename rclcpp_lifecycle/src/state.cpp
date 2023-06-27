@@ -25,12 +25,17 @@
 
 #include "rcutils/allocator.h"
 
+#include "mutex_map.hpp"
+
 namespace rclcpp_lifecycle
 {
+MutexMap State::state_handle_mutex_map_;
 
 State::State(rcutils_allocator_t allocator)
 : State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown", allocator)
-{}
+{
+  state_handle_mutex_map_.add(this);
+}
 
 State::State(
   uint8_t id,
@@ -40,6 +45,8 @@ State::State(
   owns_rcl_state_handle_(true),
   state_handle_(nullptr)
 {
+  state_handle_mutex_map_.add(this);
+
   if (label.empty()) {
     throw std::runtime_error("Lifecycle State cannot have an empty label.");
   }
@@ -67,6 +74,8 @@ State::State(
   owns_rcl_state_handle_(false),
   state_handle_(nullptr)
 {
+  state_handle_mutex_map_.add(this);
+
   if (!rcl_lifecycle_state_handle) {
     throw std::runtime_error("rcl_lifecycle_state_handle is null");
   }
@@ -78,12 +87,15 @@ State::State(const State & rhs)
   owns_rcl_state_handle_(false),
   state_handle_(nullptr)
 {
+  state_handle_mutex_map_.add(this);
+
   *this = rhs;
 }
 
 State::~State()
 {
   reset();
+  state_handle_mutex_map_.remove(this);
 }
 
 State &
@@ -92,6 +104,8 @@ State::operator=(const State & rhs)
   if (this == &rhs) {
     return *this;
   }
+
+  const auto lock = std::lock_guard<std::recursive_mutex>(state_handle_mutex_map_.getMutex(this));
 
   // reset all currently used resources
   reset();
@@ -128,6 +142,7 @@ State::operator=(const State & rhs)
 uint8_t
 State::id() const
 {
+  const auto lock = std::lock_guard<std::recursive_mutex>(state_handle_mutex_map_.getMutex(this));
   if (!state_handle_) {
     throw std::runtime_error("Error in state! Internal state_handle is NULL.");
   }
@@ -137,6 +152,7 @@ State::id() const
 std::string
 State::label() const
 {
+  const auto lock = std::lock_guard<std::recursive_mutex>(state_handle_mutex_map_.getMutex(this));
   if (!state_handle_) {
     throw std::runtime_error("Error in state! Internal state_handle is NULL.");
   }
@@ -146,6 +162,8 @@ State::label() const
 void
 State::reset() noexcept
 {
+  const auto lock = std::lock_guard<std::recursive_mutex>(state_handle_mutex_map_.getMutex(this));
+
   if (!owns_rcl_state_handle_) {
     state_handle_ = nullptr;
   }
