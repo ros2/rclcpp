@@ -110,6 +110,22 @@ create_effective_namespace(const std::string & node_namespace, const std::string
 
 }  // namespace
 
+/// Internal implementation to provide hidden and API/ABI stable changes to the Node.
+/**
+ * This class is intended to be an "escape hatch" within a stable distribution, so that certain
+ * smaller features and bugfixes can be backported, having a place to put new members, while
+ * maintaining the ABI.
+ *
+ * This is not intended to be a parking place for new features, it should be used for backports
+ * only, left empty and unallocated in Rolling.
+ */
+class Node::NodeImpl
+{
+public:
+  NodeImpl() = default;
+  ~NodeImpl() = default;
+};
+
 Node::Node(
   const std::string & node_name,
   const NodeOptions & options)
@@ -253,7 +269,8 @@ Node::Node(
   node_waitables_(other.node_waitables_),
   node_options_(other.node_options_),
   sub_namespace_(extend_sub_namespace(other.get_sub_namespace(), sub_namespace)),
-  effective_namespace_(create_effective_namespace(other.get_namespace(), sub_namespace_))
+  effective_namespace_(create_effective_namespace(other.get_namespace(), sub_namespace_)),
+  hidden_impl_(other.hidden_impl_)
 {
   // Validate new effective namespace.
   int validation_result;

@@ -1600,6 +1600,9 @@ private:
   const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;
   const std::string effective_namespace_;
+
+  class NodeImpl;
+  std::shared_ptr<NodeImpl> hidden_impl_;
 };
 
 }  // namespace rclcpp
