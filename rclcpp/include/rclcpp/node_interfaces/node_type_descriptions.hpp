@@ -26,11 +26,12 @@
 #include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "type_description_interfaces/srv/get_type_description.h"
+
 namespace rclcpp
 {
 namespace node_interfaces
 {
-
 
 /// Implementation of the NodeTypeDescriptions part of the Node API.
 class NodeTypeDescriptions : public NodeTypeDescriptionsInterface
@@ -49,10 +50,25 @@ public:
   virtual
   ~NodeTypeDescriptions();
 
+  // Helper wrapper for rclcpp::Service to access ::Request and ::Response types for allocation.
+  struct GetTypeDescriptionC
+  {
+    using Request = type_description_interfaces__srv__GetTypeDescription_Request;
+    using Response = type_description_interfaces__srv__GetTypeDescription_Response;
+    using Event = type_description_interfaces__srv__GetTypeDescription_Event;
+  };
+
 private:
   RCLCPP_DISABLE_COPY(NodeTypeDescriptions)
 
+  // Pimpl for future backport ABI stability assistance, not for general functionality
   class NodeTypeDescriptionsImpl;
+
+
+  rclcpp::Logger logger_;
+  rclcpp::Service<GetTypeDescriptionC>::SharedPtr type_description_srv_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+
   std::unique_ptr<NodeTypeDescriptionsImpl> impl_;
 };
 
