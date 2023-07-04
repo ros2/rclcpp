@@ -21,13 +21,11 @@
 
 #include "type_description_interfaces/srv/get_type_description.h"
 
-// Helper function for C typesupport.
 namespace rosidl_typesupport_cpp
 {
 template<>
 rosidl_service_type_support_t const *
-get_service_type_support_handle<
-  rclcpp::node_interfaces::NodeTypeDescriptions::GetTypeDescriptionC>()
+get_service_type_support_handle<type_description_interfaces::srv::GetTypeDescription__C>()
 {
   return ROSIDL_GET_SRV_TYPE_SUPPORT(type_description_interfaces, srv, GetTypeDescription);
 }
@@ -85,12 +83,12 @@ NodeTypeDescriptions::NodeTypeDescriptions(
               "Failed to get initialized ~/get_type_description service from rcl.");
     }
 
-    rclcpp::AnyServiceCallback<GetTypeDescriptionC> cb;
+    rclcpp::AnyServiceCallback<ServiceT> cb;
     cb.set(
       [this](
         std::shared_ptr<rmw_request_id_t> header,
-        std::shared_ptr<GetTypeDescriptionC::Request> request,
-        std::shared_ptr<GetTypeDescriptionC::Response> response
+        std::shared_ptr<ServiceT::Request> request,
+        std::shared_ptr<ServiceT::Response> response
       ) {
         rcl_node_type_description_service_handle_request(
           node_base_->get_rcl_node_handle(),
@@ -99,7 +97,7 @@ NodeTypeDescriptions::NodeTypeDescriptions(
           response.get());
       });
 
-    type_description_srv_ = std::make_shared<Service<GetTypeDescriptionC>>(
+    type_description_srv_ = std::make_shared<Service<ServiceT>>(
       node_base_->get_shared_rcl_node_handle(),
       rcl_srv,
       cb);
