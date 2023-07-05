@@ -541,6 +541,7 @@ LifecycleNode::register_on_error(
     lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING, fcn);
 }
 
+
 const State &
 LifecycleNode::get_current_state() const
 {
