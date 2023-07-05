@@ -427,6 +427,7 @@ TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
 // Parameters are tested more thoroughly in rclcpp's test_node.cpp
 // These are provided for coverage of lifecycle node's API
 TEST_F(TestDefaultStateMachine, declare_parameters) {
+  // "start_type_description_service" and "use_sim_time"
   const uint64_t builtin_param_count = 2;
   const uint64_t expected_param_count = 6 + builtin_param_count;
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");

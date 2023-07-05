@@ -59,6 +59,7 @@ protected:
     node_with_option.reset();
   }
 
+  // "start_type_description_service" and "use_sim_time"
   const uint64_t builtin_param_count = 2;
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr node_with_option;

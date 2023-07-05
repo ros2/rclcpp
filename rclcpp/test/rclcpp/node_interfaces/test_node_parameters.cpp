@@ -77,7 +77,7 @@ TEST_F(TestNodeParameters, list_parameters)
   std::vector<std::string> prefixes;
   const auto list_result = node_parameters->list_parameters(prefixes, 1u);
 
-  // currently 'use_sim_time' and 'start_type_description_service'
+  // Currently the default parameters are 'use_sim_time' and 'start_type_description_service'
   size_t number_of_parameters = list_result.names.size();
   EXPECT_GE(2u, number_of_parameters);
 
