@@ -26,32 +26,6 @@
 #include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "type_description_interfaces/srv/get_type_description.h"
-
-
-namespace type_description_interfaces
-{
-namespace srv
-{
-// Helper wrapper for rclcpp::Service to access ::Request and ::Response types for allocation.
-struct GetTypeDescription__C
-{
-  using Request = type_description_interfaces__srv__GetTypeDescription_Request;
-  using Response = type_description_interfaces__srv__GetTypeDescription_Response;
-  using Event = type_description_interfaces__srv__GetTypeDescription_Event;
-};
-}  // namespace srv
-}  // namespace type_description_interfaces
-
-namespace rosidl_typesupport_cpp
-{
-// Helper function for C typesupport.
-template<>
-RCLCPP_PUBLIC
-rosidl_service_type_support_t const *
-get_service_type_support_handle<type_description_interfaces::srv::GetTypeDescription__C>();
-}  // namespace rosidl_typesupport_cpp
-
 namespace rclcpp
 {
 namespace node_interfaces
@@ -77,14 +51,9 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeTypeDescriptions)
 
-  // Pimpl for future backport ABI stability assistance, not for general functionality
+  // Pimpl hides helper types and functions used for wrapping a C service, which would be
+  // awkward to expose in this header.
   class NodeTypeDescriptionsImpl;
-  using ServiceT = type_description_interfaces::srv::GetTypeDescription__C;
-
-  rclcpp::Logger logger_;
-  rclcpp::Service<ServiceT>::SharedPtr type_description_srv_;
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-
   std::unique_ptr<NodeTypeDescriptionsImpl> impl_;
 };
 
