@@ -90,6 +90,7 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
+#include "rclcpp_lifecycle/change_state_handler.hpp"
 
 namespace rclcpp_lifecycle
 {
@@ -1004,7 +1005,19 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_configure(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_configure(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+
+  /// Register the configure async callback
+  /**
+   * This callback will be called when the transition to this state is triggered
+   * \param[in] fcn callback function to call
+   * \return always true
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_async_on_configure(
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> fcn);
 
   /// Register the cleanup callback
   /**
@@ -1014,7 +1027,19 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_cleanup(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_cleanup(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+
+  /// Register the cleanup async callback
+  /**
+   * This callback will be called when the transition to this state is triggered
+   * \param[in] fcn callback function to call
+   * \return always true
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_async_on_cleanup(
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> fcn);
 
   /// Register the shutdown callback
   /**
@@ -1024,7 +1049,19 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_shutdown(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_shutdown(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+
+  /// Register the shutdown async callback
+  /**
+   * This callback will be called when the transition to this state is triggered
+   * \param[in] fcn callback function to call
+   * \return always true
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_async_on_shutdown(
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> fcn);
 
   /// Register the activate callback
   /**
@@ -1034,7 +1071,19 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_activate(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_activate(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+
+  /// Register the activate async callback
+  /**
+   * This callback will be called when the transition to this state is triggered
+   * \param[in] fcn callback function to call
+   * \return always true
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_async_on_activate(
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> fcn);
 
   /// Register the deactivate callback
   /**
@@ -1044,7 +1093,19 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_deactivate(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_deactivate(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+
+  /// Register the deactivate async callback
+  /**
+   * This callback will be called when the transition to this state is triggered
+   * \param[in] fcn callback function to call
+   * \return always true
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_async_on_deactivate(
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> fcn);
 
   /// Register the error callback
   /**
@@ -1054,7 +1115,19 @@ public:
    */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_error(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+  register_on_error(
+    std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
+
+  /// Register the error async callback
+  /**
+   * This callback will be called when the transition to this state is triggered
+   * \param[in] fcn callback function to call
+   * \return always true
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_async_on_error(
+    std::function<void(const State &, std::shared_ptr<ChangeStateHandler>)> fcn);
 
   RCLCPP_LIFECYCLE_PUBLIC
   CallbackReturn
