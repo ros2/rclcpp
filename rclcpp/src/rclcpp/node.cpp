@@ -110,6 +110,65 @@ create_effective_namespace(const std::string & node_namespace, const std::string
 
 }  // namespace
 
+/// \brief Associates new hidden backported members with instances of Node.
+class Node::BackportMemberMaps
+{
+public:
+  BackportMemberMaps() = default;
+
+  /// \brief Add all backported members for a new Node.
+  /**
+   * \param[in] key Raw pointer to the Node instance that will use new members.
+   */
+  void add(Node * key)
+  {
+    // Adding a new instance to the maps requires exclusive access
+    std::unique_lock lock(map_access_mutex_);
+    type_descriptions_map_.emplace(
+      key,
+      std::make_shared<rclcpp::node_interfaces::NodeTypeDescriptions>(
+        key->get_node_base_interface(),
+        key->get_node_logging_interface(),
+        key->get_node_parameters_interface(),
+        key->get_node_services_interface()));
+  }
+
+  /// \brief Remove the members for an instance of Node
+  /**
+   * \param[in] key Raw pointer to the Node
+   */
+  void remove(const Node * key)
+  {
+    // Removing an instance from the maps requires exclusive access
+    std::unique_lock lock(map_access_mutex_);
+    type_descriptions_map_.erase(key);
+  }
+
+  /// \brief Retrieve the NodeTypeDescriptionsInterface for a Node.
+  /**
+   * \param[in] key Raw pointer to an instance of Node.
+   * \return A shared ptr to this Node's NodeTypeDescriptionsInterface instance.
+   */
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface(const Node * key) const
+  {
+    // Multiple threads can retrieve from the maps at the same time
+    std::shared_lock lock(map_access_mutex_);
+    return type_descriptions_map_.at(key);
+  }
+
+private:
+  /// \brief Map that stored TypeDescriptionsInterface members
+  std::unordered_map<
+    const Node *, rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  > type_descriptions_map_;
+
+  /// \brief Controls access to all private maps
+  mutable std::shared_mutex map_access_mutex_;
+};
+// Definition of static member declaration
+Node::BackportMemberMaps Node::backport_member_maps_;
+
 Node::Node(
   const std::string & node_name,
   const NodeOptions & options)
@@ -207,17 +266,13 @@ Node::Node(
       options.clock_qos(),
       options.use_clock_thread()
     )),
-  node_type_descriptions_(new rclcpp::node_interfaces::NodeTypeDescriptions(
-      node_base_,
-      node_logging_,
-      node_parameters_,
-      node_services_
-    )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
+  backport_member_maps_.add(this);
+
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
   rclcpp::detail::declare_qos_parameters(
@@ -279,6 +334,7 @@ Node::Node(
 Node::~Node()
 {
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
+  backport_member_maps_.remove(this);
   node_waitables_.reset();
   node_time_source_.reset();
   node_parameters_.reset();
@@ -601,7 +657,7 @@ Node::get_node_topics_interface()
 rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
 Node::get_node_type_descriptions_interface()
 {
-  return node_type_descriptions_;
+  return backport_member_maps_.get_node_type_descriptions_interface(this);
 }
 
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr

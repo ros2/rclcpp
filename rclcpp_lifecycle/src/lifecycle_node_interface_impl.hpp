@@ -52,6 +52,8 @@ class LifecycleNode::LifecycleNodeInterfaceImpl final
 public:
   LifecycleNodeInterfaceImpl(
     std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
+    std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface,
+    std::shared_ptr<rclcpp::node_interfaces::NodeParametersInterface> node_parameters_interface,
     std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface);
 
   ~LifecycleNodeInterfaceImpl();
@@ -101,6 +103,9 @@ public:
 
   void
   add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer);
+
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface();
 
 private:
   RCLCPP_DISABLE_COPY(LifecycleNodeInterfaceImpl)
@@ -172,6 +177,9 @@ private:
   // to controllable things
   std::vector<std::weak_ptr<rclcpp_lifecycle::ManagedEntityInterface>> weak_managed_entities_;
   std::vector<std::weak_ptr<rclcpp::TimerBase>> weak_timers_;
+
+  // Backported members hidden in impl
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr node_type_descriptions_;
 };
 
 }  // namespace rclcpp_lifecycle
