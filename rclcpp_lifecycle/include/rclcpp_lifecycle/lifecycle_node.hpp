@@ -824,6 +824,10 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  /// Return the Node's internal NodeTypeDescriptionsInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_type_descriptions_interface
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
   get_node_type_descriptions_interface();

@@ -641,6 +641,7 @@ TEST_F(TestDefaultStateMachine, test_getters) {
   EXPECT_LT(0u, test_node->now().nanoseconds());
   EXPECT_STREQ("testnode", test_node->get_logger().get_name());
   EXPECT_NE(nullptr, const_cast<const EmptyLifecycleNode *>(test_node.get())->get_clock());
+  EXPECT_NE(nullptr, test_node->get_node_type_descriptions_interface());
 }
 
 TEST_F(TestDefaultStateMachine, test_graph_topics) {

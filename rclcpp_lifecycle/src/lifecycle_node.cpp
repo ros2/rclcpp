@@ -475,6 +475,12 @@ LifecycleNode::get_node_topics_interface()
   return node_topics_;
 }
 
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+LifecycleNode::get_node_type_descriptions_interface()
+{
+  return node_type_descriptions_;
+}
+
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
 LifecycleNode::get_node_services_interface()
 {
