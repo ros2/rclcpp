@@ -36,6 +36,7 @@
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 
@@ -205,6 +206,12 @@ Node::Node(
       node_parameters_,
       options.clock_qos(),
       options.use_clock_thread()
+    )),
+  node_type_descriptions_(new rclcpp::node_interfaces::NodeTypeDescriptions(
+      node_base_,
+      node_logging_,
+      node_parameters_,
+      node_services_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
@@ -589,6 +596,12 @@ rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 Node::get_node_topics_interface()
 {
   return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+Node::get_node_type_descriptions_interface()
+{
+  return node_type_descriptions_;
 }
 
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
