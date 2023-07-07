@@ -59,6 +59,8 @@ protected:
     node_with_option.reset();
   }
 
+  // "start_type_description_service" and "use_sim_time"
+  const uint64_t builtin_param_count = 2;
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr node_with_option;
 };
@@ -925,6 +927,7 @@ TEST_F(TestParameterClient, sync_parameter_delete_parameters) {
   Coverage for async load_parameters
  */
 TEST_F(TestParameterClient, async_parameter_load_parameters) {
+  const uint64_t expected_param_count = 4 + builtin_param_count;
   auto load_node = std::make_shared<rclcpp::Node>(
     "load_node",
     "namespace",
@@ -944,12 +947,13 @@ TEST_F(TestParameterClient, async_parameter_load_parameters) {
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
   rclcpp::spin_until_future_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
-  ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(5));
+  ASSERT_EQ(list_parameters.get().names.size(), expected_param_count);
 }
 /*
   Coverage for sync load_parameters
  */
 TEST_F(TestParameterClient, sync_parameter_load_parameters) {
+  const uint64_t expected_param_count = 4 + builtin_param_count;
   auto load_node = std::make_shared<rclcpp::Node>(
     "load_node",
     "namespace",
@@ -964,13 +968,14 @@ TEST_F(TestParameterClient, sync_parameter_load_parameters) {
   ASSERT_EQ(load_future[0].successful, true);
   // list parameters
   auto list_parameters = synchronous_client->list_parameters({}, 3);
-  ASSERT_EQ(list_parameters.names.size(), static_cast<uint64_t>(5));
+  ASSERT_EQ(list_parameters.names.size(), static_cast<uint64_t>(expected_param_count));
 }
 
 /*
   Coverage for async load_parameters with complicated regex expression
  */
 TEST_F(TestParameterClient, async_parameter_load_parameters_complicated_regex) {
+  const uint64_t expected_param_count = 5 + builtin_param_count;
   auto load_node = std::make_shared<rclcpp::Node>(
     "load_node",
     "namespace",
@@ -990,7 +995,7 @@ TEST_F(TestParameterClient, async_parameter_load_parameters_complicated_regex) {
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
   rclcpp::spin_until_future_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
-  ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(6));
+  ASSERT_EQ(list_parameters.get().names.size(), expected_param_count);
   // to check the parameter "a_value"
   std::string param_name = "a_value";
   auto param = load_node->get_parameter(param_name);
@@ -1020,6 +1025,7 @@ TEST_F(TestParameterClient, async_parameter_load_no_valid_parameter) {
   Coverage for async load_parameters from maps with complicated regex expression
  */
 TEST_F(TestParameterClient, async_parameter_load_parameters_from_map) {
+  const uint64_t expected_param_count = 5 + builtin_param_count;
   auto load_node = std::make_shared<rclcpp::Node>(
     "load_node",
     "namespace",
@@ -1068,7 +1074,7 @@ TEST_F(TestParameterClient, async_parameter_load_parameters_from_map) {
   auto list_parameters = asynchronous_client->list_parameters({}, 3);
   rclcpp::spin_until_future_complete(
     load_node, list_parameters, std::chrono::milliseconds(100));
-  ASSERT_EQ(list_parameters.get().names.size(), static_cast<uint64_t>(6));
+  ASSERT_EQ(list_parameters.get().names.size(), expected_param_count);
   // to check the parameter "a_value"
   std::string param_name = "a_value";
   auto param = load_node->get_parameter(param_name);

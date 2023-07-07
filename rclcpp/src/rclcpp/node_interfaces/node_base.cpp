@@ -20,6 +20,7 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rcl/arguments.h"
+#include "rcl/node_type_cache.h"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/validate_namespace.h"

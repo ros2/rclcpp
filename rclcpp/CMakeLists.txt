@@ -92,6 +92,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_time_source.cpp
   src/rclcpp/node_interfaces/node_timers.cpp
   src/rclcpp/node_interfaces/node_topics.cpp
+  src/rclcpp/node_interfaces/node_type_descriptions.cpp
   src/rclcpp/node_interfaces/node_waitables.cpp
   src/rclcpp/node_options.cpp
   src/rclcpp/parameter.cpp
