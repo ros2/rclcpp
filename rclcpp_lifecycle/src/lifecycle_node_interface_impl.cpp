@@ -29,6 +29,7 @@
 #include "lifecycle_msgs/srv/get_available_transitions.hpp"
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 
@@ -51,6 +52,7 @@ namespace rclcpp_lifecycle
 
 LifecycleNode::LifecycleNodeInterfaceImpl::LifecycleNodeInterfaceImpl(
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
+<<<<<<< HEAD
   std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface,
   std::shared_ptr<rclcpp::node_interfaces::NodeParametersInterface> node_parameters_interface,
   std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface)
@@ -61,6 +63,13 @@ LifecycleNode::LifecycleNodeInterfaceImpl::LifecycleNodeInterfaceImpl(
       node_logging_interface,
       node_parameters_interface,
       node_services_interface))
+=======
+  std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface,
+  std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface)
+: node_base_interface_(node_base_interface),
+  node_services_interface_(node_services_interface),
+  node_logging_interface_(node_logging_interface)
+>>>>>>> 945d254e (Switch lifecycle to use the RCLCPP macros. (#2233))
 {
 }
 
@@ -73,8 +82,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::~LifecycleNodeInterfaceImpl()
     ret = rcl_lifecycle_state_machine_fini(&state_machine_, node_handle);
   }
   if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_FATAL_NAMED(
-      "rclcpp_lifecycle",
+    RCLCPP_FATAL(
+      node_logging_interface_->get_logger(),
       "failed to destroy rcl_state_machine");
   }
 }
@@ -406,7 +415,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
   {
     std::lock_guard<std::recursive_mutex> lock(state_machine_mutex_);
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR(
+      RCLCPP_ERROR(
+        node_logging_interface_->get_logger(),
         "Unable to change state for state machine for %s: %s",
         node_base_interface_->get_name(), rcl_get_error_string().str);
       return RCL_RET_ERROR;
@@ -419,7 +429,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
       rcl_lifecycle_trigger_transition_by_id(
         &state_machine_, transition_id, publish_update) != RCL_RET_OK)
     {
-      RCUTILS_LOG_ERROR(
+      RCLCPP_ERROR(
+        node_logging_interface_->get_logger(),
         "Unable to start transition %u from current state %s: %s",
         transition_id, state_machine_.current_state->label, rcl_get_error_string().str);
       rcutils_reset_error();
@@ -451,7 +462,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
       rcl_lifecycle_trigger_transition_by_label(
         &state_machine_, transition_label, publish_update) != RCL_RET_OK)
     {
-      RCUTILS_LOG_ERROR(
+      RCLCPP_ERROR(
+        node_logging_interface_->get_logger(),
         "Failed to finish transition %u. Current state is now: %s (%s)",
         transition_id, state_machine_.current_state->label, rcl_get_error_string().str);
       rcutils_reset_error();
@@ -466,7 +478,9 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
   // error handling ?!
   // TODO(karsten1987): iterate over possible ret value
   if (cb_return_code == node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR) {
-    RCUTILS_LOG_WARN("Error occurred while doing error handling.");
+    RCLCPP_WARN(
+      node_logging_interface_->get_logger(),
+      "Error occurred while doing error handling.");
 
     auto error_cb_code = execute_callback(current_state_id, initial_state);
     auto error_cb_label = get_label_for_return_code(error_cb_code);
@@ -475,7 +489,9 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
       rcl_lifecycle_trigger_transition_by_label(
         &state_machine_, error_cb_label, publish_update) != RCL_RET_OK)
     {
-      RCUTILS_LOG_ERROR("Failed to call cleanup on error state: %s", rcl_get_error_string().str);
+      RCLCPP_ERROR(
+        node_logging_interface_->get_logger(),
+        "Failed to call cleanup on error state: %s", rcl_get_error_string().str);
       rcutils_reset_error();
       return RCL_RET_ERROR;
     }
@@ -503,8 +519,12 @@ LifecycleNode::LifecycleNodeInterfaceImpl::execute_callback(
     try {
       cb_success = callback(State(previous_state));
     } catch (const std::exception & e) {
-      RCUTILS_LOG_ERROR("Caught exception in callback for transition %d", it->first);
-      RCUTILS_LOG_ERROR("Original error: %s", e.what());
+      RCLCPP_ERROR(
+        node_logging_interface_->get_logger(),
+        "Caught exception in callback for transition %d", it->first);
+      RCLCPP_ERROR(
+        node_logging_interface_->get_logger(),
+        "Original error: %s", e.what());
       cb_success = node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
     }
   }
