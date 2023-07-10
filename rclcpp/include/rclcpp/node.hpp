@@ -56,6 +56,7 @@
 #include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/parameter.hpp"
@@ -232,13 +233,15 @@ public:
    * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
+   * \param[in] autostart The state of the clock on initialization.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    bool autostart = true);
 
   /// Create a timer that uses the node clock to drive the callback.
   /**
@@ -1454,6 +1457,11 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  /// Return the Node's internal NodeTypeDescriptionsInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface();
+
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
    * The returned sub-namespace is either the accumulated sub-namespaces which
@@ -1586,6 +1594,7 @@ private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr node_type_descriptions_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   const rclcpp::NodeOptions node_options_;
