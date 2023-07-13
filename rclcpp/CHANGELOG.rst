@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.0.2 (2023-07-14)
+-------------------
 * Fix warnings related to comparison of integer expressions of different signedness (`#2222 <https://github.com/ros2/rclcpp/issues/2222>`_)
 * Fix race condition in events-executor (`#2191 <https://github.com/ros2/rclcpp/issues/2191>`_)
 * Contributors: Alberto Soragna, Tomoya Fujita
