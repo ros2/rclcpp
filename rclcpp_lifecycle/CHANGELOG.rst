@@ -3,6 +3,15 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.5 (2023-07-17)
+-------------------
+* Fix thread safety in LifecycleNode::get_current_state() for Humble (`#2183 <https://github.com/ros2/rclcpp/issues/2183>`_)
+  * add initially-failing test case
+  * apply changes to LifecycleNodeInterfaceImpl from `#1756 <https://github.com/ros2/rclcpp/issues/1756>`_
+  * add static member to State for managing state_handle\_ access
+  * allow parallel read access in MutexMap
+* Contributors: Joseph Schornak
+
 16.0.4 (2023-04-25)
 -------------------
 

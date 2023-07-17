@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.5 (2023-07-17)
+-------------------
+* warning: comparison of integer expressions of different signedness (`#2219 <https://github.com/ros2/rclcpp/issues/2219>`_) (`#2223 <https://github.com/ros2/rclcpp/issues/2223>`_)
+* Trigger the intraprocess guard condition with data (`#2164 <https://github.com/ros2/rclcpp/issues/2164>`_) (`#2167 <https://github.com/ros2/rclcpp/issues/2167>`_)
+* Implement validity checks for rclcpp::Clock (`#2040 <https://github.com/ros2/rclcpp/issues/2040>`_) (`#2210 <https://github.com/ros2/rclcpp/issues/2210>`_)
+* Contributors: Tomoya Fujita, mergify[bot]
+
 16.0.4 (2023-04-25)
 -------------------
 * use allocator via init_options argument. (`#2129 <https://github.com/ros2/rclcpp/issues/2129>`_) (`#2131 <https://github.com/ros2/rclcpp/issues/2131>`_)
