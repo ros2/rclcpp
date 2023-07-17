@@ -1598,8 +1598,10 @@ private:
   const std::string sub_namespace_;
   const std::string effective_namespace_;
 
-  class BackportMemberMaps;
-  static BackportMemberMaps backport_member_maps_;
+  /// Static map(s) containing extra member variables for Node without changing its ABI.
+  // See node.cpp for more details.
+  class BackportMembers;
+  static BackportMembers backport_members_;
 };
 
 }  // namespace rclcpp

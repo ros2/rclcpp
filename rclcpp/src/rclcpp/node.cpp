@@ -113,11 +113,18 @@ create_effective_namespace(const std::string & node_namespace, const std::string
 
 }  // namespace
 
-/// \brief Associates new hidden backported members with instances of Node.
-class Node::BackportMemberMaps
+/// \brief Associate new extra member variables with instances of Node without changing ABI.
+/**
+ * It is used only for bugfixes or backported features that require new members.
+ * Atomically constructs/destroys all extra members.
+ * Node instance will register and remove itself, and use its methods to retrieve members.
+ * Note for performance consideration that accessing these members uses a map lookup.
+ */
+class Node::BackportMembers
 {
 public:
-  BackportMemberMaps() = default;
+  BackportMembers() = default;
+  ~BackportMembers() = default;
 
   /// \brief Add all backported members for a new Node.
   /**
@@ -170,7 +177,7 @@ private:
   mutable std::shared_mutex map_access_mutex_;
 };
 // Definition of static member declaration
-Node::BackportMemberMaps Node::backport_member_maps_;
+Node::BackportMembers Node::backport_members_;
 
 Node::Node(
   const std::string & node_name,
@@ -274,7 +281,7 @@ Node::Node(
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
-  backport_member_maps_.add(this);
+  backport_members_.add(this);
 
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
@@ -337,7 +344,7 @@ Node::Node(
 Node::~Node()
 {
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
-  backport_member_maps_.remove(this);
+  backport_members_.remove(this);
   node_waitables_.reset();
   node_time_source_.reset();
   node_parameters_.reset();
@@ -660,7 +667,7 @@ Node::get_node_topics_interface()
 rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
 Node::get_node_type_descriptions_interface()
 {
-  return backport_member_maps_.get_node_type_descriptions_interface(this);
+  return backport_members_.get_node_type_descriptions_interface(this);
 }
 
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
