@@ -34,14 +34,14 @@
 #include "rclcpp/type_adapter.hpp"
 
 
-template<class>
-inline constexpr bool always_false_v = false;
-
 namespace rclcpp
 {
 
 namespace detail
 {
+
+template<class>
+inline constexpr bool always_false_v = false;
 
 template<typename MessageT, typename AllocatorT>
 struct MessageDeleterHelper
@@ -580,7 +580,7 @@ public:
         }
         // condition to catch unhandled callback types
         else {  // NOLINT[readability/braces]
-          static_assert(always_false_v<T>, "unhandled callback type");
+          static_assert(detail::always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
@@ -660,7 +660,7 @@ public:
         }
         // condition to catch unhandled callback types
         else {  // NOLINT[readability/braces]
-          static_assert(always_false_v<T>, "unhandled callback type");
+          static_assert(detail::always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
@@ -790,7 +790,7 @@ public:
         }
         // condition to catch unhandled callback types
         else {  // NOLINT[readability/braces]
-          static_assert(always_false_v<T>, "unhandled callback type");
+          static_assert(detail::always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
@@ -924,7 +924,7 @@ public:
         }
         // condition to catch unhandled callback types
         else {  // NOLINT[readability/braces]
-          static_assert(always_false_v<T>, "unhandled callback type");
+          static_assert(detail::always_false_v<T>, "unhandled callback type");
         }
       }, callback_variant_);
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));

@@ -262,6 +262,11 @@ if(TARGET test_node_interfaces__node_topics)
     "test_msgs")
   target_link_libraries(test_node_interfaces__node_topics ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_node_interfaces__node_type_descriptions
+  node_interfaces/test_node_type_descriptions.cpp)
+if(TARGET test_node_interfaces__node_type_descriptions)
+  target_link_libraries(test_node_interfaces__node_type_descriptions ${PROJECT_NAME} mimick)
+endif()
 ament_add_gtest(test_node_interfaces__node_waitables
   node_interfaces/test_node_waitables.cpp)
 if(TARGET test_node_interfaces__node_waitables)

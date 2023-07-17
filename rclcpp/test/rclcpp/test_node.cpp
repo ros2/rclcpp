@@ -78,6 +78,7 @@ TEST_F(TestNode, construction_and_destruction) {
     EXPECT_NE(nullptr, node->get_node_options().get_rcl_node_options());
     EXPECT_NE(nullptr, node->get_graph_event());
     EXPECT_NE(nullptr, node->get_clock());
+    EXPECT_NE(nullptr, node->get_node_type_descriptions_interface());
   }
 
   {
