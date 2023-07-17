@@ -112,7 +112,7 @@ Node::create_wall_timer(
   CallbackT callback,
   rclcpp::CallbackGroup::SharedPtr group,
   bool autostart,
-  uint32_t amount_of_callbacks)
+  uint32_t number_of_callbacks)
 {
   return rclcpp::create_wall_timer(
     period,
@@ -121,7 +121,7 @@ Node::create_wall_timer(
     this->node_base_.get(),
     this->node_timers_.get(),
     autostart,
-    amount_of_callbacks);
+    number_of_callbacks);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

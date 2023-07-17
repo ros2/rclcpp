@@ -226,15 +226,17 @@ public:
    * \param[in] callback User-specified callback function.
    * \param[in] context custom context to be used.
    * \param[in] autostart timer state on initialization
-   * \param[in] amount_of_callbacks Quantity of times the callback will be triggered.
+   * \param[in] number_of_callbacks Number of times the callback will be triggered.
+   *                                If the value is 0 (the default), the callback will be called
+   *                                continuously until it is canceled.
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
-    rclcpp::Context::SharedPtr context, bool autostart = true, 
-    uint32_t amount_of_callbacks = 0
+    rclcpp::Context::SharedPtr context, bool autostart = true,
+    uint32_t number_of_callbacks = 0
   )
   : TimerBase(clock, period, context, autostart), callback_(std::forward<FunctorT>(callback)),
-    amount_of_callbacks_(amount_of_callbacks)
+    number_of_callbacks_(number_of_callbacks)
   {
     callbacks_called_ = 0;
     TRACETOOLS_TRACEPOINT(
@@ -291,8 +293,8 @@ public:
     TRACETOOLS_TRACEPOINT(callback_start, reinterpret_cast<const void *>(&callback_), false);
     execute_callback_delegate<>();
     TRACETOOLS_TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
-    if (amount_of_callbacks_ != 0) {
-      if (amount_of_callbacks_ <= ++callbacks_called_) {
+    if (number_of_callbacks_ != 0) {
+      if (number_of_callbacks_ <= ++callbacks_called_) {
         cancel();
       }
     }
@@ -335,7 +337,7 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
-  uint32_t amount_of_callbacks_;
+  uint32_t number_of_callbacks_;
 };
 
 template<
@@ -356,17 +358,17 @@ public:
    * \param callback The callback function to execute every interval
    * \param context node context
    * \param autostart timer state on initialization
-   * \param amount_of_callbacks Quantity of times the callback will be triggered.
+   * \param number_of_callbacks Quantity of times the callback will be triggered.
    */
   WallTimer(
     std::chrono::nanoseconds period,
     FunctorT && callback,
     rclcpp::Context::SharedPtr context,
     bool autostart = true,
-    uint32_t amount_of_callbacks = 0)
+    uint32_t number_of_callbacks = 0)
   : GenericTimer<FunctorT>(
       std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context, autostart,
-      amount_of_callbacks)
+      number_of_callbacks)
   {}
 
 protected:

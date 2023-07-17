@@ -234,7 +234,9 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    * \param[in] autostart The state of the clock on initialization.
-   * \param[in] amount_of_callbacks Quantity of times the callback will be triggered.
+   * \param[in] number_of_callbacks Number of times the callback will be triggered.
+   *                                If the value is 0 (the default), the callback will be called
+   *                                continuously until it is canceled.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr
@@ -243,7 +245,7 @@ public:
     CallbackT callback,
     rclcpp::CallbackGroup::SharedPtr group = nullptr,
     bool autostart = true,
-    uint32_t amount_of_callbacks = 0);
+    uint32_t number_of_callbacks = 0);
 
   /// Create a timer that uses the node clock to drive the callback.
   /**
