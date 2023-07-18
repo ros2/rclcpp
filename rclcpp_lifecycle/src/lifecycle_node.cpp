@@ -122,7 +122,7 @@ LifecycleNode::LifecycleNode(
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
-  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
+  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_, node_logging_))
 {
   impl_->init(enable_communication_interface);
 
@@ -473,6 +473,12 @@ rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 LifecycleNode::get_node_topics_interface()
 {
   return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+LifecycleNode::get_node_type_descriptions_interface()
+{
+  return node_type_descriptions_;
 }
 
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr

@@ -97,13 +97,15 @@ protected:
 BENCHMARK_F(BenchmarkLifecycleNode, get_current_state)(benchmark::State & state) {
   for (auto _ : state) {
     (void)_;
-    const auto & lifecycle_state = node->get_current_state();
+    const rclcpp_lifecycle::State & lifecycle_state = node->get_current_state();
     if (lifecycle_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
       const std::string message =
         std::string("Node's current state is: ") + std::to_string(lifecycle_state.id());
       state.SkipWithError(message.c_str());
     }
-    benchmark::DoNotOptimize(lifecycle_state);
+    // Google benchmark 1.8.2 warns that the constref DoNotOptimize signature may be optimized away
+    // by the compiler.  Cast const away to ensure we don't get that problem (and warning).
+    benchmark::DoNotOptimize(const_cast<rclcpp_lifecycle::State &>(lifecycle_state));
     benchmark::ClobberMemory();
   }
 }
@@ -112,7 +114,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_available_states)(benchmark::State & sta
   for (auto _ : state) {
     (void)_;
     constexpr size_t expected_states = 11u;
-    const auto lifecycle_states = node->get_available_states();
+    std::vector<rclcpp_lifecycle::State> lifecycle_states = node->get_available_states();
     if (lifecycle_states.size() != expected_states) {
       const std::string msg = std::to_string(lifecycle_states.size());
       state.SkipWithError(msg.c_str());
@@ -126,7 +128,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_available_transitions)(benchmark::State 
   for (auto _ : state) {
     (void)_;
     constexpr size_t expected_transitions = 2u;
-    const auto & transitions = node->get_available_transitions();
+    std::vector<rclcpp_lifecycle::Transition> transitions = node->get_available_transitions();
     if (transitions.size() != expected_transitions) {
       const std::string msg = std::to_string(transitions.size());
       state.SkipWithError(msg.c_str());
@@ -140,7 +142,7 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_transition_graph)(benchmark::State & sta
   for (auto _ : state) {
     (void)_;
     constexpr size_t expected_transitions = 25u;
-    const auto & transitions = node->get_transition_graph();
+    std::vector<rclcpp_lifecycle::Transition> transitions = node->get_transition_graph();
     if (transitions.size() != expected_transitions) {
       const std::string msg =
         std::string("Expected number of transitions did not match actual: ") +
@@ -162,18 +164,20 @@ BENCHMARK_F(BenchmarkLifecycleNode, transition_valid_state)(benchmark::State & s
   reset_heap_counters();
   for (auto _ : state) {
     (void)_;
-    const auto & active =
+    const rclcpp_lifecycle::State & active =
       node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
     if (active.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       state.SkipWithError("Transition to active state failed");
     }
-    const auto & inactive =
+    const rclcpp_lifecycle::State & inactive =
       node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
     if (inactive.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       state.SkipWithError("Transition to inactive state failed");
     }
-    benchmark::DoNotOptimize(active);
-    benchmark::DoNotOptimize(inactive);
+    // Google benchmark 1.8.2 warns that the constref DoNotOptimize signature may be optimized away
+    // by the compiler.  Cast const away to ensure we don't get that problem (and warning).
+    benchmark::DoNotOptimize(const_cast<rclcpp_lifecycle::State &>(active));
+    benchmark::DoNotOptimize(const_cast<rclcpp_lifecycle::State &>(inactive));
     benchmark::ClobberMemory();
   }
 }
