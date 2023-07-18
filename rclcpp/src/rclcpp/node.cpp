@@ -23,6 +23,7 @@
 
 #include "rcl/arguments.h"
 
+#include "rclcpp/create_generic_client.hpp"
 #include "rclcpp/detail/qos_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
@@ -675,4 +676,21 @@ const NodeOptions &
 Node::get_node_options() const
 {
   return this->node_options_;
+}
+
+rclcpp::GenericClient::SharedPtr
+Node::create_generic_client(
+  const std::string & service_name,
+  const std::string & service_type,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_generic_client(
+    node_base_,
+    node_graph_,
+    node_services_,
+    service_name,
+    service_type,
+    qos,
+    group);
 }
