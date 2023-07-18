@@ -103,6 +103,8 @@ BENCHMARK_F(BenchmarkLifecycleNode, get_current_state)(benchmark::State & state)
         std::string("Node's current state is: ") + std::to_string(lifecycle_state.id());
       state.SkipWithError(message.c_str());
     }
+    // Google benchmark 1.8.2 warns that the constref DoNotOptimize signature may be optimized away
+    // by the compiler.  Cast const away to ensure we don't get that problem (and warning).
     benchmark::DoNotOptimize(const_cast<rclcpp_lifecycle::State &>(lifecycle_state));
     benchmark::ClobberMemory();
   }
@@ -172,6 +174,8 @@ BENCHMARK_F(BenchmarkLifecycleNode, transition_valid_state)(benchmark::State & s
     if (inactive.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       state.SkipWithError("Transition to inactive state failed");
     }
+    // Google benchmark 1.8.2 warns that the constref DoNotOptimize signature may be optimized away
+    // by the compiler.  Cast const away to ensure we don't get that problem (and warning).
     benchmark::DoNotOptimize(const_cast<rclcpp_lifecycle::State &>(active));
     benchmark::DoNotOptimize(const_cast<rclcpp_lifecycle::State &>(inactive));
     benchmark::ClobberMemory();
