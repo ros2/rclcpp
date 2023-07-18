@@ -15,7 +15,7 @@
 #ifndef RCLCPP__PARAMETER_DESCRIPTOR_WRAPPER_HPP_
 #define RCLCPP__PARAMETER_DESCRIPTOR_WRAPPER_HPP_
 
-// Standard library includes
+// C++ Standard library includes
 #include <functional>
 #include <utility>
 #include <memory>
@@ -60,23 +60,24 @@ public:
   // Need the current node in order to begin the configuration state
   // for it via the declare_parameter function which setups the Node
   template<typename ParameterType>
-  ParameterDescription &
-  DeclareParameter(ParameterType default_value, rclcpp::Node::SharedPtr required_node_ptr)
-    {
-      required_node_ptr->declare_parameter<ParameterType>(
-        parameter_descriptor.name, default_value,
-        parameter_descriptor);
-      return *this;
-    }
+  ParameterDescription & DeclareParameter(
+    ParameterType default_value,
+    rclcpp::Node::SharedPtr required_node_ptr)
+  {
+    required_node_ptr->declare_parameter<ParameterType>(
+      parameter_descriptor.name, default_value,
+      parameter_descriptor);
+    return *this;
+  }
 
   template<typename ParameterType>
   ParameterDescription & DeclareParameter(
     ParameterType default_value,
     rclcpp_lifecycle::LifecycleNode::SharedPtr required_node_ptr)
   {
-    required_node_ptr->declare_parameter<ParameterType>
-      (parameter_descriptor.name, default_value,
-       parameter_descriptor);
+    required_node_ptr->declare_parameter<ParameterType>(
+      parameter_descriptor.name, default_value,
+      parameter_descriptor);
     return *this;
   }
 
@@ -159,6 +160,7 @@ public:
 
     return *this;
   }
+
 private:
   // The main descriptor object we're meant to initialize and adjust
   rcl_interfaces::msg::ParameterDescriptor parameter_descriptor = {};
