@@ -17,7 +17,10 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -36,6 +39,7 @@
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 
@@ -108,6 +112,72 @@ create_effective_namespace(const std::string & node_namespace, const std::string
 }
 
 }  // namespace
+
+/// \brief Associate new extra member variables with instances of Node without changing ABI.
+/**
+ * It is used only for bugfixes or backported features that require new members.
+ * Atomically constructs/destroys all extra members.
+ * Node instance will register and remove itself, and use its methods to retrieve members.
+ * Note for performance consideration that accessing these members uses a map lookup.
+ */
+class Node::BackportMembers
+{
+public:
+  BackportMembers() = default;
+  ~BackportMembers() = default;
+
+  /// \brief Add all backported members for a new Node.
+  /**
+   * \param[in] key Raw pointer to the Node instance that will use new members.
+   */
+  void add(Node * key)
+  {
+    // Adding a new instance to the maps requires exclusive access
+    std::unique_lock lock(map_access_mutex_);
+    type_descriptions_map_.emplace(
+      key,
+      std::make_shared<rclcpp::node_interfaces::NodeTypeDescriptions>(
+        key->get_node_base_interface(),
+        key->get_node_logging_interface(),
+        key->get_node_parameters_interface(),
+        key->get_node_services_interface()));
+  }
+
+  /// \brief Remove the members for an instance of Node
+  /**
+   * \param[in] key Raw pointer to the Node
+   */
+  void remove(const Node * key)
+  {
+    // Removing an instance from the maps requires exclusive access
+    std::unique_lock lock(map_access_mutex_);
+    type_descriptions_map_.erase(key);
+  }
+
+  /// \brief Retrieve the NodeTypeDescriptionsInterface for a Node.
+  /**
+   * \param[in] key Raw pointer to an instance of Node.
+   * \return A shared ptr to this Node's NodeTypeDescriptionsInterface instance.
+   */
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface(const Node * key) const
+  {
+    // Multiple threads can retrieve from the maps at the same time
+    std::shared_lock lock(map_access_mutex_);
+    return type_descriptions_map_.at(key);
+  }
+
+private:
+  /// \brief Map that stored TypeDescriptionsInterface members
+  std::unordered_map<
+    const Node *, rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  > type_descriptions_map_;
+
+  /// \brief Controls access to all private maps
+  mutable std::shared_mutex map_access_mutex_;
+};
+// Definition of static member declaration
+Node::BackportMembers Node::backport_members_;
 
 Node::Node(
   const std::string & node_name,
@@ -211,6 +281,8 @@ Node::Node(
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
+  backport_members_.add(this);
+
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
   rclcpp::detail::declare_qos_parameters(
@@ -272,6 +344,7 @@ Node::Node(
 Node::~Node()
 {
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
+  backport_members_.remove(this);
   node_waitables_.reset();
   node_time_source_.reset();
   node_parameters_.reset();
@@ -589,6 +662,12 @@ rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 Node::get_node_topics_interface()
 {
   return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+Node::get_node_type_descriptions_interface()
+{
+  return backport_members_.get_node_type_descriptions_interface(this);
 }
 
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr

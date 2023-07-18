@@ -43,6 +43,7 @@
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/parameter_service.hpp"
 #include "rclcpp/qos.hpp"
@@ -115,7 +116,11 @@ LifecycleNode::LifecycleNode(
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
-  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
+  impl_(new LifecycleNodeInterfaceImpl(
+      node_base_,
+      node_logging_,
+      node_parameters_,
+      node_services_))
 {
   impl_->init(enable_communication_interface);
 
@@ -472,6 +477,12 @@ rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
 LifecycleNode::get_node_services_interface()
 {
   return node_services_;
+}
+
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+LifecycleNode::get_node_type_descriptions_interface()
+{
+  return impl_->get_node_type_descriptions_interface();
 }
 
 rclcpp::node_interfaces::NodeParametersInterface::SharedPtr

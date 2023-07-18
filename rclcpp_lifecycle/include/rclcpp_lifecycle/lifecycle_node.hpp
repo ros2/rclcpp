@@ -72,6 +72,7 @@
 #include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
@@ -822,6 +823,14 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
+
+  /// Return the Node's internal NodeTypeDescriptionsInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_type_descriptions_interface
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface();
 
   /// Return the Node's internal NodeWaitablesInterface implementation.
   /**

@@ -427,11 +427,15 @@ TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
 // Parameters are tested more thoroughly in rclcpp's test_node.cpp
 // These are provided for coverage of lifecycle node's API
 TEST_F(TestDefaultStateMachine, declare_parameters) {
+  // "start_type_description_service" and "use_sim_time"
+  const uint64_t builtin_param_count = 2;
+  const uint64_t expected_param_count = 6 + builtin_param_count;
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
 
   auto list_result = test_node->list_parameters({}, 0u);
-  EXPECT_EQ(list_result.names.size(), 1u);
-  EXPECT_STREQ(list_result.names[0].c_str(), "use_sim_time");
+  EXPECT_EQ(list_result.names.size(), builtin_param_count);
+  EXPECT_STREQ(list_result.names[0].c_str(), "start_type_description_service");
+  EXPECT_STREQ(list_result.names[1].c_str(), "use_sim_time");
 
   const std::string bool_name = "test_boolean";
   const std::string int_name = "test_int";
@@ -469,10 +473,11 @@ TEST_F(TestDefaultStateMachine, declare_parameters) {
   test_node->declare_parameters("test_double", double_parameters);
 
   list_result = test_node->list_parameters({}, 0u);
-  EXPECT_EQ(list_result.names.size(), 7u);
+  EXPECT_EQ(list_result.names.size(), expected_param_count);
 
   // The order of these names is not controlled by lifecycle_node, doing set equality
   std::set<std::string> expected_names = {
+    "start_type_description_service",
     "test_boolean",
     "test_double.double_one",
     "test_double.double_two",
@@ -487,11 +492,13 @@ TEST_F(TestDefaultStateMachine, declare_parameters) {
 }
 
 TEST_F(TestDefaultStateMachine, check_parameters) {
+  const uint64_t builtin_param_count = 2;
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
 
   auto list_result = test_node->list_parameters({}, 0u);
-  EXPECT_EQ(list_result.names.size(), 1u);
-  EXPECT_STREQ(list_result.names[0].c_str(), "use_sim_time");
+  EXPECT_EQ(list_result.names.size(), builtin_param_count);
+  EXPECT_STREQ(list_result.names[0].c_str(), "start_type_description_service");
+  EXPECT_STREQ(list_result.names[1].c_str(), "use_sim_time");
 
   const std::string bool_name = "test_boolean";
   const std::string int_name = "test_int";
@@ -549,8 +556,7 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
   std::map<std::string, rclcpp::ParameterValue> parameter_map;
   EXPECT_TRUE(test_node->get_parameters({}, parameter_map));
 
-  // int param, bool param, and use_sim_time
-  EXPECT_EQ(parameter_map.size(), 3u);
+  EXPECT_EQ(parameter_map.size(), parameter_names.size() + builtin_param_count);
 
   // Check parameter types
   auto parameter_types = test_node->get_parameter_types(parameter_names);
@@ -585,10 +591,12 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
 
   // List parameters
   list_result = test_node->list_parameters({}, 0u);
-  EXPECT_EQ(list_result.names.size(), 3u);
-  EXPECT_STREQ(list_result.names[0].c_str(), parameter_names[0].c_str());
-  EXPECT_STREQ(list_result.names[1].c_str(), parameter_names[1].c_str());
-  EXPECT_STREQ(list_result.names[2].c_str(), "use_sim_time");
+  EXPECT_EQ(list_result.names.size(), parameter_names.size() + builtin_param_count);
+  size_t index = 0;
+  EXPECT_STREQ(list_result.names[index++].c_str(), "start_type_description_service");
+  EXPECT_STREQ(list_result.names[index++].c_str(), parameter_names[0].c_str());
+  EXPECT_STREQ(list_result.names[index++].c_str(), parameter_names[1].c_str());
+  EXPECT_STREQ(list_result.names[index++].c_str(), "use_sim_time");
 
   // Undeclare parameter
   test_node->undeclare_parameter(bool_name);
@@ -633,6 +641,7 @@ TEST_F(TestDefaultStateMachine, test_getters) {
   EXPECT_LT(0u, test_node->now().nanoseconds());
   EXPECT_STREQ("testnode", test_node->get_logger().get_name());
   EXPECT_NE(nullptr, const_cast<const EmptyLifecycleNode *>(test_node.get())->get_clock());
+  EXPECT_NE(nullptr, test_node->get_node_type_descriptions_interface());
 }
 
 TEST_F(TestDefaultStateMachine, test_graph_topics) {

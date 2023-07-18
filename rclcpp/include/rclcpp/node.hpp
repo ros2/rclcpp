@@ -56,6 +56,7 @@
 #include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/parameter.hpp"
@@ -1454,6 +1455,11 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  /// Return the Node's internal NodeTypeDescriptionsInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface();
+
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
    * The returned sub-namespace is either the accumulated sub-namespaces which
@@ -1591,6 +1597,11 @@ private:
   const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;
   const std::string effective_namespace_;
+
+  /// Static map(s) containing extra member variables for Node without changing its ABI.
+  // See node.cpp for more details.
+  class BackportMembers;
+  static BackportMembers backport_members_;
 };
 
 }  // namespace rclcpp

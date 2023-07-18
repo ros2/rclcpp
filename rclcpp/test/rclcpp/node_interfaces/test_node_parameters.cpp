@@ -77,9 +77,9 @@ TEST_F(TestNodeParameters, list_parameters)
   std::vector<std::string> prefixes;
   const auto list_result = node_parameters->list_parameters(prefixes, 1u);
 
-  // Currently the only default parameter is 'use_sim_time', but that may change.
+  // Currently the default parameters are 'use_sim_time' and 'start_type_description_service'
   size_t number_of_parameters = list_result.names.size();
-  EXPECT_GE(1u, number_of_parameters);
+  EXPECT_GE(2u, number_of_parameters);
 
   const std::string parameter_name = "new_parameter";
   const rclcpp::ParameterValue value(true);

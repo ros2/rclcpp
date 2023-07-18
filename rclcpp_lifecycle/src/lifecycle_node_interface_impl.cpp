@@ -30,6 +30,7 @@
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
@@ -50,9 +51,16 @@ namespace rclcpp_lifecycle
 
 LifecycleNode::LifecycleNodeInterfaceImpl::LifecycleNodeInterfaceImpl(
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
+  std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface,
+  std::shared_ptr<rclcpp::node_interfaces::NodeParametersInterface> node_parameters_interface,
   std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface)
 : node_base_interface_(node_base_interface),
-  node_services_interface_(node_services_interface)
+  node_services_interface_(node_services_interface),
+  node_type_descriptions_(new rclcpp::node_interfaces::NodeTypeDescriptions(
+      node_base_interface,
+      node_logging_interface,
+      node_parameters_interface,
+      node_services_interface))
 {
 }
 
@@ -579,6 +587,12 @@ LifecycleNode::LifecycleNodeInterfaceImpl::on_deactivate() const
       entity->on_deactivate();
     }
   }
+}
+
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+LifecycleNode::LifecycleNodeInterfaceImpl::get_node_type_descriptions_interface()
+{
+  return node_type_descriptions_;
 }
 
 }  // namespace rclcpp_lifecycle
