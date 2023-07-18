@@ -54,7 +54,8 @@ ParameterDescription & ParameterDescription::SetDescriptionText(const std::strin
   return *this;
 }
 
-ParameterDescription & ParameterDescription::SetAdditionalConstraints(const std::string & constraints)
+ParameterDescription & ParameterDescription::SetAdditionalConstraints(
+  const std::string & constraints)
 {
   parameter_descriptor.constraints = constraints;
   return *this;
@@ -73,8 +74,9 @@ ParameterDescription & ParameterDescription::SetDynamicTyping(bool dynamic_typin
 }
 
 // Here is the Specific range function for this parameter description
-ParameterDescription & ParameterDescription::SetFloatingPointDescriptionRange
-(float min, float max, float step)
+ParameterDescription & ParameterDescription::SetFloatingPointDescriptionRange(
+  float min, float max,
+  float step)
 {
   parameter_descriptor.floating_point_range.resize(1);
   parameter_descriptor.floating_point_range.at(0).from_value = min;
