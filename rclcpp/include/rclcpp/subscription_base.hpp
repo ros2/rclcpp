@@ -285,6 +285,14 @@ public:
   bool
   can_loan_messages() const;
 
+  /// Check if the subscription has intraprocess comms enabled
+  /**
+   * This is just a getter method for the intraprocess subscription state
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_intra_process_comm_enabled() const;
+
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
 

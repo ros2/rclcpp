@@ -301,6 +301,12 @@ SubscriptionBase::can_loan_messages() const
   return rcl_subscription_can_loan_messages(subscription_handle_.get());
 }
 
+bool
+SubscriptionBase::is_intra_process_comm_enabled() const
+{
+  return use_intra_process_;
+}
+
 rclcpp::Waitable::SharedPtr
 SubscriptionBase::get_intra_process_waitable() const
 {
