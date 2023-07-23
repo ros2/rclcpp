@@ -51,10 +51,10 @@ struct can_be_nullptr<T, std::void_t<
 }  // namespace detail
 
 // Forward declare
-template<typename ServiceT>
+template<typename ServiceT, typename AllocatorT>
 class Service;
 
-template<typename ServiceT>
+template<typename ServiceT, typename AllocatorT = std::allocator<void>>
 class AnyServiceCallback
 {
 public:
@@ -152,7 +152,7 @@ public:
   // template<typename Allocator = std::allocator<typename ServiceT::Response>>
   std::shared_ptr<typename ServiceT::Response>
   dispatch(
-    const std::shared_ptr<rclcpp::Service<ServiceT>> & service_handle,
+    const std::shared_ptr<rclcpp::Service<ServiceT, AllocatorT>> & service_handle,
     const std::shared_ptr<rmw_request_id_t> & request_header,
     std::shared_ptr<typename ServiceT::Request> request)
   {
@@ -222,7 +222,7 @@ private:
     )>;
   using SharedPtrDeferResponseCallbackWithServiceHandle = std::function<
     void (
-      std::shared_ptr<rclcpp::Service<ServiceT>>,
+      std::shared_ptr<rclcpp::Service<ServiceT, AllocatorT>>,
       std::shared_ptr<rmw_request_id_t>,
       std::shared_ptr<typename ServiceT::Request>
     )>;

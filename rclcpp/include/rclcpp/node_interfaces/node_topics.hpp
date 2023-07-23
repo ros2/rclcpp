@@ -16,6 +16,7 @@
 #define RCLCPP__NODE_INTERFACES__NODE_TOPICS_HPP_
 
 #include <string>
+#include <memory>
 
 #include "rcl/publisher.h"
 #include "rcl/subscription.h"
@@ -76,6 +77,32 @@ public:
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
     rclcpp::CallbackGroup::SharedPtr callback_group) override;
+
+  RCLCPP_PUBLIC
+  rclcpp::ServiceBase::SharedPtr
+  create_service(
+    std::shared_ptr<rcl_node_t> node_handle,
+    const rclcpp::ServiceFactory & service_factory) override;
+
+  RCLCPP_PUBLIC
+  void
+  add_service(
+    // rclcpp::ServiceBase::SharedPtr service,
+    // rclcpp::CallbackGroup::SharedPtr callback_group
+  ) override;
+
+  RCLCPP_PUBLIC
+  rclcpp::ClientBase::SharedPtr
+  create_client(
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+    const rclcpp::ClientFactory & client_factory) override;
+
+  RCLCPP_PUBLIC
+  void
+  add_client(
+    // rclcpp::ClientBase::SharedPtr client,
+    // rclcpp::CallbackGroup::SharedPtr callback_group
+  ) override;
 
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface *

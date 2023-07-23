@@ -26,8 +26,6 @@
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
 
-#include "../logging_mutex.hpp"
-
 using rclcpp::exceptions::throw_from_rcl_error;
 
 using rclcpp::node_interfaces::NodeBase;

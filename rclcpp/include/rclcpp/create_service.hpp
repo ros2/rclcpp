@@ -1,4 +1,4 @@
-// Copyright 2018 Open Source Robotics Foundation, Inc.
+//  Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/rmw.h"
+#include "service_options.hpp"
 
 namespace rclcpp
 {
@@ -36,44 +37,32 @@ namespace rclcpp
  * \param[in] callback The callback to call when the service gets a request.
  * \param[in] qos Quality of service profile for the service.
  * \param[in] group Callback group to handle the reply to service calls.
+ * \param[in] options A way to customize the allocator
  * \return Shared pointer to the created service.
  */
-template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
+template<
+  typename ServiceT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>>
+typename rclcpp::Service<ServiceT, AllocatorT>::SharedPtr
 create_service(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
   const std::string & service_name,
   CallbackT && callback,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::ServiceOptionsWithAllocator<AllocatorT> & options =
+  rclcpp::ServiceOptionsWithAllocator<AllocatorT>()
+)
 {
-  return create_service<ServiceT, CallbackT>(
-    node_base, node_services, service_name,
-    std::forward<CallbackT>(callback), qos.get_rmw_qos_profile(), group);
-}
-
-/// Create a service with a given type.
-/// \internal
-template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
-create_service(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name,
-  CallbackT && callback,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  rclcpp::AnyServiceCallback<ServiceT> any_service_callback;
+  rclcpp::AnyServiceCallback<ServiceT, AllocatorT> any_service_callback;
   any_service_callback.set(std::forward<CallbackT>(callback));
 
-  rcl_service_options_t service_options = rcl_service_get_default_options();
-  service_options.qos = qos_profile;
-
-  auto serv = Service<ServiceT>::make_shared(
+  auto serv = Service<ServiceT, AllocatorT>::make_shared(
     node_base->get_shared_rcl_node_handle(),
-    service_name, any_service_callback, service_options);
+    service_name, any_service_callback, qos, options);
+
   auto serv_base_ptr = std::dynamic_pointer_cast<ServiceBase>(serv);
   node_services->add_service(serv_base_ptr, group);
   return serv;

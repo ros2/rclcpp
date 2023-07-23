@@ -62,27 +62,6 @@ TEST_F(TestClient, construction_and_destruction) {
     EXPECT_TRUE(client);
   }
   {
-    // suppress deprecated function warning
-    #if !defined(_WIN32)
-    # pragma GCC diagnostic push
-    # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    #else  // !defined(_WIN32)
-    # pragma warning(push)
-    # pragma warning(disable: 4996)
-    #endif
-
-    auto client = node_->create_client<ListParameters>(
-      "service", rmw_qos_profile_services_default);
-    EXPECT_TRUE(client);
-
-    // remove warning suppression
-    #if !defined(_WIN32)
-    # pragma GCC diagnostic pop
-    #else  // !defined(_WIN32)
-    # pragma warning(pop)
-    #endif
-  }
-  {
     auto client = node_->create_client<ListParameters>(
       "service", rclcpp::ServicesQoS());
     EXPECT_TRUE(client);
@@ -97,28 +76,6 @@ TEST_F(TestClient, construction_and_destruction) {
 }
 
 TEST_F(TestClient, construction_with_free_function) {
-  {
-    auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
-      node_->get_node_base_interface(),
-      node_->get_node_graph_interface(),
-      node_->get_node_services_interface(),
-      "service",
-      rmw_qos_profile_services_default,
-      nullptr);
-    EXPECT_TRUE(client);
-  }
-  {
-    ASSERT_THROW(
-    {
-      auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
-        node_->get_node_base_interface(),
-        node_->get_node_graph_interface(),
-        node_->get_node_services_interface(),
-        "invalid_?service",
-        rmw_qos_profile_services_default,
-        nullptr);
-    }, rclcpp::exceptions::InvalidServiceNameError);
-  }
   {
     auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
       node_->get_node_base_interface(),

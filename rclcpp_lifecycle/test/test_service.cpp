@@ -68,30 +68,6 @@ TEST_F(TestService, construction_and_destruction) {
     const rclcpp::ServiceBase * const_service_base = service.get();
     EXPECT_NE(nullptr, const_service_base->get_service_handle());
   }
-  {
-    // suppress deprecated function warning
-    #if !defined(_WIN32)
-    # pragma GCC diagnostic push
-    # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    #else  // !defined(_WIN32)
-    # pragma warning(push)
-    # pragma warning(disable: 4996)
-    #endif
-
-    auto service = node->create_service<Empty>(
-      "service", callback, rmw_qos_profile_services_default);
-
-    // remove warning suppression
-    #if !defined(_WIN32)
-    # pragma GCC diagnostic pop
-    #else  // !defined(_WIN32)
-    # pragma warning(pop)
-    #endif
-
-    EXPECT_NE(nullptr, service->get_service_handle());
-    const rclcpp::ServiceBase * const_service_base = service.get();
-    EXPECT_NE(nullptr, const_service_base->get_service_handle());
-  }
 
   {
     ASSERT_THROW(

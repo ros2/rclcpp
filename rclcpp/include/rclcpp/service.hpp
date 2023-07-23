@@ -35,6 +35,7 @@
 #include "tracetools/tracetools.h"
 
 #include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/service_options.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
@@ -280,10 +281,10 @@ protected:
   std::atomic<bool> in_use_by_wait_set_{false};
 };
 
-template<typename ServiceT>
+template<typename ServiceT, typename AllocatorT = std::allocator<void>>
 class Service
   : public ServiceBase,
-  public std::enable_shared_from_this<Service<ServiceT>>
+  public std::enable_shared_from_this<Service<ServiceT, AllocatorT>>
 {
 public:
   using CallbackType = std::function<
@@ -307,13 +308,15 @@ public:
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] service_name Name of the topic to publish to.
    * \param[in] any_callback User defined callback to call when a client request is received.
-   * \param[in] service_options options for the subscription.
+   * \param[in] qos Quality of Service needed for setup of the rcl_service_options
+   * \param[in] service_options options for the subscription, now with custom allocator.
    */
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name,
-    AnyServiceCallback<ServiceT> any_callback,
-    rcl_service_options_t & service_options)
+    AnyServiceCallback<ServiceT, AllocatorT> any_callback,
+    const rclcpp::QoS & qos,
+    const rclcpp::ServiceOptionsWithAllocator<AllocatorT> & service_options)
   : ServiceBase(node_handle), any_callback_(any_callback),
     srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
@@ -332,12 +335,15 @@ public:
       });
     *service_handle_.get() = rcl_get_zero_initialized_service();
 
+    rcl_service_options_t service_options_t =
+      service_options.to_rcl_service_options(qos);
+
     rcl_ret_t ret = rcl_service_init(
       service_handle_.get(),
       node_handle.get(),
       srv_type_support_handle_,
       service_name.c_str(),
-      &service_options);
+      &service_options_t);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_SERVICE_NAME_INVALID) {
         auto rcl_node_handle = get_rcl_node_handle();
@@ -374,7 +380,7 @@ public:
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     std::shared_ptr<rcl_service_t> service_handle,
-    AnyServiceCallback<ServiceT> any_callback)
+    AnyServiceCallback<ServiceT, AllocatorT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback),
     srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
@@ -409,7 +415,7 @@ public:
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     rcl_service_t * service_handle,
-    AnyServiceCallback<ServiceT> any_callback)
+    AnyServiceCallback<ServiceT, AllocatorT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback),
     srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
@@ -521,7 +527,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Service)
 
-  AnyServiceCallback<ServiceT> any_callback_;
+  AnyServiceCallback<ServiceT, AllocatorT> any_callback_;
 
   const rosidl_service_type_support_t * srv_type_support_handle_;
 };

@@ -48,6 +48,7 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "service_options.hpp"
 
 #ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"
@@ -138,70 +139,44 @@ Node::create_timer(
     this->node_timers_.get());
 }
 
-template<typename ServiceT>
-typename Client<ServiceT>::SharedPtr
+template<typename ServiceT, typename AllocatorT>
+typename Client<ServiceT, AllocatorT>::SharedPtr
 Node::create_client(
   const std::string & service_name,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::ClientOptionsWithAllocator<AllocatorT> & options)
 {
-  return rclcpp::create_client<ServiceT>(
+  return rclcpp::create_client<ServiceT, AllocatorT>(
     node_base_,
     node_graph_,
     node_services_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     qos,
-    group);
+    group,
+    options);
 }
 
-template<typename ServiceT>
-typename Client<ServiceT>::SharedPtr
-Node::create_client(
-  const std::string & service_name,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  return rclcpp::create_client<ServiceT>(
-    node_base_,
-    node_graph_,
-    node_services_,
-    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
-    qos_profile,
-    group);
-}
-
-template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
+template<
+  typename ServiceT,
+  typename CallbackT,
+  typename AllocatorT>
+typename rclcpp::Service<ServiceT, AllocatorT>::SharedPtr
 Node::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::ServiceOptionsWithAllocator<AllocatorT> & options)
 {
-  return rclcpp::create_service<ServiceT, CallbackT>(
+  return rclcpp::create_service<ServiceT, CallbackT, AllocatorT>(
     node_base_,
     node_services_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
     qos,
-    group);
-}
-
-template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
-Node::create_service(
-  const std::string & service_name,
-  CallbackT && callback,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  return rclcpp::create_service<ServiceT, CallbackT>(
-    node_base_,
-    node_services_,
-    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
-    std::forward<CallbackT>(callback),
-    qos_profile,
-    group);
+    group,
+    options);
 }
 
 template<typename AllocatorT>
