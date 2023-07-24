@@ -32,6 +32,7 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
@@ -157,6 +158,7 @@ private:
 
   using NodeBasePtr = std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>;
   using NodeServicesPtr = std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface>;
+  using NodeLoggingPtr = std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface>;
   using ChangeStateSrvPtr = std::shared_ptr<rclcpp::Service<ChangeStateSrv>>;
   using GetStateSrvPtr = std::shared_ptr<rclcpp::Service<GetStateSrv>>;
   using GetAvailableStatesSrvPtr =
@@ -168,6 +170,7 @@ private:
 
   NodeBasePtr node_base_interface_;
   NodeServicesPtr node_services_interface_;
+  NodeLoggingPtr node_logging_interface_;
   ChangeStateSrvPtr srv_change_state_;
   GetStateSrvPtr srv_get_state_;
   GetAvailableStatesSrvPtr srv_get_available_states_;
