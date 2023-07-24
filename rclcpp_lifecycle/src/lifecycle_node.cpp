@@ -120,15 +120,7 @@ LifecycleNode::LifecycleNode(
       node_base_,
       node_logging_,
       node_parameters_,
-<<<<<<< HEAD
       node_services_))
-=======
-      node_services_
-    )),
-  node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
-  node_options_(options),
-  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_, node_logging_))
->>>>>>> 945d254e (Switch lifecycle to use the RCLCPP macros. (#2233))
 {
   impl_->init(enable_communication_interface);
 

@@ -53,14 +53,9 @@ class LifecycleNode::LifecycleNodeInterfaceImpl final
 public:
   LifecycleNodeInterfaceImpl(
     std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
-<<<<<<< HEAD
     std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface,
     std::shared_ptr<rclcpp::node_interfaces::NodeParametersInterface> node_parameters_interface,
     std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface);
-=======
-    std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface,
-    std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface);
->>>>>>> 945d254e (Switch lifecycle to use the RCLCPP macros. (#2233))
 
   ~LifecycleNodeInterfaceImpl();
 
