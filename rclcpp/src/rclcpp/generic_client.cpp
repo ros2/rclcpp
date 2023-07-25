@@ -137,7 +137,7 @@ GenericClient::get_and_erase_pending_request(int64_t request_number)
 }
 
 GenericClient::FutureAndRequestId
-GenericClient::async_send_request(const Request & request)
+GenericClient::async_send_request(const Request request)
 {
   Promise promise;
   auto future = promise.get_future();

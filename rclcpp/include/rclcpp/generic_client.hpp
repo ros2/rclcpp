@@ -109,7 +109,7 @@ public:
    * \return a FutureAndRequestId instance.
    */
   FutureAndRequestId
-  async_send_request(const Request & request);
+  async_send_request(const Request request);
 
   /// Clean all pending requests older than a time_point.
   /**
