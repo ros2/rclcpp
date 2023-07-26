@@ -35,7 +35,7 @@ public:
 
   virtual ~RateBase() {}
   virtual bool sleep() = 0;
-  virtual bool is_steady() const = 0;
+  [[deprecated("use get_type() instead")]] virtual bool is_steady() const = 0;
   virtual rcl_clock_type_t get_type() const = 0;
   virtual void reset() = 0;
 };
@@ -45,7 +45,7 @@ using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
 
 template<class Clock = std::chrono::high_resolution_clock>
-class [[deprecated("use rclcpp::Rate class instead of GenericRate")]] GenericRate
+class [[deprecated("use rclcpp::Rate class instead of GenericRate")]] GenericRate : public RateBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
@@ -56,8 +56,6 @@ public:
   explicit GenericRate(std::chrono::nanoseconds period)
   : period_(period), last_interval_(Clock::now())
   {}
-
-  virtual ~GenericRate() {}
 
   virtual bool
   sleep()
@@ -91,10 +89,16 @@ public:
     return true;
   }
 
+  [[deprecated("use get_type() instead")]]
   virtual bool
   is_steady() const
   {
     return Clock::is_steady;
+  }
+
+  virtual rcl_clock_type_t get_type() const
+  {
+    return Clock::is_steady ? RCL_STEADY_TIME : RCL_SYSTEM_TIME;
   }
 
   virtual void
@@ -164,6 +168,7 @@ public:
     return clock_->sleep_for(time_to_sleep);
   }
 
+  [[deprecated("use get_type() instead")]]
   virtual bool
   is_steady() const
   {
