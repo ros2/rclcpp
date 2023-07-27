@@ -29,6 +29,18 @@
 namespace rclcpp
 {
 
+/// Create a default single-threaded executor and execute all available work exhaustively.
+/** \param[in] node_ptr Shared pointer to the node to spin. */
+RCLCPP_PUBLIC
+void
+spin_all(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  std::chrono::nanoseconds max_duration);
+
+RCLCPP_PUBLIC
+void
+spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration);
+
 /// Create a default single-threaded executor and execute any immediately available work.
 /** \param[in] node_ptr Shared pointer to the node to spin. */
 RCLCPP_PUBLIC

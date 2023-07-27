@@ -431,6 +431,22 @@ void Executor::spin_some(std::chrono::nanoseconds max_duration)
   return this->spin_some_impl(max_duration, false);
 }
 
+void
+Executor::spin_node_all(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+  std::chrono::nanoseconds max_duration)
+{
+  this->add_node(node, false);
+  spin_all(max_duration);
+  this->remove_node(node, false);
+}
+
+void
+Executor::spin_node_all(std::shared_ptr<rclcpp::Node> node, std::chrono::nanoseconds max_duration)
+{
+  this->spin_node_all(node->get_node_base_interface(), max_duration);
+}
+
 void Executor::spin_all(std::chrono::nanoseconds max_duration)
 {
   if (max_duration < 0ns) {
