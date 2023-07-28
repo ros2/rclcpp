@@ -26,7 +26,6 @@
 #include "rcpputils/scope_exit.hpp"
 
 #include "action_msgs/msg/goal_status_array.hpp"
-#include "action_msgs/srv/cancel_goal.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp_action/server.hpp"
 
@@ -65,6 +64,11 @@ public:
   std::atomic<bool> result_request_ready_{false};
   std::atomic<bool> goal_expired_{false};
 
+  // variable used to check, that the sequence of
+  // is_ready and take_data is never interrupted by
+  // another thread.
+  std::atomic<bool> threadExlusive{false};
+
   // Lock for unordered_maps
   std::recursive_mutex unordered_map_mutex_;
 
@@ -78,6 +82,24 @@ public:
   rclcpp::Logger logger_;
 };
 }  // namespace rclcpp_action
+struct ServerBaseData {
+  using GoalRequestData = std::tuple<rcl_ret_t, const rcl_action_goal_info_t, rmw_request_id_t,
+                           std::shared_ptr<void>>;
+
+  using CancelRequestData = std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
+      rmw_request_id_t>;
+
+  using ResultRequestData = std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>;
+
+  using GoalExpiredData = struct Empty{};
+
+  std::variant<GoalRequestData, CancelRequestData, ResultRequestData, GoalExpiredData> data;
+
+  ServerBaseData(GoalRequestData &&dataIn) : data(std::move(dataIn)) {}
+  ServerBaseData(CancelRequestData &&dataIn) : data(std::move(dataIn)) {}
+  ServerBaseData(ResultRequestData &&dataIn) : data(std::move(dataIn)) {}
+  ServerBaseData(GoalExpiredData &&dataIn) : data(std::move(dataIn)) {}
+};
 
 ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -178,6 +200,11 @@ ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
+  if(pimpl_->threadExlusive.exchange(true))
+  {
+    throw std::runtime_error("ServerBase::Internal error, is_ready called, before take_data was called");
+  }
+
   bool goal_request_ready;
   bool cancel_request_ready;
   bool result_request_ready;
@@ -212,7 +239,14 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
 std::shared_ptr<void>
 ServerBase::take_data()
 {
-  if (pimpl_->goal_request_ready_.load()) {
+  auto checkCallSequence = [this]() {
+    if(!pimpl_->threadExlusive.exchange(false))
+    {
+      throw std::runtime_error("ServerBase::Internal error, take_data called, before is_ready was called");
+    }
+  };
+
+  if (pimpl_->goal_request_ready_.exchange(false)) {
     rcl_ret_t ret;
     rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
     rmw_request_id_t request_header;
@@ -225,13 +259,11 @@ ServerBase::take_data()
       &request_header,
       message.get());
 
+    checkCallSequence();
     return std::static_pointer_cast<void>(
-      std::make_shared
-      <std::tuple<rcl_ret_t, rcl_action_goal_info_t, rmw_request_id_t, std::shared_ptr<void>>>(
-        ret,
-        goal_info,
-        request_header, message));
-  } else if (pimpl_->cancel_request_ready_.load()) {
+          std::make_shared<ServerBaseData>(ServerBaseData::GoalRequestData(
+              ret, goal_info, request_header, message)));
+  } else if (pimpl_->cancel_request_ready_.exchange(false)) {
     rcl_ret_t ret;
     rmw_request_id_t request_header;
 
@@ -244,11 +276,10 @@ ServerBase::take_data()
       &request_header,
       request.get());
 
+    checkCallSequence();
     return std::static_pointer_cast<void>(
-      std::make_shared
-      <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
-      rmw_request_id_t>>(ret, request, request_header));
-  } else if (pimpl_->result_request_ready_.load()) {
+std::make_shared<ServerBaseData>(ServerBaseData::CancelRequestData(ret, request, request_header)));
+  } else if (pimpl_->result_request_ready_.exchange(false)) {
     rcl_ret_t ret;
     // Get the result request message
     rmw_request_id_t request_header;
@@ -257,11 +288,14 @@ ServerBase::take_data()
     ret = rcl_action_take_result_request(
       pimpl_->action_server_.get(), &request_header, result_request.get());
 
+    checkCallSequence();
     return std::static_pointer_cast<void>(
-      std::make_shared<std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(
-        ret, result_request, request_header));
+        std::make_shared<ServerBaseData>(ServerBaseData::ResultRequestData(
+              ret, result_request, request_header)));
   } else if (pimpl_->goal_expired_.load()) {
-    return nullptr;
+    checkCallSequence();
+    return std::static_pointer_cast<void>(
+          std::make_shared<ServerBaseData>(ServerBaseData::GoalExpiredData()));
   } else {
     throw std::runtime_error("Taking data from action server but nothing is ready");
   }
@@ -287,31 +321,37 @@ ServerBase::take_data_by_entity_id(size_t id)
 }
 
 void
-ServerBase::execute(std::shared_ptr<void> & data)
+ServerBase::execute(std::shared_ptr<void> & dataIn)
 {
-  if (!data && !pimpl_->goal_expired_.load()) {
-    throw std::runtime_error("'data' is empty");
-  }
+  std::shared_ptr<ServerBaseData> dataPtr = std::static_pointer_cast<ServerBaseData>(dataIn);
 
-  if (pimpl_->goal_request_ready_.load()) {
-    execute_goal_request_received(data);
-  } else if (pimpl_->cancel_request_ready_.load()) {
-    execute_cancel_request_received(data);
-  } else if (pimpl_->result_request_ready_.load()) {
-    execute_result_request_received(data);
-  } else if (pimpl_->goal_expired_.load()) {
-    execute_check_expired_goals();
-  } else {
-    throw std::runtime_error("Executing action server but nothing is ready");
-  }
+  std::visit(
+        [&](auto&& data) -> void {
+            using T = std::decay_t<decltype(data)>;
+            if constexpr (std::is_same_v<T, ServerBaseData::GoalRequestData>)
+            {
+                execute_goal_request_received(std::get<0>(data), std::get<1>(data), std::get<2>(data), std::get<3>(data));
+            }
+            if constexpr (std::is_same_v<T, ServerBaseData::CancelRequestData>)
+            {
+                execute_cancel_request_received(std::get<0>(data), std::get<1>(data), std::get<2>(data));
+            }
+            if constexpr (std::is_same_v<T, ServerBaseData::ResultRequestData>)
+            {
+                execute_result_request_received(std::get<0>(data), std::get<1>(data), std::get<2>(data));
+            }
+            if constexpr (std::is_same_v<T, ServerBaseData::GoalExpiredData>)
+            {
+                execute_check_expired_goals();
+            }
+        },
+        dataPtr->data);
 }
 
 void
-ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_goal_request_received(rcl_ret_t ret, rcl_action_goal_info_t goal_info,  rmw_request_id_t request_header,
+                                const std::shared_ptr<void> message)
 {
-  auto shared_ptr = std::static_pointer_cast
-    <std::tuple<rcl_ret_t, rcl_action_goal_info_t, rmw_request_id_t, std::shared_ptr<void>>>(data);
-  rcl_ret_t ret = std::get<0>(*shared_ptr);
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
     // Ignore take failure because connext fails if it receives a sample without valid data.
     // This happens when a client shuts down and connext receives a sample saying the client is
@@ -319,14 +359,6 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     return;
   } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  rcl_action_goal_info_t goal_info = std::get<1>(*shared_ptr);
-  rmw_request_id_t request_header = std::get<2>(*shared_ptr);
-  std::shared_ptr<void> message = std::get<3>(*shared_ptr);
-
-  bool expected = true;
-  if (!pimpl_->goal_request_ready_.compare_exchange_strong(expected, false)) {
-    return;
   }
 
   GoalUUID uuid = get_goal_id_from_goal_request(message.get());
@@ -396,16 +428,12 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     // Tell user to start executing action
     call_goal_accepted_callback(handle, uuid, message);
   }
-  data.reset();
 }
 
 void
-ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_cancel_request_received(rcl_ret_t ret, std::shared_ptr<action_msgs::srv::CancelGoal::Request> request,
+      rmw_request_id_t request_header)
 {
-  auto shared_ptr = std::static_pointer_cast
-    <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
-      rmw_request_id_t>>(data);
-  auto ret = std::get<0>(*shared_ptr);
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
     // Ignore take failure because connext fails if it receives a sample without valid data.
     // This happens when a client shuts down and connext receives a sample saying the client is
@@ -414,9 +442,6 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
   } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  auto request = std::get<1>(*shared_ptr);
-  auto request_header = std::get<2>(*shared_ptr);
-  pimpl_->cancel_request_ready_ = false;
 
   // Convert c++ message to C message
   rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
@@ -486,15 +511,11 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  data.reset();
 }
 
 void
-ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_result_request_received(rcl_ret_t ret, std::shared_ptr<void> result_request, rmw_request_id_t request_header)
 {
-  auto shared_ptr = std::static_pointer_cast
-    <std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(data);
-  auto ret = std::get<0>(*shared_ptr);
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
     // Ignore take failure because connext fails if it receives a sample without valid data.
     // This happens when a client shuts down and connext receives a sample saying the client is
@@ -503,10 +524,7 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
   } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  auto result_request = std::get<1>(*shared_ptr);
-  auto request_header = std::get<2>(*shared_ptr);
 
-  pimpl_->result_request_ready_ = false;
   std::shared_ptr<void> result_response;
 
   // check if the goal exists
@@ -542,7 +560,6 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
       rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
   }
-  data.reset();
 }
 
 void
