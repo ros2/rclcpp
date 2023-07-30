@@ -17,7 +17,6 @@
 
 #include <atomic>
 
-#include "guard_condition_options.hpp"
 #include "rcl/guard_condition.h"
 
 #include "rclcpp/context.hpp"
