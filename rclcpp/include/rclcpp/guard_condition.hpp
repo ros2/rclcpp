@@ -17,9 +17,11 @@
 
 #include <atomic>
 
+#include "guard_condition_options.hpp"
 #include "rcl/guard_condition.h"
 
 #include "rclcpp/context.hpp"
+#include "rclcpp/guard_condition_options.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -33,25 +35,40 @@ class GuardCondition
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(GuardCondition)
 
-  // TODO(wjwwood): support custom allocator, maybe restrict to polymorphic allocator
   /// Construct the guard condition, optionally specifying which Context to use.
   /**
    * \param[in] context Optional custom context to be used.
    *   Defaults to using the global default context singleton.
    *   Shared ownership of the context is held with the guard condition until
    *   destruction.
-   * \param[in] guard_condition_options Optional guard condition options to be used.
+   * \param[in] options Optional guard condition options to be used.
    *   Defaults to using the default guard condition options.
+   *   Can change the underlying rcl_allocator in rcl_guard_options_t
+   *   with the chosen AllocatorT representing a std::allocator
    * \throws std::invalid_argument if the context is nullptr.
    * \throws rclcpp::exceptions::RCLError based exceptions when underlying
    *   rcl functions fail.
    */
   RCLCPP_PUBLIC
+  template<typename AllocatorT = std::allocator<void>>
   explicit GuardCondition(
     rclcpp::Context::SharedPtr context =
     rclcpp::contexts::get_global_default_context(),
-    rcl_guard_condition_options_t guard_condition_options =
-    rcl_guard_condition_get_default_options());
+    rclcpp::GuardConditionWithAllocator<AllocatorT> options =
+    GuardConditionWithAllocator<AllocatorT>())
+: context_(context), rcl_guard_condition_{rcl_get_zero_initialized_guard_condition()}
+{
+  if (!context_) {
+    throw std::invalid_argument("context argument unexpectedly nullptr");
+  }
+  rcl_ret_t ret = rcl_guard_condition_init(
+    &this->rcl_guard_condition_,
+    context_->get_rcl_context().get(),
+    options.to_rcl_guard_condition_options());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to create guard condition");
+  }
+}
 
   RCLCPP_PUBLIC
   virtual
