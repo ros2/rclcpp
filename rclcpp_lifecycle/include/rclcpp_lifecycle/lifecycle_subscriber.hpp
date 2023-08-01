@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_SUBSCRIPTION_HPP_
-#define RCLCPP_LIFECYCLE__LIFECYCLE_SUBSCRIPTION_HPP_
+#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_SUBSCRIBER_HPP_
+#define RCLCPP_LIFECYCLE__LIFECYCLE_SUBSCRIBER_HPP_
 
-// #include <functional>
-// #include <memory>
+#include <memory>
+#include <string>
 
 #include "rclcpp/subscription.hpp"
 
@@ -41,7 +41,6 @@ template<
 class LifecycleSubscription : public SimpleManagedEntity,
   public rclcpp::Subscription<MessageT, AllocatorT>
 {
-
 private:
   using SubscriptionTopicStatisticsSharedPtr =
     std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageT>>;
@@ -69,7 +68,7 @@ public:
   }
 
   /// Check if we need to handle the message, and execute the callback if we do.
-  virtual void handle_message(
+  void handle_message(
     std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) override
   {
     if (!this->is_activated()) {
@@ -81,4 +80,4 @@ public:
 
 }  // namespace rclcpp_lifecycle
 
-#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_SUBSCRIPTION_HPP_
+#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_SUBSCRIBER_HPP_
