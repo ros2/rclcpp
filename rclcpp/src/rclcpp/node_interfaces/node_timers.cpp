@@ -34,8 +34,7 @@ NodeTimers::add_timer(
 {
   if (callback_group) {
     if (!node_base_->callback_group_in_node(callback_group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create timer, group not in node.");
+      throw rclcpp::exceptions::MissingGroupNodeException("timer");
     }
   } else {
     callback_group = node_base_->get_default_callback_group();

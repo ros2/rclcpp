@@ -78,7 +78,7 @@ TEST_F(TestNodeWaitables, add_remove_waitable)
     node_waitables->add_waitable(waitable, callback_group1));
   RCLCPP_EXPECT_THROW_EQ(
     node_waitables->add_waitable(waitable, callback_group2),
-    std::runtime_error("Cannot create waitable, group not in node."));
+    rclcpp::exceptions::MissingGroupNodeException("waitable"));
   EXPECT_NO_THROW(node_waitables->remove_waitable(waitable, callback_group1));
   EXPECT_NO_THROW(node_waitables->remove_waitable(waitable, callback_group2));
 
