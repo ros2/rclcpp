@@ -55,7 +55,7 @@ public:
     rclcpp::Context::SharedPtr context,
     bool autostart = true)
   : rclcpp::GenericTimer<FunctorT>(
-      std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME),
+      clock,
       period,
       std::move(callback),
       context,
