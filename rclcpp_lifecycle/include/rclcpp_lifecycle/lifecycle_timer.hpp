@@ -16,6 +16,7 @@
 #define RCLCPP_LIFECYCLE__LIFECYCLE_TIMER_HPP_
 
 #include <memory>
+#include <utility>
 
 #include "rclcpp/timer.hpp"
 #include "rclcpp_lifecycle/managed_entity.hpp"
@@ -81,7 +82,6 @@ protected:
 
 private:
   bool autostart_;
-
 };
 
 }  // namespace rclcpp_lifecycle
