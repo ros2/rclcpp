@@ -16,7 +16,6 @@
 
 #include "rclcpp/guard_condition.hpp"
 
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 
 namespace rclcpp

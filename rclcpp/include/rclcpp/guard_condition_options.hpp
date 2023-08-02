@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__GUARD_CONDITION_ALLOCATOR_HPP_
-#define RCLCPP__GUARD_CONDITION_ALLOCATOR_HPP_
+#ifndef RCLCPP__GUARD_CONDITION_OPTIONS_HPP_
+#define RCLCPP__GUARD_CONDITION_OPTIONS_HPP_
 
 #include <memory>
 
@@ -31,14 +31,14 @@ struct GuardConditionWithAllocator
   /// Optional custom allocator
   std::shared_ptr<Allocator> allocator = nullptr;
 
-  GuardConditionWithAllocator() {};
+  GuardConditionWithAllocator() {}
 
   /// Convert this class into a rcl_guard_condition_options_t
   rcl_guard_condition_options_t
   to_rcl_guard_condition_options() const
   {
     rcl_guard_condition_options_t result = rcl_guard_condition_get_default_options();
-    result.allocator = this->get_allocator();
+    result.allocator = this->get_rcl_allocator();
     return result;
   }
 
@@ -55,8 +55,7 @@ struct GuardConditionWithAllocator
     return this->allocator;
   }
 
-  private:
-
+private:
   using PlainAllocator =
     typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
 
@@ -64,7 +63,8 @@ struct GuardConditionWithAllocator
   get_rcl_allocator() const
   {
     if (!plain_allocator_storage_) {
-      std::make_shared<PlainAllocator>(*this->get_rcl_allocator());
+      plain_allocator_storage_ =
+        std::make_shared<PlainAllocator>(*this->get_allocator());
     }
     return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
   }
@@ -81,4 +81,4 @@ using GuardConditionOptions =
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__GUARD_CONDITION_ALLOCATOR_HPP_
+#endif  // RCLCPP__GUARD_CONDITION_OPTIONS_HPP_
