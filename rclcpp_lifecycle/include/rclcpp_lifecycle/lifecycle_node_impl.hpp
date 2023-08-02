@@ -105,7 +105,7 @@ LifecycleNode::create_wall_timer(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
-typename rclcpp_lifecycle::LifecycleWallTimer<CallbackT>::SharedPtr
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
 LifecycleNode::create_lifecycle_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
@@ -113,7 +113,8 @@ LifecycleNode::create_lifecycle_wall_timer(
 {
   const std::chrono::nanoseconds period_ns = rclcpp::detail::safe_cast_to_period_in_ns(period);
 
-  auto timer = rclcpp_lifecycle::LifecycleWallTimer<CallbackT>::make_shared(
+  auto timer = rclcpp_lifecycle::LifecycleTimer<CallbackT>::make_shared(
+    std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME),
     period_ns,
     std::move(callback),
     this->node_base_->get_context());
@@ -136,6 +137,25 @@ LifecycleNode::create_timer(
     group,
     this->node_base_.get(),
     this->node_timers_.get());
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+LifecycleNode::create_lifecycle_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  const std::chrono::nanoseconds period_ns = rclcpp::detail::safe_cast_to_period_in_ns(period);
+
+  auto timer = rclcpp_lifecycle::LifecycleTimer<CallbackT>::make_shared(
+    this->get_clock(),
+    period_ns,
+    std::move(callback),
+    this->node_base_->get_context());
+  this->add_managed_entity(std::dynamic_pointer_cast<rclcpp_lifecycle::SimpleManagedEntity>(timer));
+  node_timers_->add_timer(timer, group);
+  return timer;
 }
 
 template<typename ServiceT>

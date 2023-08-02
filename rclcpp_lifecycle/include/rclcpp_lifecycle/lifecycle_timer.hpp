@@ -23,9 +23,9 @@
 namespace rclcpp_lifecycle
 {
 
-/// @brief Child class of rclcpp::WallTimer class that is aware of the lifecycle state.
+/// @brief Timer class that is aware of the lifecycle state.
 /**
- * This class acts like a normal rclcpp::WallTimer, but it will not start until the
+ * This class acts like a normal rclcpp::GenericTimer, but it will not start until the
  * lifecycle node is in the "active" state. If the lifecycle node transitions
  * out of the "active" state, the timer will be canceled.
  */
@@ -37,10 +37,10 @@ template<
   typename std::enable_if<
     rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
     rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value>::type * = nullptr>
-class LifecycleWallTimer : public SimpleManagedEntity, public rclcpp::GenericTimer<FunctorT>
+class LifecycleTimer : public SimpleManagedEntity, public rclcpp::GenericTimer<FunctorT>
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(LifecycleWallTimer)
+  RCLCPP_SMART_PTR_DEFINITIONS(LifecycleTimer)
 
   /// Lifecycle wall timer constructor
   /**
@@ -48,8 +48,11 @@ public:
    * \param callback The callback function to execute every interval
    * \param context node context
    */
-  LifecycleWallTimer(
-    std::chrono::nanoseconds period, FunctorT && callback, rclcpp::Context::SharedPtr context,
+  LifecycleTimer(
+    rclcpp::Clock::SharedPtr clock,
+    std::chrono::nanoseconds period,
+    FunctorT && callback,
+    rclcpp::Context::SharedPtr context,
     bool autostart = true)
   : rclcpp::GenericTimer<FunctorT>(
       std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME),
@@ -63,7 +66,9 @@ public:
 
   void on_activate() override
   {
-    rclcpp::GenericTimer<FunctorT>::reset();
+    if (autostart_) {
+      rclcpp::GenericTimer<FunctorT>::reset();
+    }
   }
 
   void on_deactivate() override
@@ -72,7 +77,7 @@ public:
   }
 
 protected:
-  RCLCPP_DISABLE_COPY(LifecycleWallTimer)
+  RCLCPP_DISABLE_COPY(LifecycleTimer)
 
 private:
   bool autostart_;
