@@ -222,7 +222,7 @@ public:
   : std::runtime_error("event already registered") {}
 };
 
-/// Thrown when a group is missing from the node, when it wants to utilize the group.
+/// Thrown when a callback group is missing from the node, when it wants to utilize the group.
 class MissingGroupNodeException : public std::runtime_error
 {
 public:
