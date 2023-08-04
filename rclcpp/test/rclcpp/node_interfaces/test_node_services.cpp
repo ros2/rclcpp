@@ -92,7 +92,7 @@ TEST_F(TestNodeService, add_service)
     different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   RCLCPP_EXPECT_THROW_EQ(
     node_services->add_service(service, callback_group_in_different_node),
-    std::runtime_error("Cannot create service, group not in node."));
+    rclcpp::exceptions::MissingGroupNodeException("service"));
 }
 
 TEST_F(TestNodeService, add_service_rcl_trigger_guard_condition_error)
@@ -119,7 +119,7 @@ TEST_F(TestNodeService, add_client)
     different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   RCLCPP_EXPECT_THROW_EQ(
     node_services->add_client(client, callback_group_in_different_node),
-    std::runtime_error("Cannot create client, group not in node."));
+    rclcpp::exceptions::MissingGroupNodeException("client"));
 }
 
 TEST_F(TestNodeService, add_client_rcl_trigger_guard_condition_error)

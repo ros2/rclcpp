@@ -222,6 +222,14 @@ public:
   : std::runtime_error("event already registered") {}
 };
 
+/// Thrown when a callback group is missing from the node, when it wants to utilize the group.
+class MissingGroupNodeException : public std::runtime_error
+{
+public:
+  explicit MissingGroupNodeException(const std::string & obj_type)
+  : std::runtime_error("cannot create: " + obj_type + " , callback group not in node") {}
+};
+
 /// Thrown if passed parameters are inconsistent or invalid
 class InvalidParametersException : public std::runtime_error
 {
