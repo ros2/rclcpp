@@ -559,7 +559,7 @@ TEST_F(TestExecutor, spin_node_all_base_interface) {
   // Wait for the wall timer to have expired.
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   EXPECT_FALSE(spin_called);
-  dummy.spin_node_all(node->get_node_base_interface());
+  dummy.spin_node_all(node->get_node_base_interface(), std::chrono::nanoseconds(1000));
   EXPECT_TRUE(spin_called);
 }
 
@@ -576,7 +576,7 @@ TEST_F(TestExecutor, spin_node_all_node) {
   // Wait for the wall timer to have expired.
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   EXPECT_FALSE(spin_called);
-  dummy.spin_node_all(node);
+  dummy.spin_node_all(node, std::chrono::nanoseconds(1000));
   EXPECT_TRUE(spin_called);
 }
 
