@@ -546,6 +546,40 @@ TEST_F(TestExecutor, spin_node_once_node) {
   EXPECT_TRUE(spin_called);
 }
 
+TEST_F(TestExecutor, spin_node_all_base_interface) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool spin_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+      spin_called = true;
+    });
+
+  // Wait for the wall timer to have expired.
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  EXPECT_FALSE(spin_called);
+  dummy.spin_node_all(node->get_node_base_interface(), std::chrono::milliseconds(50));
+  EXPECT_TRUE(spin_called);
+}
+
+TEST_F(TestExecutor, spin_node_all_node) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool spin_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+      spin_called = true;
+    });
+
+  // Wait for the wall timer to have expired.
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  EXPECT_FALSE(spin_called);
+  dummy.spin_node_all(node, std::chrono::milliseconds(50));
+  EXPECT_TRUE(spin_called);
+}
+
 TEST_F(TestExecutor, spin_until_future_complete_future_already_complete) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");

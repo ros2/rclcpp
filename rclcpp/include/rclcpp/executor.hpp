@@ -297,6 +297,21 @@ public:
   virtual void
   spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0));
 
+  /// Add a node, complete all immediately available work exhaustively, and remove the node.
+  /**
+   * \param[in] node Shared pointer to the node to add.
+   */
+  RCLCPP_PUBLIC
+  void
+  spin_node_all(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+    std::chrono::nanoseconds max_duration);
+
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  RCLCPP_PUBLIC
+  void
+  spin_node_all(std::shared_ptr<rclcpp::Node> node, std::chrono::nanoseconds max_duration);
+
   /// Collect and execute work repeatedly within a duration or until no more work is available.
   /**
    * This function can be overridden. The default implementation is suitable for a
