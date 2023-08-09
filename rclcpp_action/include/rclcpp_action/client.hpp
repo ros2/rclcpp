@@ -708,23 +708,40 @@ private:
     }
     using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
+    const GoalUUID goal_id = goal_handle->get_goal_id();
     goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     try {
       this->send_result_request(
         std::static_pointer_cast<void>(goal_result_request),
-        [goal_handle, this](std::shared_ptr<void> response) mutable
+        [goal_id, this](std::shared_ptr<void> response) mutable
         {
+          std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+          if (goal_handles_.count(goal_id) == 0) {
+            RCLCPP_DEBUG(
+              this->get_logger(),
+              "Received result for unknown goal. Ignoring...");
+            return;
+          }
+          typename GoalHandle::SharedPtr goal_handle_ = goal_handles_[goal_id].lock();
+          // Forget about the goal if there are no more user references
+          if (!goal_handle_) {
+            RCLCPP_DEBUG(
+              this->get_logger(),
+              "Dropping weak reference to goal handle during result callback");
+            goal_handles_.erase(goal_id);
+            return;
+          }
+
           // Wrap the response in a struct with the fields a user cares about
           WrappedResult wrapped_result;
           using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
           auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
           wrapped_result.result = std::make_shared<typename ActionT::Result>();
           *wrapped_result.result = result_response->result;
-          wrapped_result.goal_id = goal_handle->get_goal_id();
+          wrapped_result.goal_id = goal_id;
           wrapped_result.code = static_cast<ResultCode>(result_response->status);
-          goal_handle->set_result(wrapped_result);
-          std::lock_guard<std::mutex> lock(goal_handles_mutex_);
-          goal_handles_.erase(goal_handle->get_goal_id());
+          goal_handle_->set_result(wrapped_result);
+          goal_handles_.erase(goal_id);
         });
     } catch (rclcpp::exceptions::RCLError & ex) {
       // This will cause an exception when the user tries to access the result
