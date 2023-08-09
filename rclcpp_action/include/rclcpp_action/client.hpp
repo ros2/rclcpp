@@ -562,6 +562,21 @@ public:
     return async_cancel(cancel_request, cancel_callback);
   }
 
+  void drop_goal_handle(typename GoalHandle::SharedPtr goal_handle)
+  {
+    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    const GoalUUID & goal_id = goal_handle->get_goal_id();
+    if (goal_handles_.count(goal_id) == 0) {
+      // someone else already deleted the entry
+      // e.g. the result callback
+      RCLCPP_DEBUG(
+        this->get_logger(),
+        "Given goal is unknown. Ignoring...");
+      return;
+    }
+    goal_handles_.erase(goal_id);
+  }
+
   /// Asynchronously request all goals at or before a specified time be canceled.
   /**
    * \param[in] stamp The timestamp for the cancel goal request.
