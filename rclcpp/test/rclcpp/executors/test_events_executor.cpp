@@ -75,8 +75,6 @@ TEST_F(TestEventsExecutor, run_pub_sub)
     !spin_exited &&
     (std::chrono::high_resolution_clock::now() - start < 1s))
   {
-    auto time = std::chrono::high_resolution_clock::now() - start;
-    auto time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(time);
     std::this_thread::sleep_for(25ms);
   }
 
