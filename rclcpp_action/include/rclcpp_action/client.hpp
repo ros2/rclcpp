@@ -562,6 +562,35 @@ public:
     return async_cancel(cancel_request, cancel_callback);
   }
 
+  /// Stops the callbacks for the goal in a thread safe way
+  /**
+   * This will NOT cancel the goal, it will only stop the callbacks.
+   *
+   * After the call to this function, it is guaranteed that there
+   * will be no more callbacks from the goal. This is not guaranteed
+   * if multiple threads are involved, and the goal_handle is just
+   * dropped.
+   *
+   * \param[in] goal_handle The goal were the callbacks shall be stopped
+   */
+  void stop_callbacks(typename GoalHandle::SharedPtr goal_handle)
+  {
+    goal_handle->set_feedback_callback(typename GoalHandle::FeedbackCallback());
+    goal_handle->set_result_callback(typename GoalHandle::ResultCallback());
+
+    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    const GoalUUID & goal_id = goal_handle->get_goal_id();
+    if (goal_handles_.count(goal_id) == 0) {
+      // someone else already deleted the entry
+      // e.g. the result callback
+      RCLCPP_DEBUG(
+        this->get_logger(),
+        "Given goal is unknown. Ignoring...");
+      return;
+    }
+    goal_handles_.erase(goal_id);
+  }
+
   /// Asynchronously request all goals at or before a specified time be canceled.
   /**
    * \param[in] stamp The timestamp for the cancel goal request.
