@@ -24,16 +24,12 @@ SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::ExecutorOptions & o
 : rclcpp::Executor(options),
   thread_attributes_(nullptr)
 {
-  rcl_ret_t ret;
-
-  ret = rcl_arguments_get_thread_attrs(
-    &options.context->get_rcl_context()->global_arguments,
-    &thread_attributes_);
-  if (ret != RCL_RET_OK) {
-    ret = rcl_context_get_thread_attrs(
-      options.context->get_rcl_context().get(),
-      &thread_attributes_);
+  if (rcutils_thread_attrs_t * attrs = rcl_context_get_thread_attrs(
+    options.context->get_rcl_context().get()))
+  {
+    thread_attributes_ = attrs;
   }
+
   if (thread_attributes_ && thread_attributes_->num_attributes != 1) {
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),

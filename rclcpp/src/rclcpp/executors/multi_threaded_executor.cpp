@@ -38,19 +38,15 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   thread_attributes_(nullptr)
 {
   bool has_number_of_threads_arg = number_of_threads > 0;
-  rcl_ret_t ret;
 
   number_of_threads_ = number_of_threads > 0 ?
     number_of_threads :
     std::max(rcpputils::Thread::hardware_concurrency(), 2U);
 
-  ret = rcl_arguments_get_thread_attrs(
-    &options.context->get_rcl_context()->global_arguments,
-    &thread_attributes_);
-  if (ret != RCL_RET_OK) {
-    ret = rcl_context_get_thread_attrs(
-      options.context->get_rcl_context().get(),
-      &thread_attributes_);
+  if (rcutils_thread_attrs_t * attrs = rcl_context_get_thread_attrs(
+    options.context->get_rcl_context().get()))
+  {
+    thread_attributes_ = attrs;
   }
 
   if (has_number_of_threads_arg && thread_attributes_ &&
