@@ -1600,6 +1600,12 @@ private:
   const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;
   const std::string effective_namespace_;
+
+  class NodeImpl;
+  // This member is meant to be a place to backport features into stable distributions,
+  // and new features targeting Rolling should not use this.
+  // See the comment in node.cpp for more information.
+  std::shared_ptr<NodeImpl> hidden_impl_{nullptr};
 };
 
 }  // namespace rclcpp
