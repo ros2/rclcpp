@@ -105,7 +105,7 @@ LifecycleNode::create_wall_timer(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
-typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+typename rclcpp_lifecycle::LifecycleTimer<CallbackT>::SharedPtr
 LifecycleNode::create_lifecycle_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
@@ -140,7 +140,7 @@ LifecycleNode::create_timer(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
-typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+typename rclcpp_lifecycle::LifecycleTimer<CallbackT>::SharedPtr
 LifecycleNode::create_lifecycle_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
