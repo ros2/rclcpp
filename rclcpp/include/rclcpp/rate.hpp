@@ -138,59 +138,20 @@ public:
   {}
 
   virtual bool
-  sleep()
-  {
-    // Time coming into sleep
-    auto now = clock_->now();
-    // Time of next interval
-    auto next_interval = last_interval_ + period_;
-    // Detect backwards time flow
-    if (now < last_interval_) {
-      // Best thing to do is to set the next_interval to now + period
-      next_interval = now + period_;
-    }
-    // Update the interval
-    last_interval_ += period_;
-    // If the time_to_sleep is negative or zero, don't sleep
-    if (next_interval <= now) {
-      // If an entire cycle was missed then reset next interval.
-      // This might happen if the loop took more than a cycle.
-      // Or if time jumps forward.
-      if (now > next_interval + period_) {
-        last_interval_ = now + period_;
-      }
-      // Either way do not sleep and return false
-      return false;
-    }
-    // Calculate the time to sleep
-    auto time_to_sleep = next_interval - now;
-    // Sleep (will get interrupted by ctrl-c, may not sleep full time)
-    return clock_->sleep_for(time_to_sleep);
-  }
+  sleep();
 
   [[deprecated("use get_type() instead")]]
   virtual bool
-  is_steady() const
-  {
-    return clock_->get_clock_type() == RCL_STEADY_TIME;
-  }
+  is_steady() const;
 
   virtual rcl_clock_type_t
-  get_type() const
-  {
-    return clock_->get_clock_type();
-  }
+  get_type() const;
 
   virtual void
-  reset()
-  {
-    last_interval_ = clock_->now();
-  }
+  reset();
 
-  Duration period() const
-  {
-    return period_;
-  }
+  Duration
+  period() const;
 
 private:
   RCLCPP_DISABLE_COPY(Rate)
