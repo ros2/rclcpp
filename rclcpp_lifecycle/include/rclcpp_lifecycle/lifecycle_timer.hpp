@@ -67,6 +67,7 @@ public:
 
   void on_activate() override
   {
+    SimpleManagedEntity::on_activate();
     if (autostart_) {
       rclcpp::GenericTimer<FunctorT>::reset();
     }
@@ -74,6 +75,7 @@ public:
 
   void on_deactivate() override
   {
+    SimpleManagedEntity::on_deactivate();
     rclcpp::GenericTimer<FunctorT>::cancel();
   }
 

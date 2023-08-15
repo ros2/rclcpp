@@ -81,8 +81,9 @@ protected:
     wall_timer_called_ = true;
   }
 
-  using CallbackT = std::shared_ptr<rclcpp_lifecycle::LifecycleTimer<std::_Bind<void(TestLifecycleTimer::* (TestLifecycleTimer *))()>,
-      (void *) nullptr>>;
+  using CallbackT = std::shared_ptr<rclcpp_lifecycle::LifecycleTimer
+      <std::_Bind<void(TestLifecycleTimer::* (TestLifecycleTimer *))()>,
+      (void *) nullptr>>; // NOLINT
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   CallbackT timer_;
   CallbackT wall_timer_;
@@ -93,7 +94,7 @@ protected:
   std::thread spinner_;
 };
 
-TEST_P(TestLifecycleTimer, timer_managed_by_node) {
+TEST_F(TestLifecycleTimer, timer_managed_by_node) {
   // Test that the timers transition with the node.
   auto success = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   auto reset_key = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
@@ -120,7 +121,7 @@ TEST_P(TestLifecycleTimer, timer_managed_by_node) {
   EXPECT_FALSE(wall_timer_->is_activated());
 }
 
-TEST_P(TestLifecycleTimer, timer_callback_only_when_active) {
+TEST_F(TestLifecycleTimer, timer_callback_only_when_active) {
   // Test that the callback only gets called when the timer is active.
   auto success = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   auto reset_key = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
