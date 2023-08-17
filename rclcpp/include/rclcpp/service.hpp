@@ -488,9 +488,9 @@ public:
 
     if (ret == RCL_RET_TIMEOUT) {
       RCLCPP_WARN(
-        rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
-        "failed to send response (timeout): %s",
-        rcl_get_error_string().str);
+        node_logger_.get_child("rclcpp"),
+        "failed to send response to %s (timeout): %s",
+        this->get_service_name(), rcl_get_error_string().str);
       rcl_reset_error();
       return;
     }
