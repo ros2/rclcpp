@@ -694,10 +694,25 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       }
 
     // DYNAMIC SUBSCRIPTION ========================================================================
-    // Deliver dynamic message
+    // If a subscription is dynamic, then it will use its serialization-specific dynamic data.
+    //
+    // Two cases:
+    // - Dynamic type subscription using dynamic type stored in its own internal type support struct
+    // - Non-dynamic type subscription with no stored dynamic type
+    //   - Subscriptions of this type must be able to lookup the local message description to
+    //     generate a dynamic type at runtime!
+    //   - TODO(methylDragon): I won't be handling this case yet
     case rclcpp::DeliveredMessageKind::DYNAMIC_MESSAGE:
       {
-        throw std::runtime_error("Unimplemented");
+        DynamicMessage::SharedPtr dynamic_message = subscription->create_dynamic_message();
+        take_and_do_error_handling(
+          "taking a dynamic message from topic",
+          subscription->get_topic_name(),
+          // This modifies the stored dynamic data in the DynamicMessage in-place
+          [&]() {return subscription->take_dynamic_message(*dynamic_message, message_info);},
+          [&]() {subscription->handle_dynamic_message(dynamic_message, message_info);});
+        subscription->return_dynamic_message(dynamic_message);
+        break;
       }
 
     default:
