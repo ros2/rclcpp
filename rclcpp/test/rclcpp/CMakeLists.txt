@@ -8,12 +8,20 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/Header.msg
   ../msg/MessageWithHeader.msg
   ../msg/String.msg
+  ../msg/Bool.msg
+  DEPENDENCIES builtin_interfaces
+  LIBRARY_NAME ${PROJECT_NAME}
+  SKIP_INSTALL
+)
+
+rosidl_generate_interfaces(${PROJECT_NAME}_test_srvs
+  ../srv/SetBool.srv
   DEPENDENCIES builtin_interfaces
   LIBRARY_NAME ${PROJECT_NAME}
   SKIP_INSTALL
 )
 # Need the target name to depend on generated interface libraries
-rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_test_msgs" "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_test_msgs" "${PROJECT_NAME}_test_srvs" "rosidl_typesupport_cpp")
 
 ament_add_gtest(
   test_allocator_common
@@ -530,6 +538,16 @@ if(TARGET test_service)
   )
   target_link_libraries(test_service_introspection ${PROJECT_NAME} mimick)
 endif()
+
+ament_add_gtest(test_service_with_type_adapter test_service_with_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_service_with_type_adapter)
+  target_link_libraries(test_service_with_type_adapter
+    ${PROJECT_NAME}
+    ${cpp_typesupport_target})
+endif()
+
 # Creating and destroying nodes is slow with Connext, so this needs larger timeout.
 ament_add_gtest(test_subscription test_subscription.cpp TIMEOUT 120)
 if(TARGET test_subscription)
