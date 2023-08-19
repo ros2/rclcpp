@@ -41,7 +41,7 @@ static const int g_max_loops = 200;
 static const std::chrono::milliseconds g_sleep_per_loop(10);
 
 
-class TestService: public ::testing::Test
+class TestClient: public ::testing::Test
 {
 public:
   static void SetUpTestCase()
@@ -138,26 +138,24 @@ struct TypeAdapter<int, rclcpp::msg::String>
 }  // namespace rclcpp
 
 /*
- * Testing the basic creation of services with a TypeAdapter for both Request and Response
+ * Testing the basic creation of clients with a TypeAdapter for both Request and Response
  */
-TEST_F(TestService, total_type_adaption_service_creation)
+TEST_F(TestClient, total_type_adaption_client_creation)
 {
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("my_node");
-
   using AdaptedRequestType = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>>;
   using AdaptedResponseType = rclcpp::TypeAdapter<bool, rclcpp::msg::Bool>>;
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("my_node");
 
   struct AdaptedTypeStruct {
     using Request = AdaptedRequestType;
     using Response = AdaptedResponseType;
   };
 
-  auto service = rclcpp::create_service<AdaptedTypeStruct>(
-      "service",
-      [](const std::string & req, const bool & res) {});
+  auto client = node->create_client<AdaptedTypeStruct>("client");
 
   /// Now try to adapt the type with the `as` metafunction
-  (void)service;
+  (void)client;
 
   using AdaptedRequestType = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
   using AdaptedResponseType = rclcpp::adapt_type<bool>::as<rclcpp::msg::Bool>;
@@ -167,13 +165,11 @@ TEST_F(TestService, total_type_adaption_service_creation)
     using Response = AdaptedResponseType;
   };
 
-  auto service = rclcpp::create_service<AdaptedTypeStruct>(
-      "service",
-      [](const std::string & req, const bool & res) {});
-  (void)service;
+  auto client = node->create_client<AdaptedTypeStruct>("client");
+  (void)client;
 }
 
-TEST_F(TestService, request_type_adaption_service_creation)
+TEST_F(TestClient, request_type_adaption_client_creation)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("my_node");
 
@@ -184,12 +180,10 @@ TEST_F(TestService, request_type_adaption_service_creation)
     using Response = rclcpp::srv::SetBool::Response;
   };
 
-  auto service = rclcpp::create_service<AdaptedTypeStruct>(
-      "service",
-      [](const std::string & req, rclcpp::srv::SetBool::Response & res) {});
+  auto client = node->create_client<AdaptedTypeStruct>("client");
 
   /// Now try to adapt the type with the `as` metafunction
-  (void)service;
+  (void)client;
 
   using AdaptedRequestType = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
 
@@ -198,13 +192,11 @@ TEST_F(TestService, request_type_adaption_service_creation)
     using Response = rclcpp::srv::SetBool::Response;
   };
 
-  auto service = rclcpp::create_service<AdaptedTypeStruct>(
-      "service",
-      [](const std::string & req, rclcpp::srv::SetBool::Response & res) {});
-  (void)service;
+  auto client = node->create_client<AdaptedTypeStruct>("client");
+  (void)client;
 }
 
-TEST_F(TestService, response_type_adaption_service_creation)
+TEST_F(TestClient, response_type_adaption_client_creation)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("my_node");
 
@@ -215,12 +207,10 @@ TEST_F(TestService, response_type_adaption_service_creation)
     using Response = AdaptedResponseType;
   };
 
-  auto service = rclcpp::create_service<AdaptedTypeStruct>(
-      "service",
-      [](const rclcpp::msg::String & req, const bool & res) {});
+  auto client = node->create_client<AdaptedTypeStruct>("client");
 
   /// Now try to adapt the type with the `as` metafunction
-  (void)service;
+  (void)client;
 
   using AdaptedResponseType = rclcpp::adapt_type<bool>::as<rclcpp::msg::Bool>;
 
@@ -229,14 +219,12 @@ TEST_F(TestService, response_type_adaption_service_creation)
     using Response = AdaptedResponseType;
   };
 
-  auto service = rclcpp::create_service<AdaptedTypeStruct>(
-      "service",
-      [](const rclcpp::msg::String & req, const bool & res) {});
-  (void)service;
+  auto client = node->create_client<AdaptedTypeStruct>("client");
+  (void)client;
 }
 
 /// Testing that conversion errors are passed up
-TEST_F(TestService, conversion_exception_is_passed_up)
+TEST_F(TestClient, conversion_exception_is_passed_up)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("my_node");
 
@@ -247,7 +235,5 @@ TEST_F(TestService, conversion_exception_is_passed_up)
     using Response = BadAdaptedResponseType;
   };
 
-  auto service = rclcpp::create_service<BadAdaptedTypeStruct>(
-      "service",
-      [](const rclcpp::msg::String & req) {});
+  auto client = node->create_client<BadAdaptedTypeStruct>("client");
 }

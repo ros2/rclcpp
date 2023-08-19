@@ -89,6 +89,14 @@ if(TARGET test_client)
   )
   target_link_libraries(test_client ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_client_with_type_adapter test_client_with_type_adapter.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+)
+if(TARGET test_client_with_type_adapter)
+  target_link_libraries(test_client_with_type_adapter
+    ${PROJECT_NAME}
+    ${cpp_typesupport_target})
+endif()
 ament_add_gtest(test_create_timer test_create_timer.cpp)
 if(TARGET test_create_timer)
   ament_target_dependencies(test_create_timer

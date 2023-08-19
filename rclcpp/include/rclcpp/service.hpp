@@ -39,7 +39,7 @@
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
-#include "rclcpp/get_message_type_support_handle.hpp"
+#include "rclcpp/get_service_type_support_handle.hpp"
 #include "rclcpp/is_ros_compatible_type.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"

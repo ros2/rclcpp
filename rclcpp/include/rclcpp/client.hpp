@@ -39,6 +39,7 @@
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/get_service_type_support_handle.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
@@ -382,6 +383,28 @@ public:
   using Request = typename ServiceT::Request;
   using Response = typename ServiceT::Response;
 
+  static_assert(
+    rclcpp::is_ros_compatible_type<Request>::value,
+    "Service Request type is not compatible with ROS 2 and cannot be used with a Client");
+  static_assert(
+    rclcpp::is_ros_compatible_type<Response>::value,
+    "Service Response type is not compatible with ROS 2 and cannot be used with a Client");
+
+  /// ServiceT::Request::custom_type if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Request
+  using ServiceRequestType = typename rclcpp::TypeAdapter<Request>::custom_type;
+  /// ServiceT::Request::ros_message_type if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Request
+  using ROSServiceRequestType =
+    typename rclcpp::TypeAdapter<Request>::ros_message_type;
+  /// ServiceT::Response::custom_type if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Response
+  using ServiceResponseType = typename rclcpp::TypeAdapter<Response>::custom_type;
+  /// ServiceT::Response::ros_message_type if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Response
+  using ROSServiceResponseType =
+    typename rclcpp::TypeAdapter<Response>::ros_message_type;
+
   using SharedRequest = typename ServiceT::Request::SharedPtr;
   using SharedResponse = typename ServiceT::Response::SharedPtr;
 
@@ -475,7 +498,7 @@ public:
     const std::string & service_name,
     rcl_client_options_t & client_options)
   : ClientBase(node_base, node_graph),
-    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(rclcpp::get_service_type_support_handle<ServiceT>())
   {
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
@@ -506,6 +529,9 @@ public:
   /**
    * \sa ClientBase::take_type_erased_response().
    *
+   * This signature is enabled if the service response is a ROSServiceResponseType
+   * as opposed to the custom type of a respective TypeAdapter
+   *
    * \param[out] response_out The reference to a Service Response into
    *   which the middleware will copy the response being taken.
    * \param[out] request_header_out The request header to be filled by the
@@ -515,10 +541,43 @@ public:
    * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
    *   rcl function fail.
    */
-  bool
-  take_response(typename ServiceT::Response & response_out, rmw_request_id_t & request_header_out)
+
+  template<typename T>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSServiceResponseType>::value
+  >
+  take_response(const T & response_out, rmw_request_id_t & request_header_out)
   {
     return this->take_type_erased_response(&response_out, request_header_out);
+  }
+  /// Take the next response for this client.
+  /**
+   * \sa ClientBase::take_type_erased_response().
+   *
+   * This signature is enabled if the service response is a ServiceResponseType
+   * created with a TypeAdapter, matching its respective custom_type
+   *
+   * \param[out] response_out The reference to a Service Response into
+   *   which the middleware will copy the response being taken.
+   * \param[out] request_header_out The request header to be filled by the
+   *   middleware when taking, and which can be used to associte the response
+   *   to a specific request.
+   * \returns true if the response was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl function fail.
+   */
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<Response>::is_specialized::value &&
+    std::is_same<T, ServiceResponseType>::value
+  >
+  take_response(const T & response_out, rmw_request_id_t & request_header_out)
+  {
+    ROSServiceResponseType ros_service_response_out;
+    rclcpp::TypeAdapter<Response>::convert_to_ros_message(
+        request_out, ros_service_response_out);
+    return this->take_type_erased_response(&ros_service_response_out, request_header_out);
   }
 
   /// Create a shared pointer with the response type
@@ -628,7 +687,7 @@ public:
    * If the callback is never called, because we never got a reply for the service server, remove_pending_request()
    * has to be called with the returned request id or prune_pending_requests().
    * Not doing so will make the `Client` instance use more memory each time a response is not
-   * received from the service server.
+   * received from the service server
    * In this case, it's convenient to setup a timer to cleanup the pending requests.
    * See for example the `examples_rclcpp_async_client` package in https://github.com/ros2/examples.
    *
@@ -823,12 +882,43 @@ protected:
     CallbackTypeValueVariant,
     CallbackWithRequestTypeValueVariant>;
 
+  template<typename T>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSServiceRequestType>::value
+  >
   int64_t
-  async_send_request_impl(const Request & request, CallbackInfoVariant value)
+  async_send_request_impl(const T & request, CallbackInfoVariant value)
   {
     int64_t sequence_number;
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &request, &sequence_number);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
+    }
+    pending_requests_.try_emplace(
+      sequence_number,
+      std::make_pair(std::chrono::system_clock::now(), std::move(value)));
+    return sequence_number;
+  }
+
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<Request>::is_specialized::value &&
+    std::is_same<T, ServiceRequestType>::value
+  >
+  int64_t
+  async_send_request_impl(const T & request, CallbackInfoVariant value)
+  {
+    int64_t sequence_number;
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+
+    ROSServiceRequestType ros_service_request;
+    rclcpp::TypeAdapter<Request>::convert_to_ros_message(
+        request, ros_service_request);
+
+    rcl_ret_t ret = rcl_send_request(
+        get_client_handle().get(), &ros_service_request, &sequence_number);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }
