@@ -41,6 +41,7 @@
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/get_service_type_support_handle.hpp"
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/is_ros_compatible_type.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
@@ -380,15 +381,13 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
+  static_assert(
+    rclcpp::is_ros_compatible_service_type<ServiceT>::value,
+    "Service Request type is not compatible with ROS 2 and cannot be used with a Client");
+
   using Request = typename ServiceT::Request;
   using Response = typename ServiceT::Response;
 
-  static_assert(
-    rclcpp::is_ros_compatible_type<Request>::value,
-    "Service Request type is not compatible with ROS 2 and cannot be used with a Client");
-  static_assert(
-    rclcpp::is_ros_compatible_type<Response>::value,
-    "Service Response type is not compatible with ROS 2 and cannot be used with a Client");
 
   /// ServiceT::Request::custom_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
@@ -498,7 +497,7 @@ public:
     const std::string & service_name,
     rcl_client_options_t & client_options)
   : ClientBase(node_base, node_graph),
-    srv_type_support_handle_(rclcpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
@@ -576,7 +575,7 @@ public:
   {
     ROSServiceResponseType ros_service_response_out;
     rclcpp::TypeAdapter<Response>::convert_to_ros_message(
-        request_out, ros_service_response_out);
+        response_out, ros_service_response_out);
     return this->take_type_erased_response(&ros_service_response_out, request_header_out);
   }
 
@@ -885,9 +884,9 @@ protected:
   template<typename T>
   typename std::enable_if_t<
     rosidl_generator_traits::is_message<T>::value &&
-    std::is_same<T, ROSServiceRequestType>::value
+    std::is_same<T, ROSServiceRequestType>::value,
+    int64_t
   >
-  int64_t
   async_send_request_impl(const T & request, CallbackInfoVariant value)
   {
     int64_t sequence_number;
@@ -905,9 +904,9 @@ protected:
   template<typename T>
   typename std::enable_if_t<
     rclcpp::TypeAdapter<Request>::is_specialized::value &&
-    std::is_same<T, ServiceRequestType>::value
+    std::is_same<T, ServiceRequestType>::value,
+    int64_t
   >
-  int64_t
   async_send_request_impl(const T & request, CallbackInfoVariant value)
   {
     int64_t sequence_number;

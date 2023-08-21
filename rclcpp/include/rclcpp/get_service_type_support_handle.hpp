@@ -59,16 +59,18 @@ template<typename AdaptedTypeStruct>
 constexpr
 std::enable_if_t<
   !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  rclcpp::TypeAdapter<AdaptedTypeStruct::Request>::is_specialized::value &&,
-  rclcpp::TypeAdapter<AdaptedTypeStruct::Response>::is_specialized::value,
+  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
+  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
   const rosidl_service_type_support_t &
 >
 get_service_type_support_handle()
 {
   struct AdaptedTypeStructTemp
   {
-      using Request = typename TypeAdapter<AdaptedTypeStruct::Request>::ros_message_type;
-      using Response = typename TypeAdapter<AdaptedTypeStruct::Response>::ros_message_type;
+      using Request =
+        typename TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
+      using Response =
+        typename TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
   };
 
   auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
@@ -83,16 +85,18 @@ template<typename AdaptedTypeStruct>
 constexpr
 std::enable_if_t<
   !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  !rclcpp::TypeAdapter<AdaptedTypeStruct::Request>::is_specialized::value &&,
-  rclcpp::TypeAdapter<AdaptedTypeStruct::Response>::is_specialized::value,
+  !rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
+  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
   const rosidl_service_type_support_t &
 >
 get_service_type_support_handle()
 {
   struct AdaptedTypeStructTemp
   {
-      using Request = typename TypeAdapter<AdaptedTypeStruct::Request>::custom_type;
-      using Response = typename TypeAdapter<AdaptedTypeStruct::Response>::ros_message_type;
+      using Request =
+        typename TypeAdapter<typename AdaptedTypeStruct::Request>::custom_type;
+      using Response =
+        typename TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
   };
 
   auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
@@ -107,16 +111,18 @@ template<typename AdaptedTypeStruct>
 constexpr
 std::enable_if_t<
   !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  rclcpp::TypeAdapter<AdaptedTypeStruct::Request>::is_specialized::value &&,
-  !rclcpp::TypeAdapter<AdaptedTypeStruct::Response>::is_specialized::value,
+  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
+  !rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
   const rosidl_service_type_support_t &
 >
 get_service_type_support_handle()
 {
   struct AdaptedTypeStructTemp
   {
-      using Request = typename TypeAdapter<AdaptedTypeStruct::Request>::ros_message_type;
-      using Response = typename TypeAdapter<AdaptedTypeStruct::Response>::custom_type;
+      using Request =
+        typename TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
+      using Response =
+        typename TypeAdapter<typename AdaptedTypeStruct::Response>::custom_type;
   };
 
   auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
@@ -130,14 +136,12 @@ get_service_type_support_handle()
 // This specialization is a pass through runtime check, which allows a better
 // static_assert to catch this issue further down the line.
 // This should never get to be called in practice, and is purely defensive.
-template<
-  typename AdaptedTypeStruct
->
+template<typename AdaptedTypeStruct>
 constexpr
 typename std::enable_if_t<
   !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  !TypeAdapter<AdaptedTypeStruct::Request>::is_specialized::value,
-  !TypeAdapter<AdaptedTypeStruct::Response>::is_specialized::value,
+  !TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
+  !TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
   const rosidl_service_type_support_t &
 >
 get_service_type_support_handle()

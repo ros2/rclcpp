@@ -311,26 +311,25 @@ class Service
 {
 public:
   static_assert(
-    rclcpp::is_ros_compatible_type<ServiceT::Request>::value,
+    rclcpp::is_ros_compatible_service_type<ServiceT>::value,
     "Service Request type is not compatible with ROS 2 and cannot be used with a Service");
-  static_assert(
-    rclcpp::is_ros_compatible_type<ServiceT::Response>::value,
-    "Service Response type is not compatible with ROS 2 and cannot be used with a Service");
 
   /// ServiceT::Request::custom_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
-  using ServiceRequestType = typename rclcpp::TypeAdapter<ServiceT::Request>::custom_type;
+  using ServiceRequestType =
+    typename rclcpp::TypeAdapter<typename ServiceT::Request>::custom_type;
   /// ServiceT::Request::ros_message_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
   using ROSServiceRequestType =
-    typename rclcpp::TypeAdapter<ServiceT::Request>::ros_message_type;
+    typename rclcpp::TypeAdapter<typename ServiceT::Request>::ros_message_type;
   /// ServiceT::Response::custom_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Response
-  using ServiceResponseType = typename rclcpp::TypeAdapter<ServiceT::Response>::custom_type;
+  using ServiceResponseType =
+    typename rclcpp::TypeAdapter<typename ServiceT::Response>::custom_type;
   /// ServiceT::Response::ros_message_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Response
   using ROSServiceResponseType =
-    typename rclcpp::TypeAdapter<ServiceT::Response>::ros_message_type;
+    typename rclcpp::TypeAdapter<typename ServiceT::Response>::ros_message_type;
 
   using CallbackType = std::function<
     void (
@@ -361,7 +360,7 @@ public:
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
   : ServiceBase(node_handle), any_callback_(any_callback),
-    srv_type_support_handle_(rclcpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     // rcl does the static memory allocation here
     service_handle_ = std::shared_ptr<rcl_service_t>(
@@ -422,7 +421,7 @@ public:
     std::shared_ptr<rcl_service_t> service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback),
-    srv_type_support_handle_(rclcpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle.get())) {
@@ -457,7 +456,7 @@ public:
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback),
-    srv_type_support_handle_(rclcpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle)) {
@@ -505,7 +504,7 @@ public:
     rosidl_generator_traits::is_message<T>::value &&
     std::is_same<T, ROSServiceRequestType>::value
   >
-  take_request(const T & request_out, rmw_request_id_t & request_id_out)
+  take_request(T & request_out, rmw_request_id_t & request_id_out)
   {
     return this->take_type_erased_request(&request_out, request_id_out);
   }
@@ -527,13 +526,13 @@ public:
    */
   template<typename T>
   typename std::enable_if_t<
-    rclcpp::TypeAdapter<ServiceT::Request>::is_specialized::value &&
+    rclcpp::TypeAdapter<typename ServiceT::Request>::is_specialized::value &&
     std::is_same<T, ServiceRequestType>::value
   >
-  take_request(const T & request_out, rmw_request_id_t & request_id_out)
+  take_request(T & request_out, rmw_request_id_t & request_id_out)
   {
     ROSServiceRequestType ros_service_request_out;
-    rclcpp::TypeAdapter<ServiceT::Request>::convert_to_ros_message(
+    rclcpp::TypeAdapter<typename ServiceT::Request>::convert_to_ros_message(
         request_out, ros_service_request_out);
     return this->take_type_erased_request(&ros_service_request_out, request_id_out);
   }
@@ -573,13 +572,21 @@ public:
    */
   template<typename T>
   std::enable_if_t<
-    rosidl_generator_traits::is_message<ServiceT::Response>::value &&
+    rosidl_generator_traits::is_message<typename ServiceT::Response>::value &&
     std::is_same<T, ROSServiceResponseType>::value
   >
-  send_response(rmw_request_id_t & req_id, const T & response)
+  send_response(rmw_request_id_t & req_id, T & response)
   {
     rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, &response);
 
+    if (ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        node_logger_.get_child("rclcpp"),
+        "failed to send response to %s (timeout): %s",
+        this->get_service_name(), rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    }
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
@@ -596,13 +603,13 @@ public:
    */
   template<typename T>
   std::enable_if_t<
-    rclcpp::TypeAdapter<ServiceT::Response>::is_specialized::value &&
+    rclcpp::TypeAdapter<typename ServiceT::Response>::is_specialized::value &&
     std::is_same<T, ServiceResponseType>::value
   >
-  send_response(rmw_request_id_t & req_id, const T & response)
+  send_response(rmw_request_id_t & req_id, T & response)
   {
     ROSServiceResponseType ros_service_response;
-    rclcpp::TypeAdapter<ServiceT::Response>::convert_to_ros_message(
+    rclcpp::TypeAdapter<typename ServiceT::Response>::convert_to_ros_message(
         response, ros_service_response);
     rcl_ret_t ret = rcl_send_response(
         get_service_handle().get(), &req_id, &ros_service_response);

@@ -9,19 +9,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/MessageWithHeader.msg
   ../msg/String.msg
   ../msg/Bool.msg
-  DEPENDENCIES builtin_interfaces
-  LIBRARY_NAME ${PROJECT_NAME}
-  SKIP_INSTALL
-)
-
-rosidl_generate_interfaces(${PROJECT_NAME}_test_srvs
   ../srv/SetBool.srv
   DEPENDENCIES builtin_interfaces
   LIBRARY_NAME ${PROJECT_NAME}
   SKIP_INSTALL
 )
+
 # Need the target name to depend on generated interface libraries
-rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_test_msgs" "${PROJECT_NAME}_test_srvs" "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_test_msgs" "rosidl_typesupport_cpp")
 
 ament_add_gtest(
   test_allocator_common
