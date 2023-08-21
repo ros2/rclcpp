@@ -196,7 +196,7 @@ public:
 
   /// Indicate that a goal has been canceled.
   /**
-   * Only call this if the goal is executing or pending, but has been canceled.
+   * Only call this if the goal is canceling.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    *
