@@ -381,13 +381,16 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
-  static_assert(
-    rclcpp::is_ros_compatible_service_type<ServiceT>::value,
-    "Service Request type is not compatible with ROS 2 and cannot be used with a Client");
-
   using Request = typename ServiceT::Request;
   using Response = typename ServiceT::Response;
 
+  static_assert(
+    rclcpp::is_ros_compatible_type<Request>::value,
+    "Service Request type is not compatible with ROS 2 and cannot be used with a Client");
+
+  static_assert(
+    rclcpp::is_ros_compatible_type<Response>::value,
+    "Service Response type is not compatible with ROS 2 and cannot be used with a Client");
 
   /// ServiceT::Request::custom_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
@@ -404,8 +407,8 @@ public:
   using ROSServiceResponseType =
     typename rclcpp::TypeAdapter<Response>::ros_message_type;
 
-  using SharedRequest = typename ServiceT::Request::SharedPtr;
-  using SharedResponse = typename ServiceT::Response::SharedPtr;
+  using SharedRequest = typename ROSServiceRequestType::SharedPtr;
+  using SharedResponse = typename ROSServiceResponseType::SharedPtr;
 
   using Promise = std::promise<SharedResponse>;
   using PromiseWithRequest = std::promise<std::pair<SharedRequest, SharedResponse>>;
@@ -544,9 +547,10 @@ public:
   template<typename T>
   typename std::enable_if_t<
     rosidl_generator_traits::is_message<T>::value &&
-    std::is_same<T, ROSServiceResponseType>::value
+    std::is_same<T, ROSServiceResponseType>::value,
+    bool
   >
-  take_response(const T & response_out, rmw_request_id_t & request_header_out)
+  take_response(T & response_out, rmw_request_id_t & request_header_out)
   {
     return this->take_type_erased_response(&response_out, request_header_out);
   }
@@ -569,9 +573,10 @@ public:
   template<typename T>
   typename std::enable_if_t<
     rclcpp::TypeAdapter<Response>::is_specialized::value &&
-    std::is_same<T, ServiceResponseType>::value
+    std::is_same<T, ServiceResponseType>::value,
+    bool
   >
-  take_response(const T & response_out, rmw_request_id_t & request_header_out)
+  take_response(T & response_out, rmw_request_id_t & request_header_out)
   {
     ROSServiceResponseType ros_service_response_out;
     rclcpp::TypeAdapter<Response>::convert_to_ros_message(
@@ -586,7 +591,7 @@ public:
   std::shared_ptr<void>
   create_response() override
   {
-    return std::shared_ptr<void>(new typename ServiceT::Response());
+    return std::shared_ptr<void>(new Response());
   }
 
   /// Create a shared pointer with a rmw_request_id_t
@@ -617,7 +622,7 @@ public:
       return;
     }
     auto & value = *optional_pending_request;
-    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(
+    auto typed_response = std::static_pointer_cast<ROSServiceResponseType>(
       std::move(response));
     if (std::holds_alternative<Promise>(value)) {
       auto & promise = std::get<Promise>(value);

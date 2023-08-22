@@ -18,8 +18,10 @@
 
 #include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/parameter_client.hpp"
+#include "rclcpp/type_adapter.hpp"
 
 #include "type_description_interfaces/srv/get_type_description.h"
+#include "type_description_interfaces/srv/get_type_description.hpp"
 
 namespace
 {
@@ -30,6 +32,79 @@ struct GetTypeDescription__C
   using Response = type_description_interfaces__srv__GetTypeDescription_Response;
   using Event = type_description_interfaces__srv__GetTypeDescription_Event;
 };
+
+/*
+template<>
+struct rclcpp::TypeAdapter<
+  type_description_interfaces__srv__GetTypeDescription_Request,
+  type_description_interfaces::srv::GetTypeDescription::Request
+>
+{
+  using is_specialized = std::true_type;
+  using custom_type = type_description_interfaces__srv__GetTypeDescription_Request;
+  using ros_message_type = type_description_interfaces::srv::GetTypeDescription::Request;
+
+  static
+  void
+  convert_to_ros_message(
+    const custom_type & source,
+    ros_message_type & destination)
+  {
+    destination.data = source;
+  }
+
+  static
+  void
+  convert_to_custom(
+    const ros_message_type & source,
+    custom_type & destination)
+  {
+    destination = source.data;
+  }
+};
+
+template<>
+struct rclcpp::TypeAdapter<
+  type_description_interfaces__srv__GetTypeDescription_Response,
+  type_description_interfaces::srv::GetTypeDescription::Response
+>
+{
+  using is_specialized = std::true_type;
+  using custom_type = type_description_interfaces__srv__GetTypeDescription_Request;
+  using ros_message_type = type_description_interfaces::srv::GetTypeDescription::Request;
+
+  static
+  void
+  convert_to_ros_message(
+    const custom_type & source,
+    ros_message_type & destination)
+  {
+    destination.data = source;
+  }
+
+  static
+  void
+  convert_to_custom(
+    const ros_message_type & source,
+    custom_type & destination)
+  {
+    destination = source.data;
+  }
+};
+
+  using TypeRequest = rclcpp::TypeAdapter<
+    type_description_interfaces__srv__GetTypeDescription_Request,
+    type_description_interfaces::srv::GetTypeDescription::Request>;
+  using TypeResponse = rclcpp::TypeAdapter<
+    type_description_interfaces__srv__GetTypeDescription_Response,
+    type_description_interfaces::srv::GetTypeDescription::Response>;
+
+struct CustomDescriptionTypes
+{
+  using Request = TypeRequest;
+  using Response = TypeResponse;
+};
+*/
 }  // namespace
 
 // Helper function for C typesupport.
@@ -50,12 +125,13 @@ namespace node_interfaces
 
 class NodeTypeDescriptions::NodeTypeDescriptionsImpl
 {
+
 public:
   using ServiceT = GetTypeDescription__C;
 
   rclcpp::Logger logger_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  rclcpp::Service<ServiceT>::SharedPtr type_description_srv_;
+  //rclcpp::Service<ServiceT>::SharedPtr type_description_srv_;
 
   NodeTypeDescriptionsImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -65,6 +141,7 @@ public:
   : logger_(node_logging->get_logger()),
     node_base_(node_base)
   {
+    /*
     const std::string enable_param_name = "start_type_description_service";
 
     bool enabled = false;
@@ -123,12 +200,13 @@ public:
         std::dynamic_pointer_cast<ServiceBase>(type_description_srv_),
         nullptr);
     }
+    */
   }
 
   ~NodeTypeDescriptionsImpl()
   {
     if (
-      type_description_srv_ &&
+//      type_description_srv_ &&
       RCL_RET_OK != rcl_node_type_description_service_fini(node_base_->get_rcl_node_handle()))
     {
       RCLCPP_ERROR(

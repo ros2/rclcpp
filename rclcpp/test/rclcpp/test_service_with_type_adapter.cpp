@@ -37,10 +37,6 @@
 
 using namespace std::chrono_literals;
 
-static const int g_max_loops = 200;
-static const std::chrono::milliseconds g_sleep_per_loop(10);
-
-
 class TestService: public ::testing::Test
 {
 public:
@@ -57,10 +53,8 @@ public:
   }
 };
 
-namespace rclcpp
-{
 template<>
-struct TypeAdapter<bool, rclcpp::msg::Bool>
+struct rclcpp::TypeAdapter<bool, rclcpp::msg::Bool>
 {
   using is_specialized = std::true_type;
   using custom_type = bool;
@@ -79,12 +73,12 @@ struct TypeAdapter<bool, rclcpp::msg::Bool>
     const ros_message_type & source,
     custom_type & destination)
   {
-    destination = source.data;
+    destination = source;
   }
 };
 
 template<>
-struct TypeAdapter<std::string, rclcpp::msg::String>
+struct rclcpp::TypeAdapter<std::string, rclcpp::msg::String>
 {
   using is_specialized = std::true_type;
   using custom_type = std::string;
@@ -109,7 +103,7 @@ struct TypeAdapter<std::string, rclcpp::msg::String>
 
 // Throws in conversion
 template<>
-struct TypeAdapter<int, rclcpp::msg::String>
+struct rclcpp::TypeAdapter<int, rclcpp::msg::String>
 {
   using is_specialized = std::true_type;
   using custom_type = int;
@@ -134,8 +128,6 @@ struct TypeAdapter<int, rclcpp::msg::String>
     (void) destination;
   }
 };
-
-}  // namespace rclcpp
 
 /*
  * Testing the basic creation of services with a TypeAdapter for both Request and Response

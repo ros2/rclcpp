@@ -9,6 +9,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/MessageWithHeader.msg
   ../msg/String.msg
   ../msg/Bool.msg
+  ../msg/Empty.msg
   ../srv/SetBool.srv
   DEPENDENCIES builtin_interfaces
   LIBRARY_NAME ${PROJECT_NAME}

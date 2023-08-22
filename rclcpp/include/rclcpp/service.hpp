@@ -311,8 +311,12 @@ class Service
 {
 public:
   static_assert(
-    rclcpp::is_ros_compatible_service_type<ServiceT>::value,
+    rclcpp::is_ros_compatible_type<typename ServiceT::Request>::value,
     "Service Request type is not compatible with ROS 2 and cannot be used with a Service");
+
+  static_assert(
+    rclcpp::is_ros_compatible_type<typename ServiceT::Response>::value,
+    "Service Response type is not compatible with ROS 2 and cannot be used with a Service");
 
   /// ServiceT::Request::custom_type if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
