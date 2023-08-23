@@ -129,16 +129,17 @@ struct rclcpp::TypeAdapter<int, rclcpp::msg::String>
   }
 };
 
-
 /*
  * Testing the basic creation of clients with a TypeAdapter for both Request and Response
  */
 TEST_F(TestClient, total_type_adaption_client_creation)
 {
-  using AdaptedRequestType = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
-  using AdaptedResponseType = rclcpp::TypeAdapter<bool, rclcpp::msg::Bool>;
 
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("my_node");
+
+  {
+  using AdaptedRequestType = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
+  using AdaptedResponseType = rclcpp::TypeAdapter<bool, rclcpp::msg::Bool>;
 
   struct AdaptedTypeStruct {
     using Request = AdaptedRequestType;
@@ -148,8 +149,8 @@ TEST_F(TestClient, total_type_adaption_client_creation)
   auto client = node->create_client<AdaptedTypeStruct>("client");
 
   /// Now try to adapt the type with the `as` metafunction
-  (void)client;
-
+  }
+  {
   using AdaptedRequestType = rclcpp::adapt_type<std::string>::as<rclcpp::msg::String>;
   using AdaptedResponseType = rclcpp::adapt_type<bool>::as<rclcpp::msg::Bool>;
 
@@ -160,6 +161,7 @@ TEST_F(TestClient, total_type_adaption_client_creation)
 
   auto Asclient = node->create_client<AdaptedTypeAsStruct>("client");
   (void)Asclient;
+  }
 }
 
 TEST_F(TestClient, request_type_adaption_client_creation)

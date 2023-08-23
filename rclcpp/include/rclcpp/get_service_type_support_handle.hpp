@@ -68,9 +68,9 @@ get_service_type_support_handle()
   struct AdaptedTypeStructTemp
   {
       using Request =
-        typename TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
+        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
       using Response =
-        typename TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
+        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
   };
 
   auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
@@ -94,9 +94,9 @@ get_service_type_support_handle()
   struct AdaptedTypeStructTemp
   {
       using Request =
-        typename TypeAdapter<typename AdaptedTypeStruct::Request>::custom_type;
+        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::custom_type;
       using Response =
-        typename TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
+        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
   };
 
   auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
@@ -120,9 +120,9 @@ get_service_type_support_handle()
   struct AdaptedTypeStructTemp
   {
       using Request =
-        typename TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
+        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
       using Response =
-        typename TypeAdapter<typename AdaptedTypeStruct::Response>::custom_type;
+        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::custom_type;
   };
 
   auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp

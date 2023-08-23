@@ -26,10 +26,9 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
 
-#include "test_msgs/msg/empty.hpp"
+#include "rclcpp/msg/empty.hpp"
 #include "rclcpp/msg/string.hpp"
 #include "rclcpp/msg/bool.hpp"
 
@@ -73,7 +72,7 @@ struct rclcpp::TypeAdapter<bool, rclcpp::msg::Bool>
     const ros_message_type & source,
     custom_type & destination)
   {
-    destination = source;
+    destination = source.data;
   }
 };
 
