@@ -398,3 +398,47 @@ TEST(TestRate, clock_types) {
     EXPECT_EQ(RCL_ROS_TIME, rate.get_type());
   }
 }
+
+TEST(TestRate, incorrect_constuctor) {
+  // Constructor with 0-frequency
+  try {
+    rclcpp::Rate rate(0.0);
+    FAIL() << "Rate with 0-frequency shouldn't be constructed\n";
+  } catch(const std::invalid_argument & ex) {
+    // Do nothing
+  } catch(const std::exception & ex) {
+    FAIL() << "Unexpected fail: " << ex.what() << "\n";
+  }
+
+  // Constructor with negative frequency
+  try {
+    rclcpp::Rate rate(-1.0);
+    FAIL() << "Rate with negative frequency shouldn't be constructed\n";
+  } catch(const std::invalid_argument & ex) {
+    // Do nothing
+  } catch(const std::exception & ex) {
+    FAIL() << "Unexpected fail: " << ex.what() << "\n";
+  }
+
+  // Constructor with 0-duration
+  try {
+    rclcpp::Duration d0(0, 0);
+    rclcpp::Rate rate(d0);
+    FAIL() << "Rate with 0-duration shouldn't be constructed\n";
+  } catch(const std::invalid_argument & ex) {
+    // Do nothing
+  } catch(const std::exception & ex) {
+    FAIL() << "Unexpected fail: " << ex.what() << "\n";
+  }
+
+  // Constructor with negative duration
+  try {
+    rclcpp::Duration dN(-1, 0);
+    rclcpp::Rate rate(dN);
+    FAIL() << "Rate with negative duraiton shouldn't be constructed\n";
+  } catch(const std::invalid_argument & ex) {
+    // Do nothing
+  } catch(const std::exception & ex) {
+    FAIL() << "Unexpected fail: " << ex.what() << "\n";
+  }
+}
