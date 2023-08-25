@@ -235,6 +235,7 @@ TEST(TestRate, generic_rate) {
 # pragma warning(pop)
 #endif
 
+    ASSERT_EQ(gr.get_type(), RCL_SYSTEM_TIME);
     EXPECT_EQ(period, gr.period());
     ASSERT_TRUE(gr.sleep());
     auto one = std::chrono::system_clock::now();
@@ -288,6 +289,7 @@ TEST(TestRate, generic_rate) {
 # pragma warning(pop)
 #endif
 
+    ASSERT_EQ(gr.get_type(), RCL_STEADY_TIME);
     EXPECT_EQ(period, gr.period());
     ASSERT_TRUE(gr.sleep());
     auto one = std::chrono::steady_clock::now();
