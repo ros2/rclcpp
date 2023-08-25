@@ -406,9 +406,9 @@ TEST(TestRate, incorrect_constuctor) {
   try {
     rclcpp::Rate rate(0.0);
     FAIL() << "Rate with 0-frequency shouldn't be constructed\n";
-  } catch(const std::invalid_argument & ex) {
+  } catch (const std::invalid_argument & ex) {
     // Do nothing
-  } catch(const std::exception & ex) {
+  } catch (const std::exception & ex) {
     FAIL() << "Unexpected fail: " << ex.what() << "\n";
   }
 
@@ -416,9 +416,9 @@ TEST(TestRate, incorrect_constuctor) {
   try {
     rclcpp::Rate rate(-1.0);
     FAIL() << "Rate with negative frequency shouldn't be constructed\n";
-  } catch(const std::invalid_argument & ex) {
+  } catch (const std::invalid_argument & ex) {
     // Do nothing
-  } catch(const std::exception & ex) {
+  } catch (const std::exception & ex) {
     FAIL() << "Unexpected fail: " << ex.what() << "\n";
   }
 
@@ -427,9 +427,9 @@ TEST(TestRate, incorrect_constuctor) {
     rclcpp::Duration d0(0, 0);
     rclcpp::Rate rate(d0);
     FAIL() << "Rate with 0-duration shouldn't be constructed\n";
-  } catch(const std::invalid_argument & ex) {
+  } catch (const std::invalid_argument & ex) {
     // Do nothing
-  } catch(const std::exception & ex) {
+  } catch (const std::exception & ex) {
     FAIL() << "Unexpected fail: " << ex.what() << "\n";
   }
 
@@ -438,9 +438,9 @@ TEST(TestRate, incorrect_constuctor) {
     rclcpp::Duration dN(-1, 0);
     rclcpp::Rate rate(dN);
     FAIL() << "Rate with negative duraiton shouldn't be constructed\n";
-  } catch(const std::invalid_argument & ex) {
+  } catch (const std::invalid_argument & ex) {
     // Do nothing
-  } catch(const std::exception & ex) {
+  } catch (const std::exception & ex) {
     FAIL() << "Unexpected fail: " << ex.what() << "\n";
   }
 }
