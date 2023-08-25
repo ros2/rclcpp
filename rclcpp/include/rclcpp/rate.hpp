@@ -131,7 +131,7 @@ public:
   : clock_(clock), period_(0, 0), last_interval_(clock_->now())
   {
     if (rate <= 0.0) {
-      throw std::invalid_argument{"rate must greater than 0"};
+      throw std::invalid_argument{"rate must be greater than 0"};
     }
     period_ = Duration::from_seconds(1.0 / rate);
   }
@@ -141,7 +141,7 @@ public:
   : clock_(clock), period_(period), last_interval_(clock_->now())
   {
     if (period <= Duration(0, 0)) {
-      throw std::invalid_argument{"period must greater than 0"};
+      throw std::invalid_argument{"period must be greater than 0"};
     }
   }
 
