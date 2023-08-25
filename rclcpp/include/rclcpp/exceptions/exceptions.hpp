@@ -206,6 +206,14 @@ public:
   const std::vector<std::string> unknown_ros_args;
 };
 
+/// Thrown when an unknown type is passed
+class UnknownTypeError : public std::runtime_error
+{
+public:
+  explicit UnknownTypeError(const std::string & type)
+  : std::runtime_error("Unknown type: " + type) {}
+};
+
 /// Thrown when an invalid rclcpp::Event object or SharedPtr is encountered.
 class InvalidEventError : public std::runtime_error
 {

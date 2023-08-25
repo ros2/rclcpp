@@ -10,6 +10,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+find_package(rcl_logging_interface REQUIRED)
 find_package(rcl_yaml_param_parser REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
@@ -207,6 +208,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "libstatistics_collector"
   "rcl"
   "rcl_interfaces"
+  "rcl_logging_interface"
   "rcl_yaml_param_parser"
   "rcpputils"
   "rcutils"

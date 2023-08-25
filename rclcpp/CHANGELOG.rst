@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+22.1.0 (2023-08-21)
+-------------------
+* Do not crash Executor when send_response fails due to client failure. (`#2276 <https://github.com/ros2/rclcpp/issues/2276>`_)
+* Adding Custom Unknown Type Error (`#2272 <https://github.com/ros2/rclcpp/issues/2272>`_)
+* Add a pimpl inside rclcpp::Node for future distro backports (`#2228 <https://github.com/ros2/rclcpp/issues/2228>`_)
+* Remove an unused variable from the events executor tests. (`#2270 <https://github.com/ros2/rclcpp/issues/2270>`_)
+* Add spin_all shortcut (`#2246 <https://github.com/ros2/rclcpp/issues/2246>`_)
+* Adding Missing Group Exceptions (`#2256 <https://github.com/ros2/rclcpp/issues/2256>`_)
+* Change associated clocks storage to unordered_set (`#2257 <https://github.com/ros2/rclcpp/issues/2257>`_)
+* associated clocks should be protected by mutex. (`#2255 <https://github.com/ros2/rclcpp/issues/2255>`_)
+* Instrument loaned message publication code path (`#2240 <https://github.com/ros2/rclcpp/issues/2240>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Emerson Knapp, Luca Della Vedova, Lucas Wendland, Tomoya Fujita, Tony Najjar
+
 22.0.0 (2023-07-11)
 -------------------
 * Implement get_node_type_descriptions_interface for lifecyclenode and add smoke test for it (`#2237 <https://github.com/ros2/rclcpp/issues/2237>`_)

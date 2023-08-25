@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rclcpp</name>
-  <version>22.0.0</version>
+  <version>22.1.0</version>
   <description>The ROS client library in C++.</description>
 
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
@@ -35,6 +35,7 @@
 
   <depend>libstatistics_collector</depend>
   <depend>rcl</depend>
+  <depend>rcl_logging_interface</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
   <depend>rcutils</depend>
