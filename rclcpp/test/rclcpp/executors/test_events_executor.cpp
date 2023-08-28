@@ -60,7 +60,7 @@ TEST_F(TestEventsExecutor, run_pub_sub)
   executor.add_node(node);
 
   bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
+  std::thread spinner([&spin_exited, &executor]() {
       executor.spin();
       spin_exited = true;
     });
@@ -107,7 +107,7 @@ TEST_F(TestEventsExecutor, run_clients_servers)
   executor.add_node(node);
 
   bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
+  std::thread spinner([&spin_exited, &executor]() {
       executor.spin();
       spin_exited = true;
     });
@@ -346,7 +346,7 @@ TEST_F(TestEventsExecutor, cancel_while_timers_running)
     });
 
 
-  std::thread spinner([&executor, this]() {executor.spin();});
+  std::thread spinner([&executor]() {executor.spin();});
 
   std::this_thread::sleep_for(10ms);
   // Call cancel while t1 callback is still being executed
@@ -373,7 +373,7 @@ TEST_F(TestEventsExecutor, cancel_while_timers_waiting)
   executor.add_node(node);
 
   auto start = std::chrono::steady_clock::now();
-  std::thread spinner([&executor, this]() {executor.spin();});
+  std::thread spinner([&executor]() {executor.spin();});
 
   std::this_thread::sleep_for(10ms);
   executor.cancel();
@@ -395,7 +395,7 @@ TEST_F(TestEventsExecutor, destroy_entities)
     2ms, [&]() {publisher->publish(std::make_unique<test_msgs::msg::Empty>());});
   EventsExecutor executor_pub;
   executor_pub.add_node(node_pub);
-  std::thread spinner([&executor_pub, this]() {executor_pub.spin();});
+  std::thread spinner([&executor_pub]() {executor_pub.spin();});
 
   // Create a node with two different subscriptions to the topic
   auto node_sub = std::make_shared<rclcpp::Node>("node_sub");
