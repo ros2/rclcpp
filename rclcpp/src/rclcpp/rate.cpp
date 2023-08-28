@@ -14,8 +14,29 @@
 
 #include "rclcpp/rate.hpp"
 
+#include <stdexcept>
+
 namespace rclcpp
 {
+
+Rate::Rate(
+  const double rate, Clock::SharedPtr clock)
+: clock_(clock), period_(0, 0), last_interval_(clock_->now())
+{
+  if (rate <= 0.0) {
+    throw std::invalid_argument{"rate must be greater than 0"};
+  }
+  period_ = Duration::from_seconds(1.0 / rate);
+}
+
+Rate::Rate(
+  const Duration & period, Clock::SharedPtr clock)
+: clock_(clock), period_(period), last_interval_(clock_->now())
+{
+  if (period <= Duration(0, 0)) {
+    throw std::invalid_argument{"period must be greater than 0"};
+  }
+}
 
 bool
 Rate::sleep()
@@ -71,5 +92,21 @@ Rate::period() const
 {
   return period_;
 }
+
+WallRate::WallRate(const double rate)
+: Rate(rate, std::make_shared<Clock>(RCL_STEADY_TIME))
+{}
+
+WallRate::WallRate(const Duration & period)
+: Rate(period, std::make_shared<Clock>(RCL_STEADY_TIME))
+{}
+
+ROSRate::ROSRate(const double rate)
+: Rate(rate, std::make_shared<Clock>(RCL_ROS_TIME))
+{}
+
+ROSRate::ROSRate(const Duration & period)
+: Rate(period, std::make_shared<Clock>(RCL_ROS_TIME))
+{}
 
 }  // namespace rclcpp
