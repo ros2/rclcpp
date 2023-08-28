@@ -779,7 +779,7 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   // that publishers aren't continuing to publish.
   // This was previously broken in that intraprocess guard conditions were only triggered on
   // publish and the test was added to prevent future regressions.
-  constexpr size_t kNumMessages = 100;
+  static constexpr size_t kNumMessages = 100;
 
   using ExecutorType = TypeParam;
   ExecutorType executor;
@@ -810,9 +810,7 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   auto timer = this->node->create_wall_timer(
     std::chrono::milliseconds(10), [this, &executor, &loops]() {
       loops++;
-      if (kNumMessages == this->callback_count.load() ||
-      loops == 500)
-      {
+      if (kNumMessages == this->callback_count.load() || loops == 500) {
         executor.cancel();
       }
     });
