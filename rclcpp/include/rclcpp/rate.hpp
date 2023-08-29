@@ -120,7 +120,7 @@ private:
   std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
 };
 
-class Rate : public RateBase
+class RCLCPP_PUBLIC Rate : public RateBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Rate)
