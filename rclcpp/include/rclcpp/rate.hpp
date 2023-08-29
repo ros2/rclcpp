@@ -164,7 +164,7 @@ public:
   explicit WallRate(const Duration & period);
 };
 
-class ROSRate : public Rate
+class RCLCPP_PUBLIC ROSRate : public Rate
 {
 public:
   explicit ROSRate(const double rate);
