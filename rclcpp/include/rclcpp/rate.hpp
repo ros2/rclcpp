@@ -157,7 +157,7 @@ private:
   Time last_interval_;
 };
 
-class WallRate : public Rate
+class RCLCPP_PUBLIC WallRate : public Rate
 {
 public:
   explicit WallRate(const double rate);
