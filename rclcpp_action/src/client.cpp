@@ -163,7 +163,6 @@ bool
 ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
 {
   auto start = std::chrono::steady_clock::now();
-  // make an event to reuse, rather than create a new one each time
   auto node_ptr = pimpl_->node_graph_.lock();
   if (!node_ptr) {
     throw rclcpp::exceptions::InvalidNodeError();
@@ -172,6 +171,7 @@ ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
   if (this->action_server_is_ready()) {
     return true;
   }
+  // make an event to reuse, rather than create a new one each time
   auto event = node_ptr->get_graph_event();
   if (timeout == std::chrono::nanoseconds(0)) {
     // check was non-blocking, return immediately
