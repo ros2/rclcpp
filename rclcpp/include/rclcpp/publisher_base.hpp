@@ -139,6 +139,12 @@ public:
   size_t
   get_intra_process_subscription_count() const;
 
+  /// Get if durability is transient local
+  /** \return If durability is transient local*/
+  RCLCPP_PUBLIC
+  bool
+  is_durability_transient_local() const;
+
   /// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC).
   /**
    * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC, the creator
@@ -331,6 +337,27 @@ public:
     event_handlers_[event_type]->clear_on_ready_callback();
   }
 
+
+  /// Publish shared messages from intra process buffer for late joiner
+  /**
+   * This signature allows the user to give a sub_id from intra process manager.
+   * The function will publish messages currently held in buffer_ to the subscription
+   * as shared pointers.
+   *
+   * \param[in] sud_id subscription id in ipm to publish data to
+   */
+  virtual void do_shared_intra_process_publish_for_late_joiner(const uint64_t sub_id);
+
+  /// Publish owned messages from intra process buffer for late joiner
+  /**
+   * This signature allows the user to give a sub_id from intra process manager.
+   * The function will publish messages currently held in buffer_ to the subscription
+   * as unique pointers.
+   *
+   * \param[in] sud_id subscription id in ipm to publish data to
+   */
+  virtual void do_unique_intra_process_publish_for_late_joiner(const uint64_t sub_id);
+
 protected:
   template<typename EventCallbackT>
   void
@@ -363,6 +390,7 @@ protected:
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
   bool intra_process_is_enabled_;
+  const bool durability_is_transient_local_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
 

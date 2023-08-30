@@ -76,6 +76,15 @@ IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr su
     if (can_communicate(publisher, subscription)) {
       uint64_t pub_id = pair.first;
       insert_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
+      if (publisher->is_durability_transient_local() &&
+        subscription->is_durability_transient_local())
+      {
+        if (subscription->use_take_shared_method()) {
+          publisher->do_shared_intra_process_publish_for_late_joiner(sub_id);
+        } else {
+          publisher->do_unique_intra_process_publish_for_late_joiner(sub_id);
+        }
+      }
     }
   }
 

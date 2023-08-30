@@ -163,10 +163,6 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication is not allowed with 0 depth qos policy");
       }
-      if (qos_profile.durability() != rclcpp::DurabilityPolicy::Volatile) {
-        throw std::invalid_argument(
-                "intraprocess communication allowed only with volatile durability");
-      }
 
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
         MessageT,

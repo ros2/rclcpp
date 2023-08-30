@@ -50,6 +50,8 @@ PublisherBase::PublisherBase(
   bool use_default_callbacks)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
   intra_process_is_enabled_(false),
+  durability_is_transient_local_(
+    publisher_options.qos.durability == RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL),
   intra_process_publisher_id_(0),
   type_support_(type_support),
   event_callbacks_(event_callbacks)
@@ -270,6 +272,12 @@ PublisherBase::get_intra_process_subscription_count() const
   return ipm->get_subscription_count(intra_process_publisher_id_);
 }
 
+bool
+PublisherBase::is_durability_transient_local() const
+{
+  return durability_is_transient_local_;
+}
+
 rclcpp::QoS
 PublisherBase::get_actual_qos() const
 {
@@ -402,4 +410,13 @@ size_t PublisherBase::lowest_available_ipm_capacity() const
   }
 
   return ipm->lowest_available_capacity(intra_process_publisher_id_);
+}
+
+void PublisherBase::do_shared_intra_process_publish_for_late_joiner(const uint64_t)
+{
+  throw std::runtime_error("intra process publish for late joiner is not implemented");
+}
+void PublisherBase::do_unique_intra_process_publish_for_late_joiner(const uint64_t)
+{
+  throw std::runtime_error("intra process publish for late joiner is not implemented");
 }

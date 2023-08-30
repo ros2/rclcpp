@@ -292,6 +292,34 @@ public:
     }
   }
 
+  template<
+    typename MessageT,
+    typename Alloc,
+    typename Deleter,
+    typename ROSMessageType>
+  void
+  add_shared_msg_to_buffer(
+    std::shared_ptr<const MessageT> message,
+    uint64_t subscription_id)
+  {
+    add_shared_msg_to_buffers<MessageT, Alloc, Deleter, ROSMessageType>(message, {subscription_id});
+  }
+
+  template<
+    typename MessageT,
+    typename Alloc,
+    typename Deleter,
+    typename ROSMessageType>
+  void
+  add_owned_msg_to_buffer(
+    std::unique_ptr<MessageT, Deleter> message,
+    uint64_t subscription_id,
+    typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator)
+  {
+    add_owned_msg_to_buffers<MessageT, Alloc, Deleter, ROSMessageType>(
+      std::move(message), {subscription_id}, allocator);
+  }
+
   /// Return true if the given rmw_gid_t matches any stored Publishers.
   RCLCPP_PUBLIC
   bool

@@ -81,6 +81,12 @@ public:
   }
 
   bool
+  is_durability_transient_local() const
+  {
+    return qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal;
+  }
+
+  bool
   operator==(const rmw_gid_t & gid) const
   {
     (void)gid;
@@ -92,6 +98,13 @@ public:
   {
     (void)gid;
     return false;
+  }
+
+  virtual void do_shared_intra_process_publish_for_late_joiner(const uint64_t)
+  {
+  }
+  virtual void do_unique_intra_process_publish_for_late_joiner(const uint64_t)
+  {
   }
 
   rclcpp::QoS qos_profile;
@@ -229,6 +242,12 @@ public:
   get_topic_name()
   {
     return topic_name.c_str();
+  }
+
+  bool
+  is_durability_transient_local() const
+  {
+    return qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal;
   }
 
   virtual
