@@ -33,10 +33,19 @@ class RateBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase)
 
+  RCLCPP_PUBLIC
   virtual ~RateBase() {}
+
+  RCLCPP_PUBLIC
   virtual bool sleep() = 0;
+
+  RCLCPP_PUBLIC
   [[deprecated("use get_type() instead")]] virtual bool is_steady() const = 0;
+
+  RCLCPP_PUBLIC
   virtual rcl_clock_type_t get_type() const = 0;
+
+  RCLCPP_PUBLIC
   virtual void reset() = 0;
 };
 
@@ -120,32 +129,39 @@ private:
   std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
 };
 
-class RCLCPP_PUBLIC Rate : public RateBase
+class Rate : public RateBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Rate)
 
+  RCLCPP_PUBLIC
   explicit Rate(
     const double rate,
     Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
 
+  RCLCPP_PUBLIC
   explicit Rate(
     const Duration & period,
     Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
 
+  RCLCPP_PUBLIC
   virtual bool
   sleep();
 
+  RCLCPP_PUBLIC
   [[deprecated("use get_type() instead")]]
   virtual bool
   is_steady() const;
 
+  RCLCPP_PUBLIC
   virtual rcl_clock_type_t
   get_type() const;
 
+  RCLCPP_PUBLIC
   virtual void
   reset();
 
+  RCLCPP_PUBLIC
   Duration
   period() const;
 
@@ -157,17 +173,23 @@ private:
   Time last_interval_;
 };
 
-class RCLCPP_PUBLIC WallRate : public Rate
+class WallRate : public Rate
 {
 public:
+  RCLCPP_PUBLIC
   explicit WallRate(const double rate);
+
+  RCLCPP_PUBLIC
   explicit WallRate(const Duration & period);
 };
 
-class RCLCPP_PUBLIC ROSRate : public Rate
+class ROSRate : public Rate
 {
 public:
+  RCLCPP_PUBLIC
   explicit ROSRate(const double rate);
+
+  RCLCPP_PUBLIC
   explicit ROSRate(const Duration & period);
 };
 
