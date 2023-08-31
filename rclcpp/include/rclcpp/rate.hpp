@@ -39,8 +39,9 @@ public:
   RCLCPP_PUBLIC
   virtual bool sleep() = 0;
 
+  [[deprecated("use get_type() instead")]]
   RCLCPP_PUBLIC
-  [[deprecated("use get_type() instead")]] virtual bool is_steady() const = 0;
+  virtual bool is_steady() const = 0;
 
   RCLCPP_PUBLIC
   virtual rcl_clock_type_t get_type() const = 0;
@@ -148,8 +149,8 @@ public:
   virtual bool
   sleep();
 
-  RCLCPP_PUBLIC
   [[deprecated("use get_type() instead")]]
+  RCLCPP_PUBLIC
   virtual bool
   is_steady() const;
 
