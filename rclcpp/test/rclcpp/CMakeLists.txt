@@ -91,7 +91,7 @@ ament_add_gtest(test_client_with_type_adapter test_client_with_type_adapter.cpp
 if(TARGET test_client_with_type_adapter)
   target_link_libraries(test_client_with_type_adapter
     ${PROJECT_NAME}
-    ${cpp_typesupport_target})
+    ${cpp_typesupport_target} mimick)
 endif()
 ament_add_gtest(test_create_timer test_create_timer.cpp)
 if(TARGET test_create_timer)
@@ -549,7 +549,7 @@ ament_add_gtest(test_service_with_type_adapter test_service_with_type_adapter.cp
 if(TARGET test_service_with_type_adapter)
   target_link_libraries(test_service_with_type_adapter
     ${PROJECT_NAME}
-    ${cpp_typesupport_target})
+    ${cpp_typesupport_target} mimick)
 endif()
 
 # Creating and destroying nodes is slow with Connext, so this needs larger timeout.

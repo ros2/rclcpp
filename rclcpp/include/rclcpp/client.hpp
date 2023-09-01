@@ -15,6 +15,8 @@
 #ifndef RCLCPP__CLIENT_HPP_
 #define RCLCPP__CLIENT_HPP_
 
+#include <sys/_types/_int64_t.h>
+
 #include <atomic>
 #include <functional>
 #include <future>
@@ -24,11 +26,13 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "is_ros_compatible_type.hpp"
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
@@ -46,6 +50,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/type_adapter.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -53,6 +58,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/rmw.h"
+
+#include <rosidl_runtime_cpp/traits.hpp>
 
 namespace rclcpp
 {
@@ -381,47 +388,113 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
-  using Request = typename ServiceT::Request;
-  using Response = typename ServiceT::Response;
-
   static_assert(
-    rclcpp::is_ros_compatible_type<Request>::value,
-    "Service Request type is not compatible with ROS 2 and cannot be used with a Client");
+    rclcpp::is_ros_compatible_service_type<ServiceT>::value,
+    "Service type is not compatible with ROS 2 and cannot be used with a Client");
 
-  static_assert(
-    rclcpp::is_ros_compatible_type<Response>::value,
-    "Service Response type is not compatible with ROS 2 and cannot be used with a Client");
-
-  /// ServiceT::Request::custom_type if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::custom_type::Request if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
-  using ServiceRequestType = typename rclcpp::TypeAdapter<Request>::custom_type;
-  /// ServiceT::Request::ros_message_type if ServiceT is a TypeAdapter, otherwise just the
+  using ServiceRequestType = typename rclcpp::TypeAdapter<ServiceT>::custom_type::Request;
+  /// ServiceT::ros_message_type::Request if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Request
   using ROSServiceRequestType =
-    typename rclcpp::TypeAdapter<Request>::ros_message_type;
-  /// ServiceT::Response::custom_type if ServiceT is a TypeAdapter, otherwise just the
+    typename rclcpp::TypeAdapter<ServiceT>::ros_message_type::Request;
+  /// ServiceT::custom_type::Response if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Response
-  using ServiceResponseType = typename rclcpp::TypeAdapter<Response>::custom_type;
-  /// ServiceT::Response::ros_message_type if ServiceT is a TypeAdapter, otherwise just the
+  using ServiceResponseType = typename rclcpp::TypeAdapter<ServiceT>::custom_type::Response;
+  /// ServiceT::ros_message_type::Response if ServiceT is a TypeAdapter, otherwise just the
   /// ServiceT::Response
   using ROSServiceResponseType =
-    typename rclcpp::TypeAdapter<Response>::ros_message_type;
+    typename rclcpp::TypeAdapter<ServiceT>::ros_message_type::Response;
 
-  using SharedRequest = typename ROSServiceRequestType::SharedPtr;
-  using SharedResponse = typename ROSServiceResponseType::SharedPtr;
+  using CustomSharedRequest = typename std::shared_ptr<ServiceRequestType>;
+  using CustomSharedResponse = typename std::shared_ptr<ServiceResponseType>;
 
-  using Promise = std::promise<SharedResponse>;
-  using PromiseWithRequest = std::promise<std::pair<SharedRequest, SharedResponse>>;
+  using ROSSharedRequest = typename ROSServiceRequestType::SharedPtr;
+  using ROSSharedResponse = typename ROSServiceResponseType::SharedPtr;
 
-  using SharedPromise = std::shared_ptr<Promise>;
-  using SharedPromiseWithRequest = std::shared_ptr<PromiseWithRequest>;
+  using SharedRequest [[deprecated("Use ROSSharedRequest instead of SharedRequest")]] =
+    ROSSharedRequest;
 
-  using Future = std::future<SharedResponse>;
-  using SharedFuture = std::shared_future<SharedResponse>;
-  using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
+  using SharedResponse [[deprecated("Use ROSSharedResponse instead of SharedResponse")]] =
+    ROSSharedResponse;
 
-  using CallbackType = std::function<void (SharedFuture)>;
-  using CallbackWithRequestType = std::function<void (SharedFutureWithRequest)>;
+  using CustomPromise = std::promise<CustomSharedResponse>;
+  using ROSPromise = std::promise<ROSSharedResponse>;
+
+  using Promise [[deprecated("Use ROSPromise instead of Promise")]] = ROSPromise;
+
+  using CustomTotalPromiseWithRequest =
+    std::promise<std::pair<CustomSharedRequest, CustomSharedResponse>>;
+  using ROSTotalPromiseWithRequest =
+    std::promise<std::pair<ROSSharedRequest, ROSSharedResponse>>;
+  using CustomROSPromiseWithRequest =
+    std::promise<std::pair<CustomSharedRequest, ROSSharedResponse>>;
+  using ROSCustomPromiseWithRequest =
+    std::promise<std::pair<ROSSharedRequest, CustomSharedResponse>>;
+
+  using PromiseWithRequest
+  [[deprecated("Use ROSTotalPromiseWithRequest instead of PromiseWithRequest")]] =
+    ROSTotalPromiseWithRequest;
+
+  using CustomSharedPromise = std::shared_ptr<CustomPromise>;
+  using ROSSharedPromise = std::shared_ptr<ROSPromise>;
+
+  using SharedPromise [[deprecated("Use ROSSharedPromise instead of SharedPromise")]] =
+    ROSSharedPromise;
+
+  using CustomTotalSharedPromiseWithRequest = std::shared_ptr<CustomTotalPromiseWithRequest>;
+  using ROSTotalSharedPromiseWithRequest = std::shared_ptr<ROSTotalPromiseWithRequest>;
+  using CustomROSSharedPromiseWithRequest = std::shared_ptr<CustomROSPromiseWithRequest>;
+  using ROSCustomSharedPromiseWithRequest = std::shared_ptr<ROSCustomPromiseWithRequest>;
+
+  using SharedPromiseWithRequest
+  [[deprecated("Use ROSTotalSharedPromiseWithRequest instead fo SharedPromiseWithRequest")]] =
+    ROSTotalSharedPromiseWithRequest;
+
+  using CustomFuture = std::future<CustomSharedResponse>;
+  using ROSFuture = std::future<ROSSharedResponse>;
+
+  using Future [[deprecated("Use ROSFuture instead of Future")]] =
+    ROSFuture;
+
+  using CustomSharedFuture = std::shared_future<CustomSharedResponse>;
+  using ROSSharedFuture = std::shared_future<ROSSharedResponse>;
+
+  using SharedFuture [[deprecated("Use ROSSharedFuture instead of SharedFuture")]] =
+    ROSSharedFuture;
+
+  using CustomTotalSharedFutureWithRequest =
+    std::shared_future<std::pair<CustomSharedRequest, CustomSharedResponse>>;
+  using ROSTotalSharedFutureWithRequest =
+    std::shared_future<std::pair<ROSSharedRequest, ROSSharedResponse>>;
+  using CustomROSSharedFutureWithRequest =
+    std::shared_future<std::pair<CustomSharedRequest, ROSSharedResponse>>;
+  using ROSCustomSharedFutureWithRequest =
+    std::shared_future<std::pair<ROSSharedRequest, CustomSharedResponse>>;
+
+  using SharedFutureWithRequest
+  [[deprecated("Use ROSTotalSharedFutureWithRequest instead of SharedFutureWithRequest")]] =
+    ROSTotalSharedFutureWithRequest;
+
+  using CustomCallbackType = std::function<void (CustomSharedFuture)>;
+  using ROSCallbackType = std::function<void (ROSSharedFuture)>;
+
+  using CallbackType [[deprecated("Use ROSCallbackType instead of CallbackType")]] =
+    ROSCallbackType;
+
+  using CustomTotalCallbackWithRequestType =
+    std::function<void (CustomTotalSharedFutureWithRequest)>;
+  using ROSTotalCallbackWithRequestType =
+    std::function<void (ROSTotalSharedFutureWithRequest)>;
+  using CustomROSCallbackWithRequestType =
+    std::function<void (CustomROSSharedFutureWithRequest)>;
+  using ROSCustomCallbackWithRequestType =
+    std::function<void (ROSCustomSharedFutureWithRequest)>;
+
+  using CallbackWithRequestType
+  [[deprecated("Use ROSTotalCallbackWithRequestType instead of CallbackWithRequestType")]] =
+    ROSTotalCallbackWithRequestType;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
@@ -429,57 +502,121 @@ public:
   /**
    * Public members:
    * - future: a std::future<SharedResponse>.
+   *   where SharedResponse is either ROSSharedResponse or CustomSharedResponse
    * - request_id: the request id associated with the future.
    *
    * All the other methods are equivalent to the ones std::future provides.
    */
-  struct FutureAndRequestId
-    : detail::FutureAndRequestId<std::future<SharedResponse>>
+  struct [[deprecated("Use ROSFutureAndRequestId instead of FutureAndRequestId")]]
+  FutureAndRequestId : detail::FutureAndRequestId<std::future<ROSSharedResponse>>
   {
-    using detail::FutureAndRequestId<std::future<SharedResponse>>::FutureAndRequestId;
-
-    /// Deprecated, use `.future.share()` instead.
-    /**
-     * Allow implicit conversions to `std::shared_future` by value.
-     * \deprecated
-     */
-    [[deprecated(
-      "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
-    operator SharedFuture() {return this->future.share();}
-
+    using detail::FutureAndRequestId<std::future<ROSSharedResponse>>::FutureAndRequestId;
     // delegate future like methods in the std::future impl_
 
     /// See std::future::share().
-    SharedFuture share() noexcept {return this->future.share();}
+    ROSSharedFuture share() noexcept {return this->future.share();}
+  };
+
+  struct ROSFutureAndRequestId
+    : detail::FutureAndRequestId<std::future<ROSSharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::future<ROSSharedResponse>>::FutureAndRequestId;
+    // delegate future like methods in the std::future impl_
+
+    /// See std::future::share().
+    ROSSharedFuture share() noexcept {return this->future.share();}
+  };
+
+  struct CustomFutureAndRequestId
+    : detail::FutureAndRequestId<std::future<CustomSharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::future<CustomSharedResponse>>::FutureAndRequestId;
+    // delegate future like methods in the std::future impl_
+
+    /// See std::future::share().
+    CustomSharedFuture share() noexcept {return this->future.share();}
   };
 
   /// A convenient Client::SharedFuture and request id pair.
   /**
    * Public members:
    * - future: a std::shared_future<SharedResponse>.
+   *   where SharedResponse is either ROSSharedResponse or CustomSharedResponse
    * - request_id: the request id associated with the future.
    *
    * All the other methods are equivalent to the ones std::shared_future provides.
    */
-  struct SharedFutureAndRequestId
-    : detail::FutureAndRequestId<std::shared_future<SharedResponse>>
+  struct [[deprecated("Use ROSSharedFutureAndRequestId instead of SharedFutureAndRequestId")]]
+  SharedFutureAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<ROSSharedResponse>>
   {
-    using detail::FutureAndRequestId<std::shared_future<SharedResponse>>::FutureAndRequestId;
+    using detail::FutureAndRequestId<std::shared_future<ROSSharedResponse>>::FutureAndRequestId;
+  };
+
+  struct ROSSharedFutureAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<ROSSharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::shared_future<ROSSharedResponse>>::FutureAndRequestId;
+  };
+
+  struct CustomSharedFutureAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<CustomSharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::shared_future<CustomSharedResponse>>::FutureAndRequestId;
   };
 
   /// A convenient Client::SharedFutureWithRequest and request id pair.
   /**
    * Public members:
-   * - future: a std::shared_future<SharedResponse>.
+   * - future: a std::shared_future<std::pair<SharedRequest, SharedResponse>>.
+   *   where SharedRequest, SharedResponse can be a mixture of ROS/Custom Typed
    * - request_id: the request id associated with the future.
    *
    * All the other methods are equivalent to the ones std::shared_future provides.
    */
-  struct SharedFutureWithRequestAndRequestId
+  struct
+  [[deprecated(
+    "Use ROSTotalSharedFutureWithRequest instead of SharedFutureWithRequestAndRequestId")]]
+  SharedFutureWithRequestAndRequestId
     : detail::FutureAndRequestId<std::shared_future<std::pair<SharedRequest, SharedResponse>>>
   {
     using detail::FutureAndRequestId<
       std::shared_future<std::pair<SharedRequest, SharedResponse>>
+    >::FutureAndRequestId;
+  };
+
+  struct ROSTotalSharedFutureWithRequestAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<std::pair<ROSSharedRequest, ROSSharedResponse>>>
+  {
+    using detail::FutureAndRequestId<
+      std::shared_future<std::pair<ROSSharedRequest, ROSSharedResponse>>
+    >::FutureAndRequestId;
+  };
+
+  struct CustomTotalSharedFutureWithRequestAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<std::pair<CustomSharedRequest,
+      CustomSharedResponse>>>
+  {
+    using detail::FutureAndRequestId<
+      std::shared_future<std::pair<CustomSharedRequest, CustomSharedResponse>>
+    >::FutureAndRequestId;
+  };
+
+  struct ROSCustomSharedFutureWithRequestAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<std::pair<ROSSharedRequest,
+      CustomSharedResponse>>>
+  {
+    using detail::FutureAndRequestId<
+      std::shared_future<std::pair<ROSSharedRequest, CustomSharedResponse>>
+    >::FutureAndRequestId;
+  };
+
+  struct CustomROSSharedFutureWithRequestAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<std::pair<CustomSharedRequest,
+      ROSSharedResponse>>>
+  {
+    using detail::FutureAndRequestId<
+      std::shared_future<std::pair<CustomSharedRequest, ROSSharedResponse>>
     >::FutureAndRequestId;
   };
 
@@ -572,15 +709,15 @@ public:
    */
   template<typename T>
   typename std::enable_if_t<
-    rclcpp::TypeAdapter<Response>::is_specialized::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
     std::is_same<T, ServiceResponseType>::value,
     bool
   >
   take_response(T & response_out, rmw_request_id_t & request_header_out)
   {
     ROSServiceResponseType ros_service_response_out;
-    rclcpp::TypeAdapter<Response>::convert_to_ros_message(
-        response_out, ros_service_response_out);
+    rclcpp::TypeAdapter<ServiceT>::convert_to_ros_service_response(
+      response_out, ros_service_response_out);
     return this->take_type_erased_response(&ros_service_response_out, request_header_out);
   }
 
@@ -591,7 +728,7 @@ public:
   std::shared_ptr<void>
   create_response() override
   {
-    return std::shared_ptr<void>(new Response());
+    return std::shared_ptr<void>(new ROSServiceResponseType());
   }
 
   /// Create a shared pointer with a rmw_request_id_t
@@ -622,26 +759,66 @@ public:
       return;
     }
     auto & value = *optional_pending_request;
-    auto typed_response = std::static_pointer_cast<ROSServiceResponseType>(
-      std::move(response));
-    if (std::holds_alternative<Promise>(value)) {
-      auto & promise = std::get<Promise>(value);
+    if (std::holds_alternative<ROSPromise>(value)) {
+      auto typed_response = std::static_pointer_cast<ROSServiceResponseType>(
+        std::move(response));
+      auto & promise = std::get<ROSPromise>(value);
+      promise.set_value(std::move(typed_response));
+    } else if (std::holds_alternative<CustomPromise>(value)) {
+      auto typed_response = std::static_pointer_cast<ServiceResponseType>(
+        std::move(response));
+      auto & promise = std::get<CustomPromise>(value);
       promise.set_value(std::move(typed_response));
     } else if (std::holds_alternative<CallbackTypeValueVariant>(value)) {
       auto & inner = std::get<CallbackTypeValueVariant>(value);
-      const auto & callback = std::get<CallbackType>(inner);
-      auto & promise = std::get<Promise>(inner);
-      auto & future = std::get<SharedFuture>(inner);
-      promise.set_value(std::move(typed_response));
-      callback(std::move(future));
+      if (inner.index() == 0) {
+        auto typed_response = std::static_pointer_cast<ROSServiceResponseType>(
+          std::move(response));
+        auto & inner_tuple =
+          std::get<std::tuple<ROSCallbackType, ROSSharedFuture, ROSPromise>>(inner);
+        const auto & callback = std::get<ROSCallbackType>(inner_tuple);
+        auto & promise = std::get<ROSPromise>(inner_tuple);
+        auto & future = std::get<ROSSharedFuture>(inner_tuple);
+        promise.set_value(std::move(typed_response));
+        callback(std::move(future));
+      } else if (inner.index() == 1) {
+        auto typed_response = std::static_pointer_cast<ServiceResponseType>(
+          std::move(response));
+        auto & inner_tuple =
+          std::get<std::tuple<CustomCallbackType, CustomSharedFuture, CustomPromise>>(inner);
+        const auto & callback = std::get<CustomCallbackType>(inner_tuple);
+        auto & promise = std::get<CustomPromise>(inner_tuple);
+        auto & future = std::get<CustomSharedFuture>(inner_tuple);
+        promise.set_value(std::move(typed_response));
+        callback(std::move(future));
+      }
     } else if (std::holds_alternative<CallbackWithRequestTypeValueVariant>(value)) {
       auto & inner = std::get<CallbackWithRequestTypeValueVariant>(value);
-      const auto & callback = std::get<CallbackWithRequestType>(inner);
-      auto & promise = std::get<PromiseWithRequest>(inner);
-      auto & future = std::get<SharedFutureWithRequest>(inner);
-      auto & request = std::get<SharedRequest>(inner);
-      promise.set_value(std::make_pair(std::move(request), std::move(typed_response)));
-      callback(std::move(future));
+      if (inner.index() == 0) {
+        auto typed_response = std::static_pointer_cast<ROSServiceResponseType>(
+          std::move(response));
+        auto & inner_tuple =
+          std::get<std::tuple<ROSTotalCallbackWithRequestType, ROSSharedRequest,
+            ROSTotalSharedFutureWithRequest, ROSTotalPromiseWithRequest>>(inner);
+        const auto & callback = std::get<ROSTotalCallbackWithRequestType>(inner_tuple);
+        auto & promise = std::get<ROSTotalPromiseWithRequest>(inner_tuple);
+        auto & future = std::get<ROSTotalSharedFutureWithRequest>(inner_tuple);
+        auto & request = std::get<ROSSharedRequest>(inner_tuple);
+        promise.set_value(std::make_pair(std::move(request), std::move(typed_response)));
+        callback(std::move(future));
+      } else if (inner.index() == 1) {
+        auto typed_response = std::static_pointer_cast<ServiceResponseType>(
+          std::move(response));
+        auto & inner_tuple =
+          std::get<std::tuple<CustomTotalCallbackWithRequestType, CustomSharedRequest,
+            CustomTotalSharedFutureWithRequest, CustomTotalPromiseWithRequest>>(inner);
+        const auto & callback = std::get<CustomTotalCallbackWithRequestType>(inner_tuple);
+        auto & promise = std::get<CustomTotalPromiseWithRequest>(inner_tuple);
+        auto & future = std::get<CustomTotalSharedFutureWithRequest>(inner_tuple);
+        auto & request = std::get<CustomSharedRequest>(inner_tuple);
+        promise.set_value(std::make_pair(std::move(request), std::move(typed_response)));
+        callback(std::move(future));
+      }
     }
   }
 
@@ -673,15 +850,34 @@ public:
    * \param[in] request request to be send.
    * \return a FutureAndRequestId instance.
    */
-  FutureAndRequestId
-  async_send_request(SharedRequest request)
+  template<typename T>
+  typename std::enable_if_t<
+    std::is_same<T, ROSSharedRequest>::value,
+    ROSFutureAndRequestId
+  >
+  async_send_request(T request)
   {
-    Promise promise;
+    ROSPromise promise;
     auto future = promise.get_future();
     auto req_id = async_send_request_impl(
       *request,
       std::move(promise));
-    return FutureAndRequestId(std::move(future), req_id);
+    return ROSFutureAndRequestId(std::move(future), req_id);
+  }
+
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
+    std::is_same<T, CustomSharedRequest>::value,
+    CustomFutureAndRequestId>
+  async_send_request(T request)
+  {
+    CustomPromise promise;
+    auto future = promise.get_future();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::move(promise));
+    return CustomFutureAndRequestId(std::move(future), req_id);
   }
 
   /// Send a request to the service server and schedule a callback in the executor.
@@ -699,27 +895,47 @@ public:
    * \param[in] cb callback that will be called when we get a response for this request.
    * \return the request id representing the request just sent.
    */
-  template<
-    typename CallbackT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        CallbackType
-      >::value
-    >::type * = nullptr
+  template<typename CallbackT>
+  typename std::enable_if_t<
+    rclcpp::function_traits::same_arguments<
+      CallbackT,
+      ROSCallbackType
+    >::value,
+    ROSSharedFutureAndRequestId
   >
-  SharedFutureAndRequestId
-  async_send_request(SharedRequest request, CallbackT && cb)
+  async_send_request(ROSSharedRequest request, CallbackT && cb)
   {
-    Promise promise;
+    ROSPromise promise;
     auto shared_future = promise.get_future().share();
     auto req_id = async_send_request_impl(
       *request,
       std::make_tuple(
-        CallbackType{std::forward<CallbackT>(cb)},
+        ROSCallbackType{std::forward<CallbackT>(cb)},
         shared_future,
         std::move(promise)));
-    return SharedFutureAndRequestId{std::move(shared_future), req_id};
+    return ROSSharedFutureAndRequestId{std::move(shared_future), req_id};
+  }
+
+  template<typename CallbackT>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
+    rclcpp::function_traits::same_arguments<
+      CallbackT,
+      CustomCallbackType
+    >::value,
+    CustomSharedFutureAndRequestId
+  >
+  async_send_request(CustomSharedRequest request, CallbackT && cb)
+  {
+    CustomPromise promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::make_tuple(
+        CustomCallbackType{std::forward<CallbackT>(cb)},
+        shared_future,
+        std::move(promise)));
+    return CustomSharedFutureAndRequestId{std::move(shared_future), req_id};
   }
 
   /// Send a request to the service server and schedule a callback in the executor.
@@ -730,28 +946,49 @@ public:
    * \param[in] cb callback that will be called when we get a response for this request.
    * \return the request id representing the request just sent.
    */
-  template<
-    typename CallbackT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        CallbackWithRequestType
-      >::value
-    >::type * = nullptr
+  template<typename CallbackT>
+  typename std::enable_if_t<
+    rclcpp::function_traits::same_arguments<
+      CallbackT,
+      ROSTotalCallbackWithRequestType
+    >::value,
+    ROSTotalSharedFutureWithRequestAndRequestId
   >
-  SharedFutureWithRequestAndRequestId
-  async_send_request(SharedRequest request, CallbackT && cb)
+  async_send_request(ROSSharedRequest request, CallbackT && cb)
   {
-    PromiseWithRequest promise;
+    ROSTotalPromiseWithRequest promise;
     auto shared_future = promise.get_future().share();
     auto req_id = async_send_request_impl(
       *request,
       std::make_tuple(
-        CallbackWithRequestType{std::forward<CallbackT>(cb)},
+        ROSTotalCallbackWithRequestType{std::forward<CallbackT>(cb)},
         request,
         shared_future,
         std::move(promise)));
-    return SharedFutureWithRequestAndRequestId{std::move(shared_future), req_id};
+    return ROSTotalSharedFutureWithRequestAndRequestId{std::move(shared_future), req_id};
+  }
+
+  template<typename CallbackT>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
+    rclcpp::function_traits::same_arguments<
+      CallbackT,
+      CustomTotalCallbackWithRequestType
+    >::value,
+    CustomTotalSharedFutureWithRequestAndRequestId
+  >
+  async_send_request(CustomSharedRequest request, CallbackT && cb)
+  {
+    CustomTotalPromiseWithRequest promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
+      *request,
+      std::make_tuple(
+        CustomTotalCallbackWithRequestType{std::forward<CallbackT>(cb)},
+        request,
+        shared_future,
+        std::move(promise)));
+    return CustomTotalSharedFutureWithRequestAndRequestId{std::move(shared_future), req_id};
   }
 
   /// Cleanup a pending request.
@@ -765,8 +1002,9 @@ public:
    * \param[in] request_id request id returned by async_send_request().
    * \return true when a pending request was removed, false if not (e.g. a response was received).
    */
-  bool
-  remove_pending_request(int64_t request_id)
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, int64_t>::value, bool>
+  remove_pending_request(T request_id)
   {
     std::lock_guard guard(pending_requests_mutex_);
     return pending_requests_.erase(request_id) != 0u;
@@ -778,8 +1016,17 @@ public:
    *
    * `Client::remove_pending_request(this, future.request_id)`.
    */
-  bool
-  remove_pending_request(const FutureAndRequestId & future)
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, ROSFutureAndRequestId>::value, bool>
+  remove_pending_request(const T & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, CustomFutureAndRequestId>::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value, bool>
+  remove_pending_request(const T & future)
   {
     return this->remove_pending_request(future.request_id);
   }
@@ -790,8 +1037,17 @@ public:
    *
    * `Client::remove_pending_request(this, future.request_id)`.
    */
-  bool
-  remove_pending_request(const SharedFutureAndRequestId & future)
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, ROSSharedFutureAndRequestId>::value, bool>
+  remove_pending_request(const T & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, CustomSharedFutureAndRequestId>::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value, bool>
+  remove_pending_request(const T & future)
   {
     return this->remove_pending_request(future.request_id);
   }
@@ -802,8 +1058,35 @@ public:
    *
    * `Client::remove_pending_request(this, future.request_id)`.
    */
-  bool
-  remove_pending_request(const SharedFutureWithRequestAndRequestId & future)
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, ROSTotalSharedFutureWithRequestAndRequestId>::value,
+    bool>
+  remove_pending_request(const T & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T,
+    CustomTotalSharedFutureWithRequestAndRequestId>::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value, bool>
+  remove_pending_request(const T & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, ROSCustomSharedFutureWithRequestAndRequestId>::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value, bool>
+  remove_pending_request(const T & future)
+  {
+    return this->remove_pending_request(future.request_id);
+  }
+
+  template<typename T>
+  typename std::enable_if_t<std::is_same<T, CustomROSSharedFutureWithRequestAndRequestId>::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value, bool>
+  remove_pending_request(const T & future)
   {
     return this->remove_pending_request(future.request_id);
   }
@@ -877,14 +1160,74 @@ public:
   }
 
 protected:
-  using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
-  using CallbackWithRequestTypeValueVariant = std::tuple<
-    CallbackWithRequestType, SharedRequest, SharedFutureWithRequest, PromiseWithRequest>;
+  template<bool is_adapted_type = rclcpp::TypeAdapter<ServiceT>::is_specialized::value>
+  struct CallbackWithRequestTypeValueVariantHelper {};
 
-  using CallbackInfoVariant = std::variant<
-    std::promise<SharedResponse>,
-    CallbackTypeValueVariant,
-    CallbackWithRequestTypeValueVariant>;
+  template<>
+  struct CallbackWithRequestTypeValueVariantHelper<false>
+  {
+    using CallbackWithRequestTypeValueVariant = std::variant<
+      std::tuple<ROSTotalCallbackWithRequestType, ROSSharedRequest,
+      ROSTotalSharedFutureWithRequest, ROSTotalPromiseWithRequest>>;
+  };
+
+  template<>
+  struct CallbackWithRequestTypeValueVariantHelper<true>
+  {
+    using CallbackWithRequestTypeValueVariant = std::variant<
+      std::tuple<ROSTotalCallbackWithRequestType, ROSSharedRequest,
+      ROSTotalSharedFutureWithRequest, ROSTotalPromiseWithRequest>,
+      std::tuple<CustomTotalCallbackWithRequestType, CustomSharedRequest,
+      CustomTotalSharedFutureWithRequest, CustomTotalPromiseWithRequest>>;
+  };
+
+  using CallbackWithRequestTypeValueVariant =
+    typename CallbackWithRequestTypeValueVariantHelper<>::CallbackWithRequestTypeValueVariant;
+
+  template<bool is_adapted_type = rclcpp::TypeAdapter<ServiceT>::is_specialized::value>
+  struct CallbackTypeValueVariantHelper {};
+
+  template<>
+  struct CallbackTypeValueVariantHelper<false>
+  {
+    using CallbackTypeValueVariant = std::variant<std::tuple<ROSCallbackType, ROSSharedFuture,
+        ROSPromise>>;
+  };
+
+  template<>
+  struct CallbackTypeValueVariantHelper<true>
+  {
+    using CallbackTypeValueVariant = std::variant<
+      std::tuple<ROSCallbackType, ROSSharedFuture, ROSPromise>,
+      std::tuple<CustomCallbackType, CustomSharedFuture, CustomPromise>>;
+  };
+
+  using CallbackTypeValueVariant = typename CallbackTypeValueVariantHelper<>::
+    CallbackTypeValueVariant;
+
+  template<bool is_adapted_type = rclcpp::TypeAdapter<ServiceT>::is_specialized::value>
+  struct CallbackInfoVariantHelper {};
+
+  template<>
+  struct CallbackInfoVariantHelper<false>
+  {
+    using CallbackInfoVariant = std::variant<
+      ROSPromise,
+      CallbackTypeValueVariant,
+      CallbackWithRequestTypeValueVariant>;
+  };
+
+  template<>
+  struct CallbackInfoVariantHelper<true>
+  {
+    using CallbackInfoVariant = std::variant<
+      ROSPromise,
+      CustomPromise,
+      CallbackTypeValueVariant,
+      CallbackWithRequestTypeValueVariant>;
+  };
+
+  using CallbackInfoVariant = typename CallbackInfoVariantHelper<>::CallbackInfoVariant;
 
   template<typename T>
   typename std::enable_if_t<
@@ -908,7 +1251,7 @@ protected:
 
   template<typename T>
   typename std::enable_if_t<
-    rclcpp::TypeAdapter<Request>::is_specialized::value &&
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
     std::is_same<T, ServiceRequestType>::value,
     int64_t
   >
@@ -918,11 +1261,11 @@ protected:
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
 
     ROSServiceRequestType ros_service_request;
-    rclcpp::TypeAdapter<Request>::convert_to_ros_message(
-        request, ros_service_request);
+    rclcpp::TypeAdapter<ServiceT>::convert_to_ros_service_request(
+      request, ros_service_request);
 
     rcl_ret_t ret = rcl_send_request(
-        get_client_handle().get(), &ros_service_request, &sequence_number);
+      get_client_handle().get(), &ros_service_request, &sequence_number);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }

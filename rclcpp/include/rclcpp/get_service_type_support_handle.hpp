@@ -23,6 +23,7 @@
 #include "rosidl_typesupport_cpp/service_type_support.hpp"
 
 #include "rclcpp/type_adapter.hpp"
+#include "type_adapter.hpp"
 
 namespace rclcpp
 {
@@ -53,80 +54,19 @@ get_service_type_support_handle()
   return *handle;
 }
 
-/// The following checks will fix for the 4 different ways you could assemble
-/// the TypeAdapter struct when using custom or ROS types.
+/// Checking the TypeAdapter struct when using custom or ROS types.
 template<typename AdaptedTypeStruct>
 constexpr
 std::enable_if_t<
   !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
-  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
+  rclcpp::TypeAdapter<AdaptedTypeStruct>::is_specialized::value,
   const rosidl_service_type_support_t &
 >
 get_service_type_support_handle()
 {
-  struct AdaptedTypeStructTemp
-  {
-      using Request =
-        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
-      using Response =
-        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
-  };
+  using CustomType = typename TypeAdapter<AdaptedTypeStruct>::ros_message_type;
+  auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<CustomType>();
 
-  auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
-    >();
-  if (!handle) {
-    throw std::runtime_error("Type support handle unexpectedly nullptr");
-  }
-  return *handle;
-}
-
-template<typename AdaptedTypeStruct>
-constexpr
-std::enable_if_t<
-  !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  !rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
-  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
-  const rosidl_service_type_support_t &
->
-get_service_type_support_handle()
-{
-  struct AdaptedTypeStructTemp
-  {
-      using Request =
-        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::custom_type;
-      using Response =
-        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::ros_message_type;
-  };
-
-  auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
-    >();
-  if (!handle) {
-    throw std::runtime_error("Type support handle unexpectedly nullptr");
-  }
-  return *handle;
-}
-
-template<typename AdaptedTypeStruct>
-constexpr
-std::enable_if_t<
-  !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
-  !rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
-  const rosidl_service_type_support_t &
->
-get_service_type_support_handle()
-{
-  struct AdaptedTypeStructTemp
-  {
-      using Request =
-        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Request>::ros_message_type;
-      using Response =
-        typename rclcpp::TypeAdapter<typename AdaptedTypeStruct::Response>::custom_type;
-  };
-
-  auto handle = rosidl_typesupport_cpp::get_service_type_support_handle<AdaptedTypeStructTemp
-    >();
   if (!handle) {
     throw std::runtime_error("Type support handle unexpectedly nullptr");
   }
@@ -140,8 +80,7 @@ template<typename AdaptedTypeStruct>
 constexpr
 typename std::enable_if_t<
   !rosidl_generator_traits::is_service<AdaptedTypeStruct>::value &&
-  !TypeAdapter<typename AdaptedTypeStruct::Request>::is_specialized::value &&
-  !TypeAdapter<typename AdaptedTypeStruct::Response>::is_specialized::value,
+  !TypeAdapter<AdaptedTypeStruct>::is_specialized::value,
   const rosidl_service_type_support_t &
 >
 get_service_type_support_handle()

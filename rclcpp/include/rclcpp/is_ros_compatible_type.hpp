@@ -35,8 +35,7 @@ struct is_ros_compatible_service_type
 {
   static constexpr bool value =
     rosidl_generator_traits::is_service<T>::value ||
-    rclcpp::TypeAdapter<typename T::Request>::is_specialized::value ||
-    rclcpp::TypeAdapter<typename T::Request>::is_specialized::value;
+    rclcpp::TypeAdapter<T>::is_specialized::value;
 };
 
 }  // namespace rclcpp
