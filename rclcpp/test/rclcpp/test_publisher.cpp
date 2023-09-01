@@ -296,6 +296,20 @@ TEST_F(TestPublisher, basic_getters) {
   }
 }
 
+TEST_F(TestPublisher, intra_process_comm_state_publisher) {
+  initialize();
+  // intra-process comm is explicitly disabled
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10, options);
+  EXPECT_FALSE(publisher->is_intra_process_comm_enabled());
+
+  // intra-process comm is explicitly enabled
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("topic", 10, options);
+  EXPECT_TRUE(pub->is_intra_process_comm_enabled());
+}
+
 TEST_F(TestPublisher, serialized_message_publish) {
   initialize();
   rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;

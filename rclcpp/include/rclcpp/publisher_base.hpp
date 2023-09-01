@@ -176,9 +176,10 @@ public:
   bool
   can_loan_messages() const;
 
-  /// Check if the publisher has intraprocess comms enabled
+  /// Check if the publisher has intra-process comms enabled
   /**
-   * This is just a getter method for the intraprocess subscription state
+   * This is just a getter method for the intra-process publisher state.
+   * \return True if intra-process is enabled on the publisher.
    */
   RCLCPP_PUBLIC
   bool
