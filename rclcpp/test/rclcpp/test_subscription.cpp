@@ -431,21 +431,37 @@ TEST_F(TestSubscription, on_new_message_callback) {
 
 TEST_F(TestSubscription, intra_process_comm_state_subscription) {
   initialize();
-  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
-  // intra-process comm is explicitly disabled
-  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
-  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
-  auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
-    "topic", 10,
-    do_nothing, options);
-  EXPECT_FALSE(subscription->is_intra_process_comm_enabled());
-  // intra-process comm is explicitly enabled
-  (void)subscription;
-  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
-  subscription = node_->create_subscription<test_msgs::msg::Empty>(
-    "topic", 10,
-    do_nothing, options);
-  EXPECT_TRUE(subscription->is_intra_process_comm_enabled());
+  {
+    // intra-process comm is explicitly disabled
+    auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
+    rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+    options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
+      "topic", 10,
+      do_nothing, options);
+    EXPECT_FALSE(subscription->is_intra_process_comm_enabled());
+  }
+  {
+    // intra-process comm is explicitly enabled
+    auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
+    rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+    options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+    auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
+      "topic", 10,
+      do_nothing, options);
+    EXPECT_TRUE(subscription->is_intra_process_comm_enabled());
+  }
+  {
+    initialize();
+    // intra-process comm is found through node default
+    auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
+    rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+    options.use_intra_process_comm = rclcpp::IntraProcessSetting::NodeDefault;
+    auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
+      "topic", 10,
+      do_nothing, options);
+    EXPECT_FALSE(subscription->is_intra_process_comm_enabled());
+  }
 }
 
 /*
