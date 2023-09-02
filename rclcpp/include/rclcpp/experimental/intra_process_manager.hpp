@@ -481,8 +481,8 @@ private:
 
       if constexpr (rclcpp::TypeAdapter<MessageT, ROSMessageType>::is_specialized::value) {
         ROSMessageTypeAllocator ros_message_alloc(allocator);
-        auto ptr = ros_message_alloc.allocate(1);
-        ros_message_alloc.construct(ptr);
+        auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_alloc, 1);
+        ROSMessageTypeAllocatorTraits::construct(ros_message_alloc, ptr);
         ROSMessageTypeDeleter deleter;
         allocator::set_allocator_for_deleter(&deleter, &allocator);
         rclcpp::TypeAdapter<MessageT, ROSMessageType>::convert_to_ros_message(*message, *ptr);
