@@ -326,12 +326,6 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
-    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
-      // In this case, the message will be delivered via intra process and
-      // we should ignore this copy of the message.
-      return;
-    }
-
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
       // get current time before executing callback to
@@ -341,15 +335,10 @@ public:
 
     any_callback_.dispatch(serialized_message, message_info);
 
-    ROSMessageType deserialized_message;
-    auto serializer = rclcpp::Serialization<ROSMessageType>();
-    serializer.deserialize_message(serialized_message.get(), &deserialized_message);
-
-
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(deserialized_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 
