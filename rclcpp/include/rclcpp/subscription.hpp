@@ -36,6 +36,7 @@
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
+#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_info.hpp"
@@ -359,6 +360,25 @@ public:
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
       subscription_topic_statistics_->handle_message(*typed_message, time);
     }
+  }
+
+  rclcpp::LoanedMessage<ROSMessageType> *
+  take_loaned_message(
+    rclcpp::LoanedMessage<ROSMessageType> & loaned_message,
+    rclcpp::MessageInfo & message_info)
+  {
+    rcl_ret_t ret = rcl_take_loaned_message(
+      get_subscription_handle().get(),
+      reinterpret_cast<void **>(loaned_message.release().get()),
+      &message_info.get_rmw_message_info(),
+      nullptr);
+
+    if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+      return nullptr;
+    } else if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+    return &loaned_message;
   }
 
   /// Return the borrowed message.
