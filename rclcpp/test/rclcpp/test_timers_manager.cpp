@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -215,7 +216,7 @@ TEST_F(TestTimersManager, timers_thread)
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
-  size_t t1_runs = 0;
+  int t1_runs = 0;
   auto t1 = TimerT::make_shared(
     1ms,
     [&t1_runs]() {
@@ -223,7 +224,7 @@ TEST_F(TestTimersManager, timers_thread)
     },
     rclcpp::contexts::get_global_default_context());
 
-  size_t t2_runs = 0;
+  int t2_runs = 0;
   auto t2 = TimerT::make_shared(
     1ms,
     [&t2_runs]() {
@@ -242,6 +243,7 @@ TEST_F(TestTimersManager, timers_thread)
 
   EXPECT_LT(1u, t1_runs);
   EXPECT_LT(1u, t2_runs);
+  EXPECT_LE(std::abs(t1_runs - t2_runs), 1u);
 }
 
 TEST_F(TestTimersManager, destructor)
