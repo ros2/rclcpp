@@ -852,6 +852,86 @@ TEST_F(TestClientAgainstServer, async_cancel_some_goals_with_callback)
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
 }
 
+TEST_F(TestClientAgainstServer, deadlock_in_callbacks)
+{
+  std::atomic<bool> feedback_callback_called = false;
+  std::atomic<bool> response_callback_called = false;
+  std::atomic<bool> result_callback_called = false;
+  std::atomic<bool> no_deadlock = false;
+
+  std::thread tr = std::thread(
+    [&]() {
+      auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+      ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+      ActionGoal goal;
+
+      using GoalHandle = rclcpp_action::ClientGoalHandle<ActionType>;
+      rclcpp_action::Client<ActionType>::SendGoalOptions ops;
+      ops.feedback_callback =
+      [&feedback_callback_called](const GoalHandle::SharedPtr handle,
+      ActionType::Feedback::ConstSharedPtr) {
+        // call functions on the handle that acquire the lock
+        handle->get_status();
+        handle->is_feedback_aware();
+        handle->is_result_aware();
+
+        feedback_callback_called = true;
+      };
+      ops.goal_response_callback = [&response_callback_called](
+        const GoalHandle::SharedPtr & handle) {
+        // call functions on the handle that acquire the lock
+        handle->get_status();
+        handle->is_feedback_aware();
+        handle->is_result_aware();
+
+        response_callback_called = true;
+      };
+      ops.result_callback = [&result_callback_called](
+        const GoalHandle::WrappedResult &) {
+        result_callback_called = true;
+      };
+
+      goal.order = 6;
+      auto future_goal_handle = action_client->async_send_goal(goal, ops);
+      dual_spin_until_future_complete(future_goal_handle);
+      auto goal_handle = future_goal_handle.get();
+
+      ASSERT_TRUE(goal_handle);
+
+      ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(2)));
+
+      auto result_future = action_client->async_get_result(goal_handle);
+      dual_spin_until_future_complete(result_future);
+
+      EXPECT_TRUE(result_future.valid());
+      auto result = result_future.get();
+
+      no_deadlock = true;
+    });
+
+  auto start_time = std::chrono::system_clock::now();
+
+  while (std::chrono::system_clock::now() - start_time < std::chrono::milliseconds(2000) &&
+    !no_deadlock)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  if (no_deadlock) {
+    tr.join();
+  } else {
+    // In case of a failure, the thread is assumed to be in a deadlock.
+    // We detach the thread so we don't block further tests.
+    tr.detach();
+  }
+
+  EXPECT_TRUE(no_deadlock);
+  EXPECT_TRUE(response_callback_called);
+  EXPECT_TRUE(result_callback_called);
+  EXPECT_TRUE(feedback_callback_called);
+}
+
 TEST_F(TestClientAgainstServer, send_rcl_errors)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
