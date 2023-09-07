@@ -28,8 +28,8 @@ using rclcpp::experimental::TimersManager;
 TimersManager::TimersManager(
   std::shared_ptr<rclcpp::Context> context,
   std::function<void(const rclcpp::TimerBase *)> on_ready_callback)
-: context_(context),
-  on_ready_callback_(on_ready_callback)
+: on_ready_callback_(on_ready_callback),
+  context_(context)
 {
 }
 

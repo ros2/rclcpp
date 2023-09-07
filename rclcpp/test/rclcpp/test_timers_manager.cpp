@@ -243,7 +243,7 @@ TEST_F(TestTimersManager, timers_thread)
 
   EXPECT_LT(1u, t1_runs);
   EXPECT_LT(1u, t2_runs);
-  EXPECT_LE(std::abs(t1_runs - t2_runs), 1u);
+  EXPECT_LE(std::abs(t1_runs - t2_runs), 1);
 }
 
 TEST_F(TestTimersManager, destructor)
