@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* add logger level service to lifecycle node. (`#2277 <https://github.com/ros2/rclcpp/issues/2277>`_)
+* Contributors: Tomoya Fujita
+
 22.1.0 (2023-08-21)
 -------------------
 * Stop using constref signature of benchmark DoNotOptimize. (`#2238 <https://github.com/ros2/rclcpp/issues/2238>`_)

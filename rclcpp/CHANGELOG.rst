@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Topic correct typeadapter deduction (`#2294 <https://github.com/ros2/rclcpp/issues/2294>`_)
+* Fix C++20 allocator construct deprecation (`#2292 <https://github.com/ros2/rclcpp/issues/2292>`_)
+* Make Rate to select the clock to work with (`#2123 <https://github.com/ros2/rclcpp/issues/2123>`_)
+* Correct the position of a comment. (`#2290 <https://github.com/ros2/rclcpp/issues/2290>`_)
+* Remove unnecessary lambda captures in the tests. (`#2289 <https://github.com/ros2/rclcpp/issues/2289>`_)
+* Add rcl_logging_interface as an explicit dependency. (`#2284 <https://github.com/ros2/rclcpp/issues/2284>`_)
+* Revamp list_parameters to be more efficient and easier to read. (`#2282 <https://github.com/ros2/rclcpp/issues/2282>`_)
+* Contributors: AiVerisimilitude, Alexey Merzlyakov, Chen Lihui, Chris Lalancette, Jiaqi Li
+
 22.1.0 (2023-08-21)
 -------------------
 * Do not crash Executor when send_response fails due to client failure. (`#2276 <https://github.com/ros2/rclcpp/issues/2276>`_)
