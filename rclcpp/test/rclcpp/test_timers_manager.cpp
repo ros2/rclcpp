@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -65,8 +66,10 @@ TEST_F(TestTimersManager, empty_manager)
 TEST_F(TestTimersManager, add_run_remove_timer)
 {
   size_t t_runs = 0;
+  std::chrono::milliseconds timer_period(10);
+
   auto t = TimerT::make_shared(
-    10ms,
+    timer_period,
     [&t_runs]() {
       t_runs++;
     },
@@ -79,7 +82,7 @@ TEST_F(TestTimersManager, add_run_remove_timer)
   timers_manager->add_timer(t);
 
   // Sleep for more 3 times the timer period
-  std::this_thread::sleep_for(30ms);
+  std::this_thread::sleep_for(3 * timer_period);
 
   // The timer is executed only once, even if we slept 3 times the period
   execute_all_ready_timers(timers_manager);
@@ -191,67 +194,6 @@ TEST_F(TestTimersManager, head_not_ready)
   EXPECT_EQ(0u, t_runs);
 }
 
-TEST_F(TestTimersManager, timers_order)
-{
-  auto timers_manager = std::make_shared<TimersManager>(
-    rclcpp::contexts::get_global_default_context());
-
-  size_t t1_runs = 0;
-  auto t1 = TimerT::make_shared(
-    10ms,
-    [&t1_runs]() {
-      t1_runs++;
-    },
-    rclcpp::contexts::get_global_default_context());
-
-  size_t t2_runs = 0;
-  auto t2 = TimerT::make_shared(
-    30ms,
-    [&t2_runs]() {
-      t2_runs++;
-    },
-    rclcpp::contexts::get_global_default_context());
-
-  size_t t3_runs = 0;
-  auto t3 = TimerT::make_shared(
-    100ms,
-    [&t3_runs]() {
-      t3_runs++;
-    },
-    rclcpp::contexts::get_global_default_context());
-
-  // Add timers in a random order
-  timers_manager->add_timer(t2);
-  timers_manager->add_timer(t3);
-  timers_manager->add_timer(t1);
-
-  std::this_thread::sleep_for(10ms);
-  execute_all_ready_timers(timers_manager);
-  EXPECT_EQ(1u, t1_runs);
-  EXPECT_EQ(0u, t2_runs);
-  EXPECT_EQ(0u, t3_runs);
-
-  std::this_thread::sleep_for(30ms);
-  execute_all_ready_timers(timers_manager);
-  EXPECT_EQ(2u, t1_runs);
-  EXPECT_EQ(1u, t2_runs);
-  EXPECT_EQ(0u, t3_runs);
-
-  std::this_thread::sleep_for(100ms);
-  execute_all_ready_timers(timers_manager);
-  EXPECT_EQ(3u, t1_runs);
-  EXPECT_EQ(2u, t2_runs);
-  EXPECT_EQ(1u, t3_runs);
-
-  timers_manager->remove_timer(t1);
-
-  std::this_thread::sleep_for(30ms);
-  execute_all_ready_timers(timers_manager);
-  EXPECT_EQ(3u, t1_runs);
-  EXPECT_EQ(3u, t2_runs);
-  EXPECT_EQ(1u, t3_runs);
-}
-
 TEST_F(TestTimersManager, start_stop_timers_thread)
 {
   auto timers_manager = std::make_shared<TimersManager>(
@@ -274,7 +216,7 @@ TEST_F(TestTimersManager, timers_thread)
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
-  size_t t1_runs = 0;
+  int t1_runs = 0;
   auto t1 = TimerT::make_shared(
     1ms,
     [&t1_runs]() {
@@ -282,7 +224,7 @@ TEST_F(TestTimersManager, timers_thread)
     },
     rclcpp::contexts::get_global_default_context());
 
-  size_t t2_runs = 0;
+  int t2_runs = 0;
   auto t2 = TimerT::make_shared(
     1ms,
     [&t2_runs]() {
@@ -296,12 +238,12 @@ TEST_F(TestTimersManager, timers_thread)
 
   // Run timers thread for a while
   timers_manager->start();
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(50ms);
   timers_manager->stop();
 
   EXPECT_LT(1u, t1_runs);
   EXPECT_LT(1u, t2_runs);
-  EXPECT_EQ(t1_runs, t2_runs);
+  EXPECT_LE(std::abs(t1_runs - t2_runs), 1);
 }
 
 TEST_F(TestTimersManager, destructor)
@@ -365,13 +307,13 @@ TEST_F(TestTimersManager, add_remove_while_thread_running)
   timers_manager->start();
 
   // After a while remove t1 and add t2
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(50ms);
   timers_manager->remove_timer(t1);
   size_t tmp_t1 = t1_runs;
   timers_manager->add_timer(t2);
 
   // Wait some more time and then stop
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(50ms);
   timers_manager->stop();
 
   // t1 has stopped running

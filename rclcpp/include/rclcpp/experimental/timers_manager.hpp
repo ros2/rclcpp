@@ -527,7 +527,7 @@ private:
   void execute_ready_timers_unsafe();
 
   // Callback to be called when timer is ready
-  std::function<void(const rclcpp::TimerBase *)> on_ready_callback_ = nullptr;
+  std::function<void(const rclcpp::TimerBase *)> on_ready_callback_;
 
   // Thread used to run the timers execution task
   std::thread timers_thread_;
