@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+22.2.0 (2023-09-07)
+-------------------
 * Correct the position of a comment. (`#2290 <https://github.com/ros2/rclcpp/issues/2290>`_)
 * Fix a typo in a comment. (`#2283 <https://github.com/ros2/rclcpp/issues/2283>`_)
 * doc fix: call `canceled` only after goal state is in canceling. (`#2266 <https://github.com/ros2/rclcpp/issues/2266>`_)

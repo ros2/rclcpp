@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+22.2.0 (2023-09-07)
+-------------------
 * Topic correct typeadapter deduction (`#2294 <https://github.com/ros2/rclcpp/issues/2294>`_)
 * Fix C++20 allocator construct deprecation (`#2292 <https://github.com/ros2/rclcpp/issues/2292>`_)
 * Make Rate to select the clock to work with (`#2123 <https://github.com/ros2/rclcpp/issues/2123>`_)

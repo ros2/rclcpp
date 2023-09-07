@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+22.2.0 (2023-09-07)
+-------------------
 * add logger level service to lifecycle node. (`#2277 <https://github.com/ros2/rclcpp/issues/2277>`_)
 * Contributors: Tomoya Fujita
 
