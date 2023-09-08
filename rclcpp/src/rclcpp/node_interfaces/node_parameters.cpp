@@ -1059,7 +1059,7 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
               if (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) {
                 return true;
               }
-              std::string substr = kv.first.substr(prefix.length());
+              std::string substr = kv.first.substr(prefix.length() + 1);
               return separators_less_than_depth(substr);
             }
             return false;

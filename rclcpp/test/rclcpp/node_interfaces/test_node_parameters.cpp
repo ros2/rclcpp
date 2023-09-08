@@ -95,7 +95,7 @@ TEST_F(TestNodeParameters, list_parameters)
     std::find(list_result2.names.begin(), list_result2.names.end(), parameter_name),
     list_result2.names.end());
 
-  // Check prefixes
+  // Check prefixes and the depth relative to the given prefixes
   const std::string parameter_name2 = "prefix.new_parameter";
   const rclcpp::ParameterValue value2(true);
   const rcl_interfaces::msg::ParameterDescriptor descriptor2;
@@ -103,7 +103,7 @@ TEST_F(TestNodeParameters, list_parameters)
     node_parameters->declare_parameter(parameter_name2, value2, descriptor2, false);
   EXPECT_EQ(value.get<bool>(), added_parameter_value.get<bool>());
   prefixes = {"prefix"};
-  auto list_result3 = node_parameters->list_parameters(prefixes, 2u);
+  auto list_result3 = node_parameters->list_parameters(prefixes, 1u);
   EXPECT_EQ(1u, list_result3.names.size());
   EXPECT_NE(
     std::find(list_result3.names.begin(), list_result3.names.end(), parameter_name2),
