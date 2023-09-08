@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+23.0.0 (2023-09-08)
+-------------------
 * Update API docs links in package READMEs (`#2302 <https://github.com/ros2/rclcpp/issues/2302>`_)
 * fix(ClientGoalHandle): Made mutex recursive to prevent deadlocks (`#2267 <https://github.com/ros2/rclcpp/issues/2267>`_)
 * Contributors: Christophe Bedard, jmachowinski

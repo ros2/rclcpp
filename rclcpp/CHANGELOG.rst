@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+23.0.0 (2023-09-08)
+-------------------
 * Fix the return type of Rate::period. (`#2301 <https://github.com/ros2/rclcpp/issues/2301>`_)
 * Update API docs links in package READMEs (`#2302 <https://github.com/ros2/rclcpp/issues/2302>`_)
 * Cleanup flaky timers_manager tests. (`#2299 <https://github.com/ros2/rclcpp/issues/2299>`_)
