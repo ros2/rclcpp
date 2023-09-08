@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Do not crash Executor when send_response fails due to client failure. (`#2279 <https://github.com/ros2/rclcpp/issues/2279>`_)
+* Add new node interface TypeDescriptionsInterface to provide GetTypeDescription service (`#2236 <https://github.com/ros2/rclcpp/issues/2236>`_)
+* Contributors: Emerson Knapp, Tomoya Fujita, Zang MingJie
+
 21.0.2 (2023-07-14)
 -------------------
 * Fix warnings related to comparison of integer expressions of different signedness (`#2222 <https://github.com/ros2/rclcpp/issues/2222>`_)
