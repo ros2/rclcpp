@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.0.3 (2023-09-08)
+-------------------
 * Do not crash Executor when send_response fails due to client failure. (`#2279 <https://github.com/ros2/rclcpp/issues/2279>`_)
 * Add new node interface TypeDescriptionsInterface to provide GetTypeDescription service (`#2236 <https://github.com/ros2/rclcpp/issues/2236>`_)
 * Contributors: Emerson Knapp, Tomoya Fujita, Zang MingJie
