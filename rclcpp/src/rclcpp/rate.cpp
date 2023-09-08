@@ -14,6 +14,7 @@
 
 #include "rclcpp/rate.hpp"
 
+#include <chrono>
 #include <stdexcept>
 
 namespace rclcpp
@@ -87,10 +88,10 @@ Rate::reset()
   last_interval_ = clock_->now();
 }
 
-Duration
+std::chrono::nanoseconds
 Rate::period() const
 {
-  return period_;
+  return std::chrono::nanoseconds(period_.nanoseconds());
 }
 
 WallRate::WallRate(const double rate)

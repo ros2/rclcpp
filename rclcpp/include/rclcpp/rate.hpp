@@ -163,7 +163,7 @@ public:
   reset();
 
   RCLCPP_PUBLIC
-  Duration
+  std::chrono::nanoseconds
   period() const;
 
 private:
