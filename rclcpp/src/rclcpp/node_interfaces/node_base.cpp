@@ -129,10 +129,17 @@ NodeBase::NodeBase(
   node_handle_.reset(
     rcl_node.release(),
     [logging_mutex](rcl_node_t * node) -> void {
-      std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
-      // TODO(ivanpauno): Instead of mutually excluding rcl_node_fini with the global logger mutex,
-      // rcl_logging_rosout_fini_publisher_for_node could be decoupled from there and be called
-      // here directly.
+      {
+        std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+        if (rcl_logging_rosout_enabled()) {
+          rcl_ret_t ret = rcl_logging_rosout_fini_publisher_for_node(node);
+          if (ret != RCL_RET_OK) {
+            RCUTILS_LOG_ERROR_NAMED(
+              "rclcpp",
+              "Error in destruction of rosout publisher: %s", rcl_get_error_string().str);
+          }
+        }
+      }
       if (rcl_node_fini(node) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
