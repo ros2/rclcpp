@@ -54,6 +54,7 @@
  *   - rclcpp::ParameterValue
  *   - rclcpp::AsyncParametersClient
  *   - rclcpp::SyncParametersClient
+ *   - rclcpp::copy_all_parameters()
  *   - rclcpp/parameter.hpp
  *   - rclcpp/parameter_value.hpp
  *   - rclcpp/parameter_client.hpp
