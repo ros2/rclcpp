@@ -23,21 +23,25 @@
 namespace rclcpp
 {
 
+/// Copy all parameters from one source node to another destination node.
 /**
- * @brief A method to copy all parameters from one node (parent) to another (child).
- * May throw parameter exceptions in error conditions
- * @param parent Node to copy parameters from
- * @param child Node to copy parameters to
+ * \param source Node to copy parameters from
+ * \param destination Node to copy parameters to
+ * \param override Default false. Whether to override destination parameters
+ * if both the source and destination contain the same parameter.
  */
 template<typename NodeT1, typename NodeT2>
-void copy_all_parameters(const NodeT1 & parent, const NodeT2 & child)
+void
+copy_all_parameters(const NodeT1 & source, const NodeT2 & destination, const bool override = false)
 {
   using Parameters = std::vector<rclcpp::Parameter>;
-  std::vector<std::string> param_names = parent->list_parameters({}, 0).names;
-  Parameters params = parent->get_parameters(param_names);
+  std::vector<std::string> param_names = source->list_parameters({}, 0).names;
+  Parameters params = source->get_parameters(param_names);
   for (Parameters::const_iterator iter = params.begin(); iter != params.end(); ++iter) {
-    if (!child->has_parameter(iter->get_name())) {
-      child->declare_parameter(iter->get_name(), iter->get_parameter_value());
+    if (!destination->has_parameter(iter->get_name())) {
+      destination->declare_parameter(iter->get_name(), iter->get_parameter_value());
+    } else if (override) {
+      destination->set_parameter(*iter);
     }
   }
 }

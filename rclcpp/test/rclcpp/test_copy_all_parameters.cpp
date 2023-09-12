@@ -16,13 +16,13 @@
 #include "rclcpp/copy_all_parameters.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-class RclCppFixture
+class RclcppFixture
 {
 public:
-  RclCppFixture() {rclcpp::init(0, nullptr);}
-  ~RclCppFixture() {rclcpp::shutdown();}
+  RclcppFixture() {rclcpp::init(0, nullptr);}
+  ~RclcppFixture() {rclcpp::shutdown();}
 };
-RclCppFixture g_rclcppfixture;
+RclcppFixture g_rclcppfixture;
 
 TEST(TestParamCopying, TestParamCopying)
 {
@@ -43,7 +43,8 @@ TEST(TestParamCopying, TestParamCopying)
   EXPECT_TRUE(node2->has_parameter("Foo"));
   EXPECT_EQ(node2->get_parameter("Foo").as_string(), std::string("barz2"));
 
-  rclcpp::copy_all_parameters(node1, node2);
+  bool override = false;
+  rclcpp::copy_all_parameters(node1, node2, override);
 
   // Test new parameters exist, of expected value, and original param is not overridden
   EXPECT_TRUE(node2->has_parameter("Foo1"));
@@ -54,4 +55,9 @@ TEST(TestParamCopying, TestParamCopying)
   EXPECT_EQ(node2->get_parameter("Foo.bar").as_string(), std::string("steve"));
   EXPECT_TRUE(node2->has_parameter("Foo"));
   EXPECT_EQ(node2->get_parameter("Foo").as_string(), std::string("barz2"));
+
+  // Test if parameter overrides are permissible that Node2's value is overridden
+  override = true;
+  rclcpp::copy_all_parameters(node1, node2, override);
+  EXPECT_EQ(node2->get_parameter("Foo").as_string(), std::string("bar"));
 }
