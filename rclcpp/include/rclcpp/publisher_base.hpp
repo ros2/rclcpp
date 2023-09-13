@@ -390,7 +390,6 @@ protected:
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
   bool intra_process_is_enabled_;
-  const bool durability_is_transient_local_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
 

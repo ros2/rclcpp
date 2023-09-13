@@ -50,8 +50,6 @@ PublisherBase::PublisherBase(
   bool use_default_callbacks)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
   intra_process_is_enabled_(false),
-  durability_is_transient_local_(
-    publisher_options.qos.durability == RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL),
   intra_process_publisher_id_(0),
   type_support_(type_support),
   event_callbacks_(event_callbacks)
@@ -275,7 +273,8 @@ PublisherBase::get_intra_process_subscription_count() const
 bool
 PublisherBase::is_durability_transient_local() const
 {
-  return durability_is_transient_local_;
+  return rcl_publisher_get_actual_qos(publisher_handle_.get())->durability ==
+         RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
 }
 
 rclcpp::QoS
