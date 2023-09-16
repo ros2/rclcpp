@@ -101,7 +101,7 @@ TEST_F(TestNodeParameters, list_parameters)
   const rcl_interfaces::msg::ParameterDescriptor descriptor2;
   const auto added_parameter_value2 =
     node_parameters->declare_parameter(parameter_name2, value2, descriptor2, false);
-  EXPECT_EQ(value.get<bool>(), added_parameter_value.get<bool>());
+  EXPECT_EQ(value2.get<bool>(), added_parameter_value2.get<bool>());
   prefixes = {"prefix"};
   auto list_result3 = node_parameters->list_parameters(prefixes, 1u);
   EXPECT_EQ(1u, list_result3.names.size());
