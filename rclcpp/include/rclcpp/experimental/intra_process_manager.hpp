@@ -28,6 +28,7 @@
 #include <typeinfo>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
@@ -112,9 +113,76 @@ public:
    * \param subscription the SubscriptionIntraProcess to register.
    * \return an unsigned 64-bit integer which is the subscription's unique id.
    */
+  template<
+    typename ROSMessageType,
+    typename Alloc = std::allocator<ROSMessageType>
+  >
   RCLCPP_PUBLIC
   uint64_t
-  add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription);
+  add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
+  {
+    using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;
+    using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
+    using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
+
+    std::unique_lock<std::shared_timed_mutex> lock(mutex_);
+
+    uint64_t sub_id = IntraProcessManager::get_next_unique_id();
+
+    subscriptions_[sub_id] = subscription;
+
+    // adds the subscription id to all the matchable publishers
+    for (auto & pair : publishers_) {
+      auto publisher = pair.second.lock();
+      if (!publisher) {
+        continue;
+      }
+      if (can_communicate(publisher, subscription)) {
+        uint64_t pub_id = pair.first;
+        insert_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
+        if (publisher->is_durability_transient_local() &&
+          subscription->is_durability_transient_local())
+        {
+          auto publisher_buffer = publisher_buffers_[pub_id].lock();
+          if (!publisher_buffer) {
+            throw std::runtime_error("publisher buffer has unexpectedly gone out of scope");
+          }
+          auto buffer = std::dynamic_pointer_cast<
+            rclcpp::experimental::buffers::IntraProcessBuffer<
+              ROSMessageType,
+              ROSMessageTypeAllocator,
+              ROSMessageTypeDeleter
+            >
+            >(publisher_buffer);
+          if (!buffer) {
+            throw std::runtime_error(
+                    "failed to dynamic cast publisher's IntraProcessBufferBase to "
+                    "IntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
+                    "ROSMessageTypeDeleter> which can happen when the publisher and "
+                    "subscription use different allocator types, which is not supported");
+          }
+          if (subscription->use_take_shared_method()) {
+            auto data_vec = buffer->get_all_data_shared();
+            for (auto shared_data : data_vec) {
+              this->template add_shared_msg_to_buffer<
+                ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
+                shared_data, sub_id);
+            }
+          } else {
+            auto data_vec = buffer->get_all_data_unique();
+            for (auto & owned_data : data_vec) {
+              auto allocator = ROSMessageTypeAllocator();
+              this->template add_owned_msg_to_buffer<
+                ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
+                std::move(owned_data), sub_id, allocator);
+            }
+          }
+        }
+      }
+    }
+
+    return sub_id;
+  }
 
   /// Unregister a subscription using the subscription's unique id.
   /**
@@ -138,7 +206,10 @@ public:
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_publisher(rclcpp::PublisherBase::SharedPtr publisher);
+  add_publisher(
+    rclcpp::PublisherBase::SharedPtr publisher,
+    rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr buffer =
+    rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr());
 
   /// Unregister a publisher using the publisher's unique id.
   /**
@@ -352,6 +423,9 @@ private:
   using PublisherMap =
     std::unordered_map<uint64_t, rclcpp::PublisherBase::WeakPtr>;
 
+  using PublisherBufferMap =
+    std::unordered_map<uint64_t, rclcpp::experimental::buffers::IntraProcessBufferBase::WeakPtr>;
+
   using PublisherToSubscriptionIdsMap =
     std::unordered_map<uint64_t, SplittedSubscriptions>;
 
@@ -548,6 +622,7 @@ private:
   PublisherToSubscriptionIdsMap pub_to_subs_;
   SubscriptionMap subscriptions_;
   PublisherMap publishers_;
+  PublisherBufferMap publisher_buffers_;
 
   mutable std::shared_timed_mutex mutex_;
 };

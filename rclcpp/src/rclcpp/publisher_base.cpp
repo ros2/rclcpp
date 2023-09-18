@@ -410,12 +410,3 @@ size_t PublisherBase::lowest_available_ipm_capacity() const
 
   return ipm->lowest_available_capacity(intra_process_publisher_id_);
 }
-
-void PublisherBase::do_shared_intra_process_publish_for_late_joiner(const uint64_t)
-{
-  throw std::runtime_error("intra process publish for late joiner is not implemented");
-}
-void PublisherBase::do_unique_intra_process_publish_for_late_joiner(const uint64_t)
-{
-  throw std::runtime_error("intra process publish for late joiner is not implemented");
-}

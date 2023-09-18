@@ -33,6 +33,111 @@
 
 namespace rclcpp
 {
+namespace experimental
+{
+namespace buffers
+{
+namespace mock
+{
+
+class IntraProcessBufferBase
+{
+public:
+  RCLCPP_SMART_PTR_ALIASES_ONLY(IntraProcessBufferBase)
+
+  virtual ~IntraProcessBufferBase() {}
+};
+
+}  // namespace mock
+}  // namespace buffers
+}  // namespace experimental
+}  // namespace rclcpp
+
+namespace rclcpp
+{
+namespace experimental
+{
+namespace buffers
+{
+namespace mock
+{
+template<
+  typename MessageT,
+  typename Alloc = std::allocator<MessageT>,
+  typename MessageDeleter = std::default_delete<MessageT>>
+class IntraProcessBuffer : public IntraProcessBufferBase
+{
+public:
+  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
+  using MessageUniquePtr = std::unique_ptr<MessageT>;
+
+  RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessBuffer)
+
+  IntraProcessBuffer()
+  {}
+
+  void add(ConstMessageSharedPtr msg)
+  {
+    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
+    shared_msg = msg;
+    ++num_msgs;
+  }
+
+  void add(MessageUniquePtr msg)
+  {
+    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
+    unique_msg = std::move(msg);
+    ++num_msgs;
+  }
+
+  void pop(std::uintptr_t & msg_ptr)
+  {
+    msg_ptr = message_ptr;
+    message_ptr = 0;
+    --num_msgs;
+  }
+
+  size_t size() const
+  {
+    return num_msgs;
+  }
+
+  std::vector<ConstMessageSharedPtr> get_all_data_shared()
+  {
+    if (shared_msg) {
+      return {shared_msg};
+    } else if (unique_msg) {
+      return {std::make_shared<const MessageT>(*unique_msg)};
+    }
+    return {};
+  }
+
+  std::vector<MessageUniquePtr> get_all_data_unique()
+  {
+    std::vector<MessageUniquePtr> result;
+    if (shared_msg) {
+      result.push_back(std::make_unique<MessageT>(*shared_msg));
+    } else if (unique_msg) {
+      result.push_back(std::make_unique<MessageT>(*unique_msg));
+    }
+    return result;
+  }
+
+  // need to store the messages somewhere otherwise the memory address will be reused
+  ConstMessageSharedPtr shared_msg;
+  MessageUniquePtr unique_msg;
+
+  std::uintptr_t message_ptr;
+  // count add and pop
+  size_t num_msgs = 0u;
+};
+
+}  // namespace mock
+}  // namespace buffers
+}  // namespace experimental
+}  // namespace rclcpp
+namespace rclcpp
+{
 // forward declaration
 namespace experimental
 {
@@ -100,13 +205,6 @@ public:
     return false;
   }
 
-  virtual void do_shared_intra_process_publish_for_late_joiner(const uint64_t)
-  {
-  }
-  virtual void do_unique_intra_process_publish_for_late_joiner(const uint64_t)
-  {
-  }
-
   rclcpp::QoS qos_profile;
   std::string topic_name;
   uint64_t intra_process_publisher_id_;
@@ -130,6 +228,9 @@ public:
   {
     auto allocator = std::make_shared<Alloc>();
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    if (qos.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
+      buffer = std::make_shared<rclcpp::experimental::buffers::mock::IntraProcessBuffer<T>>();
+    }
   }
 
   // The following functions use the IntraProcessManager
@@ -137,74 +238,11 @@ public:
   void publish(MessageUniquePtr msg);
 
   std::shared_ptr<MessageAlloc> message_allocator_;
+  typename rclcpp::experimental::buffers::mock::IntraProcessBuffer<T>::SharedPtr buffer{nullptr};
 };
 
 }  // namespace mock
 }  // namespace rclcpp
-
-namespace rclcpp
-{
-namespace experimental
-{
-namespace buffers
-{
-namespace mock
-{
-template<
-  typename MessageT,
-  typename Alloc = std::allocator<void>,
-  typename MessageDeleter = std::default_delete<MessageT>>
-class IntraProcessBuffer
-{
-public:
-  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
-  using MessageUniquePtr = std::unique_ptr<MessageT>;
-
-  RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessBuffer)
-
-  IntraProcessBuffer()
-  {}
-
-  void add(ConstMessageSharedPtr msg)
-  {
-    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
-    shared_msg = msg;
-    ++num_msgs;
-  }
-
-  void add(MessageUniquePtr msg)
-  {
-    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
-    unique_msg = std::move(msg);
-    ++num_msgs;
-  }
-
-  void pop(std::uintptr_t & msg_ptr)
-  {
-    msg_ptr = message_ptr;
-    message_ptr = 0;
-    --num_msgs;
-  }
-
-  size_t size() const
-  {
-    return num_msgs;
-  }
-
-  // need to store the messages somewhere otherwise the memory address will be reused
-  ConstMessageSharedPtr shared_msg;
-  MessageUniquePtr unique_msg;
-
-  std::uintptr_t message_ptr;
-  // count add and pop
-  size_t num_msgs = 0u;
-};
-
-}  // namespace mock
-}  // namespace buffers
-}  // namespace experimental
-}  // namespace rclcpp
-
 
 namespace rclcpp
 {
@@ -350,12 +388,14 @@ public:
 // Prevent the header files of the mocked classes to be included
 #define RCLCPP__PUBLISHER_HPP_
 #define RCLCPP__PUBLISHER_BASE_HPP_
+#define RCLCPP__EXPERIMENTAL__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BUFFER_HPP_
 #define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
+#define IntraProcessBufferBase mock::IntraProcessBufferBase
 #define IntraProcessBuffer mock::IntraProcessBuffer
 #define SubscriptionIntraProcessBase mock::SubscriptionIntraProcessBase
 #define SubscriptionIntraProcessBuffer mock::SubscriptionIntraProcessBuffer
@@ -387,10 +427,18 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
     throw std::runtime_error("cannot publish msg which is a null pointer");
   }
 
-  ipm->template do_intra_process_publish<T, T, Alloc>(
-    intra_process_publisher_id_,
-    std::move(msg),
-    *message_allocator_);
+  if (buffer) {
+    auto shared_msg = ipm->template do_intra_process_publish_and_return_shared<T, T, Alloc>(
+      intra_process_publisher_id_,
+      std::move(msg),
+      *message_allocator_);
+    buffer->add(shared_msg);
+  } else {
+    ipm->template do_intra_process_publish<T, T, Alloc>(
+      intra_process_publisher_id_,
+      std::move(msg),
+      *message_allocator_);
+  }
 }
 
 }  // namespace mock
@@ -427,7 +475,7 @@ TEST(TestIntraProcessManager, add_pub_sub) {
 
   auto p1_id = ipm->add_publisher(p1);
   auto p2_id = ipm->add_publisher(p2);
-  auto s1_id = ipm->add_subscription(s1);
+  auto s1_id = ipm->template add_subscription<MessageT>(s1);
 
   bool unique_ids = p1_id != p2_id && p2_id != s1_id;
   ASSERT_TRUE(unique_ids);
@@ -443,7 +491,7 @@ TEST(TestIntraProcessManager, add_pub_sub) {
 
   auto s2 = std::make_shared<SubscriptionIntraProcessT>(rclcpp::QoS(10).reliable());
 
-  auto s2_id = ipm->add_subscription(s2);
+  auto s2_id = ipm->template add_subscription<MessageT>(s2);
   auto p3_id = ipm->add_publisher(p3);
 
   p1_subs = ipm->get_subscription_count(p1_id);
@@ -486,7 +534,7 @@ TEST(TestIntraProcessManager, single_subscription) {
 
   auto s1 = std::make_shared<SubscriptionIntraProcessT>();
   s1->take_shared_method = false;
-  auto s1_id = ipm->add_subscription(s1);
+  auto s1_id = ipm->template add_subscription<MessageT>(s1);
 
   auto unique_msg = std::make_unique<MessageT>();
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -497,7 +545,7 @@ TEST(TestIntraProcessManager, single_subscription) {
   ipm->remove_subscription(s1_id);
   auto s2 = std::make_shared<SubscriptionIntraProcessT>();
   s2->take_shared_method = true;
-  auto s2_id = ipm->add_subscription(s2);
+  auto s2_id = ipm->template add_subscription<MessageT>(s2);
   (void)s2_id;
 
   unique_msg = std::make_unique<MessageT>();
@@ -540,11 +588,11 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
 
   auto s1 = std::make_shared<SubscriptionIntraProcessT>();
   s1->take_shared_method = false;
-  auto s1_id = ipm->add_subscription(s1);
+  auto s1_id = ipm->template add_subscription<MessageT>(s1);
 
   auto s2 = std::make_shared<SubscriptionIntraProcessT>();
   s2->take_shared_method = false;
-  auto s2_id = ipm->add_subscription(s2);
+  auto s2_id = ipm->template add_subscription<MessageT>(s2);
 
   auto unique_msg = std::make_unique<MessageT>();
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -560,11 +608,11 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
 
   auto s3 = std::make_shared<SubscriptionIntraProcessT>();
   s3->take_shared_method = true;
-  auto s3_id = ipm->add_subscription(s3);
+  auto s3_id = ipm->template add_subscription<MessageT>(s3);
 
   auto s4 = std::make_shared<SubscriptionIntraProcessT>();
   s4->take_shared_method = true;
-  auto s4_id = ipm->add_subscription(s4);
+  auto s4_id = ipm->template add_subscription<MessageT>(s4);
 
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -579,11 +627,11 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
 
   auto s5 = std::make_shared<SubscriptionIntraProcessT>();
   s5->take_shared_method = false;
-  auto s5_id = ipm->add_subscription(s5);
+  auto s5_id = ipm->template add_subscription<MessageT>(s5);
 
   auto s6 = std::make_shared<SubscriptionIntraProcessT>();
   s6->take_shared_method = false;
-  auto s6_id = ipm->add_subscription(s6);
+  auto s6_id = ipm->template add_subscription<MessageT>(s6);
 
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -599,12 +647,12 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
 
   auto s7 = std::make_shared<SubscriptionIntraProcessT>();
   s7->take_shared_method = true;
-  auto s7_id = ipm->add_subscription(s7);
+  auto s7_id = ipm->template add_subscription<MessageT>(s7);
   (void)s7_id;
 
   auto s8 = std::make_shared<SubscriptionIntraProcessT>();
   s8->take_shared_method = true;
-  auto s8_id = ipm->add_subscription(s8);
+  auto s8_id = ipm->template add_subscription<MessageT>(s8);
   (void)s8_id;
 
   unique_msg = std::make_unique<MessageT>();
@@ -646,11 +694,11 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
 
   auto s1 = std::make_shared<SubscriptionIntraProcessT>();
   s1->take_shared_method = true;
-  auto s1_id = ipm->add_subscription(s1);
+  auto s1_id = ipm->template add_subscription<MessageT>(s1);
 
   auto s2 = std::make_shared<SubscriptionIntraProcessT>();
   s2->take_shared_method = false;
-  auto s2_id = ipm->add_subscription(s2);
+  auto s2_id = ipm->template add_subscription<MessageT>(s2);
 
   auto unique_msg = std::make_unique<MessageT>();
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -665,15 +713,15 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
 
   auto s3 = std::make_shared<SubscriptionIntraProcessT>();
   s3->take_shared_method = false;
-  auto s3_id = ipm->add_subscription(s3);
+  auto s3_id = ipm->template add_subscription<MessageT>(s3);
 
   auto s4 = std::make_shared<SubscriptionIntraProcessT>();
   s4->take_shared_method = false;
-  auto s4_id = ipm->add_subscription(s4);
+  auto s4_id = ipm->template add_subscription<MessageT>(s4);
 
   auto s5 = std::make_shared<SubscriptionIntraProcessT>();
   s5->take_shared_method = true;
-  auto s5_id = ipm->add_subscription(s5);
+  auto s5_id = ipm->template add_subscription<MessageT>(s5);
 
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -697,19 +745,19 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
 
   auto s6 = std::make_shared<SubscriptionIntraProcessT>();
   s6->take_shared_method = true;
-  auto s6_id = ipm->add_subscription(s6);
+  auto s6_id = ipm->template add_subscription<MessageT>(s6);
 
   auto s7 = std::make_shared<SubscriptionIntraProcessT>();
   s7->take_shared_method = true;
-  auto s7_id = ipm->add_subscription(s7);
+  auto s7_id = ipm->template add_subscription<MessageT>(s7);
 
   auto s8 = std::make_shared<SubscriptionIntraProcessT>();
   s8->take_shared_method = false;
-  auto s8_id = ipm->add_subscription(s8);
+  auto s8_id = ipm->template add_subscription<MessageT>(s8);
 
   auto s9 = std::make_shared<SubscriptionIntraProcessT>();
   s9->take_shared_method = false;
-  auto s9_id = ipm->add_subscription(s9);
+  auto s9_id = ipm->template add_subscription<MessageT>(s9);
 
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
@@ -735,12 +783,12 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
 
   auto s10 = std::make_shared<SubscriptionIntraProcessT>();
   s10->take_shared_method = false;
-  auto s10_id = ipm->add_subscription(s10);
+  auto s10_id = ipm->template add_subscription<MessageT>(s10);
   (void)s10_id;
 
   auto s11 = std::make_shared<SubscriptionIntraProcessT>();
   s11->take_shared_method = true;
-  auto s11_id = ipm->add_subscription(s11);
+  auto s11_id = ipm->template add_subscription<MessageT>(s11);
   (void)s11_id;
 
   unique_msg = std::make_unique<MessageT>();
@@ -795,8 +843,8 @@ TEST(TestIntraProcessManager, lowest_available_capacity) {
 
   ASSERT_LE(0u, c1);
 
-  auto s1_id = ipm->add_subscription(s1);
-  auto s2_id = ipm->add_subscription(s2);
+  auto s1_id = ipm->template add_subscription<MessageT>(s1);
+  auto s2_id = ipm->template add_subscription<MessageT>(s2);
 
   bool unique_ids = s1_id != s2_id && p1_id != s1_id;
   ASSERT_TRUE(unique_ids);
@@ -838,4 +886,83 @@ TEST(TestIntraProcessManager, lowest_available_capacity) {
 
   c1 = ipm->lowest_available_capacity(p1_id);
   ASSERT_EQ(history_depth - 1u, c1);
+}
+
+/*
+   This tests the check inside add_publisher for transient_local
+   durability publishers
+   - add_publisher should throw runtime_error when no valid buffer ptr
+   is passed with a transient_local publisher
+ */
+TEST(TestIntraProcessManager, transient_local_invalid_buffer) {
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  constexpr auto history_depth = 10u;
+
+  auto ipm = std::make_shared<IntraProcessManagerT>();
+
+  auto p1 = std::make_shared<PublisherT>(rclcpp::QoS(history_depth).transient_local());
+
+  ASSERT_THROW(
+  {
+    ipm->add_publisher(p1, nullptr);
+  }, std::runtime_error);
+}
+
+/*
+   This tests publishing function for transient_local durability publihers
+   - A message is published before three transient_local subscriptions are added to
+   ipm. Two of the subscriptions use take_shared method. Delivery of the message is verified
+   along with the contents and pointer addresses from the subscriptions.
+ */
+TEST(TestIntraProcessManager, transient_local) {
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::experimental::mock::SubscriptionIntraProcess<MessageT>;
+
+  constexpr auto history_depth = 10u;
+
+  auto ipm = std::make_shared<IntraProcessManagerT>();
+
+  auto p1 = std::make_shared<PublisherT>(rclcpp::QoS(history_depth).transient_local());
+
+  auto s1 =
+    std::make_shared<SubscriptionIntraProcessT>(rclcpp::QoS(history_depth).transient_local());
+  auto s2 =
+    std::make_shared<SubscriptionIntraProcessT>(rclcpp::QoS(history_depth).transient_local());
+  auto s3 =
+    std::make_shared<SubscriptionIntraProcessT>(rclcpp::QoS(history_depth).transient_local());
+
+  s1->take_shared_method = false;
+  s2->take_shared_method = true;
+  s3->take_shared_method = true;
+
+  auto p1_id = ipm->add_publisher(p1, p1->buffer);
+
+  p1->set_intra_process_manager(p1_id, ipm);
+
+  auto unique_msg = std::make_unique<MessageT>();
+  unique_msg->msg = "Test";
+  p1->publish(std::move(unique_msg));
+
+  ipm->template add_subscription<MessageT>(s1);
+  ipm->template add_subscription<MessageT>(s2);
+  ipm->template add_subscription<MessageT>(s3);
+
+  auto received_message_pointer_1 = s1->pop();
+  auto received_message_pointer_2 = s2->pop();
+  auto received_message_pointer_3 = s3->pop();
+  ASSERT_NE(0u, received_message_pointer_1);
+  ASSERT_NE(0u, received_message_pointer_2);
+  ASSERT_NE(0u, received_message_pointer_3);
+  ASSERT_EQ(received_message_pointer_3, received_message_pointer_2);
+  ASSERT_EQ(
+    reinterpret_cast<MessageT *>(received_message_pointer_1)->msg,
+    reinterpret_cast<MessageT *>(received_message_pointer_2)->msg);
+  ASSERT_EQ(
+    reinterpret_cast<MessageT *>(received_message_pointer_1)->msg,
+    reinterpret_cast<MessageT *>(received_message_pointer_3)->msg);
+  ASSERT_EQ("Test", reinterpret_cast<MessageT *>(received_message_pointer_1)->msg);
 }

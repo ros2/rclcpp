@@ -32,13 +32,24 @@ IntraProcessManager::~IntraProcessManager()
 {}
 
 uint64_t
-IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
+IntraProcessManager::add_publisher(
+  rclcpp::PublisherBase::SharedPtr publisher,
+  rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr buffer)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
   uint64_t pub_id = IntraProcessManager::get_next_unique_id();
 
   publishers_[pub_id] = publisher;
+  if (publisher->is_durability_transient_local()) {
+    if (buffer) {
+      publisher_buffers_[pub_id] = buffer;
+    } else {
+      throw std::runtime_error(
+              "transient_local publisher needs to pass"
+              "a valid publisher buffer ptr when calling add_publisher()");
+    }
+  }
 
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[pub_id] = SplittedSubscriptions();
@@ -56,39 +67,6 @@ IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
   }
 
   return pub_id;
-}
-
-uint64_t
-IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr subscription)
-{
-  std::unique_lock<std::shared_timed_mutex> lock(mutex_);
-
-  uint64_t sub_id = IntraProcessManager::get_next_unique_id();
-
-  subscriptions_[sub_id] = subscription;
-
-  // adds the subscription id to all the matchable publishers
-  for (auto & pair : publishers_) {
-    auto publisher = pair.second.lock();
-    if (!publisher) {
-      continue;
-    }
-    if (can_communicate(publisher, subscription)) {
-      uint64_t pub_id = pair.first;
-      insert_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
-      if (publisher->is_durability_transient_local() &&
-        subscription->is_durability_transient_local())
-      {
-        if (subscription->use_take_shared_method()) {
-          publisher->do_shared_intra_process_publish_for_late_joiner(sub_id);
-        } else {
-          publisher->do_unique_intra_process_publish_for_late_joiner(sub_id);
-        }
-      }
-    }
-  }
-
-  return sub_id;
 }
 
 void

@@ -112,11 +112,11 @@ public:
   [[deprecated("use std::shared_ptr<const PublishedType>")]] =
     std::shared_ptr<const PublishedType>;
 
-  using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
+  using BufferSharedPtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     ROSMessageType,
     ROSMessageTypeAllocator,
     ROSMessageTypeDeleter
-    >::UniquePtr;
+    >::SharedPtr;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -187,7 +187,7 @@ public:
           qos,
           std::make_shared<ROSMessageTypeAllocator>(ros_message_type_allocator_));
       }
-      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
+      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this(), buffer_);
       this->setup_intra_process(
         intra_process_publisher_id,
         ipm);
@@ -446,53 +446,6 @@ public:
     return ros_message_type_allocator_;
   }
 
-  /// Publish shared messages from intra process buffer for late joiner
-  /**
-   * This signature allows the user to give a sub_id from intra process manager.
-   * The function will publish messages currently held in buffer_ to the subscription
-   * as shared pointers.
-   *
-   * \param[in] sud_id subscription id in ipm to publish data to
-   */
-  void do_shared_intra_process_publish_for_late_joiner(const uint64_t sub_id) override
-  {
-    auto ipm = weak_ipm_.lock();
-    if (!buffer_ || !ipm) {
-      throw std::runtime_error(
-              "intra process publish for late joiner called "
-              "after destruction of intra process manager and/or transient_local buffer");
-    }
-    auto data_vec = buffer_->get_all_data_shared();
-    for (auto shared_data : data_vec) {
-      ipm->template add_shared_msg_to_buffer<
-        ROSMessageType, AllocatorT, ROSMessageTypeDeleter, ROSMessageType>(shared_data, sub_id);
-    }
-  }
-
-  /// Publish owned messages from intra process buffer for late joiner
-  /**
-   * This signature allows the user to give a sub_id from intra process manager.
-   * The function will publish messages currently held in buffer_ to the subscription
-   * as unique pointers.
-   *
-   * \param[in] sud_id subscription id in ipm to publish data to
-   */
-  void do_unique_intra_process_publish_for_late_joiner(const uint64_t sub_id) override
-  {
-    auto ipm = weak_ipm_.lock();
-    if (!buffer_ || !ipm) {
-      throw std::runtime_error(
-              "intra process publish for late joiner called "
-              "after destruction of intra process manager and/or transient_local buffer");
-    }
-    auto data_vec = buffer_->get_all_data_unique();
-    for (auto & owned_data : data_vec) {
-      ipm->template add_owned_msg_to_buffer<
-        ROSMessageType, AllocatorT, ROSMessageTypeDeleter, ROSMessageType>(
-        std::move(owned_data), sub_id, ros_message_type_allocator_);
-    }
-  }
-
 protected:
   void
   do_inter_process_publish(const ROSMessageType & msg)
@@ -658,7 +611,7 @@ protected:
   ROSMessageTypeAllocator ros_message_type_allocator_;
   ROSMessageTypeDeleter ros_message_type_deleter_;
 
-  BufferUniquePtr buffer_;
+  BufferSharedPtr buffer_{nullptr};
 };
 
 }  // namespace rclcpp
