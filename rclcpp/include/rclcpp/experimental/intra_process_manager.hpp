@@ -121,10 +121,6 @@ public:
   uint64_t
   add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
   {
-    using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;
-    using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
-    using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
-
     std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
     uint64_t sub_id = IntraProcessManager::get_next_unique_id();
@@ -143,40 +139,9 @@ public:
         if (publisher->is_durability_transient_local() &&
           subscription->is_durability_transient_local())
         {
-          auto publisher_buffer = publisher_buffers_[pub_id].lock();
-          if (!publisher_buffer) {
-            throw std::runtime_error("publisher buffer has unexpectedly gone out of scope");
-          }
-          auto buffer = std::dynamic_pointer_cast<
-            rclcpp::experimental::buffers::IntraProcessBuffer<
-              ROSMessageType,
-              ROSMessageTypeAllocator,
-              ROSMessageTypeDeleter
-            >
-            >(publisher_buffer);
-          if (!buffer) {
-            throw std::runtime_error(
-                    "failed to dynamic cast publisher's IntraProcessBufferBase to "
-                    "IntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
-                    "ROSMessageTypeDeleter> which can happen when the publisher and "
-                    "subscription use different allocator types, which is not supported");
-          }
-          if (subscription->use_take_shared_method()) {
-            auto data_vec = buffer->get_all_data_shared();
-            for (auto shared_data : data_vec) {
-              this->template add_shared_msg_to_buffer<
-                ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
-                shared_data, sub_id);
-            }
-          } else {
-            auto data_vec = buffer->get_all_data_unique();
-            for (auto & owned_data : data_vec) {
-              auto allocator = ROSMessageTypeAllocator();
-              this->template add_owned_msg_to_buffer<
-                ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
-                std::move(owned_data), sub_id, allocator);
-            }
-          }
+          do_transient_local_publish<ROSMessageType, Alloc>(
+            pub_id, sub_id,
+            subscription->use_take_shared_method());
         }
       }
     }
@@ -443,6 +408,55 @@ private:
   can_communicate(
     rclcpp::PublisherBase::SharedPtr pub,
     rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const;
+
+  template<
+    typename ROSMessageType,
+    typename Alloc = std::allocator<ROSMessageType>
+  >
+  RCLCPP_PUBLIC
+  void do_transient_local_publish(
+    const uint64_t pub_id, const uint64_t sub_id,
+    const bool use_take_shared_method)
+  {
+    using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;
+    using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
+    using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
+
+    auto publisher_buffer = publisher_buffers_[pub_id].lock();
+    if (!publisher_buffer) {
+      throw std::runtime_error("publisher buffer has unexpectedly gone out of scope");
+    }
+    auto buffer = std::dynamic_pointer_cast<
+      rclcpp::experimental::buffers::IntraProcessBuffer<
+        ROSMessageType,
+        ROSMessageTypeAllocator,
+        ROSMessageTypeDeleter
+      >
+      >(publisher_buffer);
+    if (!buffer) {
+      throw std::runtime_error(
+              "failed to dynamic cast publisher's IntraProcessBufferBase to "
+              "IntraProcessBuffer<ROSMessageType,ROSMessageTypeAllocator,"
+              "ROSMessageTypeDeleter> which can happen when the publisher and "
+              "subscription use different allocator types, which is not supported");
+    }
+    if (use_take_shared_method) {
+      auto data_vec = buffer->get_all_data_shared();
+      for (auto shared_data : data_vec) {
+        this->template add_shared_msg_to_buffer<
+          ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
+          shared_data, sub_id);
+      }
+    } else {
+      auto data_vec = buffer->get_all_data_unique();
+      for (auto & owned_data : data_vec) {
+        auto allocator = ROSMessageTypeAllocator();
+        this->template add_owned_msg_to_buffer<
+          ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
+          std::move(owned_data), sub_id, allocator);
+      }
+    }
+  }
 
   template<
     typename MessageT,
