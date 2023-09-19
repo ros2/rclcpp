@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.6 (2023-09-19)
+-------------------
+* Topic correct typeadapter deduction (`#2294 <https://github.com/ros2/rclcpp/issues/2294>`_) (`#2297 <https://github.com/ros2/rclcpp/issues/2297>`_)
+* check thread whether joinable before join (`#2019 <https://github.com/ros2/rclcpp/issues/2019>`_) (`#2275 <https://github.com/ros2/rclcpp/issues/2275>`_)
+* Do not crash Executor when send_response fails due to client failure. (`#2276 <https://github.com/ros2/rclcpp/issues/2276>`_) (`#2280 <https://github.com/ros2/rclcpp/issues/2280>`_)
+* Contributors: mergify[bot]
+
 16.0.5 (2023-07-17)
 -------------------
 * warning: comparison of integer expressions of different signedness (`#2219 <https://github.com/ros2/rclcpp/issues/2219>`_) (`#2223 <https://github.com/ros2/rclcpp/issues/2223>`_)

@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.6 (2023-09-19)
+-------------------
+* Switch lifecycle to use the RCLCPP macros Signed-off-by: Tony Najjar <tony.najjar.1997@gmail.com> (`#2234 <https://github.com/ros2/rclcpp/issues/2234>`_)
+* Contributors: Tony Najjar
+
 16.0.5 (2023-07-17)
 -------------------
 * Fix thread safety in LifecycleNode::get_current_state() for Humble (`#2183 <https://github.com/ros2/rclcpp/issues/2183>`_)
