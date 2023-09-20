@@ -117,21 +117,16 @@ NodeBase::NodeBase(
     std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
     ret = rcl_logging_rosout_init_publisher_for_node(rcl_node.get());
     if (ret != RCL_RET_OK) {
-      if (rcl_logging_rosout_fini_publisher_for_node(rcl_node.get()) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Error in destruction of rosout publisher: %s", rcl_get_error_string().str);
-      }
       throw_from_rcl_error(ret, "failed to initialize rosout publisher");
     }
   }
 
   node_handle_.reset(
     rcl_node.release(),
-    [logging_mutex](rcl_node_t * node) -> void {
+    [logging_mutex, rcl_node_options](rcl_node_t * node) -> void {
       {
         std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
-        if (rcl_logging_rosout_enabled()) {
+        if (rcl_logging_rosout_enabled() && rcl_node_options.enable_rosout) {
           rcl_ret_t ret = rcl_logging_rosout_fini_publisher_for_node(node);
           if (ret != RCL_RET_OK) {
             RCUTILS_LOG_ERROR_NAMED(
