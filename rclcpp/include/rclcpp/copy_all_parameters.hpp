@@ -17,7 +17,9 @@
 
 #include <vector>
 #include <string>
+
 #include "rcl_interfaces/srv/list_parameters.hpp"
+
 #include "rclcpp/parameter.hpp"
 
 namespace rclcpp
@@ -27,21 +29,25 @@ namespace rclcpp
 /**
  * \param source Node to copy parameters from
  * \param destination Node to copy parameters to
- * \param override Default false. Whether to override destination parameters
+ * \param override_existing_params Default false. Whether to override existing destination params
  * if both the source and destination contain the same parameter.
  */
 template<typename NodeT1, typename NodeT2>
 void
-copy_all_parameters(const NodeT1 & source, const NodeT2 & destination, const bool override = false)
+copy_all_parameters(
+  const NodeT1 & source, const NodeT2 & destination, const bool override_existing_params = false)
 {
   using Parameters = std::vector<rclcpp::Parameter>;
-  std::vector<std::string> param_names = source->list_parameters({}, 0).names;
-  Parameters params = source->get_parameters(param_names);
+  auto source_params = source->get_node_parameters_interface();
+  auto dest_params = destination->get_node_parameters_interface();
+
+  std::vector<std::string> param_names = source_params->list_parameters({}, 0).names;
+  Parameters params = source_params->get_parameters(param_names);
   for (Parameters::const_iterator iter = params.begin(); iter != params.end(); ++iter) {
-    if (!destination->has_parameter(iter->get_name())) {
-      destination->declare_parameter(iter->get_name(), iter->get_parameter_value());
-    } else if (override) {
-      destination->set_parameter(*iter);
+    if (!dest_params->has_parameter(iter->get_name())) {
+      dest_params->declare_parameter(iter->get_name(), iter->get_parameter_value());
+    } else if (override_existing_params) {
+      dest_params->set_parameters_atomically({*iter});
     }
   }
 }

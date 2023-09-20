@@ -16,15 +16,21 @@
 #include "rclcpp/copy_all_parameters.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-class RclcppFixture
+class TestNode : public ::testing::Test
 {
-public:
-  RclcppFixture() {rclcpp::init(0, nullptr);}
-  ~RclcppFixture() {rclcpp::shutdown();}
-};
-RclcppFixture g_rclcppfixture;
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-TEST(TestParamCopying, TestParamCopying)
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNode, TestParamCopying)
 {
   auto node1 = std::make_shared<rclcpp::Node>("test_node1");
   auto node2 = std::make_shared<rclcpp::Node>("test_node2");
