@@ -666,7 +666,8 @@ endif()
 ament_add_gtest(
   test_executors
   executors/test_executors.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
 if(TARGET test_executors)
   ament_target_dependencies(test_executors
     "rcl"
