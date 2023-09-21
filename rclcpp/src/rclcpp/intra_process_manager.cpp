@@ -99,6 +99,7 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
   publishers_.erase(intra_process_publisher_id);
+  publisher_buffers_.erase(intra_process_publisher_id);
   pub_to_subs_.erase(intra_process_publisher_id);
 }
 
