@@ -117,7 +117,6 @@ public:
     typename ROSMessageType,
     typename Alloc = std::allocator<ROSMessageType>
   >
-  RCLCPP_PUBLIC
   uint64_t
   add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
   {
@@ -413,7 +412,6 @@ private:
     typename ROSMessageType,
     typename Alloc = std::allocator<ROSMessageType>
   >
-  RCLCPP_PUBLIC
   void do_transient_local_publish(
     const uint64_t pub_id, const uint64_t sub_id,
     const bool use_take_shared_method)
