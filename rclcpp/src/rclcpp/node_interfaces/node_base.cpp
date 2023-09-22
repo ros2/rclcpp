@@ -21,6 +21,8 @@
 
 #include "rcl/arguments.h"
 #include "rcl/node_type_cache.h"
+#include "rcl/logging.h"
+#include "rcl/logging_rosout.h"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/validate_namespace.h"
@@ -55,17 +57,12 @@ NodeBase::NodeBase(
   std::shared_ptr<std::recursive_mutex> logging_mutex = get_global_logging_mutex();
 
   rcl_ret_t ret;
-  {
-    std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
-    // TODO(ivanpauno): /rosout Qos should be reconfigurable.
-    // TODO(ivanpauno): Instead of mutually excluding rcl_node_init with the global logger mutex,
-    // rcl_logging_rosout_init_publisher_for_node could be decoupled from there and be called
-    // here directly.
-    ret = rcl_node_init(
-      rcl_node.get(),
-      node_name.c_str(), namespace_.c_str(),
-      context_->get_rcl_context().get(), &rcl_node_options);
-  }
+
+  // TODO(ivanpauno): /rosout Qos should be reconfigurable.
+  ret = rcl_node_init(
+    rcl_node.get(),
+    node_name.c_str(), namespace_.c_str(),
+    context_->get_rcl_context().get(), &rcl_node_options);
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
@@ -115,13 +112,29 @@ NodeBase::NodeBase(
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }
 
+  // The initialization for the rosout publisher
+  if (rcl_logging_rosout_enabled() && rcl_node_options.enable_rosout) {
+    std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+    ret = rcl_logging_rosout_init_publisher_for_node(rcl_node.get());
+    if (ret != RCL_RET_OK) {
+      throw_from_rcl_error(ret, "failed to initialize rosout publisher");
+    }
+  }
+
   node_handle_.reset(
     rcl_node.release(),
-    [logging_mutex](rcl_node_t * node) -> void {
-      std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
-      // TODO(ivanpauno): Instead of mutually excluding rcl_node_fini with the global logger mutex,
-      // rcl_logging_rosout_fini_publisher_for_node could be decoupled from there and be called
-      // here directly.
+    [logging_mutex, rcl_node_options](rcl_node_t * node) -> void {
+      {
+        std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+        if (rcl_logging_rosout_enabled() && rcl_node_options.enable_rosout) {
+          rcl_ret_t ret = rcl_logging_rosout_fini_publisher_for_node(node);
+          if (ret != RCL_RET_OK) {
+            RCUTILS_LOG_ERROR_NAMED(
+              "rclcpp",
+              "Error in destruction of rosout publisher: %s", rcl_get_error_string().str);
+          }
+        }
+      }
       if (rcl_node_fini(node) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
