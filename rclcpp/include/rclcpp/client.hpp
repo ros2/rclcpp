@@ -15,8 +15,6 @@
 #ifndef RCLCPP__CLIENT_HPP_
 #define RCLCPP__CLIENT_HPP_
 
-#include <sys/_types/_int64_t.h>
-
 #include <atomic>
 #include <functional>
 #include <future>
