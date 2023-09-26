@@ -972,7 +972,11 @@ public:
 
   /// Return a list of parameters with any of the given prefixes, up to the given depth.
   /**
-   * \todo: properly document and test this method.
+   * \param[in] prefixes The list of prefixes that should be searched for within the
+   * current parameters.
+   * \param[in] depth An unsigned integer that represents the recursive depth to search.
+   * \returns A ListParametersResult message which contains both an array of unique prefixes
+   * and an array of names that were matched to the prefixes given
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
