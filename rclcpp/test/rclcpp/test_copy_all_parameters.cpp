@@ -68,18 +68,21 @@ TEST_F(TestNode, TestParamCopying)
   EXPECT_EQ(node2->get_parameter("Foo").as_string(), std::string("bar"));
 }
 
-
 TEST_F(TestNode, TestParamCopyingExceptions)
 {
   auto node1 = std::make_shared<rclcpp::Node>("test_node1");
   auto node2 = std::make_shared<rclcpp::Node>("test_node2");
 
-  // Tests for Parameter value conflicts
+  // Tests for Parameter value conflicts handled
   node1->declare_parameter("Foo", rclcpp::ParameterValue(std::string(("bar"))));
   node2->declare_parameter("Foo", rclcpp::ParameterValue(0.123));
 
   bool override = true;
-  EXPECT_THROW(
-    rclcpp::copy_all_parameters(node1, node2, override),
-    rclcpp::exceptions::InvalidParameterTypeException);
+  EXPECT_NO_THROW(
+    rclcpp::copy_all_parameters(node1, node2, override));
+
+  // Tests for Parameter read-only handled
+  node1->declare_parameter("Foo1", rclcpp::ParameterValue(std::string(("bar"))));
+  node2->declare_parameter("Foo1", rclcpp::ParameterValue(0.123));
+  EXPECT_NO_THROW(rclcpp::copy_all_parameters(node1, node2, override));
 }
