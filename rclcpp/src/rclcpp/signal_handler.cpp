@@ -113,8 +113,8 @@ SignalHandler::get_logger()
 SignalHandler &
 SignalHandler::get_global_signal_handler()
 {
-  static SignalHandler * signal_handler = new SignalHandler();
-  return *signal_handler;
+  static SignalHandler & signal_handler = *new SignalHandler();
+  return signal_handler;
 }
 
 bool
