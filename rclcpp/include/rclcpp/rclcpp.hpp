@@ -54,7 +54,7 @@
  *   - rclcpp::ParameterValue
  *   - rclcpp::AsyncParametersClient
  *   - rclcpp::SyncParametersClient
- *   - rclcpp::copy_all_parameters()
+ *   - rclcpp::copy_all_parameter_values()
  *   - rclcpp/parameter.hpp
  *   - rclcpp/parameter_value.hpp
  *   - rclcpp/parameter_client.hpp
@@ -165,7 +165,7 @@
 #include <csignal>
 #include <memory>
 
-#include "rclcpp/copy_all_parameters.hpp"
+#include "rclcpp/copy_all_parameter_values.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
