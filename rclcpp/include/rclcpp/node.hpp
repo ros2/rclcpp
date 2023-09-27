@@ -972,14 +972,14 @@ public:
 
   /// Return a list of parameters with any of the given prefixes, up to the given depth.
   /**
-   * prefixes are a way to highlight namespaces within parameter naming conventions,
-   * they have a hierarchy which is currently separated by "." (a dot).
+   * Parameters are separated into a hierarchy using the "." (dot) character.
+   * The "prefixes" argument is a way to select only particular parts of the hierarchy.
    *
    * \param[in] prefixes The list of prefixes that should be searched for within the
    * current parameters. If this vector of prefixes is empty, then list_parameters
    * will return all parameters.
    * \param[in] depth An unsigned integer that represents the recursive depth to search.
-   * If this depth = 0, then we will return all parameters that fit the prefixes.
+   * If this depth = 0, then all parameters that fit the prefixes will be returned.
    * \returns A ListParametersResult message which contains both an array of unique prefixes
    * and an array of names that were matched to the prefixes given.
    */
