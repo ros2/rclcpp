@@ -116,6 +116,13 @@ TEST_F(TestNodeParameters, list_parameters)
   EXPECT_NE(
     std::find(list_result4.names.begin(), list_result4.names.end(), parameter_name),
     list_result4.names.end());
+
+  // Return all parameters when the depth = 0
+  auto list_result5 = node_parameters->list_parameters(prefixes, 0u);
+  EXPECT_EQ(1u, list_result5.names.size());
+  EXPECT_NE(
+    std::find(list_result5.names.begin(), list_result5.names.end(), parameter_name),
+    list_result5.names.end());
 }
 
 TEST_F(TestNodeParameters, parameter_overrides)
