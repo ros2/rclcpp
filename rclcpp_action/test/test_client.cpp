@@ -166,7 +166,7 @@ protected:
       {
         rclcpp_action::GoalUUID zero_uuid;
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
-        const rclcpp::Time cancel_stamp = request->goal_info.stamp;
+        const rclcpp::Time cancel_stamp(request->goal_info.stamp, RCL_ROS_TIME);
         bool cancel_all = (
           request->goal_info.goal_id.uuid == zero_uuid &&
           cancel_stamp == zero_stamp);
@@ -175,7 +175,7 @@ protected:
         while (it != goals.end()) {
           auto goal_request = it->second.first;
           auto goal_response = it->second.second;
-          const rclcpp::Time goal_stamp = goal_response->stamp;
+          const rclcpp::Time goal_stamp(goal_response->stamp, RCL_ROS_TIME);
           bool cancel_this = (
             request->goal_info.goal_id.uuid == goal_request->goal_id.uuid ||
             cancel_stamp > goal_stamp);

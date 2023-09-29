@@ -52,7 +52,7 @@ template<typename ActionT>
 rclcpp::Time
 ClientGoalHandle<ActionT>::get_goal_stamp() const
 {
-  return info_.stamp;
+  return rclcpp::Time{info_.stamp, RCL_ROS_TIME};
 }
 
 template<typename ActionT>

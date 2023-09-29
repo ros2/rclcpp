@@ -106,7 +106,7 @@ TEST_F(TestTime, conversions) {
     rclcpp::Time now = system_clock.now();
     builtin_interfaces::msg::Time now_msg = now;
 
-    rclcpp::Time now_again = now_msg;
+    rclcpp::Time now_again(now_msg);
     EXPECT_EQ(now.nanoseconds(), now_again.nanoseconds());
   }
 
@@ -117,7 +117,7 @@ TEST_F(TestTime, conversions) {
     EXPECT_EQ(msg.sec, 12345);
     EXPECT_EQ(msg.nanosec, 67890u);
 
-    rclcpp::Time time = msg;
+    rclcpp::Time time(msg);
     EXPECT_EQ(time.nanoseconds(), positive_time.nanoseconds());
     EXPECT_EQ(
       RCL_S_TO_NS(static_cast<int64_t>(msg.sec)) + static_cast<int64_t>(msg.nanosec),
@@ -133,16 +133,10 @@ TEST_F(TestTime, conversions) {
 
     EXPECT_ANY_THROW(
     {
-      rclcpp::Time negative_time = negative_time_msg;
+      rclcpp::Time negative_time(negative_time_msg);
     });
 
     EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
-
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time assignment(1, 2);
-      assignment = negative_time_msg;
-    });
   }
 
   {
@@ -384,21 +378,6 @@ TEST_F(TestTime, test_constructor_from_rcl_time_point) {
   EXPECT_EQ(test_clock_type, test_time_point.clock_type);
 }
 
-TEST_F(TestTime, test_assignment_operator_from_builtin_msg_time) {
-  rclcpp::Clock ros_clock(RCL_ROS_TIME);
-  const builtin_interfaces::msg::Time ros_now = ros_clock.now();
-  EXPECT_NE(0, ros_now.sec);
-  EXPECT_NE(0u, ros_now.nanosec);
-
-  rclcpp::Time test_time(0u, RCL_CLOCK_UNINITIALIZED);
-  EXPECT_EQ(0u, test_time.nanoseconds());
-  EXPECT_EQ(RCL_CLOCK_UNINITIALIZED, test_time.get_clock_type());
-
-  test_time = ros_now;
-  EXPECT_NE(0, test_time.nanoseconds());
-  // The clock type is hardcoded internally
-  EXPECT_EQ(RCL_ROS_TIME, test_time.get_clock_type());
-}
 
 TEST_F(TestTime, test_sum_operator) {
   const rclcpp::Duration one(1ns);
