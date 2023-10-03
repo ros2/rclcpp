@@ -236,6 +236,7 @@ public:
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
     rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface)
   {
+    std::lock_guard<std::mutex> guard(node_base_lock_);
     node_base_ = node_base_interface;
     node_topics_ = node_topics_interface;
     node_graph_ = node_graph_interface;
@@ -280,17 +281,14 @@ public:
     parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
       node_topics_,
       [this](std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event) {
-        if (node_base_ != nullptr) {
-          this->on_parameter_event(event);
-        }
-        // Do nothing if node_base_ is nullptr because it means the TimeSource is now
-        // without an attached node
+        this->on_parameter_event(event);
       });
   }
 
   // Detach the attached node
   void detachNode()
   {
+    std::lock_guard<std::mutex> guard(node_base_lock_);
     // destroy_clock_sub() *must* be first here, to ensure that the executor
     // can't possibly call any of the callbacks as we are cleaning up.
     destroy_clock_sub();
@@ -327,6 +325,7 @@ private:
   std::thread clock_executor_thread_;
 
   // Preserve the node reference
+  std::mutex node_base_lock_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_{nullptr};
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_{nullptr};
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_{nullptr};
@@ -464,6 +463,14 @@ private:
   // Callback for parameter updates
   void on_parameter_event(std::shared_ptr<const rcl_interfaces::msg::ParameterEvent> event)
   {
+    std::lock_guard<std::mutex> guard(node_base_lock_);
+
+    if (node_base_ == nullptr) {
+      // Do nothing if node_base_ is nullptr because it means the TimeSource is now
+      // without an attached node
+      return;
+    }
+
     // Filter out events on 'use_sim_time' parameter instances in other nodes.
     if (event->node != node_base_->get_fully_qualified_name()) {
       return;
