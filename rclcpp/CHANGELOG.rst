@@ -2,6 +2,16 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add locking to protect the TimeSource::NodeState::node_base\_ (`#2320 <https://github.com/ros2/rclcpp/issues/2320>`_)
+* Update SignalHandler get_global_signal_handler to avoid complex types in static memory (`#2316 <https://github.com/ros2/rclcpp/issues/2316>`_)
+* Removing Old Connext Tests (`#2313 <https://github.com/ros2/rclcpp/issues/2313>`_)
+* Documentation for list_parameters  (`#2315 <https://github.com/ros2/rclcpp/issues/2315>`_)
+* Decouple rosout publisher init from node init. (`#2174 <https://github.com/ros2/rclcpp/issues/2174>`_)
+* fix the depth to relative in list_parameters (`#2300 <https://github.com/ros2/rclcpp/issues/2300>`_)
+* Contributors: Chris Lalancette, Lucas Wendland, Minju, Lee, Tomoya Fujita, Tully Foote
+
 23.0.0 (2023-09-08)
 -------------------
 * Fix the return type of Rate::period. (`#2301 <https://github.com/ros2/rclcpp/issues/2301>`_)
