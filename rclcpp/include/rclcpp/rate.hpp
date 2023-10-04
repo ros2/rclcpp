@@ -184,16 +184,6 @@ public:
   explicit WallRate(const Duration & period);
 };
 
-class ROSRate : public Rate
-{
-public:
-  RCLCPP_PUBLIC
-  explicit ROSRate(const double rate);
-
-  RCLCPP_PUBLIC
-  explicit ROSRate(const Duration & period);
-};
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__RATE_HPP_

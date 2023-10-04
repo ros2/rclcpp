@@ -102,12 +102,4 @@ WallRate::WallRate(const Duration & period)
 : Rate(period, std::make_shared<Clock>(RCL_STEADY_TIME))
 {}
 
-ROSRate::ROSRate(const double rate)
-: Rate(rate, std::make_shared<Clock>(RCL_ROS_TIME))
-{}
-
-ROSRate::ROSRate(const Duration & period)
-: Rate(period, std::make_shared<Clock>(RCL_ROS_TIME))
-{}
-
 }  // namespace rclcpp
