@@ -75,6 +75,13 @@ if(TARGET test_client)
   )
   target_link_libraries(test_client ${PROJECT_NAME} mimick)
 endif()
+ament_add_gtest(test_copy_all_parameter_values test_copy_all_parameter_values.cpp)
+if(TARGET test_copy_all_parameter_values)
+  ament_target_dependencies(test_copy_all_parameter_values
+    "rcl_interfaces"
+  )
+  target_link_libraries(test_copy_all_parameter_values ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_create_timer test_create_timer.cpp)
 if(TARGET test_create_timer)
   ament_target_dependencies(test_create_timer
