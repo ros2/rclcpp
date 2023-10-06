@@ -67,7 +67,8 @@ Rate::sleep()
   // Calculate the time to sleep
   auto time_to_sleep = next_interval - now;
   // Sleep (will get interrupted by ctrl-c, may not sleep full time)
-  return clock_->sleep_for(time_to_sleep);
+  clock_->sleep_for(time_to_sleep);
+  return true;
 }
 
 bool
