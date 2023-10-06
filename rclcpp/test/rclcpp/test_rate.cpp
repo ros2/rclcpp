@@ -21,12 +21,24 @@
 
 #include "../utils/rclcpp_gtest_macros.hpp"
 
+class TestRate : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
 /*
    Basic tests for the Rate and WallRate classes.
  */
-TEST(TestRate, rate_basics) {
-  rclcpp::init(0, nullptr);
-
+TEST_F(TestRate, rate_basics) {
   auto period = std::chrono::milliseconds(1000);
   auto offset = std::chrono::milliseconds(500);
   auto epsilon = std::chrono::milliseconds(100);
@@ -79,13 +91,9 @@ TEST(TestRate, rate_basics) {
   auto five = std::chrono::system_clock::now();
   delta = five - four;
   ASSERT_TRUE(epsilon > delta);
-
-  rclcpp::shutdown();
 }
 
-TEST(TestRate, wall_rate_basics) {
-  rclcpp::init(0, nullptr);
-
+TEST_F(TestRate, wall_rate_basics) {
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);
@@ -140,14 +148,12 @@ TEST(TestRate, wall_rate_basics) {
   auto five = std::chrono::steady_clock::now();
   delta = five - four;
   EXPECT_GT(epsilon, delta);
-
-  rclcpp::shutdown();
 }
 
 /*
    Basic test for the deprecated GenericRate class.
  */
-TEST(TestRate, generic_rate) {
+TEST_F(TestRate, generic_rate) {
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);
@@ -262,7 +268,7 @@ TEST(TestRate, generic_rate) {
   }
 }
 
-TEST(TestRate, from_double) {
+TEST_F(TestRate, from_double) {
   {
     rclcpp::Rate rate(1.0);
     EXPECT_EQ(rclcpp::Duration(std::chrono::seconds(1)), rate.period());
@@ -281,7 +287,7 @@ TEST(TestRate, from_double) {
   }
 }
 
-TEST(TestRate, clock_types) {
+TEST_F(TestRate, clock_types) {
   {
     rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME));
 // suppress deprecated warnings
@@ -341,7 +347,7 @@ TEST(TestRate, clock_types) {
   }
 }
 
-TEST(TestRate, incorrect_constuctor) {
+TEST_F(TestRate, incorrect_constuctor) {
   // Constructor with 0-frequency
   RCLCPP_EXPECT_THROW_EQ(
     rclcpp::Rate rate(0.0),
