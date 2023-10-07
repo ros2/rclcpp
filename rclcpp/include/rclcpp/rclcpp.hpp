@@ -93,9 +93,10 @@
  *   - rclcpp::Event
  * - List topic names and types:
  *   - rclcpp::Node::get_topic_names_and_types()
- * - Get the number of publishers, subscribers, clients, or services on a topic or service:
+ * - Get the number of publishers or subscribers on a topic:
  *   - rclcpp::Node::count_publishers()
  *   - rclcpp::Node::count_subscribers()
+ * - Get the number of clients or servers on a service:
  *   - rclcpp::Node::count_clients()
  *   - rclcpp::Node::count_services()
  *
