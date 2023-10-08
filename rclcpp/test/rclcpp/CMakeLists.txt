@@ -38,13 +38,7 @@ if(TARGET test_exceptions)
   target_link_libraries(test_exceptions ${PROJECT_NAME} mimick)
 endif()
 
-# Increasing timeout because connext can take a long time to destroy nodes
-# TODO(brawner) remove when destroying Node for Connext is resolved. See:
-# https://github.com/ros2/rclcpp/issues/1250
-ament_add_gtest(
-  test_allocator_memory_strategy
-  strategies/test_allocator_memory_strategy.cpp
-  TIMEOUT 360)
+ament_add_gtest(test_allocator_memory_strategy strategies/test_allocator_memory_strategy.cpp)
 if(TARGET test_allocator_memory_strategy)
   ament_target_dependencies(test_allocator_memory_strategy
     "rcl"
@@ -85,6 +79,7 @@ if(TARGET test_client)
   )
   target_link_libraries(test_client ${PROJECT_NAME} mimick)
 endif()
+
 ament_add_gtest(test_client_with_type_adapter test_client_with_type_adapter.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
 )
@@ -92,6 +87,15 @@ if(TARGET test_client_with_type_adapter)
   target_link_libraries(test_client_with_type_adapter
     ${PROJECT_NAME}
     ${cpp_typesupport_target} mimick)
+ endif()
+
+ament_add_gtest(test_copy_all_parameter_values test_copy_all_parameter_values.cpp)
+if(TARGET test_copy_all_parameter_values)
+  ament_target_dependencies(test_copy_all_parameter_values
+    "rcl_interfaces"
+  )
+  target_link_libraries(test_copy_all_parameter_values ${PROJECT_NAME})
+
 endif()
 ament_add_gtest(test_create_timer test_create_timer.cpp)
 if(TARGET test_create_timer)
@@ -691,8 +695,6 @@ if(TARGET test_interface_traits)
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
 endif()
 
-# TODO(brawner) remove when destroying Node for Connext is resolved. See:
-# https://github.com/ros2/rclcpp/issues/1250
 ament_add_gtest(
   test_executors
   executors/test_executors.cpp
