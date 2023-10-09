@@ -305,6 +305,24 @@ public:
   size_t
   count_subscribers(const std::string & topic_name) const = 0;
 
+  /// Return the number of clients created for a given service.
+  /*
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  count_clients(const std::string & service_name) const = 0;
+
+  /// Return the number of services created for a given service.
+  /*
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  count_services(const std::string & service_name) const = 0;
+
   /// Return the rcl guard condition which is triggered when the ROS graph changes.
   RCLCPP_PUBLIC
   virtual

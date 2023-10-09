@@ -1314,6 +1314,26 @@ public:
   size_t
   count_subscribers(const std::string & topic_name) const;
 
+  /// Return the number of clients created for a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \return number of clients that have been created for the given service.
+   * \throws std::runtime_error if clients could not be counted
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_clients(const std::string & service_name) const;
+
+  /// Return the number of services created for a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \return number of services that have been created for the given service.
+   * \throws std::runtime_error if services could not be counted
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_services(const std::string & service_name) const;
+
   /// Return the topic endpoint information about publishers on a given topic.
   /**
    * The returned parameter is a list of topic endpoint information, where each item will contain

@@ -96,6 +96,9 @@
  * - Get the number of publishers or subscribers on a topic:
  *   - rclcpp::Node::count_publishers()
  *   - rclcpp::Node::count_subscribers()
+ * - Get the number of clients or servers on a service:
+ *   - rclcpp::Node::count_clients()
+ *   - rclcpp::Node::count_services()
  *
  * And components related to logging:
  *

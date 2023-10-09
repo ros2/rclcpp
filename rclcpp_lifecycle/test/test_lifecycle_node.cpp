@@ -726,6 +726,17 @@ TEST_F(TestDefaultStateMachine, test_graph_services) {
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_transition_graph"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
+
+  EXPECT_EQ(0u, test_node->count_clients("/testnode/change_state"));
+  EXPECT_EQ(0u, test_node->count_clients("/testnode/get_available_states"));
+  EXPECT_EQ(0u, test_node->count_clients("/testnode/get_available_transitions"));
+  EXPECT_EQ(0u, test_node->count_clients("/testnode/get_state"));
+  EXPECT_EQ(0u, test_node->count_clients("/testnode/get_transition_graph"));
+  EXPECT_EQ(1u, test_node->count_services("/testnode/change_state"));
+  EXPECT_EQ(1u, test_node->count_services("/testnode/get_available_states"));
+  EXPECT_EQ(1u, test_node->count_services("/testnode/get_available_transitions"));
+  EXPECT_EQ(1u, test_node->count_services("/testnode/get_state"));
+  EXPECT_EQ(1u, test_node->count_services("/testnode/get_transition_graph"));
 }
 
 TEST_F(TestDefaultStateMachine, test_graph_services_by_node) {
