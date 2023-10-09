@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add clients & services count (`#2072 <https://github.com/ros2/rclcpp/issues/2072>`_)
+* remove invalid sized allocation test for SerializedMessage. (`#2330 <https://github.com/ros2/rclcpp/issues/2330>`_)
+* Adding API to copy all parameters from one node to another (`#2304 <https://github.com/ros2/rclcpp/issues/2304>`_)
+* Contributors: Minju, Lee, Steve Macenski, Tomoya Fujita
+
 23.1.0 (2023-10-04)
 -------------------
 * Add locking to protect the TimeSource::NodeState::node_base\_ (`#2320 <https://github.com/ros2/rclcpp/issues/2320>`_)
