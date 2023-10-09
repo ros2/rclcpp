@@ -246,6 +246,7 @@ public:
     node_parameters_ = node_parameters_interface;
     // TODO(tfoote): Update QOS
 
+    node_name_ = node_base_->get_fully_qualified_name();
     logger_ = node_logging_->get_logger();
 
     // Though this defaults to false, it can be overridden by initial parameter values for the
@@ -323,6 +324,8 @@ private:
   // Dedicated thread for clock subscription.
   bool use_clock_thread_;
   std::thread clock_executor_thread_;
+  // Fully qualified node name
+  const char * node_name_;
 
   // Preserve the node reference
   std::mutex node_base_lock_;
@@ -472,7 +475,7 @@ private:
     }
 
     // Filter out events on 'use_sim_time' parameter instances in other nodes.
-    if (event->node != node_base_->get_fully_qualified_name()) {
+    if (event->node != node_name_) {
       return;
     }
     // Filter for only 'use_sim_time' being added or changed.
