@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+23.2.0 (2023-10-09)
+-------------------
 * add clients & services count (`#2072 <https://github.com/ros2/rclcpp/issues/2072>`_)
 * Contributors: Minju, Lee
 
