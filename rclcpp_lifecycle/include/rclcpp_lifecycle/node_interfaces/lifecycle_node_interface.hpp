@@ -21,6 +21,14 @@
 #include "rclcpp_lifecycle/visibility_control.h"
 #include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
 
+// When windows.h is included, ERROR is defined as a macro.  So the use of it later in this file,
+// even as an enum, causes compilation errors.  Work around this by undefining the macro here,
+// and then redefining when this header is finished being included.
+#if defined(_WIN32)
+#pragma push_macro("ERROR")
+#undef ERROR
+#endif
+
 namespace rclcpp_lifecycle
 {
 namespace node_interfaces
@@ -107,6 +115,10 @@ public:
 
 }  // namespace node_interfaces
 }  // namespace rclcpp_lifecycle
+
+#if defined(_WIN32)
+#pragma pop_macro("ERROR")
+#endif
 
 RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface, lifecycle_node)
