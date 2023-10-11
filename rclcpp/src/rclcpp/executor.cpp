@@ -623,7 +623,12 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
     // Deliver ROS message
     case rclcpp::DeliveredMessageKind::ROS_MESSAGE:
       {
-        if (subscription->can_loan_messages()) {
+        // TODO(clalancette): The loaned message interface is currently not safe to use.
+        // If a user takes a reference to the shared_ptr, it can get freed from underneath them
+        // via rcl_return_loaned_message_from_subscription().  The correct solution is to return
+        // the loaned message in a custom deleter, but that needs to be carefully handled with
+        // locking.  Disable the entire interface for now until we sort through the issues.
+        if (false && subscription->can_loan_messages()) {
           // This is the case where a loaned message is taken from the middleware via
           // inter-process communication, given to the user for their callback,
           // and then returned.
@@ -669,6 +674,11 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
             subscription->get_topic_name(),
             [&]() {return subscription->take_type_erased(message.get(), message_info);},
             [&]() {subscription->handle_message(message, message_info);});
+          // TODO(clalancette): In the case that the user is using the MessageMemoryPool,
+          // and they take a shared_ptr reference to the message in the callback, this can
+          // inadvertently return the message to the pool when the user is still using it.
+          // This is a bug that needs to be fixed in the pool, and we should probably have
+          // a custom deleter for the message that actually does the return_message().
           subscription->return_message(message);
         }
         break;
