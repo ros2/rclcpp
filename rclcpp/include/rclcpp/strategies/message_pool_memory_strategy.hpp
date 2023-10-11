@@ -15,7 +15,11 @@
 #ifndef RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 
+#include <array>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <type_traits>
 
 #include "rosidl_runtime_cpp/traits.hpp"
 
@@ -52,11 +56,10 @@ public:
 
   /// Default constructor
   MessagePoolMemoryStrategy()
-  : next_array_index_(0)
   {
     for (size_t i = 0; i < Size; ++i) {
-      pool_[i].msg_ptr_ = std::make_shared<MessageT>();
-      pool_[i].used = false;
+      pool_[i] = std::make_shared<MessageT>();
+      free_list_.push_back(i);
     }
   }
 
@@ -68,16 +71,25 @@ public:
    */
   std::shared_ptr<MessageT> borrow_message()
   {
-    size_t current_index = next_array_index_;
-    next_array_index_ = (next_array_index_ + 1) % Size;
-    if (pool_[current_index].used) {
-      throw std::runtime_error("Tried to access message that was still in use! Abort.");
+    std::lock_guard<std::mutex> lock(pool_mutex_);
+    if (free_list_.size() == 0) {
+      for (size_t i = 0; i < Size; ++i) {
+        if (pool_[i].use_count() == 1) {
+          free_list_.push_back(i);
+          break;
+        }
+      }
+      if (free_list_.size() == 0) {
+        throw std::runtime_error("No more free slots in the pool!");
+      }
     }
-    pool_[current_index].msg_ptr_->~MessageT();
-    new (pool_[current_index].msg_ptr_.get())MessageT;
 
-    pool_[current_index].used = true;
-    return pool_[current_index].msg_ptr_;
+    size_t current_index = free_list_.pop_front();
+
+    pool_[current_index]->~MessageT();
+    new (pool_[current_index].get())MessageT;
+
+    return pool_[current_index];
   }
 
   /// Return a message to the message pool.
@@ -87,24 +99,68 @@ public:
    */
   void return_message(std::shared_ptr<MessageT> & msg)
   {
-    for (size_t i = 0; i < Size; ++i) {
-      if (pool_[i].msg_ptr_ == msg) {
-        pool_[i].used = false;
-        return;
+    (void)msg;
+
+    // What we really want to do here is to figure out whether the user has taken an additional
+    // reference to the message, and only add it to the free list if that is *not* the case.
+    // However, we can't really do that for the currently passed-in msg; it can have an arbitrary
+    // reference count due to the mechanisms of rclcpp.  Instead, we look at all the rest of the
+    // pointers, and add the ones that the user has released into the free pool.
+    // We do the same thing in borrow_message(), so if the user has a pool of size 1
+    // (or only one free slot), we'll always find it.
+
+    std::lock_guard<std::mutex> lock(pool_mutex_);
+    if (free_list_.size() == 0) {
+      for (size_t i = 0; i < Size; ++i) {
+        if (pool_[i].use_count() == 1) {
+          free_list_.push_back(i);
+        }
       }
     }
-    throw std::runtime_error("Unrecognized message ptr in return_message.");
   }
 
 protected:
-  struct PoolMember
+  template<size_t N>
+  class CyclicSizeTArray
   {
-    std::shared_ptr<MessageT> msg_ptr_;
-    bool used;
+public:
+    void push_back(const size_t v)
+    {
+      if (size_ + 1 > N) {
+        throw std::runtime_error("Tried to push too many items into the array");
+      }
+      array_[(front_ + size_) % N] = v;
+      ++size_;
+    }
+
+    size_t pop_front()
+    {
+      if (size_ < 1) {
+        throw std::runtime_error("Tried to pop item from empty array");
+      }
+
+      size_t val = array_[front_];
+
+      front_ = (front_ + 1) % N;
+      --size_;
+
+      return val;
+    }
+
+    size_t size() const
+    {
+      return size_;
+    }
+
+private:
+    size_t front_ = 0;
+    size_t size_ = 0;
+    std::array<size_t, N> array_;
   };
 
-  std::array<PoolMember, Size> pool_;
-  size_t next_array_index_;
+  std::mutex pool_mutex_;
+  std::array<std::shared_ptr<MessageT>, Size> pool_;
+  CyclicSizeTArray<Size> free_list_;
 };
 
 }  // namespace message_pool_memory_strategy
