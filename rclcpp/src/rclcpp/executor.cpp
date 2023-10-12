@@ -623,12 +623,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
     // Deliver ROS message
     case rclcpp::DeliveredMessageKind::ROS_MESSAGE:
       {
-        // TODO(clalancette): The loaned message interface is currently not safe to use.
-        // If a user takes a reference to the shared_ptr, it can get freed from underneath them
-        // via rcl_return_loaned_message_from_subscription().  The correct solution is to return
-        // the loaned message in a custom deleter, but that needs to be carefully handled with
-        // locking.  Disable the entire interface for now until we sort through the issues.
-        if (false && subscription->can_loan_messages()) {
+        if (subscription->can_loan_messages()) {
           // This is the case where a loaned message is taken from the middleware via
           // inter-process communication, given to the user for their callback,
           // and then returned.
