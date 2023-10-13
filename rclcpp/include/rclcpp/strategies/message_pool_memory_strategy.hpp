@@ -80,7 +80,7 @@ public:
         }
       }
       if (free_list_.size() == 0) {
-        throw std::runtime_error("No more free slots in the pool!");
+        throw std::runtime_error("No more free slots in the pool");
       }
     }
 

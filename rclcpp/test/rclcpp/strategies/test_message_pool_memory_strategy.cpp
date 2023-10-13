@@ -56,7 +56,7 @@ TEST_F(TestMessagePoolMemoryStrategy, borrow_too_many) {
   // Size is 1, borrowing second time should fail
   RCLCPP_EXPECT_THROW_EQ(
     message_memory_strategy_->borrow_message(),
-    std::runtime_error("No more free slots in the pool!"));
+    std::runtime_error("No more free slots in the pool"));
   EXPECT_NO_THROW(message_memory_strategy_->return_message(message));
 }
 
@@ -71,7 +71,7 @@ TEST_F(TestMessagePoolMemoryStrategy, borrow_hold_reference) {
     // But we are still holding the reference, so we expect that there is still no room in the pool.
     RCLCPP_EXPECT_THROW_EQ(
       message_memory_strategy_->borrow_message(),
-      std::runtime_error("No more free slots in the pool!"));
+      std::runtime_error("No more free slots in the pool"));
   }
 
   // Now that we've dropped the reference (left the scope), we expect to be able to borrow again.
