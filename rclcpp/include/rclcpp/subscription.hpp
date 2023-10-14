@@ -104,7 +104,7 @@ public:
 
 private:
   using SubscriptionTopicStatisticsSharedPtr =
-    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>>;
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
@@ -316,7 +316,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 
@@ -357,7 +357,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 

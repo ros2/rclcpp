@@ -77,16 +77,14 @@ using libstatistics_collector::moving_average_statistics::StatisticData;
 
 /**
  * Wrapper class to test and expose parts of the SubscriptionTopicStatistics<T> class.
- * \tparam CallbackMessageT
  */
-template<typename CallbackMessageT>
-class TestSubscriptionTopicStatistics : public SubscriptionTopicStatistics<CallbackMessageT>
+class TestSubscriptionTopicStatistics : public SubscriptionTopicStatistics
 {
 public:
   TestSubscriptionTopicStatistics(
     const std::string & node_name,
     rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
-  : SubscriptionTopicStatistics<CallbackMessageT>(node_name, publisher)
+  : SubscriptionTopicStatistics(node_name, publisher)
   {
   }
 
@@ -95,7 +93,7 @@ public:
   /// Exposed for testing
   std::vector<StatisticData> get_current_collector_data() const
   {
-    return SubscriptionTopicStatistics<CallbackMessageT>::get_current_collector_data();
+    return SubscriptionTopicStatistics::get_current_collector_data();
   }
 };
 
@@ -277,12 +275,12 @@ private:
 class TestSubscriptionTopicStatisticsFixture : public ::testing::Test
 {
 protected:
-  void SetUp()
+  void SetUp() override
   {
     rclcpp::init(0 /* argc */, nullptr /* argv */);
   }
 
-  void TearDown()
+  void TearDown() override
   {
     rclcpp::shutdown();
   }
@@ -389,7 +387,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
     10);
 
   // Construct a separate instance
-  auto sub_topic_stats = std::make_unique<TestSubscriptionTopicStatistics<Empty>>(
+  auto sub_topic_stats = std::make_unique<TestSubscriptionTopicStatistics>(
     empty_subscriber->get_name(),
     topic_stats_publisher);
 
@@ -432,9 +430,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   ex.add_node(empty_subscriber);
 
   // Spin and get future
-  ex.spin_until_future_complete(
-    statistics_listener->GetFuture(),
-    kTestTimeout);
+  ex.spin_until_future_complete(statistics_listener->GetFuture(), kTestTimeout);
 
   // Compare message counts, sample count should be the same as published and received count
   EXPECT_EQ(kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
@@ -460,15 +456,8 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   EXPECT_EQ(kNumExpectedMessagePeriodMessages, message_period_count);
 
   // Check the collected statistics for message period.
-  // Message age statistics will not be calculated because Empty messages
-  // don't have a `header` with timestamp. This means that we expect to receive a `message_age`
-  // and `message_period` message for each empty message published.
   for (const auto & msg : received_messages) {
-    if (msg.metrics_source == kMessageAgeSourceLabel) {
-      check_if_statistics_message_is_empty(msg);
-    } else if (msg.metrics_source == kMessagePeriodSourceLabel) {
-      check_if_statistic_message_is_populated(msg);
-    }
+    check_if_statistic_message_is_populated(msg);
   }
 }
 
