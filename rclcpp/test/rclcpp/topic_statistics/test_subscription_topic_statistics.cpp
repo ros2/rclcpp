@@ -168,20 +168,22 @@ private:
 };
 
 /**
- * TransitionMessageStamp publisher node : used to publish MessageWithHeader with `header` value set
+ * TransitionMessageStamp publisher emulator node : used to emulate publishing messages by
+ * directly calling rclcpp::Subscription::handle_message(msg_shared_ptr, message_info).
  * The message age results change during the test.
  */
-
-class TransitionMessageStampPublisher : public rclcpp::Node
+template<typename MessageT>
+class TransitionMessageStampPublisherEmulator : public rclcpp::Node
 {
 public:
-  TransitionMessageStampPublisher(
-    const std::string & name, const std::string & topic,
+  TransitionMessageStampPublisherEmulator(
+    const std::string & name,
     const std::chrono::seconds transition_duration, const std::chrono::seconds message_age_offset,
+    typename rclcpp::Subscription<MessageT>::SharedPtr subscription,
     const std::chrono::milliseconds & publish_period = std::chrono::milliseconds{100})
-  : Node(name), transition_duration_(transition_duration), message_age_offset_(message_age_offset)
+  : Node(name), transition_duration_(transition_duration), message_age_offset_(message_age_offset),
+    subscription_(std::move(subscription))
   {
-    publisher_ = create_publisher<MessageWithHeader>(topic, 10);
     publish_timer_ = this->create_wall_timer(publish_period, [this]() {this->publish_message();});
     start_time_ = this->now();
   }
@@ -189,24 +191,26 @@ public:
 private:
   void publish_message()
   {
-    auto msg = MessageWithHeader{};
+    std::shared_ptr<void> msg_shared_ptr = std::make_shared<MessageT>();
+    rmw_message_info_t rmw_message_info = rmw_get_zero_initialized_message_info();
+
     auto now = this->now();
     auto elapsed_time = now - start_time_;
     if (elapsed_time < transition_duration_) {
       // Apply only to the topic statistics in the first half
       // Subtract offset so message_age is always >= offset.
-      msg.header.stamp = now - message_age_offset_;
+      rmw_message_info.source_timestamp = (now - message_age_offset_).nanoseconds();
     } else {
-      msg.header.stamp = now;
+      rmw_message_info.source_timestamp = now.nanoseconds();
     }
-    publisher_->publish(msg);
+    rclcpp::MessageInfo message_info{rmw_message_info};
+    subscription_->handle_message(msg_shared_ptr, message_info);
   }
 
   std::chrono::seconds transition_duration_;
   std::chrono::seconds message_age_offset_;
+  typename rclcpp::Subscription<MessageT>::SharedPtr subscription_;
   rclcpp::Time start_time_;
-
-  rclcpp::Publisher<MessageWithHeader>::SharedPtr publisher_;
   rclcpp::TimerBase::SharedPtr publish_timer_;
 };
 
@@ -264,6 +268,11 @@ public:
       options);
   }
   virtual ~MessageWithHeaderSubscriber() = default;
+
+  rclcpp::Subscription<MessageWithHeader>::SharedPtr get_subscription()
+  {
+    return subscription_;
+  }
 
 private:
   rclcpp::Subscription<MessageWithHeader>::SharedPtr subscription_;
@@ -520,15 +529,17 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window_reset)
 {
-  // Create a MessageWithHeader publisher
-  auto msg_with_header_publisher = std::make_shared<TransitionMessageStampPublisher>(
-    kTestPubNodeName, kTestSubStatsTopic, kUnstableMessageAgeWindowDuration,
-    kUnstableMessageAgeOffset);
-
   // msg_with_header_subscriber has a topic statistics instance as part of its
   // subscription this will listen to and generate statistics
   auto msg_with_header_subscriber =
     std::make_shared<MessageWithHeaderSubscriber>(kTestSubNodeName, kTestSubStatsTopic);
+
+  // Create a MessageWithHeader publisher
+  auto msg_with_header_publisher =
+    std::make_shared<TransitionMessageStampPublisherEmulator<MessageWithHeader>>(
+    kTestPubNodeName, kUnstableMessageAgeWindowDuration,
+    kUnstableMessageAgeOffset, msg_with_header_subscriber->get_subscription());
+
   // Create a listener for topic statistics messages
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_stats_include_window_reset", "/statistics", kNumExpectedMessages);
