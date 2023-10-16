@@ -93,7 +93,7 @@ public:
 };
 
 /**
- * Empty publisher node: used to publish empty messages
+ * PublisherNode wrapper: used to create publisher node
  */
 template<typename MessageT>
 class PublisherNode : public rclcpp::Node
