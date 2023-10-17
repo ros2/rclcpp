@@ -16,6 +16,7 @@
 #define RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 
 #include <array>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -58,8 +59,15 @@ public:
   MessagePoolMemoryStrategy()
   {
     for (size_t i = 0; i < Size; ++i) {
-      pool_[i] = std::make_shared<MessageT>();
+      pool_[i] = new MessageT;
       free_list_.push_back(i);
+    }
+  }
+
+  ~MessagePoolMemoryStrategy()
+  {
+    for (size_t i = 0; i < Size; ++i) {
+      delete pool_[i];
     }
   }
 
@@ -73,23 +81,21 @@ public:
   {
     std::lock_guard<std::mutex> lock(pool_mutex_);
     if (free_list_.size() == 0) {
-      for (size_t i = 0; i < Size; ++i) {
-        if (pool_[i].use_count() == 1) {
-          free_list_.push_back(i);
-          break;
-        }
-      }
-      if (free_list_.size() == 0) {
-        throw std::runtime_error("No more free slots in the pool");
-      }
+      throw std::runtime_error("No more free slots in the pool");
     }
 
     size_t current_index = free_list_.pop_front();
 
-    pool_[current_index]->~MessageT();
-    new (pool_[current_index].get())MessageT;
-
-    return pool_[current_index];
+    return std::shared_ptr<MessageT>(
+      pool_[current_index], [this](MessageT * p) {
+        for (size_t i = 0; i < Size; ++i) {
+          if (pool_[i] == p) {
+            *p = {};
+            free_list_.push_back(i);
+            break;
+          }
+        }
+      });
   }
 
   /// Return a message to the message pool.
@@ -100,28 +106,11 @@ public:
   void return_message(std::shared_ptr<MessageT> & msg)
   {
     (void)msg;
-
-    // What we really want to do here is to figure out whether the user has taken an additional
-    // reference to the message, and only add it to the free list if that is *not* the case.
-    // However, we can't really do that for the currently passed-in msg; it can have an arbitrary
-    // reference count due to the mechanisms of rclcpp.  Instead, we look at all the rest of the
-    // pointers, and add the ones that the user has released into the free pool.
-    // We do the same thing in borrow_message(), so if the user has a pool of size 1
-    // (or only one free slot), we'll always find it.
-
-    std::lock_guard<std::mutex> lock(pool_mutex_);
-    if (free_list_.size() == 0) {
-      for (size_t i = 0; i < Size; ++i) {
-        if (pool_[i].use_count() == 1) {
-          free_list_.push_back(i);
-        }
-      }
-    }
   }
 
 protected:
   template<size_t N>
-  class CyclicSizeTArray
+  class CircularArray
   {
 public:
     void push_back(const size_t v)
@@ -159,8 +148,8 @@ private:
   };
 
   std::mutex pool_mutex_;
-  std::array<std::shared_ptr<MessageT>, Size> pool_;
-  CyclicSizeTArray<Size> free_list_;
+  std::array<MessageT *, Size> pool_;
+  CircularArray<Size> free_list_;
 };
 
 }  // namespace message_pool_memory_strategy
