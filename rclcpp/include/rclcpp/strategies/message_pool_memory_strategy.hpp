@@ -90,7 +90,8 @@ public:
       pool_[current_index], [this](MessageT * p) {
         for (size_t i = 0; i < Size; ++i) {
           if (pool_[i] == p) {
-            *p = {};
+            p->~MessageT();
+            new(p) MessageT();
             free_list_.push_back(i);
             break;
           }
