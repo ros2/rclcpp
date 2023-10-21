@@ -289,7 +289,7 @@ public:
   }
 
   bool
-  use_take_shared_method() const
+  use_take_shared_method() const override
   {
     return take_shared_method;
   }
