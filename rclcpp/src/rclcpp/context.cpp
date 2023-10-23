@@ -462,7 +462,7 @@ template<Context::ShutdownType shutdown_type>
 std::vector<rclcpp::Context::ShutdownCallback>
 Context::get_shutdown_callback() const
 {
-  const auto get_callback_vector = [this](auto & mutex, auto & callback_set) {
+  const auto get_callback_vector = [](auto & mutex, auto & callback_set) {
       const std::lock_guard<std::mutex> lock(mutex);
       std::vector<rclcpp::Context::ShutdownCallback> callbacks;
       for (auto & callback : callback_set) {
