@@ -40,7 +40,7 @@ public:
  */
 TEST_F(TestRate, rate_basics) {
   auto period = std::chrono::milliseconds(1000);
-  auto offset = std::chrono::milliseconds(500);
+  auto offset = std::chrono::milliseconds(300);
   auto epsilon = std::chrono::milliseconds(100);
   double overrun_ratio = 1.5;
 
@@ -95,7 +95,7 @@ TEST_F(TestRate, rate_basics) {
 
 TEST_F(TestRate, wall_rate_basics) {
   auto period = std::chrono::milliseconds(100);
-  auto offset = std::chrono::milliseconds(50);
+  auto offset = std::chrono::milliseconds(30);
   auto epsilon = std::chrono::milliseconds(1);
   double overrun_ratio = 1.5;
 
@@ -155,7 +155,7 @@ TEST_F(TestRate, wall_rate_basics) {
  */
 TEST_F(TestRate, generic_rate) {
   auto period = std::chrono::milliseconds(100);
-  auto offset = std::chrono::milliseconds(50);
+  auto offset = std::chrono::milliseconds(30);
   auto epsilon = std::chrono::milliseconds(1);
   double overrun_ratio = 1.5;
 
