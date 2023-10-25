@@ -54,6 +54,7 @@
  *   - rclcpp::ParameterValue
  *   - rclcpp::AsyncParametersClient
  *   - rclcpp::SyncParametersClient
+ *   - rclcpp::copy_all_parameter_values()
  *   - rclcpp/parameter.hpp
  *   - rclcpp/parameter_value.hpp
  *   - rclcpp/parameter_client.hpp
@@ -95,6 +96,9 @@
  * - Get the number of publishers or subscribers on a topic:
  *   - rclcpp::Node::count_publishers()
  *   - rclcpp::Node::count_subscribers()
+ * - Get the number of clients or servers on a service:
+ *   - rclcpp::Node::count_clients()
+ *   - rclcpp::Node::count_services()
  *
  * And components related to logging:
  *
@@ -164,6 +168,7 @@
 #include <csignal>
 #include <memory>
 
+#include "rclcpp/copy_all_parameter_values.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"

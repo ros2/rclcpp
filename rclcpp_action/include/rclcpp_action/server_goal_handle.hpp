@@ -128,7 +128,7 @@ class Server;
  * accepted.
  * A `Server` will create an instance and give it to the user in their `handle_accepted` callback.
  *
- * Internally, this class is responsible for coverting between the C++ action type and generic
+ * Internally, this class is responsible for converting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
  */
 template<typename ActionT>
@@ -196,7 +196,7 @@ public:
 
   /// Indicate that a goal has been canceled.
   /**
-   * Only call this if the goal is executing or pending, but has been canceled.
+   * Only call this if the goal is canceling.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    *

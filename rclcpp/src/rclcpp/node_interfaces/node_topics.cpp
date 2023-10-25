@@ -58,7 +58,7 @@ NodeTopics::add_publisher(
   // Assign to a group.
   if (callback_group) {
     if (!node_base_->callback_group_in_node(callback_group)) {
-      throw std::runtime_error("Cannot create publisher, callback group not in node.");
+      throw rclcpp::exceptions::MissingGroupNodeException("publisher");
     }
   } else {
     callback_group = node_base_->get_default_callback_group();
@@ -97,8 +97,7 @@ NodeTopics::add_subscription(
   // Assign to a group.
   if (callback_group) {
     if (!node_base_->callback_group_in_node(callback_group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create subscription, callback group not in node.");
+      throw rclcpp::exceptions::MissingGroupNodeException("subscription");
     }
   } else {
     callback_group = node_base_->get_default_callback_group();

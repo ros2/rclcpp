@@ -2,6 +2,25 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+23.2.0 (2023-10-09)
+-------------------
+
+23.1.0 (2023-10-04)
+-------------------
+* Add missing header required by the rclcpp::NodeOptions type (`#2324 <https://github.com/ros2/rclcpp/issues/2324>`_)
+* Contributors: Ignacio Vizzo
+
+23.0.0 (2023-09-08)
+-------------------
+* Update API docs links in package READMEs (`#2302 <https://github.com/ros2/rclcpp/issues/2302>`_)
+* Contributors: Christophe Bedard
+
+22.2.0 (2023-09-07)
+-------------------
+
+22.1.0 (2023-08-21)
+-------------------
+
 22.0.0 (2023-07-11)
 -------------------
 

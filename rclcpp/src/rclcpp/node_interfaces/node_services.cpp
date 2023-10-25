@@ -32,8 +32,7 @@ NodeServices::add_service(
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create service, group not in node.");
+      throw rclcpp::exceptions::MissingGroupNodeException("service");
     }
   } else {
     group = node_base_->get_default_callback_group();
@@ -58,8 +57,7 @@ NodeServices::add_client(
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create client, group not in node.");
+      throw rclcpp::exceptions::MissingGroupNodeException("client");
     }
   } else {
     group = node_base_->get_default_callback_group();

@@ -144,6 +144,10 @@ LifecycleNode::LifecycleNode(
       &LifecycleNodeInterface::on_deactivate, this,
       std::placeholders::_1));
   register_on_error(std::bind(&LifecycleNodeInterface::on_error, this, std::placeholders::_1));
+
+  if (options.enable_logger_service()) {
+    node_logging_->create_logger_services(node_services_);
+  }
 }
 
 LifecycleNode::~LifecycleNode()
@@ -380,6 +384,18 @@ size_t
 LifecycleNode::count_subscribers(const std::string & topic_name) const
 {
   return node_graph_->count_subscribers(topic_name);
+}
+
+size_t
+LifecycleNode::count_clients(const std::string & service_name) const
+{
+  return node_graph_->count_clients(service_name);
+}
+
+size_t
+LifecycleNode::count_services(const std::string & service_name) const
+{
+  return node_graph_->count_services(service_name);
 }
 
 std::vector<rclcpp::TopicEndpointInfo>

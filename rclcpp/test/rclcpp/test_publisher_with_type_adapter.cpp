@@ -152,33 +152,54 @@ TEST_F(TestPublisher, conversion_exception_is_passed_up) {
   }
 }
 
+using UseTakeSharedMethod = bool;
+class TestPublisherFixture
+  : public TestPublisher,
+  public ::testing::WithParamInterface<UseTakeSharedMethod>
+{
+};
+
 /*
  * Testing that publisher sends type adapted types and ROS message types with intra proccess communications.
  */
-TEST_F(
-  TestPublisher,
+TEST_P(
+  TestPublisherFixture,
   check_type_adapted_message_is_sent_and_received_intra_process) {
   using StringTypeAdapter = rclcpp::TypeAdapter<std::string, rclcpp::msg::String>;
   const std::string message_data = "Message Data";
   const std::string topic_name = "topic_name";
   bool is_received;
 
-  auto callback =
-    [message_data, &is_received](
-    const rclcpp::msg::String::ConstSharedPtr msg,
-    const rclcpp::MessageInfo & message_info
-    ) -> void
-    {
-      is_received = true;
-      ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
-      ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
-    };
-
   auto node = rclcpp::Node::make_shared(
     "test_intra_process",
     rclcpp::NodeOptions().use_intra_process_comms(true));
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 10);
-  auto sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, callback);
+  rclcpp::Subscription<rclcpp::msg::String>::SharedPtr sub;
+  if (GetParam()) {
+    auto callback =
+      [message_data, &is_received](
+      const rclcpp::msg::String::ConstSharedPtr msg,
+      const rclcpp::MessageInfo & message_info
+      ) -> void
+      {
+        is_received = true;
+        ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+      };
+    sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, callback);
+  } else {
+    auto callback_unique =
+      [message_data, &is_received](
+      rclcpp::msg::String::UniquePtr msg,
+      const rclcpp::MessageInfo & message_info
+      ) -> void
+      {
+        is_received = true;
+        ASSERT_STREQ(message_data.c_str(), msg->data.c_str());
+        ASSERT_TRUE(message_info.get_rmw_message_info().from_intra_process);
+      };
+    sub = node->create_subscription<rclcpp::msg::String>(topic_name, 1, callback_unique);
+  }
 
   auto wait_for_message_to_be_received = [&is_received, &node]() {
       rclcpp::executors::SingleThreadedExecutor executor;
@@ -238,6 +259,14 @@ TEST_F(
     */
   }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+  TestPublisherFixtureWithParam,
+  TestPublisherFixture,
+  ::testing::Values(
+    true,   // use take shared method
+    false   // not use take shared method
+));
 
 /*
  * Testing that publisher sends type adapted types and ROS message types with inter proccess communications.

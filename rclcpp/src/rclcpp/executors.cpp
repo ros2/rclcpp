@@ -15,6 +15,21 @@
 #include "rclcpp/executors.hpp"
 
 void
+rclcpp::spin_all(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  std::chrono::nanoseconds max_duration)
+{
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.spin_node_all(node_ptr, max_duration);
+}
+
+void
+rclcpp::spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration)
+{
+  rclcpp::spin_all(node_ptr->get_node_base_interface(), max_duration);
+}
+
+void
 rclcpp::spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor exec;
