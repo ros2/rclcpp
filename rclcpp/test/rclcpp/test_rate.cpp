@@ -18,10 +18,24 @@
 
 #include "rclcpp/rate.hpp"
 
+class TestRate : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
 /*
    Basic tests for the Rate and WallRate classes.
  */
-TEST(TestRate, rate_basics) {
+TEST_F(TestRate, rate_basics) {
   auto period = std::chrono::milliseconds(1000);
   auto offset = std::chrono::milliseconds(500);
   auto epsilon = std::chrono::milliseconds(100);
@@ -61,7 +75,7 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(epsilon > delta);
 }
 
-TEST(TestRate, wall_rate_basics) {
+TEST_F(TestRate, wall_rate_basics) {
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);
@@ -101,7 +115,7 @@ TEST(TestRate, wall_rate_basics) {
   EXPECT_GT(epsilon, delta);
 }
 
-TEST(TestRate, from_double) {
+TEST_F(TestRate, from_double) {
   {
     rclcpp::WallRate rate(1.0);
     EXPECT_EQ(std::chrono::seconds(1), rate.period());
