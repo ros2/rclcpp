@@ -496,7 +496,7 @@ Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
       std::unique_lock<std::mutex> lock(interrupt_mutex_);
       auto start = std::chrono::steady_clock::now();
       // this will release the lock while waiting
-      interrupt_condition_variable_.wait_for(lock, nanoseconds);
+      interrupt_condition_variable_.wait_for(lock, time_left);
       time_left -= std::chrono::steady_clock::now() - start;
     }
   } while (time_left > std::chrono::nanoseconds::zero() && this->is_valid());
