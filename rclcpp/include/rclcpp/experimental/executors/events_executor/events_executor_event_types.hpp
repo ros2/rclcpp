@@ -15,6 +15,8 @@
 #ifndef RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__EVENTS_EXECUTOR_EVENT_TYPES_HPP_
 #define RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__EVENTS_EXECUTOR_EVENT_TYPES_HPP_
 
+#include <memory>
+
 namespace rclcpp
 {
 namespace experimental
@@ -34,6 +36,7 @@ enum ExecutorEventType
 struct ExecutorEvent
 {
   const void * entity_key;
+  std::shared_ptr<void> data;
   int waitable_data;
   ExecutorEventType type;
   size_t num_events;
