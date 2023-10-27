@@ -60,6 +60,17 @@ public:
 
     /// See std::future::share().
     SharedFuture share() noexcept {return this->future.share();}
+
+    /// Move constructor.
+    FutureAndRequestId(FutureAndRequestId && other) noexcept = default;
+    /// Deleted copy constructor, each instance is a unique owner of the future.
+    FutureAndRequestId(const FutureAndRequestId & other) = delete;
+    /// Move assignment.
+    FutureAndRequestId & operator=(FutureAndRequestId && other) noexcept = default;
+    /// Deleted copy assignment, each instance is a unique owner of the future.
+    FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
+    /// Destructor.
+    ~FutureAndRequestId() = default;
   };
 
   GenericClient(
