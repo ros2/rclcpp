@@ -198,16 +198,23 @@ protected:
   set_on_reset_callback(rcl_event_callback_t callback, const void * user_data);
 };
 
+struct TimerInfo
+{
+  Time expected_call_time;
+  Time actual_call_time;
+};
 
 using VoidCallbackType = std::function<void ()>;
 using TimerCallbackType = std::function<void (TimerBase &)>;
+using TimerInfoCallbackType = std::function<void (const TimerInfo &)>;
 
 /// Generic timer. Periodically executes a user-specified callback.
 template<
   typename FunctorT,
   typename std::enable_if<
     rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
-    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerInfoCallbackType>::value
   >::type * = nullptr
 >
 class GenericTimer : public TimerBase
@@ -259,7 +266,7 @@ public:
   bool
   call() override
   {
-    rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
+    rcl_ret_t ret = rcl_timer_call_with_info(timer_handle_.get(), &timer_call_info_);
     if (ret == RCL_RET_TIMER_CANCELED) {
       return false;
     }
@@ -305,6 +312,21 @@ public:
     callback_(*this);
   }
 
+
+  template<
+    typename CallbackT = FunctorT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, TimerInfoCallbackType>::value
+    >::type * = nullptr
+  >
+  void
+  execute_callback_delegate()
+  {
+    const TimerInfo info{Time{timer_call_info_.expected_call_time, clock_->get_clock_type()},
+      Time{timer_call_info_.actual_call_time, clock_->get_clock_type()}};
+    callback_(info);
+  }
+
   /// Is the clock steady (i.e. is the time between ticks constant?)
   /** \return True if the clock used by this timer is steady. */
   bool
@@ -317,6 +339,7 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
+  rcl_timer_call_info_t timer_call_info_;
 };
 
 template<
