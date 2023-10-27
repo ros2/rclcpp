@@ -27,7 +27,7 @@ using rclcpp::experimental::TimersManager;
 
 TimersManager::TimersManager(
   std::shared_ptr<rclcpp::Context> context,
-  std::function<void(const rclcpp::TimerBase *)> on_ready_callback)
+  std::function<void(const rclcpp::TimerBase *, const std::shared_ptr<void> &)> on_ready_callback)
 : on_ready_callback_(on_ready_callback),
   context_(context)
 {
@@ -148,8 +148,12 @@ bool TimersManager::execute_head_timer()
   if (timer_ready) {
     // NOTE: here we always execute the timer, regardless of whether the
     // on_ready_callback is set or not.
-    head_timer->call();
-    head_timer->execute_callback();
+    auto data = head_timer->call();
+    if (!data) {
+      // someone canceled the timer between is_ready and call
+      return false;
+    }
+    head_timer->execute_callback(data);
     timers_heap.heapify_root();
     weak_timers_heap_.store(timers_heap);
   }
@@ -157,7 +161,9 @@ bool TimersManager::execute_head_timer()
   return timer_ready;
 }
 
-void TimersManager::execute_ready_timer(const rclcpp::TimerBase * timer_id)
+void TimersManager::execute_ready_timer(
+  const rclcpp::TimerBase * timer_id,
+  const std::shared_ptr<void> & data)
 {
   TimerPtr ready_timer;
   {
@@ -165,7 +171,7 @@ void TimersManager::execute_ready_timer(const rclcpp::TimerBase * timer_id)
     ready_timer = weak_timers_heap_.get_timer(timer_id);
   }
   if (ready_timer) {
-    ready_timer->execute_callback();
+    ready_timer->execute_callback(data);
   }
 }
 
@@ -215,11 +221,16 @@ void TimersManager::execute_ready_timers_unsafe()
   const size_t number_ready_timers = locked_heap.get_number_ready_timers();
   size_t executed_timers = 0;
   while (executed_timers < number_ready_timers && head_timer->is_ready()) {
-    head_timer->call();
-    if (on_ready_callback_) {
-      on_ready_callback_(head_timer.get());
+    auto data = head_timer->call();
+    if (data) {
+      if (on_ready_callback_) {
+        on_ready_callback_(head_timer.get(), data);
+      } else {
+        head_timer->execute_callback(data);
+      }
     } else {
-      head_timer->execute_callback();
+      // someone canceled the timer between is_ready and call
+      // we don't do anything, as the timer is now 'processed'
     }
 
     executed_timers++;

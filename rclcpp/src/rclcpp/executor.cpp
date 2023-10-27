@@ -545,7 +545,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     TRACETOOLS_TRACEPOINT(
       rclcpp_executor_execute,
       static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
-    execute_timer(any_exec.timer);
+    execute_timer(any_exec.timer, any_exec.data);
   }
   if (any_exec.subscription) {
     TRACETOOLS_TRACEPOINT(
@@ -715,9 +715,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 }
 
 void
-Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
+Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & dataPtr)
 {
-  timer->execute_callback();
+  timer->execute_callback(dataPtr);
 }
 
 void
