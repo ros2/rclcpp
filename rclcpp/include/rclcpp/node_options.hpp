@@ -42,6 +42,7 @@ public:
    *   - arguments = {}
    *   - parameter_overrides = {}
    *   - use_global_arguments = true
+   *   - enable_rosout = true
    *   - use_intra_process_comms = false
    *   - enable_topic_statistics = false
    *   - start_parameter_services = true
