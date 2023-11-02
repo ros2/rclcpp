@@ -597,6 +597,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
       [&]()
       {
+<<<<<<< HEAD
         subscription->handle_serialized_message(serialized_msg, message_info);
       });
     subscription->return_serialized_message(serialized_msg);
@@ -621,6 +622,60 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
           return false;
         } else if (RCL_RET_OK != ret) {
           rclcpp::exceptions::throw_from_rcl_error(ret);
+=======
+        if (subscription->can_loan_messages()) {
+          // This is the case where a loaned message is taken from the middleware via
+          // inter-process communication, given to the user for their callback,
+          // and then returned.
+          void * loaned_msg = nullptr;
+          // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
+          //   is extened to support subscriptions as well.
+          take_and_do_error_handling(
+            "taking a loaned message from topic",
+            subscription->get_topic_name(),
+            [&]()
+            {
+              rcl_ret_t ret = rcl_take_loaned_message(
+                subscription->get_subscription_handle().get(),
+                &loaned_msg,
+                &message_info.get_rmw_message_info(),
+                nullptr);
+              if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+                return false;
+              } else if (RCL_RET_OK != ret) {
+                rclcpp::exceptions::throw_from_rcl_error(ret);
+              }
+              return true;
+            },
+            [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
+          if (nullptr != loaned_msg) {
+            rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
+              subscription->get_subscription_handle().get(), loaned_msg);
+            if (RCL_RET_OK != ret) {
+              RCLCPP_ERROR(
+                rclcpp::get_logger("rclcpp"),
+                "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
+                "'%s': %s",
+                subscription->get_topic_name(), rcl_get_error_string().str);
+            }
+            loaned_msg = nullptr;
+          }
+        } else {
+          // This case is taking a copy of the message data from the middleware via
+          // inter-process communication.
+          std::shared_ptr<void> message = subscription->create_message();
+          take_and_do_error_handling(
+            "taking a message from topic",
+            subscription->get_topic_name(),
+            [&]() {return subscription->take_type_erased(message.get(), message_info);},
+            [&]() {subscription->handle_message(message, message_info);});
+          // TODO(clalancette): In the case that the user is using the MessageMemoryPool,
+          // and they take a shared_ptr reference to the message in the callback, this can
+          // inadvertently return the message to the pool when the user is still using it.
+          // This is a bug that needs to be fixed in the pool, and we should probably have
+          // a custom deleter for the message that actually does the return_message().
+          subscription->return_message(message);
+>>>>>>> f294488e (Disable the loaned messages inside the executor. (#2335))
         }
         return true;
       },

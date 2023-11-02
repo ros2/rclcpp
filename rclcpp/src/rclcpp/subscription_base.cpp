@@ -229,7 +229,20 @@ SubscriptionBase::setup_intra_process(
 bool
 SubscriptionBase::can_loan_messages() const
 {
-  return rcl_subscription_can_loan_messages(subscription_handle_.get());
+  bool retval = rcl_subscription_can_loan_messages(subscription_handle_.get());
+  if (retval) {
+    // TODO(clalancette): The loaned message interface is currently not safe to use with
+    // shared_ptr callbacks.  If a user takes a copy of the shared_ptr, it can get freed from
+    // underneath them via rcl_return_loaned_message_from_subscription().  The correct solution is
+    // to return the loaned message in a custom deleter, but that needs to be carefully handled
+    // with locking.  Warn the user about this until we fix it.
+    RCLCPP_WARN_ONCE(
+      this->node_logger_,
+      "Loaned messages are only safe with const ref subscription callbacks. "
+      "If you are using any other kind of subscriptions, "
+      "set the ROS_DISABLE_LOANED_MESSAGES environment variable to 1 (the default).");
+  }
+  return retval;
 }
 
 rclcpp::Waitable::SharedPtr
