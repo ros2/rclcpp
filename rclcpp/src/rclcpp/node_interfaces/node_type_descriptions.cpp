@@ -98,6 +98,7 @@ public:
             }
             delete service;
           });
+      *rcl_srv = rcl_get_zero_initialized_service();
       rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_srv.get(), rcl_node);
 
       if (rcl_ret != RCL_RET_OK) {
