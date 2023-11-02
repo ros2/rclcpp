@@ -24,6 +24,8 @@
 
 #include "rosidl_runtime_cpp/traits.hpp"
 
+#include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -59,15 +61,26 @@ public:
   MessagePoolMemoryStrategy()
   {
     for (size_t i = 0; i < Size; ++i) {
-      pool_[i] = new MessageT;
+      pool_[i] = static_cast<MessageT *>(malloc(sizeof(MessageT)));
       free_list_.push_back(i);
     }
   }
 
   ~MessagePoolMemoryStrategy()
   {
-    for (size_t i = 0; i < Size; ++i) {
-      delete pool_[i];
+    // The user may have held onto shared pointers after a borrow_message().  In that case,
+    // freeing the memory from the pool may lead to UB.  If we detect the situation where this
+    // class is being destroyed before the shared pointers, warn the user.
+
+    if (free_list_.size() != Size) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("MessagePool"),
+        "User code is holding onto shared pointers from the message pool; this will leak memory");
+    }
+
+    while (free_list_.size() != 0) {
+      size_t index = free_list_.pop_front();
+      free(pool_[index]);
     }
   }
 
@@ -87,11 +100,12 @@ public:
     size_t current_index = free_list_.pop_front();
 
     return std::shared_ptr<MessageT>(
-      pool_[current_index], [this](MessageT * p) {
+      new(pool_[current_index]) MessageT(),
+      [this](MessageT * p) {
+        std::lock_guard<std::mutex> lock(pool_mutex_);
         for (size_t i = 0; i < Size; ++i) {
           if (pool_[i] == p) {
             p->~MessageT();
-            new(p) MessageT();
             free_list_.push_back(i);
             break;
           }
