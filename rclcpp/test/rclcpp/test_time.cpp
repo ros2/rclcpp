@@ -363,10 +363,27 @@ TEST_F(TestTime, seconds) {
 }
 
 TEST_F(TestTime, test_max) {
-  const rclcpp::Time time_max = rclcpp::Time::max();
-  const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999);
-  EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
-  EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
+  // Same clock types
+  for (rcl_clock_type_t type = RCL_ROS_TIME;
+    type != RCL_STEADY_TIME; type = static_cast<rcl_clock_type_t>(type + 1))
+  {
+    const rclcpp::Time time_max = rclcpp::Time::max(type);
+    const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999, type);
+    EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
+    EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
+  }
+  // Different clock types
+  {
+    const rclcpp::Time time_max = rclcpp::Time::max(RCL_ROS_TIME);
+    const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999, RCL_STEADY_TIME);
+    EXPECT_ANY_THROW((void)(time_max == max_time));
+    EXPECT_ANY_THROW((void)(time_max != max_time));
+    EXPECT_ANY_THROW((void)(time_max <= max_time));
+    EXPECT_ANY_THROW((void)(time_max >= max_time));
+    EXPECT_ANY_THROW((void)(time_max < max_time));
+    EXPECT_ANY_THROW((void)(time_max > max_time));
+    EXPECT_ANY_THROW((void)(time_max - max_time));
+  }
 }
 
 TEST_F(TestTime, test_constructor_from_rcl_time_point) {
