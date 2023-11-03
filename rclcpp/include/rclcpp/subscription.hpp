@@ -44,7 +44,6 @@
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
-#include "rclcpp/serialization.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
