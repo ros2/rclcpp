@@ -189,7 +189,7 @@ public:
    */
   RCLCPP_PUBLIC
   static Time
-  max();
+  max(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);  // NOLINT
 
   /// Get the seconds since epoch
   /**
