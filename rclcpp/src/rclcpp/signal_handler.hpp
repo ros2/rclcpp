@@ -75,7 +75,7 @@ public:
   bool
   install(SignalHandlerOptions signal_handler_options = SignalHandlerOptions::All);
 
-  /// Uninstall the signal handler for SIGINT/SIGTERM and join the dedicated singal handling
+  /// Uninstall the signal handler for SIGINT/SIGTERM and join the dedicated signal handling
   /// thread.
   /**
    * Also restores the previous signal handler.
@@ -189,7 +189,7 @@ private:
 
   // Whether or not a signal has been received.
   std::atomic_bool signal_received_ = false;
-  // A thread to which singal handling tasks are deferred.
+  // A thread to which signal handling tasks are deferred.
   std::thread signal_handler_thread_;
 
   // A mutex used to synchronize the install() and uninstall() methods.
