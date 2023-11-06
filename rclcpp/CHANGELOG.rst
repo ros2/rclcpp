@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+24.0.0 (2023-11-06)
+-------------------
 * fix (signal_handler.hpp): spelling (`#2356 <https://github.com/ros2/rclcpp/issues/2356>`_)
 * Updates to not use std::move in some places. (`#2353 <https://github.com/ros2/rclcpp/issues/2353>`_)
 * rclcpp::Time::max() clock type support. (`#2352 <https://github.com/ros2/rclcpp/issues/2352>`_)
