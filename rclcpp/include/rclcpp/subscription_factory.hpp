@@ -142,7 +142,7 @@ create_subscription_factory(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
   const rosidl_message_type_support_t & type_support,
-  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
+  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>
   subscription_topic_stats = nullptr)
 {
   auto allocator = options.get_allocator();
