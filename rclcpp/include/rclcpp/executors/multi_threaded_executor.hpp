@@ -85,6 +85,7 @@ private:
   size_t number_of_threads_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
+  std::atomic<int> wait_count_;
 };
 
 }  // namespace executors

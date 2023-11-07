@@ -634,6 +634,33 @@ protected:
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
+  /// Update wait set
+  /**
+   * This function can be called by any thread
+   * 
+   * \param[in] timeout duration of time to wait for work, a negative value
+   *   (the defualt behavior), will make this function block indefinitely
+   */
+  RCLCPP_PUBLIC
+  void
+  wait_set_update(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  /// Wait for executable in ready state and populate union structure.
+  /**
+   * If an executable is ready, it will return immediately, otherwise
+   * block based on the timeout for work to become ready.
+   *
+   * \param[out] any_executable populated union structure of ready executable
+   * \return true if an executable was ready and any_executable was populated,
+   *   otherwise false
+   */
+  RCLCPP_PUBLIC
+  bool
+  get_next_executable_multi(
+    AnyExecutable & any_executable
+    );
+
+
   /// Add all callback groups that can be automatically added from associated nodes.
   /**
    * The executor, before collecting entities, verifies if any callback group from

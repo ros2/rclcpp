@@ -968,6 +968,20 @@ Executor::get_next_ready_executable_from_map(
   return success;
 }
 
+void
+Executor::wait_set_update(std::chrono::nanoseconds timeout)
+{
+  wait_for_work(timeout);
+}
+
+bool
+Executor::get_next_executable_multi(AnyExecutable & any_executable)
+{
+  bool success = false;
+  success = get_next_ready_executable(any_executable);
+  return success;
+}
+
 bool
 Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
 {

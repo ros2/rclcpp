@@ -81,7 +81,6 @@ MultiThreadedExecutor::get_number_of_threads()
 void
 MultiThreadedExecutor::run(size_t this_thread_number)
 {
-  (void)this_thread_number;
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {
@@ -89,7 +88,16 @@ MultiThreadedExecutor::run(size_t this_thread_number)
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
-      if (!get_next_executable(any_exec, next_exec_timeout_)) {
+      if (!get_next_executable_multi(any_exec)) {
+        // at the binary position of this_thread_number in wait_count_, set the binary digit to 1
+        wait_count_.fetch_or(1 << this_thread_number);
+        // if the wait_count_ is equal to 2^number_of_threads_ - 1, then all threads are waiting
+        if (wait_count_.load() == (1 << number_of_threads_) - 1) {
+          // reset the wait_count_ to 0
+          wait_count_.store(0);
+          // notify all threads to continue
+          wait_set_update(next_exec_timeout_);
+        }
         continue;
       }
     }
