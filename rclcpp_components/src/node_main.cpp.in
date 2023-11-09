@@ -23,11 +23,14 @@
 
 #define NODE_MAIN_LOGGER_NAME "@node@"
 
+using namespace rclcpp::executors;
+using namespace rclcpp::experimental::executors;
+
 int main(int argc, char * argv[])
 {
   auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
   rclcpp::Logger logger = rclcpp::get_logger(NODE_MAIN_LOGGER_NAME);
-  rclcpp::executors::@executor@ exec;
+  @executor@ exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
