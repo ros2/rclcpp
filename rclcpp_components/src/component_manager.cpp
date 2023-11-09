@@ -39,10 +39,12 @@ ComponentManager::ComponentManager(
 {
   loadNode_srv_ = create_service<LoadNode>(
     "~/_container/load_node",
-    std::bind(&ComponentManager::on_load_node, this, _1, _2, _3));
+    std::bind(&ComponentManager::on_load_node, this, _1, _2, _3),
+    rclcpp::ServicesQoS().keep_last(200));
   unloadNode_srv_ = create_service<UnloadNode>(
     "~/_container/unload_node",
-    std::bind(&ComponentManager::on_unload_node, this, _1, _2, _3));
+    std::bind(&ComponentManager::on_unload_node, this, _1, _2, _3),
+    rclcpp::ServicesQoS().keep_last(200));
   listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::on_list_nodes, this, _1, _2, _3));
