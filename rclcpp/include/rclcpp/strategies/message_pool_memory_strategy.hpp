@@ -57,30 +57,24 @@ class MessagePoolMemoryStrategy
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessagePoolMemoryStrategy)
 
-  /// Default constructor
   MessagePoolMemoryStrategy()
   {
+    pool_mutex_ = std::make_shared<std::mutex>();
+
+    pool_ = std::shared_ptr<std::array<MessageT *, Size>>(
+      new std::array<MessageT *, Size>,
+      [](std::array<MessageT *, Size> * arr) {
+        for (size_t i = 0; i < Size; ++i) {
+          free((*arr)[i]);
+        }
+        delete arr;
+      });
+
+    free_list_ = std::make_shared<CircularArray<Size>>();
+
     for (size_t i = 0; i < Size; ++i) {
-      pool_[i] = static_cast<MessageT *>(malloc(sizeof(MessageT)));
-      free_list_.push_back(i);
-    }
-  }
-
-  ~MessagePoolMemoryStrategy()
-  {
-    // The user may have held onto shared pointers after a borrow_message().  In that case,
-    // freeing the memory from the pool may lead to UB.  If we detect the situation where this
-    // class is being destroyed before the shared pointers, warn the user.
-
-    if (free_list_.size() != Size) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("MessagePool"),
-        "User code is holding onto shared pointers from the message pool; this will leak memory");
-    }
-
-    while (free_list_.size() != 0) {
-      size_t index = free_list_.pop_front();
-      free(pool_[index]);
+      (*pool_)[i] = static_cast<MessageT *>(malloc(sizeof(MessageT)));
+      free_list_->push_back(i);
     }
   }
 
@@ -92,21 +86,22 @@ public:
    */
   std::shared_ptr<MessageT> borrow_message()
   {
-    std::lock_guard<std::mutex> lock(pool_mutex_);
-    if (free_list_.size() == 0) {
+    std::lock_guard<std::mutex> lock(*pool_mutex_);
+    if (free_list_->size() == 0) {
       throw std::runtime_error("No more free slots in the pool");
     }
 
-    size_t current_index = free_list_.pop_front();
+    size_t current_index = free_list_->pop_front();
 
     return std::shared_ptr<MessageT>(
-      new(pool_[current_index]) MessageT(),
-      [this](MessageT * p) {
-        std::lock_guard<std::mutex> lock(pool_mutex_);
+      new((*pool_)[current_index]) MessageT(),
+      [pool = this->pool_, pool_mutex = this->pool_mutex_,
+      free_list = this->free_list_](MessageT * p) {
+        std::lock_guard<std::mutex> lock(*pool_mutex);
         for (size_t i = 0; i < Size; ++i) {
-          if (pool_[i] == p) {
+          if ((*pool)[i] == p) {
             p->~MessageT();
-            free_list_.push_back(i);
+            free_list->push_back(i);
             break;
           }
         }
@@ -115,7 +110,8 @@ public:
 
   /// Return a message to the message pool.
   /**
-   * Manage metadata in the message pool ring buffer to release the message.
+   * This does nothing since the message isn't returned to the pool until the user has dropped
+   * all references.
    * \param[in] msg Shared pointer to the message to return.
    */
   void return_message(std::shared_ptr<MessageT> & msg)
@@ -162,9 +158,13 @@ private:
     std::array<size_t, N> array_;
   };
 
-  std::mutex pool_mutex_;
-  std::array<MessageT *, Size> pool_;
-  CircularArray<Size> free_list_;
+  // It's very important that these are shared_ptrs, since users of this class might hold a
+  // reference to a pool item longer than the lifetime of the class.  In that scenario, the
+  // shared_ptr ensures that the lifetime of these variables outlives this class, and hence ensures
+  // the custom destructor for each pool item can successfully run.
+  std::shared_ptr<std::mutex> pool_mutex_;
+  std::shared_ptr<std::array<MessageT *, Size>> pool_;
+  std::shared_ptr<CircularArray<Size>> free_list_;
 };
 
 }  // namespace message_pool_memory_strategy
