@@ -646,6 +646,11 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       subscription->get_topic_name(),
       [&]() {return subscription->take_type_erased(message.get(), message_info);},
       [&]() {subscription->handle_message(message, message_info);});
+    // TODO(clalancette): In the case that the user is using the MessageMemoryPool,
+    // and they take a shared_ptr reference to the message in the callback, this can
+    // inadvertently return the message to the pool when the user is still using it.
+    // This is a bug that needs to be fixed in the pool, and we should probably have
+    // a custom deleter for the message that actually does the return_message().
     subscription->return_message(message);
   }
 }
