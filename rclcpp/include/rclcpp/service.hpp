@@ -589,6 +589,38 @@ public:
   std::shared_ptr<void>
   create_request() override
   {
+    if (std::holds_alternative<ROSCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    if (std::holds_alternative<ROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    if (std::holds_alternative<ROSCustomCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomROSCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    if (std::holds_alternative<ROSCustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
     return std::make_shared<ROSServiceRequestType>();
   }
 
@@ -603,10 +635,69 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) override
   {
-    auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
-    auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
-    if (response) {
-      send_response(*request_header, *response);
+    if (std::holds_alternative<ROSCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<ROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<ROSCustomCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomROSCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<ROSCustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
     }
   }
 

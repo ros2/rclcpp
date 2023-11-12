@@ -457,13 +457,13 @@ public:
       return nullptr;
     }
     // auto response = allocate_shared<typename ServiceT::Response, Allocator>();
-    auto response = std::make_shared<ROSServiceResponseType>();
+    auto response = std::make_shared<ServiceResponseType>();
     if (std::holds_alternative<CustomTotalSharedPtrCallback>(callback_)) {
       (void)request_header;
-      const auto & cb = std::get<CustomROSSharedPtrCallback>(callback_);
+      const auto & cb = std::get<CustomTotalSharedPtrCallback>(callback_);
       cb(std::move(request), response);
     } else if (std::holds_alternative<CustomTotalSharedPtrWithRequestHeaderCallback>(callback_)) {
-      const auto & cb = std::get<CustomROSSharedPtrWithRequestHeaderCallback>(callback_);
+      const auto & cb = std::get<CustomTotalSharedPtrWithRequestHeaderCallback>(callback_);
       cb(request_header, std::move(request), response);
     }
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
