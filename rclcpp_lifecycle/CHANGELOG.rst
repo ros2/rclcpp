@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.7 (2023-11-13)
+-------------------
+
 16.0.6 (2023-09-19)
 -------------------
 * Switch lifecycle to use the RCLCPP macros Signed-off-by: Tony Najjar <tony.najjar.1997@gmail.com> (`#2234 <https://github.com/ros2/rclcpp/issues/2234>`_)

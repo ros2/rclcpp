@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.7 (2023-11-13)
+-------------------
+* Disable the loaned messages inside the executor. (backport `#2335 <https://github.com/ros2/rclcpp/issues/2335>`_) (`#2364 <https://github.com/ros2/rclcpp/issues/2364>`_)
+* Add missing 'enable_rosout' comments (`#2345 <https://github.com/ros2/rclcpp/issues/2345>`_) (`#2347 <https://github.com/ros2/rclcpp/issues/2347>`_)
+* address rate related flaky tests. (`#2329 <https://github.com/ros2/rclcpp/issues/2329>`_) (`#2342 <https://github.com/ros2/rclcpp/issues/2342>`_)
+* Update SignalHandler get_global_signal_handler to avoid complex types in static memory (`#2316 <https://github.com/ros2/rclcpp/issues/2316>`_) (`#2321 <https://github.com/ros2/rclcpp/issues/2321>`_)
+* Fix C++20 allocator construct deprecation (`#2292 <https://github.com/ros2/rclcpp/issues/2292>`_) (`#2319 <https://github.com/ros2/rclcpp/issues/2319>`_)
+* Contributors: mergify[bot]
+
 16.0.6 (2023-09-19)
 -------------------
 * Topic correct typeadapter deduction (`#2294 <https://github.com/ros2/rclcpp/issues/2294>`_) (`#2297 <https://github.com/ros2/rclcpp/issues/2297>`_)
