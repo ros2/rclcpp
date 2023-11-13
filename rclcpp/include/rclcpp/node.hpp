@@ -972,7 +972,16 @@ public:
 
   /// Return a list of parameters with any of the given prefixes, up to the given depth.
   /**
-   * \todo: properly document and test this method.
+   * Parameters are separated into a hierarchy using the "." (dot) character.
+   * The "prefixes" argument is a way to select only particular parts of the hierarchy.
+   *
+   * \param[in] prefixes The list of prefixes that should be searched for within the
+   * current parameters. If this vector of prefixes is empty, then list_parameters
+   * will return all parameters.
+   * \param[in] depth An unsigned integer that represents the recursive depth to search.
+   * If this depth = 0, then all parameters that fit the prefixes will be returned.
+   * \returns A ListParametersResult message which contains both an array of unique prefixes
+   * and an array of names that were matched to the prefixes given.
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
@@ -1304,6 +1313,26 @@ public:
   RCLCPP_PUBLIC
   size_t
   count_subscribers(const std::string & topic_name) const;
+
+  /// Return the number of clients created for a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \return number of clients that have been created for the given service.
+   * \throws std::runtime_error if clients could not be counted
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_clients(const std::string & service_name) const;
+
+  /// Return the number of services created for a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \return number of services that have been created for the given service.
+   * \throws std::runtime_error if services could not be counted
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_services(const std::string & service_name) const;
 
   /// Return the topic endpoint information about publishers on a given topic.
   /**

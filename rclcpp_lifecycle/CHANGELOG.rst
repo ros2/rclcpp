@@ -3,6 +3,29 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+24.0.0 (2023-11-06)
+-------------------
+* Fix rclcpp_lifecycle inclusion on Windows. (`#2331 <https://github.com/ros2/rclcpp/issues/2331>`_)
+* Contributors: Chris Lalancette
+
+23.2.0 (2023-10-09)
+-------------------
+* add clients & services count (`#2072 <https://github.com/ros2/rclcpp/issues/2072>`_)
+* Contributors: Minju, Lee
+
+23.1.0 (2023-10-04)
+-------------------
+
+23.0.0 (2023-09-08)
+-------------------
+* Update API docs links in package READMEs (`#2302 <https://github.com/ros2/rclcpp/issues/2302>`_)
+* Contributors: Christophe Bedard
+
+22.2.0 (2023-09-07)
+-------------------
+* add logger level service to lifecycle node. (`#2277 <https://github.com/ros2/rclcpp/issues/2277>`_)
+* Contributors: Tomoya Fujita
+
 22.1.0 (2023-08-21)
 -------------------
 * Stop using constref signature of benchmark DoNotOptimize. (`#2238 <https://github.com/ros2/rclcpp/issues/2238>`_)

@@ -482,7 +482,7 @@ public:
 
   void publish_loaned_message(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg)
   {
-    this->do_loaned_message_publish(std::move(loaned_msg.release()));
+    this->do_loaned_message_publish(loaned_msg.release());
   }
 
   void call_default_incompatible_qos_callback(rclcpp::QOSOfferedIncompatibleQoSInfo & event) const

@@ -126,9 +126,6 @@ private:
   std::shared_ptr<std::pair<std::string, std::string>> logger_sublogger_pairname_ = nullptr;
 
 public:
-  RCLCPP_PUBLIC
-  Logger(const Logger &) = default;
-
   /// Get the name of this logger.
   /**
    * \return the full name of the logger including any prefixes, or

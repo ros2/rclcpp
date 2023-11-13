@@ -145,11 +145,6 @@ TEST(TestSerializedMessage, reserve) {
   // Resize using reserve method
   serialized_msg.reserve(15);
   EXPECT_EQ(15u, serialized_msg.capacity());
-
-  // Use invalid value throws exception
-  EXPECT_THROW(
-    {serialized_msg.reserve(-1);},
-    rclcpp::exceptions::RCLBadAlloc);
 }
 
 TEST(TestSerializedMessage, serialization) {

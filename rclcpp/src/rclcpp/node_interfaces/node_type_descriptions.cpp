@@ -84,21 +84,29 @@ public:
     }
 
     if (enabled) {
-      auto rcl_node = node_base->get_rcl_node_handle();
-      rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_node);
+      auto * rcl_node = node_base->get_rcl_node_handle();
+      std::shared_ptr<rcl_service_t> rcl_srv(
+        new rcl_service_t,
+        [rcl_node, logger = this->logger_](rcl_service_t * service)
+        {
+          if (rcl_service_fini(service, rcl_node) != RCL_RET_OK) {
+            RCLCPP_ERROR(
+              logger,
+              "Error in destruction of rcl service handle [~/get_type_description]: %s",
+              rcl_get_error_string().str);
+            rcl_reset_error();
+          }
+          delete service;
+        });
+      *rcl_srv = rcl_get_zero_initialized_service();
+      rcl_ret_t rcl_ret = rcl_node_type_description_service_init(rcl_srv.get(), rcl_node);
+
       if (rcl_ret != RCL_RET_OK) {
         RCLCPP_ERROR(
-          logger_, "Failed to initialize ~/get_type_description_service: %s",
+          logger_, "Failed to initialize ~/get_type_description service: %s",
           rcl_get_error_string().str);
         throw std::runtime_error(
                 "Failed to initialize ~/get_type_description service.");
-      }
-
-      rcl_service_t * rcl_srv = nullptr;
-      rcl_ret = rcl_node_get_type_description_service(rcl_node, &rcl_srv);
-      if (rcl_ret != RCL_RET_OK) {
-        throw std::runtime_error(
-                "Failed to get initialized ~/get_type_description service from rcl.");
       }
 
       rclcpp::AnyServiceCallback<ServiceT> cb;
@@ -122,18 +130,6 @@ public:
       node_services->add_service(
         std::dynamic_pointer_cast<ServiceBase>(type_description_srv_),
         nullptr);
-    }
-  }
-
-  ~NodeTypeDescriptionsImpl()
-  {
-    if (
-      type_description_srv_ &&
-      RCL_RET_OK != rcl_node_type_description_service_fini(node_base_->get_rcl_node_handle()))
-    {
-      RCLCPP_ERROR(
-        logger_,
-        "Error in shutdown of get_type_description service: %s", rcl_get_error_string().str);
     }
   }
 };

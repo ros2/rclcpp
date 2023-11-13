@@ -644,6 +644,7 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
             break;
           }
           total += k * (i + 42);
+          (void)total;
         }
       });
   }

@@ -19,6 +19,8 @@
 #include <memory>
 #include <thread>
 
+#include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -31,9 +33,20 @@ class RateBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase)
 
+  RCLCPP_PUBLIC
   virtual ~RateBase() {}
+
+  RCLCPP_PUBLIC
   virtual bool sleep() = 0;
+
+  [[deprecated("use get_type() instead")]]
+  RCLCPP_PUBLIC
   virtual bool is_steady() const = 0;
+
+  RCLCPP_PUBLIC
+  virtual rcl_clock_type_t get_type() const = 0;
+
+  RCLCPP_PUBLIC
   virtual void reset() = 0;
 };
 
@@ -42,14 +55,13 @@ using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
 
 template<class Clock = std::chrono::high_resolution_clock>
-class GenericRate : public RateBase
+class [[deprecated("use rclcpp::Rate class instead of GenericRate")]] GenericRate : public RateBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
 
   explicit GenericRate(double rate)
-  : GenericRate<Clock>(
-      duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
+  : period_(duration_cast<nanoseconds>(duration<double>(1.0 / rate))), last_interval_(Clock::now())
   {}
   explicit GenericRate(std::chrono::nanoseconds period)
   : period_(period), last_interval_(Clock::now())
@@ -87,10 +99,16 @@ public:
     return true;
   }
 
+  [[deprecated("use get_type() instead")]]
   virtual bool
   is_steady() const
   {
     return Clock::is_steady;
+  }
+
+  virtual rcl_clock_type_t get_type() const
+  {
+    return Clock::is_steady ? RCL_STEADY_TIME : RCL_SYSTEM_TIME;
   }
 
   virtual void
@@ -112,8 +130,59 @@ private:
   std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
 };
 
-using Rate = GenericRate<std::chrono::system_clock>;
-using WallRate = GenericRate<std::chrono::steady_clock>;
+class Rate : public RateBase
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(Rate)
+
+  RCLCPP_PUBLIC
+  explicit Rate(
+    const double rate,
+    Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
+
+  RCLCPP_PUBLIC
+  explicit Rate(
+    const Duration & period,
+    Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
+
+  RCLCPP_PUBLIC
+  virtual bool
+  sleep();
+
+  [[deprecated("use get_type() instead")]]
+  RCLCPP_PUBLIC
+  virtual bool
+  is_steady() const;
+
+  RCLCPP_PUBLIC
+  virtual rcl_clock_type_t
+  get_type() const;
+
+  RCLCPP_PUBLIC
+  virtual void
+  reset();
+
+  RCLCPP_PUBLIC
+  std::chrono::nanoseconds
+  period() const;
+
+private:
+  RCLCPP_DISABLE_COPY(Rate)
+
+  Clock::SharedPtr clock_;
+  Duration period_;
+  Time last_interval_;
+};
+
+class WallRate : public Rate
+{
+public:
+  RCLCPP_PUBLIC
+  explicit WallRate(const double rate);
+
+  RCLCPP_PUBLIC
+  explicit WallRate(const Duration & period);
+};
 
 }  // namespace rclcpp
 
