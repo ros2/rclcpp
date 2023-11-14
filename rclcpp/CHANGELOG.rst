@@ -2,6 +2,22 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+24.0.0 (2023-11-06)
+-------------------
+* fix (signal_handler.hpp): spelling (`#2356 <https://github.com/ros2/rclcpp/issues/2356>`_)
+* Updates to not use std::move in some places. (`#2353 <https://github.com/ros2/rclcpp/issues/2353>`_)
+* rclcpp::Time::max() clock type support. (`#2352 <https://github.com/ros2/rclcpp/issues/2352>`_)
+* Serialized Messages with Topic Statistics (`#2274 <https://github.com/ros2/rclcpp/issues/2274>`_)
+* Add a custom deleter when constructing rcl_service_t (`#2351 <https://github.com/ros2/rclcpp/issues/2351>`_)
+* Disable the loaned messages inside the executor. (`#2335 <https://github.com/ros2/rclcpp/issues/2335>`_)
+* Use message_info in SubscriptionTopicStatistics instead of typed message (`#2337 <https://github.com/ros2/rclcpp/issues/2337>`_)
+* Add missing 'enable_rosout' comments (`#2345 <https://github.com/ros2/rclcpp/issues/2345>`_)
+* Adjust rclcpp usage of type description service (`#2344 <https://github.com/ros2/rclcpp/issues/2344>`_)
+* address rate related flaky tests. (`#2329 <https://github.com/ros2/rclcpp/issues/2329>`_)
+* Fixes pointed out by the clang analyzer. (`#2339 <https://github.com/ros2/rclcpp/issues/2339>`_)
+* Remove useless ROSRate class (`#2326 <https://github.com/ros2/rclcpp/issues/2326>`_)
+* Contributors: Alexey Merzlyakov, Chris Lalancette, Jiaqi Li, Lucas Wendland, Michael Carroll, Michael Orlov, Tomoya Fujita, Zard-C
+
 23.2.0 (2023-10-09)
 -------------------
 * add clients & services count (`#2072 <https://github.com/ros2/rclcpp/issues/2072>`_)

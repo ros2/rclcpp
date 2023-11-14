@@ -104,7 +104,7 @@ public:
 
 private:
   using SubscriptionTopicStatisticsSharedPtr =
-    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>>;
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
@@ -316,7 +316,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 
@@ -325,8 +325,20 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
-    // TODO(wjwwood): enable topic statistics for serialized messages
+    std::chrono::time_point<std::chrono::system_clock> now;
+    if (subscription_topic_statistics_) {
+      // get current time before executing callback to
+      // exclude callback duration from topic statistics result.
+      now = std::chrono::system_clock::now();
+    }
+
     any_callback_.dispatch(serialized_message, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+    }
   }
 
   void
@@ -357,7 +369,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 

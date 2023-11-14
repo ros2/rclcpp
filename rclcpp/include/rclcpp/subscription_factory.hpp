@@ -75,15 +75,14 @@ template<
   typename CallbackT,
   typename AllocatorT,
   typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
-  typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType,
-  typename ROSMessageType = typename SubscriptionT::ROSMessageType
+  typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType
 >
 SubscriptionFactory
 create_subscription_factory(
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
-  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>>
+  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>
   subscription_topic_stats = nullptr
 )
 {
