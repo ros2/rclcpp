@@ -35,10 +35,13 @@ UnsupportedEventTypeException::UnsupportedEventTypeException(
 
 QOSEventHandlerBase::~QOSEventHandlerBase()
 {
+<<<<<<< HEAD:rclcpp/src/rclcpp/qos_event.cpp
   if (on_new_event_callback_) {
     clear_on_ready_callback();
   }
 
+=======
+>>>>>>> 411dbe82 (Fix data race in EventHandlerBase (#2349)):rclcpp/src/rclcpp/event_handler.cpp
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
