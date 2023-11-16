@@ -21,7 +21,6 @@
 #include <tuple>
 
 #include "rcpputils/shared_library.hpp"
-#include "rosidl_runtime_cpp/action_type_support_decl.hpp"
 #include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 #include "rosidl_runtime_cpp/service_type_support_decl.hpp"
 
@@ -39,88 +38,39 @@ RCLCPP_PUBLIC
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier);
 
-namespace internal
-{
-
-struct typesupport_message_tag {};
-struct typesupport_service_tag {};
-struct typesupport_action_tag {};
-
-template<typename T>
-struct typesupport_traits
-{
-  using type_tag = T;
-};
-
-template<>
-struct typesupport_traits<rosidl_message_type_support_t>
-{
-  using type_tag = typesupport_message_tag;
-};
-
-template<>
-struct typesupport_traits<rosidl_service_type_support_t>
-{
-  using type_tag = typesupport_service_tag;
-};
-
-template<>
-struct typesupport_traits<rosidl_action_type_support_t>
-{
-  using type_tag = typesupport_action_tag;
-};
-
-
-RCLCPP_PUBLIC
-const rosidl_message_type_support_t * _get_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library,
-  typesupport_message_tag
-);
-
-RCLCPP_PUBLIC
-const rosidl_service_type_support_t * _get_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library,
-  typesupport_service_tag
-);
-
-RCLCPP_PUBLIC
-const rosidl_action_type_support_t * _get_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library,
-  typesupport_action_tag
-);
-
-}  // namespace internal
-
-/// Extract the type support handle from the library.
+/// Extract message the type support handle from the library.
 /**
- * The library needs to match the type of topic, service or action.
- * The shared library must stay loaded for the lifetime of the result.
- *
- * The template parameter can be `rosidl_message_type_support_t`, `rosidl_service_type_support_t`
- * and `rosidl_action_type_support_t`.
+ * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
  *
  * \param[in] type The topic type, e.g. "std_msgs/msg/String"
  * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
  * \param[in] library The shared type support library
- * \return A type support handle
  * \throws std::runtime_error if library could not be found.
+ * \return A message type support handle
  */
-template<typename T = rosidl_message_type_support_t>
-const T *
+RCLCPP_PUBLIC
+const rosidl_message_type_support_t *
 get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library)
-{
-  return internal::_get_typesupport_handle(
-    type, typesupport_identifier, library, typename internal::typesupport_traits<T>::type_tag());
-}
+  rcpputils::SharedLibrary & library);
+
+/// Extract the service type support handle from the library.
+/**
+ * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
+ *
+ * \param[in] type The service type, e.g. "std_msgs/srv/String"
+ * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
+ * \param[in] library The shared type support library
+ * \throws std::runtime_error if library could not be found.
+ * \return A service type support handle
+ */
+RCLCPP_PUBLIC
+const rosidl_service_type_support_t *
+get_service_typesupport_handle(
+  const std::string & type,
+  const std::string & typesupport_identifier,
+  rcpputils::SharedLibrary & library);
 
 }  // namespace rclcpp
 

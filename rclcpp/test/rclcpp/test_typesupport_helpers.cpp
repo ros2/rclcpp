@@ -80,7 +80,7 @@ TEST(TypesupportHelpersTest, returns_service_type_info_for_valid_legacy_library)
   try {
     auto library = rclcpp::get_typesupport_library(
       "test_msgs/Empty", "rosidl_typesupport_cpp");
-    auto empty_typesupport = rclcpp::get_typesupport_handle<rosidl_service_type_support_t>(
+    auto empty_typesupport = rclcpp::get_service_typesupport_handle(
       "test_msgs/Empty", "rosidl_typesupport_cpp", *library);
 
     EXPECT_THAT(
@@ -95,38 +95,12 @@ TEST(TypesupportHelpersTest, returns_service_type_info_for_valid_library) {
   try {
     auto library = rclcpp::get_typesupport_library(
       "test_msgs/srv/Empty", "rosidl_typesupport_cpp");
-    auto empty_typesupport = rclcpp::get_typesupport_handle<rosidl_service_type_support_t>(
+    auto empty_typesupport = rclcpp::get_service_typesupport_handle(
       "test_msgs/srv/Empty", "rosidl_typesupport_cpp", *library);
 
     EXPECT_THAT(
       std::string(empty_typesupport->typesupport_identifier),
       ContainsRegex("rosidl_typesupport"));
-  } catch (const std::runtime_error & e) {
-    FAIL() << e.what();
-  }
-}
-
-TEST(TypesupportHelpersTest, returns_action_type_info_for_valid_legacy_library) {
-  try {
-    auto library = rclcpp::get_typesupport_library(
-      "test_msgs/Fibonacci", "rosidl_typesupport_cpp");
-    auto fibonacci_typesupport = rclcpp::get_typesupport_handle<rosidl_action_type_support_t>(
-      "test_msgs/Fibonacci", "rosidl_typesupport_cpp", *library);
-
-    EXPECT_NE(nullptr, fibonacci_typesupport);
-  } catch (const std::runtime_error & e) {
-    FAIL() << e.what();
-  }
-}
-
-TEST(TypesupportHelpersTest, returns_action_type_info_for_valid_library) {
-  try {
-    auto library = rclcpp::get_typesupport_library(
-      "test_msgs/action/Fibonacci", "rosidl_typesupport_cpp");
-    auto fibonacci_typesupport = rclcpp::get_typesupport_handle<rosidl_action_type_support_t>(
-      "test_msgs/action/Fibonacci", "rosidl_typesupport_cpp", *library);
-
-    EXPECT_NE(nullptr, fibonacci_typesupport);
   } catch (const std::runtime_error & e) {
     FAIL() << e.what();
   }
@@ -140,7 +114,7 @@ TEST(TypesupportHelpersTest, test_throw_exception_with_invalid_type) {
     rclcpp::get_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
   EXPECT_THROW(
-    rclcpp::get_typesupport_handle<rosidl_message_type_support_t>(
+    rclcpp::get_service_typesupport_handle(
       invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
 
@@ -148,15 +122,7 @@ TEST(TypesupportHelpersTest, test_throw_exception_with_invalid_type) {
   invalid_type = "test_msgs/srv/InvalidType";
   library = rclcpp::get_typesupport_library(invalid_type, "rosidl_typesupport_cpp");
   EXPECT_THROW(
-    rclcpp::get_typesupport_handle<rosidl_service_type_support_t>(
-      invalid_type, "rosidl_typesupport_cpp", *library),
-    std::runtime_error);
-
-  // action
-  invalid_type = "test_msgs/action/InvalidType";
-  library = rclcpp::get_typesupport_library(invalid_type, "rosidl_typesupport_cpp");
-  EXPECT_THROW(
-    rclcpp::get_typesupport_handle<rosidl_action_type_support_t>(
+    rclcpp::get_service_typesupport_handle(
       invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
 }
