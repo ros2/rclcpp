@@ -260,6 +260,16 @@ public:
     }
   }
 
+  ~EventHandler()
+  {
+    // Since the rmw event listener holds a reference to the
+    // "on ready" callback, we need to clear it on destruction of this class.
+    // This clearing is not needed for other rclcpp entities like pub/subs, since
+    // they do own the underlying rmw entities, which are destroyed
+    // on their rclcpp destructors, thus no risk of dangling pointers.
+    clear_on_ready_callback();
+  }
+
   /// Take data so that the callback cannot be scheduled again
   std::shared_ptr<void>
   take_data() override
