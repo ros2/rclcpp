@@ -41,6 +41,32 @@
 
 using namespace std::chrono_literals;
 
+
+template<typename T>
+class TestExecutorsOnlyNode : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+
+    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    std::stringstream test_name;
+    test_name << test_info->test_case_name() << "_" << test_info->name();
+    node = std::make_shared<rclcpp::Node>("node", test_name.str());
+
+  }
+
+  void TearDown()
+  {
+    node.reset();
+
+    rclcpp::shutdown();
+  }
+
+  rclcpp::Node::SharedPtr node;
+};
+
 template<typename T>
 class TestExecutors : public ::testing::Test
 {
@@ -121,6 +147,8 @@ public:
 // TYPED_TEST_SUITE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
 // is updated.
 TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
+
+TYPED_TEST_SUITE(TestExecutorsOnlyNode, ExecutorTypes, ExecutorTypeNames);
 
 // StaticSingleThreadedExecutor is not included in these tests for now, due to:
 // https://github.com/ros2/rclcpp/issues/1219
@@ -398,8 +426,6 @@ public:
       }
     }
     return false;
-    (void)wait_set;
-    return true;
   }
 
   std::shared_ptr<void>
@@ -492,6 +518,58 @@ TYPED_TEST(TestExecutors, spinAll)
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
   ASSERT_TRUE(spin_exited);
   spinner.join();
+}
+
+TYPED_TEST(TestExecutorsOnlyNode, missing_event)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  rclcpp::Node::SharedPtr node(this->node);
+  auto callback_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    true);
+
+  auto waitable_interfaces = node->get_node_waitables_interface();
+  auto my_waitable = std::make_shared<TestWaitable>();
+  auto my_waitable2 = std::make_shared<TestWaitable>();
+  waitable_interfaces->add_waitable(my_waitable, callback_group);
+  waitable_interfaces->add_waitable(my_waitable2, callback_group);
+  executor.add_node(this->node);
+
+  my_waitable->trigger();
+  my_waitable2->trigger();
+
+  // a node has some default subscribers, that need to get executed first, therefore the loop
+  for (int i = 0; i < 10; i++) {
+    executor.spin_once(std::chrono::milliseconds(10));
+    if (my_waitable->get_count() > 0) {
+      // stop execution, after the first waitable has been executed
+      break;
+    }
+  }
+
+  EXPECT_EQ(1u, my_waitable->get_count());
+  EXPECT_EQ(0u, my_waitable2->get_count());
+
+  // block the callback group, this is something that may happen during multi threaded execution
+  // This removes my_waitable2 from the list of ready events, and triggers a call to wait_for_work
+  callback_group->can_be_taken_from().exchange(false);
+
+  //now there should be no ready event
+  executor.spin_once(std::chrono::milliseconds(10));
+
+  EXPECT_EQ(1u, my_waitable->get_count());
+  EXPECT_EQ(0u, my_waitable2->get_count());
+
+  //unblock the callback group
+  callback_group->can_be_taken_from().exchange(true);
+
+  //now the second waitable should get processed
+  executor.spin_once(std::chrono::milliseconds(10));
+
+  EXPECT_EQ(1u, my_waitable->get_count());
+  EXPECT_EQ(1u, my_waitable2->get_count());
 }
 
 TYPED_TEST(TestExecutors, spinSome)
