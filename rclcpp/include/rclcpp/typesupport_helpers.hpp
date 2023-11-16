@@ -38,14 +38,14 @@ RCLCPP_PUBLIC
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier);
 
-/// Extract message the type support handle from the library.
+/// Extract the message type support handle from the library.
 /**
  * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
  *
  * \param[in] type The topic type, e.g. "std_msgs/msg/String"
  * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
  * \param[in] library The shared type support library
- * \throws std::runtime_error if library could not be found.
+ * \throws std::runtime_error if the symbol of type not found in the library.
  * \return A message type support handle
  */
 RCLCPP_PUBLIC
@@ -59,10 +59,10 @@ get_typesupport_handle(
 /**
  * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
  *
- * \param[in] type The service type, e.g. "std_msgs/srv/String"
+ * \param[in] type The service type, e.g. "std_srvs/srv/Empty"
  * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
  * \param[in] library The shared type support library
- * \throws std::runtime_error if library could not be found.
+ * \throws std::runtime_error if the symbol of type not found in the library.
  * \return A service type support handle
  */
 RCLCPP_PUBLIC
