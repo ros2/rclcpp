@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 21.0.3 (2023-09-08)
 -------------------
 * Switch lifecycle to use the RCLCPP macros. (`#2244 <https://github.com/ros2/rclcpp/issues/2244>`_)

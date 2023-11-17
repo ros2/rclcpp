@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Disable the loaned messages inside the executor. (`#2365 <https://github.com/ros2/rclcpp/issues/2365>`_)
+* Add missing 'enable_rosout' comments (`#2346 <https://github.com/ros2/rclcpp/issues/2346>`_)
+* Address rate related flaky tests. (`#2341 <https://github.com/ros2/rclcpp/issues/2341>`_)
+* Add missing stdexcept include (`#2333 <https://github.com/ros2/rclcpp/issues/2333>`_)
+* Update SignalHandler get_global_signal_handler to avoid complex types in static memory (`#2322 <https://github.com/ros2/rclcpp/issues/2322>`_)
+* Fix C++20 allocator construct deprecation (`#2318 <https://github.com/ros2/rclcpp/issues/2318>`_)
+* Topic correct typeadapter deduction (`#2298 <https://github.com/ros2/rclcpp/issues/2298>`_)
+* Contributors: AiVerisimilitude, Chen Lihui, Chris Lalancette, Jiaqi Li, Øystein Sture, Tomoya Fujita, William Woodall
+
 21.0.3 (2023-09-08)
 -------------------
 * Do not crash Executor when send_response fails due to client failure. (`#2279 <https://github.com/ros2/rclcpp/issues/2279>`_)
