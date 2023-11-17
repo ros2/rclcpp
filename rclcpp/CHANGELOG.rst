@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.0.4 (2023-11-17)
+-------------------
 * Disable the loaned messages inside the executor. (`#2365 <https://github.com/ros2/rclcpp/issues/2365>`_)
 * Add missing 'enable_rosout' comments (`#2346 <https://github.com/ros2/rclcpp/issues/2346>`_)
 * Address rate related flaky tests. (`#2341 <https://github.com/ros2/rclcpp/issues/2341>`_)
