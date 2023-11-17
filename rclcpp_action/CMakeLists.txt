@@ -141,6 +141,17 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+
+  ament_add_gtest(test_node_graph_action test/test_node_graph_action.cpp)
+  if(TARGET test_node_graph_action)
+    ament_target_dependencies(test_node_graph_action
+      "test_msgs"
+    )
+    target_link_libraries(test_node_graph_action
+      ${PROJECT_NAME}
+      mimick
+    )
+  endif()
 endif()
 
 ament_package()

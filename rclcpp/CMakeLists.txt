@@ -9,6 +9,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
 find_package(rcl REQUIRED)
+find_package(rcl_action REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rcl_logging_interface REQUIRED)
 find_package(rcl_yaml_param_parser REQUIRED)
@@ -208,6 +209,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "ament_index_cpp"
   "libstatistics_collector"
   "rcl"
+  "rcl_action"
   "rcl_interfaces"
   "rcl_logging_interface"
   "rcl_yaml_param_parser"
@@ -244,6 +246,7 @@ ament_export_targets(${PROJECT_NAME})
 ament_export_dependencies(ament_index_cpp)
 ament_export_dependencies(libstatistics_collector)
 ament_export_dependencies(rcl)
+ament_export_dependencies(rcl_action)
 ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(builtin_interfaces)

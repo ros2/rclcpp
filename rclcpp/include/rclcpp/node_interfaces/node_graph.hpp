@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "rcl/guard_condition.h"
+#include "rcl_action/graph.h"
 
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
@@ -69,6 +70,10 @@ public:
 
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
+  get_action_names_and_types() const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
   get_service_names_and_types_by_node(
     const std::string & node_name,
     const std::string & namespace_) const override;
@@ -76,6 +81,18 @@ public:
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_action_client_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const override;
+
+  RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_action_server_names_and_types_by_node(
     const std::string & node_name,
     const std::string & namespace_) const override;
 
