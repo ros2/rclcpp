@@ -422,6 +422,7 @@ public:
   {
     for (size_t i = 0; i < wait_set->size_of_guard_conditions; ++i) {
       if (&gc_.get_rcl_guard_condition() == wait_set->guard_conditions[i]) {
+        is_ready_called_before_take_data = true;
         return true;
       }
     }
@@ -431,6 +432,12 @@ public:
   std::shared_ptr<void>
   take_data() override
   {
+    if (!is_ready_called_before_take_data) {
+      throw std::runtime_error(
+              "TestWaitable : Internal error, take data was called, but is_ready was not called before");
+    }
+
+    is_ready_called_before_take_data = false;
     return nullptr;
   }
 
@@ -474,9 +481,11 @@ public:
   }
 
 private:
+  bool is_ready_called_before_take_data = false;
   size_t count_ = 0;
   rclcpp::GuardCondition gc_;
 };
+
 
 TYPED_TEST(TestExecutors, spinAll)
 {
@@ -519,6 +528,137 @@ TYPED_TEST(TestExecutors, spinAll)
   ASSERT_TRUE(spin_exited);
   spinner.join();
 }
+
+TEST(TestExecutorsOnlyNode, double_take_data)
+{
+  rclcpp::init(0, nullptr);
+
+  const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+  std::stringstream test_name;
+  test_name << test_info->test_case_name() << "_" << test_info->name();
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("node", test_name.str());
+
+  class MyExecutor : public rclcpp::executors::SingleThreadedExecutor
+  {
+public:
+    /**
+     * This is a copy of Executor::get_next_executable with a callback, to test
+     * for a special race condition
+     */
+    bool get_next_executable_with_callback(
+      rclcpp::AnyExecutable & any_executable,
+      std::chrono::nanoseconds timeout,
+      std::function<void(void)> inbetween)
+    {
+      bool success = false;
+      // Check to see if there are any subscriptions or timers needing service
+      // TODO(wjwwood): improve run to run efficiency of this function
+      success = get_next_ready_executable(any_executable);
+      // If there are none
+      if (!success) {
+
+        inbetween();
+
+        // Wait for subscriptions or timers to work on
+        wait_for_work(timeout);
+        if (!spinning.load()) {
+          return false;
+        }
+        // Try again
+        success = get_next_ready_executable(any_executable);
+      }
+      return success;
+    }
+
+    void spin_once_with_callback(
+      std::chrono::nanoseconds timeout,
+      std::function<void(void)> inbetween)
+    {
+      rclcpp::AnyExecutable any_exec;
+      if (get_next_executable_with_callback(any_exec, timeout, inbetween)) {
+        execute_any_executable(any_exec);
+      }
+    }
+
+  };
+
+  MyExecutor executor;
+
+  auto callback_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    true);
+
+  std::vector<std::shared_ptr<TestWaitable>> waitables;
+
+  auto waitable_interfaces = node->get_node_waitables_interface();
+
+  for (int i = 0; i < 3; i++) {
+    auto waitable = std::make_shared<TestWaitable>();
+    waitables.push_back(waitable);
+    waitable_interfaces->add_waitable(waitable, callback_group);
+  }
+  executor.add_node(node);
+
+  for (auto & waitable : waitables) {
+    waitable->trigger();
+  }
+
+  // a node has some default subscribers, that need to get executed first, therefore the loop
+  for (int i = 0; i < 10; i++) {
+    executor.spin_once(std::chrono::milliseconds(10));
+    if (waitables.front()->get_count() > 0) {
+      // stop execution, after the first waitable has been executed
+      break;
+    }
+  }
+
+  EXPECT_EQ(waitables.front()->get_count(), 1);
+
+  // block the callback group, this is something that may happen during multi threaded execution
+  // This removes my_waitable2 from the list of ready events, and triggers a call to wait_for_work
+  callback_group->can_be_taken_from().exchange(false);
+
+  bool no_ready_executable = false;
+
+  //now there should be no ready events now,
+  executor.spin_once_with_callback(
+    std::chrono::milliseconds(10), [&]() {
+      no_ready_executable = true;
+    });
+
+  EXPECT_TRUE(no_ready_executable);
+
+  //rearm, so that rmw_wait will push a second entry into the queue
+  for (auto & waitable : waitables) {
+    waitable->trigger();
+  }
+
+  no_ready_executable = false;
+
+  while (!no_ready_executable) {
+    executor.spin_once_with_callback(
+      std::chrono::milliseconds(10), [&]() {
+        //unblock the callback group
+        callback_group->can_be_taken_from().exchange(true);
+
+        no_ready_executable = true;
+
+      });
+  }
+  EXPECT_TRUE(no_ready_executable);
+
+  // now we process all events from get_next_ready_executable
+  EXPECT_NO_THROW(
+    for (int i = 0; i < 10; i++) {
+    executor.spin_once(std::chrono::milliseconds(1));
+  }
+  );
+
+  node.reset();
+
+  rclcpp::shutdown();
+}
+
 
 TYPED_TEST(TestExecutorsOnlyNode, missing_event)
 {
