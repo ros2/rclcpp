@@ -59,6 +59,15 @@ ComponentManager::ComponentManager(
     desc.read_only = true;
     this->declare_parameter(
       "thread_num", static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
+
+    rcl_interfaces::msg::ParameterDescriptor desc2{};
+    desc2.description = "Whether to set thread prioritization higher";
+    desc2.read_only = true;
+    this->declare_parameter("use_soft_realtime_priority", false, desc2);
+  }
+
+  if (this->get_parameter("use_soft_realtime_priority").as_bool()) {
+    setSoftRealTimePriority();
   }
 }
 

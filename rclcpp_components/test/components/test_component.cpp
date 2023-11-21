@@ -51,6 +51,12 @@ public:
     return node_.get_node_base_interface();
   }
 
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+  get_node_parameters_interface()
+  {
+    return node_.get_node_parameters_interface();
+  }
+
 private:
   rclcpp::Node node_;
 };
