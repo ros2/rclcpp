@@ -5,6 +5,7 @@ project(rclcpp_action)
 find_package(ament_cmake_ros REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcl REQUIRED)
 find_package(rcl_action REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
@@ -21,28 +22,26 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   )
 endif()
 
-set(${PROJECT_NAME}_SRCS
+add_library(${PROJECT_NAME}
   src/client.cpp
   src/qos.cpp
   src/server.cpp
   src/server_goal_handle.cpp
   src/types.cpp
 )
-
-add_library(${PROJECT_NAME}
-  ${${PROJECT_NAME}_SRCS})
-
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-ament_target_dependencies(${PROJECT_NAME}
-  "action_msgs"
-  "rcl_action"
-  "rclcpp"
-  "rcpputils"
-  "rosidl_runtime_c"
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  ${action_msgs_TARGETS}
+  rcl::rcl
+  rcl_action::rcl_action
+  rclcpp::rclcpp
+  rosidl_runtime_c::rosidl_runtime_c
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  rcpputils::rcpputils
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -69,12 +68,7 @@ ament_export_libraries(${PROJECT_NAME})
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
-# specific order: dependents before dependencies
-ament_export_dependencies(ament_cmake)
-ament_export_dependencies(action_msgs)
-ament_export_dependencies(rclcpp)
-ament_export_dependencies(rcl_action)
-ament_export_dependencies(rosidl_runtime_c)
+ament_export_dependencies(action_msgs rcl_action rclcpp rosidl_runtime_c)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
@@ -87,58 +81,52 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   if(TARGET test_client)
-    ament_target_dependencies(test_client
-      "rcutils"
-      "test_msgs"
-    )
     target_link_libraries(test_client
       ${PROJECT_NAME}
       mimick
+      rcl::rcl
+      rcl_action::rcl_action
+      rclcpp::rclcpp
+      rcutils::rcutils
+      ${test_msgs_TARGETS}
     )
   endif()
 
   ament_add_gtest(test_server test/test_server.cpp TIMEOUT 180)
   if(TARGET test_server)
-    ament_target_dependencies(test_server
-      "rcpputils"
-      "rcutils"
-      "test_msgs"
-    )
     target_link_libraries(test_server
       ${PROJECT_NAME}
       mimick
+      rcl_action::rcl_action
+      rclcpp::rclcpp
+      ${test_msgs_TARGETS}
     )
   endif()
 
   ament_add_gtest(test_server_goal_handle test/test_server_goal_handle.cpp)
   if(TARGET test_server_goal_handle)
-    ament_target_dependencies(test_server_goal_handle
-      "rcutils"
-      "test_msgs"
-    )
     target_link_libraries(test_server_goal_handle
       ${PROJECT_NAME}
+      ${action_msgs_TARGETS}
       mimick
+      rclcpp::rclcpp
+      ${test_msgs_TARGETS}
     )
   endif()
 
   ament_add_gtest(test_traits test/test_traits.cpp)
   if(TARGET test_traits)
-    ament_target_dependencies(test_traits
-      "test_msgs"
-    )
     target_link_libraries(test_traits
       ${PROJECT_NAME}
+      ${test_msgs_TARGETS}
     )
   endif()
 
   ament_add_gtest(test_types test/test_types.cpp)
   if(TARGET test_types)
-    ament_target_dependencies(test_types
-      "test_msgs"
-    )
     target_link_libraries(test_types
       ${PROJECT_NAME}
+      ${test_msgs_TARGETS}
     )
   endif()
 endif()
