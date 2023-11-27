@@ -178,3 +178,13 @@ TEST_F(TestRosoutSubscription, test_rosoutsubscription_getchild_hierarchy) {
   EXPECT_TRUE(future.get());
   received_msg_promise = {};
 }
+
+TEST_F(TestRosoutSubscription, test_rosoutsubscription_node_rosout_disabled) {
+  rclcpp::NodeOptions options = rclcpp::NodeOptions().enable_rosout(false);
+  auto node = std::make_shared<rclcpp::Node>("my_node", options);
+  auto log_func = [&node] {
+      auto logger = node->get_logger().get_child("child");
+      RCLCPP_INFO(logger, "test");
+    };
+  ASSERT_NO_THROW(log_func());
+}
