@@ -16,6 +16,8 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(rosidl_dynamic_typesupport REQUIRED)
+find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
@@ -202,23 +204,28 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
-# specific order: dependents before dependencies
-ament_target_dependencies(${PROJECT_NAME}
-  "ament_index_cpp"
-  "libstatistics_collector"
-  "rcl"
-  "rcl_interfaces"
-  "rcl_logging_interface"
-  "rcl_yaml_param_parser"
-  "rcpputils"
-  "rcutils"
-  "builtin_interfaces"
-  "rosgraph_msgs"
-  "rosidl_typesupport_cpp"
-  "rosidl_runtime_cpp"
-  "statistics_msgs"
-  "tracetools"
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  ${builtin_interfaces_TARGETS}
+  libstatistics_collector::libstatistics_collector
+  rcl::rcl
+  ${rcl_interfaces_TARGETS}
+  rcl_yaml_param_parser::rcl_yaml_param_parser
+  rcpputils::rcpputils
+  rcutils::rcutils
+  rmw::rmw
+  ${rosgraph_msgs_TARGETS}
+  rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
+  rosidl_runtime_c::rosidl_runtime_c
+  rosidl_runtime_cpp::rosidl_runtime_cpp
+  rosidl_typesupport_cpp::rosidl_typesupport_cpp
+  ${statistics_msgs_TARGETS}
+  tracetools::tracetools
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  ament_index_cpp::ament_index_cpp
+  rcl_logging_interface::rcl_logging_interface
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -240,20 +247,23 @@ ament_export_libraries(${PROJECT_NAME})
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
-# specific order: dependents before dependencies
-ament_export_dependencies(ament_index_cpp)
-ament_export_dependencies(libstatistics_collector)
-ament_export_dependencies(rcl)
-ament_export_dependencies(rcpputils)
-ament_export_dependencies(rcutils)
-ament_export_dependencies(builtin_interfaces)
-ament_export_dependencies(rosgraph_msgs)
-ament_export_dependencies(rosidl_typesupport_cpp)
-ament_export_dependencies(rosidl_typesupport_c)
-ament_export_dependencies(rosidl_runtime_cpp)
-ament_export_dependencies(rcl_yaml_param_parser)
-ament_export_dependencies(statistics_msgs)
-ament_export_dependencies(tracetools)
+ament_export_dependencies(
+  builtin_interfaces
+  libstatistics_collector
+  rcl
+  rcl_interfaces
+  rcl_yaml_param_parser
+  rcpputils
+  rcutils
+  rmw
+  rosgraph_msgs
+  rosidl_dynamic_typesupport
+  rosidl_runtime_c
+  rosidl_runtime_cpp
+  rosidl_typesupport_cpp
+  statistics_msgs
+  tracetools
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
