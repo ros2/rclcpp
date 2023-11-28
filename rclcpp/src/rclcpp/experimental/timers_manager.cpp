@@ -109,7 +109,8 @@ std::chrono::nanoseconds TimersManager::get_head_timeout()
   }
 
   std::unique_lock<std::mutex> lock(timers_mutex_);
-  return this->get_head_timeout_unsafe();
+  bool head_was_cancelled;
+  return this->get_head_timeout_unsafe(head_was_cancelled);
 }
 
 size_t TimersManager::get_number_ready_timers()
@@ -169,7 +170,7 @@ void TimersManager::execute_ready_timer(const rclcpp::TimerBase * timer_id)
   }
 }
 
-std::chrono::nanoseconds TimersManager::get_head_timeout_unsafe()
+std::chrono::nanoseconds TimersManager::get_head_timeout_unsafe(bool& head_was_cancelled)
 {
   // If we don't have any weak pointer, then we just return maximum timeout
   if (weak_timers_heap_.empty()) {
@@ -191,6 +192,7 @@ std::chrono::nanoseconds TimersManager::get_head_timeout_unsafe()
     }
     head_timer = locked_heap.front();
   }
+  head_was_cancelled = head_timer->is_canceled();
 
   return head_timer->time_until_trigger();
 }
@@ -242,14 +244,22 @@ void TimersManager::run_timers()
     // Lock mutex
     std::unique_lock<std::mutex> lock(timers_mutex_);
 
-    std::chrono::nanoseconds time_to_sleep = get_head_timeout_unsafe();
+    bool head_was_cancelled = false;
+    std::chrono::nanoseconds time_to_sleep = get_head_timeout_unsafe(head_was_cancelled);
 
     // No need to wait if a timer is already available
     if (time_to_sleep > std::chrono::nanoseconds::zero()) {
       if (time_to_sleep != std::chrono::nanoseconds::max()) {
         // Wait until timeout or notification that timers have been updated
         timers_cv_.wait_for(lock, time_to_sleep, [this]() {return timers_updated_;});
-      } else {
+      }
+      else if (head_was_cancelled) {
+        // Wait until notification that timers have been updated
+        TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
+        locked_heap.heapify();
+        weak_timers_heap_.store(locked_heap);
+      }
+      else {
         // Wait until notification that timers have been updated
         timers_cv_.wait(lock, [this]() {return timers_updated_;});
       }

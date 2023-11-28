@@ -25,7 +25,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
 #include "rclcpp/context.hpp"
 #include "rclcpp/timer.hpp"
 
@@ -496,7 +495,14 @@ private:
     static bool timer_greater(TimerPtr a, TimerPtr b)
     {
       // TODO(alsora): this can cause an error if timers are using different clocks
-      return a->time_until_trigger() > b->time_until_trigger();
+      bool both_canceled_or_active = a->is_canceled() == b->is_canceled();
+      if (both_canceled_or_active) {
+        return a->time_until_trigger() > b->time_until_trigger();
+      }
+      else if (a->is_canceled()) {
+        return true;
+      }
+      return false;
     }
 
     std::vector<TimerPtr> owned_heap_;
@@ -517,7 +523,7 @@ private:
    * or std::chrono::nanoseconds::max() if the heap is empty.
    * This function is not thread safe, acquire the timers_mutex_ before calling it.
    */
-  std::chrono::nanoseconds get_head_timeout_unsafe();
+  std::chrono::nanoseconds get_head_timeout_unsafe(bool& head_was_canceled);
 
   /**
    * @brief Executes all the timers currently ready when the function is invoked
