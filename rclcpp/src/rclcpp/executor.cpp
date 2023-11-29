@@ -611,6 +611,10 @@ Executor::collect_entities()
     collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
   }
 
+  // We must remove expired entities here, so that we don't continue to use older entities.
+  // See https://github.com/ros2/rclcpp/issues/2180 for more information.
+  current_collection_.remove_expired_entities();
+
   // Update each of the groups of entities in the current collection, adding or removing
   // from the wait set as necessary.
   current_collection_.timers.update(
