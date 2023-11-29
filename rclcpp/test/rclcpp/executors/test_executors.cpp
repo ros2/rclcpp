@@ -818,3 +818,105 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   executor.spin();
   EXPECT_EQ(kNumMessages, this->callback_count.load());
 }
+
+class TimerNode : public rclcpp::Node {
+   public:
+    TimerNode(std::string subname)
+        : Node("timer_node", subname) {
+
+        
+        timer1_ = rclcpp::create_timer(this->get_node_base_interface(), get_node_timers_interface(),
+                                      get_clock(), 1ms,
+                                      std::bind(&TimerNode::Timer1Callback, this));
+
+        timer2_ =
+              rclcpp::create_timer(this->get_node_base_interface(), get_node_timers_interface(),
+                                      get_clock(), 1ms,
+                                      std::bind(&TimerNode::Timer2Callback, this));
+    }
+
+    int GetTimer1Cnt() { return cnt1_; }
+    int GetTimer2Cnt() { return cnt2_; }
+   private:
+    void Timer1Callback() {
+        RCLCPP_DEBUG(this->get_logger(), "Timer 1!");
+        if (++cnt1_ > 5) {
+            RCLCPP_DEBUG(this->get_logger(), "Timer cancelling itself!");
+            timer1_->cancel();
+        }
+    }
+
+    void Timer2Callback() {
+        RCLCPP_DEBUG(this->get_logger(), "Timer 2!");
+        cnt2_++;
+    }
+
+    rclcpp::TimerBase::SharedPtr timer1_;
+    rclcpp::TimerBase::SharedPtr timer2_;
+    int cnt1_ = 0;
+    int cnt2_ = 0;
+};
+
+
+template<typename T>
+class TestTimerCancelBehavior : public ::testing::Test
+{
+public:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
+  void SetUp()
+  {
+    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    std::stringstream test_name;
+    test_name << test_info->test_case_name() << "_" << test_info->name();
+    node = std::make_shared<TimerNode>(test_name.str());
+  }
+
+  void TearDown()
+  {
+    node.reset();
+  }
+
+
+  std::shared_ptr<TimerNode> node;
+};
+
+TYPED_TEST_SUITE(TestTimerCancelBehavior, ExecutorTypes, ExecutorTypeNames);
+
+TYPED_TEST(TestTimerCancelBehavior, testOneTimerCancelledWithExecutorSpin) {
+  // Validate that cancelling one timer yields no change in behavior for other
+  // timers. Specifically, this tests the behavior when using spin() to run the
+  // executor, which is the most common usecase.
+
+  // Spin the executor in a standalone thread
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  executor.add_node(this->node);
+  std::thread real_time_thread([&executor]() {
+    executor.spin();
+  });
+
+  // Cancel to stop the spin after some time.
+  std::this_thread::sleep_for(15ms);
+  executor.cancel();
+
+  size_t t1_runs = this->node->GetTimer1Cnt();
+  size_t t2_runs = this->node->GetTimer2Cnt();
+  EXPECT_NE(t1_runs, t2_runs);
+  // Check that t2 has significantly more calls
+  EXPECT_LT(t1_runs + 5, t2_runs);
+
+  // Clean up thread object
+  if (real_time_thread.joinable()) {
+    real_time_thread.join();
+  }
+}
+
