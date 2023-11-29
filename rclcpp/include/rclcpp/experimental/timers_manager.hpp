@@ -495,14 +495,7 @@ private:
     static bool timer_greater(TimerPtr a, TimerPtr b)
     {
       // TODO(alsora): this can cause an error if timers are using different clocks
-      bool both_canceled_or_active = a->is_canceled() == b->is_canceled();
-      if (both_canceled_or_active) {
-        return a->time_until_trigger() > b->time_until_trigger();
-      }
-      else if (a->is_canceled()) {
-        return true;
-      }
-      return false;
+      return a->time_until_trigger() > b->time_until_trigger();
     }
 
     std::vector<TimerPtr> owned_heap_;
