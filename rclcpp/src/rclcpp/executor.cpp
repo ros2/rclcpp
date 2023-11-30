@@ -658,21 +658,20 @@ Executor::collect_entities()
   this->wait_set_.prune_deleted_entities();
   this->entities_need_rebuild_.store(false);
 
-  if (!this->ready_executables_.empty())
-  {
+  if (!this->ready_executables_.empty()) {
     std::unordered_set<rclcpp::CallbackGroup::SharedPtr> groups;
-    for (const auto &weak_group : callback_groups)
-    {
+    for (const auto & weak_group : callback_groups) {
       auto group = weak_group.lock();
-      if (group)
+      if (group) {
         groups.insert(group);
+      }
     }
 
     this->ready_executables_.erase(
       std::remove_if(
         this->ready_executables_.begin(),
         this->ready_executables_.end(),
-        [groups](auto exec){
+        [groups](auto exec) {
           return groups.count(exec.callback_group) == 0;
         }),
       this->ready_executables_.end());
