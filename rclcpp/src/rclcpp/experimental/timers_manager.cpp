@@ -100,7 +100,7 @@ void TimersManager::stop()
   }
 }
 
-std::chrono::nanoseconds TimersManager::get_head_timeout()
+std::optional<std::chrono::nanoseconds> TimersManager::get_head_timeout()
 {
   // Do not allow to interfere with the thread running
   if (running_) {
@@ -109,8 +109,7 @@ std::chrono::nanoseconds TimersManager::get_head_timeout()
   }
 
   std::unique_lock<std::mutex> lock(timers_mutex_);
-  bool head_was_cancelled;
-  return this->get_head_timeout_unsafe(head_was_cancelled);
+  return this->get_head_timeout_unsafe();
 }
 
 size_t TimersManager::get_number_ready_timers()
@@ -170,7 +169,7 @@ void TimersManager::execute_ready_timer(const rclcpp::TimerBase * timer_id)
   }
 }
 
-std::chrono::nanoseconds TimersManager::get_head_timeout_unsafe(bool& head_was_cancelled)
+std::optional<std::chrono::nanoseconds> TimersManager::get_head_timeout_unsafe()
 {
   // If we don't have any weak pointer, then we just return maximum timeout
   if (weak_timers_heap_.empty()) {
@@ -192,8 +191,9 @@ std::chrono::nanoseconds TimersManager::get_head_timeout_unsafe(bool& head_was_c
     }
     head_timer = locked_heap.front();
   }
-  head_was_cancelled = head_timer->is_canceled();
-
+  if (head_timer->is_canceled()) {
+    return std::nullopt;
+  }
   return head_timer->time_until_trigger();
 }
 
@@ -244,20 +244,29 @@ void TimersManager::run_timers()
     // Lock mutex
     std::unique_lock<std::mutex> lock(timers_mutex_);
 
-    bool head_was_cancelled = false;
-    std::chrono::nanoseconds time_to_sleep = get_head_timeout_unsafe(head_was_cancelled);
+    std::optional<std::chrono::nanoseconds> time_to_sleep = get_head_timeout_unsafe();
 
+    if (!time_to_sleep.has_value()) {
+        // If head was cancelled, and there is more than 1 timer, we need to re-heapify. This
+        // is a case where the next up timer should really be used, so the next loop iteration
+        // will pick up the correct head.
+        if (weak_timers_heap_.size() > 1) {
+          TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
+          locked_heap.heapify();
+          weak_timers_heap_.store(locked_heap);
+        }
+        // Otherwise, we can just wait indefinitely for a new timer to be added, since the only
+        // timer is invalid.
+        else {
+          // Wait until notification that timers have been updated
+          timers_cv_.wait(lock, [this]() {return timers_updated_;});
+        }
+    }
     // No need to wait if a timer is already available
-    if (time_to_sleep > std::chrono::nanoseconds::zero()) {
-      if (time_to_sleep != std::chrono::nanoseconds::max()) {
+    else if (time_to_sleep.value() > std::chrono::nanoseconds::zero()) {
+      if (time_to_sleep.value() != std::chrono::nanoseconds::max()) {
         // Wait until timeout or notification that timers have been updated
-        timers_cv_.wait_for(lock, time_to_sleep, [this]() {return timers_updated_;});
-      }
-      else if (head_was_cancelled) {
-        // Wait until notification that timers have been updated
-        TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
-        locked_heap.heapify();
-        weak_timers_heap_.store(locked_heap);
+        timers_cv_.wait_for(lock, time_to_sleep.value(), [this]() {return timers_updated_;});
       }
       else {
         // Wait until notification that timers have been updated

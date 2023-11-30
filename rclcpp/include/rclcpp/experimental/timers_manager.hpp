@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -171,13 +172,14 @@ public:
    * @brief Get the amount of time before the next timer triggers.
    * This function is thread safe.
    *
-   * @return std::chrono::nanoseconds to wait,
+   * @return std::optional<std::chrono::nanoseconds> to wait,
    * the returned value could be negative if the timer is already expired
    * or std::chrono::nanoseconds::max() if there are no timers stored in the object.
+   * If the head timer was cancelled, then this will return a nullopt.
    * @throws std::runtime_error if the timers thread was already running.
    */
   RCLCPP_PUBLIC
-  std::chrono::nanoseconds get_head_timeout();
+  std::optional<std::chrono::nanoseconds> get_head_timeout();
 
 private:
   RCLCPP_DISABLE_COPY(TimersManager)
@@ -268,6 +270,15 @@ public:
     bool empty() const
     {
       return weak_heap_.empty();
+    }
+
+    /**
+     * @brief Returns the size of the heap.
+     * @return the number of valid timers in the heap.
+     */
+    size_t size() const
+    {
+      return weak_heap_.size();
     }
 
     /**
@@ -511,12 +522,13 @@ private:
    * @brief Get the amount of time before the next timer triggers.
    * This function is not thread safe, acquire a mutex before calling it.
    *
-   * @return std::chrono::nanoseconds to wait,
+   * @return std::optional<std::chrono::nanoseconds> to wait,
    * the returned value could be negative if the timer is already expired
    * or std::chrono::nanoseconds::max() if the heap is empty.
+   * If the head timer was cancelled, then this will return a nullopt.
    * This function is not thread safe, acquire the timers_mutex_ before calling it.
    */
-  std::chrono::nanoseconds get_head_timeout_unsafe(bool& head_was_canceled);
+  std::optional<std::chrono::nanoseconds> get_head_timeout_unsafe();
 
   /**
    * @brief Executes all the timers currently ready when the function is invoked
