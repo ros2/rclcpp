@@ -668,26 +668,19 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   rclcpp::Node::SharedPtr node(this->node);
   auto callback_group = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive,
-    true);
+    false);
 
   auto waitable_interfaces = node->get_node_waitables_interface();
   auto my_waitable = std::make_shared<TestWaitable>();
   auto my_waitable2 = std::make_shared<TestWaitable>();
   waitable_interfaces->add_waitable(my_waitable, callback_group);
   waitable_interfaces->add_waitable(my_waitable2, callback_group);
-  executor.add_node(this->node);
+  executor.add_callback_group(callback_group, node->get_node_base_interface());
 
   my_waitable->trigger();
   my_waitable2->trigger();
 
-  // a node has some default subscribers, that need to get executed first, therefore the loop
-  for (int i = 0; i < 10; i++) {
-    executor.spin_once(std::chrono::milliseconds(10));
-    if (my_waitable->get_count() > 0) {
-      // stop execution, after the first waitable has been executed
-      break;
-    }
-  }
+  executor.spin_once(std::chrono::milliseconds(10));
 
   EXPECT_EQ(1u, my_waitable->get_count());
   EXPECT_EQ(0u, my_waitable2->get_count());
@@ -696,16 +689,16 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   // This removes my_waitable2 from the list of ready events, and triggers a call to wait_for_work
   callback_group->can_be_taken_from().exchange(false);
 
-  //now there should be no ready event
+  // now there should be no ready event
   executor.spin_once(std::chrono::milliseconds(10));
 
   EXPECT_EQ(1u, my_waitable->get_count());
   EXPECT_EQ(0u, my_waitable2->get_count());
 
-  //unblock the callback group
+  // unblock the callback group
   callback_group->can_be_taken_from().exchange(true);
 
-  //now the second waitable should get processed
+  // now the second waitable should get processed
   executor.spin_once(std::chrono::milliseconds(10));
 
   EXPECT_EQ(1u, my_waitable->get_count());
