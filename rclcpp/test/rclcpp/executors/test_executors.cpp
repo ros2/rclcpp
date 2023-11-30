@@ -454,6 +454,14 @@ public:
     (void) data;
     count_++;
     std::this_thread::sleep_for(3ms);
+    try {
+      std::lock_guard<std::mutex> lock(execute_promise_mutex_);
+      execute_promise_.set_value();
+    } catch (const std::future_error & future_error) {
+      if (future_error.code() != std::future_errc::promise_already_satisfied) {
+        throw;
+      }
+    }
   }
 
   void
@@ -480,8 +488,18 @@ public:
     return count_;
   }
 
+  std::future<void>
+  reset_execute_promise_and_get_future()
+  {
+    std::lock_guard<std::mutex> lock(execute_promise_mutex_);
+    execute_promise_ = std::promise<void>();
+    return execute_promise_.get_future();
+  }
+
 private:
   bool is_ready_called_before_take_data = false;
+  std::promise<void> execute_promise_;
+  std::mutex execute_promise_mutex_;
   size_t count_ = 0;
   rclcpp::GuardCondition gc_;
 };
@@ -670,6 +688,7 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
     rclcpp::CallbackGroupType::MutuallyExclusive,
     false);
 
+  std::chrono::seconds max_spin_duration(2);
   auto waitable_interfaces = node->get_node_waitables_interface();
   auto my_waitable = std::make_shared<TestWaitable>();
   auto my_waitable2 = std::make_shared<TestWaitable>();
@@ -680,7 +699,10 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   my_waitable->trigger();
   my_waitable2->trigger();
 
-  executor.spin_once(std::chrono::milliseconds(10));
+  {
+    auto my_waitable_execute_future = my_waitable->reset_execute_promise_and_get_future();
+    executor.spin_until_future_complete(my_waitable_execute_future, max_spin_duration);
+  }
 
   EXPECT_EQ(1u, my_waitable->get_count());
   EXPECT_EQ(0u, my_waitable2->get_count());
@@ -690,7 +712,13 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   callback_group->can_be_taken_from().exchange(false);
 
   // now there should be no ready event
-  executor.spin_once(std::chrono::milliseconds(10));
+  {
+    auto my_waitable2_execute_future = my_waitable2->reset_execute_promise_and_get_future();
+    auto future_code = executor.spin_until_future_complete(
+      my_waitable2_execute_future,
+      std::chrono::milliseconds(100));  // expected to timeout
+    EXPECT_EQ(future_code, rclcpp::FutureReturnCode::TIMEOUT);
+  }
 
   EXPECT_EQ(1u, my_waitable->get_count());
   EXPECT_EQ(0u, my_waitable2->get_count());
@@ -699,7 +727,10 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   callback_group->can_be_taken_from().exchange(true);
 
   // now the second waitable should get processed
-  executor.spin_once(std::chrono::milliseconds(10));
+  {
+    auto my_waitable2_execute_future = my_waitable2->reset_execute_promise_and_get_future();
+    executor.spin_until_future_complete(my_waitable2_execute_future, max_spin_duration);
+  }
 
   EXPECT_EQ(1u, my_waitable->get_count());
   EXPECT_EQ(1u, my_waitable2->get_count());
