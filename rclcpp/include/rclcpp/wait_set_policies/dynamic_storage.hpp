@@ -386,6 +386,7 @@ public:
         return weak_ptr.expired();
       };
     // remove guard conditions which have been deleted
+    subscriptions_.erase(std::remove_if(subscriptions_.begin(), subscriptions_.end(), p), subscriptions_.end());
     guard_conditions_.erase(
       std::remove_if(guard_conditions_.begin(), guard_conditions_.end(), p),
       guard_conditions_.end());
