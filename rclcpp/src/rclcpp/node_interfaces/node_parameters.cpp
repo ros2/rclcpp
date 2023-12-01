@@ -579,7 +579,7 @@ NodeParameters::declare_parameter(
   bool ignore_override)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+  // ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   return declare_parameter_helper(
     name,
@@ -604,7 +604,7 @@ NodeParameters::declare_parameter(
   bool ignore_override)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+  // ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   if (rclcpp::PARAMETER_NOT_SET == type) {
     throw std::invalid_argument{
@@ -696,7 +696,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+  // ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   rcl_interfaces::msg::SetParametersResult result;
 
