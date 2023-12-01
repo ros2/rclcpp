@@ -60,14 +60,17 @@ TEST_F(TestSubscriptionOptions, topic_statistics_options_default_and_set) {
   EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::NodeDefault);
   EXPECT_EQ(options.topic_stats_options.publish_topic, defaultPublishTopic);
   EXPECT_EQ(options.topic_stats_options.publish_period, 1s);
+  EXPECT_EQ(options.topic_stats_options.qos, rclcpp::SystemDefaultsQoS());
 
   options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
   options.topic_stats_options.publish_topic = "topic_statistics";
   options.topic_stats_options.publish_period = 5min;
+  options.topic_stats_options.qos = rclcpp::BestAvailableQoS();
 
   EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::Enable);
   EXPECT_EQ(options.topic_stats_options.publish_topic, "topic_statistics");
   EXPECT_EQ(options.topic_stats_options.publish_period, 5min);
+  EXPECT_EQ(options.topic_stats_options.qos, rclcpp::BestAvailableQoS());
 }
 
 TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
