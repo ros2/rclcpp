@@ -163,9 +163,13 @@ public:
    * This method stores the publisher intra process object, together with
    * the information of its wrapped publisher (i.e. topic name and QoS).
    *
+   * If the publisher's durability is transient local, its buffer pointer should
+   * be passed and the method will store it as well.
+   *
    * In addition this generates a unique intra process id for the publisher.
    *
    * \param publisher publisher to be registered with the manager.
+   * \param buffer publisher's buffer to be stored if its duability is transient local.
    * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
   RCLCPP_PUBLIC

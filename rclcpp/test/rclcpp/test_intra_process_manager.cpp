@@ -445,18 +445,18 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
 }  // namespace rclcpp
 
 /*
-   This tests how the class connects and disconnects publishers and subscriptions:
-   - Creates 2 publishers on different topics and a subscription to one of them.
-     Add everything to the intra-process manager.
-   - All the entities are expected to have different ids.
-   - Check the subscriptions count for each publisher.
-   - One of the publishers is expected to have 1 subscription, while the other 0.
-   - Check the subscription count for a non existing publisher id, should return 0.
-   - Add a new publisher and a new subscription both with reliable QoS.
-   - The subscriptions count of the previous publisher is expected to remain unchanged,
-     while the new publisher is expected to have 2 subscriptions (it's compatible with both QoS).
-   - Remove the just added subscriptions.
-   - The count for the last publisher is expected to decrease to 1.
+ * This tests how the class connects and disconnects publishers and subscriptions:
+ * - Creates 2 publishers on different topics and a subscription to one of them.
+ *   Add everything to the intra-process manager.
+ * - All the entities are expected to have different ids.
+ * - Check the subscriptions count for each publisher.
+ * - One of the publishers is expected to have 1 subscription, while the other 0.
+ * - Check the subscription count for a non existing publisher id, should return 0.
+ * - Add a new publisher and a new subscription both with reliable QoS.
+ * - The subscriptions count of the previous publisher is expected to remain unchanged,
+ *   while the new publisher is expected to have 2 subscriptions (it's compatible with both QoS).
+ * - Remove the just added subscriptions.
+ * - The count for the last publisher is expected to decrease to 1.
  */
 TEST(TestIntraProcessManager, add_pub_sub) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -511,14 +511,14 @@ TEST(TestIntraProcessManager, add_pub_sub) {
 }
 
 /*
-   This tests the minimal usage of the class where there is a single subscription per publisher:
-   - Publishes a unique_ptr message with a subscription requesting ownership.
-   - The received message is expected to be the same.
-   - Remove the first subscription from ipm and add a new one.
-   - Publishes a unique_ptr message with a subscription not requesting ownership.
-   - The received message is expected to be the same, the first subscription do not receive it.
-   - Publishes a shared_ptr message with a subscription not requesting ownership.
-   - The received message is expected to be the same.
+ * This tests the minimal usage of the class where there is a single subscription per publisher:
+ * - Publishes a unique_ptr message with a subscription requesting ownership.
+ * - The received message is expected to be the same.
+ * - Remove the first subscription from ipm and add a new one.
+ * - Publishes a unique_ptr message with a subscription not requesting ownership.
+ * - The received message is expected to be the same, the first subscription do not receive it.
+ * - Publishes a shared_ptr message with a subscription not requesting ownership.
+ * - The received message is expected to be the same.
  */
 TEST(TestIntraProcessManager, single_subscription) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -564,15 +564,15 @@ TEST(TestIntraProcessManager, single_subscription) {
 }
 
 /*
-   This tests the usage of the class where there are multiple subscriptions of the same type:
-   - Publishes a unique_ptr message with 2 subscriptions requesting ownership.
-   - One is expected to receive the published message, while the other will receive a copy.
-   - Publishes a unique_ptr message with 2 subscriptions not requesting ownership.
-   - Both received messages are expected to be the same as the published one.
-   - Publishes a shared_ptr message with 2 subscriptions requesting ownership.
-   - Both received messages are expected to be a copy of the published one.
-   - Publishes a shared_ptr message with 2 subscriptions not requesting ownership.
-   - Both received messages are expected to be the same as the published one.
+ * This tests the usage of the class where there are multiple subscriptions of the same type:
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership.
+ * - One is expected to receive the published message, while the other will receive a copy.
+ * - Publishes a unique_ptr message with 2 subscriptions not requesting ownership.
+ * - Both received messages are expected to be the same as the published one.
+ * - Publishes a shared_ptr message with 2 subscriptions requesting ownership.
+ * - Both received messages are expected to be a copy of the published one.
+ * - Publishes a shared_ptr message with 2 subscriptions not requesting ownership.
+ * - Both received messages are expected to be the same as the published one.
  */
 TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -665,20 +665,20 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
 }
 
 /*
-   This tests the usage of the class where there are multiple subscriptions of different types:
-   - Publishes a unique_ptr message with 1 subscription requesting ownership and 1 not.
-   - The one requesting ownership is expected to receive the published message,
-     while the other is expected to receive a copy.
-   - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 1 not.
-   - One of the subscriptions requesting ownership is expected to receive the published message,
-     while both other subscriptions are expected to receive different copies.
-   - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 2 not.
-   - The 2 subscriptions not requesting ownership are expected to both receive the same copy
-     of the message, one of the subscription requesting ownership is expected to receive a
-     different copy, while the last is expected to receive the published message.
-   - Publishes a shared_ptr message with 1 subscription requesting ownership and 1 not.
-   - The subscription requesting ownership is expected to receive a copy of the message, while
-     the other is expected to receive the published message
+ * This tests the usage of the class where there are multiple subscriptions of different types:
+ * - Publishes a unique_ptr message with 1 subscription requesting ownership and 1 not.
+ * - The one requesting ownership is expected to receive the published message,
+ *   while the other is expected to receive a copy.
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 1 not.
+ * - One of the subscriptions requesting ownership is expected to receive the published message,
+ *   while both other subscriptions are expected to receive different copies.
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 2 not.
+ * - The 2 subscriptions not requesting ownership are expected to both receive the same copy
+ *   of the message, one of the subscription requesting ownership is expected to receive a
+ *   different copy, while the last is expected to receive the published message.
+ * - Publishes a shared_ptr message with 1 subscription requesting ownership and 1 not.
+ * - The subscription requesting ownership is expected to receive a copy of the message, while
+ *   the other is expected to receive the published message
  */
 TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -801,25 +801,25 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
 }
 
 /*
-   This tests the method "lowest_available_capacity":
-   - Creates 1 publisher.
-   - The available buffer capacity should be at least history size.
-   - Add 2 subscribers.
-   - Add everything to the intra-process manager.
-   - All the entities are expected to have different ids.
-   - Check the subscriptions count for the publisher.
-   - The available buffer capacity should be the history size.
-   - Publish one message (without receiving it).
-   - The available buffer capacity should decrease by 1.
-   - Publish another message (without receiving it).
-   - The available buffer capacity should decrease by 1.
-   - One subscriber receives one message.
-   - The available buffer capacity should stay the same,
-     as the other subscriber still has not freed its buffer.
-   - The other subscriber receives one message.
-   - The available buffer capacity should increase by 1.
-   - One subscription goes out of scope.
-   - The available buffer capacity should not change.
+ * This tests the method "lowest_available_capacity":
+ * - Creates 1 publisher.
+ * - The available buffer capacity should be at least history size.
+ * - Add 2 subscribers.
+ * - Add everything to the intra-process manager.
+ * - All the entities are expected to have different ids.
+ * - Check the subscriptions count for the publisher.
+ * - The available buffer capacity should be the history size.
+ * - Publish one message (without receiving it).
+ * - The available buffer capacity should decrease by 1.
+ * - Publish another message (without receiving it).
+ * - The available buffer capacity should decrease by 1.
+ * - One subscriber receives one message.
+ * - The available buffer capacity should stay the same,
+ *   as the other subscriber still has not freed its buffer.
+ * - The other subscriber receives one message.
+ * - The available buffer capacity should increase by 1.
+ * - One subscription goes out of scope.
+ * - The available buffer capacity should not change.
  */
 TEST(TestIntraProcessManager, lowest_available_capacity) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -889,10 +889,10 @@ TEST(TestIntraProcessManager, lowest_available_capacity) {
 }
 
 /*
-   This tests the check inside add_publisher for transient_local
-   durability publishers
-   - add_publisher should throw runtime_error when no valid buffer ptr
-   is passed with a transient_local publisher
+ * This tests the check inside add_publisher for transient_local
+ * durability publishers
+ * - add_publisher should throw runtime_error when no valid buffer ptr
+ * is passed with a transient_local publisher
  */
 TEST(TestIntraProcessManager, transient_local_invalid_buffer) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -911,10 +911,10 @@ TEST(TestIntraProcessManager, transient_local_invalid_buffer) {
 }
 
 /*
-   This tests publishing function for transient_local durability publihers
-   - A message is published before three transient_local subscriptions are added to
-   ipm. Two of the subscriptions use take_shared method. Delivery of the message is verified
-   along with the contents and pointer addresses from the subscriptions.
+ * This tests publishing function for transient_local durability publihers
+ * - A message is published before three transient_local subscriptions are added to
+ * ipm. Two of the subscriptions use take_shared method. Delivery of the message is verified
+ * along with the contents and pointer addresses from the subscriptions.
  */
 TEST(TestIntraProcessManager, transient_local) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;

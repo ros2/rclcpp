@@ -22,7 +22,7 @@
 #include "rclcpp/experimental/buffers/ring_buffer_implementation.hpp"
 
 /*
-   Construtctor
+ * Construtctor
  */
 TEST(TestRingBufferImplementation, constructor) {
   // Cannot create a buffer of size zero.
@@ -37,11 +37,11 @@ TEST(TestRingBufferImplementation, constructor) {
 }
 
 /*
-   Basic usage
-   - insert data and check that it has data
-   - get all data
-   - extract data
-   - overwrite old data writing over the buffer capacity
+ * Basic usage
+ * - insert data and check that it has data
+ * - get all data
+ * - extract data
+ * - overwrite old data writing over the buffer capacity
  */
 TEST(TestRingBufferImplementation, basic_usage) {
   rclcpp::experimental::buffers::RingBufferImplementation<char> rb(2);
@@ -88,11 +88,11 @@ TEST(TestRingBufferImplementation, basic_usage) {
 }
 
 /*
-   Basic usage with unique_ptr
-   - insert unique_ptr data and check that it has data
-   - get all data
-   - extract data
-   - overwrite old data writing over the buffer capacity
+ * Basic usage with unique_ptr
+ * - insert unique_ptr data and check that it has data
+ * - get all data
+ * - extract data
+ * - overwrite old data writing over the buffer capacity
  */
 TEST(TestRingBufferImplementation, basic_usage_unique_ptr) {
   rclcpp::experimental::buffers::RingBufferImplementation<std::unique_ptr<char>> rb(2);
