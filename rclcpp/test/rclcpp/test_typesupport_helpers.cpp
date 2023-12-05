@@ -50,7 +50,7 @@ TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_legacy_library) {
   try {
     auto library = rclcpp::get_typesupport_library(
       "test_msgs/BasicTypes", "rosidl_typesupport_cpp");
-    auto string_typesupport = rclcpp::get_typesupport_handle(
+    auto string_typesupport = rclcpp::get_message_typesupport_handle(
       "test_msgs/BasicTypes", "rosidl_typesupport_cpp", *library);
 
     EXPECT_THAT(
@@ -65,7 +65,7 @@ TEST(TypesupportHelpersTest, returns_c_type_info_for_valid_library) {
   try {
     auto library = rclcpp::get_typesupport_library(
       "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp");
-    auto string_typesupport = rclcpp::get_typesupport_handle(
+    auto string_typesupport = rclcpp::get_message_typesupport_handle(
       "test_msgs/msg/BasicTypes", "rosidl_typesupport_cpp", *library);
 
     EXPECT_THAT(
@@ -111,18 +111,16 @@ TEST(TypesupportHelpersTest, test_throw_exception_with_invalid_type) {
   std::string invalid_type = "test_msgs/msg/InvalidType";
   auto library = rclcpp::get_typesupport_library(invalid_type, "rosidl_typesupport_cpp");
   EXPECT_THROW(
-    rclcpp::get_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
+    rclcpp::get_message_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
   EXPECT_THROW(
-    rclcpp::get_service_typesupport_handle(
-      invalid_type, "rosidl_typesupport_cpp", *library),
+    rclcpp::get_service_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
 
   // service
   invalid_type = "test_msgs/srv/InvalidType";
   library = rclcpp::get_typesupport_library(invalid_type, "rosidl_typesupport_cpp");
   EXPECT_THROW(
-    rclcpp::get_service_typesupport_handle(
-      invalid_type, "rosidl_typesupport_cpp", *library),
+    rclcpp::get_service_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
 }

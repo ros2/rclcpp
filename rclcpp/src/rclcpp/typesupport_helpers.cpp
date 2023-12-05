@@ -144,6 +144,14 @@ const rosidl_message_type_support_t * get_typesupport_handle(
   const std::string & typesupport_identifier,
   rcpputils::SharedLibrary & library)
 {
+  return get_message_typesupport_handle(type, typesupport_identifier, library);
+}
+
+const rosidl_message_type_support_t * get_message_typesupport_handle(
+  const std::string & type,
+  const std::string & typesupport_identifier,
+  rcpputils::SharedLibrary & library)
+{
   static const std::string typesupport_name = "message";
   static const std::string symbol_part_name = "__get_message_type_support_handle__";
   static const std::string middle_module_additional = "msg";
