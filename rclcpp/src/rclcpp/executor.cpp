@@ -412,7 +412,8 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    any_exec.waitable->execute(any_exec.data);
+    auto data = any_exec.take_data();
+    any_exec.waitable->execute(data);
   }
 
   // Reset the callback_group, regardless of type

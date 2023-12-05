@@ -47,7 +47,7 @@ struct AnyExecutable
   // These are used to keep the scope on the containing items
   rclcpp::CallbackGroup::SharedPtr callback_group;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base;
-  std::shared_ptr<void> data;
+  std::function<std::shared_ptr<void>()> take_data;
 };
 
 }  // namespace rclcpp

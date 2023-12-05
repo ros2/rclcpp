@@ -24,8 +24,7 @@ AnyExecutable::AnyExecutable()
   client(nullptr),
   waitable(nullptr),
   callback_group(nullptr),
-  node_base(nullptr),
-  data(nullptr)
+  node_base(nullptr)
 {}
 
 AnyExecutable::~AnyExecutable()
