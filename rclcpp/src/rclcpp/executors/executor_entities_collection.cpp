@@ -227,7 +227,7 @@ ready_executables(
     }
   }
 
-  for (auto & [handle, entry] : collection.waitables) {
+  for (const auto & [handle, entry] : collection.waitables) {
     auto waitable = entry.entity.lock();
     if (!waitable) {
       continue;
@@ -242,7 +242,6 @@ ready_executables(
     rclcpp::AnyExecutable exec;
     exec.waitable = waitable;
     exec.callback_group = group_info;
-    exec.take_data = [waitable](){return waitable->take_data();};
     executables.push_back(exec);
     added++;
   }

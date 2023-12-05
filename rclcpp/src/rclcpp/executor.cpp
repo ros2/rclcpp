@@ -412,7 +412,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    auto data = any_exec.take_data();
+    auto data = any_exec.waitable->take_data();
     any_exec.waitable->execute(data);
   }
 
