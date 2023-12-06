@@ -96,4 +96,48 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   auto timer = node->create_wall_timer(PERIOD_MS, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
+
+}
+
+TEST_F(TestMultiThreadedExecutor, catch_exception) {
+
+  rclcpp::executors::MultiThreadedExecutor executor;
+
+  std::shared_ptr<rclcpp::Node> node =
+    std::make_shared<rclcpp::Node>("test_multi_threaded_executor_catch_exception");
+
+  const std::string test_reason = "test exception";
+
+  std::atomic_bool timer_executed_after_exception = false;
+
+  auto timer = node->create_wall_timer(
+    std::chrono::milliseconds(1), [test_reason, &timer_executed_after_exception, &executor]()
+    {
+      static size_t cnt = 0;
+      if (cnt == 0) {
+        cnt++;
+        throw std::runtime_error(test_reason);
+      }
+
+      timer_executed_after_exception = true;
+      executor.cancel();
+    });
+
+  std::atomic_bool caught_exception = false;
+
+  executor.add_node(node);
+  executor.spin(
+    [&caught_exception, &test_reason](const std::exception & e)
+    {
+      const std::runtime_error * runtime_error = dynamic_cast<const std::runtime_error *>(&e);
+      ASSERT_NE(runtime_error, nullptr);
+
+      ASSERT_EQ(runtime_error->what(), test_reason);
+
+      caught_exception = true;
+    }
+  );
+
+  ASSERT_TRUE(caught_exception);
+  ASSERT_TRUE(timer_executed_after_exception);
 }
