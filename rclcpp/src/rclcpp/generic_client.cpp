@@ -34,7 +34,7 @@ GenericClient::GenericClient(
   ts_lib_ = get_typesupport_library(
     service_type, "rosidl_typesupport_cpp");
 
-  auto service_ts_ = get_typesupport_handle<rosidl_service_type_support_t>(
+  auto service_ts_ = get_service_typesupport_handle(
     service_type, "rosidl_typesupport_cpp", *ts_lib_);
 
   auto response_type_support_intro = get_message_typesupport_handle(
