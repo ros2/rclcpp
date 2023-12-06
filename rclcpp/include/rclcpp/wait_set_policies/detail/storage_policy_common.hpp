@@ -340,7 +340,6 @@ protected:
       }
     }
 
-
     // Add services.
     for (const auto & service : services) {
       if (!service) {

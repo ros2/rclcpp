@@ -103,8 +103,7 @@ public:
   void
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
-    if (this->buffer_->has_data())
-    {
+    if (this->buffer_->has_data()) {
       this->trigger_guard_condition();
     }
     detail::add_guard_condition_to_rcl_wait_set(*wait_set, this->gc_);
