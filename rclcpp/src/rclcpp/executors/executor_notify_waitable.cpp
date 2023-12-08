@@ -27,15 +27,17 @@ ExecutorNotifyWaitable::ExecutorNotifyWaitable(std::function<void(void)> on_exec
 {
 }
 
-ExecutorNotifyWaitable::ExecutorNotifyWaitable(const ExecutorNotifyWaitable & other)
-: ExecutorNotifyWaitable(other.execute_callback_)
+ExecutorNotifyWaitable::ExecutorNotifyWaitable(ExecutorNotifyWaitable & other)
 {
+  std::lock_guard<std::mutex> lock(other.guard_condition_mutex_);
+  this->execute_callback_ = other.execute_callback_;
   this->notify_guard_conditions_ = other.notify_guard_conditions_;
 }
 
-ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(const ExecutorNotifyWaitable & other)
+ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(ExecutorNotifyWaitable & other)
 {
   if (this != &other) {
+    std::lock_guard<std::mutex> lock(other.guard_condition_mutex_);
     this->execute_callback_ = other.execute_callback_;
     this->notify_guard_conditions_ = other.notify_guard_conditions_;
   }
