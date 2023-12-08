@@ -649,9 +649,7 @@ Executor::collect_entities()
 
   current_collection_.waitables.update(
     collection.waitables,
-    [this](auto waitable) {
-      wait_set_.add_waitable(waitable);
-    },
+    [this](auto waitable) {wait_set_.add_waitable(waitable);},
     [this](auto waitable) {wait_set_.remove_waitable(waitable);});
 
   // In the case that an entity already has an expired weak pointer

@@ -203,13 +203,13 @@ protected:
           needs_pruning_ = true;
           continue;
         }
-        const auto & waitable = waitable_entry.waitable;
-        subscriptions_from_waitables += waitable->get_number_of_ready_subscriptions();
-        guard_conditions_from_waitables += waitable->get_number_of_ready_guard_conditions();
-        timers_from_waitables += waitable->get_number_of_ready_timers();
-        clients_from_waitables += waitable->get_number_of_ready_clients();
-        services_from_waitables += waitable->get_number_of_ready_services();
-        events_from_waitables += waitable->get_number_of_ready_events();
+        auto & waitable = *waitable_entry.waitable;
+        subscriptions_from_waitables += waitable.get_number_of_ready_subscriptions();
+        guard_conditions_from_waitables += waitable.get_number_of_ready_guard_conditions();
+        timers_from_waitables += waitable.get_number_of_ready_timers();
+        clients_from_waitables += waitable.get_number_of_ready_clients();
+        services_from_waitables += waitable.get_number_of_ready_services();
+        events_from_waitables += waitable.get_number_of_ready_events();
       }
       rcl_ret_t ret = rcl_wait_set_resize(
         &rcl_wait_set_,

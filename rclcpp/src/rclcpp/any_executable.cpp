@@ -16,7 +16,6 @@
 
 using rclcpp::AnyExecutable;
 
-RCLCPP_PUBLIC
 AnyExecutable::AnyExecutable()
 : subscription(nullptr),
   timer(nullptr),

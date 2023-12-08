@@ -52,8 +52,7 @@ ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 
     rcl_guard_condition_t * cond = &guard_condition->get_rcl_guard_condition();
 
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(
-      wait_set, cond, NULL);
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, cond, NULL);
 
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(

@@ -569,7 +569,7 @@ protected:
    * This waitable contains the interrupt and shutdown guard condition, as well
    * as the guard condition associated with each node and callback group.
    * By default, if any change is detected in the monitored entities, the notify
-   * waitable will awake the executor and rebuild  the collections.
+   * waitable will awake the executor and rebuild the collections.
    */
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
@@ -578,7 +578,7 @@ protected:
   /// Collector used to associate executable entities from nodes and guard conditions
   rclcpp::executors::ExecutorEntitiesCollector collector_;
 
-  /// Waitset to be waited on.
+  /// WaitSet to be waited on.
   rclcpp::WaitSet wait_set_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Hold the current state of the collection being waited on by the waitset
