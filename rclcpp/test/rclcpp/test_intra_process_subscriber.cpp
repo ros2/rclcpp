@@ -63,11 +63,12 @@ TEST_F(TestIntraProcessSubscriber, constructor) {
 }
 
 /*
-   Test methods of SubscriptionIntraProcess:
+   Test methods of SubscriptionIntraProcess with shared callback:
+    * is_serialized
     * deserialize_message
     * serve_serialized_message
  */
-TEST_F(TestIntraProcessSubscriber, methods) {
+TEST_F(TestIntraProcessSubscriber, methods_shared) {
   using MessageT = test_msgs::msg::Empty;
   using Alloc = std::allocator<void>;
 
@@ -120,8 +121,51 @@ TEST_F(TestIntraProcessSubscriber, methods) {
     take_shared_subscriptions);
 
   // execute subscriber callback
-  auto data = subscriber->take_data();
-  subscriber->execute(data);
+  {
+    auto data = subscriber->take_data();
+    subscriber->execute(data);
+  }
+
+  // check if message was received
+  EXPECT_EQ(1u, counter);
+
+  // add a 2nd shared subscriber to cover more code
+  auto subscriber2 = std::make_shared<rclcpp::experimental::SubscriptionIntraProcess<MessageT,
+      MessageT>>(
+    callback,
+    allocator,
+    context,
+    "topic",
+    rclcpp::SystemDefaultsQoS().keep_last(10),
+    rclcpp::IntraProcessBufferType::SharedPtr);
+  const auto sub2_id = ipm->add_subscription(subscriber2);
+  take_shared_subscriptions.push_back(sub2_id);
+
+  subscriber->serve_serialized_message(
+    &serialized_message,
+    ipm.get(),
+    intra_process_publisher_id,
+    reinterpret_cast<void *>(allocator.get()),
+    take_ownership_subscriptions,
+    take_shared_subscriptions);
+
+  // execute subscribers callback
+  {
+    auto data = subscriber->take_data();
+    subscriber->execute(data);
+  }
+
+  // check if message was received
+  EXPECT_EQ(2u, counter);
+
+  {
+    auto data = subscriber2->take_data();
+    subscriber2->execute(data);
+  }
+
+  // check if message was received
+  EXPECT_EQ(3u, counter);
+}
 
   // check if message was received
   EXPECT_EQ(1u, counter);
