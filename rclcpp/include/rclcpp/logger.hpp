@@ -24,6 +24,7 @@
 #include "rcl/node.h"
 #include "rcutils/logging.h"
 #include "rcpputils/filesystem_helper.hpp"
+#include "rclcpp/logging.hpp"
 
 /**
  * \def RCLCPP_LOGGING_ENABLED
@@ -34,8 +35,7 @@
  * This should be used in combination with `RCLCPP_LOG_MIN_SEVERITY` to compile
  * out logging macros.
  */
-// TODO(dhood): determine this automatically from `RCLCPP_LOG_MIN_SEVERITY`
-#ifndef RCLCPP_LOGGING_ENABLED
+#ifdef RCLCPP_LOGG_MIN_SEVERITY_NONE
 #define RCLCPP_LOGGING_ENABLED 1
 #endif
 
