@@ -179,7 +179,102 @@ Clock::sleep_until(Time until, Context::SharedPtr context)
 bool
 Clock::sleep_for(Duration rel_time, Context::SharedPtr context)
 {
-  return sleep_until(now() + rel_time, context);
+  if (!context || !context->is_valid()) {
+    throw std::runtime_error("context cannot be slept with because it's invalid");
+  }
+  const auto this_clock_type = get_clock_type();
+  bool time_source_changed = false;
+
+  std::condition_variable cv;
+
+  // Wake this thread if the context is shutdown
+  rclcpp::OnShutdownCallbackHandle shutdown_cb_handle = context->add_on_shutdown_callback(
+    [&cv]() {
+      cv.notify_one();
+    });
+  // No longer need the shutdown callback when this function exits
+  auto callback_remover = rcpputils::scope_exit(
+    [context, &shutdown_cb_handle]() {
+      context->remove_on_shutdown_callback(shutdown_cb_handle);
+    });
+
+  if (this_clock_type == RCL_STEADY_TIME || this_clock_type == RCL_SYSTEM_TIME) {
+    const std::chrono::nanoseconds rel_time_chrono =
+      std::chrono::nanoseconds(rel_time.nanoseconds());
+    std::chrono::nanoseconds time_left = rel_time_chrono;
+    const std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    do {
+      {
+        std::unique_lock lock(impl_->clock_mutex_);
+        auto now = std::chrono::steady_clock::now() - start;
+        // this will release the lock while waiting
+        cv.wait_for(lock, time_left);
+        time_left -= std::chrono::steady_clock::now() - start;
+      }
+    } while (time_left > std::chrono::nanoseconds::zero() && context->is_valid());
+  } else if (this_clock_type == RCL_ROS_TIME) {
+    Time curr = now();
+    Time until = curr + rel_time;
+
+    // Install jump handler for any amount of time change, for two purposes:
+    // - if ROS time is active, check if time reached on each new clock sample
+    // - Trigger via on_clock_change to detect if time source changes, to invalidate sleep
+    rcl_jump_threshold_t threshold;
+    threshold.on_clock_change = true;
+    // 0 is disable, so -1 and 1 are smallest possible time changes
+    threshold.min_backward.nanoseconds = -1;
+    threshold.min_forward.nanoseconds = 1;
+    auto clock_handler = create_jump_callback(
+      nullptr,
+      [&cv, &time_source_changed, &curr, &until, this](
+        const rcl_time_jump_t & jump)
+      {
+        if (jump.clock_change != RCL_ROS_TIME_NO_CHANGE) {
+          time_source_changed = true;
+        }
+        if (now() < curr) {
+          // Time jumped in the past: correcting until value on time shift
+          const Duration delta = curr - now();
+          until -= delta;
+        }
+
+        cv.notify_one();
+      },
+      threshold);
+
+    if (!ros_time_is_active()) {
+      // RCL_ROS_TIME is not active. Time flaws as steady one.
+      const std::chrono::nanoseconds rel_time_chrono =
+        std::chrono::nanoseconds(rel_time.nanoseconds());
+      std::chrono::nanoseconds time_left = rel_time_chrono;
+      const std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+      do {
+        {
+          std::unique_lock lock(impl_->clock_mutex_);
+          auto now = std::chrono::steady_clock::now() - start;
+          // this will release the lock while waiting
+          cv.wait_for(lock, time_left);
+          time_left -= std::chrono::steady_clock::now() - start;
+        }
+      } while (
+        time_left > std::chrono::nanoseconds::zero() && context->is_valid() &&
+        !time_source_changed);
+    } else {
+      // RCL_ROS_TIME is active. Need to waiting in respect to time jumps in the past.
+      std::unique_lock lock(impl_->clock_mutex_);
+      while (curr < until && context->is_valid() && !time_source_changed) {
+        cv.wait(lock);
+        curr = now();
+      }
+    }
+  }
+
+  // Return true if the timeout elapsed successfully, otherwise false.
+  if (!context->is_valid() || time_source_changed) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
