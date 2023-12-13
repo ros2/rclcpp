@@ -246,58 +246,33 @@ void TimersManager::run_timers()
 
     std::optional<std::chrono::nanoseconds> time_to_sleep = get_head_timeout_unsafe();
 
-    // Head timer is not cancelled
-    if (time_to_sleep.has_value()) {
-      // No need to wait if a timer is already available
-      if (time_to_sleep.value() > std::chrono::nanoseconds::zero()) {
-        // Heap is not empty
-        if (time_to_sleep.value() != std::chrono::nanoseconds::max()) {
-          // Check if head timer is in cancelled_timers_
-          TimerPtr head_timer = weak_timers_heap_.front().lock();
-          auto itr = std::find(cancelled_timers_.begin(), cancelled_timers_.end(), head_timer);
-
-          if (itr != cancelled_timers_.end()) {
-            // Remove if present bc recieved valid time_to_sleep so no longer cancelled
-            cancelled_timers_.erase(itr);
-          }
-
-          // Wait until timeout or notification that timers have been updated
-          timers_cv_.wait_for(lock, time_to_sleep.value(), [this]() {return timers_updated_;});
-        }
-        // Heap is empty
-        else {
-          // Wait until notification that timers have been updated
-          timers_cv_.wait(lock, [this]() {return timers_updated_;});
-        }
-      }
+    // If head timer was cancelled, try to reheap and get a new head.
+    // This avoids an edge condition where head timer is cancelled, but other
+    // valid timers remain in the heap.
+    if (!time_to_sleep.has_value()) {
+      // Re-heap to (possibly) move cancelled timer from head of heap. If
+      // entire heap is cancelled, this will still result in a nullopt.
+      TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
+      locked_heap.heapify();
+      weak_timers_heap_.store(locked_heap);
+      time_to_sleep = get_head_timeout_unsafe();
     }
-    // Head timer is cancelled
-    else {
-      // Check if head timer is in cancelled_timers_ already
-      TimerPtr head_timer = weak_timers_heap_.front().lock();
-      auto itr = std::find(cancelled_timers_.begin(), cancelled_timers_.end(), head_timer);
 
-      if (itr == cancelled_timers_.end()) {
-        // Append to vector if not present so it will be treated as a cancelled timer
-        cancelled_timers_.push_back(head_timer);
+    // If no timers, or all timers cancelled, wait for an update.
+    if (!time_to_sleep.has_value() || (time_to_sleep.value() == std::chrono::nanoseconds::max()) ) {
+      // Wait until notification that timers have been updated
+      timers_cv_.wait(lock, [this]() {return timers_updated_;});
 
-        // Re-heap to move cancelled timer from head of heap
-        TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
-        locked_heap.heapify();
-        weak_timers_heap_.store(locked_heap);
-      }
-      // Head timer has already been recongized as cancelled
-      // This handles the case where all timers in the heap are cancelled
-      else {
-        // Wait until notification that timers have been updated
-        timers_cv_.wait(lock, [this]() {return timers_updated_;});
-
-        // Re-heap in case ordering changed due to a cancelled timer
-        // re-activating.
-        TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
-        locked_heap.heapify();
-        weak_timers_heap_.store(locked_heap);
-      }
+      // Re-heap in case ordering changed due to a cancelled timer
+      // re-activating.
+      TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
+      locked_heap.heapify();
+      weak_timers_heap_.store(locked_heap);
+    }
+    else if (time_to_sleep.value() != std::chrono::nanoseconds::zero()) {
+        // If time_to_sleep is zero, we immediately execute. Otherwise, wait
+        // until timeout or notification that timers have been updated
+        timers_cv_.wait_for(lock, time_to_sleep.value(), [this]() {return timers_updated_;});
     }
 
     // Reset timers updated flag

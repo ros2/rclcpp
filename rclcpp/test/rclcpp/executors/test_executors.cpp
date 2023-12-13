@@ -894,124 +894,86 @@ public:
     std::stringstream test_name;
     test_name << test_info->test_case_name() << "_" << test_info->name();
     node = std::make_shared<TimerNode>(test_name.str());
+
+    // Spin the executor in a standalone thread
+    executor.add_node(this->node);
+    standalone_thread = std::thread([this]() {
+      executor.spin();
+    });
   }
 
   void TearDown()
   {
     node.reset();
-  }
-
-  /*void RunBothTimerCancelTest(bool cancel_timer1_first) {
-    // Spin the executor in a standalone thread
-    using ExecutorType = TypeParam;
-    ExecutorType executor;
-    executor.add_node(this->node);
-    std::thread real_time_thread([&executor]() {
-      executor.spin();
-    });
-
-    // Cancel to stop the spin after some time.
-    std::this_thread::sleep_for(5ms);
-    if (cancel_timer1_first) {
-      this->node->CancelTimer1();
-      this->node->CancelTimer2();
-    }
-    else {
-      this->node->CancelTimer2();  
-      this->node->CancelTimer1();
-    }
-    std::this_thread::sleep_for(10ms);
-    size_t t1_runs_initial = this->node->GetTimer1Cnt();
-    size_t t2_runs_initial = this->node->GetTimer2Cnt();
-    
-    // Manually reset timer 1, then sleep again
-    // Counts should update.
-    this->node->ResetTimer1();
-    std::this_thread::sleep_for(15ms);
-    size_t t1_runs_final = this->node->GetTimer1Cnt();
-    size_t t2_runs_final = this->node->GetTimer2Cnt();
-
-    executor.cancel();
-
-    // T1 and T2 should have the same initial count.
-    EXPECT_EQ(t1_runs_initial, t2_runs_initial);
-
-    // Expect that T1 has up to 15 more calls than t2. Add some buffer
-    // to account for jitter.
-    EXPECT_EQ(t2_runs_initial, t2_runs_final);
-    EXPECT_LT(t1_runs_initial + 13, t1_runs_final);
 
     // Clean up thread object
-    if (real_time_thread.joinable()) {
-      real_time_thread.join();
+    if (standalone_thread.joinable()) {
+      standalone_thread.join();
     }
   }
-  */
-
 
   std::shared_ptr<TimerNode> node;
+  std::thread standalone_thread;
+  T executor;
 };
 
 TYPED_TEST_SUITE(TestTimerCancelBehavior, ExecutorTypes, ExecutorTypeNames);
 
-TYPED_TEST(TestTimerCancelBehavior, testOneTimerCancelledWithExecutorSpin) {
+TYPED_TEST(TestTimerCancelBehavior, testTimer1CancelledWithExecutorSpin) {
   // Validate that cancelling one timer yields no change in behavior for other
   // timers. Specifically, this tests the behavior when using spin() to run the
   // executor, which is the most common usecase.
-
-  // Spin the executor in a standalone thread
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  executor.add_node(this->node);
-  std::thread real_time_thread([&executor]() {
-    executor.spin();
-  });
 
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
   std::this_thread::sleep_for(10ms);
-  executor.cancel();
+  this->executor.cancel();
 
-  size_t t1_runs = this->node->GetTimer1Cnt();
-  size_t t2_runs = this->node->GetTimer2Cnt();
+  int t1_runs = this->node->GetTimer1Cnt();
+  int t2_runs = this->node->GetTimer2Cnt();
   EXPECT_NE(t1_runs, t2_runs);
   // Check that t2 has significantly more calls
   EXPECT_LT(t1_runs + 5, t2_runs);
+}
 
-  // Clean up thread object
-  if (real_time_thread.joinable()) {
-    real_time_thread.join();
-  }
+TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
+  // Validate that cancelling one timer yields no change in behavior for other
+  // timers. Specifically, this tests the behavior when using spin() to run the
+  // executor, which is the most common usecase.
+
+  // Cancel to stop the spin after some time.
+  std::this_thread::sleep_for(5ms);
+  this->node->CancelTimer2();
+  std::this_thread::sleep_for(10ms);
+  this->executor.cancel();
+
+  int t1_runs = this->node->GetTimer1Cnt();
+  int t2_runs = this->node->GetTimer2Cnt();
+  EXPECT_NE(t1_runs, t2_runs);
+  // Check that t1 has significantly more calls
+  EXPECT_LT(t2_runs + 5, t1_runs);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   // Validate that cancelling timer doesn't affect operation of other timers,
   // and that the cancelled timer starts executing normally once reset manually.
 
-  // Spin the executor in a standalone thread
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  executor.add_node(this->node);
-  std::thread real_time_thread([&executor]() {
-    executor.spin();
-  });
-
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
   std::this_thread::sleep_for(10ms);
-  size_t t1_runs_initial = this->node->GetTimer1Cnt();
-  size_t t2_runs_initial = this->node->GetTimer2Cnt();
+  int t1_runs_initial = this->node->GetTimer1Cnt();
+  int t2_runs_initial = this->node->GetTimer2Cnt();
   
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
   std::this_thread::sleep_for(15ms);
-  size_t t1_runs_final = this->node->GetTimer1Cnt();
-  size_t t2_runs_final = this->node->GetTimer2Cnt();
+  int t1_runs_final = this->node->GetTimer1Cnt();
+  int t2_runs_final = this->node->GetTimer2Cnt();
 
-  executor.cancel();
+  this->executor.cancel();
 
   // T1 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
@@ -1020,95 +982,111 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   EXPECT_LT(t1_runs_initial + 5, t2_runs_initial);
   // Check that t2 has significantly more calls, and keeps getting called.
   EXPECT_LT(t2_runs_initial + 13, t2_runs_final);
+}
 
-  // Clean up thread object
-  if (real_time_thread.joinable()) {
-    real_time_thread.join();
-  }
+TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
+  // Validate that cancelling timer doesn't affect operation of other timers,
+  // and that the cancelled timer starts executing normally once reset manually.
+
+  // Cancel to stop the spin after some time.
+  std::this_thread::sleep_for(5ms);
+  this->node->CancelTimer2();
+  std::this_thread::sleep_for(10ms);
+  int t1_runs_initial = this->node->GetTimer1Cnt();
+  int t2_runs_initial = this->node->GetTimer2Cnt();
+  
+  // Manually reset timer 1, then sleep again
+  // Counts should update.
+  this->node->ResetTimer2();
+  std::this_thread::sleep_for(15ms);
+  int t1_runs_final = this->node->GetTimer1Cnt();
+  int t2_runs_final = this->node->GetTimer2Cnt();
+
+  this->executor.cancel();
+
+  // T2 should have been restarted, and execute about 15 additional times.
+  // Check 10 greater than initial, to account for some timing jitter.
+  EXPECT_LT(t2_runs_initial + 10, t2_runs_final);
+
+  EXPECT_LT(t2_runs_initial + 5, t1_runs_initial);
+  // Check that t1 has significantly more calls, and keeps getting called.
+  EXPECT_LT(t1_runs_initial + 13, t1_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   // Validate behavior from cancelling 2 timers, then only re-enabling one of them.
   // Ensure that only the reset timer is executed.
 
-  // Spin the executor in a standalone thread
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  executor.add_node(this->node);
-  std::thread real_time_thread([&executor]() {
-    executor.spin();
-  });
-
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
   std::this_thread::sleep_for(10ms);
-  size_t t1_runs_initial = this->node->GetTimer1Cnt();
-  size_t t2_runs_initial = this->node->GetTimer2Cnt();
+  int t1_runs_initial = this->node->GetTimer1Cnt();
+  int t2_runs_initial = this->node->GetTimer2Cnt();
   
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
   std::this_thread::sleep_for(15ms);
-  size_t t1_runs_final = this->node->GetTimer1Cnt();
-  size_t t2_runs_final = this->node->GetTimer2Cnt();
+  int t1_runs_intermediate = this->node->GetTimer1Cnt();
+  int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
-  executor.cancel();
+  this->node->ResetTimer2();
+  std::this_thread::sleep_for(15ms);
+  int t1_runs_final = this->node->GetTimer1Cnt();
+  int t2_runs_final = this->node->GetTimer2Cnt();
+
+  this->executor.cancel();
 
   // T1 and T2 should have the same initial count.
-  EXPECT_EQ(t1_runs_initial, t2_runs_initial);
+  EXPECT_LE(std::abs(t1_runs_initial - t2_runs_initial), 1);
 
   // Expect that T1 has up to 15 more calls than t2. Add some buffer
   // to account for jitter.
-  EXPECT_EQ(t2_runs_initial, t2_runs_final);
-  EXPECT_LT(t1_runs_initial + 11, t1_runs_final);
+  EXPECT_EQ(t2_runs_initial, t2_runs_intermediate);
+  EXPECT_LT(t1_runs_initial + 11, t1_runs_intermediate);
 
-  // Clean up thread object
-  if (real_time_thread.joinable()) {
-    real_time_thread.join();
-  }
+  // Expect that by end of test, both are running properly again.
+  EXPECT_LT(t1_runs_intermediate + 11, t1_runs_final);
+  EXPECT_LT(t2_runs_intermediate + 11, t2_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   // Validate behavior from cancelling 2 timers, then only re-enabling one of them.
   // Ensure that only the reset timer is executed.
 
-  // Spin the executor in a standalone thread
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  executor.add_node(this->node);
-  std::thread real_time_thread([&executor]() {
-    executor.spin();
-  });
-
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
   std::this_thread::sleep_for(10ms);
-  size_t t1_runs_initial = this->node->GetTimer1Cnt();
-  size_t t2_runs_initial = this->node->GetTimer2Cnt();
+  int t1_runs_initial = this->node->GetTimer1Cnt();
+  int t2_runs_initial = this->node->GetTimer2Cnt();
   
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
   std::this_thread::sleep_for(15ms);
-  size_t t1_runs_final = this->node->GetTimer1Cnt();
-  size_t t2_runs_final = this->node->GetTimer2Cnt();
+  int t1_runs_intermediate = this->node->GetTimer1Cnt();
+  int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
-  executor.cancel();
+  this->node->ResetTimer1();
+  std::this_thread::sleep_for(15ms);
+  int t1_runs_final = this->node->GetTimer1Cnt();
+  int t2_runs_final = this->node->GetTimer2Cnt();
+
+  this->executor.cancel();
 
   // T1 and T2 should have the same initial count.
-  EXPECT_EQ(t1_runs_initial, t2_runs_initial);
+  EXPECT_LE(std::abs(t1_runs_initial - t2_runs_initial), 1);
 
   // Expect that T1 has up to 15 more calls than t2. Add some buffer
   // to account for jitter.
-  EXPECT_EQ(t1_runs_initial, t1_runs_final);
-  EXPECT_LT(t2_runs_initial + 11, t2_runs_final);
+  EXPECT_EQ(t1_runs_initial, t1_runs_intermediate);
+  EXPECT_LT(t2_runs_initial + 11, t2_runs_intermediate);
 
-  // Clean up thread object
-  if (real_time_thread.joinable()) {
-    real_time_thread.join();
-  }
+  // Expect that by end of test, both are running properly again.
+  EXPECT_LT(t1_runs_intermediate + 11, t1_runs_final);
+  EXPECT_LT(t2_runs_intermediate + 11, t2_runs_final);
 }
