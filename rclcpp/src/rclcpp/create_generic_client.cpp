@@ -27,26 +27,8 @@ create_generic_client(
   const rclcpp::QoS & qos,
   rclcpp::CallbackGroup::SharedPtr group)
 {
-  return create_generic_client(
-    node_base, node_graph, node_services,
-    service_name,
-    service_type,
-    qos.get_rmw_qos_profile(),
-    group);
-}
-
-rclcpp::GenericClient::SharedPtr
-create_generic_client(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name,
-  const std::string & service_type,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
   rcl_client_options_t options = rcl_client_get_default_options();
-  options.qos = qos_profile;
+  options.qos = qos.get_rmw_qos_profile();
 
   auto cli = rclcpp::GenericClient::make_shared(
     node_base.get(),

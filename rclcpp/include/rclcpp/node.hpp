@@ -324,7 +324,7 @@ public:
   /// Create and return a GenericClient.
   /**
    * \param[in] service_name The name on which the service is accessible.
-   * \param[in] service_type The name of service type, e.g. "test_msgs/srv/BasicTypes"
+   * \param[in] service_type The name of service type, e.g. "std_srvs/srv/SetBool"
    * \param[in] qos Quality of service profile for client.
    * \param[in] group Callback group to handle the reply to service calls.
    * \return Shared pointer to the created GenericClient.

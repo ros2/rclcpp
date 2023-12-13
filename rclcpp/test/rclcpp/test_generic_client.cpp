@@ -90,7 +90,6 @@ protected:
    Testing client construction and destruction.
  */
 TEST_F(TestGenericClient, construction_and_destruction) {
-  using rcl_interfaces::srv::ListParameters;
   {
     auto client = node->create_generic_client("test_service", "test_msgs/srv/Empty");
   }
@@ -111,42 +110,6 @@ TEST_F(TestGenericClient, construction_and_destruction) {
 }
 
 TEST_F(TestGenericClient, construction_with_free_function) {
-  {
-    auto client = rclcpp::create_generic_client(
-      node->get_node_base_interface(),
-      node->get_node_graph_interface(),
-      node->get_node_services_interface(),
-      "test_service",
-      "test_msgs/srv/Empty",
-      rmw_qos_profile_services_default,
-      nullptr);
-  }
-  {
-    ASSERT_THROW(
-    {
-      auto client = rclcpp::create_generic_client(
-        node->get_node_base_interface(),
-        node->get_node_graph_interface(),
-        node->get_node_services_interface(),
-        "invalid_?test_service",
-        "test_msgs/srv/Empty",
-        rmw_qos_profile_services_default,
-        nullptr);
-    }, rclcpp::exceptions::InvalidServiceNameError);
-  }
-  {
-    ASSERT_THROW(
-    {
-      auto client = rclcpp::create_generic_client(
-        node->get_node_base_interface(),
-        node->get_node_graph_interface(),
-        node->get_node_services_interface(),
-        "test_service",
-        "test_msgs/srv/InvalidType",
-        rmw_qos_profile_services_default,
-        nullptr);
-    }, std::runtime_error);
-  }
   {
     auto client = rclcpp::create_generic_client(
       node->get_node_base_interface(),
@@ -264,7 +227,7 @@ protected:
   {
     auto client = node->create_generic_client(service_name, "test_msgs/srv/Empty");
     if (!client->wait_for_service()) {
-      return ::testing::AssertionFailure() << "Waiting for service failed";
+      return ::testing::AssertionFailure() << "Service is not available yet";
     }
 
     auto request = std::make_shared<test_msgs::srv::Empty::Request>();

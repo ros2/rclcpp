@@ -50,17 +50,6 @@ create_generic_client(
   const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
   rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-/// Create a generic service client with a given type.
-/// \internal
-rclcpp::GenericClient::SharedPtr
-create_generic_client(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name,
-  const std::string & service_type,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group);
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CREATE_GENERIC_CLIENT_HPP_
