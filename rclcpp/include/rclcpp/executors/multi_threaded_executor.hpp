@@ -21,12 +21,13 @@
 #include <vector>
 #include <set>
 #include <unordered_map>
+#include <optional>
 
-#include "rcutils/thread_attr.h"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcpputils/thread/thread_attribute.hpp"
 
 namespace rclcpp
 {
@@ -60,6 +61,21 @@ public:
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
   RCLCPP_PUBLIC
+  explicit MultiThreadedExecutor(
+    size_t number_of_threads,
+    const rcpputils::ThreadAttribute & thread_attr,
+    bool yield_before_execute = false,
+    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  RCLCPP_PUBLIC
+  explicit MultiThreadedExecutor(
+    const rclcpp::ExecutorOptions & options,
+    size_t number_of_threads,
+    const rcpputils::ThreadAttribute & thread_attr,
+    bool yield_before_execute = false,
+    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  RCLCPP_PUBLIC
   virtual ~MultiThreadedExecutor();
 
   /**
@@ -74,6 +90,16 @@ public:
   size_t
   get_number_of_threads();
 
+  RCLCPP_PUBLIC
+  const std::optional<rcpputils::ThreadAttribute> &
+  get_thread_attribute() const
+  {
+    return thread_attr_;
+  }
+
+  RCLCPP_PUBLIC
+  static const char default_name[];
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -82,11 +108,19 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
+  RCLCPP_PUBLIC
+  explicit MultiThreadedExecutor(
+    const rclcpp::ExecutorOptions & options,
+    size_t number_of_threads,
+    std::optional<rcpputils::ThreadAttribute> thread_attr,
+    bool yield_before_execute,
+    std::chrono::nanoseconds timeout);
+
   std::mutex wait_mutex_;
   size_t number_of_threads_;
+  std::optional<rcpputils::ThreadAttribute> thread_attr_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
-  rcutils_thread_attrs_t * thread_attributes_;
 };
 
 }  // namespace executors

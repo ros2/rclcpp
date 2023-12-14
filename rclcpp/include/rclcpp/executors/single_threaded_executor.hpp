@@ -21,8 +21,8 @@
 #include <cstdlib>
 #include <memory>
 #include <vector>
+#include <optional>
 
-#include "rcutils/thread_attr.h"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -30,6 +30,7 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcpputils/thread/thread_attribute.hpp"
 
 namespace rclcpp
 {
@@ -50,6 +51,11 @@ public:
   explicit SingleThreadedExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
 
+  RCLCPP_PUBLIC
+  explicit SingleThreadedExecutor(
+    const rclcpp::ExecutorOptions & options,
+    const rcpputils::ThreadAttribute & thread_attr);
+
   /// Default destructor.
   RCLCPP_PUBLIC
   virtual ~SingleThreadedExecutor();
@@ -66,6 +72,22 @@ public:
   void
   spin() override;
 
+  RCLCPP_PUBLIC
+  bool has_thread_attribute() const
+  {
+    return thread_attr_.has_value();
+  }
+
+  RCLCPP_PUBLIC
+  const std::optional<rcpputils::ThreadAttribute> &
+  get_thread_attribute() const
+  {
+    return thread_attr_;
+  }
+
+  RCLCPP_PUBLIC
+  static const char default_name[];
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -73,7 +95,8 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
-  rcutils_thread_attrs_t * thread_attributes_;
+
+  std::optional<rcpputils::ThreadAttribute> thread_attr_;
 };
 
 }  // namespace executors

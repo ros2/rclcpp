@@ -14,10 +14,16 @@
 
 #include <gtest/gtest.h>
 
+#include <pthread.h>
+
+#include <atomic>
 #include <chrono>
+#include <future>
 #include <string>
 #include <memory>
+#include <utility>
 
+#include "rcpputils/thread.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -28,9 +34,13 @@ using namespace std::chrono_literals;
 class TestMultiThreadedExecutor : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
+  void SetUp() override
   {
     rclcpp::init(0, nullptr);
+  }
+  void TearDown() override
+  {
+    rclcpp::shutdown();
   }
 };
 
@@ -96,4 +106,125 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   auto timer = node->create_wall_timer(PERIOD_MS, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
+}
+
+TEST_F(TestMultiThreadedExecutor, thread_attribute_apply) {
+  using rcpputils::Thread;
+  using rcpputils::ThreadAttribute;
+  using rcpputils::ThreadId;
+  using rcpputils::SchedPolicy;
+
+  ThreadAttribute attr;
+  unsigned thread_count = 10;
+
+#if __linux__
+  ThreadId parent_thread = rcpputils::this_thread::get_id();
+  {
+    sched_param param = {0};
+    int r = pthread_setschedparam(pthread_self(), SCHED_OTHER, &param);
+    EXPECT_EQ(0, r);
+    // SCHED_FIFO, SCHED_RR are require the privilege on linux
+    attr.set_sched_policy(SchedPolicy::batch);
+  }
+#endif
+
+  rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), thread_count, attr);
+
+  std::atomic<unsigned> succ_count = 0;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  auto timer = node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+#if __linux__
+      int policy;
+      sched_param param;
+      ThreadId worker_thread = rcpputils::this_thread::get_id();
+      int r = pthread_getschedparam(pthread_self(), &policy, &param);
+      SchedPolicy rclcpp_policy = SchedPolicy(0x8000'0000 | policy);
+      EXPECT_EQ(0, r);
+      EXPECT_EQ(SchedPolicy::batch, rclcpp_policy);
+      EXPECT_NE(worker_thread, parent_thread);
+#endif
+      unsigned n = succ_count.fetch_add(1);
+      if (n == thread_count - 1) {
+        executor.cancel();
+      }
+    });
+
+  executor.add_node(node);
+  executor.spin();
+  EXPECT_EQ(succ_count, thread_count);
+}
+
+constexpr char const * argv[] = {
+  "test_multi_threaded_executor",
+  "--ros-args",
+  "--thread-attrs-value",
+  R"(
+- name: RCLCPP_EXECUTOR_MULTI_THREADED
+  scheduling_policy: FIFO
+  priority: 10
+  core_affinity: []
+- name: executor-1
+  scheduling_policy: RR
+  priority: 20
+  core_affinity: [0]
+  )",
+  NULL,
+};
+constexpr int argc = sizeof(argv) / sizeof(*argv) - 1;
+
+class TestMultiThreadedExecutorAttribute : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    rclcpp::init(argc, argv);
+  }
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestMultiThreadedExecutorAttribute, thread_attribute_default_name) {
+  using rcpputils::SchedPolicy;
+  rclcpp::executors::MultiThreadedExecutor executor;
+
+  const auto & opt_attr = executor.get_thread_attribute();
+  ASSERT_TRUE(opt_attr);
+
+  const auto & attr = opt_attr.value();
+  EXPECT_EQ(SchedPolicy::fifo, attr.get_sched_policy());
+  EXPECT_EQ(10, attr.get_priority());
+
+  const auto & affinity = attr.get_affinity();
+  EXPECT_EQ(0, affinity.count());
+}
+
+TEST_F(TestMultiThreadedExecutorAttribute, thread_attribute_specified_name) {
+  using rcpputils::SchedPolicy;
+  auto options = rclcpp::ExecutorOptions();
+  options.name = "executor-1";
+  rclcpp::executors::MultiThreadedExecutor executor(options);
+
+  const auto & opt_attr = executor.get_thread_attribute();
+  ASSERT_TRUE(opt_attr);
+
+  const auto & attr = opt_attr.value();
+  EXPECT_EQ(SchedPolicy::rr, attr.get_sched_policy());
+  EXPECT_EQ(20, attr.get_priority());
+
+  const auto & affinity = attr.get_affinity();
+  EXPECT_EQ(1, affinity.count());
+  EXPECT_TRUE(affinity.is_set(0));
+}
+
+TEST_F(TestMultiThreadedExecutorAttribute, thread_attribute_not_found) {
+  using rcpputils::SchedPolicy;
+  auto options = rclcpp::ExecutorOptions();
+  options.name = "executor-not-exists";
+  rclcpp::executors::MultiThreadedExecutor executor(options);
+
+  const auto & opt_attr = executor.get_thread_attribute();
+  ASSERT_FALSE(opt_attr);
 }
