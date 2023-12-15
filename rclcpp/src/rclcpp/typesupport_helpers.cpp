@@ -91,44 +91,6 @@ extract_type_identifier(const std::string & full_type)
   return std::make_tuple(package_name, middle_module, type_name);
 }
 
-const void * get_typesupport_handle_impl(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  const std::string & typesupport_name,
-  const std::string & symbol_part_name,
-  const std::string & middle_module_additional,
-  rcpputils::SharedLibrary & library)
-{
-  std::string package_name;
-  std::string middle_module;
-  std::string type_name;
-  std::tie(package_name, middle_module, type_name) = extract_type_identifier(type);
-
-  if (middle_module.empty()) {
-    middle_module = middle_module_additional;
-  }
-
-  auto mk_error = [&package_name, &type_name, &typesupport_name](auto reason) {
-      std::stringstream rcutils_dynamic_loading_error;
-      rcutils_dynamic_loading_error <<
-        "Something went wrong loading the typesupport library for " <<
-        typesupport_name << " type " << package_name <<
-        "/" << type_name << ". " << reason;
-      return rcutils_dynamic_loading_error.str();
-    };
-
-  try {
-    std::string symbol_name = typesupport_identifier + symbol_part_name +
-      package_name + "__" + middle_module + "__" + type_name;
-    const void * (* get_ts)() = nullptr;
-    // This will throw runtime_error if the symbol was not found.
-    get_ts = reinterpret_cast<decltype(get_ts)>(library.get_symbol(symbol_name));
-    return get_ts();
-  } catch (std::runtime_error &) {
-    throw std::runtime_error{mk_error("Library could not be found.")};
-  }
-}
-
 }  // anonymous namespace
 
 std::shared_ptr<rcpputils::SharedLibrary>
@@ -139,42 +101,36 @@ get_typesupport_library(const std::string & type, const std::string & typesuppor
   return std::make_shared<rcpputils::SharedLibrary>(library_path);
 }
 
-const rosidl_message_type_support_t * get_typesupport_handle(
+const rosidl_message_type_support_t *
+get_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
   rcpputils::SharedLibrary & library)
 {
-  return get_message_typesupport_handle(type, typesupport_identifier, library);
-}
+  std::string package_name;
+  std::string middle_module;
+  std::string type_name;
+  std::tie(package_name, middle_module, type_name) = extract_type_identifier(type);
 
-const rosidl_message_type_support_t * get_message_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library)
-{
-  static const std::string typesupport_name = "message";
-  static const std::string symbol_part_name = "__get_message_type_support_handle__";
-  static const std::string middle_module_additional = "msg";
+  auto mk_error = [&package_name, &type_name](auto reason) {
+      std::stringstream rcutils_dynamic_loading_error;
+      rcutils_dynamic_loading_error <<
+        "Something went wrong loading the typesupport library for message type " << package_name <<
+        "/" << type_name << ". " << reason;
+      return rcutils_dynamic_loading_error.str();
+    };
 
-  return static_cast<const rosidl_message_type_support_t *>(get_typesupport_handle_impl(
-           type, typesupport_identifier, typesupport_name, symbol_part_name,
-           middle_module_additional, library
-  ));
-}
+  try {
+    std::string symbol_name = typesupport_identifier + "__get_message_type_support_handle__" +
+      package_name + "__" + (middle_module.empty() ? "msg" : middle_module) + "__" + type_name;
 
-const rosidl_service_type_support_t * get_service_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library)
-{
-  static const std::string typesupport_name = "service";
-  static const std::string symbol_part_name = "__get_service_type_support_handle__";
-  static const std::string middle_module_additional = "srv";
-
-  return static_cast<const rosidl_service_type_support_t *>(get_typesupport_handle_impl(
-           type, typesupport_identifier, typesupport_name, symbol_part_name,
-           middle_module_additional, library
-  ));
+    const rosidl_message_type_support_t * (* get_ts)() = nullptr;
+    // This will throw runtime_error if the symbol was not found.
+    get_ts = reinterpret_cast<decltype(get_ts)>(library.get_symbol(symbol_name));
+    return get_ts();
+  } catch (std::runtime_error &) {
+    throw std::runtime_error{mk_error("Library could not be found.")};
+  }
 }
 
 }  // namespace rclcpp
