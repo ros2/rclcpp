@@ -35,13 +35,13 @@
  * This should be used in combination with `RCLCPP_LOG_MIN_SEVERITY` to compile
  * out logging macros.
  */
-#ifndef RCLCPP_LOGGING_ENABLED
-#define RCLCPP_LOGGING_ENABLED 0
-#endif
 
 #if RCLCPP_LOG_MIN_SEVERITY != RCLCPP_LOG_MIN_SEVERITY_NONE
 #define RCLCPP_LOGGING_ENABLED 1
+#else
+#define RCLCPP_LOGGING_ENABLED 0
 #endif
+
 
 namespace rclcpp
 {
