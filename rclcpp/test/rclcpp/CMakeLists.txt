@@ -482,6 +482,13 @@ if(TARGET test_events_queue)
   target_link_libraries(test_events_queue ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_priority_events_executor executors/test_priority_events_executor.cpp TIMEOUT 5)
+if(TARGET test_priority_events_executor)
+  ament_target_dependencies(test_priority_events_executor
+    "test_msgs")
+  target_link_libraries(test_priority_events_executor ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_guard_condition test_guard_condition.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_guard_condition)

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__SIMPLE_EVENTS_QUEUE_HPP_
-#define RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__SIMPLE_EVENTS_QUEUE_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__PRIORITY_EVENTS_QUEUE_HPP_
+#define RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__PRIORITY_EVENTS_QUEUE_HPP_
 
 #include <condition_variable>
 #include <functional>
@@ -30,9 +30,18 @@ namespace experimental
 namespace executors
 {
 
-struct PriorityEvent {
+struct PriorityEvent
+{
   int priority;
   rclcpp::experimental::executors::ExecutorEvent event;
+};
+
+struct ComparePriorities : public std::binary_function<PriorityEvent, PriorityEvent, bool>
+{
+  _GLIBCXX14_CONSTEXPR
+  bool
+  operator()(const PriorityEvent & __x, const PriorityEvent & __y) const
+  {return __x.priority < __y.priority;}
 };
 
 /**
@@ -44,11 +53,13 @@ class PriorityEventsQueue : public EventsQueue
 {
 public:
   RCLCPP_PUBLIC
-  PriorityEventsQueue() {
+  PriorityEventsQueue()
+  {
     // Default callback to extract priority from event
     extract_priority_ = [](const rclcpp::experimental::executors::ExecutorEvent & event) {
-      return 0;
-    };
+        (void)(event);
+        return 0;
+      };
   }
 
   RCLCPP_PUBLIC
@@ -141,7 +152,9 @@ private:
   // Callback to extract priority from event
   std::function<int(const rclcpp::experimental::executors::ExecutorEvent &)> extract_priority_;
   // The underlying queue implementation
-  std::priority_queue<rclcpp::experimental::executors::PriorityEvent> event_queue_;
+  std::priority_queue<rclcpp::experimental::executors::PriorityEvent,
+    std::vector<rclcpp::experimental::executors::PriorityEvent>,
+    ComparePriorities> event_queue_;
   // Mutex to protect read/write access to the queue
   mutable std::mutex mutex_;
   // Variable used to notify when an event is added to the queue
@@ -152,4 +165,4 @@ private:
 }  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__SIMPLE_EVENTS_QUEUE_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__EXECUTORS__EVENTS_EXECUTOR__PRIORITY_EVENTS_QUEUE_HPP_
