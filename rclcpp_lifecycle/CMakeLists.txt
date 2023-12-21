@@ -159,3 +159,8 @@ ament_export_targets(${PROJECT_NAME})
 ament_export_dependencies(lifecycle_msgs rcl rclcpp rcl_interfaces rcl_lifecycle rcutils rosidl_typesupport_cpp)
 
 ament_package()
+
+if(TEST cppcheck)
+  # must set the property after ament_package()
+  set_tests_properties(cppcheck PROPERTIES TIMEOUT 360)
+endif()
