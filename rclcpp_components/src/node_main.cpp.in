@@ -30,14 +30,13 @@ int main(int argc, char * argv[])
   rclcpp::executors::@executor@ exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
-  std::vector<class_loader::ClassLoader * > loaders;
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
   std::string library_name = "@library_name@";
   std::string class_name = "rclcpp_components::NodeFactoryTemplate<@component@>";
 
   RCLCPP_DEBUG(logger, "Load library %s", library_name.c_str());
-  auto loader = new class_loader::ClassLoader(library_name);
+  auto loader = std::make_unique<class_loader::ClassLoader>(library_name);
   auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
   for (const auto & clazz : classes) {
     std::string name = clazz.c_str();
@@ -59,8 +58,6 @@ int main(int argc, char * argv[])
       exec.add_node(node);
     }
   }
-  loaders.push_back(loader);
-
 
   exec.spin();
 
