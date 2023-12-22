@@ -61,6 +61,7 @@ if(BUILD_TESTING)
   # Give cppcheck hints about macro definitions coming from outside this package
   set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
+  set_tests_properties(cppcheck PROPERTIES TIMEOUT 360)
 
   find_package(performance_test_fixture REQUIRED)
 
@@ -160,7 +161,3 @@ ament_export_dependencies(lifecycle_msgs rcl rclcpp rcl_interfaces rcl_lifecycle
 
 ament_package()
 
-if(TEST cppcheck)
-  # must set the property after ament_package()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 360)
-endif()
