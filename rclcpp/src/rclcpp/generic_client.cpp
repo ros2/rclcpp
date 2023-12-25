@@ -43,7 +43,6 @@ GenericClient::GenericClient(
   response_members_ = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
     response_type_support_intro->data);
 
-
   rcl_ret_t ret = rcl_client_init(
     this->get_client_handle().get(),
     this->get_rcl_node_handle(),

@@ -17,12 +17,15 @@
 
 #include <map>
 #include <memory>
+#include <future>
 #include <string>
 #include <vector>
 #include <utility>
 
+#include "rcl/client.h"
+
 #include "rclcpp/client.hpp"
-#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/visibility_control.hpp"
 #include "rcpputils/shared_library.hpp"
 
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
@@ -32,8 +35,8 @@ namespace rclcpp
 class GenericClient : public ClientBase
 {
 public:
-  using Request = void *;
-  using Response = void *;
+  using Request = void *;   // Serialized data pointer of request message
+  using Response = void *;  // Serialized data pointer of response message
 
   using SharedResponse = std::shared_ptr<void>;
 
@@ -80,14 +83,14 @@ public:
     const std::string & service_type,
     rcl_client_options_t & client_options);
 
-  SharedResponse
-  create_response() override;
+  RCLCPP_PUBLIC
+  SharedResponse create_response() override;
 
-  std::shared_ptr<rmw_request_id_t>
-  create_request_header() override;
+  RCLCPP_PUBLIC
+  std::shared_ptr<rmw_request_id_t> create_request_header() override;
 
-  void
-  handle_response(
+  RCLCPP_PUBLIC
+  void handle_response(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response) override;
 
@@ -99,7 +102,7 @@ public:
    *
    * If the future never completes,
    * e.g. the call to Executor::spin_until_future_complete() times out,
-   * Client::remove_pending_request() must be called to clean the client internal state.
+   * GenericClient::remove_pending_request() must be called to clean the client internal state.
    * Not doing so will make the `Client` instance to use more memory each time a response is not
    * received from the service server.
    *
@@ -119,8 +122,8 @@ public:
    * \param[in] request request to be send.
    * \return a FutureAndRequestId instance.
    */
-  FutureAndRequestId
-  async_send_request(const Request request);
+  RCLCPP_PUBLIC
+  FutureAndRequestId async_send_request(const Request request);
 
   /// Clean all pending requests older than a time_point.
   /**
@@ -150,11 +153,11 @@ public:
     return old_size - pending_requests_.size();
   }
 
-  size_t
-  prune_pending_requests();
+  RCLCPP_PUBLIC
+  size_t prune_pending_requests();
 
-  bool
-  remove_pending_request(int64_t request_id);
+  RCLCPP_PUBLIC
+  bool remove_pending_request(int64_t request_id);
 
   /// Take the next response for this client.
   /**
@@ -163,16 +166,16 @@ public:
    * \param[out] response_out The reference to a Service Response into
    *   which the middleware will copy the response being taken.
    * \param[out] request_header_out The request header to be filled by the
-   *   middleware when taking, and which can be used to associte the response
+   *   middleware when taking, and which can be used to associate the response
    *   to a specific request.
    * \returns true if the response was taken, otherwise false.
    * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
    *   rcl function fail.
    */
-  bool
-  take_response(Response response_out, rmw_request_id_t & request_header_out)
+  RCLCPP_PUBLIC
+  bool take_response(Response response_out, rmw_request_id_t & request_header_out)
   {
-    return this->take_type_erased_response(&response_out, request_header_out);
+    return this->take_type_erased_response(response_out, request_header_out);
   }
 
 protected:

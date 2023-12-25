@@ -20,13 +20,13 @@
 
 #include "rclcpp/generic_client.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/qos.hpp"
-#include "rmw/rmw.h"
 
 namespace rclcpp
 {
-/// Create a generic service client with a given type.
+/// Create a generic service client with a name of given type.
 /**
  * \param[in] node_base NodeBaseInterface implementation of the node on which
  *  to create the client.

@@ -18,6 +18,7 @@
 #include <memory>
 #include <utility>
 
+#include "rclcpp/create_generic_client.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/serialization.hpp"
