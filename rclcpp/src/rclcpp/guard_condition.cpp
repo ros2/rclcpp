@@ -16,28 +16,10 @@
 
 #include "rclcpp/guard_condition.hpp"
 
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 
 namespace rclcpp
 {
-
-GuardCondition::GuardCondition(
-  rclcpp::Context::SharedPtr context,
-  rcl_guard_condition_options_t guard_condition_options)
-: context_(context), rcl_guard_condition_{rcl_get_zero_initialized_guard_condition()}
-{
-  if (!context_) {
-    throw std::invalid_argument("context argument unexpectedly nullptr");
-  }
-  rcl_ret_t ret = rcl_guard_condition_init(
-    &this->rcl_guard_condition_,
-    context_->get_rcl_context().get(),
-    guard_condition_options);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to create guard condition");
-  }
-}
 
 GuardCondition::~GuardCondition()
 {
