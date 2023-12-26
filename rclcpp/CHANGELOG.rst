@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+25.0.0 (2023-12-26)
+-------------------
 * Updated GenericSubscription to AnySubscriptionCallback (`#1928 <https://github.com/ros2/rclcpp/issues/1928>`_)
 * make type support helper supported for service (`#2209 <https://github.com/ros2/rclcpp/issues/2209>`_)
 * Adding QoS to subscription options (`#2323 <https://github.com/ros2/rclcpp/issues/2323>`_)
