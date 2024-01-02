@@ -63,7 +63,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_cppcheck REQUIRED)
-  ament_cppcheck()
+  # cppcheck is being added elsewhere
   set_tests_properties(cppcheck PROPERTIES TIMEOUT 360)
 
   find_package(performance_test_fixture REQUIRED)
