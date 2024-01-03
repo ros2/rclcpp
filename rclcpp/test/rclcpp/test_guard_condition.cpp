@@ -67,16 +67,6 @@ TEST_F(TestGuardCondition, construction_and_destruction) {
 }
 
 /*
- * Testing context accessor.
- */
-TEST_F(TestGuardCondition, get_context) {
-  {
-    auto gc = std::make_shared<rclcpp::GuardCondition>();
-    gc->get_context();
-  }
-}
-
-/*
  * Testing rcl guard condition accessor.
  */
 TEST_F(TestGuardCondition, get_rcl_guard_condition) {

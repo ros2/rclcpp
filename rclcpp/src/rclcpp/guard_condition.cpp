@@ -23,16 +23,17 @@ namespace rclcpp
 {
 
 GuardCondition::GuardCondition(
-  rclcpp::Context::SharedPtr context,
+  const rclcpp::Context::SharedPtr & context,
   rcl_guard_condition_options_t guard_condition_options)
-: context_(context), rcl_guard_condition_{rcl_get_zero_initialized_guard_condition()}
+: rcl_guard_condition_{rcl_get_zero_initialized_guard_condition()}
 {
-  if (!context_) {
+  if (!context) {
     throw std::invalid_argument("context argument unexpectedly nullptr");
   }
+
   rcl_ret_t ret = rcl_guard_condition_init(
     &this->rcl_guard_condition_,
-    context_->get_rcl_context().get(),
+    context->get_rcl_context().get(),
     guard_condition_options);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to create guard condition");
@@ -51,12 +52,6 @@ GuardCondition::~GuardCondition()
         "failed to finalize guard condition: %s", exception.what());
     }
   }
-}
-
-rclcpp::Context::SharedPtr
-GuardCondition::get_context() const
-{
-  return context_;
 }
 
 rcl_guard_condition_t &
