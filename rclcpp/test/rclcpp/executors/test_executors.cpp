@@ -41,6 +41,32 @@
 
 using namespace std::chrono_literals;
 
+
+template<typename T>
+class TestExecutorsOnlyNode : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+
+    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    std::stringstream test_name;
+    test_name << test_info->test_case_name() << "_" << test_info->name();
+    node = std::make_shared<rclcpp::Node>("node", test_name.str());
+
+  }
+
+  void TearDown()
+  {
+    node.reset();
+
+    rclcpp::shutdown();
+  }
+
+  rclcpp::Node::SharedPtr node;
+};
+
 template<typename T>
 class TestExecutors : public ::testing::Test
 {
@@ -381,13 +407,24 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set) override
   {
-    (void)wait_set;
-    return true;
+    for (size_t i = 0; i < wait_set->size_of_guard_conditions; ++i) {
+      if (&gc_.get_rcl_guard_condition() == wait_set->guard_conditions[i]) {
+        is_ready_called_before_take_data = true;
+        return true;
+      }
+    }
+    return false;
   }
 
   std::shared_ptr<void>
   take_data() override
   {
+    if (!is_ready_called_before_take_data) {
+      throw std::runtime_error(
+              "TestWaitable : Internal error, take data was called, but is_ready was not called before");
+    }
+
+    is_ready_called_before_take_data = false;
     return nullptr;
   }
 
@@ -404,6 +441,14 @@ public:
     (void) data;
     count_++;
     std::this_thread::sleep_for(3ms);
+    try {
+      std::lock_guard<std::mutex> lock(execute_promise_mutex_);
+      execute_promise_.set_value();
+    } catch (const std::future_error & future_error) {
+      if (future_error.code() != std::future_errc::promise_already_satisfied) {
+        throw;
+      }
+    }
   }
 
   void
@@ -430,10 +475,22 @@ public:
     return count_;
   }
 
+  std::future<void>
+  reset_execute_promise_and_get_future()
+  {
+    std::lock_guard<std::mutex> lock(execute_promise_mutex_);
+    execute_promise_ = std::promise<void>();
+    return execute_promise_.get_future();
+  }
+
 private:
+  bool is_ready_called_before_take_data = false;
+  std::promise<void> execute_promise_;
+  std::mutex execute_promise_mutex_;
   size_t count_ = 0;
   rclcpp::GuardCondition gc_;
 };
+
 
 TYPED_TEST(TestExecutors, spinAll)
 {
@@ -475,6 +532,208 @@ TYPED_TEST(TestExecutors, spinAll)
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
   ASSERT_TRUE(spin_exited);
   spinner.join();
+}
+
+TEST(TestExecutorsOnlyNode, double_take_data)
+{
+  rclcpp::init(0, nullptr);
+
+  const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+  std::stringstream test_name;
+  test_name << test_info->test_case_name() << "_" << test_info->name();
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("node", test_name.str());
+
+  class MyExecutor : public rclcpp::executors::SingleThreadedExecutor
+  {
+public:
+    /**
+     * This is a copy of Executor::get_next_executable with a callback, to test
+     * for a special race condition
+     */
+    bool get_next_executable_with_callback(
+      rclcpp::AnyExecutable & any_executable,
+      std::chrono::nanoseconds timeout,
+      std::function<void(void)> inbetween)
+    {
+      bool success = false;
+      // Check to see if there are any subscriptions or timers needing service
+      // TODO(wjwwood): improve run to run efficiency of this function
+      success = get_next_ready_executable(any_executable);
+      // If there are none
+      if (!success) {
+
+        inbetween();
+
+        // Wait for subscriptions or timers to work on
+        wait_for_work(timeout);
+        if (!spinning.load()) {
+          return false;
+        }
+        // Try again
+        success = get_next_ready_executable(any_executable);
+      }
+      return success;
+    }
+
+    void spin_once_with_callback(
+      std::chrono::nanoseconds timeout,
+      std::function<void(void)> inbetween)
+    {
+      rclcpp::AnyExecutable any_exec;
+      if (get_next_executable_with_callback(any_exec, timeout, inbetween)) {
+        execute_any_executable(any_exec);
+      }
+    }
+
+  };
+
+  MyExecutor executor;
+
+  auto callback_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    true);
+
+  std::vector<std::shared_ptr<TestWaitable>> waitables;
+
+  auto waitable_interfaces = node->get_node_waitables_interface();
+
+  for (int i = 0; i < 3; i++) {
+    auto waitable = std::make_shared<TestWaitable>();
+    waitables.push_back(waitable);
+    waitable_interfaces->add_waitable(waitable, callback_group);
+  }
+  executor.add_node(node);
+
+  for (auto & waitable : waitables) {
+    waitable->trigger();
+  }
+
+  // a node has some default subscribers, that need to get executed first, therefore the loop
+  for (int i = 0; i < 10; i++) {
+    executor.spin_once(std::chrono::milliseconds(10));
+    if (waitables.front()->get_count() > 0) {
+      // stop execution, after the first waitable has been executed
+      break;
+    }
+  }
+
+  EXPECT_EQ(waitables.front()->get_count(), 1);
+
+  // block the callback group, this is something that may happen during multi threaded execution
+  // This removes my_waitable2 from the list of ready events, and triggers a call to wait_for_work
+  callback_group->can_be_taken_from().exchange(false);
+
+  bool no_ready_executable = false;
+
+  //now there should be no ready events now,
+  executor.spin_once_with_callback(
+    std::chrono::milliseconds(10), [&]() {
+      no_ready_executable = true;
+    });
+
+  EXPECT_TRUE(no_ready_executable);
+
+  //rearm, so that rmw_wait will push a second entry into the queue
+  for (auto & waitable : waitables) {
+    waitable->trigger();
+  }
+
+  no_ready_executable = false;
+
+  while (!no_ready_executable) {
+    executor.spin_once_with_callback(
+      std::chrono::milliseconds(10), [&]() {
+        //unblock the callback group
+        callback_group->can_be_taken_from().exchange(true);
+
+        no_ready_executable = true;
+
+      });
+  }
+  EXPECT_TRUE(no_ready_executable);
+
+  // now we process all events from get_next_ready_executable
+  EXPECT_NO_THROW(
+    for (int i = 0; i < 10; i++) {
+    executor.spin_once(std::chrono::milliseconds(1));
+  }
+  );
+
+  node.reset();
+
+  rclcpp::shutdown();
+}
+
+
+TYPED_TEST(TestExecutors, missing_event)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  rclcpp::Node::SharedPtr & node = this->node;
+  auto callback_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    false);
+
+  std::chrono::seconds max_spin_duration(2);
+  auto waitable_interfaces = node->get_node_waitables_interface();
+  auto my_waitable = std::make_shared<TestWaitable>();
+  auto my_waitable2 = std::make_shared<TestWaitable>();
+  waitable_interfaces->add_waitable(my_waitable, callback_group);
+  waitable_interfaces->add_waitable(my_waitable2, callback_group);
+  executor.add_callback_group(callback_group, node->get_node_base_interface());
+
+  // Trigger the first waitable
+  my_waitable->trigger();
+
+  // Spin until it is executed
+  {
+    auto my_waitable_execute_future = my_waitable->reset_execute_promise_and_get_future();
+    executor.spin_until_future_complete(my_waitable_execute_future, max_spin_duration);
+  }
+
+  // Check that it was executed but no the untriggered second waitable
+  EXPECT_EQ(1u, my_waitable->get_count())
+    << "my_waitable unexpectedly not executed after being triggered";
+  EXPECT_EQ(0u, my_waitable2->get_count())
+    << "my_waitable2 unexpectedly executed without being triggered";
+
+  // Trigger the second waitable, but...
+  my_waitable2->trigger();
+
+  // block the callback group, this is something that may happen during multi-threaded execution.
+  // This removes my_waitable2 from the list of ready events, which should prevent it from being
+  // executed.
+  callback_group->can_be_taken_from().exchange(false);
+
+  // Now there should be no ready event, so we'll spin until a timeout.
+  {
+    auto my_waitable2_execute_future = my_waitable2->reset_execute_promise_and_get_future();
+    auto future_code = executor.spin_until_future_complete(
+      my_waitable2_execute_future,
+      std::chrono::milliseconds(100));  // expected to timeout
+    EXPECT_EQ(future_code, rclcpp::FutureReturnCode::TIMEOUT)
+      << "my_waitable2 unexpectedly executed, avoiding spin_until_future_complete() timing out";
+  }
+
+  // Check that it still wasn't executed (despite being triggered and us spinning).
+  EXPECT_EQ(1u, my_waitable->get_count());
+  EXPECT_EQ(0u, my_waitable2->get_count())
+    << "my_waitable2 executed unexpectedly while its callback group is blacked by marking it "
+    << "as 'can_be_taken_from = false'";
+
+  // unblock the callback group
+  callback_group->can_be_taken_from().exchange(true);
+
+  // now the second waitable should get processed
+  {
+    auto my_waitable2_execute_future = my_waitable2->reset_execute_promise_and_get_future();
+    executor.spin_until_future_complete(my_waitable2_execute_future, max_spin_duration);
+  }
+
+  EXPECT_EQ(1u, my_waitable->get_count());
+  EXPECT_EQ(1u, my_waitable2->get_count())
+    << "my_waitable2 unexpectedly not executed after unblocking its callback group";
 }
 
 TYPED_TEST(TestExecutors, spinSome)
