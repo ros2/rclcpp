@@ -678,12 +678,12 @@ public:
 }
 
 
-TYPED_TEST(TestExecutorsOnlyNode, missing_event)
+TYPED_TEST(TestExecutors, missing_event)
 {
   using ExecutorType = TypeParam;
   ExecutorType executor;
 
-  rclcpp::Node::SharedPtr node(this->node);
+  rclcpp::Node::SharedPtr & node = this->node;
   auto callback_group = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive,
     false);
@@ -696,32 +696,44 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   waitable_interfaces->add_waitable(my_waitable2, callback_group);
   executor.add_callback_group(callback_group, node->get_node_base_interface());
 
+  // Trigger the first waitable
   my_waitable->trigger();
-  my_waitable2->trigger();
 
+  // Spin until it is executed
   {
     auto my_waitable_execute_future = my_waitable->reset_execute_promise_and_get_future();
     executor.spin_until_future_complete(my_waitable_execute_future, max_spin_duration);
   }
 
-  EXPECT_EQ(1u, my_waitable->get_count());
-  EXPECT_EQ(0u, my_waitable2->get_count());
+  // Check that it was executed but no the untriggered second waitable
+  EXPECT_EQ(1u, my_waitable->get_count())
+    << "my_waitable unexpectedly not executed after being triggered";
+  EXPECT_EQ(0u, my_waitable2->get_count())
+    << "my_waitable2 unexpectedly executed without being triggered";
 
-  // block the callback group, this is something that may happen during multi threaded execution
-  // This removes my_waitable2 from the list of ready events, and triggers a call to wait_for_work
+  // Trigger the second waitable, but...
+  my_waitable2->trigger();
+
+  // block the callback group, this is something that may happen during multi-threaded execution.
+  // This removes my_waitable2 from the list of ready events, which should prevent it from being
+  // executed.
   callback_group->can_be_taken_from().exchange(false);
 
-  // now there should be no ready event
+  // Now there should be no ready event, so we'll spin until a timeout.
   {
     auto my_waitable2_execute_future = my_waitable2->reset_execute_promise_and_get_future();
     auto future_code = executor.spin_until_future_complete(
       my_waitable2_execute_future,
       std::chrono::milliseconds(100));  // expected to timeout
-    EXPECT_EQ(future_code, rclcpp::FutureReturnCode::TIMEOUT);
+    EXPECT_EQ(future_code, rclcpp::FutureReturnCode::TIMEOUT)
+      << "my_waitable2 unexpectedly executed, avoiding spin_until_future_complete() timing out";
   }
 
+  // Check that it still wasn't executed (despite being triggered and us spinning).
   EXPECT_EQ(1u, my_waitable->get_count());
-  EXPECT_EQ(0u, my_waitable2->get_count());
+  EXPECT_EQ(0u, my_waitable2->get_count())
+    << "my_waitable2 executed unexpectedly while its callback group is blacked by marking it "
+    << "as 'can_be_taken_from = false'";
 
   // unblock the callback group
   callback_group->can_be_taken_from().exchange(true);
@@ -733,7 +745,8 @@ TYPED_TEST(TestExecutorsOnlyNode, missing_event)
   }
 
   EXPECT_EQ(1u, my_waitable->get_count());
-  EXPECT_EQ(1u, my_waitable2->get_count());
+  EXPECT_EQ(1u, my_waitable2->get_count())
+    << "my_waitable2 unexpectedly not executed after unblocking its callback group";
 }
 
 TYPED_TEST(TestExecutors, spinSome)
