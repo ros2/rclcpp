@@ -214,3 +214,27 @@ TEST(TestContext, check_on_shutdown_callback_order_after_del) {
 
   EXPECT_TRUE(result[0] == 1 && result[1] == 3 && result[2] == 4 && result[3] == 0);
 }
+
+TEST(TestContext, check_context_destroyed) {
+  rclcpp::Context::SharedPtr ctx;
+  {
+    ctx = std::make_shared<rclcpp::Context>();
+    ctx->init(0, nullptr);
+
+    rclcpp::Context::WeakPtr weak_context = ctx->weak_from_this();
+    auto get_node_context = [weak_context]() -> rclcpp::Context::SharedPtr {
+        return weak_context.lock();
+      };
+
+    auto group = std::make_shared<rclcpp::CallbackGroup>(
+      rclcpp::CallbackGroupType::MutuallyExclusive,
+      get_node_context,
+      false);
+
+    rclcpp::GuardCondition::SharedPtr gc = group->get_notify_guard_condition();
+    ASSERT_NE(gc, nullptr);
+    ASSERT_EQ(ctx.use_count(), 2u);
+  }
+
+  ASSERT_EQ(ctx.use_count(), 1u);
+}
