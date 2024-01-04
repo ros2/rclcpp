@@ -273,15 +273,6 @@ public:
     }
 
     /**
-     * @brief Returns the size of the heap.
-     * @return the number of valid timers in the heap.
-     */
-    size_t size() const
-    {
-      return weak_heap_.size();
-    }
-
-    /**
      * @brief This function restores the current object as a valid heap
      * and it returns a locked version of it.
      * Timers that went out of scope are removed from the container.
