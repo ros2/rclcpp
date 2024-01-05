@@ -329,6 +329,7 @@ public:
    * \param[in] group Callback group to handle the reply to service calls.
    * \return Shared pointer to the created GenericClient.
    */
+  RCLCPP_PUBLIC
   rclcpp::GenericClient::SharedPtr
   create_generic_client(
     const std::string & service_name,

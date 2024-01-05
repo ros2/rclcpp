@@ -40,6 +40,7 @@ namespace rclcpp
  * \param[in] group Callback group to handle the reply to service calls.
  * \return Shared pointer to the created client.
  */
+RCLCPP_PUBLIC
 rclcpp::GenericClient::SharedPtr
 create_generic_client(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
