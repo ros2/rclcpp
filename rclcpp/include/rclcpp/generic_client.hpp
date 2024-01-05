@@ -48,7 +48,7 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(GenericClient)
 
-  /// A convenient Client::Future and request id pair.
+  /// A convenient GenericClient::Future and request id pair.
   /**
    * Public members:
    * - future: a std::future<void *>.
