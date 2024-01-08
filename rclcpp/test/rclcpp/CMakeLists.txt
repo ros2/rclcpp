@@ -108,6 +108,17 @@ ament_add_gtest(test_intra_process_buffer test_intra_process_buffer.cpp)
 if(TARGET test_intra_process_buffer)
   target_link_libraries(test_intra_process_buffer ${PROJECT_NAME})
 endif()
+ament_add_gtest(test_intra_process_subscriber test_intra_process_subscriber.cpp)
+if(TARGET test_intra_process_subscriber)
+  ament_target_dependencies(test_intra_process_subscriber
+    "rcl_interfaces"
+    "rmw"
+    "rosidl_runtime_cpp"
+    "rosidl_typesupport_cpp"
+    "test_msgs"
+  )
+  target_link_libraries(test_intra_process_subscriber ${PROJECT_NAME})
+endif()
 
 ament_add_gtest(test_loaned_message test_loaned_message.cpp)
 target_link_libraries(test_loaned_message ${PROJECT_NAME} mimick ${test_msgs_TARGETS})

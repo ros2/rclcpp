@@ -33,6 +33,7 @@
 
 using namespace ::testing;  // NOLINT
 using namespace rclcpp;  // NOLINT
+using namespace std::chrono_literals;
 
 class RclcppGenericNodeFixture : public Test
 {
@@ -61,9 +62,12 @@ public:
     publishers_.push_back(publisher);
   }
 
-  template<typename T1, typename T2>
+  template<typename T1, typename T2, typename AllocatorT = std::allocator<void>>
   std::vector<T1> subscribe_raw_messages(
-    size_t expected_recv_msg_count, const std::string & topic_name, const std::string & type)
+    size_t expected_recv_msg_count, const std::string & topic_name, const std::string & type,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ))
   {
     std::vector<T1> messages;
     size_t counter = 0;
@@ -75,7 +79,7 @@ public:
         serializer.deserialize_message(message.get(), &deserialized_message);
         messages.push_back(this->get_data_from_msg(deserialized_message));
         counter++;
-      });
+      }, options);
 
     while (counter < expected_recv_msg_count) {
       rclcpp::spin_some(node_);
@@ -84,14 +88,14 @@ public:
   }
 
   template<typename T1, typename T2>
-  rclcpp::SerializedMessage serialize_message(const T1 & data)
+  std::unique_ptr<rclcpp::SerializedMessage> serialize_message(const T1 & data)
   {
     T2 message;
     write_message(data, message);
 
     rclcpp::Serialization<T2> ser;
-    SerializedMessage result;
-    ser.serialize_message(&message, &result);
+    auto result = std::make_unique<SerializedMessage>();
+    ser.serialize_message(&message, result.get());
     return result;
   }
 
@@ -171,7 +175,7 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
   ASSERT_TRUE(success);
 
   for (const auto & message : test_messages) {
-    publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>(message));
+    publisher->publish(*serialize_message<std::string, test_msgs::msg::Strings>(message));
   }
 
   auto subscribed_messages = subscriber_future_.get();
@@ -209,7 +213,7 @@ TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
 
     for (const auto & message : test_messages) {
       publisher->publish_as_loaned_msg(
-        serialize_message<int64_t, test_msgs::msg::BasicTypes>(message));
+        *serialize_message<int64_t, test_msgs::msg::BasicTypes>(message));
     }
 
     auto subscribed_messages = subscriber_future_.get();
@@ -219,7 +223,7 @@ TEST_F(RclcppGenericNodeFixture, publish_loaned_msg_work)
     ASSERT_THROW(
     {
       publisher->publish_as_loaned_msg(
-        serialize_message<int64_t, test_msgs::msg::BasicTypes>(test_messages[0]));
+        *serialize_message<int64_t, test_msgs::msg::BasicTypes>(test_messages[0]));
     }, rclcpp::exceptions::RCLError);
   }
 }
@@ -266,6 +270,8 @@ TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
 
 TEST_F(RclcppGenericNodeFixture, generic_subscription_different_callbacks)
 {
+  // If the GenericSubscription does not use the provided QoS profile,
+  // its request will be incompatible with the Publisher's offer and no messages will be passed.
   using namespace std::chrono_literals;
   std::string topic_name = "string_topic";
   std::string topic_type = "test_msgs/msg/Strings";
@@ -308,4 +314,64 @@ TEST_F(RclcppGenericNodeFixture, generic_subscription_different_callbacks)
     // It normally takes < 20ms, 5s chosen as "a very long time"
     ASSERT_TRUE(wait_for(connected, 5s));
   }
+}
+
+TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_with_intraprocess)
+{
+  // We currently publish more messages because they can get lost
+  std::vector<std::string> test_messages = {"Hello World"};
+  std::string topic_name = "/string_topic";
+  std::string type = "test_msgs/msg/Strings";
+
+  // add a dummy subscriber without ipm
+  auto node = std::make_shared<rclcpp::Node>("test_string_msg_listener_node");
+  auto string_msgs_sub = node->create_subscription<test_msgs::msg::Strings>(
+    topic_name, 10, [](test_msgs::msg::Strings::ConstSharedPtr) {});
+
+  auto publisher_options = rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>();
+  publisher_options.use_intra_process_comm = IntraProcessSetting::Enable;
+  auto ts_lib = rclcpp::get_typesupport_library(
+    type, "rosidl_typesupport_cpp");
+  auto type_support = *rclcpp::get_typesupport_handle(type, "rosidl_typesupport_cpp", *ts_lib);
+
+  auto publisher =
+    rclcpp::detail::create_publisher(
+    *node, topic_name,
+    type_support,
+    rclcpp::QoS(1),
+    publisher_options
+    );
+
+  auto subscriber_future_ = std::async(
+    std::launch::async, [this, topic_name, type] {
+      auto subscriber_options = rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>>();
+      subscriber_options.use_intra_process_comm = IntraProcessSetting::Enable;
+      return subscribe_raw_messages<std::string, test_msgs::msg::Strings>(
+        1, topic_name, type,
+        subscriber_options);
+    });
+
+  // TODO(karsten1987): Port 'wait_for_sub' to rclcpp
+  auto allocator = node_->get_node_options().allocator();
+  auto success = false;
+  auto ret = rcl_wait_for_subscribers(
+    node_->get_node_base_interface()->get_rcl_node_handle(),
+    &allocator,
+    topic_name.c_str(),
+    1u,
+    static_cast<rcutils_duration_value_t>(1e9),
+    &success);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ASSERT_TRUE(success);
+
+  std::this_thread::sleep_for(100ms);
+
+  for (const auto & message : test_messages) {
+    publisher->publish(std::move(serialize_message<std::string, test_msgs::msg::Strings>(message)));
+    std::this_thread::sleep_for(100ms);
+  }
+
+  auto subscribed_messages = subscriber_future_.get();
+  EXPECT_THAT(subscribed_messages, SizeIs(1));
+  EXPECT_THAT(subscribed_messages[0], StrEq("Hello World"));
 }

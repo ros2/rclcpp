@@ -240,6 +240,25 @@ Node::create_generic_subscription(
   );
 }
 
+template<typename CallbackT, typename AllocatorT>
+std::shared_ptr<rclcpp::GenericSubscription>
+Node::create_generic_subscription(
+  const std::string & topic_name,
+  const rosidl_message_type_support_t & type_support_handle,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::create_generic_subscription(
+    node_topics_,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    type_support_handle,
+    qos,
+    std::forward<CallbackT>(callback),
+    options
+  );
+}
+
 
 template<typename ParameterT>
 auto

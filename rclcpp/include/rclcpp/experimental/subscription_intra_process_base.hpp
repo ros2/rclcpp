@@ -19,19 +19,41 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "rcl/wait.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
+#include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
 namespace experimental
 {
+
+// Forward declarations to reuse methods from IntraProcessManager
+class IntraProcessManager;
+namespace detail
+{
+template<
+  typename MessageT,
+  typename ROSMessageType,
+  typename Alloc,
+  typename Deleter = std::default_delete<MessageT>
+>
+void do_intra_process_publish_same_type(
+  IntraProcessManager * intraprocess_manager,
+  uint64_t intra_process_publisher_id,
+  std::unique_ptr<MessageT, Deleter> message,
+  typename allocator::AllocRebind<MessageT, Alloc>::allocator_type & allocator,
+  const std::vector<uint64_t> & take_ownership_subscriptions,
+  const std::vector<uint64_t> & take_shared_subscriptions);
+}  // namespace detail
 
 class SubscriptionIntraProcessBase : public rclcpp::Waitable
 {
@@ -175,6 +197,36 @@ public:
     std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
     on_new_message_callback_ = nullptr;
   }
+
+  /// Check if subscription type is a serialized message type.
+  RCLCPP_PUBLIC
+  virtual bool
+  is_serialized() const = 0;
+
+  /// Convert serialized message to ROS message type and serve it back to IPM.
+  /**
+   * Convert serialized message to ROS message type and serve it back to IPM.
+   * This is needed as the publisher of serialized message is not aware of the subscribed
+   * data type. While the subscription has all needed information (MessageT, Allocator) to
+   * cast and deserialize the message.
+   *
+   * \param serialized_message serialized message which needs to be de-serialized.
+   * \param intraprocess_manager intraprocess manger to which the de-serialized messaged should be forwarded.
+   * \param intra_process_publisher_id id of publisher.
+   * \param untyped_allocator pointer to allocator of message.
+   * \param take_ownership_subscriptions subscription ids which takes ownership.
+   * \param take_shared_subscriptions subscription ids with shared ownership.
+   * \return true for success.
+   */
+  RCLCPP_PUBLIC
+  virtual bool
+  serve_serialized_message(
+    const rclcpp::SerializedMessage * serialized_message,
+    IntraProcessManager * intraprocess_manager,
+    uint64_t intra_process_publisher_id,
+    void * untyped_allocator,
+    const std::vector<uint64_t> & take_ownership_subscriptions,
+    const std::vector<uint64_t> & take_shared_subscriptions) = 0;
 
 protected:
   std::recursive_mutex callback_mutex_;

@@ -74,7 +74,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/future_return_code.cpp
   src/rclcpp/generic_publisher.cpp
-  src/rclcpp/generic_subscription.cpp
   src/rclcpp/graph_listener.cpp
   src/rclcpp/guard_condition.cpp
   src/rclcpp/init_options.cpp

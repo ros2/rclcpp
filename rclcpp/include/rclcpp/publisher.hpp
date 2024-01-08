@@ -78,7 +78,8 @@ class Publisher : public PublisherBase
 {
 public:
   static_assert(
-    rclcpp::is_ros_compatible_type<MessageT>::value,
+    rclcpp::is_ros_compatible_type<MessageT>::value || std::is_same<MessageT,
+    rclcpp::SerializedMessage>::value,
     "given message type is not compatible with ROS and cannot be used with a Publisher");
 
   /// MessageT::custom_type if MessageT is a TypeAdapter, otherwise just MessageT.
@@ -121,16 +122,18 @@ public:
    * \param[in] topic Name of the topic to publish to.
    * \param[in] qos QoS profile for Subcription.
    * \param[in] options Options for the subscription.
+   * \param[in] type_support Type support for the subscribed topic.
    */
   Publisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rclcpp::QoS & qos,
-    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+    const rosidl_message_type_support_t & type_support)
   : PublisherBase(
       node_base,
       topic,
-      rclcpp::get_message_type_support_handle<MessageT>(),
+      type_support,
       options.template to_rcl_publisher_options<MessageT>(qos),
       // NOTE(methylDragon): Passing these args separately is necessary for event binding
       options.event_callbacks,
@@ -143,6 +146,19 @@ public:
     allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
     // Setup continues in the post construction method, post_init_setup().
   }
+
+  Publisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  : Publisher(
+      node_base,
+      topic,
+      qos,
+      options,
+      rclcpp::get_message_type_support_handle<MessageT>())
+  {}
 
   /// Called post construction, so that construction may continue after shared_from_this() works.
   virtual
@@ -244,6 +260,40 @@ public:
         this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
       this->do_inter_process_publish(*shared_msg);
     } else {
+      this->do_intra_process_ros_message_publish(std::move(msg));
+    }
+  }
+
+  /// Publish a serialized message on the topic.
+  /**
+   * This signature is enabled if the element_type of the std::unique_ptr is
+   * a rclcpp::SerializedMessage, as opposed to the custom_type of a TypeAdapter,
+   * and that type matches the type given when creating the publisher.
+   *
+   * This signature allows the user to give ownership of the message to rclcpp,
+   * allowing for more efficient intra-process communication optimizations.
+   *
+   * \param[in] msg A unique pointer to the message to send.
+   */
+  template<typename T>
+  typename std::enable_if_t<
+    std::is_same<T, rclcpp::SerializedMessage>::value &&
+    std::is_same<T, ROSMessageType>::value
+  >
+  publish(std::unique_ptr<T, ROSMessageTypeDeleter> msg)
+  {
+    bool inter_process_publish_needed =
+      get_subscription_count() > get_intra_process_subscription_count();
+
+    if (inter_process_publish_needed) {
+      auto status = rcl_publish_serialized_message(
+        publisher_handle_.get(), &msg->get_rcl_serialized_message(), nullptr);
+      if (RCL_RET_OK != status) {
+        rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+      }
+    }
+
+    if (intra_process_is_enabled_) {
       this->do_intra_process_ros_message_publish(std::move(msg));
     }
   }

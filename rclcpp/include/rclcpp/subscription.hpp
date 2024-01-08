@@ -153,6 +153,14 @@ public:
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       using rclcpp::detail::resolve_intra_process_buffer_type;
 
+      if (callback.is_serialized_message_callback() &&
+        !serialization_traits::is_serialized_message_class<SubscribedType>::value)
+      {
+        throw std::invalid_argument(
+                "intraprocess communication for serialized callback "
+                "allowed only with rclcpp::SerializedMessage subscription type");
+      }
+
       // Check if the QoS is compatible with intra-process.
       auto qos_profile = get_actual_qos();
       if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
@@ -325,6 +333,11 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
+      // In this case, the message will be delivered via intra process and
+      // we should ignore this copy of the message.
+      return;
+    }
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
       // get current time before executing callback to

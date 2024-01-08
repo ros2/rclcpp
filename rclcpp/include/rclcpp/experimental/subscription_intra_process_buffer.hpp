@@ -19,6 +19,7 @@
 #include <string>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/guard_condition.h"
@@ -167,6 +168,72 @@ public:
   use_take_shared_method() const override
   {
     return buffer_->use_take_shared_method();
+  }
+
+  bool
+  is_serialized() const override
+  {
+    return serialization_traits::is_serialized_message_class<SubscribedType>::value;
+  }
+
+  SubscribedTypeUniquePtr deserialize_message(
+    const rclcpp::SerializedMessage * serialized_message)
+  {
+    if (serialized_message == nullptr) {
+      // The method is only allowed to be called with valid data (serialized case).
+      throw std::runtime_error("nullptr provided for serialized message");
+    }
+
+    auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
+    SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
+    if constexpr (std::is_same<SubscribedType, rclcpp::SerializedMessage>::value) {
+      (void)serialized_message;
+      throw std::runtime_error("Serialized message cannot be serialized.");
+    } else if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
+      Serialization<SubscribedType> serializer;
+      serializer.deserialize_message(serialized_message, ptr);
+    } else {
+      ROSMessageType ros_msg;
+      Serialization<ROSMessageType> serializer;
+      serializer.deserialize_message(serialized_message, &ros_msg);
+      rclcpp::TypeAdapter<SubscribedType, ROSMessageType>::convert_to_custom(ros_msg, *ptr);
+    }
+
+    return SubscribedTypeUniquePtr(ptr, subscribed_type_deleter_);
+  }
+
+  bool serve_serialized_message(
+    const rclcpp::SerializedMessage * serialized_message,
+    IntraProcessManager * intraprocess_manager,
+    uint64_t intra_process_publisher_id,
+    void * untyped_allocator,
+    const std::vector<uint64_t> & take_ownership_subscriptions,
+    const std::vector<uint64_t> & take_shared_subscriptions) override
+  {
+    if (intraprocess_manager == nullptr) {
+      // The method is only allowed to be called with valid data (serialized case).
+      throw std::runtime_error("nullptr provided for serialized inter-process manager");
+    }
+
+    typedef typename allocator::AllocRebind<SubscribedType, Alloc>::allocator_type AllocType;
+    auto allocator = static_cast<AllocType *>(untyped_allocator);
+
+    if (allocator == nullptr) {
+      throw std::runtime_error(
+              "failed to cast allocator "
+              "which can happen when the publisher and "
+              "subscription use different allocator types, which is not supported");
+    }
+
+    detail::do_intra_process_publish_same_type<SubscribedType, ROSMessageType, Alloc, Deleter>(
+      intraprocess_manager,
+      intra_process_publisher_id,
+      deserialize_message(serialized_message),
+      *allocator,
+      take_ownership_subscriptions,
+      take_shared_subscriptions);
+
+    return true;
   }
 
   size_t available_capacity() const override

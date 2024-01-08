@@ -36,6 +36,53 @@ namespace rclcpp
 namespace detail
 {
 /// Create and return a publisher of the given MessageT type.
+/**
+ * The NodeT type only needs to have a method called get_node_topics_interface()
+ * which returns a shared_ptr to a NodeTopicsInterface.
+ */
+template<
+  typename MessageT = SerializedMessage,
+  typename AllocatorT = std::allocator<void>,
+  typename PublisherT = rclcpp::Publisher<MessageT, AllocatorT>,
+  typename NodeT>
+std::shared_ptr<PublisherT>
+create_publisher(
+  NodeT & node,
+  const std::string & topic_name,
+  const rosidl_message_type_support_t & type_support,
+  const rclcpp::QoS & qos,
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+  )
+)
+{
+  // Extract the NodeTopicsInterface from the NodeT.
+  using rclcpp::node_interfaces::get_node_topics_interface;
+  auto node_topics_interface = get_node_topics_interface(node);
+  auto node_parameters = node.get_node_parameters_interface();
+  const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
+    rclcpp::detail::declare_qos_parameters(
+    options.qos_overriding_options, node_parameters,
+    node_topics_interface->resolve_topic_name(topic_name),
+    qos, rclcpp::detail::PublisherQosParametersTraits{}) :
+    qos;
+
+  // Create the publisher.
+  auto pub = node_topics_interface->create_publisher(
+    topic_name,
+    rclcpp::create_publisher_factory<AllocatorT, PublisherT>(
+      options,
+      type_support),
+    actual_qos
+  );
+
+  // Add the publisher to the node topics interface.
+  node_topics_interface->add_publisher(pub, options.callback_group);
+
+  return std::dynamic_pointer_cast<PublisherT>(pub);
+}
+
+/// Create and return a publisher of the given MessageT type.
 template<
   typename MessageT,
   typename AllocatorT = std::allocator<void>,
