@@ -218,14 +218,9 @@ NodeBase::create_callback_group(
   rclcpp::CallbackGroupType group_type,
   bool automatically_add_to_executor_with_node)
 {
-  auto weak_context = this->get_context()->weak_from_this();
-  auto get_node_context = [weak_context]() -> rclcpp::Context::SharedPtr {
-      return weak_context.lock();
-    };
-
   auto group = std::make_shared<rclcpp::CallbackGroup>(
     group_type,
-    get_node_context,
+    context_->weak_from_this(),
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
