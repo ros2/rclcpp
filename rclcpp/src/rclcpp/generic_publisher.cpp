@@ -23,6 +23,9 @@ namespace rclcpp
 
 void GenericPublisher::publish(const rclcpp::SerializedMessage & message)
 {
+  TRACETOOLS_TRACEPOINT(rclcpp_publish,
+    static_cast<const void *>(publisher_handle_.get()),
+    static_cast<const void *>(&message.get_rcl_serialized_message()));
   auto return_code = rcl_publish_serialized_message(
     get_publisher_handle().get(), &message.get_rcl_serialized_message(), NULL);
 
@@ -68,6 +71,7 @@ void GenericPublisher::deserialize_message(
 
 void GenericPublisher::publish_loaned_message(void * loaned_message)
 {
+  TRACETOOLS_TRACEPOINT(rclcpp_publish, nullptr, static_cast<const void *>(loaned_message));
   auto return_code = rcl_publish_loaned_message(
     get_publisher_handle().get(), loaned_message, NULL);
 
