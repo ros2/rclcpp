@@ -268,11 +268,10 @@ void TimersManager::run_timers()
       TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
       locked_heap.heapify();
       weak_timers_heap_.store(locked_heap);
-    }
-    else if (time_to_sleep.value() != std::chrono::nanoseconds::zero()) {
-        // If time_to_sleep is zero, we immediately execute. Otherwise, wait
-        // until timeout or notification that timers have been updated
-        timers_cv_.wait_for(lock, time_to_sleep.value(), [this]() {return timers_updated_;});
+    } else if (time_to_sleep.value() != std::chrono::nanoseconds::zero()) {
+      // If time_to_sleep is zero, we immediately execute. Otherwise, wait
+      // until timeout or notification that timers have been updated
+      timers_cv_.wait_for(lock, time_to_sleep.value(), [this]() {return timers_updated_;});
     }
 
     // Reset timers updated flag

@@ -819,58 +819,66 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
   EXPECT_EQ(kNumMessages, this->callback_count.load());
 }
 
-class TimerNode : public rclcpp::Node {
-   public:
-    TimerNode(std::string subname)
-        : Node("timer_node", subname) {
+class TimerNode : public rclcpp::Node
+{
+public:
+  explicit TimerNode(std::string subname)
+  : Node("timer_node", subname)
+  {
+    timer1_ = rclcpp::create_timer(
+      this->get_node_base_interface(), get_node_timers_interface(),
+      get_clock(), 1ms,
+      std::bind(&TimerNode::Timer1Callback, this));
 
-        
-        timer1_ = rclcpp::create_timer(this->get_node_base_interface(), get_node_timers_interface(),
-                                      get_clock(), 1ms,
-                                      std::bind(&TimerNode::Timer1Callback, this));
+    timer2_ =
+      rclcpp::create_timer(
+      this->get_node_base_interface(), get_node_timers_interface(),
+      get_clock(), 1ms,
+      std::bind(&TimerNode::Timer2Callback, this));
+  }
 
-        timer2_ =
-              rclcpp::create_timer(this->get_node_base_interface(), get_node_timers_interface(),
-                                      get_clock(), 1ms,
-                                      std::bind(&TimerNode::Timer2Callback, this));
-    }
+  int GetTimer1Cnt() {return cnt1_;}
+  int GetTimer2Cnt() {return cnt2_;}
 
-    int GetTimer1Cnt() { return cnt1_; }
-    int GetTimer2Cnt() { return cnt2_; }
+  void ResetTimer1()
+  {
+    timer1_->reset();
+  }
 
-    void ResetTimer1() {
-        timer1_->reset();
-    }
+  void ResetTimer2()
+  {
+    timer2_->reset();
+  }
 
-    void ResetTimer2() {
-        timer2_->reset();
-    }
+  void CancelTimer1()
+  {
+    RCLCPP_DEBUG(this->get_logger(), "Timer 1 cancelling!");
+    timer1_->cancel();
+  }
 
-    void CancelTimer1() {
-      RCLCPP_DEBUG(this->get_logger(), "Timer 1 cancelling!");
-      timer1_->cancel();
-    }
+  void CancelTimer2()
+  {
+    RCLCPP_DEBUG(this->get_logger(), "Timer 2 cancelling!");
+    timer2_->cancel();
+  }
 
-    void CancelTimer2() {
-      RCLCPP_DEBUG(this->get_logger(), "Timer 2 cancelling!");
-      timer2_->cancel();
-    }
+private:
+  void Timer1Callback()
+  {
+    RCLCPP_DEBUG(this->get_logger(), "Timer 1!");
+    cnt1_++;
+  }
 
-   private:
-    void Timer1Callback() {
-        RCLCPP_DEBUG(this->get_logger(), "Timer 1!");
-        cnt1_++;
-    }
+  void Timer2Callback()
+  {
+    RCLCPP_DEBUG(this->get_logger(), "Timer 2!");
+    cnt2_++;
+  }
 
-    void Timer2Callback() {
-        RCLCPP_DEBUG(this->get_logger(), "Timer 2!");
-        cnt2_++;
-    }
-
-    rclcpp::TimerBase::SharedPtr timer1_;
-    rclcpp::TimerBase::SharedPtr timer2_;
-    int cnt1_ = 0;
-    int cnt2_ = 0;
+  rclcpp::TimerBase::SharedPtr timer1_;
+  rclcpp::TimerBase::SharedPtr timer2_;
+  int cnt1_ = 0;
+  int cnt2_ = 0;
 };
 
 
@@ -897,9 +905,10 @@ public:
 
     // Spin the executor in a standalone thread
     executor.add_node(this->node);
-    standalone_thread = std::thread([this]() {
-      executor.spin();
-    });
+    standalone_thread = std::thread(
+      [this]() {
+        executor.spin();
+      });
   }
 
   void TearDown()
@@ -965,7 +974,7 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   std::this_thread::sleep_for(10ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
-  
+
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
@@ -994,7 +1003,7 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
   std::this_thread::sleep_for(10ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
-  
+
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
@@ -1024,7 +1033,7 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   std::this_thread::sleep_for(10ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
-  
+
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
@@ -1063,7 +1072,7 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   std::this_thread::sleep_for(10ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
-  
+
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
