@@ -65,7 +65,6 @@ StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
   if (std::chrono::nanoseconds(0) == max_duration) {
     max_duration = std::chrono::nanoseconds::max();
   }
-
   return this->spin_some_impl(max_duration, false);
 }
 
@@ -83,41 +82,28 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 {
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
-      if (std::chrono::nanoseconds(0) == max_duration) {
-        // told to spin forever if need be
-        return true;
-      } else if (std::chrono::steady_clock::now() - start < max_duration) {
-        // told to spin only for some maximum amount of time
-        return true;
-      }
-      // spun too long
-      return false;
-    };
+    const auto spin_forever = std::chrono::nanoseconds(0) == max_duration;
+    const auto cur_duration = std::chrono::steady_clock::now() - start;
+    return spin_forever || (cur_duration < max_duration);
+  };
 
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false););
 
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     // Get executables that are ready now
     std::lock_guard<std::mutex> guard(mutex_);
-    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
-      this->collect_entities();
-    }
 
-    auto wait_result = wait_set_.wait(std::chrono::nanoseconds(0));
-    if (wait_result.kind() == WaitResultKind::Empty) {
-      RCUTILS_LOG_WARN_NAMED(
-        "rclcpp",
-        "empty wait set received in wait(). This should never happen.");
-      continue;
-    }
-
-    // Execute ready executables
-    bool work_available = execute_ready_executables(current_collection_, wait_result, false);
-    if (!work_available || !exhaustive) {
-      break;
+    auto wait_result = this->collect_and_wait(std::chrono::nanoseconds(0));
+    if (wait_result.has_value())
+    {
+      // Execute ready executables
+      bool work_available = this->execute_ready_executables(current_collection_, wait_result.value(), false);
+      if (!work_available || !exhaustive) {
+        break;
+      }
     }
   }
 }
@@ -127,21 +113,28 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
   if (rclcpp::ok(context_) && spinning.load()) {
     std::lock_guard<std::mutex> guard(mutex_);
-    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
-      this->collect_entities();
+    auto wait_result = this->collect_and_wait(timeout);
+    if (wait_result.has_value())
+    {
+      this->execute_ready_executables(current_collection_, wait_result.value(), true);
     }
-
-    auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
-    if (wait_result.kind() == WaitResultKind::Empty) {
-      RCUTILS_LOG_WARN_NAMED(
-        "rclcpp",
-        "empty wait set received in wait(). This should never happen.");
-      return;
-    }
-
-    // Execute ready executables
-    execute_ready_executables(current_collection_, wait_result, true);
   }
+}
+
+std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
+StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
+{
+  if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+    this->collect_entities();
+  }
+  auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
+  if (wait_result.kind() == WaitResultKind::Empty) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rclcpp",
+      "empty wait set received in wait(). This should never happen.");
+    return {};
+  }
+  return wait_result;
 }
 
 // This preserves the "scheduling semantics" of the StaticSingleThreadedExecutor
@@ -152,6 +145,7 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
   bool spin_once)
 {
   bool any_ready_executable = false;
+  bool executable_run = false;
 
   if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
     return any_ready_executable;
@@ -159,72 +153,55 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
 
   auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
 
-  for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
-    if (nullptr == rcl_wait_set.timers[ii]) {continue;}
-    auto entity_iter = collection.timers.find(rcl_wait_set.timers[ii]);
-    if (entity_iter != collection.timers.end()) {
-      auto entity = entity_iter->second.entity.lock();
-      if (!entity) {
-        continue;
+  auto iterate_collection = [spin_once, &any_ready_executable](auto entities, auto entities_size, auto collection, auto entity_callback){
+    for (size_t ii = 0; ii < entities_size; ++ii) {
+      if (nullptr == entities[ii]) {continue;}
+      auto entity_iter = collection.find(entities[ii]);
+      if (entity_iter != collection.end()) {
+        auto entity = entity_iter->second.entity.lock();
+        if (!entity) {
+          continue;
+        }
+        if (!entity_callback(entity))
+          continue;
+        any_ready_executable = true;
+        if (spin_once) {
+          return;
+        }
       }
-      if (!entity->call()) {
-        continue;
-      }
-      execute_timer(entity);
-      if (spin_once) {
-        return true;
-      }
-      any_ready_executable = true;
     }
-  }
+  };
 
-  for (size_t ii = 0; ii < rcl_wait_set.size_of_subscriptions; ++ii) {
-    if (nullptr == rcl_wait_set.subscriptions[ii]) {continue;}
-    auto entity_iter = collection.subscriptions.find(rcl_wait_set.subscriptions[ii]);
-    if (entity_iter != collection.subscriptions.end()) {
-      auto entity = entity_iter->second.entity.lock();
-      if (!entity) {
-        continue;
-      }
-      execute_subscription(entity);
-      if (spin_once) {
-        return true;
-      }
-      any_ready_executable = true;
-    }
-  }
+  iterate_collection(rcl_wait_set.timers, rcl_wait_set.size_of_timers, collection.timers,
+    [](auto timer){
+      if (!timer->call())
+        return false;
+      execute_timer(timer);
+      return true;
+    });
+  if (spin_once && any_ready_executable) { return true; }
 
-  for (size_t ii = 0; ii < rcl_wait_set.size_of_services; ++ii) {
-    if (nullptr == rcl_wait_set.services[ii]) {continue;}
-    auto entity_iter = collection.services.find(rcl_wait_set.services[ii]);
-    if (entity_iter != collection.services.end()) {
-      auto entity = entity_iter->second.entity.lock();
-      if (!entity) {
-        continue;
-      }
-      execute_service(entity);
-      if (spin_once) {
-        return true;
-      }
-      any_ready_executable = true;
-    }
-  }
+  iterate_collection(rcl_wait_set.subscriptions, rcl_wait_set.size_of_subscriptions, collection.subscriptions,
+    [](auto subscription){
+      execute_subscription(subscription);
+      return true;
+    });
+  if (spin_once && any_ready_executable) { return true; }
 
-  for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
-    if (nullptr == rcl_wait_set.clients[ii]) {continue;}
-    auto entity_iter = collection.clients.find(rcl_wait_set.clients[ii]);
-    if (entity_iter != collection.clients.end()) {
-      auto entity = entity_iter->second.entity.lock();
-      if (!entity) {
-        continue;
-      }
-      execute_client(entity);
-      if (spin_once) {
-        return true;
-      }
-      any_ready_executable = true;
-    }
-  }
+  iterate_collection(rcl_wait_set.services, rcl_wait_set.size_of_services, collection.services,
+    [](auto service){
+      execute_service(service);
+      return true;
+    });
+  if (spin_once && any_ready_executable) { return true; }
+
+  iterate_collection(rcl_wait_set.clients, rcl_wait_set.size_of_clients, collection.clients,
+    [](auto client){
+      execute_client(client);
+      return true;
+    });
+  if (spin_once && any_ready_executable) { return true; }
+
 
   for (auto & [handle, entry] : collection.waitables) {
     auto waitable = entry.entity.lock();

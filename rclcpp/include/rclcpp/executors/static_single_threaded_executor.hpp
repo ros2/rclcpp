@@ -113,20 +113,20 @@ protected:
    * @param spin_once if true executes only the first ready executable.
    * @return true if any executable was ready.
    */
-  RCLCPP_PUBLIC
   bool
   execute_ready_executables(
     const rclcpp::executors::ExecutorEntitiesCollection & collection,
     rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
     bool spin_once);
 
-  RCLCPP_PUBLIC
   void
   spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
 
-  RCLCPP_PUBLIC
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
+
+  std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
+  collect_and_wait(std::chrono::nanoseconds timeout);
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
