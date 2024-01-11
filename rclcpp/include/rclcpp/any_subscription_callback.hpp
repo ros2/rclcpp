@@ -30,6 +30,7 @@
 #include "rclcpp/detail/subscription_callback_type_helper.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/message_info.hpp"
+#include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_adapter.hpp"
 
@@ -158,13 +159,14 @@ struct AnySubscriptionCallbackPossibleTypes
 template<
   typename MessageT,
   typename AllocatorT,
-  bool is_adapted_type = rclcpp::TypeAdapter<MessageT>::is_specialized::value
+  bool is_adapted_type = rclcpp::TypeAdapter<MessageT>::is_specialized::value,
+  bool is_serialized_type = serialization_traits::is_serialized_message_class<MessageT>::value
 >
 struct AnySubscriptionCallbackHelper;
 
 /// Specialization for when MessageT is not a TypeAdapter.
 template<typename MessageT, typename AllocatorT>
-struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false>
+struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false, false>
 {
   using CallbackTypes = AnySubscriptionCallbackPossibleTypes<MessageT, AllocatorT>;
 
@@ -194,7 +196,7 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false>
 
 /// Specialization for when MessageT is a TypeAdapter.
 template<typename MessageT, typename AllocatorT>
-struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true>
+struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true, false>
 {
   using CallbackTypes = AnySubscriptionCallbackPossibleTypes<MessageT, AllocatorT>;
 
@@ -227,6 +229,26 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true>
     typename CallbackTypes::SharedPtrROSMessageCallback,
     typename CallbackTypes::SharedPtrWithInfoCallback,
     typename CallbackTypes::SharedPtrWithInfoROSMessageCallback,
+    typename CallbackTypes::SharedPtrSerializedMessageCallback,
+    typename CallbackTypes::SharedPtrSerializedMessageWithInfoCallback
+  >;
+};
+
+/// Specialization for when MessageT is a SerializedMessage to exclude duplicated declarations.
+template<typename MessageT, typename AllocatorT>
+struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false, true>
+{
+  using CallbackTypes = AnySubscriptionCallbackPossibleTypes<MessageT, AllocatorT>;
+
+  using variant_type = std::variant<
+    typename CallbackTypes::ConstRefSerializedMessageCallback,
+    typename CallbackTypes::ConstRefSerializedMessageWithInfoCallback,
+    typename CallbackTypes::UniquePtrSerializedMessageCallback,
+    typename CallbackTypes::UniquePtrSerializedMessageWithInfoCallback,
+    typename CallbackTypes::SharedConstPtrSerializedMessageCallback,
+    typename CallbackTypes::SharedConstPtrSerializedMessageWithInfoCallback,
+    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageCallback,
+    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback,
     typename CallbackTypes::SharedPtrSerializedMessageCallback,
     typename CallbackTypes::SharedPtrSerializedMessageWithInfoCallback
   >;
@@ -487,7 +509,9 @@ public:
   }
 
   // Dispatch when input is a ros message and the output could be anything.
-  void
+  template<typename TMsg = ROSMessageType>
+  typename std::enable_if<!serialization_traits::is_serialized_message_class<TMsg>::value,
+    void>::type
   dispatch(
     std::shared_ptr<ROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
@@ -589,7 +613,7 @@ public:
   // Dispatch when input is a serialized message and the output could be anything.
   void
   dispatch(
-    std::shared_ptr<rclcpp::SerializedMessage> serialized_message,
+    std::shared_ptr<const rclcpp::SerializedMessage> serialized_message,
     const rclcpp::MessageInfo & message_info)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);

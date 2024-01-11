@@ -2,6 +2,13 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+25.0.0 (2023-12-26)
+-------------------
+* Switch to target_link_libraries. (`#2374 <https://github.com/ros2/rclcpp/issues/2374>`_)
+* feat(rclcpp_components): support events executor in node main template (`#2366 <https://github.com/ros2/rclcpp/issues/2366>`_)
+* fix(rclcpp_components): increase the service queue sizes in component_container (`#2363 <https://github.com/ros2/rclcpp/issues/2363>`_)
+* Contributors: Chris Lalancette, Daisuke Nishimatsu, M. Fatih Cırıt
+
 24.0.0 (2023-11-06)
 -------------------
 

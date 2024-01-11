@@ -88,7 +88,7 @@ create_subscription(
       node_parameters,
       node_topics_interface,
       options.topic_stats_options.publish_topic,
-      qos);
+      options.topic_stats_options.qos);
 
     subscription_topic_stats =
       std::make_shared<rclcpp::topic_statistics::SubscriptionTopicStatistics>(

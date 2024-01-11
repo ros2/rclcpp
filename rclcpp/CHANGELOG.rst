@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+25.0.0 (2023-12-26)
+-------------------
+* Updated GenericSubscription to AnySubscriptionCallback (`#1928 <https://github.com/ros2/rclcpp/issues/1928>`_)
+* make type support helper supported for service (`#2209 <https://github.com/ros2/rclcpp/issues/2209>`_)
+* Adding QoS to subscription options (`#2323 <https://github.com/ros2/rclcpp/issues/2323>`_)
+* Switch to target_link_libraries. (`#2374 <https://github.com/ros2/rclcpp/issues/2374>`_)
+* aligh with rcl that a rosout publisher of a node might not exist (`#2357 <https://github.com/ros2/rclcpp/issues/2357>`_)
+* Fix data race in EventHandlerBase (`#2349 <https://github.com/ros2/rclcpp/issues/2349>`_)
+* Support users holding onto shared pointers in the message memory pool (`#2336 <https://github.com/ros2/rclcpp/issues/2336>`_)
+* Contributors: Chen Lihui, Chris Lalancette, DensoADAS, Lucas Wendland, mauropasse
+
 24.0.0 (2023-11-06)
 -------------------
 * fix (signal_handler.hpp): spelling (`#2356 <https://github.com/ros2/rclcpp/issues/2356>`_)

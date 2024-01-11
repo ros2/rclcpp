@@ -48,7 +48,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit GuardCondition(
-    rclcpp::Context::SharedPtr context =
+    const rclcpp::Context::SharedPtr & context =
     rclcpp::contexts::get_global_default_context(),
     rcl_guard_condition_options_t guard_condition_options =
     rcl_guard_condition_get_default_options());
@@ -56,11 +56,6 @@ public:
   RCLCPP_PUBLIC
   virtual
   ~GuardCondition();
-
-  /// Return the context used when creating this guard condition.
-  RCLCPP_PUBLIC
-  rclcpp::Context::SharedPtr
-  get_context() const;
 
   /// Return the underlying rcl guard condition structure.
   RCLCPP_PUBLIC
@@ -128,7 +123,6 @@ public:
   set_on_trigger_callback(std::function<void(size_t)> callback);
 
 protected:
-  rclcpp::Context::SharedPtr context_;
   rcl_guard_condition_t rcl_guard_condition_;
   std::atomic<bool> in_use_by_wait_set_{false};
   std::recursive_mutex reentrant_mutex_;
