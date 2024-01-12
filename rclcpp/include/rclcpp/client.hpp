@@ -115,6 +115,29 @@ struct FutureAndRequestId
   /// Destructor.
   ~FutureAndRequestId() = default;
 };
+
+template<typename PendingRequestsT, typename AllocatorT = std::allocator<int64_t>>
+size_t
+prune_requests_older_than_impl(
+  PendingRequestsT & pending_requests,
+  std::mutex & pending_requests_mutex,
+  std::chrono::time_point<std::chrono::system_clock> time_point,
+  std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
+{
+  std::lock_guard guard(pending_requests_mutex);
+  auto old_size = pending_requests.size();
+  for (auto it = pending_requests.begin(), last = pending_requests.end(); it != last; ) {
+    if (it->second.first < time_point) {
+      if (pruned_requests) {
+        pruned_requests->push_back(it->first);
+      }
+      it = pending_requests.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  return old_size - pending_requests.size();
+}
 }  // namespace detail
 
 namespace node_interfaces
@@ -771,19 +794,11 @@ public:
     std::chrono::time_point<std::chrono::system_clock> time_point,
     std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
   {
-    std::lock_guard guard(pending_requests_mutex_);
-    auto old_size = pending_requests_.size();
-    for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
-      if (it->second.first < time_point) {
-        if (pruned_requests) {
-          pruned_requests->push_back(it->first);
-        }
-        it = pending_requests_.erase(it);
-      } else {
-        ++it;
-      }
-    }
-    return old_size - pending_requests_.size();
+    return detail::prune_requests_older_than_impl(
+      pending_requests_,
+      pending_requests_mutex_,
+      time_point,
+      pruned_requests);
   }
 
   /// Configure client introspection.

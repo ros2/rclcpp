@@ -19,6 +19,9 @@
 #include <string>
 
 #include "rclcpp/generic_client.hpp"
+#include "rclcpp/node_interfaces/get_node_base_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
@@ -51,6 +54,25 @@ create_generic_client(
   const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
   rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
+template<typename NodeT>
+rclcpp::GenericClient::SharedPtr
+create_generic_client(
+  NodeT node,
+  const std::string & service_name,
+  const std::string & service_type,
+  const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_generic_client(
+    rclcpp::node_interfaces::get_node_base_interface(node),
+    rclcpp::node_interfaces::get_node_graph_interface(node),
+    rclcpp::node_interfaces::get_node_services_interface(node),
+    service_name,
+    service_type,
+    qos,
+    group
+  );
+}
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CREATE_GENERIC_CLIENT_HPP_

@@ -74,6 +74,17 @@ if(TARGET test_generic_client)
     ${test_msgs_TARGETS}
   )
 endif()
+ament_add_gtest(test_client_common test_client_common.cpp)
+if(TARGET test_client_common)
+  target_link_libraries(test_client_common ${PROJECT_NAME}
+    mimick
+    ${rcl_interfaces_TARGETS}
+    rmw::rmw
+    rosidl_runtime_cpp::rosidl_runtime_cpp
+    rosidl_typesupport_cpp::rosidl_typesupport_cpp
+    ${test_msgs_TARGETS}
+  )
+endif()
 ament_add_gtest(test_create_subscription test_create_subscription.cpp)
 if(TARGET test_create_subscription)
   target_link_libraries(test_create_subscription ${PROJECT_NAME} ${test_msgs_TARGETS})

@@ -84,13 +84,16 @@ public:
     rcl_client_options_t & client_options);
 
   RCLCPP_PUBLIC
-  SharedResponse create_response() override;
+  SharedResponse
+  create_response() override;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rmw_request_id_t> create_request_header() override;
+  std::shared_ptr<rmw_request_id_t>
+  create_request_header() override;
 
   RCLCPP_PUBLIC
-  void handle_response(
+  void
+  handle_response(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response) override;
 
@@ -123,7 +126,8 @@ public:
    * \return a FutureAndRequestId instance.
    */
   RCLCPP_PUBLIC
-  FutureAndRequestId async_send_request(const Request request);
+  FutureAndRequestId
+  async_send_request(const Request request);
 
   /// Clean all pending requests older than a time_point.
   /**
@@ -138,26 +142,21 @@ public:
     std::chrono::time_point<std::chrono::system_clock> time_point,
     std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
   {
-    std::lock_guard guard(pending_requests_mutex_);
-    auto old_size = pending_requests_.size();
-    for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
-      if (it->second.first < time_point) {
-        if (pruned_requests) {
-          pruned_requests->push_back(it->first);
-        }
-        it = pending_requests_.erase(it);
-      } else {
-        ++it;
-      }
-    }
-    return old_size - pending_requests_.size();
+    return detail::prune_requests_older_than_impl(
+      pending_requests_,
+      pending_requests_mutex_,
+      time_point,
+      pruned_requests);
   }
 
   RCLCPP_PUBLIC
-  size_t prune_pending_requests();
+  size_t
+  prune_pending_requests();
 
   RCLCPP_PUBLIC
-  bool remove_pending_request(int64_t request_id);
+  bool
+  remove_pending_request(
+    int64_t request_id);
 
   /// Take the next response for this client.
   /**
@@ -173,7 +172,8 @@ public:
    *   rcl function fail.
    */
   RCLCPP_PUBLIC
-  bool take_response(Response response_out, rmw_request_id_t & request_header_out)
+  bool
+  take_response(Response response_out, rmw_request_id_t & request_header_out)
   {
     return this->take_type_erased_response(response_out, request_header_out);
   }
@@ -183,10 +183,13 @@ protected:
     std::promise<SharedResponse>>;  // Use variant for extension
 
   int64_t
-  async_send_request_impl(const Request request, CallbackInfoVariant value);
+  async_send_request_impl(
+    const Request request,
+    CallbackInfoVariant value);
 
   std::optional<CallbackInfoVariant>
-  get_and_erase_pending_request(int64_t request_number);
+  get_and_erase_pending_request(
+    int64_t request_number);
 
   RCLCPP_DISABLE_COPY(GenericClient)
 
