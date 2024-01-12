@@ -41,7 +41,7 @@ struct ComparePriorities : public std::binary_function<PriorityEvent, PriorityEv
   _GLIBCXX14_CONSTEXPR
   bool
   operator()(const PriorityEvent & __x, const PriorityEvent & __y) const
-  {return __x.priority < __y.priority;}
+  {return __x.priority > __y.priority;}
 };
 
 /**

@@ -20,6 +20,7 @@
 
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/experimental/executors/events_executor/priority_events_queue.hpp"
+// #include "rclcpp/experimental/executors/events_executor/simple_events_queue.hpp"
 
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/msg/empty.hpp"
@@ -28,6 +29,7 @@ using namespace std::chrono_literals;
 
 using rclcpp::experimental::executors::EventsExecutor;
 using rclcpp::experimental::executors::PriorityEventsQueue;
+// using rclcpp::experimental::executors::SimpleEventsQueue;
 
 class TestPriorityEventsExecutor : public ::testing::Test
 {
@@ -53,11 +55,15 @@ TEST_F(TestPriorityEventsExecutor, priority_subs)
   // Create timer publishing to 3 subscriptions
   auto node = std::make_shared<rclcpp::Node>("node");
 
+  // Create QoS for subscriptions
+  rclcpp::QoS qos(10);
+
   int subscriptions_executed = 0;
 
+  qos.deadline(rclcpp::Duration(3, 0));
   bool msg_received_low = false;
   auto sub_low = node->create_subscription<test_msgs::msg::Empty>(
-    "topic", rclcpp::SensorDataQoS(),
+    "topic", qos,
     [&msg_received_low, &subscriptions_executed](test_msgs::msg::Empty::ConstSharedPtr msg)
     {
       (void)msg;
@@ -66,9 +72,10 @@ TEST_F(TestPriorityEventsExecutor, priority_subs)
       subscriptions_executed++;
     });
 
+  qos.deadline(rclcpp::Duration(2, 0));
   bool msg_received_medium = false;
   auto sub_medium = node->create_subscription<test_msgs::msg::Empty>(
-    "topic", rclcpp::SensorDataQoS(),
+    "topic", qos,
     [&msg_received_medium, &subscriptions_executed](test_msgs::msg::Empty::ConstSharedPtr msg)
     {
       (void)msg;
@@ -77,9 +84,10 @@ TEST_F(TestPriorityEventsExecutor, priority_subs)
       subscriptions_executed++;
     });
 
+  qos.deadline(rclcpp::Duration(1, 0));
   bool msg_received_high = false;
   auto sub_high = node->create_subscription<test_msgs::msg::Empty>(
-    "topic", rclcpp::SensorDataQoS(),
+    "topic", qos,
     [&msg_received_high, &subscriptions_executed](test_msgs::msg::Empty::ConstSharedPtr msg)
     {
       (void)msg;
@@ -88,12 +96,35 @@ TEST_F(TestPriorityEventsExecutor, priority_subs)
       subscriptions_executed++;
     });
 
-  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", rclcpp::SensorDataQoS());
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", qos);
 
   // Create executor
   auto extract_priority = [](const rclcpp::experimental::executors::ExecutorEvent & event) {
-      return event.type == rclcpp::experimental::executors::ExecutorEventType::TIMER_EVENT ?
-             0 : 1;
+      const rcl_client_t * client;
+      const rcl_service_t * service;
+      const rclcpp::TimerBase * timer;
+      const rclcpp::Waitable * waitable;
+      const rcl_subscription_t * subscription;
+      switch (event.type) {
+        case rclcpp::experimental::executors::ExecutorEventType::CLIENT_EVENT:
+          client = static_cast<const rcl_client_t *>(event.entity_key);
+          break;
+        case rclcpp::experimental::executors::ExecutorEventType::SERVICE_EVENT:
+          service = static_cast<const rcl_service_t *>(event.entity_key);
+          break;
+        case rclcpp::experimental::executors::ExecutorEventType::TIMER_EVENT:
+          timer = static_cast<const rclcpp::TimerBase *>(event.entity_key);
+          return 0UL;
+          break;
+        case rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT:
+          subscription = static_cast<const rcl_subscription_t *>(event.entity_key);
+          return rcl_subscription_get_options(subscription)->qos.deadline.sec;
+          break;
+        case rclcpp::experimental::executors::ExecutorEventType::WAITABLE_EVENT:
+          waitable = static_cast<const rclcpp::Waitable *>(event.entity_key);
+          break;
+      }
+      return 0UL;
     };
   EventsExecutor executor(std::make_unique<PriorityEventsQueue>(extract_priority));
   executor.add_node(node);
@@ -117,7 +148,7 @@ TEST_F(TestPriorityEventsExecutor, priority_subs)
   {
     auto time = std::chrono::high_resolution_clock::now() - start;
     auto time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(time);
-    std::this_thread::sleep_for(25ms);
+    std::this_thread::sleep_for(100ms);
   }
 
   executor.cancel();
