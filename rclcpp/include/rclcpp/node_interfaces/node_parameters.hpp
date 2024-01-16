@@ -137,6 +137,10 @@ public:
   undeclare_parameter(const std::string & name) override;
 
   RCLCPP_PUBLIC
+  void
+  load_parameters(const std::string & yaml_filepath) override;
+
+  RCLCPP_PUBLIC
   bool
   has_parameter(const std::string & name) const override;
 

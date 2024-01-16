@@ -373,6 +373,12 @@ Node::undeclare_parameter(const std::string & name)
   this->node_parameters_->undeclare_parameter(name);
 }
 
+void
+Node::load_parameters(const std::string & yaml_filepath)
+{
+  this->node_parameters_->load_parameters(yaml_filepath);
+}
+
 bool
 Node::has_parameter(const std::string & name) const
 {

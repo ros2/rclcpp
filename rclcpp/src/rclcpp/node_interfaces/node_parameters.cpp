@@ -657,6 +657,14 @@ NodeParameters::undeclare_parameter(const std::string & name)
   parameters_.erase(parameter_info);
 }
 
+void
+NodeParameters::load_parameters(const std::string & yaml_filepath)
+{
+  auto parameters_client = std::make_shared<rclcpp::AsyncParametersClient>(node_, "package_name");
+  parameters_client->load_parameters(yaml_filepath);
+
+}
+
 bool
 NodeParameters::has_parameter(const std::string & name) const
 {
