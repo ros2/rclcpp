@@ -586,7 +586,7 @@ public:
   void
   undeclare_parameter(const std::string & name);
 
-  /// Load a list of parameters from a yaml parameter file..
+  /// Load a list of parameters from a yaml parameter file.
   /**
    * \param[in] yaml_name The name of the yaml file that needs to be loaded.
    */

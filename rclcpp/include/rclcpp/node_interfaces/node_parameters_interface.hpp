@@ -115,7 +115,7 @@ public:
   void
   undeclare_parameter(const std::string & name) = 0;
 
-  /// Load a list parameters from a yaml parameter file
+  /// Load a list parameters from a yaml parameter file.
   /**
    * \sa rclcpp::Node::load_parameters
    */

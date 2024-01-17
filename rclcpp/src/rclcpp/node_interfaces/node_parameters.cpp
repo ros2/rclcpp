@@ -14,7 +14,6 @@
 
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 
-#include <cwctype>
 #include <rcl_yaml_param_parser/parser.h>
 
 #include <array>
