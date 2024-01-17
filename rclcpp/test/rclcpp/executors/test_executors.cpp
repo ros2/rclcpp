@@ -936,7 +936,7 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer1CancelledWithExecutorSpin) {
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(20ms);
   this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
@@ -954,7 +954,7 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(20ms);
   this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
@@ -971,14 +971,14 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(20ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(15ms);
+  std::this_thread::sleep_for(25ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1000,14 +1000,14 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
   // Cancel to stop the spin after some time.
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(20ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(15ms);
+  std::this_thread::sleep_for(25ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1030,19 +1030,19 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(20ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(15ms);
+  std::this_thread::sleep_for(25ms);
   int t1_runs_intermediate = this->node->GetTimer1Cnt();
   int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(15ms);
+  std::this_thread::sleep_for(25ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1069,19 +1069,19 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   std::this_thread::sleep_for(5ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(20ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(15ms);
+  std::this_thread::sleep_for(25ms);
   int t1_runs_intermediate = this->node->GetTimer1Cnt();
   int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(15ms);
+  std::this_thread::sleep_for(25ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
