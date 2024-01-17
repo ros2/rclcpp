@@ -591,8 +591,8 @@ public:
    * \param[in] yaml_name The name of the yaml file that needs to be loaded.
    */
   RCLCPP_PUBLIC
-  void
-  load_parameters(const std::string & yaml_filepath);
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(const std::string & yaml_filepath, const std::string & node_name_);
 
   /// Return true if a given parameter is declared.
   /**

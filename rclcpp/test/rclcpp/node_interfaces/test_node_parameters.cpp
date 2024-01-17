@@ -125,6 +125,20 @@ TEST_F(TestNodeParameters, list_parameters)
     list_result5.names.end());
 }
 
+TEST_F(TestNodeParameters, load_parameters) {
+  const uint64_t expected_param_count = 4;
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  // load parameters
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  const std::string parameters_filepath = (
+    test_resources_path / "test_node" / "load_parameters.yaml").string();
+  auto load_vector = node_parameters->load_parameters(parameters_filepath, "/namespace/load_node");
+  ASSERT_EQ(load_vector.size(), expected_param_count);
+}
+
 TEST_F(TestNodeParameters, parameter_overrides)
 {
   rclcpp::NodeOptions node_options;

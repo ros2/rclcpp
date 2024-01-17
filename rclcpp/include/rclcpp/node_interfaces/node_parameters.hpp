@@ -137,8 +137,9 @@ public:
   undeclare_parameter(const std::string & name) override;
 
   RCLCPP_PUBLIC
-  void
-  load_parameters(const std::string & yaml_filepath) override;
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(
+  const std::string & yaml_filepath, const std::string & node_name_) override;
 
   RCLCPP_PUBLIC
   bool

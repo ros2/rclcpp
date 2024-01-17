@@ -121,8 +121,9 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  void
-  load_parameters(const std::string & yaml_filepath) = 0;
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  load_parameters(
+  const std::string & yaml_filepath, const std::string & node_name_) = 0;
 
   /// Return true if the parameter has been declared, otherwise false.
   /**
