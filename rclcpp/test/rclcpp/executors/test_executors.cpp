@@ -934,16 +934,16 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer1CancelledWithExecutorSpin) {
   // executor, which is the most common usecase.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(100ms);
   this->node->CancelTimer1();
-  std::this_thread::sleep_for(20ms);
+  std::this_thread::sleep_for(300ms);
   this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
   int t2_runs = this->node->GetTimer2Cnt();
   EXPECT_NE(t1_runs, t2_runs);
   // Check that t2 has significantly more calls
-  EXPECT_LT(t1_runs + 5, t2_runs);
+  EXPECT_LT(t1_runs + 150, t2_runs);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
@@ -952,16 +952,16 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
   // executor, which is the most common usecase.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(100ms);
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(20ms);
+  std::this_thread::sleep_for(300ms);
   this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
   int t2_runs = this->node->GetTimer2Cnt();
   EXPECT_NE(t1_runs, t2_runs);
   // Check that t1 has significantly more calls
-  EXPECT_LT(t2_runs + 5, t1_runs);
+  EXPECT_LT(t2_runs + 150, t1_runs);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
@@ -969,16 +969,16 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   // and that the cancelled timer starts executing normally once reset manually.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(100ms);
   this->node->CancelTimer1();
-  std::this_thread::sleep_for(20ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(25ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -986,11 +986,11 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
 
   // T1 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
-  EXPECT_LT(t1_runs_initial + 10, t1_runs_final);
+  EXPECT_LT(t1_runs_initial + 150, t1_runs_final);
 
-  EXPECT_LT(t1_runs_initial + 5, t2_runs_initial);
+  EXPECT_LT(t1_runs_initial + 150, t2_runs_initial);
   // Check that t2 has significantly more calls, and keeps getting called.
-  EXPECT_LT(t2_runs_initial + 13, t2_runs_final);
+  EXPECT_LT(t2_runs_initial + 150, t2_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
@@ -998,16 +998,16 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
   // and that the cancelled timer starts executing normally once reset manually.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(100ms);
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(20ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(25ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1015,11 +1015,11 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
 
   // T2 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
-  EXPECT_LT(t2_runs_initial + 10, t2_runs_final);
+  EXPECT_LT(t2_runs_initial + 150, t2_runs_final);
 
-  EXPECT_LT(t2_runs_initial + 5, t1_runs_initial);
+  EXPECT_LT(t2_runs_initial + 150, t1_runs_initial);
   // Check that t1 has significantly more calls, and keeps getting called.
-  EXPECT_LT(t1_runs_initial + 13, t1_runs_final);
+  EXPECT_LT(t1_runs_initial + 150, t1_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
@@ -1027,22 +1027,22 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   // Ensure that only the reset timer is executed.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(100ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(20ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(25ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_intermediate = this->node->GetTimer1Cnt();
   int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(25ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1054,11 +1054,11 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   // Expect that T1 has up to 15 more calls than t2. Add some buffer
   // to account for jitter.
   EXPECT_EQ(t2_runs_initial, t2_runs_intermediate);
-  EXPECT_LT(t1_runs_initial + 11, t1_runs_intermediate);
+  EXPECT_LT(t1_runs_initial + 150, t1_runs_intermediate);
 
   // Expect that by end of test, both are running properly again.
-  EXPECT_LT(t1_runs_intermediate + 11, t1_runs_final);
-  EXPECT_LT(t2_runs_intermediate + 11, t2_runs_final);
+  EXPECT_LT(t1_runs_intermediate + 150, t1_runs_final);
+  EXPECT_LT(t2_runs_intermediate + 150, t2_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
@@ -1066,22 +1066,22 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   // Ensure that only the reset timer is executed.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(5ms);
+  std::this_thread::sleep_for(100ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(20ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(25ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_intermediate = this->node->GetTimer1Cnt();
   int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(25ms);
+  std::this_thread::sleep_for(300ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1093,9 +1093,9 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   // Expect that T1 has up to 15 more calls than t2. Add some buffer
   // to account for jitter.
   EXPECT_EQ(t1_runs_initial, t1_runs_intermediate);
-  EXPECT_LT(t2_runs_initial + 11, t2_runs_intermediate);
+  EXPECT_LT(t2_runs_initial + 150, t2_runs_intermediate);
 
   // Expect that by end of test, both are running properly again.
-  EXPECT_LT(t1_runs_intermediate + 11, t1_runs_final);
-  EXPECT_LT(t2_runs_intermediate + 11, t2_runs_final);
+  EXPECT_LT(t1_runs_intermediate + 150, t1_runs_final);
+  EXPECT_LT(t2_runs_intermediate + 150, t2_runs_final);
 }
