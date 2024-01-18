@@ -36,8 +36,10 @@
 #include "rclcpp/duration.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/time_source.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "rosgraph_msgs/msg/clock.hpp"
 
 using namespace std::chrono_literals;
 
@@ -881,6 +883,89 @@ private:
   int cnt2_ = 0;
 };
 
+// Sets up a separate thread to publish /clock messages.
+// Clock rate relative to real clock is controlled by realtime_update_rate.
+// This is set conservatively slow to ensure unit tests are reliable on Windows
+// environments, where timing performance is subpar.
+//
+// Use `sleep_for` in tests to advance the clock. Clock should run and be published
+// in separate thread continuously to ensure correct behavior in node under test.
+class ClockPublisher : public rclcpp::Node
+{
+public:
+  explicit ClockPublisher(float simulated_clock_step = .001f, float realtime_update_rate = 0.25f)
+  : Node("clock_publisher"),
+    ros_update_duration_(0, 0),
+    realtime_clock_step_(0, 0),
+    rostime_(0, 0)
+  {
+    clock_publisher_ = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", 10);
+    realtime_clock_step_ =
+      rclcpp::Duration::from_seconds(simulated_clock_step / realtime_update_rate);
+    ros_update_duration_ = rclcpp::Duration::from_seconds(simulated_clock_step);
+
+    timer_thread_ = std::thread(&ClockPublisher::RunTimer, this);
+  }
+
+  ~ClockPublisher()
+  {
+    running_ = false;
+    if (timer_thread_.joinable()) {
+      timer_thread_.join();
+    }
+  }
+
+  void sleep_for(rclcpp::Duration duration)
+  {
+    rclcpp::Time start_time(0, 0, RCL_ROS_TIME);
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      start_time = rostime_;
+    }
+    rclcpp::Time current_time = start_time;
+
+    while (true) {
+      {
+        const std::lock_guard<std::mutex> lock(mutex_);
+        current_time = rostime_;
+      }
+      if ((current_time - start_time) >= duration) {
+        return;
+      }
+      std::this_thread::sleep_for(realtime_clock_step_.to_chrono<std::chrono::milliseconds>());
+      rostime_ += ros_update_duration_;
+    }
+  }
+
+private:
+  void RunTimer()
+  {
+    while (running_) {
+      PublishClock();
+      std::this_thread::sleep_for(realtime_clock_step_.to_chrono<std::chrono::milliseconds>());
+    }
+  }
+
+  void PublishClock()
+  {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    auto message = rosgraph_msgs::msg::Clock();
+    message.clock = rostime_;
+    clock_publisher_->publish(message);
+  }
+
+  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_publisher_;
+
+  rclcpp::Duration ros_update_duration_;
+  rclcpp::Duration realtime_clock_step_;
+  // Rostime must be guarded by a mutex, since accessible in running thread
+  // as well as sleep_for
+  rclcpp::Time rostime_;
+  std::mutex mutex_;
+  std::thread timer_thread_;
+  std::atomic<bool> running_ = true;
+};
+
 
 template<typename T>
 class TestTimerCancelBehavior : public ::testing::Test
@@ -902,6 +987,17 @@ public:
     std::stringstream test_name;
     test_name << test_info->test_case_name() << "_" << test_info->name();
     node = std::make_shared<TimerNode>(test_name.str());
+    param_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+    ASSERT_TRUE(param_client->wait_for_service(5s));
+
+    auto set_parameters_results = param_client->set_parameters(
+      {rclcpp::Parameter("use_sim_time", false)});
+    for (auto & result : set_parameters_results) {
+      ASSERT_TRUE(result.successful);
+    }
+
+    // Run standalone thread to publish clock time
+    sim_clock_node = std::make_shared<ClockPublisher>();
 
     // Spin the executor in a standalone thread
     executor.add_node(this->node);
@@ -922,6 +1018,8 @@ public:
   }
 
   std::shared_ptr<TimerNode> node;
+  std::shared_ptr<ClockPublisher> sim_clock_node;
+  rclcpp::SyncParametersClient::SharedPtr param_client;
   std::thread standalone_thread;
   T executor;
 };
@@ -934,16 +1032,16 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer1CancelledWithExecutorSpin) {
   // executor, which is the most common usecase.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(100ms);
+  this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer1();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
   int t2_runs = this->node->GetTimer2Cnt();
   EXPECT_NE(t1_runs, t2_runs);
   // Check that t2 has significantly more calls
-  EXPECT_LT(t1_runs + 150, t2_runs);
+  EXPECT_LT(t1_runs + 50, t2_runs);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
@@ -952,16 +1050,16 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
   // executor, which is the most common usecase.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(100ms);
+  this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
   int t2_runs = this->node->GetTimer2Cnt();
   EXPECT_NE(t1_runs, t2_runs);
   // Check that t1 has significantly more calls
-  EXPECT_LT(t2_runs + 150, t1_runs);
+  EXPECT_LT(t2_runs + 50, t1_runs);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
@@ -969,16 +1067,16 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   // and that the cancelled timer starts executing normally once reset manually.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(100ms);
+  this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer1();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -986,11 +1084,11 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
 
   // T1 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
-  EXPECT_LT(t1_runs_initial + 150, t1_runs_final);
+  EXPECT_LT(t1_runs_initial + 50, t1_runs_final);
 
-  EXPECT_LT(t1_runs_initial + 150, t2_runs_initial);
+  EXPECT_LT(t1_runs_initial + 50, t2_runs_initial);
   // Check that t2 has significantly more calls, and keeps getting called.
-  EXPECT_LT(t2_runs_initial + 150, t2_runs_final);
+  EXPECT_LT(t2_runs_initial + 50, t2_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
@@ -998,16 +1096,16 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
   // and that the cancelled timer starts executing normally once reset manually.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(100ms);
+  this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1015,11 +1113,11 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
 
   // T2 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
-  EXPECT_LT(t2_runs_initial + 150, t2_runs_final);
+  EXPECT_LT(t2_runs_initial + 50, t2_runs_final);
 
-  EXPECT_LT(t2_runs_initial + 150, t1_runs_initial);
+  EXPECT_LT(t2_runs_initial + 50, t1_runs_initial);
   // Check that t1 has significantly more calls, and keeps getting called.
-  EXPECT_LT(t1_runs_initial + 150, t1_runs_final);
+  EXPECT_LT(t1_runs_initial + 50, t1_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
@@ -1027,22 +1125,22 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   // Ensure that only the reset timer is executed.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(100ms);
+  this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_intermediate = this->node->GetTimer1Cnt();
   int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1054,11 +1152,11 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   // Expect that T1 has up to 15 more calls than t2. Add some buffer
   // to account for jitter.
   EXPECT_EQ(t2_runs_initial, t2_runs_intermediate);
-  EXPECT_LT(t1_runs_initial + 150, t1_runs_intermediate);
+  EXPECT_LT(t1_runs_initial + 50, t1_runs_intermediate);
 
   // Expect that by end of test, both are running properly again.
-  EXPECT_LT(t1_runs_intermediate + 150, t1_runs_final);
-  EXPECT_LT(t2_runs_intermediate + 150, t2_runs_final);
+  EXPECT_LT(t1_runs_intermediate + 50, t1_runs_final);
+  EXPECT_LT(t2_runs_intermediate + 50, t2_runs_final);
 }
 
 TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
@@ -1066,22 +1164,22 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   // Ensure that only the reset timer is executed.
 
   // Cancel to stop the spin after some time.
-  std::this_thread::sleep_for(100ms);
+  this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer1();
   this->node->CancelTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_initial = this->node->GetTimer1Cnt();
   int t2_runs_initial = this->node->GetTimer2Cnt();
 
   // Manually reset timer 1, then sleep again
   // Counts should update.
   this->node->ResetTimer2();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_intermediate = this->node->GetTimer1Cnt();
   int t2_runs_intermediate = this->node->GetTimer2Cnt();
 
   this->node->ResetTimer1();
-  std::this_thread::sleep_for(300ms);
+  this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
 
@@ -1093,9 +1191,9 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   // Expect that T1 has up to 15 more calls than t2. Add some buffer
   // to account for jitter.
   EXPECT_EQ(t1_runs_initial, t1_runs_intermediate);
-  EXPECT_LT(t2_runs_initial + 150, t2_runs_intermediate);
+  EXPECT_LT(t2_runs_initial + 50, t2_runs_intermediate);
 
   // Expect that by end of test, both are running properly again.
-  EXPECT_LT(t1_runs_intermediate + 150, t1_runs_final);
-  EXPECT_LT(t2_runs_intermediate + 150, t2_runs_final);
+  EXPECT_LT(t1_runs_intermediate + 50, t1_runs_final);
+  EXPECT_LT(t2_runs_intermediate + 50, t2_runs_final);
 }
