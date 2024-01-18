@@ -282,7 +282,7 @@ install(
 
 if(TEST cppcheck)
   # must set the property after ament_package()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 500)
+  set_tests_properties(cppcheck PROPERTIES TIMEOUT 600)
 endif()
 
 if(TEST cpplint)
