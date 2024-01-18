@@ -15,6 +15,8 @@
 #ifndef RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
 
+#include <vector>
+
 namespace rclcpp
 {
 namespace experimental
@@ -30,6 +32,8 @@ public:
 
   virtual BufferT dequeue() = 0;
   virtual void enqueue(BufferT request) = 0;
+
+  virtual std::vector<BufferT> get_all_data() = 0;
 
   virtual void clear() = 0;
   virtual bool has_data() const = 0;

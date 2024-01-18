@@ -611,11 +611,7 @@ static std::vector<TestParameters> invalid_qos_profiles()
 {
   std::vector<TestParameters> parameters;
 
-  parameters.reserve(3);
-  parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(),
-      "transient_local_qos"));
+  parameters.reserve(1);
   parameters.push_back(
     TestParameters(
       rclcpp::QoS(rclcpp::KeepAll()),

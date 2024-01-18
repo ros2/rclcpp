@@ -139,6 +139,12 @@ public:
   size_t
   get_intra_process_subscription_count() const;
 
+  /// Get if durability is transient local
+  /** \return If durability is transient local*/
+  RCLCPP_PUBLIC
+  bool
+  is_durability_transient_local() const;
+
   /// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC).
   /**
    * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC, the creator

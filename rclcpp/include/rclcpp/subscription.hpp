@@ -163,10 +163,6 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication is not allowed with 0 depth qos policy");
       }
-      if (qos_profile.durability() != rclcpp::DurabilityPolicy::Volatile) {
-        throw std::invalid_argument(
-                "intraprocess communication allowed only with volatile durability");
-      }
 
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
         MessageT,
@@ -193,7 +189,8 @@ public:
       // Add it to the intra process manager.
       using rclcpp::experimental::IntraProcessManager;
       auto ipm = context->get_sub_context<IntraProcessManager>();
-      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process_);
+      uint64_t intra_process_subscription_id = ipm->template add_subscription<
+        ROSMessageType, ROSMessageTypeAllocator>(subscription_intra_process_);
       this->setup_intra_process(intra_process_subscription_id, ipm);
     }
 
