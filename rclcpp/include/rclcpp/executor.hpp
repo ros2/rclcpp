@@ -483,6 +483,7 @@ protected:
   void
   execute_any_executable(AnyExecutable & any_exec);
 
+public:
   /// Run subscription executable.
   /**
    * Do necessary setup and tear-down as well as executing the subscription.
@@ -520,6 +521,7 @@ protected:
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+protected:
   /// Block until more work becomes avilable or timeout is reached.
   /**
    * Builds a set of waitable entities, which are passed to the middleware.
