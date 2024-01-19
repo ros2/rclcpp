@@ -20,6 +20,7 @@
 #include "performance_test_fixture/performance_test_fixture.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors/cbg_executor.hpp"
 #include "rcpputils/scope_exit.hpp"
 #include "test_msgs/msg/empty.hpp"
 
@@ -145,6 +146,12 @@ BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor_spin_some)(benchmark:
   executor_spin_some<rclcpp::executors::MultiThreadedExecutor>(st);
 }
 
+BENCHMARK_F(PerformanceTestExecutor, cbg_executor_spin_some)(benchmark::State & st)
+{
+  executor_spin_some<rclcpp::executors::CBGExecutor>(st);
+}
+
+
 BENCHMARK_F(PerformanceTestExecutor, single_thread_executor_wait_for_work)(benchmark::State & st)
 {
   benchmark_wait_for_work<rclcpp::executors::SingleThreadedExecutor>(st);
@@ -153,6 +160,11 @@ BENCHMARK_F(PerformanceTestExecutor, single_thread_executor_wait_for_work)(bench
 BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor_wait_for_work)(benchmark::State & st)
 {
   benchmark_wait_for_work<rclcpp::executors::MultiThreadedExecutor>(st);
+}
+
+BENCHMARK_F(PerformanceTestExecutor, cbg_executor_wait_for_work)(benchmark::State & st)
+{
+  benchmark_wait_for_work<rclcpp::executors::CBGExecutor>(st);
 }
 
 class CascadedPerformanceTestExecutor : public PerformanceTest
@@ -238,11 +250,16 @@ BENCHMARK_F(CascadedPerformanceTestExecutor, multi_thread_executor_spin_some)(be
   executor_spin_some<rclcpp::executors::MultiThreadedExecutor>(st);
 }
 
+BENCHMARK_F(CascadedPerformanceTestExecutor, cbg_executor_spin_some)(benchmark::State & st)
+{
+  executor_spin_some<rclcpp::executors::CBGExecutor>(st);
+}
 
 
 class PerformanceTestExecutorMultipleCallbackGroups : public PerformanceTest
 {
 public:
+//   static constexpr unsigned int kNumberOfNodes = 20;
 
   void SetUp(benchmark::State & st)
   {
@@ -336,6 +353,12 @@ BENCHMARK_F(
 {
   executor_spin_some<rclcpp::executors::MultiThreadedExecutor>(st);
 }
+
+BENCHMARK_F(
+  PerformanceTestExecutorMultipleCallbackGroups,
+  cbg_executor_spin_some)(benchmark::State & st)
+{
+  executor_spin_some<rclcpp::executors::CBGExecutor>(st);
 }
 
 class PerformanceTestExecutorSimple : public PerformanceTest
@@ -465,6 +488,16 @@ BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_remove_node)(be
   remove_node<rclcpp::executors::MultiThreadedExecutor>(st);
 }
 
+BENCHMARK_F(PerformanceTestExecutorSimple, cbg_executor_add_node)(benchmark::State & st)
+{
+  add_node<rclcpp::executors::CBGExecutor>(st);
+}
+
+BENCHMARK_F(PerformanceTestExecutorSimple, cbg_executor_remove_node)(benchmark::State & st)
+{
+  remove_node<rclcpp::executors::CBGExecutor>(st);
+}
+
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
   static_single_thread_executor_add_node)(benchmark::State & st)
@@ -495,10 +528,60 @@ BENCHMARK_F(
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
+  cbg_executor_spin_node_until_future_complete)(benchmark::State & st)
+{
+  spin_node_until_future_complete<rclcpp::executors::CBGExecutor>(st);
+}
+
+BENCHMARK_F(
+  PerformanceTestExecutorSimple,
   static_single_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
 {
   spin_node_until_future_complete<rclcpp::executors::StaticSingleThreadedExecutor>(st);
 }
+
+class SharedPtrHolder : public PerformanceTest
+{
+public:
+  void SetUp(benchmark::State & st)
+  {
+    shared_ptr = std::make_shared<std::string>("foo");
+    weak_ptr = shared_ptr;
+    PerformanceTest::SetUp(st);
+  }
+  void TearDown(benchmark::State & st)
+  {
+    PerformanceTest::TearDown(st);
+    shared_ptr.reset();
+    weak_ptr.reset();
+  }
+  std::shared_ptr<std::string> shared_ptr;
+  std::weak_ptr<std::string> weak_ptr;
+};
+
+
+BENCHMARK_F(SharedPtrHolder,
+  shared_ptr_ref)(benchmark::State & st)
+{
+    for (auto _ : st) {
+    (void)_;
+      size_t cnt = shared_ptr.use_count();
+      benchmark::DoNotOptimize(cnt);
+    }
+}
+
+BENCHMARK_F(SharedPtrHolder,
+  weakt_upcast)(benchmark::State & st)
+{
+    for (auto _ : st) {
+    (void)_;
+
+      std::shared_ptr<std::string> ptr = weak_ptr.lock();
+      benchmark::DoNotOptimize(ptr);
+
+    }
+}
+
 
 BENCHMARK_F(
   PerformanceTestExecutorSimple,
