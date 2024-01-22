@@ -17,7 +17,6 @@
 
 #include <memory>
 #include <vector>
-#include <utility>
 
 #include "rcl/allocator.h"
 
@@ -121,8 +120,8 @@ public:
       }
     }
     for (size_t i = 0; i < waitable_handles_.size(); ++i) {
-      if (waitable_handles_[i]->is_ready(wait_set)) {
-        waitable_triggered_handles_.emplace_back(std::move(waitable_handles_[i]));
+      if (!waitable_handles_[i]->is_ready(wait_set)) {
+        waitable_handles_[i].reset();
       }
     }
 
@@ -146,7 +145,10 @@ public:
       timer_handles_.end()
     );
 
-    waitable_handles_.clear();
+    waitable_handles_.erase(
+      std::remove(waitable_handles_.begin(), waitable_handles_.end(), nullptr),
+      waitable_handles_.end()
+    );
   }
 
   bool collect_entities(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
@@ -390,9 +392,8 @@ public:
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
-    auto & waitable_handles = waitable_triggered_handles_;
-    auto it = waitable_handles.begin();
-    while (it != waitable_handles.end()) {
+    auto it = waitable_handles_.begin();
+    while (it != waitable_handles_.end()) {
       std::shared_ptr<Waitable> & waitable = *it;
       if (waitable) {
         // Find the group for this handle and see if it can be serviced
@@ -400,7 +401,7 @@ public:
         if (!group) {
           // Group was not found, meaning the waitable is not valid...
           // Remove it from the ready list and continue looking
-          it = waitable_handles.erase(it);
+          it = waitable_handles_.erase(it);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -413,11 +414,11 @@ public:
         any_exec.waitable = waitable;
         any_exec.callback_group = group;
         any_exec.node_base = get_node_by_group(group, weak_groups_to_nodes);
-        waitable_handles.erase(it);
+        waitable_handles_.erase(it);
         return;
       }
       // Else, the waitable is no longer valid, remove it and continue
-      it = waitable_handles.erase(it);
+      it = waitable_handles_.erase(it);
     }
   }
 
@@ -497,8 +498,6 @@ private:
   VectorRebind<std::shared_ptr<const rcl_client_t>> client_handles_;
   VectorRebind<std::shared_ptr<const rcl_timer_t>> timer_handles_;
   VectorRebind<std::shared_ptr<Waitable>> waitable_handles_;
-
-  VectorRebind<std::shared_ptr<Waitable>> waitable_triggered_handles_;
 
   std::shared_ptr<VoidAlloc> allocator_;
 };
