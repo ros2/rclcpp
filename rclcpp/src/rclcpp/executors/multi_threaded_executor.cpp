@@ -55,7 +55,7 @@ MultiThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false););
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
@@ -100,8 +100,7 @@ MultiThreadedExecutor::run(size_t this_thread_number)
     execute_any_executable(any_exec);
 
     if (any_exec.callback_group &&
-      any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive &&
-      any_exec.callback_group->size() > 1)
+        any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
     {
       try {
         interrupt_guard_condition_->trigger();
