@@ -100,7 +100,7 @@ MultiThreadedExecutor::run(size_t this_thread_number)
     execute_any_executable(any_exec);
 
     if (any_exec.callback_group &&
-        any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
+      any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
     {
       try {
         interrupt_guard_condition_->trigger();
