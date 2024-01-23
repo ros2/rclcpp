@@ -32,6 +32,9 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
+#include "rclcpp/detail/resolve_intra_process_buffer_type.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
+#include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/get_message_type_support_handle.hpp"
 #include "rclcpp/is_ros_compatible_type.hpp"
@@ -109,6 +112,12 @@ public:
   [[deprecated("use std::shared_ptr<const PublishedType>")]] =
     std::shared_ptr<const PublishedType>;
 
+  using BufferSharedPtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
+    ROSMessageType,
+    ROSMessageTypeAllocator,
+    ROSMessageTypeDeleter
+    >::SharedPtr;
+
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
   /// Default constructor.
@@ -171,11 +180,14 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication is not allowed with a zero qos history depth value");
       }
-      if (qos.durability() != rclcpp::DurabilityPolicy::Volatile) {
-        throw std::invalid_argument(
-                "intraprocess communication allowed only with volatile durability");
+      if (qos.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
+        buffer_ = rclcpp::experimental::create_intra_process_buffer<
+          ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter>(
+          rclcpp::detail::resolve_intra_process_buffer_type(options_.intra_process_buffer_type),
+          qos,
+          std::make_shared<ROSMessageTypeAllocator>(ros_message_type_allocator_));
       }
-      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
+      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this(), buffer_);
       this->setup_intra_process(
         intra_process_publisher_id,
         ipm);
@@ -242,9 +254,18 @@ public:
     if (inter_process_publish_needed) {
       auto shared_msg =
         this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
+      if (buffer_) {
+        buffer_->add_shared(shared_msg);
+      }
       this->do_inter_process_publish(*shared_msg);
     } else {
-      this->do_intra_process_ros_message_publish(std::move(msg));
+      if (buffer_) {
+        auto shared_msg =
+          this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
+        buffer_->add_shared(shared_msg);
+      } else {
+        this->do_intra_process_ros_message_publish(std::move(msg));
+      }
     }
   }
 
@@ -309,14 +330,22 @@ public:
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
-      ROSMessageType ros_msg;
+      auto ros_msg_ptr = std::make_shared<ROSMessageType>();
       // TODO(clalancette): This is unnecessarily doing an additional conversion
       // that may have already been done in do_intra_process_publish_and_return_shared().
       // We should just reuse that effort.
-      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, ros_msg);
+      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
       this->do_intra_process_publish(std::move(msg));
-      this->do_inter_process_publish(ros_msg);
+      this->do_inter_process_publish(*ros_msg_ptr);
+      if (buffer_) {
+        buffer_->add_shared(ros_msg_ptr);
+      }
     } else {
+      if (buffer_) {
+        auto ros_msg_ptr = std::make_shared<ROSMessageType>();
+        rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
+        buffer_->add_shared(ros_msg_ptr);
+      }
       this->do_intra_process_publish(std::move(msg));
     }
   }
@@ -581,6 +610,8 @@ protected:
   PublishedTypeDeleter published_type_deleter_;
   ROSMessageTypeAllocator ros_message_type_allocator_;
   ROSMessageTypeDeleter ros_message_type_deleter_;
+
+  BufferSharedPtr buffer_{nullptr};
 };
 
 }  // namespace rclcpp
