@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.8 (2024-01-24)
+-------------------
+* Add missing header required by the rclcpp::NodeOptions type (`#2324 <https://github.com/ros2/rclcpp/issues/2324>`_) (`#2407 <https://github.com/ros2/rclcpp/issues/2407>`_)
+* fix(rclcpp_components): increase the service queue sizes in component_container (backport `#2363 <https://github.com/ros2/rclcpp/issues/2363>`_) (`#2380 <https://github.com/ros2/rclcpp/issues/2380>`_)
+* Contributors: mergify[bot]
+
 16.0.7 (2023-11-13)
 -------------------
 

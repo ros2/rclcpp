@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.8 (2024-01-24)
+-------------------
+* Add missing stdexcept include (`#2186 <https://github.com/ros2/rclcpp/issues/2186>`_) (`#2394 <https://github.com/ros2/rclcpp/issues/2394>`_)
+* Contributors: gentoo90
+
 16.0.7 (2023-11-13)
 -------------------
 * Disable the loaned messages inside the executor. (backport `#2335 <https://github.com/ros2/rclcpp/issues/2335>`_) (`#2364 <https://github.com/ros2/rclcpp/issues/2364>`_)
