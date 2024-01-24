@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+26.0.0 (2024-01-24)
+-------------------
 * Increase the cppcheck timeout to 600 seconds. (`#2409 <https://github.com/ros2/rclcpp/issues/2409>`_)
 * Add transient local durability support to publisher and subscriptions when using intra-process communication (`#2303 <https://github.com/ros2/rclcpp/issues/2303>`_)
 * Stop storing the context in the guard condition. (`#2400 <https://github.com/ros2/rclcpp/issues/2400>`_)
