@@ -483,8 +483,7 @@ public:
       }
     }
 
-    if(hold_execute)
-    {
+    if (hold_execute) {
       std::unique_lock<std::mutex> lk(cv_m);
       cv.wait(lk);
     }
@@ -554,9 +553,16 @@ TYPED_TEST(TestExecutors, spinAll)
   // Long timeout, but should not block test if spin_all works as expected as we cancel the
   // executor.
   bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
-      executor.spin_all(1s);
-      executor.remove_node(this->node, true);
+  std::atomic_bool exception = false;
+
+  std::thread spinner([&spin_exited, &executor, &exception, this]() {
+      try {
+        executor.spin_all(1s);
+        executor.remove_node(this->node, true);
+      } catch (...) {
+        exception = true;
+      }
+
       spin_exited = true;
     });
 
@@ -581,6 +587,8 @@ TYPED_TEST(TestExecutors, spinAll)
   EXPECT_LT(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
   ASSERT_TRUE(spin_exited);
+
+  EXPECT_FALSE(exception);
   spinner.join();
 }
 
@@ -863,9 +871,16 @@ TYPED_TEST(TestExecutors, spinSome)
   // Long timeout, doesn't block test from finishing because spin_some should exit after the
   // first one completes.
   bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
-      executor.spin_some(1s);
-      executor.remove_node(this->node, true);
+
+  std::atomic_bool exception = false;
+
+  std::thread spinner([&spin_exited, &executor, &exception, this]() {
+      try {
+        executor.spin_some(1s);
+        executor.remove_node(this->node, true);
+      } catch (...) {
+        exception = true;
+      }
       spin_exited = true;
     });
 
@@ -886,6 +901,7 @@ TYPED_TEST(TestExecutors, spinSome)
   EXPECT_LE(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
   EXPECT_TRUE(spin_exited);
+  EXPECT_FALSE(exception);
   // Cancel if it hasn't exited already.
   executor.cancel();
 
