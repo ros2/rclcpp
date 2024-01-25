@@ -62,6 +62,15 @@ int main(int argc, char * argv[])
     }
   }
 
+  if (exec.get_all_callback_groups().empty()) {
+    RCLCPP_ERROR(
+      logger,
+      "Class %s not found in library %s",
+      class_name.c_str(),
+      library_name.c_str());
+    return 1;
+  }
+
   exec.spin();
 
   for (auto wrapper : node_wrappers) {
