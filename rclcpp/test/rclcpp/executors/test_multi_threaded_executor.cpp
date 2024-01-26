@@ -160,11 +160,11 @@ constexpr char const * argv[] = {
   "--ros-args",
   "--thread-attrs-value",
   R"(
-- name: RCLCPP_EXECUTOR_MULTI_THREADED
+- tag: RCLCPP_EXECUTOR_MULTI_THREADED
   scheduling_policy: FIFO
   priority: 10
   core_affinity: []
-- name: executor-1
+- tag: executor-1
   scheduling_policy: RR
   priority: 20
   core_affinity: [0]

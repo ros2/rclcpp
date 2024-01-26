@@ -88,7 +88,7 @@ default_thread_attr(rclcpp::ExecutorOptions const & options)
   const rcutils_thread_attr_t * attr = std::find_if(
     attrs_beg, attrs_end,
     [&](const auto & attr) {
-      return attr.name == name;
+      return attr.tag == name;
     });
   if (attr != attrs_end) {
     return rcpputils::ThreadAttribute(*attr);
