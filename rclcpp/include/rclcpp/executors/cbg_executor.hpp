@@ -21,6 +21,7 @@
 #include <deque>
 #include <unordered_map>
 
+#include "rclcpp/executors/detail/any_executable_weak_ref.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/callback_group_state.hpp"
 #include "rclcpp/macros.hpp"
@@ -48,9 +49,10 @@ public:
     next_unprocessed_ready_executable = 0;
   }
 
-  void add_ready_executable(const Executable & e)
+  void add_ready_executable(AnyExecutableWeakRef & e)
   {
-    ready_executables.push_back(e);
+    ready_executables.push_back(&e);
+//     ready_executables.push_back(std::get<const Executable>(e.executable));
   }
 
   bool has_unprocessed_executables()
@@ -58,9 +60,9 @@ public:
     for (; next_unprocessed_ready_executable < ready_executables.size();
       next_unprocessed_ready_executable++)
     {
-      const auto & ready_executable = ready_executables[next_unprocessed_ready_executable];
+      auto & ready_executable = ready_executables[next_unprocessed_ready_executable];
 
-      if (ready_executable.lock()) {
+      if (ready_executable->executable_alive()) {
         return true;
       }
     }
@@ -74,7 +76,7 @@ public:
     {
       const auto & ready_executable = ready_executables[next_unprocessed_ready_executable];
 
-      if (fill_any_executable(any_executable, ready_executable)) {
+      if (fill_any_executable(any_executable, std::get<const Executable>(ready_executable->executable))) {
         // mark the current element as processed
         next_unprocessed_ready_executable++;
 
@@ -108,7 +110,7 @@ private:
           return false;
         }
 
-        any_executable.data = *data;
+//         any_executable.data = *data;
 
         return true;
       //RCUTILS_LOG_INFO("Executing timer");
@@ -142,7 +144,7 @@ private:
     return false;
   }
 
-  std::vector<Executable> ready_executables;
+  std::vector<AnyExecutableWeakRef *> ready_executables;
   size_t next_unprocessed_ready_executable = 0;
 
 };
@@ -166,11 +168,11 @@ public:
 
   void clear_and_prepare(const CallbackGroupState & cb_elements);
 
-  void add_ready_executable(const rclcpp::SubscriptionBase::WeakPtr & executable);
-  void add_ready_executable(const rclcpp::ServiceBase::WeakPtr & executable);
-  void add_ready_executable(const rclcpp::TimerBase::WeakPtr & executable);
-  void add_ready_executable(const rclcpp::ClientBase::WeakPtr & executable);
-  void add_ready_executable(const rclcpp::Waitable::WeakPtr & executable);
+  void add_ready_timer(AnyExecutableWeakRef & executable);
+  void add_ready_subscription(AnyExecutableWeakRef & executable);
+  void add_ready_service(AnyExecutableWeakRef & executable);
+  void add_ready_client(AnyExecutableWeakRef & executable);
+  void add_ready_waitable(AnyExecutableWeakRef & executable);
 
   enum Priorities
   {

@@ -28,6 +28,7 @@ using namespace std::chrono_literals;
 using performance_test_fixture::PerformanceTest;
 
 constexpr unsigned int kNumberOfNodes = 10;
+constexpr unsigned int kNumberOfPubSubs = 10;
 
 class PerformanceTestExecutor : public PerformanceTest
 {
@@ -39,14 +40,16 @@ public:
     for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
       nodes.push_back(std::make_shared<rclcpp::Node>("my_node_" + std::to_string(i)));
 
-      publishers.push_back(
-        nodes[i]->create_publisher<test_msgs::msg::Empty>(
-          "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10)));
+      for (unsigned int j = 0u; j < kNumberOfPubSubs; j++) {
+        publishers.push_back(
+          nodes[i]->create_publisher<test_msgs::msg::Empty>(
+            "/empty_msgs_" + std::to_string(i) + "_" + std::to_string(j), rclcpp::QoS(10)));
 
-      auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
-      subscriptions.push_back(
-        nodes[i]->create_subscription<test_msgs::msg::Empty>(
-          "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10), std::move(callback)));
+        auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
+        subscriptions.push_back(
+          nodes[i]->create_subscription<test_msgs::msg::Empty>(
+            "/empty_msgs_" + std::to_string(i) + "_" + std::to_string(j), rclcpp::QoS(10), std::move(callback)));
+      }
     }
     PerformanceTest::SetUp(st);
   }

@@ -164,24 +164,24 @@ bool CallbackGroupScheduler::has_unprocessed_executables()
          ready_waitables.has_unprocessed_executables();
 }
 
-void CallbackGroupScheduler::add_ready_executable(
-  const rclcpp::SubscriptionBase::WeakPtr & executable)
+
+void CallbackGroupScheduler::add_ready_subscription(AnyExecutableWeakRef & executable)
 {
   ready_subscriptions.add_ready_executable(executable);
 }
-void CallbackGroupScheduler::add_ready_executable(const rclcpp::ServiceBase::WeakPtr & executable)
+void CallbackGroupScheduler::add_ready_service(AnyExecutableWeakRef & executable)
 {
   ready_services.add_ready_executable(executable);
 }
-void CallbackGroupScheduler::add_ready_executable(const rclcpp::TimerBase::WeakPtr & executable)
+void CallbackGroupScheduler::add_ready_timer(AnyExecutableWeakRef & executable)
 {
   ready_timers.add_ready_executable(executable);
 }
-void CallbackGroupScheduler::add_ready_executable(const rclcpp::ClientBase::WeakPtr & executable)
+void CallbackGroupScheduler::add_ready_client(AnyExecutableWeakRef & executable)
 {
   ready_clients.add_ready_executable(executable);
 }
-void CallbackGroupScheduler::add_ready_executable(const rclcpp::Waitable::WeakPtr & executable)
+void CallbackGroupScheduler::add_ready_waitable(AnyExecutableWeakRef & executable)
 {
   ready_waitables.add_ready_executable(executable);
 }
@@ -428,43 +428,33 @@ void CBGExecutor::fill_callback_group_data(
         return;
       }
 
-      switch (ready_exec.executable.index()) {
+      switch (ready_exec.rcl_handle_shr_ptr.index()) {
         case AnyExecutableWeakRef::ExecutableIndex::Subscription:
           {
-            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_executable(
-              std::get<const rclcpp::SubscriptionBase::WeakPtr>(
-                ready_exec.executable));
+            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_subscription(ready_exec);
           }
           break;
         case AnyExecutableWeakRef::ExecutableIndex::Timer:
           {
-            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_executable(
-              std::get<const rclcpp::TimerBase::WeakPtr>(
-                ready_exec.executable));
+            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_timer(ready_exec);
           }
           break;
         case AnyExecutableWeakRef::ExecutableIndex::Service:
           {
-            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_executable(
-              std::get<const rclcpp::ServiceBase::WeakPtr>(
-                ready_exec.executable));
+            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_service(ready_exec);
           }
           break;
         case AnyExecutableWeakRef::ExecutableIndex::Client:
           {
-            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_executable(
-              std::get<const rclcpp::ClientBase::WeakPtr>(
-                ready_exec.executable));
+            idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_client(ready_exec);
           }
           break;
         case AnyExecutableWeakRef::ExecutableIndex::Waitable:
           {
-            const rclcpp::Waitable::WeakPtr & waitable_weak =
-              std::get<const rclcpp::Waitable::WeakPtr>(ready_exec.executable);
-            rclcpp::Waitable::SharedPtr waitable = waitable_weak.lock();
+            rclcpp::Waitable::SharedPtr &waitable =  std::get<rclcpp::Waitable::SharedPtr>(ready_exec.rcl_handle_shr_ptr);
+
             if (waitable && waitable->is_ready(&wait_set)) {
-              idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_executable(
-                waitable_weak);
+              idle_callback_groups[ready_exec.callback_group_index]->scheduler->add_ready_waitable(ready_exec);
             }
           }
           break;
@@ -476,7 +466,8 @@ void CBGExecutor::fill_callback_group_data(
             }
           }
           break;
-
+        case AnyExecutableWeakRef::ExecutableIndex::Deleted:
+          break;
       }
 
       ready_exec.processed = true;
@@ -488,20 +479,12 @@ void CBGExecutor::fill_callback_group_data(
       //RCUTILS_LOG_I("Found ready client");
       add_executable(ready_exec);
     }
-    else
-    {
-      ready_exec.rcl_handle_shr_ptr.reset();
-    }
   }
   for (size_t i = 0; i < mapping.events_map.size(); ++i) {
     AnyExecutableWeakRef & ready_exec(*mapping.events_map[i]);
     if (wait_set.events[i]) {
 //       RCUTILS_LOG_INFO("Found ready events");
       add_executable(ready_exec);
-    }
-    else
-    {
-      ready_exec.rcl_handle_shr_ptr.reset();
     }
   }
   for (size_t i = 0; i < mapping.guard_conditions_map.size(); ++i) {
@@ -519,10 +502,6 @@ void CBGExecutor::fill_callback_group_data(
 //       RCUTILS_LOG_INFO("Found ready services");
       add_executable(ready_exec);
     }
-    else
-    {
-      ready_exec.rcl_handle_shr_ptr.reset();
-    }
   }
   for (size_t i = 0; i < mapping.subscription_map.size(); ++i) {
     AnyExecutableWeakRef & ready_exec(*mapping.subscription_map[i]);
@@ -531,20 +510,12 @@ void CBGExecutor::fill_callback_group_data(
 
       add_executable(ready_exec);
     }
-    else
-    {
-      ready_exec.rcl_handle_shr_ptr.reset();
-    }
   }
   for (size_t i = 0; i < mapping.timer_map.size(); ++i) {
     AnyExecutableWeakRef & ready_exec(*mapping.timer_map[i]);
     if (wait_set.timers[i]) {
 //       RCUTILS_LOG_INFO("Found ready timers");
       add_executable(ready_exec);
-    }
-    else
-    {
-      ready_exec.rcl_handle_shr_ptr.reset();
     }
   }
 }
@@ -606,7 +577,7 @@ CBGExecutor::execute_any_executable(AnyExecutable & any_exec)
   }
   if (any_exec.timer) {
 //         RCUTILS_LOG_ERROR_NAMED("rclcpp", "Executing Timer");
-    rclcpp::Executor::execute_timer(any_exec.timer, any_exec.data);
+    rclcpp::Executor::execute_timer(any_exec.timer);
   }
   if (any_exec.subscription) {
 //         RCUTILS_LOG_ERROR_NAMED("rclcpp", "Executing subscription");

@@ -114,50 +114,61 @@ struct RCLToRCLCPPMap
 
   bool add_to_wait_set_and_mapping(rcl_wait_set_s & ws, AnyExecutableWeakRef & executable_ref)
   {
-    switch (executable_ref.executable.index()) {
+    auto check_usage_and_delete_or_add = [this, &executable_ref, &ws] (const auto &shr_ptr)
+    {
+      auto use_cnt = shr_ptr.use_count();
+      if(use_cnt <= 1)
+      {
+        // got deleted, we are the last one holding a reference
+        executable_ref.rcl_handle_shr_ptr = std::monostate();
+        return true;
+      }
+
+      return add_to_wait_set_and_mapping(
+            ws,
+            shr_ptr, executable_ref);
+    };
+
+    switch (executable_ref.rcl_handle_shr_ptr.index()) {
       case AnyExecutableWeakRef::ExecutableIndex::Subscription:
         {
-          return add_to_wait_set_and_mapping(
-            ws,
-            std::get<const rclcpp::SubscriptionBase::WeakPtr>(
-              executable_ref.executable), executable_ref);
+          return check_usage_and_delete_or_add(std::get<std::shared_ptr<rcl_subscription_t>>(
+              executable_ref.rcl_handle_shr_ptr));
         }
         break;
       case AnyExecutableWeakRef::ExecutableIndex::Timer:
         {
-          return add_to_wait_set_and_mapping(
-            ws,
-            std::get<const rclcpp::TimerBase::WeakPtr>(executable_ref.executable), executable_ref);
+          return check_usage_and_delete_or_add(std::get<std::shared_ptr<const rcl_timer_t>>(
+              executable_ref.rcl_handle_shr_ptr));
         }
         break;
       case AnyExecutableWeakRef::ExecutableIndex::Service:
         {
-          return add_to_wait_set_and_mapping(
-            ws,
-            std::get<const rclcpp::ServiceBase::WeakPtr>(executable_ref.executable),
-            executable_ref);
+          return check_usage_and_delete_or_add(std::get<std::shared_ptr<rcl_service_t>>(
+              executable_ref.rcl_handle_shr_ptr));
         }
         break;
       case AnyExecutableWeakRef::ExecutableIndex::Client:
         {
-          return add_to_wait_set_and_mapping(
-            ws,
-            std::get<const rclcpp::ClientBase::WeakPtr>(executable_ref.executable), executable_ref);
+          return check_usage_and_delete_or_add(std::get<std::shared_ptr<rcl_client_t>>(
+              executable_ref.rcl_handle_shr_ptr));
         }
         break;
       case AnyExecutableWeakRef::ExecutableIndex::Waitable:
         {
-          return add_to_wait_set_and_mapping(
-            ws,
-            std::get<const rclcpp::Waitable::WeakPtr>(executable_ref.executable), executable_ref);
+          return check_usage_and_delete_or_add(std::get<std::shared_ptr<rclcpp::Waitable>>(
+              executable_ref.rcl_handle_shr_ptr));
         }
         break;
       case AnyExecutableWeakRef::ExecutableIndex::GuardCondition:
         {
-          return add_to_wait_set_and_mapping(
-            ws,
-            std::get<const rclcpp::GuardCondition::WeakPtr>(
-              executable_ref.executable), executable_ref);
+          return check_usage_and_delete_or_add(std::get<rclcpp::GuardCondition::SharedPtr>(
+              executable_ref.rcl_handle_shr_ptr));
+        }
+        break;
+      case AnyExecutableWeakRef::ExecutableIndex::Deleted:
+        {
+          return true;
         }
         break;
     }
@@ -168,17 +179,9 @@ struct RCLToRCLCPPMap
 
   bool add_to_wait_set_and_mapping(
     rcl_wait_set_s & ws,
-    const rclcpp::SubscriptionBase::WeakPtr & sub_weak_ptr,
+    const std::shared_ptr<rcl_subscription_t> & handle_shr_ptr,
     AnyExecutableWeakRef & executable_ref)
   {
-    const rclcpp::SubscriptionBase::SharedPtr & sub_ptr = sub_weak_ptr.lock();
-    if (!sub_ptr) {
-      // got deleted, we just ignore it
-      return true;
-    }
-
-    auto handle_shr_ptr = sub_ptr->get_subscription_handle();
-    executable_ref.rcl_handle_shr_ptr = handle_shr_ptr;
     subscription_map.emplace_back(&executable_ref);
 
     size_t idx;
@@ -202,17 +205,9 @@ struct RCLToRCLCPPMap
 
   bool add_to_wait_set_and_mapping(
     rcl_wait_set_s & ws,
-    const rclcpp::ClientBase::WeakPtr & client_weak_ptr,
+    const std::shared_ptr<rcl_client_t> & handle_shr_ptr,
     AnyExecutableWeakRef & any_exec)
   {
-    const rclcpp::ClientBase::SharedPtr & client_ptr = client_weak_ptr.lock();
-    if (!client_ptr) {
-      // got deleted, we just ignore it from now on
-      return true;
-    }
-
-    auto handle_shr_ptr = client_ptr->get_client_handle();
-    any_exec.rcl_handle_shr_ptr = handle_shr_ptr;
     clients_map.emplace_back(&any_exec);
 
     size_t idx;
@@ -231,17 +226,9 @@ struct RCLToRCLCPPMap
 
   bool add_to_wait_set_and_mapping(
     rcl_wait_set_s & ws,
-    const rclcpp::ServiceBase::WeakPtr & weak_ptr,
+    const std::shared_ptr<rcl_service_t> & handle_shr_ptr,
     AnyExecutableWeakRef & any_exec)
   {
-    const rclcpp::ServiceBase::SharedPtr & shr_ptr = weak_ptr.lock();
-    if (!shr_ptr) {
-      // got deleted, we just ignore it from now on
-      return true;
-    }
-
-    auto handle_shr_ptr = shr_ptr->get_service_handle();
-    any_exec.rcl_handle_shr_ptr = handle_shr_ptr;
     services_map.emplace_back(&any_exec);
 
     size_t idx;
@@ -259,17 +246,10 @@ struct RCLToRCLCPPMap
   }
 
   bool add_to_wait_set_and_mapping(
-    rcl_wait_set_s & ws, const rclcpp::TimerBase::WeakPtr & weak_ptr,
+    rcl_wait_set_s & ws,
+    const std::shared_ptr<const rcl_timer_t> & handle_shr_ptr,
     AnyExecutableWeakRef & any_exec)
   {
-    const rclcpp::TimerBase::SharedPtr & shr_ptr = weak_ptr.lock();
-    if (!shr_ptr) {
-      // got deleted, we just ignore it from now on
-      return true;
-    }
-
-    auto handle_shr_ptr = shr_ptr->get_timer_handle();
-    any_exec.rcl_handle_shr_ptr = handle_shr_ptr;
     timer_map.emplace_back(&any_exec);
 
     size_t idx;
@@ -287,15 +267,9 @@ struct RCLToRCLCPPMap
   }
 
   bool add_to_wait_set_and_mapping(
-    rcl_wait_set_s & ws, const rclcpp::Waitable::WeakPtr & weak_ptr,
+    rcl_wait_set_s & ws, const rclcpp::Waitable::SharedPtr & waitable_ptr,
     AnyExecutableWeakRef & any_exec)
   {
-    const rclcpp::Waitable::SharedPtr & waitable_ptr = weak_ptr.lock();
-    if (!waitable_ptr) {
-      // got deleted, we just ignore it from now on
-      return true;
-    }
-
     const size_t old_client_index = ws.client_index;
     const size_t old_event_index = ws.event_index;
     const size_t old_guard_condition_index = ws.guard_condition_index;
@@ -353,19 +327,11 @@ struct RCLToRCLCPPMap
 
   bool add_to_wait_set_and_mapping(
     rcl_wait_set_s & ws,
-    const rclcpp::GuardCondition::WeakPtr & weak_ptr,
+    const rclcpp::GuardCondition::SharedPtr &gc_ptr,
     AnyExecutableWeakRef & any_exec)
   {
-    rclcpp::GuardCondition::SharedPtr shr_ptr = weak_ptr.lock();
-
-    if (!shr_ptr) {
-      return false;
-    }
-
-    const auto & gc = shr_ptr->get_rcl_guard_condition();
-
     size_t idx = 200;
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(&ws, &gc, &idx);
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(&ws, &(gc_ptr->get_rcl_guard_condition()), &idx);
 
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(
