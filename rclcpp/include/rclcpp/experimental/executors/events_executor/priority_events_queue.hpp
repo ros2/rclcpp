@@ -20,6 +20,7 @@
 #include <mutex>
 #include <queue>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/experimental/executors/events_executor/events_queue.hpp"
 
