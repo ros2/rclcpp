@@ -66,6 +66,23 @@ CallbackGroup::size() const
     timer_ptrs_.size() +
     waitable_ptrs_.size();
 }
+
+void CallbackGroup::collect_all_ptrs(
+  std::vector<rclcpp::SubscriptionBase::WeakPtr> & subscription_ptrs,
+  std::vector<rclcpp::TimerBase::WeakPtr> & timer_ptrs,
+  std::vector<rclcpp::ServiceBase::WeakPtr> & service_ptrs,
+  std::vector<rclcpp::ClientBase::WeakPtr> & client_ptrs,
+  std::vector<rclcpp::Waitable::WeakPtr> & waitable_ptrs) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  subscription_ptrs = this->subscription_ptrs_;
+  timer_ptrs = this->timer_ptrs_;
+  service_ptrs = this->service_ptrs_;
+  client_ptrs = this->client_ptrs_;
+  waitable_ptrs = this->waitable_ptrs_;
+}
+
 void CallbackGroup::collect_all_ptrs(
   std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
   std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,

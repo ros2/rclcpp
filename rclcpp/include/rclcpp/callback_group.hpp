@@ -202,6 +202,14 @@ public:
     std::function<void(const rclcpp::TimerBase::SharedPtr &)> timer_func,
     std::function<void(const rclcpp::Waitable::SharedPtr &)> waitable_func) const;
 
+  RCLCPP_PUBLIC
+  void collect_all_ptrs(
+    std::vector<rclcpp::SubscriptionBase::WeakPtr> & subscription_ptrs_,
+    std::vector<rclcpp::TimerBase::WeakPtr> & timer_ptrs_,
+    std::vector<rclcpp::ServiceBase::WeakPtr> & service_ptrs_,
+    std::vector<rclcpp::ClientBase::WeakPtr> & client_ptrs_,
+    std::vector<rclcpp::Waitable::WeakPtr> & waitable_ptrs_) const;
+
   /// Return a reference to the 'associated with executor' atomic boolean.
   /**
    * When a callback group is added to an executor this boolean is checked
