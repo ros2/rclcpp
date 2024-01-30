@@ -50,9 +50,12 @@ public:
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable(ExecutorNotifyWaitable & other);
 
-
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable & operator=(ExecutorNotifyWaitable & other);
+
+  RCLCPP_PUBLIC
+  void
+  dummy() override {};
 
   /// Add conditions to the wait set
   /**

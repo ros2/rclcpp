@@ -48,6 +48,11 @@ void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
+
+  // Note: no guard conditions need to be re-triggered, since the guard
+  // conditions in this class are not tracking a stateful condition, but instead
+  // only serve to interrupt the wait set when new information is available to
+  // consider.
   for (auto weak_guard_condition : this->notify_guard_conditions_) {
     auto guard_condition = weak_guard_condition.lock();
     if (!guard_condition) {continue;}

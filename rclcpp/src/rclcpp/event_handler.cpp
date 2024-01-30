@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "rcl/error_handling.h"
 #include "rcl/event.h"
 
 #include "rclcpp/event_handler.hpp"
