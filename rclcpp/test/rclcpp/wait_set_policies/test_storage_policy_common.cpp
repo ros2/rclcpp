@@ -50,7 +50,15 @@ class TestWaitable : public rclcpp::Waitable
 public:
   TestWaitable()
   : is_ready_(false), add_to_wait_set_(false) {}
+
+  // TODO(wjwwood): is this ok? do events continue to stay ready until they are
+  // taken/checked?
+  RCLCPP_PUBLIC
+  void
+  dummy() override {};
+
   void add_to_wait_set(rcl_wait_set_t &) override
+
   {
     if (!add_to_wait_set_) {
       throw std::runtime_error("waitable unexpectedly failed to be added to wait set");

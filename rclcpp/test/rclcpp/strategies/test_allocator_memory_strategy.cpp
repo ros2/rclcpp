@@ -39,7 +39,13 @@ static bool test_waitable_result = false;
 class TestWaitable : public rclcpp::Waitable
 {
 public:
+  // TODO(wjwwood): is this ok? double check that this test doesn't need more
+  RCLCPP_PUBLIC
+  void
+  dummy() override {};
+
   void add_to_wait_set(rcl_wait_set_t &) override
+
   {
     if (!test_waitable_result) {
       throw std::runtime_error("TestWaitable add_to_wait_set failed");

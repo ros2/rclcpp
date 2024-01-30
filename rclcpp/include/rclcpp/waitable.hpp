@@ -35,6 +35,11 @@ public:
   RCLCPP_PUBLIC
   virtual ~Waitable() = default;
 
+  RCLCPP_PUBLIC
+  virtual
+  void
+  dummy() = 0;
+
   /// Get the number of ready subscriptions
   /**
    * Returns a value of 0 by default.

@@ -101,6 +101,28 @@ public:
 
   virtual ~SubscriptionIntraProcess() = default;
 
+  RCLCPP_PUBLIC
+  void
+  dummy() override {};
+
+  RCLCPP_PUBLIC
+  void
+  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    // This block is necessary when the guard condition wakes the wait set, but
+    // the intra process waitable was not handled before the wait set is waited
+    // on again.
+    // Basically we're keeping the guard condition triggered so long as there is
+    // data in the buffer.
+    if (this->buffer_->has_data()) {
+      // If there is data still to be processed, indicate to the
+      // executor or waitset by triggering the guard condition.
+      this->trigger_guard_condition();
+    }
+    // Let the parent classes handle the rest of the work:
+    return SubscriptionIntraProcessBufferT::add_to_wait_set(wait_set);
+  }
+
   std::shared_ptr<void>
   take_data() override
   {
