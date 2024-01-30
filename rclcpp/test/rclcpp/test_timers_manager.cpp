@@ -359,3 +359,49 @@ TEST_F(TestTimersManager, infinite_loop)
   EXPECT_LT(0u, t1_runs);
   EXPECT_LT(0u, t2_runs);
 }
+
+// Validate that cancelling one timer yields no change in behavior for other
+// timers.
+TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
+{
+  auto timers_manager = std::make_shared<TimersManager>(
+    rclcpp::contexts::get_global_default_context());
+
+  size_t t1_runs = 0;
+  std::shared_ptr<TimerT> t1;
+  // After a while cancel t1. Don't remove it though.
+  // Simulates typical usage in a Node where a timer is cancelled but not removed,
+  // since typical users aren't going to mess around with the timer manager.
+  t1 = TimerT::make_shared(
+    1ms,
+    [&t1_runs, &t1]() {
+      t1_runs++;
+      if (t1_runs == 5) {
+        t1->cancel();
+      }
+    },
+    rclcpp::contexts::get_global_default_context());
+
+  size_t t2_runs = 0;
+  auto t2 = TimerT::make_shared(
+    1ms,
+    [&t2_runs]() {
+      t2_runs++;
+    },
+    rclcpp::contexts::get_global_default_context());
+
+  // Add timers
+  timers_manager->add_timer(t1);
+  timers_manager->add_timer(t2);
+
+  // Start timers thread
+  timers_manager->start();
+
+  std::this_thread::sleep_for(15ms);
+
+  // t1 has stopped running
+  EXPECT_NE(t1_runs, t2_runs);
+  // Check that t2 has significantly more calls
+  EXPECT_LT(t1_runs + 5, t2_runs);
+  timers_manager->stop();
+}
