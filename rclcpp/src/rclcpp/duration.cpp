@@ -28,6 +28,8 @@
 
 #include "rcutils/logging_macros.h"
 
+#include "rclcpp/utilities.hpp"
+
 namespace rclcpp
 {
 
