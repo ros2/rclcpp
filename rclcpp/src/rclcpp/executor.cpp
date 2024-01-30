@@ -315,43 +315,25 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  size_t work_in_queue = 0;
-  bool has_waited = false;
-
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    work_in_queue = ready_executables_.size();
-  }
-  // The logic below is to guarantee that we:
-  // a) run all of the work in the queue before we spin the first time
-  // b) spin at least once
-  // c) run all of the work in the queue after we spin
-
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-    AnyExecutable any_exec;
-    if (work_in_queue > 0) {
-      // If there is work in the queue, then execute it
-      // This covers the case that there are things left in the queue from a
-      // previous spin.
-      if (get_next_ready_executable(any_exec)) {
-        execute_any_executable(any_exec);
-      }
-    } else if (!has_waited && !work_in_queue) {
-      // Once the ready queue is empty, then we need to wait at least once.
+    if (!wait_result_.has_value()) {
       wait_for_work(std::chrono::milliseconds(0));
-      has_waited = true;
-    } else if (has_waited && !work_in_queue) {
-      // Once we have emptied the ready queue, but have already waited:
-      if (!exhaustive) {
-        // In the case of spin some, then we can exit
-        break;
-      } else {
-        // In the case of spin all, then we will allow ourselves to wait again.
-        has_waited = false;
-      }
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    work_in_queue = ready_executables_.size();
+
+    AnyExecutable any_exec;
+    if (get_next_ready_executable(any_exec)) {
+      execute_any_executable(any_exec);
+    } else {
+      // If nothing is ready, reset the result to signal we are
+      // ready to wait again
+      wait_result_.reset();
+    }
+
+    if (!wait_result_.has_value() && !exhaustive) {
+      // In the case of spin some, then we can exit
+      // In the case of spin all, then we will allow ourselves to wait again.
+      break;
+    }
   }
 }
 
@@ -558,7 +540,6 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         throw std::runtime_error("Delivered message kind is not supported");
       }
   }
-  return;
 }
 
 void
@@ -595,6 +576,9 @@ Executor::execute_client(
 void
 Executor::collect_entities()
 {
+  // Updating the entity collection and waitset expires any active result
+  this->wait_result_.reset();
+
   // Get the current list of available waitables from the collector.
   rclcpp::executors::ExecutorEntitiesCollection collection;
   this->collector_.update_collections();
@@ -656,45 +640,28 @@ Executor::collect_entities()
   // before being removed from the waitset, additionally prune the waitset.
   this->wait_set_.prune_deleted_entities();
   this->entities_need_rebuild_.store(false);
-
-  if (!this->ready_executables_.empty()) {
-    std::unordered_set<rclcpp::CallbackGroup::SharedPtr> groups;
-    for (const auto & weak_group : callback_groups) {
-      auto group = weak_group.lock();
-      if (group) {
-        groups.insert(group);
-      }
-    }
-
-    this->ready_executables_.erase(
-      std::remove_if(
-        this->ready_executables_.begin(),
-        this->ready_executables_.end(),
-        [groups](auto exec) {
-          return groups.count(exec.callback_group) == 0;
-        }),
-      this->ready_executables_.end());
-  }
 }
 
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   TRACETOOLS_TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
+
+  // Clear any previous wait result
+  this->wait_result_.reset();
+
   {
     std::lock_guard<std::mutex> guard(mutex_);
     if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
       this->collect_entities();
     }
   }
-
-  auto wait_result = wait_set_.wait(timeout);
-  if (wait_result.kind() == WaitResultKind::Empty) {
+  this->wait_result_.emplace(wait_set_.wait(timeout));
+  if (!this->wait_result_ || this->wait_result_->kind() == WaitResultKind::Empty) {
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
   }
-  rclcpp::executors::ready_executables(current_collection_, wait_result, ready_executables_);
 }
 
 bool
@@ -702,22 +669,61 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
   TRACETOOLS_TRACEPOINT(rclcpp_executor_get_next_ready);
 
-  std::lock_guard<std::mutex> guard(mutex_);
-  if (ready_executables_.size() == 0) {
+  if (!wait_result_.has_value() || wait_result_->kind() != rclcpp::WaitResultKind::Ready) {
     return false;
   }
 
-  any_executable = ready_executables_.front();
-  ready_executables_.pop_front();
-
-  if (any_executable.callback_group &&
-    any_executable.callback_group->type() == CallbackGroupType::MutuallyExclusive)
-  {
-    assert(any_executable.callback_group->can_be_taken_from().load());
-    any_executable.callback_group->can_be_taken_from().store(false);
+  if (auto timer = wait_result_->next_ready_timer()) {
+    auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
+    if (entity_iter != current_collection_.timers.end()) {
+      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+        any_executable.timer = timer;
+        any_executable.callback_group = callback_group;
+      }
+    }
+  } else if (auto subscription = wait_result_->next_ready_subscription()) {
+    auto entity_iter = current_collection_.subscriptions.find(
+      subscription->get_subscription_handle().get());
+    if (entity_iter != current_collection_.subscriptions.end()) {
+      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+        any_executable.subscription = subscription;
+        any_executable.callback_group = callback_group;
+      }
+    }
+  } else if (auto service = wait_result_->next_ready_service()) {
+    auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
+    if (entity_iter != current_collection_.services.end()) {
+      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+        any_executable.service = service;
+        any_executable.callback_group = callback_group;
+      }
+    }
+  } else if (auto client = wait_result_->next_ready_client()) {
+    auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
+    if (entity_iter != current_collection_.clients.end()) {
+      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+        any_executable.client = client;
+        any_executable.callback_group = callback_group;
+      }
+    }
+  } else if (auto waitable = wait_result_->next_ready_waitable()) {
+    auto entity_iter = current_collection_.waitables.find(waitable.get());
+    if (entity_iter != current_collection_.waitables.end()) {
+      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+        any_executable.waitable = waitable;
+        any_executable.callback_group = callback_group;
+      }
+    }
   }
 
-  return true;
+  if (any_executable.callback_group) {
+    if (any_executable.callback_group->type() == CallbackGroupType::MutuallyExclusive) {
+      assert(any_executable.callback_group->can_be_taken_from().load());
+      any_executable.callback_group->can_be_taken_from().store(false);
+    }
+  }
+
+  return any_executable.callback_group != nullptr;
 }
 
 bool

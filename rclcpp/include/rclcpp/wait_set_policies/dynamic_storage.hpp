@@ -453,6 +453,41 @@ public:
     reset_all(shared_waitables_);
   }
 
+  std::shared_ptr<rclcpp::SubscriptionBase>
+  subscriptions(size_t ii) const
+  {
+    return shared_subscriptions_[ii].subscription;
+  }
+
+  std::shared_ptr<rclcpp::TimerBase>
+  timers(size_t ii) const
+  {
+    return shared_timers_[ii];
+  }
+
+  std::shared_ptr<rclcpp::ClientBase>
+  clients(size_t ii) const
+  {
+    return shared_clients_[ii];
+  }
+
+  std::shared_ptr<rclcpp::ServiceBase>
+  services(size_t ii) const
+  {
+    return shared_services_[ii];
+  }
+
+  size_t size_of_waitables() const
+  {
+    return shared_waitables_.size();
+  }
+
+  std::shared_ptr<rclcpp::Waitable>
+  waitables(size_t ii) const
+  {
+    return shared_waitables_[ii].waitable;
+  }
+
   size_t ownership_reference_counter_ = 0;
 
   SequenceOfWeakSubscriptions subscriptions_;

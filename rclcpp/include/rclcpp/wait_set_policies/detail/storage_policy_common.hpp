@@ -397,6 +397,28 @@ protected:
     needs_resize_ = true;
   }
 
+  template<class SubscriptionsIterable>
+  typename SubscriptionsIterable::value_type
+  subscriptions(size_t) const {return nullptr;}
+
+  template<class TimersIterable>
+  typename TimersIterable::value_type
+  timers(size_t) const {return nullptr;}
+
+  template<class ClientsIterable>
+  typename ClientsIterable::value_type
+  clients(size_t) const {return nullptr;}
+
+  template<class ServicesIterable>
+  typename ServicesIterable::value_type
+  services(size_t) const {return nullptr;}
+
+  size_t size_of_waitables() const {return 0;}
+
+  template<class WaitablesIterable>
+  typename WaitablesIterable::value_type
+  waitables(size_t) const {return nullptr;}
+
   rcl_wait_set_t rcl_wait_set_;
   rclcpp::Context::SharedPtr context_;
 

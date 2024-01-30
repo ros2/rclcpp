@@ -580,6 +580,7 @@ protected:
 
   /// WaitSet to be waited on.
   rclcpp::WaitSet wait_set_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::optional<rclcpp::WaitResult<rclcpp::WaitSet>> wait_result_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Hold the current state of the collection being waited on by the waitset
   rclcpp::executors::ExecutorEntitiesCollection current_collection_ RCPPUTILS_TSA_GUARDED_BY(
@@ -588,9 +589,6 @@ protected:
   /// Hold the current state of the notify waitable being waited on by the waitset
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> current_notify_waitable_
   RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// Hold the list of executables currently available to be executed.
-  std::deque<rclcpp::AnyExecutable> ready_executables_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// shutdown callback handle registered to Context
   rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
