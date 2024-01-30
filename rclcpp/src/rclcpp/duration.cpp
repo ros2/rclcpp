@@ -319,7 +319,8 @@ Duration::from_nanoseconds(rcl_duration_value_t nanoseconds)
 }
 
 builtin_interfaces::msg::Time
-operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs) {
+operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs)
+{
   if (lhs.sec < 0) {
     throw std::runtime_error("message time is negative");
   }
@@ -327,7 +328,7 @@ operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
   rcl_time_point_value_t rcl_time;
   rcl_time = RCL_S_TO_NS(static_cast<int64_t>(lhs.sec));
   rcl_time += lhs.nanosec;
-  
+ 
   if (rclcpp::add_will_overflow(rcl_time, rhs.nanoseconds())) {
     throw std::overflow_error("addition leads to int64_t overflow");
   }
@@ -351,7 +352,8 @@ operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
 }
 
 builtin_interfaces::msg::Time
-operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs) {
+operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs)
+{
   if (lhs.sec < 0) {
     throw std::runtime_error("message time is negative");
   }
@@ -359,7 +361,7 @@ operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
   rcl_time_point_value_t rcl_time;
   rcl_time = RCL_S_TO_NS(static_cast<int64_t>(lhs.sec));
   rcl_time += lhs.nanosec;
-  
+ 
   if (rclcpp::sub_will_overflow(rcl_time, rhs.nanoseconds())) {
     throw std::overflow_error("addition leads to int64_t overflow");
   }
