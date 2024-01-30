@@ -158,6 +158,14 @@ private:
   Duration() = default;
 };
 
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time
+operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
+
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time
+operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__DURATION_HPP_
