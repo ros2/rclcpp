@@ -441,6 +441,24 @@ if(TARGET test_executors)
   target_link_libraries(test_executors ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
 endif()
 
+ament_add_gtest(
+  test_executors_timer_cancel_behavior
+  executors/test_executors_timer_cancel_behavior.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors)
+  target_link_libraries(test_executors_timer_cancel_behavior ${PROJECT_NAME} ${rosgraph_msgs_TARGETS})
+endif()
+
+ament_add_gtest(
+  test_executors_intraprocess
+  executors/test_executors_intraprocess.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors)
+  target_link_libraries(test_executors_intraprocess ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
+
 ament_add_gtest(test_static_single_threaded_executor executors/test_static_single_threaded_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_static_single_threaded_executor)
