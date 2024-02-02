@@ -100,31 +100,11 @@ TEST_F(TestPriorityEventsExecutor, priority_subs)
 
   // Create executor
   auto extract_priority = [](const rclcpp::experimental::executors::ExecutorEvent & event) {
-      const rcl_client_t * client;
-      const rcl_service_t * service;
-      const rclcpp::TimerBase * timer;
-      const rclcpp::Waitable * waitable;
-      const rcl_subscription_t * subscription;
-      switch (event.type) {
-        case rclcpp::experimental::executors::ExecutorEventType::CLIENT_EVENT:
-          client = static_cast<const rcl_client_t *>(event.entity_key);
-          break;
-        case rclcpp::experimental::executors::ExecutorEventType::SERVICE_EVENT:
-          service = static_cast<const rcl_service_t *>(event.entity_key);
-          break;
-        case rclcpp::experimental::executors::ExecutorEventType::TIMER_EVENT:
-          timer = static_cast<const rclcpp::TimerBase *>(event.entity_key);
-          return 0UL;
-          break;
-        case rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT:
-          subscription = static_cast<const rcl_subscription_t *>(event.entity_key);
-          return rcl_subscription_get_options(subscription)->qos.deadline.sec;
-          break;
-        case rclcpp::experimental::executors::ExecutorEventType::WAITABLE_EVENT:
-          waitable = static_cast<const rclcpp::Waitable *>(event.entity_key);
-          break;
+      if (event.type != rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT) {
+        return 0UL;
       }
-      return 0UL;
+      auto subscription = static_cast<const rcl_subscription_t *>(event.entity_key);
+      return rcl_subscription_get_options(subscription)->qos.deadline.sec;
     };
   EventsExecutor executor(std::make_unique<PriorityEventsQueue>(extract_priority));
   executor.add_node(node);

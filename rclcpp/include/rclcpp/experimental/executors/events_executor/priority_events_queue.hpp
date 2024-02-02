@@ -19,6 +19,7 @@
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -57,7 +58,7 @@ public:
   PriorityEventsQueue()
   {
     // Default callback to extract priority from event
-    extract_priority_ = [](const rclcpp::experimental::executors::ExecutorEvent & event) {
+    extract_priority_ = [](const ExecutorEvent & event) {
         (void)(event);
         return 0;
       };
@@ -65,8 +66,11 @@ public:
 
   RCLCPP_PUBLIC
   explicit PriorityEventsQueue(
-    std::function<int(const rclcpp::experimental::executors::ExecutorEvent &)> extract_priority)
-  : extract_priority_(extract_priority) {}
+    std::function<int(const ExecutorEvent &)> extract_priority)
+  : extract_priority_(extract_priority) {
+    static_assert(std::is_invocable_r_v<int, decltype(extract_priority), const ExecutorEvent &>,
+      "extract_priority must be a callable with signature int(const ExecutorEvent &)");
+  }
 
   RCLCPP_PUBLIC
   ~PriorityEventsQueue() override = default;
@@ -78,10 +82,10 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  enqueue(const rclcpp::experimental::executors::ExecutorEvent & event) override
+  enqueue(const ExecutorEvent & event) override
   {
     int priority = extract_priority_(event);
-    rclcpp::experimental::executors::PriorityEvent single_event = {priority, event};
+    PriorityEvent single_event = {priority, event};
     single_event.event.num_events = 1;
     {
       std::unique_lock<std::mutex> lock(mutex_);
@@ -100,7 +104,7 @@ public:
   RCLCPP_PUBLIC
   bool
   dequeue(
-    rclcpp::experimental::executors::ExecutorEvent & event,
+    ExecutorEvent & event,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds::max()) override
   {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -151,10 +155,10 @@ public:
 
 private:
   // Callback to extract priority from event
-  std::function<int(const rclcpp::experimental::executors::ExecutorEvent &)> extract_priority_;
+  std::function<int(const ExecutorEvent &)> extract_priority_;
   // The underlying queue implementation
-  std::priority_queue<rclcpp::experimental::executors::PriorityEvent,
-    std::vector<rclcpp::experimental::executors::PriorityEvent>,
+  std::priority_queue<PriorityEvent,
+    std::vector<PriorityEvent>,
     ComparePriorities> event_queue_;
   // Mutex to protect read/write access to the queue
   mutable std::mutex mutex_;
