@@ -91,15 +91,9 @@ Time::~Time()
 Time::operator builtin_interfaces::msg::Time() const
 {
   builtin_interfaces::msg::Time msg_time;
-  constexpr rcl_time_point_value_t kRemainder = RCL_S_TO_NS(1);
-  const auto result = std::div(rcl_time_.nanoseconds, kRemainder);
-  if (result.rem >= 0) {
-    msg_time.sec = static_cast<std::int32_t>(result.quot);
-    msg_time.nanosec = static_cast<std::uint32_t>(result.rem);
-  } else {
-    msg_time.sec = static_cast<std::int32_t>(result.quot - 1);
-    msg_time.nanosec = static_cast<std::uint32_t>(kRemainder + result.rem);
-  }
+  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time_);
+  msg_time.sec = sec_nanos.first;
+  msg_time.nanosec = sec_nanos.second;
   return msg_time;
 }
 

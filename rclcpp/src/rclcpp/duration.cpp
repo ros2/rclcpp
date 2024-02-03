@@ -339,15 +339,9 @@ operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
   rcl_time += rhs.nanoseconds();
 
   builtin_interfaces::msg::Time ret;
-  constexpr rcl_time_point_value_t kRemainder = RCL_S_TO_NS(1);
-  const auto result = std::div(rcl_time, kRemainder);
-  if (result.rem >= 0) {
-    ret.sec = static_cast<std::int32_t>(result.quot);
-    ret.nanosec = static_cast<std::uint32_t>(result.rem);
-  } else {
-    ret.sec = static_cast<std::int32_t>(result.quot - 1);
-    ret.nanosec = static_cast<std::uint32_t>(kRemainder + result.rem);
-  }
+  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time);
+  ret.sec = sec_nanos.first;
+  ret.nanosec = sec_nanos.second;
   return ret;
 }
 
@@ -372,15 +366,9 @@ operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
   rcl_time -= rhs.nanoseconds();
 
   builtin_interfaces::msg::Time ret;
-  constexpr rcl_time_point_value_t kRemainder = RCL_S_TO_NS(1);
-  const auto result = std::div(rcl_time, kRemainder);
-  if (result.rem >= 0) {
-    ret.sec = static_cast<std::int32_t>(result.quot);
-    ret.nanosec = static_cast<std::uint32_t>(result.rem);
-  } else {
-    ret.sec = static_cast<std::int32_t>(result.quot - 1);
-    ret.nanosec = static_cast<std::uint32_t>(kRemainder + result.rem);
-  }
+  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time);
+  ret.sec = sec_nanos.first;
+  ret.nanosec = sec_nanos.second;
   return ret;
 }
 
