@@ -336,7 +336,7 @@ get_c_vector_string(const std::vector<std::string> & strings_in);
  * \return the std::pair of seconds and nanoseconds from the rcl_time_point_t
  */
 std::pair<int32_t, uint32_t>
-convert_rcl_time_to_sec_nanos(const rcl_time_point_t & time_point)
+convert_rcl_time_to_sec_nanos(const rcl_time_point_t & time_point);
 
 }  // namespace rclcpp
 
