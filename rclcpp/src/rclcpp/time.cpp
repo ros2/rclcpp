@@ -91,7 +91,7 @@ Time::~Time()
 Time::operator builtin_interfaces::msg::Time() const
 {
   builtin_interfaces::msg::Time msg_time;
-  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time_);
+  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time_.nanoseconds);
   msg_time.sec = sec_nanos.first;
   msg_time.nanosec = sec_nanos.second;
   return msg_time;
