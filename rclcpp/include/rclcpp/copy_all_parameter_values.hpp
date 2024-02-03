@@ -15,6 +15,8 @@
 #ifndef RCLCPP__COPY_ALL_PARAMETER_VALUES_HPP_
 #define RCLCPP__COPY_ALL_PARAMETER_VALUES_HPP_
 
+#include <rcl_yaml_param_parser/parser.h>
+
 #include <string>
 #include <vector>
 
@@ -22,7 +24,9 @@
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
+#include "rclcpp/node_interfaces/node_interfaces.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_map.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 
@@ -75,6 +79,28 @@ copy_all_parameter_values(
       }
     }
   }
+}
+
+/// Load a list of parameters from a yaml parameter file.
+/**
+ * \param[in] yaml_name The name of the yaml file that needs to be loaded.
+ * \param[in] node_interfaces The list of variadic NodeInterfaces taken as a template to set parameters for
+ */
+template<typename NodeT>
+std::vector<rcl_interfaces::msg::SetParametersResult>
+load_parameters(
+  const std::string & yaml_filepath, NodeT node_interface)
+{
+  rclcpp::ParameterMap parameter_map =
+    rclcpp::parameter_map_from_yaml_file(yaml_filepath, node_interface->get_name());
+
+  auto iter = parameter_map.find(node_interface->get_name());
+  if (iter == parameter_map.end() || iter->second.size() == 0) {
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
+  }
+  auto params_result = node_interface->set_parameters(iter->second);
+
+  return params_result;
 }
 
 }  // namespace rclcpp

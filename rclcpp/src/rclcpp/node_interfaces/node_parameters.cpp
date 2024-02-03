@@ -657,22 +657,6 @@ NodeParameters::undeclare_parameter(const std::string & name)
   parameters_.erase(parameter_info);
 }
 
-std::vector<rcl_interfaces::msg::SetParametersResult>
-NodeParameters::load_parameters(
-const std::string & yaml_filepath, const std::string & node_name_)
-{
-  rclcpp::ParameterMap parameter_map =
-    rclcpp::parameter_map_from_yaml_file(yaml_filepath, node_name_.c_str());
-
-  auto iter = parameter_map.find(node_name_);
-  if (iter == parameter_map.end() || iter->second.size() == 0) {
-    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
-  }
-  auto params_result = set_parameters(iter->second);
-
-  return params_result;
-}
-
 bool
 NodeParameters::has_parameter(const std::string & name) const
 {

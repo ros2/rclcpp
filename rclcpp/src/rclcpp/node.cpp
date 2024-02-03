@@ -373,12 +373,6 @@ Node::undeclare_parameter(const std::string & name)
   this->node_parameters_->undeclare_parameter(name);
 }
 
-std::vector<rcl_interfaces::msg::SetParametersResult>
-Node::load_parameters(const std::string & yaml_filepath, const std::string & node_name_)
-{
-  return this->node_parameters_->load_parameters(yaml_filepath, node_name_);
-}
-
 bool
 Node::has_parameter(const std::string & name) const
 {

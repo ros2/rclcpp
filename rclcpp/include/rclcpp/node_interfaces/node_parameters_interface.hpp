@@ -115,16 +115,6 @@ public:
   void
   undeclare_parameter(const std::string & name) = 0;
 
-  /// Load a list parameters from a yaml parameter file.
-  /**
-   * \sa rclcpp::Node::load_parameters
-   */
-  RCLCPP_PUBLIC
-  virtual
-  std::vector<rcl_interfaces::msg::SetParametersResult>
-  load_parameters(
-  const std::string & yaml_filepath, const std::string & node_name_) = 0;
-
   /// Return true if the parameter has been declared, otherwise false.
   /**
    * \sa rclcpp::Node::has_parameter

@@ -86,3 +86,19 @@ TEST_F(TestNode, TestParamCopyingExceptions)
   node2->declare_parameter("Foo1", rclcpp::ParameterValue(0.123));
   EXPECT_NO_THROW(rclcpp::copy_all_parameter_values(node1, node2, override));
 }
+
+TEST_F(TestNode, TestFileImport)
+{
+  const uint64_t expected_param_count = 4;
+  auto load_node = std::make_shared<rclcpp::Node>(
+    "load_node",
+    "namespace",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+
+  // load parameters
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  const std::string parameters_filepath = (
+    test_resources_path / "test_node" / "load_parameters.yaml").string();
+  auto load_vector = rclcpp::load_parameters(parameters_filepath, load_node);
+  ASSERT_EQ(load_vector.size(), expected_param_count);
+}

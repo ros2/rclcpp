@@ -586,14 +586,6 @@ public:
   void
   undeclare_parameter(const std::string & name);
 
-  /// Load a list of parameters from a yaml parameter file.
-  /**
-   * \param[in] yaml_name The name of the yaml file that needs to be loaded.
-   */
-  RCLCPP_PUBLIC
-  std::vector<rcl_interfaces::msg::SetParametersResult>
-  load_parameters(const std::string & yaml_filepath, const std::string & node_name_);
-
   /// Return true if a given parameter is declared.
   /**
    * \param[in] name The name of the parameter to check for being declared.
