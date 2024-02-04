@@ -367,15 +367,10 @@ public:
     for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
       nodes.push_back(std::make_shared<rclcpp::Node>("my_node_" + std::to_string(i)));
 
-      auto waitable_interfaces = nodes.back()->get_node_waitables_interface();
-
-      auto callback_waitable = std::make_shared<CallbackWaitable>();
-      waitables.push_back(callback_waitable);
-      waitable_interfaces->add_waitable(callback_waitable, nullptr);
-
-      publishers.push_back(
-        nodes[i]->create_publisher<test_msgs::msg::Empty>(
-          "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10)));
+      for (unsigned int j = 0u; j < kNumberOfPubSubs; j++) {
+        publishers.push_back(
+          nodes[i]->create_publisher<test_msgs::msg::Empty>(
+            "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i) + "_" + std::to_string(j), rclcpp::QoS(10)));
 
       auto callback = [this, i](test_msgs::msg::Empty::ConstSharedPtr) {
           if (i == kNumberOfNodes - 1) {
@@ -385,9 +380,16 @@ public:
             publishers[i + 1]->publish(empty_msgs);
           }
         };
-      subscriptions.push_back(
-        nodes[i]->create_subscription<test_msgs::msg::Empty>(
-          "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i), rclcpp::QoS(10), std::move(callback)));
+        subscriptions.push_back(
+          nodes[i]->create_subscription<test_msgs::msg::Empty>(
+            "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i) + "_" + std::to_string(j), rclcpp::QoS(10), std::move(callback)));
+      }
+
+      auto waitable_interfaces = nodes.back()->get_node_waitables_interface();
+
+      auto callback_waitable = std::make_shared<CallbackWaitable>();
+      waitables.push_back(callback_waitable);
+      waitable_interfaces->add_waitable(callback_waitable, nullptr);
     }
     for (unsigned int i = 0u; i < waitables.size(); i++) {
           if (i == waitables.size() - 1) {
