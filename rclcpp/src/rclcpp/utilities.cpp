@@ -26,7 +26,6 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
-#include "rcl/time.h"
 
 namespace rclcpp
 {
@@ -226,23 +225,6 @@ get_c_vector_string(const std::vector<std::string> & strings_in)
   }
 
   return cstrings;
-}
-
-std::pair<int32_t, uint32_t>
-convert_rcl_time_to_sec_nanos(const rcl_time_point_value_t & time_point)
-{
-  int32_t seconds;
-  uint32_t nanoseconds;
-  constexpr rcl_time_point_value_t kRemainder = RCL_S_TO_NS(1);
-  const auto result = std::div(time_point, kRemainder);
-  if (result.rem >= 0) {
-    seconds = static_cast<std::int32_t>(result.quot);
-    nanoseconds = static_cast<std::uint32_t>(result.rem);
-  } else {
-    seconds = static_cast<std::int32_t>(result.quot - 1);
-    nanoseconds = static_cast<std::uint32_t>(kRemainder + result.rem);
-  }
-  return {seconds, nanoseconds};
 }
 
 }  // namespace rclcpp

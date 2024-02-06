@@ -19,7 +19,6 @@
 #include <functional>
 #include <limits>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "rclcpp/context.hpp"
@@ -330,14 +329,6 @@ get_c_string(const std::string & string_in);
 RCLCPP_PUBLIC
 std::vector<const char *>
 get_c_vector_string(const std::vector<std::string> & strings_in);
-
-/// Return the std::pair of seconds and nanoseconds from the given rcl_time_point_value_t.
-/**
- * \param[in] time_point is a rcl_time_point_value_t
- * \return the std::pair of seconds and nanoseconds from the rcl_time_point_value_t
- */
-std::pair<int32_t, uint32_t>
-convert_rcl_time_to_sec_nanos(const rcl_time_point_value_t & time_point);
 
 }  // namespace rclcpp
 

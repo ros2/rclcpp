@@ -338,10 +338,7 @@ operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
 
   rcl_time += rhs.nanoseconds();
 
-  builtin_interfaces::msg::Time ret;
-  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time);
-  ret.sec = sec_nanos.first;
-  ret.nanosec = sec_nanos.second;
+  builtin_interfaces::msg::Time ret = convert_rcl_time_to_sec_nanos(rcl_time);
   return ret;
 }
 
@@ -365,10 +362,7 @@ operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
 
   rcl_time -= rhs.nanoseconds();
 
-  builtin_interfaces::msg::Time ret;
-  auto sec_nanos = convert_rcl_time_to_sec_nanos(rcl_time);
-  ret.sec = sec_nanos.first;
-  ret.nanosec = sec_nanos.second;
+  builtin_interfaces::msg::Time ret = convert_rcl_time_to_sec_nanos(rcl_time);
   return ret;
 }
 

@@ -222,6 +222,15 @@ RCLCPP_PUBLIC
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 
+/// Convert rcl_time_point_value_t to builtin_interfaces::msg::Time
+/**
+ * \param[in] time_point is a rcl_time_point_value_t
+ * \return the builtin_interfaces::msg::Time from the time_point
+ */
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time
+convert_rcl_time_to_sec_nanos(const rcl_time_point_value_t & time_point);
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__TIME_HPP_
