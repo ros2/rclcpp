@@ -80,9 +80,7 @@ TEST_F(TestDuration, operators) {
 }
 
 TEST_F(TestDuration, operators_with_message_stamp) {
-  builtin_interfaces::msg::Time time_msg;  // 0.1s
-  time_msg.sec = 0;
-  time_msg.nanosec = 100000000;
+  builtin_interfaces::msg::Time time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
   rclcpp::Duration pos_duration(1, 100000000);  // 1.1s
   rclcpp::Duration neg_duration(-2, 900000000);  // -1.1s
 
