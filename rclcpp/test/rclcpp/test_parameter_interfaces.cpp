@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include "rclcpp/copy_all_parameter_values.hpp"
+#include "rclcpp/parameter_interfaces.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 class TestNode : public ::testing::Test
@@ -89,6 +89,9 @@ TEST_F(TestNode, TestParamCopyingExceptions)
 
 TEST_F(TestNode, TestFileImport)
 {
+  using rclcpp::node_interfaces::NodeBaseInterface;
+  using rclcpp::node_interfaces::NodeParametersInterface;
+
   const uint64_t expected_param_count = 4;
   auto load_node = std::make_shared<rclcpp::Node>(
     "load_node",
@@ -99,6 +102,6 @@ TEST_F(TestNode, TestFileImport)
   rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_parameters.yaml").string();
-  auto load_vector = rclcpp::load_parameters(parameters_filepath, load_node);
+  auto load_vector = rclcpp::load_parameters(parameters_filepath, *load_node);
   ASSERT_EQ(load_vector.size(), expected_param_count);
 }
