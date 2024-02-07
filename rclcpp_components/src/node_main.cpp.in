@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -41,13 +42,15 @@ int main(int argc, char * argv[])
   RCLCPP_DEBUG(logger, "Load library %s", library_name.c_str());
   auto loader = std::make_unique<class_loader::ClassLoader>(library_name);
   auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
-  for (const auto & clazz : classes) {
-    std::string name = clazz.c_str();
-    if (name.compare(class_name) == 0) {
-      RCLCPP_DEBUG(logger, "Instantiate class %s", clazz.c_str());
+
+  if (std::find(
+    classes.begin(),
+    classes.end(),
+    class_name) != classes.end()) {
+      RCLCPP_DEBUG(logger, "Instantiate class %s", class_name.c_str());
       std::shared_ptr<rclcpp_components::NodeFactory> node_factory = nullptr;
       try {
-        node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
+        node_factory = loader->createInstance<rclcpp_components::NodeFactory>(class_name);
       } catch (const std::exception & ex) {
         RCLCPP_ERROR(logger, "Failed to load library %s", ex.what());
         return 1;
@@ -59,10 +62,7 @@ int main(int argc, char * argv[])
       auto node = wrapper.get_node_base_interface();
       node_wrappers.push_back(wrapper);
       exec.add_node(node);
-    }
-  }
-
-  if (exec.get_all_callback_groups().empty()) {
+  } else {
     RCLCPP_ERROR(
       logger,
       "Class %s not found in library %s",
