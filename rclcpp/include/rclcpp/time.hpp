@@ -64,6 +64,7 @@ public:
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
+  explicit
   Time(
     const builtin_interfaces::msg::Time & time_msg,
     rcl_clock_type_t clock_type = RCL_ROS_TIME);
@@ -89,16 +90,6 @@ public:
   RCLCPP_PUBLIC
   Time &
   operator=(const Time & rhs);
-
-  /**
-   * Assign Time from a builtin_interfaces::msg::Time instance.
-   * The clock_type will be reset to RCL_ROS_TIME.
-   * Equivalent to *this = Time(time_msg, RCL_ROS_TIME).
-   * \throws std::runtime_error if seconds are negative
-   */
-  RCLCPP_PUBLIC
-  Time &
-  operator=(const builtin_interfaces::msg::Time & time_msg);
 
   /**
    * \throws std::runtime_error if the time sources are different
@@ -221,6 +212,22 @@ private:
 RCLCPP_PUBLIC
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
+
+/**
+ * Comparison between Time and builtin_interfaces::msg::Time is not allowed.
+ * \throws std::runtime_error if the time sources are different
+ */
+RCLCPP_PUBLIC
+bool
+operator==(const rclcpp::Time & lhs, const builtin_interfaces::msg::Time & rhs) = delete;
+
+/**
+ * Comparison between Time and builtin_interfaces::msg::Time is not allowed.
+ * \throws std::runtime_error if the time sources are different
+ */
+RCLCPP_PUBLIC
+bool
+operator==(const builtin_interfaces::msg::Time & lhs, const rclcpp::Time & rhs) = delete;
 
 }  // namespace rclcpp
 

@@ -106,13 +106,6 @@ Time::operator builtin_interfaces::msg::Time() const
 Time &
 Time::operator=(const Time & rhs) = default;
 
-Time &
-Time::operator=(const builtin_interfaces::msg::Time & time_msg)
-{
-  *this = Time(time_msg);
-  return *this;
-}
-
 bool
 Time::operator==(const rclcpp::Time & rhs) const
 {
