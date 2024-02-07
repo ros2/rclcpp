@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.0.5 (2024-02-07)
+-------------------
 * Fix data race in EventHandlerBase (`#2387 <https://github.com/ros2/rclcpp/issues/2387>`_)
 * Contributors: mauropasse
 
