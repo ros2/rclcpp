@@ -81,12 +81,12 @@ TEST_F(TestDuration, operators) {
 
 TEST_F(TestDuration, operators_with_message_stamp) {
   builtin_interfaces::msg::Time time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
-  rclcpp::Duration pos_duration(1, 100000000);  // 1.1s
-  rclcpp::Duration neg_duration(-2, 900000000);  // -1.1s
+  rclcpp::Duration pos_duration(1, 100000000u);  // 1.1s
+  rclcpp::Duration neg_duration(-2, 900000000u);  // -1.1s
 
   builtin_interfaces::msg::Time res_addpos = time_msg + pos_duration;
   EXPECT_EQ(res_addpos.sec, 1);
-  EXPECT_EQ(res_addpos.nanosec, 200000000);
+  EXPECT_EQ(res_addpos.nanosec, 200000000u);
 
   builtin_interfaces::msg::Time res_addneg = time_msg + neg_duration;
   EXPECT_EQ(res_addneg.sec, -1);
@@ -98,7 +98,7 @@ TEST_F(TestDuration, operators_with_message_stamp) {
 
   builtin_interfaces::msg::Time res_subneg = time_msg - neg_duration;
   EXPECT_EQ(res_subneg.sec, 1);
-  EXPECT_EQ(res_subneg.nanosec, 200000000);
+  EXPECT_EQ(res_subneg.nanosec, 200000000u);
 
   builtin_interfaces::msg::Time neg_time_msg;
   neg_time_msg.sec = -1;
