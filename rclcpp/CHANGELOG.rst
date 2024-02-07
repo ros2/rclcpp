@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix data race in EventHandlerBase (`#2387 <https://github.com/ros2/rclcpp/issues/2387>`_)
+* Contributors: mauropasse
+
 21.0.4 (2023-11-17)
 -------------------
 * Disable the loaned messages inside the executor. (`#2365 <https://github.com/ros2/rclcpp/issues/2365>`_)
