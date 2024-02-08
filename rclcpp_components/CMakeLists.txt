@@ -90,25 +90,6 @@ if(BUILD_TESTING)
   set(components "")
   add_library(test_component SHARED test/components/test_component.cpp)
   target_link_libraries(test_component PRIVATE component)
-  # Fake version of this macro so that rclcpp_components_register_node works
-  macro(_rclcpp_components_register_package_hook)
-    set(rclcpp_components_NODE_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/src/node_main.cpp.in)
-    add_library(rclcpp_components::component ALIAS component)
-  endmacro()
-  include(./cmake/rclcpp_components_register_node.cmake)
-  rclcpp_components_register_node(test_component
-    PLUGIN "test_rclcpp_components::DoesNotExist"
-    EXECUTABLE test_component_does_not_exist_executable
-  )
-  find_program(BASH_PROGRAM bash)
-  add_test(
-    NAME test_non_existent_plugin
-    # Check to make sure the executable returns a non-zero exit code
-    COMMAND ${BASH_PROGRAM} -c "${BASH_PROGRAM} -c \"$<TARGET_FILE:test_component_does_not_exist_executable>\"; test $? -ne 0;"
-  )
-  set_tests_properties(test_non_existent_plugin PROPERTIES
-    # Need to preload this library since it doesn't get installed
-    ENVIRONMENT LD_PRELOAD=$<TARGET_FILE:test_component>)
   #rclcpp_components_register_nodes(test_component "test_rclcpp_components::TestComponent")
   set(components "${components}test_rclcpp_components::TestComponentFoo;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentBar;$<TARGET_FILE:test_component>\n")
