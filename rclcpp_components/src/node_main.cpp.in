@@ -46,23 +46,7 @@ int main(int argc, char * argv[])
   if (std::find(
     classes.begin(),
     classes.end(),
-    class_name) != classes.end()) {
-      RCLCPP_DEBUG(logger, "Instantiate class %s", class_name.c_str());
-      std::shared_ptr<rclcpp_components::NodeFactory> node_factory = nullptr;
-      try {
-        node_factory = loader->createInstance<rclcpp_components::NodeFactory>(class_name);
-      } catch (const std::exception & ex) {
-        RCLCPP_ERROR(logger, "Failed to load library %s", ex.what());
-        return 1;
-      } catch (...) {
-        RCLCPP_ERROR(logger, "Failed to load library");
-        return 1;
-      }
-      auto wrapper = node_factory->create_node_instance(options);
-      auto node = wrapper.get_node_base_interface();
-      node_wrappers.push_back(wrapper);
-      exec.add_node(node);
-  } else {
+    class_name) == classes.end()) {
     RCLCPP_ERROR(
       logger,
       "Class %s not found in library %s",
@@ -70,6 +54,21 @@ int main(int argc, char * argv[])
       library_name.c_str());
     return 1;
   }
+  RCLCPP_DEBUG(logger, "Instantiate class %s", class_name.c_str());
+  std::shared_ptr<rclcpp_components::NodeFactory> node_factory = nullptr;
+  try {
+    node_factory = loader->createInstance<rclcpp_components::NodeFactory>(class_name);
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(logger, "Failed to load library %s", ex.what());
+    return 1;
+  } catch (...) {
+    RCLCPP_ERROR(logger, "Failed to load library");
+    return 1;
+  }
+  auto wrapper = node_factory->create_node_instance(options);
+  auto node = wrapper.get_node_base_interface();
+  node_wrappers.push_back(wrapper);
+  exec.add_node(node);
 
   exec.spin();
 
