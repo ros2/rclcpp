@@ -34,7 +34,6 @@ int main(int argc, char * argv[])
   @executor@ exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
-  std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
   std::string library_name = "@library_name@";
   std::string class_name = "rclcpp_components::NodeFactoryTemplate<@component@>";
@@ -65,17 +64,16 @@ int main(int argc, char * argv[])
     RCLCPP_ERROR(logger, "Failed to load library");
     return 1;
   }
-  auto wrapper = node_factory->create_node_instance(options);
-  auto node = wrapper.get_node_base_interface();
-  node_wrappers.push_back(wrapper);
-  exec.add_node(node);
+  // Scope to destruct node_wrapper before shutdown
+  {
+    auto node_wrapper = node_factory->create_node_instance(options);
+    auto node = node_wrapper.get_node_base_interface();
+    exec.add_node(node);
 
-  exec.spin();
+    exec.spin();
 
-  for (auto wrapper : node_wrappers) {
-    exec.remove_node(wrapper.get_node_base_interface());
+    exec.remove_node(node_wrapper.get_node_base_interface());
   }
-  node_wrappers.clear();
 
   rclcpp::shutdown();
 
