@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -137,91 +138,9 @@ public:
     }
   }
 
-  size_t ready_timers() const
-  {
-    auto ready = 0;
-    if (this->kind() == WaitResultKind::Ready) {
-      const auto rcl_wait_set = wait_set_pointer_->get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
-        if (rcl_wait_set.timers[ii] != nullptr &&
-          wait_set_pointer_->timers(ii)->call())
-        {
-          ready++;
-        }
-      }
-    }
-    return ready;
-  }
-
-  size_t ready_subscriptions() const
-  {
-    auto ready = 0;
-    if (this->kind() == WaitResultKind::Ready) {
-      const auto rcl_wait_set = wait_set_pointer_->get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_subscriptions; ++ii) {
-        if (rcl_wait_set.subscriptions[ii] != nullptr) {
-          ready++;
-        }
-      }
-    }
-    return ready;
-  }
-
-  size_t ready_services() const
-  {
-    auto ready = 0;
-    if (this->kind() == WaitResultKind::Ready) {
-      const auto rcl_wait_set = wait_set_pointer_->get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_services; ++ii) {
-        if (rcl_wait_set.services[ii] != nullptr) {
-          ready++;
-        }
-      }
-    }
-    return ready;
-  }
-
-  size_t ready_clients() const
-  {
-    auto ready = 0;
-    if (this->kind() == WaitResultKind::Ready) {
-      const auto rcl_wait_set = wait_set_pointer_->get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
-        if (rcl_wait_set.clients[ii] != nullptr) {
-          ready++;
-        }
-      }
-    }
-    return ready;
-  }
-
-  size_t ready_waitables() const
-  {
-    auto ready = 0;
-    if (this->kind() == WaitResultKind::Ready) {
-      const auto rcl_wait_set = wait_set_pointer_->get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_waitables; ++ii) {
-        if (rcl_wait_set.waitables[ii] != nullptr &&
-          wait_set_pointer_->waitables[ii]->is_ready(&rcl_wait_set))
-        {
-          ready++;
-        }
-      }
-    }
-    return ready;
-  }
-
-  size_t ready_count() const
-  {
-    return ready_timers() +
-           ready_subscriptions() +
-           ready_services() +
-           ready_clients() +
-           ready_waitables();
-  }
-
   std::shared_ptr<rclcpp::TimerBase> next_ready_timer()
   {
+    check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::TimerBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
@@ -240,6 +159,7 @@ public:
 
   std::shared_ptr<rclcpp::SubscriptionBase> next_ready_subscription()
   {
+    check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::SubscriptionBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
@@ -256,6 +176,7 @@ public:
 
   std::shared_ptr<rclcpp::ServiceBase> next_ready_service()
   {
+    check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::ServiceBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
@@ -272,12 +193,14 @@ public:
 
   std::shared_ptr<rclcpp::ClientBase> next_ready_client()
   {
+    check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::ClientBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
       for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
         if (rcl_wait_set.clients[ii] != nullptr) {
           ret = wait_set_pointer_->clients(ii);
+
           rcl_wait_set.clients[ii] = nullptr;
           break;
         }
@@ -288,17 +211,22 @@ public:
 
   std::shared_ptr<rclcpp::Waitable> next_ready_waitable()
   {
-    auto ret = std::shared_ptr<rclcpp::Waitable>{nullptr};
+    check_wait_result_dirty();
+    auto waitable = std::shared_ptr<rclcpp::Waitable>{nullptr};
+    auto data = std::shared_ptr<void>{nullptr};
+
     if (this->kind() == WaitResultKind::Ready) {
       auto rcl_wait_set = get_wait_set().get_rcl_wait_set();
-      for (size_t ii = 0; ii < wait_set_pointer_->size_of_waitables(); ++ii) {
-        if (wait_set_pointer_->waitables(ii)->is_ready(&rcl_wait_set)) {
-          ret = wait_set_pointer_->waitables(ii);
-          break;
+      while (next_waitable_index_ < wait_set_pointer_->size_of_waitables()) {
+        auto cur_waitable = wait_set_pointer_->waitables(next_waitable_index_);
+        if (cur_waitable != nullptr && cur_waitable->is_ready(&rcl_wait_set)) {
+          waitable = cur_waitable;
         }
+        next_waitable_index_++;
       }
     }
-    return ret;
+
+    return waitable;
   }
 
 private:
@@ -321,9 +249,20 @@ private:
     wait_set_pointer_->wait_result_acquire();
   }
 
-  const WaitResultKind wait_result_kind_;
+  void check_wait_result_dirty()
+  {
+    // In the case that the waitset was modified while the result was out,
+    // we must mark the wait result as no longer valid
+    if (wait_set_pointer_ && wait_set_pointer_->wait_result_dirty_) {
+      this->wait_result_kind_ = WaitResultKind::Invalid;
+    }
+  }
+
+  WaitResultKind wait_result_kind_;
 
   WaitSetT * wait_set_pointer_ = nullptr;
+
+  size_t next_waitable_index_ = 0;
 };
 
 }  // namespace rclcpp

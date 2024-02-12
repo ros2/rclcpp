@@ -70,15 +70,16 @@ ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 
   bool any_ready = false;
   for (size_t ii = 0; ii < wait_set->size_of_guard_conditions; ++ii) {
-    auto rcl_guard_condition = wait_set->guard_conditions[ii];
+    const auto * rcl_guard_condition = wait_set->guard_conditions[ii];
 
     if (nullptr == rcl_guard_condition) {
       continue;
     }
-    for (auto weak_guard_condition : this->notify_guard_conditions_) {
+    for (const auto & weak_guard_condition : this->notify_guard_conditions_) {
       auto guard_condition = weak_guard_condition.lock();
       if (guard_condition && &guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
         any_ready = true;
+        break;
       }
     }
   }

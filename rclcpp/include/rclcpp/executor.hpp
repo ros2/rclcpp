@@ -19,7 +19,6 @@
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
-#include <deque>
 #include <iostream>
 #include <list>
 #include <map>

@@ -53,18 +53,17 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
+  context_(options.context),
   notify_waitable_(std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
       [this]() {
         this->entities_need_rebuild_.store(true);
       })),
+  entities_need_rebuild_(true),
   collector_(notify_waitable_),
   wait_set_({}, {}, {}, {}, {}, {}, options.context),
   current_notify_waitable_(notify_waitable_),
   impl_(std::make_unique<rclcpp::ExecutorImplementation>())
 {
-  // Store the context for later use.
-  context_ = options.context;
-
   shutdown_callback_handle_ = context_->add_on_shutdown_callback(
     [weak_gc = std::weak_ptr<rclcpp::GuardCondition>{shutdown_guard_condition_}]() {
       auto strong_gc = weak_gc.lock();
@@ -394,8 +393,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    auto data = any_exec.waitable->take_data();
-    any_exec.waitable->execute(data);
+    any_exec.waitable->execute(any_exec.data);
   }
 
   // Reset the callback_group, regardless of type
@@ -669,49 +667,90 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
   TRACETOOLS_TRACEPOINT(rclcpp_executor_get_next_ready);
 
+  bool valid_executable = false;
+
   if (!wait_result_.has_value() || wait_result_->kind() != rclcpp::WaitResultKind::Ready) {
     return false;
   }
 
-  if (auto timer = wait_result_->next_ready_timer()) {
-    auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
-    if (entity_iter != current_collection_.timers.end()) {
-      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+  if (!valid_executable) {
+    while (auto timer = wait_result_->next_ready_timer()) {
+      auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
+      if (entity_iter != current_collection_.timers.end()) {
+        auto callback_group = entity_iter->second.callback_group.lock();
+        if (callback_group && !callback_group->can_be_taken_from()) {
+          continue;
+        }
         any_executable.timer = timer;
         any_executable.callback_group = callback_group;
+        valid_executable = true;
+        break;
       }
     }
-  } else if (auto subscription = wait_result_->next_ready_subscription()) {
-    auto entity_iter = current_collection_.subscriptions.find(
-      subscription->get_subscription_handle().get());
-    if (entity_iter != current_collection_.subscriptions.end()) {
-      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+  }
+
+  if (!valid_executable) {
+    while (auto subscription = wait_result_->next_ready_subscription()) {
+      auto entity_iter = current_collection_.subscriptions.find(
+        subscription->get_subscription_handle().get());
+      if (entity_iter != current_collection_.subscriptions.end()) {
+        auto callback_group = entity_iter->second.callback_group.lock();
+        if (callback_group && !callback_group->can_be_taken_from()) {
+          continue;
+        }
         any_executable.subscription = subscription;
         any_executable.callback_group = callback_group;
+        valid_executable = true;
+        break;
       }
     }
-  } else if (auto service = wait_result_->next_ready_service()) {
-    auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
-    if (entity_iter != current_collection_.services.end()) {
-      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+  }
+
+  if (!valid_executable) {
+    while (auto service = wait_result_->next_ready_service()) {
+      auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
+      if (entity_iter != current_collection_.services.end()) {
+        auto callback_group = entity_iter->second.callback_group.lock();
+        if (callback_group && !callback_group->can_be_taken_from()) {
+          continue;
+        }
         any_executable.service = service;
         any_executable.callback_group = callback_group;
+        valid_executable = true;
+        break;
       }
     }
-  } else if (auto client = wait_result_->next_ready_client()) {
-    auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
-    if (entity_iter != current_collection_.clients.end()) {
-      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+  }
+
+  if (!valid_executable) {
+    while (auto client = wait_result_->next_ready_client()) {
+      auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
+      if (entity_iter != current_collection_.clients.end()) {
+        auto callback_group = entity_iter->second.callback_group.lock();
+        if (callback_group && !callback_group->can_be_taken_from()) {
+          continue;
+        }
         any_executable.client = client;
         any_executable.callback_group = callback_group;
+        valid_executable = true;
+        break;
       }
     }
-  } else if (auto waitable = wait_result_->next_ready_waitable()) {
-    auto entity_iter = current_collection_.waitables.find(waitable.get());
-    if (entity_iter != current_collection_.waitables.end()) {
-      if (auto callback_group = entity_iter->second.callback_group.lock()) {
+  }
+
+  if (!valid_executable) {
+    while (auto waitable = wait_result_->next_ready_waitable()) {
+      auto entity_iter = current_collection_.waitables.find(waitable.get());
+      if (entity_iter != current_collection_.waitables.end()) {
+        auto callback_group = entity_iter->second.callback_group.lock();
+        if (callback_group && !callback_group->can_be_taken_from()) {
+          continue;
+        }
         any_executable.waitable = waitable;
         any_executable.callback_group = callback_group;
+        any_executable.data = waitable->take_data();
+        valid_executable = true;
+        break;
       }
     }
   }
@@ -723,7 +762,8 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
     }
   }
 
-  return any_executable.callback_group != nullptr;
+
+  return valid_executable;
 }
 
 bool

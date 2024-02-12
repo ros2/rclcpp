@@ -425,13 +425,13 @@ public:
   get_number_of_ready_guard_conditions() override {return 1;}
 
   size_t
-  get_count()
+  get_count() const
   {
     return count_;
   }
 
 private:
-  size_t count_ = 0;
+  std::atomic<size_t> count_ = 0;
   rclcpp::GuardCondition gc_;
 };
 
@@ -488,7 +488,7 @@ TYPED_TEST(TestExecutors, spinSome)
 
   // Long timeout, doesn't block test from finishing because spin_some should exit after the
   // first one completes.
-  bool spin_exited = false;
+  std::atomic<bool> spin_exited = false;
   std::thread spinner([&spin_exited, &executor, this]() {
       executor.spin_some(1s);
       executor.remove_node(this->node, true);
