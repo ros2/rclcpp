@@ -53,10 +53,6 @@ public:
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable & operator=(ExecutorNotifyWaitable & other);
 
-  RCLCPP_PUBLIC
-  void
-  dummy() override {};
-
   /// Add conditions to the wait set
   /**
    * \param[inout] wait_set structure that conditions will be added to

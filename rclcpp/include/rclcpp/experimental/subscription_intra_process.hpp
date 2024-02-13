@@ -103,10 +103,6 @@ public:
 
   RCLCPP_PUBLIC
   void
-  dummy() override {};
-
-  RCLCPP_PUBLIC
-  void
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     // This block is necessary when the guard condition wakes the wait set, but
