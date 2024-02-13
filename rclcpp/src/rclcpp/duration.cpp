@@ -338,8 +338,7 @@ operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
 
   rcl_time += rhs.nanoseconds();
 
-  builtin_interfaces::msg::Time ret = convert_rcl_time_to_sec_nanos(rcl_time);
-  return ret;
+  return convert_rcl_time_to_sec_nanos(rcl_time);
 }
 
 builtin_interfaces::msg::Time
@@ -362,8 +361,7 @@ operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
 
   rcl_time -= rhs.nanoseconds();
 
-  builtin_interfaces::msg::Time ret = convert_rcl_time_to_sec_nanos(rcl_time);
-  return ret;
+  return convert_rcl_time_to_sec_nanos(rcl_time);
 }
 
 }  // namespace rclcpp
