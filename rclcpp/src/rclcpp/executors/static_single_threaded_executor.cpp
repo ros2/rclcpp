@@ -149,91 +149,52 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
     return any_ready_executable;
   }
 
-  auto rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
+  while (auto subscription = wait_result.next_ready_subscription()) {
+    auto entity_iter = collection.subscriptions.find(subscription->get_subscription_handle().get());
+    if (entity_iter != collection.subscriptions.end()) {
+      execute_subscription(subscription);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
+    }
+  }
 
-  // Helper function to iterate over the waitset result and collection to check for readiness
-  //
-  // In the case that spin_once is set, this function will exit after the first entity in the
-  // collectionis executed, regardless if additional work is available and ready.
-  //
-  // \param[in] entities - rcl_wait_set handles to iterate over (eg rcl_wait_set.timers)
-  // \param[in] size_of_entities - size of rcl_wait_set handles (eg rcl_wait_set.size_of_timers)
-  // \param[in] collection - collection of associated weak_ptrs to be waited on
-  // \param[in] entity_callback - function of the form bool(std:;shared_ptr<Entity>),
-  //                              returns true if the entity was executed,
-  //                              false otherwise
-  auto iterate_collection = [spin_once, &any_ready_executable](
-    auto entities, auto size_of_entities, auto collection, auto entity_callback) {
-      for (size_t ii = 0; ii < size_of_entities; ++ii) {
-        if (nullptr == entities[ii]) {continue;}
-        auto entity_iter = collection.find(entities[ii]);
-        if (entity_iter != collection.end()) {
-          auto entity = entity_iter->second.entity.lock();
-          if (!entity) {
-            continue;
-          }
-          if (!entity_callback(entity)) {
-            continue;
-          }
-          any_ready_executable = true;
-          if (spin_once) {
-            return;
-          }
-        }
+  while (auto timer = wait_result.next_ready_timer()) {
+    auto entity_iter = collection.timers.find(timer->get_timer_handle().get());
+    if (entity_iter != collection.timers.end()) {
+      if (timer->call()) {
+        execute_timer(timer);
+        any_ready_executable = true;
+        if (spin_once) {return any_ready_executable;}
       }
-    };
-
-  // Timer must check if call() is true before executing
-  auto timer_callback = [](auto timer) {
-      if (!timer->call()) {
-        return false;
-      }
-      execute_timer(timer);
-      return true;
-    };
-
-  auto subscription_callback = [](auto subscription) {
-      execute_subscription(subscription); return true;
-    };
-  auto service_callback = [](auto service) {execute_service(service); return true;};
-  auto client_callback = [](auto client) {execute_client(client); return true;};
-
-  iterate_collection(
-    rcl_wait_set.timers, rcl_wait_set.size_of_timers, collection.timers,
-    timer_callback);
-  if (spin_once && any_ready_executable) {return true;}
-
-  iterate_collection(
-    rcl_wait_set.subscriptions, rcl_wait_set.size_of_subscriptions,
-    collection.subscriptions, subscription_callback);
-  if (spin_once && any_ready_executable) {return true;}
-
-  iterate_collection(
-    rcl_wait_set.services, rcl_wait_set.size_of_services, collection.services,
-    service_callback);
-  if (spin_once && any_ready_executable) {return true;}
-
-  iterate_collection(
-    rcl_wait_set.clients, rcl_wait_set.size_of_clients, collection.clients,
-    client_callback);
-  if (spin_once && any_ready_executable) {return true;}
-
-  // Waitables require custom logic, so iterate_collection cannot be used.
-  for (const auto & [handle, entry] : collection.waitables) {
-    auto waitable = entry.entity.lock();
-    if (!waitable) {
-      continue;
     }
-    if (!waitable->is_ready(&rcl_wait_set)) {
-      continue;
-    }
+  }
 
-    auto data = waitable->take_data();
-    waitable->execute(data);
-    if (spin_once) {
-      return true;
+  while (auto client = wait_result.next_ready_client()) {
+    auto entity_iter = collection.clients.find(client->get_client_handle().get());
+    if (entity_iter != collection.clients.end()) {
+      execute_client(client);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
     }
-    any_ready_executable = true;
+  }
+
+  while (auto service = wait_result.next_ready_service()) {
+    auto entity_iter = collection.services.find(service->get_service_handle().get());
+    if (entity_iter != collection.services.end()) {
+      execute_service(service);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
+    }
+  }
+
+  while (auto waitable = wait_result.next_ready_waitable()) {
+    auto entity_iter = collection.waitables.find(waitable.get());
+    if (entity_iter != collection.waitables.end()) {
+      auto data = waitable->take_data();
+      waitable->execute(data);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
+    }
   }
   return any_ready_executable;
 }
