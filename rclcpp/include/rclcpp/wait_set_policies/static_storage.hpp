@@ -188,6 +188,31 @@ public:
     // Explicitly do nothing.
   }
 
+  size_t size_of_subscriptions() const
+  {
+    return subscriptions_.size();
+  }
+
+  size_t size_of_timers() const
+  {
+    return timers_.size();
+  }
+
+  size_t size_of_clients() const
+  {
+    return clients_.size();
+  }
+
+  size_t size_of_services() const
+  {
+    return services_.size();
+  }
+
+  size_t size_of_waitables() const
+  {
+    return waitables_.size();
+  }
+
   typename ArrayOfSubscriptions::value_type
   subscriptions(size_t ii) const
   {
@@ -210,11 +235,6 @@ public:
   services(size_t ii) const
   {
     return services_[ii];
-  }
-
-  size_t size_of_waitables() const
-  {
-    return waitables_.size();
   }
 
   typename ArrayOfWaitables::value_type

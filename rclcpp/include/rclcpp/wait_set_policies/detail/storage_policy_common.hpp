@@ -397,6 +397,12 @@ protected:
     needs_resize_ = true;
   }
 
+  size_t size_of_subscriptions() const {return 0;}
+  size_t size_of_timers() const {return 0;}
+  size_t size_of_clients() const {return 0;}
+  size_t size_of_services() const {return 0;}
+  size_t size_of_waitables() const {return 0;}
+
   template<class SubscriptionsIterable>
   typename SubscriptionsIterable::value_type
   subscriptions(size_t) const {return nullptr;}
@@ -412,8 +418,6 @@ protected:
   template<class ServicesIterable>
   typename ServicesIterable::value_type
   services(size_t) const {return nullptr;}
-
-  size_t size_of_waitables() const {return 0;}
 
   template<class WaitablesIterable>
   typename WaitablesIterable::value_type

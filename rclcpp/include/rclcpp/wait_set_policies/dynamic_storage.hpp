@@ -453,6 +453,31 @@ public:
     reset_all(shared_waitables_);
   }
 
+  size_t size_of_subscriptions() const
+  {
+    return shared_subscriptions_.size();
+  }
+
+  size_t size_of_timers() const
+  {
+    return shared_timers_.size();
+  }
+
+  size_t size_of_clients() const
+  {
+    return shared_clients_.size();
+  }
+
+  size_t size_of_services() const
+  {
+    return shared_services_.size();
+  }
+
+  size_t size_of_waitables() const
+  {
+    return shared_waitables_.size();
+  }
+
   std::shared_ptr<rclcpp::SubscriptionBase>
   subscriptions(size_t ii) const
   {
@@ -475,11 +500,6 @@ public:
   services(size_t ii) const
   {
     return shared_services_[ii];
-  }
-
-  size_t size_of_waitables() const
-  {
-    return shared_waitables_.size();
   }
 
   std::shared_ptr<rclcpp::Waitable>

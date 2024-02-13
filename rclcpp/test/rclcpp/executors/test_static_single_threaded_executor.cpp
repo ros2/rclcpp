@@ -86,7 +86,8 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_callback_group_trigger_guard_fai
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
       executor.remove_callback_group(cb_group, true),
-      std::runtime_error("Failed to trigger guard condition on callback group remove: error not set"));
+      std::runtime_error(
+        "Failed to trigger guard condition on callback group remove: error not set"));
   }
 }
 

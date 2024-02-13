@@ -144,7 +144,7 @@ public:
     auto ret = std::shared_ptr<rclcpp::TimerBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_timers; ++ii) {
+      for (size_t ii = 0; ii < wait_set_pointer_->size_of_timers(); ++ii) {
         if (rcl_wait_set.timers[ii] != nullptr &&
           wait_set_pointer_->timers(ii)->call())
         {
@@ -163,7 +163,7 @@ public:
     auto ret = std::shared_ptr<rclcpp::SubscriptionBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_subscriptions; ++ii) {
+      for (size_t ii = 0; ii < wait_set_pointer_->size_of_subscriptions(); ++ii) {
         if (rcl_wait_set.subscriptions[ii] != nullptr) {
           ret = wait_set_pointer_->subscriptions(ii);
           rcl_wait_set.subscriptions[ii] = nullptr;
@@ -180,7 +180,7 @@ public:
     auto ret = std::shared_ptr<rclcpp::ServiceBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_services; ++ii) {
+      for (size_t ii = 0; ii < wait_set_pointer_->size_of_services(); ++ii) {
         if (rcl_wait_set.services[ii] != nullptr) {
           ret = wait_set_pointer_->services(ii);
           rcl_wait_set.services[ii] = nullptr;
@@ -197,7 +197,7 @@ public:
     auto ret = std::shared_ptr<rclcpp::ClientBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
       auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < rcl_wait_set.size_of_clients; ++ii) {
+      for (size_t ii = 0; ii < wait_set_pointer_->size_of_clients(); ++ii) {
         if (rcl_wait_set.clients[ii] != nullptr) {
           ret = wait_set_pointer_->clients(ii);
 
