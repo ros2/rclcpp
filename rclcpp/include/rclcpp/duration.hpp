@@ -18,6 +18,7 @@
 #include <chrono>
 
 #include "builtin_interfaces/msg/duration.hpp"
+#include "builtin_interfaces/msg/time.hpp"
 #include "rcl/time.h"
 #include "rclcpp/visibility_control.hpp"
 
@@ -157,6 +158,14 @@ private:
 
   Duration() = default;
 };
+
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time
+operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
+
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time
+operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
 
 }  // namespace rclcpp
 

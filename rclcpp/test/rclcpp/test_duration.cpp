@@ -79,6 +79,35 @@ TEST_F(TestDuration, operators) {
   EXPECT_TRUE(time == assignment_op_duration);
 }
 
+TEST_F(TestDuration, operators_with_message_stamp) {
+  builtin_interfaces::msg::Time time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
+  rclcpp::Duration pos_duration(1, 100000000u);  // 1.1s
+  rclcpp::Duration neg_duration(-2, 900000000u);  // -1.1s
+
+  builtin_interfaces::msg::Time res_addpos = time_msg + pos_duration;
+  EXPECT_EQ(res_addpos.sec, 1);
+  EXPECT_EQ(res_addpos.nanosec, 200000000u);
+
+  builtin_interfaces::msg::Time res_addneg = time_msg + neg_duration;
+  EXPECT_EQ(res_addneg.sec, -1);
+  EXPECT_EQ(res_addneg.nanosec, 0);
+
+  builtin_interfaces::msg::Time res_subpos = time_msg - pos_duration;
+  EXPECT_EQ(res_subpos.sec, -1);
+  EXPECT_EQ(res_subpos.nanosec, 0);
+
+  builtin_interfaces::msg::Time res_subneg = time_msg - neg_duration;
+  EXPECT_EQ(res_subneg.sec, 1);
+  EXPECT_EQ(res_subneg.nanosec, 200000000u);
+
+  builtin_interfaces::msg::Time neg_time_msg;
+  neg_time_msg.sec = -1;
+  auto max = rclcpp::Duration::from_nanoseconds(std::numeric_limits<rcl_duration_value_t>::max());
+
+  EXPECT_THROW(neg_time_msg + max, std::runtime_error);
+  EXPECT_THROW(time_msg + max, std::overflow_error);
+}
+
 TEST_F(TestDuration, chrono_overloads) {
   int64_t ns = 123456789l;
   auto chrono_ns = std::chrono::nanoseconds(ns);
