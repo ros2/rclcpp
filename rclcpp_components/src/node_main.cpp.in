@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,41 +34,46 @@ int main(int argc, char * argv[])
   @executor@ exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
-  std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
   std::string library_name = "@library_name@";
   std::string class_name = "rclcpp_components::NodeFactoryTemplate<@component@>";
 
   RCLCPP_DEBUG(logger, "Load library %s", library_name.c_str());
   auto loader = std::make_unique<class_loader::ClassLoader>(library_name);
-  auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
-  for (const auto & clazz : classes) {
-    std::string name = clazz.c_str();
-    if (name.compare(class_name) == 0) {
-      RCLCPP_DEBUG(logger, "Instantiate class %s", clazz.c_str());
-      std::shared_ptr<rclcpp_components::NodeFactory> node_factory = nullptr;
-      try {
-        node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
-      } catch (const std::exception & ex) {
-        RCLCPP_ERROR(logger, "Failed to load library %s", ex.what());
-        return 1;
-      } catch (...) {
-        RCLCPP_ERROR(logger, "Failed to load library");
-        return 1;
-      }
-      auto wrapper = node_factory->create_node_instance(options);
-      auto node = wrapper.get_node_base_interface();
-      node_wrappers.push_back(wrapper);
-      exec.add_node(node);
-    }
-  }
+  std::vector<std::string> classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
 
-  exec.spin();
-
-  for (auto wrapper : node_wrappers) {
-    exec.remove_node(wrapper.get_node_base_interface());
+  if (std::find(
+    classes.begin(),
+    classes.end(),
+    class_name) == classes.end()) {
+    RCLCPP_ERROR(
+      logger,
+      "Class %s not found in library %s",
+      class_name.c_str(),
+      library_name.c_str());
+    return 1;
   }
-  node_wrappers.clear();
+  RCLCPP_DEBUG(logger, "Instantiate class %s", class_name.c_str());
+  std::shared_ptr<rclcpp_components::NodeFactory> node_factory = nullptr;
+  try {
+    node_factory = loader->createInstance<rclcpp_components::NodeFactory>(class_name);
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(logger, "Failed to load library %s", ex.what());
+    return 1;
+  } catch (...) {
+    RCLCPP_ERROR(logger, "Failed to load library");
+    return 1;
+  }
+  // Scope to destruct node_wrapper before shutdown
+  {
+    rclcpp_components::NodeInstanceWrapper node_wrapper = node_factory->create_node_instance(options);
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node = node_wrapper.get_node_base_interface();
+    exec.add_node(node);
+
+    exec.spin();
+
+    exec.remove_node(node_wrapper.get_node_base_interface());
+  }
 
   rclcpp::shutdown();
 
