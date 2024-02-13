@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
 
   RCLCPP_DEBUG(logger, "Load library %s", library_name.c_str());
   auto loader = std::make_unique<class_loader::ClassLoader>(library_name);
-  auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
+  std::vector<std::string> classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
 
   if (std::find(
     classes.begin(),
@@ -66,8 +66,8 @@ int main(int argc, char * argv[])
   }
   // Scope to destruct node_wrapper before shutdown
   {
-    auto node_wrapper = node_factory->create_node_instance(options);
-    auto node = node_wrapper.get_node_base_interface();
+    rclcpp_components::NodeInstanceWrapper node_wrapper = node_factory->create_node_instance(options);
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node = node_wrapper.get_node_base_interface();
     exec.add_node(node);
 
     exec.spin();
