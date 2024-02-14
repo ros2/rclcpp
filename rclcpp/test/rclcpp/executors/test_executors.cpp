@@ -15,8 +15,8 @@
 /**
  * This test checks all implementations of rclcpp::executor to check they pass they basic API
  * tests. Anything specific to any executor in particular should go in a separate test file.
- *
  */
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -36,8 +36,11 @@
 #include "rclcpp/duration.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/time_source.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+
+#include "./executor_types.hpp"
 
 using namespace std::chrono_literals;
 
@@ -84,51 +87,8 @@ public:
 template<typename T>
 class TestExecutorsStable : public TestExecutors<T> {};
 
-using ExecutorTypes =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
-
-class ExecutorTypeNames
-{
-public:
-  template<typename T>
-  static std::string GetName(int idx)
-  {
-    (void)idx;
-    if (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
-      return "SingleThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
-      return "MultiThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
-      return "StaticSingleThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
-      return "EventsExecutor";
-    }
-
-    return "";
-  }
-};
-
-// TYPED_TEST_SUITE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
-// is updated.
 TYPED_TEST_SUITE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 
-// StaticSingleThreadedExecutor is not included in these tests for now, due to:
-// https://github.com/ros2/rclcpp/issues/1219
-using StandardExecutors =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
 TYPED_TEST_SUITE(TestExecutorsStable, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
@@ -716,105 +676,4 @@ TEST(TestExecutors, testSpinUntilFutureCompleteNodePtr)
   }
 
   rclcpp::shutdown();
-}
-
-template<typename T>
-class TestIntraprocessExecutors : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  static void TearDownTestCase()
-  {
-    rclcpp::shutdown();
-  }
-
-  void SetUp()
-  {
-    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-    std::stringstream test_name;
-    test_name << test_info->test_case_name() << "_" << test_info->name();
-    node = std::make_shared<rclcpp::Node>("node", test_name.str());
-
-    callback_count = 0u;
-
-    const std::string topic_name = std::string("topic_") + test_name.str();
-
-    rclcpp::PublisherOptions po;
-    po.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
-    publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, rclcpp::QoS(1), po);
-
-    auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {
-        this->callback_count.fetch_add(1u);
-      };
-
-    rclcpp::SubscriptionOptions so;
-    so.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
-    subscription =
-      node->create_subscription<test_msgs::msg::Empty>(
-      topic_name, rclcpp::QoS(kNumMessages), std::move(callback), so);
-  }
-
-  void TearDown()
-  {
-    publisher.reset();
-    subscription.reset();
-    node.reset();
-  }
-
-  const size_t kNumMessages = 100;
-
-  rclcpp::Node::SharedPtr node;
-  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
-  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
-  std::atomic_size_t callback_count;
-};
-
-TYPED_TEST_SUITE(TestIntraprocessExecutors, ExecutorTypes, ExecutorTypeNames);
-
-TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
-  // This tests that executors will continue to service intraprocess subscriptions in the case
-  // that publishers aren't continuing to publish.
-  // This was previously broken in that intraprocess guard conditions were only triggered on
-  // publish and the test was added to prevent future regressions.
-  static constexpr size_t kNumMessages = 100;
-
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-  executor.add_node(this->node);
-
-  EXPECT_EQ(0u, this->callback_count.load());
-  this->publisher->publish(test_msgs::msg::Empty());
-
-  // Wait for up to 5 seconds for the first message to come available.
-  const std::chrono::milliseconds sleep_per_loop(10);
-  int loops = 0;
-  while (1u != this->callback_count.load() && loops < 500) {
-    rclcpp::sleep_for(sleep_per_loop);
-    executor.spin_some();
-    loops++;
-  }
-  EXPECT_EQ(1u, this->callback_count.load());
-
-  // reset counter
-  this->callback_count.store(0u);
-
-  for (size_t ii = 0; ii < kNumMessages; ++ii) {
-    this->publisher->publish(test_msgs::msg::Empty());
-  }
-
-  // Fire a timer every 10ms up to 5 seconds waiting for subscriptions to be read.
-  loops = 0;
-  auto timer = this->node->create_wall_timer(
-    std::chrono::milliseconds(10), [this, &executor, &loops]() {
-      loops++;
-      if (kNumMessages == this->callback_count.load() || loops == 500) {
-        executor.cancel();
-      }
-    });
-  executor.spin();
-  EXPECT_EQ(kNumMessages, this->callback_count.load());
 }

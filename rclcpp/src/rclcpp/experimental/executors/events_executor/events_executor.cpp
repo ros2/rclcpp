@@ -206,11 +206,12 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
     timeout = std::chrono::nanoseconds::max();
   }
 
-  // Select the smallest between input timeout and timer timeout
+  // Select the smallest between input timeout and timer timeout.
+  // Cancelled timers are not considered.
   bool is_timer_timeout = false;
   auto next_timer_timeout = timers_manager_->get_head_timeout();
-  if (next_timer_timeout < timeout) {
-    timeout = next_timer_timeout;
+  if (next_timer_timeout.has_value() && next_timer_timeout.value() < timeout) {
+    timeout = next_timer_timeout.value();
     is_timer_timeout = true;
   }
 

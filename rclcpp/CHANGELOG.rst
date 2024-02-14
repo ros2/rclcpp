@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+27.0.0 (2024-02-07)
+-------------------
+* Split test_executors up into smaller chunks. (`#2421 <https://github.com/ros2/rclcpp/issues/2421>`_)
+* [events executor] - Fix Behavior with Timer Cancel (`#2375 <https://github.com/ros2/rclcpp/issues/2375>`_)
+* Removed deprecated header (`#2413 <https://github.com/ros2/rclcpp/issues/2413>`_)
+* Make sure to mark RingBuffer methods as 'override'. (`#2410 <https://github.com/ros2/rclcpp/issues/2410>`_)
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette, Matt Condino
+
 26.0.0 (2024-01-24)
 -------------------
 * Increase the cppcheck timeout to 600 seconds. (`#2409 <https://github.com/ros2/rclcpp/issues/2409>`_)
