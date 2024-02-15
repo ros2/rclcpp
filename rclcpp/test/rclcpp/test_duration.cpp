@@ -80,10 +80,11 @@ TEST_F(TestDuration, operators) {
 }
 
 TEST_F(TestDuration, operators_with_message_stamp) {
-  builtin_interfaces::msg::Time time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
   rclcpp::Duration pos_duration(1, 100000000u);  // 1.1s
   rclcpp::Duration neg_duration(-2, 900000000u);  // -1.1s
 
+  // Addition and subtraction operators
+  builtin_interfaces::msg::Time time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
   builtin_interfaces::msg::Time res_addpos = time_msg + pos_duration;
   EXPECT_EQ(res_addpos.sec, 1);
   EXPECT_EQ(res_addpos.nanosec, 200000000u);
@@ -106,6 +107,27 @@ TEST_F(TestDuration, operators_with_message_stamp) {
 
   EXPECT_THROW(neg_time_msg + max, std::runtime_error);
   EXPECT_THROW(time_msg + max, std::overflow_error);
+
+  // Addition and subtraction assignment operators
+  time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
+  time_msg += pos_duration;
+  EXPECT_EQ(time_msg.sec, 1);
+  EXPECT_EQ(time_msg.nanosec, 200000000u);
+
+  time_msg -= pos_duration;
+  EXPECT_EQ(time_msg.sec, 0);
+  EXPECT_EQ(time_msg.nanosec, 100000000u);
+
+  time_msg += neg_duration;
+  EXPECT_EQ(time_msg.sec, -1);
+  EXPECT_EQ(time_msg.nanosec, 0u);
+
+  time_msg -= neg_duration;
+  EXPECT_EQ(time_msg.sec, 0);
+  EXPECT_EQ(time_msg.nanosec, 100000000u);
+
+  EXPECT_THROW(neg_time_msg += max, std::runtime_error);
+  EXPECT_THROW(time_msg += max, std::overflow_error);
 }
 
 TEST_F(TestDuration, chrono_overloads) {
