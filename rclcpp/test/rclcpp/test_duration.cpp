@@ -109,7 +109,7 @@ TEST_F(TestDuration, operators_with_message_stamp) {
   EXPECT_THROW(time_msg + max, std::overflow_error);
 
   // Addition and subtraction assignment operators
-  time_msg = rclcpp::Time(0, 100000000u);  // 0.1s
+  time_msg = rclcpp::Time(0, 100000000u);
   time_msg += pos_duration;
   EXPECT_EQ(time_msg.sec, 1);
   EXPECT_EQ(time_msg.nanosec, 200000000u);
@@ -122,9 +122,12 @@ TEST_F(TestDuration, operators_with_message_stamp) {
   EXPECT_EQ(time_msg.sec, -1);
   EXPECT_EQ(time_msg.nanosec, 0u);
 
+  EXPECT_THROW(time_msg -= neg_duration, std::runtime_error);  // not allow negative left operand
+
+  time_msg = rclcpp::Time(0, 100000000u);
   time_msg -= neg_duration;
-  EXPECT_EQ(time_msg.sec, 0);
-  EXPECT_EQ(time_msg.nanosec, 100000000u);
+  EXPECT_EQ(time_msg.sec, 1);
+  EXPECT_EQ(time_msg.nanosec, 200000000u);
 
   EXPECT_THROW(neg_time_msg += max, std::runtime_error);
   EXPECT_THROW(time_msg += max, std::overflow_error);
