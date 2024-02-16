@@ -4,7 +4,7 @@ This document is a declaration of software quality for the `rclcpp_components` p
 
 The package `rclcpp_components` claims to be in the **Quality Level 1** category.
 
-Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://www.ros.org/reps/rep-2004.html) of the ROS2 developer guide.
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 1 in REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 ## Version Policy [1]
 
@@ -92,7 +92,7 @@ There is an automated test which runs a linter that ensures each file has at lea
 
 ### Feature Testing [4.i]
 
-Each feature in `rclcpp_components` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_components/tree/master/test) directory.
+Each feature in `rclcpp_components` has corresponding tests which simulate typical usage, and they are located in the [`test`](https://github.com/ros2/rclcpp_components/tree/rolling/test) directory.
 New features are required to have tests before being added.
 
 Currently nightly test results can be seen here:
@@ -125,7 +125,7 @@ Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly
 
 `rclcpp_components` follows the recommendations for performance testing of C/C++ code in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#performance), and opts to do performance analysis on each release rather than each change.
 
-The performance tests of `rclcpp_components` are located in the [test/benchmark directory](https://github.com/ros2/rclcpp/tree/master/rclcpp_components/test/benchmark).
+The performance tests of `rclcpp_components` are located in the [test/benchmark directory](https://github.com/ros2/rclcpp/tree/rolling/rclcpp_components/test/benchmark).
 
 Package and system level performance benchmarks that cover features of `rclcpp_components` can be found at:
 * [Benchmarks](http://build.ros2.org/view/Rci/job/Rci__benchmark_ubuntu_focal_amd64/BenchmarkTable/)
@@ -135,7 +135,7 @@ Changes that introduce regressions in performance must be adequately justified i
 
 ### Linters and Static Analysis [4.v]
 
-`rclcpp_components` uses and passes all the ROS2 standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
+`rclcpp_components` uses and passes all the ROS 2 standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
 
 Currently nightly test results can be seen here:
 * [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rclcpp_components/)
@@ -159,7 +159,7 @@ It also has several test dependencies, which do not affect the resulting quality
 
 The `ament_index_cpp` package provides a C++ API to access the ament resource index.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/master/ament_index_cpp/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/rolling/ament_index_cpp/QUALITY_DECLARATION.md).
 
 #### `class_loader`
 
@@ -171,19 +171,19 @@ It is **Quality Level 1**, see its [Quality Declaration document](https://github
 
 The `composition_interfaces` package contains message and service definitions for managing composable nodes in a container process.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/composition_interfaces/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/rolling/composition_interfaces/QUALITY_DECLARATION.md).
 
 #### `rclcpp`
 
 The `rclcpp` package provides the ROS client library in C++.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/rolling/rclcpp/QUALITY_DECLARATION.md).
 
 #### `rcpputils`
 
 The `rcpputils` package provides an API which contains common utilities and data structures useful when programming in C++.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/rolling/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
