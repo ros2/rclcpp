@@ -127,7 +127,9 @@ public:
    * the RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT macro.
    *
    * Usage example:
-   *   ```RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(rclcpp::node_interfaces::NodeBaseInterface, base)```
+   *   ```cpp
+   *   RCLCPP_NODE_INTERFACE_HELPERS_SUPPORT(rclcpp::node_interfaces::NodeBaseInterface, base)
+   *   ```
    *
    * If you choose not to use the helper macro, then you can specialize the
    * template yourself, but you must:
