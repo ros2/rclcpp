@@ -42,7 +42,6 @@
 #define RCLCPP_LOGGING_ENABLED 0
 #endif
 
-
 namespace rclcpp
 {
 
