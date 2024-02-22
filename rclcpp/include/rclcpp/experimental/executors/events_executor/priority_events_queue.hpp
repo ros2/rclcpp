@@ -1,4 +1,4 @@
-// Copyright 2023 iRobot Corporation.
+// Copyright 2023 Washington University in St. Louis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ struct PriorityEvent
 
 struct ComparePriorities : public std::binary_function<PriorityEvent, PriorityEvent, bool>
 {
-  _GLIBCXX14_CONSTEXPR
   bool
   operator()(const PriorityEvent & __x, const PriorityEvent & __y) const
   {return __x.priority > __y.priority;}

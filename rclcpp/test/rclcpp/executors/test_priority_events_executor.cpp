@@ -45,6 +45,99 @@ public:
   }
 };
 
+TEST_F(TestPriorityEventsExecutor, priority_queue)
+{
+  // Make node
+  auto node = std::make_shared<rclcpp::Node>("node");
+
+  // Create QoS for subscriptions
+  rclcpp::QoS qos(10);
+
+  qos.deadline(rclcpp::Duration(3, 0));
+  auto sub_low = node->create_subscription<test_msgs::msg::Empty>(
+    "topic", qos,
+    [](test_msgs::msg::Empty::ConstSharedPtr msg)
+    {
+      (void)msg;
+    });
+  rclcpp::experimental::executors::ExecutorEvent event_low = {
+    sub_low->get_subscription_handle().get(),
+    0,
+    rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT,
+    1
+  };
+
+  qos.deadline(rclcpp::Duration(2, 0));
+  auto sub_medium = node->create_subscription<test_msgs::msg::Empty>(
+    "topic", qos,
+    [](test_msgs::msg::Empty::ConstSharedPtr msg)
+    {
+      (void)msg;
+    });
+  rclcpp::experimental::executors::ExecutorEvent event_medium = {
+    sub_medium->get_subscription_handle().get(),
+    0,
+    rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT,
+    1
+  };
+
+  qos.deadline(rclcpp::Duration(1, 0));
+  auto sub_high = node->create_subscription<test_msgs::msg::Empty>(
+    "topic", qos,
+    [](test_msgs::msg::Empty::ConstSharedPtr msg)
+    {
+      (void)msg;
+    });
+  rclcpp::experimental::executors::ExecutorEvent event_high = {
+    sub_high->get_subscription_handle().get(),
+    0,
+    rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT,
+    1
+  };
+
+  auto tmr = node->create_wall_timer(1s, []() {});
+  rclcpp::experimental::executors::ExecutorEvent event_tmr = {
+    tmr.get(),
+    0,
+    rclcpp::experimental::executors::ExecutorEventType::TIMER_EVENT,
+    1
+  };
+
+  // Create PriorityEventsQueue
+  auto extract_priority = [](const rclcpp::experimental::executors::ExecutorEvent & event) {
+      if (event.type != rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT) {
+        return 0UL;
+      }
+      auto subscription = static_cast<const rcl_subscription_t *>(event.entity_key);
+      return rcl_subscription_get_options(subscription)->qos.deadline.sec;
+    };
+  PriorityEventsQueue::SharedPtr queue = std::make_unique<PriorityEventsQueue>(extract_priority);
+
+  rclcpp::experimental::executors::ExecutorEvent event;
+  EXPECT_EQ(queue->empty(), true);
+  EXPECT_EQ(queue->dequeue(event, 0s), false);
+
+  queue->enqueue(event_low);
+  queue->enqueue(event_medium);
+  queue->enqueue(event_high);
+  queue->enqueue(event_tmr);
+
+
+  EXPECT_EQ(queue->dequeue(event, 0s), true);
+  EXPECT_EQ(event.entity_key, tmr.get());
+  EXPECT_EQ(event.type, rclcpp::experimental::executors::ExecutorEventType::TIMER_EVENT);
+  EXPECT_EQ(queue->dequeue(event, 0s), true);
+  EXPECT_EQ(event.entity_key, sub_high->get_subscription_handle().get());
+  EXPECT_EQ(event.type, rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT);
+  EXPECT_EQ(queue->dequeue(event, 0s), true);
+  EXPECT_EQ(event.entity_key, sub_medium->get_subscription_handle().get());
+  EXPECT_EQ(event.type, rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT);
+  EXPECT_EQ(queue->dequeue(event, 0s), true);
+  EXPECT_EQ(event.entity_key, sub_low->get_subscription_handle().get());
+  EXPECT_EQ(event.type, rclcpp::experimental::executors::ExecutorEventType::SUBSCRIPTION_EVENT);
+  EXPECT_EQ(queue->dequeue(event, 0s), false);
+}
+
 TEST_F(TestPriorityEventsExecutor, priority_subs)
 {
   // rmw_connextdds doesn't support events-executor
