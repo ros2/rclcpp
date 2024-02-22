@@ -448,7 +448,7 @@ public:
         std::shared_ptr<GoalHandle> goal_handle(
           new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
         {
-          std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+          std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
           goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         }
         promise->set_value(goal_handle);
@@ -466,7 +466,7 @@ public:
     // To prevent the list from growing out of control, forget about any goals
     // with no more user references
     {
-      std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+      std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
       auto goal_handle_it = goal_handles_.begin();
       while (goal_handle_it != goal_handles_.end()) {
         if (!goal_handle_it->second.lock()) {
@@ -496,7 +496,7 @@ public:
     typename GoalHandle::SharedPtr goal_handle,
     ResultCallback result_callback = nullptr)
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
@@ -531,7 +531,7 @@ public:
     typename GoalHandle::SharedPtr goal_handle,
     CancelCallback cancel_callback = nullptr)
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
@@ -564,8 +564,12 @@ public:
 
   void drop_goal_handle(typename GoalHandle::SharedPtr goal_handle)
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    const GoalUUID & goal_id = goal_handle->get_goal_id();
+    drop_goal_handle(goal_handle->get_goal_id());
+  }
+
+  void drop_goal_handle(const GoalUUID & goal_id)
+  {
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     if (goal_handles_.count(goal_id) == 0) {
       // someone else already deleted the entry
       // e.g. the result callback
@@ -605,7 +609,7 @@ public:
   virtual
   ~Client()
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     auto it = goal_handles_.begin();
     while (it != goal_handles_.end()) {
       typename GoalHandle::SharedPtr goal_handle = it->second.lock();
@@ -652,7 +656,7 @@ private:
   void
   handle_feedback_message(std::shared_ptr<void> message) override
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
     typename FeedbackMessage::SharedPtr feedback_message =
       std::static_pointer_cast<FeedbackMessage>(message);
@@ -689,7 +693,7 @@ private:
   void
   handle_status_message(std::shared_ptr<void> message) override
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
@@ -730,7 +734,7 @@ private:
         std::static_pointer_cast<void>(goal_result_request),
         [goal_id, this](std::shared_ptr<void> response) mutable
         {
-          std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+          std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
           if (goal_handles_.count(goal_id) == 0) {
             RCLCPP_DEBUG(
               this->get_logger(),
@@ -787,7 +791,7 @@ private:
   }
 
   std::map<GoalUUID, typename GoalHandle::WeakPtr> goal_handles_;
-  std::mutex goal_handles_mutex_;
+  std::recursive_mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
 
