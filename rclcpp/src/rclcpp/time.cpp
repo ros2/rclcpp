@@ -65,6 +65,8 @@ Time::Time(int64_t nanoseconds, rcl_clock_type_t clock_type)
 
 Time::Time(const Time & rhs) = default;
 
+Time::Time(Time && rhs) noexcept = default;
+
 Time::Time(
   const builtin_interfaces::msg::Time & time_msg,
   rcl_clock_type_t clock_type)
@@ -84,9 +86,7 @@ Time::Time(const rcl_time_point_t & time_point)
   // noop
 }
 
-Time::~Time()
-{
-}
+Time::~Time() = default;
 
 Time::operator builtin_interfaces::msg::Time() const
 {
@@ -102,6 +102,9 @@ Time::operator=(const builtin_interfaces::msg::Time & time_msg)
   *this = Time(time_msg);
   return *this;
 }
+
+Time &
+Time::operator=(Time && rhs) noexcept = default;
 
 bool
 Time::operator==(const rclcpp::Time & rhs) const
