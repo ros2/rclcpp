@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
@@ -54,7 +55,7 @@ get_node_logger(const rcl_node_t * node)
   return rclcpp::get_logger(logger_name);
 }
 
-rcpputils::fs::path
+std::filesystem::path
 get_logging_directory()
 {
   char * log_dir = NULL;
