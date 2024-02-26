@@ -46,7 +46,7 @@ public:
     }
   }
 
-  bool is_ready(rcl_wait_set_t *) override
+  bool is_ready(const rcl_wait_set_t *) override
   {
     return test_waitable_result;
   }
@@ -57,7 +57,7 @@ public:
     return nullptr;
   }
 
-  void execute(std::shared_ptr<void> & data) override
+  void execute(const std::shared_ptr<void> & data) override
   {
     (void) data;
   }

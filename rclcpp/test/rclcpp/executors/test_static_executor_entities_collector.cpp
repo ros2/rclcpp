@@ -232,7 +232,7 @@ class TestWaitable : public rclcpp::Waitable
 public:
   void add_to_wait_set(rcl_wait_set_t *) override {}
 
-  bool is_ready(rcl_wait_set_t *) override {return true;}
+  bool is_ready(const rcl_wait_set_t *) override {return true;}
 
   std::shared_ptr<void>
   take_data() override
@@ -240,7 +240,7 @@ public:
     return nullptr;
   }
   void
-  execute(std::shared_ptr<void> & data) override
+  execute(const std::shared_ptr<void> & data) override
   {
     (void) data;
   }

@@ -67,7 +67,7 @@ EventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 
 /// Check if the Waitable is ready.
 bool
-EventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
+EventHandlerBase::is_ready(const rcl_wait_set_t * wait_set)
 {
   return wait_set->events[wait_set_event_index_] == &event_handle_;
 }

@@ -69,7 +69,7 @@ ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 }
 
 bool
-ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
+ExecutorNotifyWaitable::is_ready(const rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
@@ -92,7 +92,7 @@ ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 }
 
 void
-ExecutorNotifyWaitable::execute(std::shared_ptr<void> & data)
+ExecutorNotifyWaitable::execute(const std::shared_ptr<void> & data)
 {
   (void) data;
   this->execute_callback_();

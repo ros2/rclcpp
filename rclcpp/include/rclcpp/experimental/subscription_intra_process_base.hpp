@@ -72,7 +72,7 @@ public:
   is_durability_transient_local() const;
 
   bool
-  is_ready(rcl_wait_set_t * wait_set) override = 0;
+  is_ready(const rcl_wait_set_t * wait_set) override = 0;
 
   std::shared_ptr<void>
   take_data() override = 0;
@@ -85,7 +85,7 @@ public:
   }
 
   void
-  execute(std::shared_ptr<void> & data) override = 0;
+  execute(const std::shared_ptr<void> & data) override = 0;
 
   virtual
   bool

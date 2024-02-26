@@ -150,7 +150,7 @@ public:
     );
   }
 
-  void execute(std::shared_ptr<void> & data) override
+  void execute(const std::shared_ptr<void> & data) override
   {
     execute_impl<SubscribedType>(data);
   }
@@ -158,7 +158,7 @@ public:
 protected:
   template<typename T>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
-  execute_impl(std::shared_ptr<void> & data)
+  execute_impl(const std::shared_ptr<void> & data)
   {
     (void)data;
     throw std::runtime_error("Subscription intra-process can't handle serialized messages");
@@ -166,9 +166,9 @@ protected:
 
   template<class T>
   typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value, void>::type
-  execute_impl(std::shared_ptr<void> & data)
+  execute_impl(const std::shared_ptr<void> & data)
   {
-    if (!data) {
+    if (nullptr == data) {
       return;
     }
 
