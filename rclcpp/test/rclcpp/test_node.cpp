@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <limits>
 #include <map>
@@ -27,7 +28,6 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "rcpputils/filesystem_helper.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 #include "rmw/validate_namespace.h"
@@ -56,7 +56,7 @@ protected:
     test_resources_path /= "test_node";
   }
 
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /*
