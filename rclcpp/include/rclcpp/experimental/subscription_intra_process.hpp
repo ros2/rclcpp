@@ -167,7 +167,7 @@ protected:
   typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value, void>::type
   execute_impl(const std::shared_ptr<void> & data)
   {
-    if (!data) {
+    if (nullptr == data) {
       return;
     }
 
