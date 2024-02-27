@@ -149,7 +149,6 @@ public:
           wait_set_pointer_->timers(ii)->call())
         {
           ret = wait_set_pointer_->timers(ii);
-          rcl_wait_set.timers[ii] = nullptr;
           break;
         }
       }
