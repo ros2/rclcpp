@@ -95,8 +95,9 @@ Executor::~Executor()
   }
   // Disassociate all nodes.
   std::for_each(
-    weak_nodes_.begin(), weak_nodes_.end(), []
-      (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
+    weak_nodes_.begin(), weak_nodes_.end(),
+    [](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr)
+    {
       auto shared_node_ptr = weak_node_ptr.lock();
       if (shared_node_ptr) {
         std::atomic_bool & has_executor = shared_node_ptr->get_associated_with_executor_atomic();

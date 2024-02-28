@@ -127,6 +127,7 @@ public:
    *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
    *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
    */
+  // *INDENT-OFF*
   Subscription(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rosidl_message_type_support_t & type_support_handle,
@@ -148,6 +149,7 @@ public:
     any_callback_(callback),
     options_(options),
     message_memory_strategy_(message_memory_strategy)
+  // *INDENT-ON*
   {
     // Setup intra process publishing if requested.
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {

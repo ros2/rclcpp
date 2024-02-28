@@ -51,8 +51,10 @@ TEST_F(TestAnyServiceCallback, no_set_and_dispatch_throw) {
 
 TEST_F(TestAnyServiceCallback, set_and_dispatch_no_header) {
   int callback_calls = 0;
-  auto callback = [&callback_calls](const std::shared_ptr<test_msgs::srv::Empty::Request>,
-      std::shared_ptr<test_msgs::srv::Empty::Response>) {
+  auto callback = [&callback_calls](
+    const std::shared_ptr<test_msgs::srv::Empty::Request>,
+    std::shared_ptr<test_msgs::srv::Empty::Response>)
+    {
       callback_calls++;
     };
 
@@ -65,10 +67,11 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_no_header) {
 
 TEST_F(TestAnyServiceCallback, set_and_dispatch_header) {
   int callback_with_header_calls = 0;
-  auto callback_with_header =
-    [&callback_with_header_calls](const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<test_msgs::srv::Empty::Request>,
-      std::shared_ptr<test_msgs::srv::Empty::Response>) {
+  auto callback_with_header = [&callback_with_header_calls](
+    const std::shared_ptr<rmw_request_id_t>,
+    const std::shared_ptr<test_msgs::srv::Empty::Request>,
+    std::shared_ptr<test_msgs::srv::Empty::Response>)
+    {
       callback_with_header_calls++;
     };
 
@@ -80,9 +83,9 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_header) {
 
 TEST_F(TestAnyServiceCallback, set_and_dispatch_defered) {
   int callback_with_header_calls = 0;
-  auto callback_with_header =
-    [&callback_with_header_calls](const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<test_msgs::srv::Empty::Request>) {
+  auto callback_with_header = [&callback_with_header_calls](
+    const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<test_msgs::srv::Empty::Request>)
+    {
       callback_with_header_calls++;
     };
 
@@ -94,10 +97,10 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_defered) {
 
 TEST_F(TestAnyServiceCallback, set_and_dispatch_defered_with_service_handle) {
   int callback_with_header_calls = 0;
-  auto callback_with_header =
-    [&callback_with_header_calls](std::shared_ptr<rclcpp::Service<test_msgs::srv::Empty>>,
-      const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<test_msgs::srv::Empty::Request>)
+  auto callback_with_header = [&callback_with_header_calls](
+    std::shared_ptr<rclcpp::Service<test_msgs::srv::Empty>>,
+    const std::shared_ptr<rmw_request_id_t>,
+    const std::shared_ptr<test_msgs::srv::Empty::Request>)
     {
       callback_with_header_calls++;
     };
