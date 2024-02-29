@@ -73,7 +73,7 @@ struct hash<rclcpp_action::GoalUUID>
     constexpr size_t FNV_prime = 1099511628211u;
     size_t result = 14695981039346656037u;
 
-    for (const auto& byte : uuid) {
+    for (const auto & byte : uuid) {
       result ^= byte;
       result *= FNV_prime;
     }

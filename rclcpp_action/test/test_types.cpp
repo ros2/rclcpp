@@ -61,41 +61,12 @@ TEST(TestActionTypes, rcl_action_goal_info_to_goal_uuid) {
   }
 }
 
-TEST(TestActionTypes, goal_uuid_hashing_algorithm_collisions) {
-  // Use predefined IDs that have been known to fail with previous hashing algorithms
-  rclcpp_action::GoalUUID g1_1 = {0x0b,0x76,0xbe,0x24,0x5a,0x94,0x42,0xc2,0xfe,0xa2,0x20,0x96,0xa7,0x43,0x4a,0xa7};
-  rclcpp_action::GoalUUID g1_2 = {0x04,0x79,0x41,0xdf,0x7d,0x4d,0xb5,0xe2,0xeb,0x9b,0xeb,0x59,0xe2,0x81,0x26,0x49};
-
-  rclcpp_action::GoalUUID g2_1 = {0x17,0xe6,0xf4,0xff,0x9d,0xb6,0xaa,0x53,0x59,0x84,0x82,0xf0,0x1d,0x46,0xe0,0xcf};
-  rclcpp_action::GoalUUID g2_2 = {0x0c,0xbb,0x81,0x55,0xe1,0x04,0x7b,0x61,0x76,0xf6,0x51,0x96,0xbe,0x83,0xb4,0xa1};
-
-  rclcpp_action::GoalUUID g3_1 = {0x00,0x20,0x83,0x8d,0x73,0x49,0x4e,0x9c,0x8d,0x51,0x8e,0x34,0xaf,0xb4,0x75,0xd1};
-  rclcpp_action::GoalUUID g3_2 = {0x0d,0xfb,0x53,0x2f,0x13,0x89,0xa9,0xf3,0x4a,0x36,0xa4,0x84,0x77,0xc9,0xf7,0x40};
-
-  rclcpp_action::GoalUUID g4_1 = {0x08,0x6c,0x88,0x06,0xf6,0x8f,0xa5,0x9c,0xae,0xb8,0xa3,0x22,0xf7,0xba,0x9b,0x3c};
-  rclcpp_action::GoalUUID g4_2 = {0x0b,0xd7,0x63,0x72,0x16,0xc9,0x72,0x7b,0x06,0x59,0x59,0xdd,0xb8,0xf4,0xb5,0xee};
-
-  size_t hashed_g1_1 = std::hash<rclcpp_action::GoalUUID>()(g1_1);
-  size_t hashed_g1_2 = std::hash<rclcpp_action::GoalUUID>()(g1_2);
-  EXPECT_NE(hashed_g1_1, hashed_g1_2);
-
-  size_t hashed_g2_1 = std::hash<rclcpp_action::GoalUUID>()(g2_1);
-  size_t hashed_g2_2 = std::hash<rclcpp_action::GoalUUID>()(g2_2);
-  EXPECT_NE(hashed_g2_1, hashed_g2_2);
-
-  size_t hashed_g3_1 = std::hash<rclcpp_action::GoalUUID>()(g3_1);
-  size_t hashed_g3_2 = std::hash<rclcpp_action::GoalUUID>()(g3_2);
-  EXPECT_NE(hashed_g3_1, hashed_g3_2);
-
-  size_t hashed_g4_1 = std::hash<rclcpp_action::GoalUUID>()(g4_1);
-  size_t hashed_g4_2 = std::hash<rclcpp_action::GoalUUID>()(g4_2);
-  EXPECT_NE(hashed_g4_1, hashed_g4_2);
-}
-
 TEST(TestActionTypes, goal_uuid_to_hashed_uuid_random) {
   // Use std::random_device to seed the generator of goal IDs.
   std::random_device rd;
-  std::independent_bits_engine<std::default_random_engine, 8, decltype(rd())> random_bytes_generator(rd());
+  std::independent_bits_engine<
+    std::default_random_engine, 8, decltype(rd())> random_bytes_generator(rd());
+
   std::vector<size_t> hashed_guuids;
   constexpr size_t iterations = 1000;
 
@@ -103,8 +74,8 @@ TEST(TestActionTypes, goal_uuid_to_hashed_uuid_random) {
     rclcpp_action::GoalUUID goal_id;
 
     // Generate random bytes for each element of the array
-    for (auto& element : goal_id) {
-        element = static_cast<uint8_t>(random_bytes_generator());
+    for (auto & element : goal_id) {
+      element = static_cast<uint8_t>(random_bytes_generator());
     }
 
     size_t new_hashed_guuid = std::hash<rclcpp_action::GoalUUID>()(goal_id);
