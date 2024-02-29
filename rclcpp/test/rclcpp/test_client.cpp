@@ -247,7 +247,7 @@ protected:
   ::testing::AssertionResult SendEmptyRequestAndWait(
     std::chrono::milliseconds timeout = std::chrono::milliseconds(1000))
   {
-    using SharedFuture = rclcpp::Client<test_msgs::srv::Empty>::SharedFuture;
+    using SharedFuture = rclcpp::Client<test_msgs::srv::Empty>::ROSSharedFuture;
 
     auto client = node->create_client<test_msgs::srv::Empty>(service_name);
     if (!client->wait_for_service()) {
@@ -294,7 +294,7 @@ TEST_F(TestClientWithServer, async_send_request) {
 
 TEST_F(TestClientWithServer, async_send_request_callback_with_request) {
   using SharedFutureWithRequest =
-    rclcpp::Client<test_msgs::srv::Empty>::SharedFutureWithRequest;
+    rclcpp::Client<test_msgs::srv::Empty>::ROSTotalSharedFutureWithRequest;
 
   auto client = node->create_client<test_msgs::srv::Empty>(service_name);
   ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(1)));
@@ -563,7 +563,7 @@ TEST_F(TestClient, client_qos_depth) {
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
   ::testing::AssertionResult request_result = ::testing::AssertionSuccess();
 
-  using SharedFuture = rclcpp::Client<test_msgs::srv::Empty>::SharedFuture;
+  using SharedFuture = rclcpp::Client<test_msgs::srv::Empty>::ROSSharedFuture;
   uint64_t client_cb_count_ = 0;
   auto client_callback = [&client_cb_count_, &request_result](SharedFuture future_response) {
       if (nullptr == future_response.get()) {

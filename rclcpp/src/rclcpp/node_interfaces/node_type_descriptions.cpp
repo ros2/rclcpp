@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <type_traits>
 
 #include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/parameter_client.hpp"
@@ -43,11 +44,25 @@ get_service_type_support_handle<GetTypeDescription__C>()
 }
 }  // namespace rosidl_typesupport_cpp
 
+namespace rosidl_generator_traits
+{
+template<>
+struct is_service<GetTypeDescription__C>: std::true_type {};
+
+template<>
+struct is_message<GetTypeDescription__C::Request>: std::true_type {};
+
+template<>
+struct is_message<GetTypeDescription__C::Response>: std::true_type {};
+
+template<>
+struct is_message<GetTypeDescription__C::Event>: std::true_type {};
+}  // namespace rosidl_generator_traits
+
 namespace rclcpp
 {
 namespace node_interfaces
 {
-
 class NodeTypeDescriptions::NodeTypeDescriptionsImpl
 {
 public:

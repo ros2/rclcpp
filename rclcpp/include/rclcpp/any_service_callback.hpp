@@ -22,8 +22,11 @@
 #include <type_traits>
 #include <utility>
 
+#include "rosidl_runtime_cpp/traits.hpp"
+
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/type_adapter.hpp"
 #include "rmw/types.h"
 #include "tracetools/tracetools.h"
 #include "tracetools/utils.hpp"
@@ -58,6 +61,127 @@ template<typename ServiceT>
 class AnyServiceCallback
 {
 public:
+  using ServiceRequestType =
+    typename TypeAdapter<ServiceT>::custom_type::Request;
+  /// ServiceT::ros_message_type::Request if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Request
+  using ROSServiceRequestType =
+    typename TypeAdapter<ServiceT>::ros_message_type::Request;
+  /// ServiceT::custom_type::Response if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Response
+  using ServiceResponseType =
+    typename TypeAdapter<ServiceT>::custom_type::Response;
+  /// ServiceT::ros_message_type::Response if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Response
+  using ROSServiceResponseType =
+    typename TypeAdapter<ServiceT>::ros_message_type::Response;
+
+private:
+  using ROSTotalSharedPtrCallback = std::function<
+    void (
+      std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>
+    )>;
+  using ROSTotalSharedPtrWithRequestHeaderCallback = std::function<
+    void (
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>
+    )>;
+  using CustomTotalSharedPtrCallback = std::function<
+    void (
+      std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>
+    )>;
+  using CustomTotalSharedPtrWithRequestHeaderCallback = std::function<
+    void (
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>
+    )>;
+  using ROSCustomSharedPtrCallback = std::function<
+    void (
+      std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>
+    )>;
+  using ROSCustomSharedPtrWithRequestHeaderCallback = std::function<
+    void (
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>
+    )>;
+  using CustomROSSharedPtrCallback = std::function<
+    void (
+      std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>
+    )>;
+  using CustomROSSharedPtrWithRequestHeaderCallback = std::function<
+    void (
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>
+    )>;
+  using ROSSharedPtrDeferResponseCallback = std::function<
+    void (
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ROSServiceRequestType>
+    )>;
+  using ROSSharedPtrDeferResponseCallbackWithServiceHandle = std::function<
+    void (
+      std::shared_ptr<rclcpp::Service<ServiceT>>,
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ROSServiceRequestType>
+    )>;
+  using CustomSharedPtrDeferResponseCallback = std::function<
+    void (
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ServiceRequestType>
+    )>;
+  using CustomSharedPtrDeferResponseCallbackWithServiceHandle = std::function<
+    void (
+      std::shared_ptr<rclcpp::Service<ServiceT>>,
+      std::shared_ptr<rmw_request_id_t>,
+      std::shared_ptr<ServiceRequestType>
+    )>;
+
+  template<bool is_adapted_type = rclcpp::TypeAdapter<ServiceT>::is_specialized::value>
+  struct AnyServiceCallbackHelper;
+
+  template<>
+  struct AnyServiceCallbackHelper<true>
+  {
+    using variant_type = std::variant<
+      std::monostate,
+      ROSTotalSharedPtrCallback,
+      ROSTotalSharedPtrWithRequestHeaderCallback,
+      CustomTotalSharedPtrCallback,
+      CustomTotalSharedPtrWithRequestHeaderCallback,
+      ROSCustomSharedPtrCallback,
+      ROSCustomSharedPtrWithRequestHeaderCallback,
+      CustomROSSharedPtrCallback,
+      CustomROSSharedPtrWithRequestHeaderCallback,
+      ROSSharedPtrDeferResponseCallback,
+      ROSSharedPtrDeferResponseCallbackWithServiceHandle,
+      CustomSharedPtrDeferResponseCallback,
+      CustomSharedPtrDeferResponseCallbackWithServiceHandle>;
+  };
+
+  template<>
+  struct AnyServiceCallbackHelper<false>
+  {
+    using variant_type = std::variant<
+      std::monostate,
+      ROSTotalSharedPtrCallback,
+      ROSTotalSharedPtrWithRequestHeaderCallback,
+      ROSSharedPtrDeferResponseCallback,
+      ROSSharedPtrDeferResponseCallbackWithServiceHandle>;
+  };
+
+  using CallbackHelperT = AnyServiceCallbackHelper<>;
+
+  typename CallbackHelperT::variant_type callback_;
+
+public:
   AnyServiceCallback()
   : callback_(std::monostate{})
   {}
@@ -72,31 +196,89 @@ public:
     if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrCallback
+        ROSTotalSharedPtrCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrCallback>(callback);
+      callback_.template emplace<ROSTotalSharedPtrCallback>(callback);
     } else if constexpr (  // NOLINT, can't satisfy both cpplint and uncrustify
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrWithRequestHeaderCallback
+        ROSTotalSharedPtrWithRequestHeaderCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
+      callback_.template emplace<ROSTotalSharedPtrWithRequestHeaderCallback>(callback);
     } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrDeferResponseCallback
+        CustomTotalSharedPtrCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
+      callback_.template emplace<CustomTotalSharedPtrCallback>(callback);
     } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrDeferResponseCallbackWithServiceHandle
+        CustomTotalSharedPtrWithRequestHeaderCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+      callback_.template emplace<CustomTotalSharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSCustomSharedPtrCallback
+      >::value)
+    {
+      callback_.template emplace<ROSCustomSharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSCustomSharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<ROSCustomSharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomROSSharedPtrCallback
+      >::value)
+    {
+      callback_.template emplace<CustomROSSharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomROSSharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<CustomROSSharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSSharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.template emplace<ROSSharedPtrDeferResponseCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSSharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.template emplace<
+        ROSSharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomSharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.template emplace<CustomSharedPtrDeferResponseCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomSharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.template emplace<
+        CustomSharedPtrDeferResponseCallbackWithServiceHandle>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -117,31 +299,89 @@ public:
     if constexpr (
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrCallback
+        ROSTotalSharedPtrCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrCallback>(callback);
+      callback_.template emplace<ROSTotalSharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT, can't satisfy both cpplint and uncrustify
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSTotalSharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<ROSTotalSharedPtrWithRequestHeaderCallback>(callback);
     } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrWithRequestHeaderCallback
+        CustomTotalSharedPtrCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
+      callback_.template emplace<CustomTotalSharedPtrCallback>(callback);
     } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrDeferResponseCallback
+        CustomTotalSharedPtrWithRequestHeaderCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
+      callback_.template emplace<CustomTotalSharedPtrWithRequestHeaderCallback>(callback);
     } else if constexpr (  // NOLINT
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        SharedPtrDeferResponseCallbackWithServiceHandle
+        ROSCustomSharedPtrCallback
       >::value)
     {
-      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+      callback_.template emplace<ROSCustomSharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSCustomSharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<ROSCustomSharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomROSSharedPtrCallback
+      >::value)
+    {
+      callback_.template emplace<CustomROSSharedPtrCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomROSSharedPtrWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<CustomROSSharedPtrWithRequestHeaderCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSSharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.template emplace<ROSSharedPtrDeferResponseCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ROSSharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.template emplace<
+        ROSSharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomSharedPtrDeferResponseCallback
+      >::value)
+    {
+      callback_.template emplace<CustomSharedPtrDeferResponseCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CustomSharedPtrDeferResponseCallbackWithServiceHandle
+      >::value)
+    {
+      callback_.template emplace<
+        CustomSharedPtrDeferResponseCallbackWithServiceHandle>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -150,11 +390,15 @@ public:
   }
 
   // template<typename Allocator = std::allocator<typename ServiceT::Response>>
-  std::shared_ptr<typename ServiceT::Response>
+  template<typename T>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSServiceRequestType>::value,
+    std::shared_ptr<ROSServiceResponseType>>
   dispatch(
     const std::shared_ptr<rclcpp::Service<ServiceT>> & service_handle,
     const std::shared_ptr<rmw_request_id_t> & request_header,
-    std::shared_ptr<typename ServiceT::Request> request)
+    std::shared_ptr<T> request)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     if (std::holds_alternative<std::monostate>(callback_)) {
@@ -162,28 +406,80 @@ public:
       // to pass a callback at construnciton.
       throw std::runtime_error{"unexpected request without any callback set"};
     }
-    if (std::holds_alternative<SharedPtrDeferResponseCallback>(callback_)) {
-      const auto & cb = std::get<SharedPtrDeferResponseCallback>(callback_);
+    if (std::holds_alternative<ROSSharedPtrDeferResponseCallback>(callback_)) {
+      const auto & cb = std::get<ROSSharedPtrDeferResponseCallback>(callback_);
       cb(request_header, std::move(request));
       return nullptr;
     }
-    if (std::holds_alternative<SharedPtrDeferResponseCallbackWithServiceHandle>(callback_)) {
-      const auto & cb = std::get<SharedPtrDeferResponseCallbackWithServiceHandle>(callback_);
+    if (std::holds_alternative<ROSSharedPtrDeferResponseCallbackWithServiceHandle>(callback_)) {
+      const auto & cb = std::get<ROSSharedPtrDeferResponseCallbackWithServiceHandle>(callback_);
       cb(service_handle, request_header, std::move(request));
       return nullptr;
     }
     // auto response = allocate_shared<typename ServiceT::Response, Allocator>();
-    auto response = std::make_shared<typename ServiceT::Response>();
-    if (std::holds_alternative<SharedPtrCallback>(callback_)) {
+    auto response = std::make_shared<ROSServiceResponseType>();
+    if (std::holds_alternative<ROSTotalSharedPtrCallback>(callback_)) {
       (void)request_header;
-      const auto & cb = std::get<SharedPtrCallback>(callback_);
+      const auto & cb = std::get<ROSTotalSharedPtrCallback>(callback_);
       cb(std::move(request), response);
-    } else if (std::holds_alternative<SharedPtrWithRequestHeaderCallback>(callback_)) {
-      const auto & cb = std::get<SharedPtrWithRequestHeaderCallback>(callback_);
+    } else if (std::holds_alternative<ROSTotalSharedPtrWithRequestHeaderCallback>(callback_)) {
+      const auto & cb = std::get<ROSTotalSharedPtrWithRequestHeaderCallback>(callback_);
       cb(request_header, std::move(request), response);
     }
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
     return response;
+  }
+
+  template<typename T>
+  typename std::enable_if_t<
+    !rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ServiceRequestType>::value,
+    std::shared_ptr<ServiceResponseType>>
+  dispatch(
+    const std::shared_ptr<rclcpp::Service<ServiceT>> & service_handle,
+    const std::shared_ptr<rmw_request_id_t> & request_header,
+    std::shared_ptr<T> request)
+  {
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    if (std::holds_alternative<std::monostate>(callback_)) {
+      // TODO(ivanpauno): Remove the set method, and force the users of this class
+      // to pass a callback at construnciton.
+      throw std::runtime_error{"unexpected request without any callback set"};
+    }
+    if (std::holds_alternative<CustomSharedPtrDeferResponseCallback>(callback_)) {
+      const auto & cb = std::get<CustomSharedPtrDeferResponseCallback>(callback_);
+      cb(request_header, std::move(request));
+      return nullptr;
+    }
+    if (std::holds_alternative<CustomSharedPtrDeferResponseCallbackWithServiceHandle>(callback_)) {
+      const auto & cb = std::get<CustomSharedPtrDeferResponseCallbackWithServiceHandle>(callback_);
+      cb(service_handle, request_header, std::move(request));
+      return nullptr;
+    }
+    // auto response = allocate_shared<typename ServiceT::Response, Allocator>();
+    auto response = std::make_shared<ServiceResponseType>();
+    if (std::holds_alternative<CustomTotalSharedPtrCallback>(callback_)) {
+      (void)request_header;
+      const auto & cb = std::get<CustomTotalSharedPtrCallback>(callback_);
+      cb(std::move(request), response);
+    } else if (std::holds_alternative<CustomTotalSharedPtrWithRequestHeaderCallback>(callback_)) {
+      const auto & cb = std::get<CustomTotalSharedPtrWithRequestHeaderCallback>(callback_);
+      cb(request_header, std::move(request), response);
+    }
+    TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
+    return response;
+  }
+
+  typename CallbackHelperT::variant_type &
+  get_variant()
+  {
+    return callback_;
+  }
+
+  const typename CallbackHelperT::variant_type &
+  get_variant() const
+  {
+    return callback_;
   }
 
   void register_callback_for_tracing()
@@ -202,37 +498,6 @@ public:
       }, callback_);
 #endif  // TRACETOOLS_DISABLED
   }
-
-private:
-  using SharedPtrCallback = std::function<
-    void (
-      std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>
-    )>;
-  using SharedPtrWithRequestHeaderCallback = std::function<
-    void (
-      std::shared_ptr<rmw_request_id_t>,
-      std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>
-    )>;
-  using SharedPtrDeferResponseCallback = std::function<
-    void (
-      std::shared_ptr<rmw_request_id_t>,
-      std::shared_ptr<typename ServiceT::Request>
-    )>;
-  using SharedPtrDeferResponseCallbackWithServiceHandle = std::function<
-    void (
-      std::shared_ptr<rclcpp::Service<ServiceT>>,
-      std::shared_ptr<rmw_request_id_t>,
-      std::shared_ptr<typename ServiceT::Request>
-    )>;
-
-  std::variant<
-    std::monostate,
-    SharedPtrCallback,
-    SharedPtrWithRequestHeaderCallback,
-    SharedPtrDeferResponseCallback,
-    SharedPtrDeferResponseCallbackWithServiceHandle> callback_;
 };
 
 }  // namespace rclcpp

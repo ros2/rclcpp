@@ -39,11 +39,15 @@
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/get_service_type_support_handle.hpp"
+#include "rclcpp/is_ros_compatible_type.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/type_adapter.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "type_adapter.hpp"
 
 namespace rclcpp
 {
@@ -280,22 +284,110 @@ protected:
   std::atomic<bool> in_use_by_wait_set_{false};
 };
 
+
+/**
+ * ServiceT must be either a:
+ * ROS service type with its own message type support in both the request and response
+ * (e.g. std_msgs::msgs::String), or a rclcpp::TypeAdapter<CustomType, ROSMessageType>
+ * (e.g. struct TypeAdapterStruct { using Request = rclcpp::TypeAdapter<std::string,
+ * std_msgs::msg::String>; using Response = rclcpp::TypeAdapter<bool, std_msgs::msg::Bool>; };
+ * )
+ *
+ * In the case the ServiceT is a ROS service with ROS message types in both the request and
+ * response (e.g. std_msgs::msg::Bool, std_msgs::msg::String), all of the custom types
+ * ServiceRequestType, ROSServiceRequestType, ServiceResponseType, ROSServiceResponseType will
+ * be their respective types.
+ * In any case that ServiceT is a struct that uses request and response as a
+ * TypeAdapter<CustomType, ROSMessageType> (e.g. struct TypeAdapterStruct {
+ * using Request = rclcpp::TypeAdapter<std::string, std_msgs::msg::String>;
+ * using Response = rclcpp::TypeAdapter<bool, std_msgs::msg::Bool>; };)
+ * ServiceRequestType and ServiceResponseType will be the custom type and
+ * ROSServiceRequestType and ROSServiceResponseType will be the ROS message type
+ */
 template<typename ServiceT>
 class Service
   : public ServiceBase,
   public std::enable_shared_from_this<Service<ServiceT>>
 {
 public:
-  using CallbackType = std::function<
-    void (
-      const std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>)>;
+  static_assert(
+    rclcpp::is_ros_compatible_service_type<ServiceT>::value,
+    "Service type is not compatible with ROS 2 and cannot be used with a Service");
 
-  using CallbackWithHeaderType = std::function<
+  /// ServiceT::custom_type::Request if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Request
+  using ServiceRequestType =
+    typename rclcpp::TypeAdapter<ServiceT>::custom_type::Request;
+  /// ServiceT::ros_message_type::Request if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Request
+  using ROSServiceRequestType =
+    typename rclcpp::TypeAdapter<ServiceT>::ros_message_type::Request;
+  /// ServiceT::custom_type::Response if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Response
+  using ServiceResponseType =
+    typename rclcpp::TypeAdapter<ServiceT>::custom_type::Response;
+  /// ServiceT::ros_message_type::Response if ServiceT is a TypeAdapter, otherwise just the
+  /// ServiceT::Response
+  using ROSServiceResponseType =
+    typename rclcpp::TypeAdapter<ServiceT>::ros_message_type::Response;
+
+  using CallbackType [[deprecated("Use ROSCallbackType instead of CallbackType")]] =
+    std::function<
+    void (
+      const std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>)>;
+
+  using ROSCallbackType = std::function<
+    void (
+      const std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>)>;
+
+  using CallbackWithHeaderType
+  [[deprecated("Use ROSCallbackWithHeaderType instead of CallbackWithHeaderType")]] =
+    std::function<
     void (
       const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>)>;
+      const std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>)>;
+
+  using ROSCallbackWithHeaderType = std::function<
+    void (
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>)>;
+
+  using CustomCallbackType = std::function<
+    void (
+      const std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>)>;
+
+  using CustomCallbackWithHeaderType = std::function<
+    void (
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>)>;
+
+  using ROSCustomCallbackType = std::function<
+    void (
+      const std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>)>;
+
+  using ROSCustomCallbackWithHeaderType = std::function<
+    void (
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<ROSServiceRequestType>,
+      std::shared_ptr<ServiceResponseType>)>;
+
+  using CustomROSCallbackType = std::function<
+    void (
+      const std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>)>;
+
+  using CustomROSCallbackWithHeaderType = std::function<
+    void (
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<ServiceRequestType>,
+      std::shared_ptr<ROSServiceResponseType>)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Service)
 
   /// Default constructor.
@@ -315,7 +407,7 @@ public:
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
   : ServiceBase(node_handle), any_callback_(any_callback),
-    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     // rcl does the static memory allocation here
     service_handle_ = std::shared_ptr<rcl_service_t>(
@@ -376,7 +468,7 @@ public:
     std::shared_ptr<rcl_service_t> service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback),
-    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle.get())) {
@@ -411,7 +503,7 @@ public:
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback),
-    srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
+    srv_type_support_handle_(&rclcpp::get_service_type_support_handle<ServiceT>())
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle)) {
@@ -443,6 +535,9 @@ public:
   /**
    * \sa ServiceBase::take_type_erased_request().
    *
+   * This signature is enabled if the service request is a ROSServiceRequestType
+   * as opposed to the custom type of a respective TypeAdapter
+   *
    * \param[out] request_out The reference to a service request object
    *   into which the middleware will copy the taken request.
    * \param[out] request_id_out The output id for the request which can be used
@@ -451,16 +546,82 @@ public:
    * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
    *   rcl calls fail.
    */
-  bool
-  take_request(typename ServiceT::Request & request_out, rmw_request_id_t & request_id_out)
+  template<typename T>
+  typename std::enable_if_t<
+    rosidl_generator_traits::is_message<T>::value &&
+    std::is_same<T, ROSServiceRequestType>::value,
+    bool
+  >
+  take_request(T & request_out, rmw_request_id_t & request_id_out)
   {
     return this->take_type_erased_request(&request_out, request_id_out);
+  }
+
+  /// Take the next request from the service.
+  /**
+   * \sa ServiceBase::take_type_erased_request().
+   *
+   * This signature is enabled if the service request is a ServiceRequestType
+   * created with a TypeAdapter, matching its respective custom_type
+   *
+   * \param[out] request_out The reference to a service request object
+   *   into which the middleware will copy the taken request.
+   * \param[out] request_id_out The output id for the request which can be used
+   *   to associate response with this request in the future.
+   * \returns true if the request was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl calls fail.
+   */
+  template<typename T>
+  typename std::enable_if_t<
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
+    std::is_same<T, ServiceRequestType>::value,
+    bool
+  >
+  take_request(T & request_out, rmw_request_id_t & request_id_out)
+  {
+    ROSServiceRequestType ros_service_request_out;
+    rclcpp::TypeAdapter<ServiceT>::convert_to_ros_service_request(
+      request_out, ros_service_request_out);
+    return this->take_type_erased_request(&ros_service_request_out, request_id_out);
   }
 
   std::shared_ptr<void>
   create_request() override
   {
-    return std::make_shared<typename ServiceT::Request>();
+    if (std::holds_alternative<ROSCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    if (std::holds_alternative<ROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    if (std::holds_alternative<ROSCustomCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomROSCallbackType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    if (std::holds_alternative<ROSCustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ROSServiceRequestType>();
+    }
+    if (std::holds_alternative<CustomROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      return std::make_shared<ServiceRequestType>();
+    }
+    return std::make_shared<ROSServiceRequestType>();
   }
 
   std::shared_ptr<rmw_request_id_t>
@@ -474,15 +635,87 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) override
   {
-    auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
-    if (response) {
-      send_response(*request_header, *response);
+    if (std::holds_alternative<ROSCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<ROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<ROSCustomCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomROSCallbackType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<ROSCustomCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ROSServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
+    }
+    if (std::holds_alternative<CustomROSCallbackWithHeaderType>(any_callback_.get_variant()))
+    {
+      auto typed_request = std::static_pointer_cast<ServiceRequestType>(request);
+      auto response = any_callback_.dispatch(this->shared_from_this(), request_header, typed_request);
+      if (response) {
+        send_response(*request_header, *response);
+      }
     }
   }
 
-  void
-  send_response(rmw_request_id_t & req_id, typename ServiceT::Response & response)
+  // Send the given response via rcl function
+  /**
+   * Enable this response if the given ServiceT::Response is a ROSServiceResponseType,
+   * a provided ros_message_type opposed to a custom_type from a TypeAdapter
+   *
+   * \param[in] req_id The given id assigned to the current response.
+   * \param[in] response A ServiceT::Response which is meant to be sent via rcl.
+   * throws rclcpp::exceptions::throw_from_rcl_error if the rcl_ret_t is not alright
+   */
+  template<typename T>
+  std::enable_if_t<
+    rosidl_generator_traits::is_message<ROSServiceResponseType>::value &&
+    std::is_same<T, ROSServiceResponseType>::value
+  >
+  send_response(rmw_request_id_t & req_id, T & response)
   {
     rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, &response);
 
@@ -494,6 +727,33 @@ public:
       rcl_reset_error();
       return;
     }
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
+    }
+  }
+
+  // Send the given response via rcl function
+  /**
+   * Enable this response if the given ServiceT::Response is a ServiceResponseType,
+   * a provided custom_type from a TypeAdapter
+   *
+   * \param[in] req_id The given id assigned to the current response.
+   * \param[in] response A ServiceT::Response which is meant to be sent via rcl.
+   * throws rclcpp::exceptions::throw_from_rcl_error if the rcl_ret_t is not alright
+   */
+  template<typename T>
+  std::enable_if_t<
+    rclcpp::TypeAdapter<ServiceT>::is_specialized::value &&
+    std::is_same<T, ServiceResponseType>::value
+  >
+  send_response(rmw_request_id_t & req_id, T & response)
+  {
+    ROSServiceResponseType ros_service_response;
+    rclcpp::TypeAdapter<ServiceT>::convert_to_ros_service_response(
+      response, ros_service_response);
+    rcl_ret_t ret = rcl_send_response(
+      get_service_handle().get(), &req_id, &ros_service_response);
+
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
