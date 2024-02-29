@@ -409,8 +409,10 @@ StaticExecutorEntitiesCollector::remove_node(
   std::for_each(
     weak_groups_to_nodes_associated_with_executor_.begin(),
     weak_groups_to_nodes_associated_with_executor_.end(),
-    [&found_group_ptrs, node_ptr](std::pair<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+    [&found_group_ptrs, node_ptr](
+      std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair)
+    {
       auto & weak_node_ptr = key_value_pair.second;
       auto shared_node_ptr = weak_node_ptr.lock();
       auto group_ptr = key_value_pair.first.lock();
@@ -419,8 +421,9 @@ StaticExecutorEntitiesCollector::remove_node(
       }
     });
   std::for_each(
-    found_group_ptrs.begin(), found_group_ptrs.end(), [this]
-      (rclcpp::CallbackGroup::SharedPtr group_ptr) {
+    found_group_ptrs.begin(), found_group_ptrs.end(),
+    [this](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    {
       this->remove_callback_group_from_map(
         group_ptr,
         weak_groups_to_nodes_associated_with_executor_);

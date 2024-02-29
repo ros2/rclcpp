@@ -499,8 +499,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_goal_response_callback_wait
   bool goal_response_received = false;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.goal_response_callback =
-    [&goal_response_received]
-      (typename ActionGoalHandle::SharedPtr goal_handle)
+    [&goal_response_received](typename ActionGoalHandle::SharedPtr goal_handle)
     {
       if (goal_handle) {
         goal_response_received = true;
@@ -545,8 +544,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
   goal.order = 4;
   int feedback_count = 0;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
-  send_goal_ops.feedback_callback =
-    [&feedback_count](
+  send_goal_ops.feedback_callback = [&feedback_count](
     typename ActionGoalHandle::SharedPtr goal_handle,
     const std::shared_ptr<const ActionFeedback> feedback)
     {
@@ -868,9 +866,9 @@ TEST_F(TestClientAgainstServer, deadlock_in_callbacks)
 
       using GoalHandle = rclcpp_action::ClientGoalHandle<ActionType>;
       rclcpp_action::Client<ActionType>::SendGoalOptions ops;
-      ops.feedback_callback =
-      [&feedback_callback_called](const GoalHandle::SharedPtr handle,
-      ActionType::Feedback::ConstSharedPtr) {
+      ops.feedback_callback = [&feedback_callback_called](
+        const GoalHandle::SharedPtr handle, ActionType::Feedback::ConstSharedPtr)
+      {
         // call functions on the handle that acquire the lock
         handle->get_status();
         handle->is_feedback_aware();
@@ -940,9 +938,8 @@ TEST_F(TestClientAgainstServer, send_rcl_errors)
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
     [](const typename ActionGoalHandle::WrappedResult &) {};
-  send_goal_ops.feedback_callback =
-    [](typename ActionGoalHandle::SharedPtr,
-      const std::shared_ptr<const ActionFeedback>) {};
+  send_goal_ops.feedback_callback = [](
+    typename ActionGoalHandle::SharedPtr, const std::shared_ptr<const ActionFeedback>) {};
 
   {
     ActionGoal goal;
@@ -982,9 +979,8 @@ TEST_F(TestClientAgainstServer, execute_rcl_errors)
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
     [](const typename ActionGoalHandle::WrappedResult &) {};
-  send_goal_ops.feedback_callback =
-    [](typename ActionGoalHandle::SharedPtr,
-      const std::shared_ptr<const ActionFeedback>) {};
+  send_goal_ops.feedback_callback = [](
+    typename ActionGoalHandle::SharedPtr, const std::shared_ptr<const ActionFeedback>) {};
 
   {
     ActionGoal goal;

@@ -285,20 +285,14 @@ TEST_P(TestTimer, test_failures_with_exceptions)
     std::shared_ptr<rclcpp::TimerBase> timer_to_test_destructor;
     // Test destructor failure, just logs a msg
     auto mock = mocking_utils::inject_on_return("lib:rclcpp", rcl_timer_fini, RCL_RET_ERROR);
-    EXPECT_NO_THROW(
-    {
-      switch (timer_type) {
-        case TimerType::WALL_TIMER:
-          timer_to_test_destructor =
-          test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
-          break;
-        case TimerType::GENERIC_TIMER:
-          timer_to_test_destructor =
-          test_node->create_timer(std::chrono::milliseconds(0), [](void) {});
-          break;
-      }
-      timer_to_test_destructor.reset();
-    });
+    if (timer_type == TimerType::WALL_TIMER) {
+      timer_to_test_destructor =
+        test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
+    } else {
+      timer_to_test_destructor =
+        test_node->create_timer(std::chrono::milliseconds(0), [](void) {});
+    }
+    timer_to_test_destructor.reset();
   }
   {
     auto mock = mocking_utils::patch_and_return(
