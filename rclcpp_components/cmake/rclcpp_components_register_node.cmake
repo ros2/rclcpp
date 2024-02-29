@@ -24,6 +24,8 @@
 # :type PLUGIN: string
 # :param EXECUTABLE: the node's executable name
 # :type EXECUTABLE: string
+# :param EXECUTOR: the C++ class name of the executor to use (blank uses SingleThreadedExecutor)
+# :type EXECUTOR: string
 # :param RESOURCE_INDEX: the ament resource index to register the components
 # :type RESOURCE_INDEX: string
 #
