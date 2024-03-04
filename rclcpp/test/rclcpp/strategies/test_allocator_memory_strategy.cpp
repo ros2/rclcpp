@@ -200,9 +200,9 @@ protected:
 
   std::shared_ptr<rclcpp::Node> create_node_with_service(const std::string & name)
   {
-    auto service_callback =
-      [](const test_msgs::srv::Empty::Request::SharedPtr,
-        test_msgs::srv::Empty::Response::SharedPtr) {};
+    auto service_callback = [](
+      const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
     auto node_with_service = create_node_with_disabled_callback_groups(name);
 
     auto callback_group =
@@ -949,9 +949,9 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_service_out_of_scope) {
       node->create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    auto service_callback =
-      [](const test_msgs::srv::Empty::Request::SharedPtr,
-        test_msgs::srv::Empty::Response::SharedPtr) {};
+    auto service_callback = [](
+      const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
     auto service = node->create_service<test_msgs::srv::Empty>(
       "service", std::move(service_callback), rclcpp::ServicesQoS(), callback_group);
 

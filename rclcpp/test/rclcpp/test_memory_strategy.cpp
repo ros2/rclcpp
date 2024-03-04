@@ -143,9 +143,9 @@ TEST_F(TestMemoryStrategy, get_service_by_handle) {
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-      auto service_callback =
-        [](const test_msgs::srv::Empty::Request::SharedPtr,
-          test_msgs::srv::Empty::Response::SharedPtr) {};
+      auto service_callback = [](
+        const test_msgs::srv::Empty::Request::SharedPtr,
+        test_msgs::srv::Empty::Response::SharedPtr) {};
       const rclcpp::QoS qos(10);
       weak_groups_to_nodes.insert(
         std::pair<rclcpp::CallbackGroup::WeakPtr,
@@ -389,9 +389,9 @@ TEST_F(TestMemoryStrategy, get_group_by_service) {
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-      auto service_callback =
-        [](const test_msgs::srv::Empty::Request::SharedPtr,
-          test_msgs::srv::Empty::Response::SharedPtr) {};
+      auto service_callback = [](
+        const test_msgs::srv::Empty::Request::SharedPtr,
+        test_msgs::srv::Empty::Response::SharedPtr) {};
       const rclcpp::QoS qos(10);
 
       service = node->create_service<test_msgs::srv::Empty>(

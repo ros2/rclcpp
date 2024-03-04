@@ -57,6 +57,10 @@ public:
   RCLCPP_PUBLIC
   Time(const Time & rhs);
 
+  /// Move constructor
+  RCLCPP_PUBLIC
+  Time(Time && rhs) noexcept;
+
   /// Time constructor
   /**
    * \param time_msg builtin_interfaces time message to copy
@@ -84,6 +88,7 @@ public:
   operator builtin_interfaces::msg::Time() const;
 
   /**
+   * Copy assignment operator
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
@@ -99,6 +104,13 @@ public:
   RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
+
+  /**
+   * Move assignment operator
+   */
+  RCLCPP_PUBLIC
+  Time &
+  operator=(Time && rhs) noexcept;
 
   /**
    * \throws std::runtime_error if the time sources are different
@@ -221,6 +233,15 @@ private:
 RCLCPP_PUBLIC
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
+
+/// Convert rcl_time_point_value_t to builtin_interfaces::msg::Time
+/**
+ * \param[in] time_point is a rcl_time_point_value_t
+ * \return the builtin_interfaces::msg::Time from the time_point
+ */
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time
+convert_rcl_time_to_sec_nanos(const rcl_time_point_value_t & time_point);
 
 }  // namespace rclcpp
 

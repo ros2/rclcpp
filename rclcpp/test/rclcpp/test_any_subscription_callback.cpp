@@ -19,8 +19,6 @@
 #include <string>
 #include <utility>
 
-// TODO(aprotyas): Figure out better way to suppress deprecation warnings.
-#define RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS 1
 #include "rclcpp/any_subscription_callback.hpp"
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/msg/empty.h"
