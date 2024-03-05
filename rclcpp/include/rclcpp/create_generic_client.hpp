@@ -54,6 +54,18 @@ create_generic_client(
   const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
   rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
+/// Create a generic service client with a name of given type.
+/**
+ * The NodeT type needs to have NodeBaseInterface implementation, NodeGraphInterface implementation
+ * and NodeServicesInterface implementation of the node which to create the client.
+ *
+ * \param[in] node The node on which to create the client.
+ * \param[in] service_name The name on which the service is accessible.
+ * \param[in] service_type The name of service type, e.g. "test_msgs/srv/BasicTypes"
+ * \param[in] qos Quality of service profile for client.
+ * \param[in] group Callback group to handle the reply to service calls.
+ * \return Shared pointer to the created client.
+ */
 template<typename NodeT>
 rclcpp::GenericClient::SharedPtr
 create_generic_client(
