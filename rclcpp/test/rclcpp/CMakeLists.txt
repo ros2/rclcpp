@@ -6,6 +6,7 @@ add_definitions(-DTEST_RESOURCES_DIRECTORY="${TEST_RESOURCES_DIRECTORY}")
 
 rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/Header.msg
+  ../msg/LargeMessage.msg
   ../msg/MessageWithHeader.msg
   ../msg/String.msg
   DEPENDENCIES builtin_interfaces
