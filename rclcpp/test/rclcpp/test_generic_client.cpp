@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2023 Sony Group Corporation.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 #include <memory>
 #include <utility>
 
+#include "rclcpp/create_generic_client.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/serialization.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 
@@ -27,7 +29,11 @@
 
 #include "test_msgs/srv/empty.hpp"
 
-class TestClient : public ::testing::Test
+using namespace std::chrono_literals;
+
+// All tests are from test_client
+
+class TestGenericClient : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -42,7 +48,7 @@ protected:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    node = std::make_shared<rclcpp::Node>("test_node", "/ns");
   }
 
   void TearDown()
@@ -53,7 +59,7 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-class TestClientSub : public ::testing::Test
+class TestGenericClientSub : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -68,10 +74,9 @@ protected:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    node = std::make_shared<rclcpp::Node>("test_node", "/ns");
     subnode = node->create_sub_node("sub_ns");
   }
-
   void TearDown()
   {
     node.reset();
@@ -84,107 +89,115 @@ protected:
 /*
    Testing client construction and destruction.
  */
-TEST_F(TestClient, construction_and_destruction) {
-  using rcl_interfaces::srv::ListParameters;
+TEST_F(TestGenericClient, construction_and_destruction) {
   {
-    auto client = node->create_client<ListParameters>("service");
-  }
-  {
-    // suppress deprecated function warning
-    #if !defined(_WIN32)
-    # pragma GCC diagnostic push
-    # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    #else  // !defined(_WIN32)
-    # pragma warning(push)
-    # pragma warning(disable: 4996)
-    #endif
-
-    auto client = node->create_client<ListParameters>(
-      "service", rmw_qos_profile_services_default);
-
-    // remove warning suppression
-    #if !defined(_WIN32)
-    # pragma GCC diagnostic pop
-    #else  // !defined(_WIN32)
-    # pragma warning(pop)
-    #endif
-  }
-  {
-    auto client = node->create_client<ListParameters>(
-      "service", rclcpp::ServicesQoS());
+    auto client = node->create_generic_client("test_service", "test_msgs/srv/Empty");
   }
 
   {
     ASSERT_THROW(
     {
-      auto client = node->create_client<ListParameters>("invalid_service?");
+      auto client = node->create_generic_client("invalid_test_service?", "test_msgs/srv/Empty");
     }, rclcpp::exceptions::InvalidServiceNameError);
+  }
+
+  {
+    ASSERT_THROW(
+    {
+      auto client = node->create_generic_client("test_service", "test_msgs/srv/InvalidType");
+    }, std::runtime_error);
   }
 }
 
-TEST_F(TestClient, construction_with_free_function) {
+TEST_F(TestGenericClient, construction_with_free_function) {
   {
-    auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
+    auto client = rclcpp::create_generic_client(
       node->get_node_base_interface(),
       node->get_node_graph_interface(),
       node->get_node_services_interface(),
-      "service",
-      rmw_qos_profile_services_default,
-      nullptr);
-  }
-  {
-    ASSERT_THROW(
-    {
-      auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
-        node->get_node_base_interface(),
-        node->get_node_graph_interface(),
-        node->get_node_services_interface(),
-        "invalid_?service",
-        rmw_qos_profile_services_default,
-        nullptr);
-    }, rclcpp::exceptions::InvalidServiceNameError);
-  }
-  {
-    auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
-      node->get_node_base_interface(),
-      node->get_node_graph_interface(),
-      node->get_node_services_interface(),
-      "service",
+      "test_service",
+      "test_msgs/srv/Empty",
       rclcpp::ServicesQoS(),
       nullptr);
   }
   {
     ASSERT_THROW(
     {
-      auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
+      auto client = rclcpp::create_generic_client(
         node->get_node_base_interface(),
         node->get_node_graph_interface(),
         node->get_node_services_interface(),
-        "invalid_?service",
+        "invalid_?test_service",
+        "test_msgs/srv/Empty",
         rclcpp::ServicesQoS(),
         nullptr);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
+  {
+    ASSERT_THROW(
+    {
+      auto client = rclcpp::create_generic_client(
+        node->get_node_base_interface(),
+        node->get_node_graph_interface(),
+        node->get_node_services_interface(),
+        "test_service",
+        "test_msgs/srv/InvalidType",
+        rclcpp::ServicesQoS(),
+        nullptr);
+    }, std::runtime_error);
+  }
+  {
+    auto client = rclcpp::create_generic_client(
+      node,
+      "test_service",
+      "test_msgs/srv/Empty",
+      rclcpp::ServicesQoS(),
+      nullptr);
+  }
+  {
+    ASSERT_THROW(
+    {
+      auto client = rclcpp::create_generic_client(
+        node,
+        "invalid_?test_service",
+        "test_msgs/srv/Empty",
+        rclcpp::ServicesQoS(),
+        nullptr);
+    }, rclcpp::exceptions::InvalidServiceNameError);
+  }
+  {
+    ASSERT_THROW(
+    {
+      auto client = rclcpp::create_generic_client(
+        node,
+        "invalid_?test_service",
+        "test_msgs/srv/InvalidType",
+        rclcpp::ServicesQoS(),
+        nullptr);
+    }, std::runtime_error);
+  }
 }
 
-TEST_F(TestClient, construct_with_rcl_error) {
+TEST_F(TestGenericClient, construct_with_rcl_error) {
   {
     // reset() is not necessary for this exception, but handles unused return value warning
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_client_init, RCL_RET_ERROR);
     EXPECT_THROW(
-      node->create_client<test_msgs::srv::Empty>("service").reset(),
+      node->create_generic_client("test_service", "test_msgs/srv/Empty").reset(),
       rclcpp::exceptions::RCLError);
   }
   {
     // reset() is required for this one
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_client_fini, RCL_RET_ERROR);
-    EXPECT_NO_THROW(node->create_client<test_msgs::srv::Empty>("service").reset());
+    EXPECT_NO_THROW(
+      node->create_generic_client("test_service", "test_msgs/srv/Empty").reset());
   }
 }
 
-TEST_F(TestClient, wait_for_service) {
-  const std::string service_name = "service";
-  auto client = node->create_client<test_msgs::srv::Empty>(service_name);
+TEST_F(TestGenericClient, wait_for_service) {
+  const std::string service_name = "test_service";
+
+  auto client = node->create_generic_client(service_name, "test_msgs/srv/Empty");
   EXPECT_FALSE(client->wait_for_service(std::chrono::nanoseconds(0)));
   EXPECT_FALSE(client->wait_for_service(std::chrono::milliseconds(10)));
 
@@ -200,19 +213,18 @@ TEST_F(TestClient, wait_for_service) {
 }
 
 /*
-   Testing client construction and destruction for subnodes.
+   Testing generic client construction and destruction for subnodes.
  */
-TEST_F(TestClientSub, construction_and_destruction) {
-  using rcl_interfaces::srv::ListParameters;
+TEST_F(TestGenericClientSub, construction_and_destruction) {
   {
-    auto client = subnode->create_client<ListParameters>("service");
-    EXPECT_STREQ(client->get_service_name(), "/ns/sub_ns/service");
+    auto client = subnode->create_generic_client("test_service", "test_msgs/srv/Empty");
+    EXPECT_STREQ(client->get_service_name(), "/ns/test_service");
   }
 
   {
     ASSERT_THROW(
     {
-      auto client = node->create_client<ListParameters>("invalid_service?");
+      auto client = node->create_generic_client("invalid_service?", "test_msgs/srv/Empty");
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
 }
