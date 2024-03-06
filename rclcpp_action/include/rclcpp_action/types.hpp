@@ -69,14 +69,13 @@ struct hash<rclcpp_action::GoalUUID>
 {
   size_t operator()(const rclcpp_action::GoalUUID & uuid) const noexcept
   {
-    // TODO(sloretz) Use someone else's hash function and cite it
-    size_t result = 0;
-    for (size_t i = 0; i < uuid.size(); ++i) {
-      for (size_t b = 0; b < sizeof(size_t); ++b) {
-        size_t part = uuid[i];
-        part <<= CHAR_BIT * b;
-        result ^= part;
-      }
+    // Using the FNV-1a hash algorithm
+    constexpr size_t FNV_prime = 1099511628211u;
+    size_t result = 14695981039346656037u;
+
+    for (const auto & byte : uuid) {
+      result ^= byte;
+      result *= FNV_prime;
     }
     return result;
   }
