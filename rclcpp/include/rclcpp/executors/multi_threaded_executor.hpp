@@ -79,7 +79,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  spin(std::function<void(const std::exception & e)> exception_handler);
+  spin(const std::function<void(const std::exception & e)> & exception_handler) override;
 
   RCLCPP_PUBLIC
   size_t
@@ -88,7 +88,9 @@ public:
 protected:
   RCLCPP_PUBLIC
   void
-  run(size_t this_thread_number, std::function<void(const std::exception & e)> exception_handler);
+  run(
+    size_t this_thread_number,
+    const std::function<void(const std::exception & e)> & exception_handler);
 
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)

@@ -57,6 +57,41 @@ StaticSingleThreadedExecutor::spin()
   }
 }
 
+
+void
+StaticSingleThreadedExecutor::spin(
+  const std::function<void(const std::exception & e)> & exception_handler)
+{
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin() called while already spinning");
+  }
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+
+  // Set memory_strategy_ and exec_list_ based on weak_nodes_
+  // Prepare wait_set_ based on memory_strategy_
+  entities_collector_->init(&wait_set_, memory_strategy_);
+
+  while (rclcpp::ok(this->context_) && spinning.load()) {
+    // Refresh wait set and wait for work
+    entities_collector_->refresh_wait_set();
+
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("rclcpp"),
+      "Waitset Refresh");
+
+    try {
+      execute_ready_executables();
+
+    } catch (const std::exception & e) {
+      RCLCPP_ERROR_STREAM(
+        rclcpp::get_logger("rclcpp"),
+        "Exception while spinning : " << e.what());
+
+      exception_handler(e);
+    }
+  }
+}
+
 void
 StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
 {

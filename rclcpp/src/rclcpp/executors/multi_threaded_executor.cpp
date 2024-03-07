@@ -57,7 +57,7 @@ MultiThreadedExecutor::spin()
 
 void
 
-MultiThreadedExecutor::spin(std::function<void(const std::exception & e)> exception_handler)
+MultiThreadedExecutor::spin(const std::function<void(const std::exception & e)> & exception_handler)
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
@@ -88,38 +88,28 @@ MultiThreadedExecutor::get_number_of_threads()
 void
 MultiThreadedExecutor::run(
   size_t this_thread_number,
-  std::function<void(const std::exception & e)> exception_handler)
+  const std::function<void(const std::exception & e)> & exception_handler)
 {
-  try {
-
-    (void)this_thread_number;
-    while (rclcpp::ok(this->context_) && spinning.load()) {
-      rclcpp::AnyExecutable any_exec;
-      {
-        std::lock_guard wait_lock{wait_mutex_};
-        if (!rclcpp::ok(this->context_) || !spinning.load()) {
-          return;
-        }
-        if (!get_next_executable(any_exec, next_exec_timeout_)) {
-          continue;
-        }
+  (void)this_thread_number;
+  while (rclcpp::ok(this->context_) && spinning.load()) {
+    rclcpp::AnyExecutable any_exec;
+    {
+      std::lock_guard wait_lock{wait_mutex_};
+      if (!rclcpp::ok(this->context_) || !spinning.load()) {
+        return;
       }
-      if (yield_before_execute_) {
-        std::this_thread::yield();
+      if (!get_next_executable(any_exec, next_exec_timeout_)) {
+        continue;
       }
-
-      execute_any_executable(any_exec);
-
-      // Clear the callback_group to prevent the AnyExecutable destructor from
-      // resetting the callback group `can_be_taken_from`
-      any_exec.callback_group.reset();
+    }
+    if (yield_before_execute_) {
+      std::this_thread::yield();
     }
 
-  } catch (const std::exception & e) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("rclcpp"),
-      "Exception while spinning : " << e.what());
+    execute_any_executable(any_exec, exception_handler);
 
-    exception_handler(e);
+    // Clear the callback_group to prevent the AnyExecutable destructor from
+    // resetting the callback group `can_be_taken_from`
+    any_exec.callback_group.reset();
   }
 }
