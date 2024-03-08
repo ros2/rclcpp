@@ -163,7 +163,6 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)
-  
   AnySubscriptionCallback<rclcpp::SerializedMessage, std::allocator<void>> any_callback_;
   // The type support library should stay loaded, so it is stored in the GenericSubscription
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;

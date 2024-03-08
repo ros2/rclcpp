@@ -23,7 +23,8 @@ namespace rclcpp
 
 void GenericPublisher::publish(const rclcpp::SerializedMessage & message)
 {
-  TRACETOOLS_TRACEPOINT(rclcpp_publish,
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_publish,
     nullptr,
     static_cast<const void *>(&message.get_rcl_serialized_message()));
   auto return_code = rcl_publish_serialized_message(
