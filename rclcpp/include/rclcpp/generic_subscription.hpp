@@ -87,7 +87,6 @@ public:
     any_callback_(callback),
     ts_lib_(ts_lib)
   {
-    auto callback_ptr = static_cast<const void *>(&any_callback_);
     TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_init,
       static_cast<const void *>(get_subscription_handle().get()),
@@ -95,7 +94,7 @@ public:
     TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_callback_added,
       static_cast<const void *>(this),
-      callback_ptr);
+      static_cast<const void *>(&any_callback_));
 
 #ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
