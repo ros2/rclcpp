@@ -244,6 +244,7 @@ SubscriptionBase::take_serialized(
     &message_out.get_rcl_serialized_message(),
     &message_info_out.get_rmw_message_info(),
     nullptr);
+  TRACETOOLS_TRACEPOINT(rclcpp_take, static_cast<const void *>(&message_out.get_rcl_serialized_message()));
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
     return false;
   } else if (RCL_RET_OK != ret) {
