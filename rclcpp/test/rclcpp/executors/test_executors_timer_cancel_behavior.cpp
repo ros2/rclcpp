@@ -102,7 +102,7 @@ private:
 class ClockPublisher : public rclcpp::Node
 {
 public:
-  explicit ClockPublisher(float simulated_clock_step = .001f, float realtime_update_rate = 0.25f)
+  explicit ClockPublisher(float simulated_clock_step = .001f, float realtime_update_rate = 0.10f)
   : Node("clock_publisher"),
     ros_update_duration_(0, 0),
     realtime_clock_step_(0, 0),
