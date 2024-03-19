@@ -32,6 +32,12 @@ namespace rclcpp
 namespace executors
 {
 
+/**
+ * The Multi-threaded executor uses multiple threads to do work while spinning.
+ *
+ * Note, however, that it will only use multiple threads via its blocking `spin()` method.
+ * When using other methods, like e.g. `rclcpp::Executor:spin_until_future_complete(some_future)`, only the main thread will be used to do work.
+ */
 class MultiThreadedExecutor : public rclcpp::Executor
 {
 public:
