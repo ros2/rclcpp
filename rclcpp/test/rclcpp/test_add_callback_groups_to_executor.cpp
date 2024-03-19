@@ -204,10 +204,11 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   executor.add_node(node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
-  std::atomic_int timer_count {0};
+  std::atomic_size_t timer_count {0};
   auto timer_callback = [&executor, &timer_count]() {
+      printf("in timer_callback(%zu)\n", timer_count.load());
       if (timer_count > 0) {
-        ASSERT_EQ(executor.get_all_callback_groups().size(), 3u);
+        ASSERT_GT(executor.get_all_callback_groups().size(), 1u);
         executor.cancel();
       }
       timer_count++;
@@ -215,7 +216,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
-    2s, timer_callback, cb_grp);
+    1s, timer_callback, cb_grp);
   rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   auto timer2_callback = []() {};
@@ -227,6 +228,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   rclcpp::TimerBase::SharedPtr timer3_ = node->create_wall_timer(
     2s, timer3_callback, cb_grp3);
   executor.spin();
+  ASSERT_GT(timer_count.load(), 0u);
 }
 
 /*

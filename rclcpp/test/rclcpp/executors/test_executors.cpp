@@ -172,7 +172,6 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning)
 {
   using ExecutorType = TypeParam;
   ExecutorType executor;
-  executor.add_node(this->node);
 
   std::atomic_bool timer_completed = false;
   auto timer = this->node->create_wall_timer(
@@ -180,9 +179,10 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning)
       timer_completed.store(true);
     });
 
+  executor.add_node(this->node);
   std::thread spinner([&]() {executor.spin();});
-  // Sleep for a short time to verify executor.spin() is going, and didn't throw.
 
+  // Sleep for a short time to verify executor.spin() is going, and didn't throw.
   auto start = std::chrono::steady_clock::now();
   while (!timer_completed.load() && (std::chrono::steady_clock::now() - start) < 10s) {
     std::this_thread::sleep_for(1ms);
@@ -339,11 +339,18 @@ public:
   void
   add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
+    if (trigger_count_ > 0) {
+      // Keep the gc triggered until the trigger count is reduced back to zero.
+      // This is necessary if trigger() results in the wait set waking, but not
+      // executing this waitable, in which case it needs to be re-triggered.
+      gc_.trigger();
+    }
     rclcpp::detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
   }
 
   void trigger()
   {
+    trigger_count_++;
     gc_.trigger();
   }
 
@@ -371,6 +378,7 @@ public:
   execute(std::shared_ptr<void> & data) override
   {
     (void) data;
+    trigger_count_--;
     count_++;
     std::this_thread::sleep_for(3ms);
   }
@@ -400,6 +408,7 @@ public:
   }
 
 private:
+  std::atomic<size_t> trigger_count_ = 0;
   std::atomic<size_t> count_ = 0;
   rclcpp::GuardCondition gc_;
 };
@@ -461,7 +470,7 @@ TYPED_TEST(TestExecutors, spinSome)
   std::thread spinner([&spin_exited, &executor, this]() {
       executor.spin_some(1s);
       executor.remove_node(this->node, true);
-      spin_exited = true;
+      spin_exited.store(true);
     });
 
   // Do some work until sufficient calls to the waitable occur, but keep going until either
@@ -469,8 +478,8 @@ TYPED_TEST(TestExecutors, spinSome)
   auto start = std::chrono::steady_clock::now();
   while (
     my_waitable->get_count() <= 1 &&
-    !spin_exited &&
-    (std::chrono::steady_clock::now() - start < 1s))
+    !spin_exited.load() &&
+    std::chrono::steady_clock::now() - start < 10s)
   {
     my_waitable->trigger();
     this->publisher->publish(test_msgs::msg::Empty());
@@ -480,7 +489,7 @@ TYPED_TEST(TestExecutors, spinSome)
   // the first iteration of the while loop
   EXPECT_LE(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
-  EXPECT_TRUE(spin_exited);
+  EXPECT_TRUE(spin_exited.load());
   // Cancel if it hasn't exited already.
   executor.cancel();
 

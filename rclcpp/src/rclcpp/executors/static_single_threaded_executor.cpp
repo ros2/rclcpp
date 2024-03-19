@@ -40,21 +40,7 @@ StaticSingleThreadedExecutor::spin()
   // except we need to keep the wait result to reproduce the StaticSingleThreadedExecutor
   // behavior.
   while (rclcpp::ok(this->context_) && spinning.load()) {
-    std::deque<rclcpp::AnyExecutable> to_exec;
-
-    std::lock_guard<std::mutex> guard(mutex_);
-    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
-      this->collect_entities();
-    }
-
-    auto wait_result = wait_set_.wait(std::chrono::nanoseconds(-1));
-    if (wait_result.kind() == WaitResultKind::Empty) {
-      RCUTILS_LOG_WARN_NAMED(
-        "rclcpp",
-        "empty wait set received in wait(). This should never happen.");
-      continue;
-    }
-    execute_ready_executables(current_collection_, wait_result, false);
+    this->spin_once_impl(std::chrono::nanoseconds(-1));
   }
 }
 
@@ -101,7 +87,8 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
       // Execute ready executables
       bool work_available = this->execute_ready_executables(
         current_collection_,
-        wait_result.value(), false);
+        wait_result.value(),
+        false);
       if (!work_available || !exhaustive) {
         break;
       }
@@ -158,9 +145,16 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
     }
   }
 
-  while (auto timer = wait_result.next_ready_timer()) {
+  size_t current_timer_index = 0;
+  while (true) {
+    auto [timer, timer_index] = wait_result.peak_next_ready_timer(current_timer_index);
+    if (nullptr == timer) {
+      break;
+    }
+    current_timer_index = timer_index;
     auto entity_iter = collection.timers.find(timer->get_timer_handle().get());
     if (entity_iter != collection.timers.end()) {
+      wait_result.clear_timer_with_index(current_timer_index);
       if (timer->call()) {
         execute_timer(timer);
         any_ready_executable = true;

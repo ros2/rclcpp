@@ -184,7 +184,8 @@ public:
    * \return the number of entities in the callback group.
    */
   RCLCPP_PUBLIC
-  size_t size() const;
+  size_t
+  size() const;
 
   /// Return a reference to the 'can be taken' atomic boolean.
   /**
@@ -216,7 +217,8 @@ public:
    * \param[in] waitable_fuinc Function to execute for each waitable
    */
   RCLCPP_PUBLIC
-  void collect_all_ptrs(
+  void
+  collect_all_ptrs(
     std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
     std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
     std::function<void(const rclcpp::ClientBase::SharedPtr &)> client_func,

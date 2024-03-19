@@ -20,12 +20,16 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include "rcl/wait.h"
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/wait_result_kind.hpp"
 
+#include "rclcpp/client.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription_base.hpp"
 #include "rclcpp/timer.hpp"
 
 namespace rclcpp
@@ -138,33 +142,80 @@ public:
     }
   }
 
-  std::shared_ptr<rclcpp::TimerBase> next_ready_timer()
+  /// Get the next ready timer and its index in the wait result, but do not clear it.
+  /**
+   * The returned timer is not cleared automatically, as it the case with the
+   * other next_ready_*()-like functions.
+   * Instead, this function returns the timer and the index that identifies it
+   * in the wait result, so that it can be cleared (marked as taken or used)
+   * in a separate step with clear_timer_with_index().
+   * This is necessary in some multi-threaded executor implementations.
+   *
+   * If the timer is not cleared using the index, subsequent calls to this
+   * function will return the same timer.
+   *
+   * If there is no ready timer, then nullptr will be returned and the index
+   * will be invalid and should not be used.
+   *
+   * \param[in] start_index index at which to start searching for the next ready
+   *   timer in the wait result. If the start_index is out of bounds for the
+   *   list of timers in the wait result, then {nullptr, start_index} will be
+   *   returned. Defaults to 0.
+   * \return next ready timer pointer and its index in the wait result, or
+   *   {nullptr, start_index} if none was found.
+   */
+  std::pair<std::shared_ptr<rclcpp::TimerBase>, size_t>
+  peak_next_ready_timer(size_t start_index = 0)
   {
     check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::TimerBase>{nullptr};
+    size_t ii = start_index;
     if (this->kind() == WaitResultKind::Ready) {
-      auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < wait_set_pointer_->size_of_timers(); ++ii) {
-        if (rcl_wait_set.timers[ii] != nullptr &&
-          wait_set_pointer_->timers(ii)->call())
-        {
-          ret = wait_set_pointer_->timers(ii);
+      auto & wait_set = this->get_wait_set();
+      auto & rcl_wait_set = wait_set.storage_get_rcl_wait_set();
+      for (; ii < wait_set.size_of_timers(); ++ii) {
+        if (rcl_wait_set.timers[ii] != nullptr) {
+          ret = wait_set.timers(ii);
           break;
         }
       }
     }
-    return ret;
+    return {ret, ii};
   }
 
-  std::shared_ptr<rclcpp::SubscriptionBase> next_ready_subscription()
+  /// Clear the timer at the given index.
+  /**
+   * Clearing a timer from the wait result prevents it from being returned by
+   * the peak_next_ready_timer() on subsequent calls.
+   *
+   * The index should come from the peak_next_ready_timer() function, and
+   * should only be used with this function if the timer pointer was valid.
+   *
+   * \throws std::out_of_range if the given index is out of range
+   */
+  void
+  clear_timer_with_index(size_t index)
+  {
+    auto & wait_set = this->get_wait_set();
+    auto & rcl_wait_set = wait_set.storage_get_rcl_wait_set();
+    if (index >= wait_set.size_of_timers()) {
+      throw std::out_of_range("given timer index is out of range");
+    }
+    rcl_wait_set.timers[index] = nullptr;
+  }
+
+  /// Get the next ready subscription, clearing it from the wait result.
+  std::shared_ptr<rclcpp::SubscriptionBase>
+  next_ready_subscription()
   {
     check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::SubscriptionBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
-      auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < wait_set_pointer_->size_of_subscriptions(); ++ii) {
+      auto & wait_set = this->get_wait_set();
+      auto & rcl_wait_set = wait_set.storage_get_rcl_wait_set();
+      for (size_t ii = 0; ii < wait_set.size_of_subscriptions(); ++ii) {
         if (rcl_wait_set.subscriptions[ii] != nullptr) {
-          ret = wait_set_pointer_->subscriptions(ii);
+          ret = wait_set.subscriptions(ii);
           rcl_wait_set.subscriptions[ii] = nullptr;
           break;
         }
@@ -173,15 +224,18 @@ public:
     return ret;
   }
 
-  std::shared_ptr<rclcpp::ServiceBase> next_ready_service()
+  /// Get the next ready service, clearing it from the wait result.
+  std::shared_ptr<rclcpp::ServiceBase>
+  next_ready_service()
   {
     check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::ServiceBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
-      auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < wait_set_pointer_->size_of_services(); ++ii) {
+      auto & wait_set = this->get_wait_set();
+      auto & rcl_wait_set = wait_set.storage_get_rcl_wait_set();
+      for (size_t ii = 0; ii < wait_set.size_of_services(); ++ii) {
         if (rcl_wait_set.services[ii] != nullptr) {
-          ret = wait_set_pointer_->services(ii);
+          ret = wait_set.services(ii);
           rcl_wait_set.services[ii] = nullptr;
           break;
         }
@@ -190,16 +244,18 @@ public:
     return ret;
   }
 
-  std::shared_ptr<rclcpp::ClientBase> next_ready_client()
+  /// Get the next ready client, clearing it from the wait result.
+  std::shared_ptr<rclcpp::ClientBase>
+  next_ready_client()
   {
     check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::ClientBase>{nullptr};
     if (this->kind() == WaitResultKind::Ready) {
-      auto & rcl_wait_set = wait_set_pointer_->storage_get_rcl_wait_set();
-      for (size_t ii = 0; ii < wait_set_pointer_->size_of_clients(); ++ii) {
+      auto & wait_set = this->get_wait_set();
+      auto & rcl_wait_set = wait_set.storage_get_rcl_wait_set();
+      for (size_t ii = 0; ii < wait_set.size_of_clients(); ++ii) {
         if (rcl_wait_set.clients[ii] != nullptr) {
-          ret = wait_set_pointer_->clients(ii);
-
+          ret = wait_set.clients(ii);
           rcl_wait_set.clients[ii] = nullptr;
           break;
         }
@@ -208,16 +264,19 @@ public:
     return ret;
   }
 
-  std::shared_ptr<rclcpp::Waitable> next_ready_waitable()
+  /// Get the next ready waitable, clearing it from the wait result.
+  std::shared_ptr<rclcpp::Waitable>
+  next_ready_waitable()
   {
     check_wait_result_dirty();
     auto waitable = std::shared_ptr<rclcpp::Waitable>{nullptr};
     auto data = std::shared_ptr<void>{nullptr};
 
     if (this->kind() == WaitResultKind::Ready) {
-      auto rcl_wait_set = get_wait_set().get_rcl_wait_set();
-      while (next_waitable_index_ < wait_set_pointer_->size_of_waitables()) {
-        auto cur_waitable = wait_set_pointer_->waitables(next_waitable_index_);
+      auto & wait_set = this->get_wait_set();
+      auto rcl_wait_set = wait_set.get_rcl_wait_set();
+      while (next_waitable_index_ < wait_set.size_of_waitables()) {
+        auto cur_waitable = wait_set.waitables(next_waitable_index_);
         if (cur_waitable != nullptr && cur_waitable->is_ready(&rcl_wait_set)) {
           waitable = cur_waitable;
         }
@@ -245,14 +304,16 @@ private:
     // Should be enforced by the static factory methods on this class.
     assert(WaitResultKind::Ready == wait_result_kind);
     // Secure thread-safety (if provided) and shared ownership (if needed).
-    wait_set_pointer_->wait_result_acquire();
+    this->get_wait_set().wait_result_acquire();
   }
 
-  void check_wait_result_dirty()
+  /// Check if the wait result is invalid because the wait set was modified.
+  void
+  check_wait_result_dirty()
   {
-    // In the case that the waitset was modified while the result was out,
+    // In the case that the wait set was modified while the result was out,
     // we must mark the wait result as no longer valid
-    if (wait_set_pointer_ && wait_set_pointer_->wait_result_dirty_) {
+    if (wait_set_pointer_ && this->get_wait_set().wait_result_dirty_) {
       this->wait_result_kind_ = WaitResultKind::Invalid;
     }
   }

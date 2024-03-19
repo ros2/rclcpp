@@ -559,8 +559,7 @@ Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 }
 
 void
-Executor::execute_client(
-  rclcpp::ClientBase::SharedPtr client)
+Executor::execute_client(rclcpp::ClientBase::SharedPtr client)
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
@@ -674,11 +673,26 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   }
 
   if (!valid_executable) {
-    while (auto timer = wait_result_->next_ready_timer()) {
+    size_t current_timer_index = 0;
+    while (true) {
+      auto [timer, timer_index] = wait_result_->peak_next_ready_timer(current_timer_index);
+      if (nullptr == timer) {
+        break;
+      }
+      current_timer_index = timer_index;
       auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
       if (entity_iter != current_collection_.timers.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
         if (callback_group && !callback_group->can_be_taken_from()) {
+          continue;
+        }
+        // At this point the timer is either ready for execution or was perhaps
+        // it was canceled, based on the result of call(), but either way it
+        // should not be checked again from peak_next_ready_timer(), so clear
+        // it from the wait result.
+        wait_result_->clear_timer_with_index(current_timer_index);
+        // Check that the timer should be called still, i.e. it wasn't canceled.
+        if (!timer->call()) {
           continue;
         }
         any_executable.timer = timer;
