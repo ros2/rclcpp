@@ -32,12 +32,6 @@ using ExecutorTypes =
   rclcpp::executors::StaticSingleThreadedExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
 
-using MainExecutorTypes =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor>;
-
 class ExecutorTypeNames
 {
 public:
