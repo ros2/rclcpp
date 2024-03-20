@@ -147,7 +147,7 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
 
   size_t current_timer_index = 0;
   while (true) {
-    auto [timer, timer_index] = wait_result.peak_next_ready_timer(current_timer_index);
+    auto [timer, timer_index] = wait_result.peek_next_ready_timer(current_timer_index);
     if (nullptr == timer) {
       break;
     }

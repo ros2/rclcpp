@@ -675,7 +675,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   if (!valid_executable) {
     size_t current_timer_index = 0;
     while (true) {
-      auto [timer, timer_index] = wait_result_->peak_next_ready_timer(current_timer_index);
+      auto [timer, timer_index] = wait_result_->peek_next_ready_timer(current_timer_index);
       if (nullptr == timer) {
         break;
       }
@@ -688,7 +688,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         }
         // At this point the timer is either ready for execution or was perhaps
         // it was canceled, based on the result of call(), but either way it
-        // should not be checked again from peak_next_ready_timer(), so clear
+        // should not be checked again from peek_next_ready_timer(), so clear
         // it from the wait result.
         wait_result_->clear_timer_with_index(current_timer_index);
         // Check that the timer should be called still, i.e. it wasn't canceled.

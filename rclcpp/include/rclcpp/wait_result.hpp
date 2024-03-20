@@ -165,7 +165,7 @@ public:
    *   {nullptr, start_index} if none was found.
    */
   std::pair<std::shared_ptr<rclcpp::TimerBase>, size_t>
-  peak_next_ready_timer(size_t start_index = 0)
+  peek_next_ready_timer(size_t start_index = 0)
   {
     check_wait_result_dirty();
     auto ret = std::shared_ptr<rclcpp::TimerBase>{nullptr};
@@ -186,9 +186,9 @@ public:
   /// Clear the timer at the given index.
   /**
    * Clearing a timer from the wait result prevents it from being returned by
-   * the peak_next_ready_timer() on subsequent calls.
+   * the peek_next_ready_timer() on subsequent calls.
    *
-   * The index should come from the peak_next_ready_timer() function, and
+   * The index should come from the peek_next_ready_timer() function, and
    * should only be used with this function if the timer pointer was valid.
    *
    * \throws std::out_of_range if the given index is out of range
