@@ -234,6 +234,18 @@ public:
   void
   handle_loaned_message(void * loaned_message, const rclcpp::MessageInfo & message_info) = 0;
 
+// Take the loaned message
+/*
+ * This method returns messages[out] after allowing the middleware to handle the loaned message to any application.
+ *
+ * \param[in] loaned_message : message that the user wants to take.
+ * \param[in] message_info : the detailed description of the message that the loaned message should own.
+ * returns a boolean that determines if the subscription can take the loaned message, if it can then it fails it returns false, if it can't take the message then the function can throw an error in rclcpp::exceptions::throw_from_rcl_error, otherwise it returns true.
+ */
+  RCLCPP_PUBLIC
+  void *
+  take_loaned_message(void * loaned_message, rclcpp::MessageInfo & message_info) const;
+
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
   RCLCPP_PUBLIC
