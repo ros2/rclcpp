@@ -142,6 +142,12 @@ def get_rclcpp_suffix_from_features(features):
 @[ if 'stream' in feature_combination]@
     std::stringstream rclcpp_stream_ss_; \
     rclcpp_stream_ss_ << @(stream_arg); \
+@[ else]@
+    { \
+      constexpr bool starts_with_double_quotes = (#__VA_ARGS__)[0] == '"'; \
+      static_assert(starts_with_double_quotes, \
+        "Second argument to RCLCPP_@(severity) must be a string literal"); \
+    } \
 @[ end if]@
     RCUTILS_LOG_@(severity)@(get_suffix_from_features(feature_combination))_NAMED( \
 @{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
