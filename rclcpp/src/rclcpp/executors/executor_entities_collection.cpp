@@ -39,6 +39,30 @@ void ExecutorEntitiesCollection::clear()
   waitables.clear();
 }
 
+size_t ExecutorEntitiesCollection::remove_expired_entities()
+{
+  auto remove_entities = [](auto & collection) -> size_t {
+      size_t removed = 0;
+      for (auto it = collection.begin(); it != collection.end(); ) {
+        if (it->second.entity.expired()) {
+          ++removed;
+          it = collection.erase(it);
+        } else {
+          ++it;
+        }
+      }
+      return removed;
+    };
+
+  return
+    remove_entities(subscriptions) +
+    remove_entities(timers) +
+    remove_entities(guard_conditions) +
+    remove_entities(clients) +
+    remove_entities(services) +
+    remove_entities(waitables);
+}
+
 void
 build_entities_collection(
   const std::vector<rclcpp::CallbackGroup::WeakPtr> & callback_groups,
