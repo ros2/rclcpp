@@ -282,16 +282,23 @@ public:
   void
   spin_node_some(std::shared_ptr<rclcpp::Node> node);
 
-  /// Collect work once and execute all available work, optionally within a duration.
+  /// Collect work once and execute all available work, optionally within a max duration.
   /**
-   * This function can be overridden. The default implementation is suitable for a
-   * single-threaded model of execution.
-   * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
-   * to block (which may have unintended consequences).
+   * This function can be overridden.
+   * The default implementation is suitable for a single-threaded model of execution.
+   * Adding subscriptions, timers, services, etc. with blocking or long running
+   * callbacks may cause the function exceed the max_duration significantly.
+   *
+   * If there is no work to be done when this called, it will return immediately
+   * because the collecting of available work is non-blocking.
+   * Before each piece of ready work is executed this function checks if the
+   * max_duration has been exceeded, and if it has it returns without starting
+   * the execution of the next piece of work.
+   *
+   * If a max_duration of 0 is given, then all of the collected work will be
+   * executed before the function returns.
    *
    * \param[in] max_duration The maximum amount of time to spend executing work, or 0 for no limit.
-   * Note that spin_some() may take longer than this time as it only returns once max_duration has
-   * been exceeded.
    */
   RCLCPP_PUBLIC
   virtual void
