@@ -408,6 +408,29 @@ public:
   virtual
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
+
+  /// Wait for a number of publishers to be available on a topic.
+  /**
+   * This function will block until the provided number of publishers are available or a timeout occurs.
+   *
+   * TODO(jacobperron): Detect this scenario and throw an exception
+   * This function should not be called concurrently with a running GraphListener.
+   * E.g. Do not call this after calling `rclcpp::GraphListener::get_graph_event()`.
+   * If this happens an exception is thrown.
+   *
+   * \param[in] topic_name the topic to check for publishers. It will not be automatically remapped.
+   * \param[in] count the number of publishers to wait for.
+   * \param[in] timeout elapsed time to wait for publishers.
+   * \return `true` if the number of publishers is greater than or equal to the provided count, or
+   *   `false` if a timeout occurs.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  wait_for_publishers(
+    const std::string & topic_name,
+    size_t count,
+    const std::chrono::nanoseconds & timeout) const = 0;
 };
 
 }  // namespace node_interfaces
