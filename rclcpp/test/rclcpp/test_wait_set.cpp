@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -342,6 +343,9 @@ TEST_F(TestWaitSet, get_result_from_wait_result) {
   EXPECT_EQ(&wait_set, &const_result.get_wait_set());
 }
 
+/*
+ * Fail to get wait_set from result when timeout (not ready).
+ */
 TEST_F(TestWaitSet, get_result_from_wait_result_not_ready_error) {
   rclcpp::WaitSet wait_set;
   auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
@@ -359,3 +363,97 @@ TEST_F(TestWaitSet, get_result_from_wait_result_not_ready_error) {
     const_result.get_wait_set(),
     std::runtime_error("cannot access wait set when the result was not ready"));
 }
+
+/*
+ * Fail to add item to wait set, which was added in the constructor of another wait set.
+ *
+ * Also ensure items in destroyed wait sets can be added to new wait sets afterwards.
+ */
+TEST_F(TestWaitSet, add_entity_in_constructor_and_dynamically_fails) {
+  auto node = std::make_shared<rclcpp::Node>("add_entity_in_constructor_and_dynamically_fails");
+
+  rclcpp::SubscriptionOptions subscription_options;
+  subscription_options.event_callbacks.deadline_callback = [](auto) {};
+  subscription_options.event_callbacks.liveliness_callback = [](auto) {};
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
+  auto sub = node->create_subscription<test_msgs::msg::BasicTypes>(
+    "~/test",
+    1,
+    do_nothing,
+    subscription_options);
+
+  auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
+
+  auto timer = node->create_wall_timer(std::chrono::seconds(1), []() {});
+
+  auto client = node->create_client<rcl_interfaces::srv::ListParameters>("~/empty");
+
+  auto srv_callback =
+    [](
+      const std::shared_ptr<rmw_request_id_t>,
+      const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request>,
+      const std::shared_ptr<rcl_interfaces::srv::ListParameters::Response>
+    ) {};
+  auto service =
+    node->create_service<rcl_interfaces::srv::ListParameters>("~/test", srv_callback);
+
+  {
+    // Add all entities via constructor.
+    rclcpp::WaitSet wait_set(
+      {{sub}},
+      {guard_condition},
+      {timer},
+      {client},
+      {service}
+    );
+
+    // Expect all cannot be added to another wait set.
+    rclcpp::WaitSet other_wait_set;
+    EXPECT_THROW({
+      other_wait_set.add_subscription(sub);
+    }, std::runtime_error);
+    EXPECT_THROW({
+      other_wait_set.add_guard_condition(guard_condition);
+    }, std::runtime_error);
+    EXPECT_THROW({
+      other_wait_set.add_timer(timer);
+    }, std::runtime_error);
+    EXPECT_THROW({
+      other_wait_set.add_client(client);
+    }, std::runtime_error);
+    EXPECT_THROW({
+      other_wait_set.add_service(service);
+    }, std::runtime_error);
+  }
+}
+
+/*
+ * Ensure removing a subscription added via construction is removable with all mask items.
+ *
+ * This covers a case that had a bug in which the adding of items via construction was naive and
+ * did not behave as-if items were being added via `add_*` type methods, specifically for
+ * subscriptions, which had the mask logic.
+ */
+TEST_F(TestWaitSet, remove_subscription_which_was_added_via_construction) {
+  auto node =
+    std::make_shared<rclcpp::Node>("remove_subscription_which_was_added_via_construction");
+
+  rclcpp::SubscriptionOptions subscription_options;
+  subscription_options.event_callbacks.deadline_callback = [](auto) {};
+  subscription_options.event_callbacks.liveliness_callback = [](auto) {};
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
+  auto sub = node->create_subscription<test_msgs::msg::BasicTypes>(
+    "~/test",
+    1,
+    do_nothing,
+    subscription_options);
+
+  rclcpp::WaitSet wait_set({{sub}});
+
+  wait_set.remove_subscription(sub);
+}
+
+/*
+More test ideas:
+  - add to dynamic wait set, let go out of scope, destroy wait set (weak ptr to objects prevent exchange_in_use_by_wait_set_state(false), should be ok though)
+ */
