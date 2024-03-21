@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 
 namespace rclcpp_components
 {
@@ -28,6 +29,8 @@ class NodeInstanceWrapper
 public:
   using NodeBaseInterfaceGetter = std::function<
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr(const std::shared_ptr<void> &)>;
+  using NodeParametersInterfaceGetter = std::function<
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr(const std::shared_ptr<void> &)>;
 
   NodeInstanceWrapper()
   : node_instance_(nullptr)
@@ -35,8 +38,10 @@ public:
 
   NodeInstanceWrapper(
     std::shared_ptr<void> node_instance,
-    NodeBaseInterfaceGetter node_base_interface_getter)
-  : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter)
+    NodeBaseInterfaceGetter node_base_interface_getter,
+    NodeParametersInterfaceGetter node_parameters_interface_getter)
+  : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter),
+    node_parameters_interface_getter_(node_parameters_interface_getter)
   {}
 
   /// Get a type-erased pointer to the original Node instance
@@ -62,9 +67,20 @@ public:
     return node_base_interface_getter_(node_instance_);
   }
 
+  /// Get NodeParametersInterface pointer for the encapsulated Node Instance.
+  /**
+   * \return Shared NodeParametersInterface pointer of the encapsulated Node instance.
+   */
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+  get_node_parameters_interface()
+  {
+    return node_parameters_interface_getter_(node_instance_);
+  }
+
 private:
   std::shared_ptr<void> node_instance_;
   NodeBaseInterfaceGetter node_base_interface_getter_;
+  NodeParametersInterfaceGetter node_parameters_interface_getter_;
 };
 }  // namespace rclcpp_components
 

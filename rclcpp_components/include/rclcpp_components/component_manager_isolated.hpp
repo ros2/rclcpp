@@ -78,7 +78,15 @@ protected:
     wrapper.executor = exec;
     auto & thread_initialized = wrapper.thread_initialized;
     wrapper.thread = std::thread(
-      [exec, &thread_initialized]() {
+      [exec, &thread_initialized, &node_id, this]() {
+        auto node_params = node_wrappers_[node_id].get_node_parameters_interface();
+        auto param_overrides = node_params->get_parameter_overrides();
+        auto found_iter = param_overrides.find("use_soft_realtime_priority");
+        if (found_iter != param_overrides.end()) {
+          if (found_iter->second.get<bool>()) {
+            setSoftRealTimePriority();
+          }
+        }
         thread_initialized = true;
         exec->spin();
       });

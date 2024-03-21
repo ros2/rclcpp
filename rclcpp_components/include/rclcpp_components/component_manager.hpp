@@ -256,6 +256,20 @@ protected:
     on_list_nodes(request_header, request, response);
   }
 
+  /// Set a manager's executor thread priority level, can throw if priority is not able to be set
+  void setSoftRealTimePriority()
+  {
+    sched_param sch;
+    sch.sched_priority = 49;
+    if (sched_setscheduler(0, SCHED_FIFO, &sch) == -1) {
+      std::string errmsg(
+        "Cannot set as soft real-time thread. Users must set: <username> hard rtprio 99 and "
+        "<username> soft rtprio 99 in /etc/security/limits.conf to enable "
+        "soft realtime prioritization! Error: ");
+      throw std::runtime_error(errmsg + std::strerror(errno));
+    }
+  }
+
 protected:
   std::weak_ptr<rclcpp::Executor> executor_;
 
