@@ -596,8 +596,8 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
   constexpr auto max_duration = 100ms;  // relatively short because we expect to exceed it
   constexpr auto waitable_callback_duration = max_duration * 2;
   auto long_running_callback = [&waitable_callback_duration]() {
-    std::this_thread::sleep_for(waitable_callback_duration);
-  };
+      std::this_thread::sleep_for(waitable_callback_duration);
+    };
 
   auto waitable_interfaces = this->node->get_node_waitables_interface();
 
