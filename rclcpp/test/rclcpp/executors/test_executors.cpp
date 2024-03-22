@@ -530,7 +530,7 @@ TYPED_TEST(TestExecutors, spin_some)
       << "little to do and should not have blocked either, but this could be a "
       << "false negative if the computer is really slow";
 
-    EXPECT_GT(my_waitable1->get_count(), 0u)
+    EXPECT_EQ(my_waitable1->get_count(), 1u)
       << "spin_some() failed to execute a waitable that was triggered";
   }
 
@@ -558,9 +558,9 @@ TYPED_TEST(TestExecutors, spin_some)
       << "little to do and should not have blocked either, but this could be a "
       << "false negative if the computer is really slow";
 
-    EXPECT_GT(my_waitable1->get_count(), original_my_waitable1_count)
+    EXPECT_EQ(my_waitable1->get_count(), original_my_waitable1_count + 1)
       << "spin_some() failed to execute a waitable that was triggered";
-    EXPECT_GT(my_waitable2->get_count(), 0u)
+    EXPECT_EQ(my_waitable2->get_count(), 1u)
       << "spin_some() failed to execute a waitable that was triggered";
   }
 }
@@ -574,6 +574,7 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
   // TODO(wjwwood): The `StaticSingleThreadedExecutor` and the `EventsExecutor`
   //   do not properly implement max_duration (it seems), so disable this test
   //   for them in the meantime.
+  //   see: https://github.com/ros2/rclcpp/issues/2462
   if (
     std::is_same<ExecutorType, rclcpp::executors::StaticSingleThreadedExecutor>() ||
     std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
