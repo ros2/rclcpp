@@ -343,7 +343,13 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
       response_pair.second.get());
   }
 
-  if (RCL_RET_OK != ret) {
+  if (RCL_RET_TIMEOUT == ret) {
+    RCLCPP_WARN(
+      pimpl_->logger_,
+      "failed to send goal response %s (timeout): %s",
+      to_string(uuid).c_str(), rcl_get_error_string().str);
+    rcl_reset_error();
+  } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
