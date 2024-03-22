@@ -290,8 +290,8 @@ public:
   {
     // Avoid allocating when not using intra process.
     if (!intra_process_is_enabled_) {
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg);
+      this->do_inter_process_publish(msg);
+      return;
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // As the message is not const, a copy should be made.
@@ -318,12 +318,12 @@ public:
   >
   publish(std::unique_ptr<T, PublishedTypeDeleter> msg)
   {
-    // Avoid allocating when not using intra process.
     if (!intra_process_is_enabled_) {
       // In this case we're not using intra process.
-      ROSMessageType ros_msg;
-      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, ros_msg);
-      return this->do_inter_process_publish(ros_msg);
+      auto ros_msg_ptr = std::make_unique<ROSMessageType>();
+      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
+      this->do_inter_process_publish(*ros_msg_ptr);
+      return;
     }
 
     bool inter_process_publish_needed =
@@ -331,9 +331,6 @@ public:
 
     if (inter_process_publish_needed) {
       auto ros_msg_ptr = std::make_shared<ROSMessageType>();
-      // TODO(clalancette): This is unnecessarily doing an additional conversion
-      // that may have already been done in do_intra_process_publish_and_return_shared().
-      // We should just reuse that effort.
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
       this->do_intra_process_publish(std::move(msg));
       this->do_inter_process_publish(*ros_msg_ptr);
@@ -368,13 +365,12 @@ public:
   >
   publish(const T & msg)
   {
-    // Avoid double allocating when not using intra process.
     if (!intra_process_is_enabled_) {
       // Convert to the ROS message equivalent and publish it.
-      ROSMessageType ros_msg;
-      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, ros_msg);
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(ros_msg);
+      auto ros_msg_ptr = std::make_unique<ROSMessageType>();
+      rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, *ros_msg_ptr);
+      this->do_inter_process_publish(*ros_msg_ptr);
+      return;
     }
 
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.

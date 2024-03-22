@@ -6,6 +6,7 @@ add_definitions(-DTEST_RESOURCES_DIRECTORY="${TEST_RESOURCES_DIRECTORY}")
 
 rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   ../msg/Header.msg
+  ../msg/LargeMessage.msg
   ../msg/MessageWithHeader.msg
   ../msg/String.msg
   DEPENDENCIES builtin_interfaces
@@ -62,6 +63,28 @@ ament_add_gtest(test_create_timer test_create_timer.cpp)
 if(TARGET test_create_timer)
   target_link_libraries(test_create_timer ${PROJECT_NAME})
   target_include_directories(test_create_timer PRIVATE ./)
+endif()
+ament_add_gtest(test_generic_client test_generic_client.cpp)
+if(TARGET test_generic_client)
+  target_link_libraries(test_generic_client ${PROJECT_NAME}
+    mimick
+    ${rcl_interfaces_TARGETS}
+    rmw::rmw
+    rosidl_runtime_cpp::rosidl_runtime_cpp
+    rosidl_typesupport_cpp::rosidl_typesupport_cpp
+    ${test_msgs_TARGETS}
+  )
+endif()
+ament_add_gtest(test_client_common test_client_common.cpp)
+if(TARGET test_client_common)
+  target_link_libraries(test_client_common ${PROJECT_NAME}
+    mimick
+    ${rcl_interfaces_TARGETS}
+    rmw::rmw
+    rosidl_runtime_cpp::rosidl_runtime_cpp
+    rosidl_typesupport_cpp::rosidl_typesupport_cpp
+    ${test_msgs_TARGETS}
+  )
 endif()
 ament_add_gtest(test_create_subscription test_create_subscription.cpp)
 if(TARGET test_create_subscription)
