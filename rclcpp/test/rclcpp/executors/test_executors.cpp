@@ -571,13 +571,12 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
 {
   using ExecutorType = TypeParam;
 
-  // TODO(wjwwood): The `StaticSingleThreadedExecutor` and the `EventsExecutor`
+  // TODO(wjwwood): The `StaticSingleThreadedExecutor`
   //   do not properly implement max_duration (it seems), so disable this test
   //   for them in the meantime.
   //   see: https://github.com/ros2/rclcpp/issues/2462
   if (
-    std::is_same<ExecutorType, rclcpp::executors::StaticSingleThreadedExecutor>() ||
-    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+    std::is_same<ExecutorType, rclcpp::executors::StaticSingleThreadedExecutor>())
   {
     GTEST_SKIP();
   }
@@ -609,6 +608,9 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
   auto my_waitable2 = std::make_shared<TestWaitable>();
   my_waitable2->set_on_execute_callback(long_running_callback);
   waitable_interfaces->add_waitable(my_waitable2, isolated_callback_group);
+
+  my_waitable1->trigger();
+  my_waitable2->trigger();
 
   ExecutorType executor;
   executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
