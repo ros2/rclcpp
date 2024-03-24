@@ -16,9 +16,12 @@
 #define RCLCPP__NODE_INTERFACES__NODE_TOPICS_INTERFACE_HPP_
 
 #include <string>
+#include <memory>
 
 #include "rcl/publisher.h"
 #include "rcl/subscription.h"
+#include "rcl/service.h"
+#include "rcl/client.h"
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/macros.hpp"
@@ -29,6 +32,10 @@
 #include "rclcpp/publisher_factory.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_factory.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/service_factory.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/client_factory.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -75,6 +82,36 @@ public:
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
     rclcpp::CallbackGroup::SharedPtr callback_group) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::ServiceBase::SharedPtr
+  create_service(
+    std::shared_ptr<rcl_node_t> node_handle,
+    const rclcpp::ServiceFactory & service_factory) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  add_service(
+    // rclcpp::ServiceBase::SharedPtr service,
+    // rclcpp::CallbackGroup::SharedPtr callback_group
+  ) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::ClientBase::SharedPtr
+  create_client(
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+    const rclcpp::ClientFactory & client_factory) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  add_client(
+    // rclcpp::ClientBase::SharedPtr client,
+    // rclcpp::CallbackGroup::SharedPtr callback_group
+  ) = 0;
 
   RCLCPP_PUBLIC
   virtual

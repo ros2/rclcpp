@@ -126,6 +126,42 @@ NodeTopics::add_subscription(
   }
 }
 
+rclcpp::ServiceBase::SharedPtr
+NodeTopics::create_service(
+  std::shared_ptr<rcl_node_t> node_handle,
+  const rclcpp::ServiceFactory & service_factory)
+{
+  // Create the ServiceT specific Service using the factory, but return it as ServiceBase.
+  return service_factory.create_typed_service(node_handle);
+}
+
+// TODO(cursedrock17): Work on the event_callback implementations
+// for the services and clients
+void
+NodeTopics::add_service(
+  // rclcpp::ServiceBase::SharedPtr service,
+  // rclcpp::CallbackGroup::SharedPtr callback_group
+)
+{
+}
+
+rclcpp::ClientBase::SharedPtr
+NodeTopics::create_client(
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+  const rclcpp::ClientFactory & client_factory)
+{
+  // Create the ServiceT specific Client using the factory, but return it as ClientBase.
+  return client_factory.create_typed_client(node_base_, node_graph);
+}
+
+void
+NodeTopics::add_client(
+  // rclcpp::ClientBase::SharedPtr client,
+  // rclcpp::CallbackGroup::SharedPtr callback_group
+)
+{
+}
+
 rclcpp::node_interfaces::NodeBaseInterface *
 NodeTopics::get_node_base_interface() const
 {
