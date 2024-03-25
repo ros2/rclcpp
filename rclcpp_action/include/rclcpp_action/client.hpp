@@ -418,7 +418,7 @@ public:
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
-  std::shared_future<typename GoalHandle::SharedPtr>
+  [[nodiscard]] std::shared_future<typename GoalHandle::SharedPtr>
   async_send_goal(const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
   {
     // Put promise in the heap to move it around.
