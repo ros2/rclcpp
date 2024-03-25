@@ -1,5 +1,4 @@
 // Copyright 2023 Open Source Robotics Foundation, Inc.
-// v
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,20 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../include/rclcpp/parameter_descriptor_wrapper.hpp"
+#include "rclcpp/parameter_descriptor_wrapper.hpp"
 
 namespace rclcpp
 {
 
 ParameterDescription::ParameterDescription()
 {
-  // Copies all the information in ParameterDescriptor.message
-  //  Need to set this in the constructor, but it doesn't necessarily need to be used
+  // Need to set this in the constructor, but it doesn't necessarily need to be used
   parameter_descriptor.type{rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET};
 }
 
-// ParameterDescription - ParameterDescription
-// First the build methods to connect to the base class in the builder
 rcl_interfaces::msg::ParameterDescriptor ParameterDescription::build() const
 {
   // Return some some sort message
