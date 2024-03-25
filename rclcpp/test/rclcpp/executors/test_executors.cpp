@@ -352,8 +352,13 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set) override
   {
-    (void)wait_set;
-    return true;
+    for (size_t i = 0; i < wait_set->size_of_guard_conditions; ++i) {
+      auto rcl_guard_condition = wait_set->guard_conditions[i];
+      if (&gc_.get_rcl_guard_condition() == rcl_guard_condition) {
+        return true;
+      }
+    }
+    return false;
   }
 
   std::shared_ptr<void>
