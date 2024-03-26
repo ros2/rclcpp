@@ -230,7 +230,7 @@ protected:
   std::function<void(size_t)> on_new_event_callback_{nullptr};
 
   rcl_event_t event_handle_;
-  size_t wait_set_event_index_;
+  size_t wait_set_event_index_ = 0;
 };
 
 using QOSEventHandlerBase [[deprecated("Use rclcpp::EventHandlerBase")]] = EventHandlerBase;
