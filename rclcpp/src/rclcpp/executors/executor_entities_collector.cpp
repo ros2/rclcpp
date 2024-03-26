@@ -61,6 +61,12 @@ ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
     if (group_ptr) {
       group_ptr->get_associated_with_executor_atomic().store(false);
     }
+    // Disassociate the guard condition from the executor notify waitable
+    auto guard_condition_it = weak_groups_to_guard_conditions_.find(weak_group_ptr);
+    if (guard_condition_it != weak_groups_to_guard_conditions_.end()) {
+      this->notify_waitable_->remove_guard_condition(guard_condition_it->second);
+      weak_groups_to_guard_conditions_.erase(guard_condition_it);
+    }
   }
   pending_manually_added_groups_.clear();
   pending_manually_removed_groups_.clear();
@@ -144,6 +150,11 @@ ExecutorEntitiesCollector::add_callback_group(rclcpp::CallbackGroup::SharedPtr g
   }
 
   this->pending_manually_added_groups_.insert(group_ptr);
+
+  // Store callback group notify guard condition in map and add it to the notify waitable
+  auto group_guard_condition = group_ptr->get_notify_guard_condition();
+  weak_groups_to_guard_conditions_.insert({group_ptr, group_guard_condition});
+  this->notify_waitable_->add_guard_condition(group_guard_condition);
 }
 
 void
@@ -341,6 +352,13 @@ ExecutorEntitiesCollector::process_queues()
     auto group_ptr = weak_group_ptr.lock();
     if (group_ptr) {
       this->add_callback_group_to_collection(group_ptr, manually_added_groups_);
+    } else {
+      // Disassociate the guard condition from the executor notify waitable
+      auto guard_condition_it = weak_groups_to_guard_conditions_.find(weak_group_ptr);
+      if (guard_condition_it != weak_groups_to_guard_conditions_.end()) {
+        this->notify_waitable_->remove_guard_condition(guard_condition_it->second);
+        weak_groups_to_guard_conditions_.erase(guard_condition_it);
+      }
     }
   }
   pending_manually_added_groups_.clear();

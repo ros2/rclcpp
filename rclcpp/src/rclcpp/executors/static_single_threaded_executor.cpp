@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "rclcpp/executors/executor_entities_collection.hpp"
-#include "rclcpp/executors/executor_notify_waitable.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/executors/static_single_threaded_executor.hpp"

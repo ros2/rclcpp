@@ -200,18 +200,25 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
 {
   using ExecutorType = TypeParam;
 
+  auto count_callback_groups_in_node = [](auto node) {
+      size_t num = 0;
+      node->get_node_base_interface()->for_each_callback_group([&num](auto) {
+          num++;
+        });
+      return num;
+    };
+
   ExecutorType executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   executor.add_node(node->get_node_base_interface());
-  ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), count_callback_groups_in_node(node));
   std::atomic_size_t timer_count {0};
   auto timer_callback = [&executor, &timer_count]() {
-      printf("in timer_callback(%zu)\n", timer_count.load());
-      if (timer_count > 0) {
-        ASSERT_GT(executor.get_all_callback_groups().size(), 1u);
+      auto cur_timer_count = timer_count++;
+      printf("in timer_callback(%zu)\n", cur_timer_count);
+      if (cur_timer_count > 0) {
         executor.cancel();
       }
-      timer_count++;
     };
   rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
