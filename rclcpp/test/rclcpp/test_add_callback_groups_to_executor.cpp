@@ -202,7 +202,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
 
   auto count_callback_groups_in_node = [](auto node) {
       size_t num = 0;
-      node->get_node_base_interface()->for_each_callback_group([&num](auto) {
+      node->get_node_base_interface()->for_each_callback_group(
+        [&num](auto) {
           num++;
         });
       return num;

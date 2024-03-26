@@ -72,9 +72,10 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
       }
     });
 
-  notify_waitable_->set_on_ready_callback([this](auto, auto) {
-    this->entities_need_rebuild_.store(true);
-  });
+  notify_waitable_->set_on_ready_callback(
+    [this](auto, auto) {
+      this->entities_need_rebuild_.store(true);
+    });
 
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
