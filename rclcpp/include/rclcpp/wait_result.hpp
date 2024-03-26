@@ -276,11 +276,11 @@ public:
       auto & wait_set = this->get_wait_set();
       auto rcl_wait_set = wait_set.get_rcl_wait_set();
       while (next_waitable_index_ < wait_set.size_of_waitables()) {
-        auto cur_waitable = wait_set.waitables(next_waitable_index_);
+        auto cur_waitable = wait_set.waitables(next_waitable_index_++);
         if (cur_waitable != nullptr && cur_waitable->is_ready(&rcl_wait_set)) {
           waitable = cur_waitable;
+          break;
         }
-        next_waitable_index_++;
       }
     }
 
