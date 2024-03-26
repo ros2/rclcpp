@@ -193,6 +193,11 @@ public:
   bool
   ros_time_is_active();
 
+  RCLCPP_PUBLIC
+  void
+  cancel_sleep_or_wait();
+
+
   /// Return the rcl_clock_t clock handle
   RCLCPP_PUBLIC
   rcl_clock_t *
