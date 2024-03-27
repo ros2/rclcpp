@@ -398,7 +398,8 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    any_exec.waitable->execute(any_exec.data);
+    const std::shared_ptr<void> & const_data = any_exec.data;
+    any_exec.waitable->execute(const_data);
   }
 
   // Reset the callback_group, regardless of type

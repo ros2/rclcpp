@@ -18,9 +18,9 @@
 using rclcpp::experimental::SubscriptionIntraProcessBase;
 
 void
-SubscriptionIntraProcessBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+SubscriptionIntraProcessBase::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
-  detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
+  detail::add_guard_condition_to_rcl_wait_set(wait_set, gc_);
 }
 
 const char *

@@ -180,10 +180,23 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
     }
   }
 
-  while (auto waitable = wait_result.next_ready_waitable()) {
-    auto entity_iter = collection.waitables.find(waitable.get());
-    if (entity_iter != collection.waitables.end()) {
-      auto data = waitable->take_data();
+  // Execute all the ready clients
+  for (size_t i = 0; i < wait_set_.size_of_clients; ++i) {
+    if (i < entities_collector_->get_number_of_clients()) {
+      if (wait_set_.clients[i]) {
+        execute_client(entities_collector_->get_client(i));
+        if (spin_once) {
+          return true;
+        }
+        any_ready_executable = true;
+      }
+    }
+  }
+  // Execute all the ready waitables
+  for (size_t i = 0; i < entities_collector_->get_number_of_waitables(); ++i) {
+    auto waitable = entities_collector_->get_waitable(i);
+    if (waitable->is_ready(wait_set_)) {
+      const auto data = waitable->take_data();
       waitable->execute(data);
       any_ready_executable = true;
       if (spin_once) {return any_ready_executable;}

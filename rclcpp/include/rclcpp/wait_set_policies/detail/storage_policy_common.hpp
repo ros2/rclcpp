@@ -375,7 +375,7 @@ protected:
         needs_pruning_ = true;
         continue;
       }
-      waitable_entry.waitable->add_to_wait_set(&rcl_wait_set_);
+      waitable_entry.waitable->add_to_wait_set(rcl_wait_set_);
     }
   }
 

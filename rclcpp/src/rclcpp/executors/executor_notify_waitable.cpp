@@ -45,7 +45,7 @@ ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(ExecutorNotifyWaitabl
 }
 
 void
-ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
+ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
   for (auto weak_guard_condition : this->notify_guard_conditions_) {
@@ -53,8 +53,7 @@ ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
     if (!guard_condition) {continue;}
 
     rcl_guard_condition_t * cond = &guard_condition->get_rcl_guard_condition();
-
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, cond, NULL);
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(&wait_set, cond, NULL);
 
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(
@@ -64,13 +63,13 @@ ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 }
 
 bool
-ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
+ExecutorNotifyWaitable::is_ready(const rcl_wait_set_t & wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
   bool any_ready = false;
-  for (size_t ii = 0; ii < wait_set->size_of_guard_conditions; ++ii) {
-    const auto * rcl_guard_condition = wait_set->guard_conditions[ii];
+  for (size_t ii = 0; ii < wait_set.size_of_guard_conditions; ++ii) {
+    const auto * rcl_guard_condition = wait_set.guard_conditions[ii];
 
     if (nullptr == rcl_guard_condition) {
       continue;
@@ -87,7 +86,7 @@ ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 }
 
 void
-ExecutorNotifyWaitable::execute(std::shared_ptr<void> & data)
+ExecutorNotifyWaitable::execute(const std::shared_ptr<void> & data)
 {
   (void) data;
   this->execute_callback_();
