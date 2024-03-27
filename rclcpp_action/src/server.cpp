@@ -165,18 +165,18 @@ ServerBase::get_number_of_ready_guard_conditions()
 }
 
 void
-ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+ServerBase::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_wait_set_add_action_server(
-    wait_set, pimpl_->action_server_.get(), NULL);
+    &wait_set, pimpl_->action_server_.get(), NULL);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "ServerBase::add_to_wait_set() failed");
   }
 }
 
 bool
-ServerBase::is_ready(rcl_wait_set_t * wait_set)
+ServerBase::is_ready(const rcl_wait_set_t & wait_set)
 {
   bool goal_request_ready;
   bool cancel_request_ready;
@@ -186,7 +186,7 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
   {
     std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     ret = rcl_action_server_wait_set_get_entities_ready(
-      wait_set,
+      &wait_set,
       pimpl_->action_server_.get(),
       &goal_request_ready,
       &cancel_request_ready,
@@ -287,7 +287,7 @@ ServerBase::take_data_by_entity_id(size_t id)
 }
 
 void
-ServerBase::execute(std::shared_ptr<void> & data)
+ServerBase::execute(const std::shared_ptr<void> & data)
 {
   if (!data && !pimpl_->goal_expired_.load()) {
     throw std::runtime_error("'data' is empty");

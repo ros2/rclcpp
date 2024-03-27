@@ -119,13 +119,13 @@ public:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+  add_to_wait_set(rcl_wait_set_t & wait_set) override;
 
   /// Return true if any entity belonging to the action server is ready to be executed.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   bool
-  is_ready(rcl_wait_set_t *) override;
+  is_ready(const rcl_wait_set_t & wait_set) override;
 
   RCLCPP_ACTION_PUBLIC
   std::shared_ptr<void>
@@ -139,7 +139,7 @@ public:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute(std::shared_ptr<void> & data) override;
+  execute(const std::shared_ptr<void> & data) override;
 
   /// \internal
   /// Set a callback to be called when action server entities have an event

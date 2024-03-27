@@ -383,7 +383,7 @@ protected:
         continue;
       }
       rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
-      waitable.add_to_wait_set(&rcl_wait_set_);
+      waitable.add_to_wait_set(rcl_wait_set_);
     }
   }
 

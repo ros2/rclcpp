@@ -339,7 +339,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
         }
         if (waitable) {
           for (size_t i = 0; i < event.num_events; i++) {
-            auto data = waitable->take_data_by_entity_id(event.waitable_data);
+            const auto data = waitable->take_data_by_entity_id(event.waitable_data);
             waitable->execute(data);
           }
         }

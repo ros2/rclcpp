@@ -100,7 +100,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set);
+  add_to_wait_set(rcl_wait_set_t & wait_set);
 
   /// Set a callback to be called whenever the guard condition is triggered.
   /**
@@ -128,7 +128,9 @@ protected:
   std::recursive_mutex reentrant_mutex_;
   std::function<void(size_t)> on_trigger_callback_{nullptr};
   size_t unread_count_{0};
-  rcl_wait_set_t * wait_set_{nullptr};
+  // the type of wait_set_ is actually rcl_wait_set_t *, but it's never
+  // dereferenced, only compared to, so make it void * to avoid accidental use
+  void * wait_set_{nullptr};
 };
 
 }  // namespace rclcpp

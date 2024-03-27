@@ -208,7 +208,7 @@ ready_executables(
     if (!waitable) {
       continue;
     }
-    if (!waitable->is_ready(&rcl_wait_set)) {
+    if (!waitable->is_ready(rcl_wait_set)) {
       continue;
     }
     auto group_info = group_cache(entry.callback_group);
