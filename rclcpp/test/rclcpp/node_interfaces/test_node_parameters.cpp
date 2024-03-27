@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,8 +31,6 @@
 
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
-
-#include "rcpputils/filesystem_helper.hpp"
 
 class TestNodeParameters : public ::testing::Test
 {
@@ -61,7 +60,7 @@ protected:
   std::shared_ptr<rclcpp::Node> node;
   rclcpp::node_interfaces::NodeParameters * node_parameters;
 
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 TEST_F(TestNodeParameters, construct_destruct_rcl_errors) {

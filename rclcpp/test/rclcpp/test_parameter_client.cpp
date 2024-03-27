@@ -15,6 +15,7 @@
 #include <gmock/gmock.h>
 
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <future>
 #include <memory>
@@ -935,7 +936,7 @@ TEST_F(TestParameterClient, async_parameter_load_parameters) {
   auto asynchronous_client =
     std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
   // load parameters
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_parameters.yaml").string();
   auto load_future = asynchronous_client->load_parameters(parameters_filepath);
@@ -961,7 +962,7 @@ TEST_F(TestParameterClient, sync_parameter_load_parameters) {
   auto synchronous_client =
     std::make_shared<rclcpp::SyncParametersClient>(load_node);
   // load parameters
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_parameters.yaml").string();
   auto load_future = synchronous_client->load_parameters(parameters_filepath);
@@ -983,7 +984,7 @@ TEST_F(TestParameterClient, async_parameter_load_parameters_complicated_regex) {
   auto asynchronous_client =
     std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
   // load parameters
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "load_complicated_parameters.yaml").string();
   auto load_future = asynchronous_client->load_parameters(parameters_filepath);
@@ -1013,7 +1014,7 @@ TEST_F(TestParameterClient, async_parameter_load_no_valid_parameter) {
   auto asynchronous_client =
     std::make_shared<rclcpp::AsyncParametersClient>(load_node, "/namespace/load_node");
   // load parameters
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
   const std::string parameters_filepath = (
     test_resources_path / "test_node" / "no_valid_parameters.yaml").string();
   EXPECT_THROW(
