@@ -345,7 +345,16 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
   }
 
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
+    if (ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        pimpl_->logger_,
+        "Failed to send goal response %s (timeout): %s",
+        to_string(uuid).c_str(), rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    } else {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
   }
 
   const auto status = response_pair.first;
@@ -484,6 +493,15 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
       pimpl_->action_server_.get(), &request_header, response.get());
   }
 
+  if (ret == RCL_RET_TIMEOUT) {
+    GoalUUID uuid = request->goal_info.goal_id.uuid;
+    RCLCPP_WARN(
+      pimpl_->logger_,
+      "Failed to send cancel response %s (timeout): %s",
+      to_string(uuid).c_str(), rcl_get_error_string().str);
+    rcl_reset_error();
+    return;
+  }
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -539,6 +557,14 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
     std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     rcl_ret_t rcl_ret = rcl_action_send_result_response(
       pimpl_->action_server_.get(), &request_header, result_response.get());
+    if (rcl_ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        pimpl_->logger_,
+        "Failed to send result response %s (timeout): %s",
+        to_string(uuid).c_str(), rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    }
     if (RCL_RET_OK != rcl_ret) {
       rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
@@ -672,7 +698,13 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
       for (auto & request_header : iter->second) {
         rcl_ret_t ret = rcl_action_send_result_response(
           pimpl_->action_server_.get(), &request_header, result_msg.get());
-        if (RCL_RET_OK != ret) {
+        if (ret == RCL_RET_TIMEOUT) {
+          RCLCPP_WARN(
+            pimpl_->logger_,
+            "Failed to send result response %s (timeout): %s",
+            to_string(uuid).c_str(), rcl_get_error_string().str);
+          rcl_reset_error();
+        } else if (RCL_RET_OK != ret) {
           rclcpp::exceptions::throw_from_rcl_error(ret);
         }
       }
