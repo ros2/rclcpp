@@ -50,7 +50,6 @@ public:
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable(ExecutorNotifyWaitable & other);
 
-
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable & operator=(ExecutorNotifyWaitable & other);
 
@@ -69,7 +68,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  is_ready(rcl_wait_set_t * wait_set) override;
+  is_ready(const rcl_wait_set_t * wait_set) override;
 
   /// Perform work associated with the waitable.
   /**
@@ -78,7 +77,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  execute(std::shared_ptr<void> & data) override;
+  execute(const std::shared_ptr<void> & data) override;
 
   /// Retrieve data to be used in the next execute call.
   /**

@@ -566,6 +566,11 @@ if(TARGET test_thread_safe_synchronization)
   target_link_libraries(test_thread_safe_synchronization ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
+ament_add_gtest(test_intra_process_waitable waitables/test_intra_process_waitable.cpp)
+if(TARGET test_intra_process_waitable)
+  target_link_libraries(test_intra_process_waitable ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
+
 ament_add_gtest(test_rosout_qos test_rosout_qos.cpp)
 if(TARGET test_rosout_qos)
   target_link_libraries(test_rosout_qos ${PROJECT_NAME} rcl::rcl rmw::rmw)
