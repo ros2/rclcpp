@@ -290,7 +290,7 @@ protected:
         return create_wait_result(WaitResultKind::Empty);
       } else {
         // Some other error case, throw.
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "rcl_wait() failed");
       }
     } while (should_loop());
 

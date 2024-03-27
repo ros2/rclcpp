@@ -26,6 +26,7 @@ enum RCLCPP_PUBLIC WaitResultKind
   Ready,  //<! Kind used when something in the wait set was ready.
   Timeout,  //<! Kind used when the wait resulted in a timeout.
   Empty,  //<! Kind used when trying to wait on an empty wait set.
+  Invalid,  //<! Kind used when wait result has been invalidated.
 };
 
 }  // namespace rclcpp

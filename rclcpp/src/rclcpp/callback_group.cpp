@@ -66,6 +66,7 @@ CallbackGroup::size() const
     timer_ptrs_.size() +
     waitable_ptrs_.size();
 }
+
 void CallbackGroup::collect_all_ptrs(
   std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
   std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,

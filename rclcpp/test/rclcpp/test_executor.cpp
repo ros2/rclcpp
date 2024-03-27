@@ -46,23 +46,6 @@ public:
   {
     spin_node_once_nanoseconds(node, std::chrono::milliseconds(100));
   }
-
-  rclcpp::memory_strategy::MemoryStrategy * memory_strategy_ptr()
-  {
-    return memory_strategy_.get();
-  }
-
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr local_get_node_by_group(
-    rclcpp::CallbackGroup::SharedPtr group)
-  {
-    std::lock_guard<std::mutex> guard_{mutex_};  // only to make the TSA happy
-    return get_node_by_group(weak_groups_to_nodes_, group);
-  }
-
-  rclcpp::CallbackGroup::SharedPtr local_get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
-  {
-    return get_group_by_timer(timer);
-  }
 };
 
 class TestExecutor : public ::testing::Test
@@ -130,7 +113,7 @@ TEST_F(TestExecutor, constructor_bad_wait_set_init) {
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_init, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     static_cast<void>(std::make_unique<DummyExecutor>()),
-    std::runtime_error("Failed to create wait set in Executor constructor: error not set"));
+    std::runtime_error("Failed to create wait set: error not set"));
 }
 
 TEST_F(TestExecutor, add_callback_group_twice) {
@@ -142,7 +125,7 @@ TEST_F(TestExecutor, add_callback_group_twice) {
   cb_group->get_associated_with_executor_atomic().exchange(false);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.add_callback_group(cb_group, node->get_node_base_interface(), false),
-    std::runtime_error("Callback group was already added to executor."));
+    std::runtime_error("Callback group has already been added to this executor."));
 }
 
 TEST_F(TestExecutor, add_callback_group_failed_trigger_guard_condition) {
@@ -168,9 +151,15 @@ TEST_F(TestExecutor, remove_callback_group_null_node) {
 
   node.reset();
 
+
+  /**
+   * TODO(mjcarroll): Assert this when we are enforcing that nodes must be destroyed
+   * after their created callback groups.
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_callback_group(cb_group, false),
     std::runtime_error("Node must not be deleted before its callback group(s)."));
+   */
+  EXPECT_NO_THROW(dummy.remove_callback_group(cb_group, false));
 }
 
 TEST_F(TestExecutor, remove_callback_group_failed_trigger_guard_condition) {
@@ -197,7 +186,7 @@ TEST_F(TestExecutor, remove_node_not_associated) {
 
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_node(node->get_node_base_interface(), false),
-    std::runtime_error("Node needs to be associated with an executor."));
+    std::runtime_error("Node '/ns/node' needs to be associated with an executor."));
 }
 
 TEST_F(TestExecutor, remove_node_associated_with_different_executor) {
@@ -211,7 +200,7 @@ TEST_F(TestExecutor, remove_node_associated_with_different_executor) {
 
   RCLCPP_EXPECT_THROW_EQ(
     dummy2.remove_node(node1->get_node_base_interface(), false),
-    std::runtime_error("Node needs to be associated with this executor."));
+    std::runtime_error("Node '/ns/node1' needs to be associated with this executor."));
 }
 
 TEST_F(TestExecutor, spin_node_once_nanoseconds) {
@@ -328,42 +317,14 @@ TEST_F(TestExecutor, cancel_failed_trigger_guard_condition) {
     std::runtime_error("Failed to trigger guard condition in cancel: error not set"));
 }
 
-TEST_F(TestExecutor, set_memory_strategy_nullptr) {
-  DummyExecutor dummy;
-
+TEST_F(TestExecutor, create_executor_fail_wait_set_clear) {
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
-    dummy.set_memory_strategy(nullptr),
-    std::runtime_error("Received NULL memory strategy in executor."));
+    DummyExecutor dummy,
+    std::runtime_error("Couldn't clear the wait set: error not set"));
 }
 
-TEST_F(TestExecutor, set_memory_strategy) {
-  DummyExecutor dummy;
-  rclcpp::memory_strategy::MemoryStrategy::SharedPtr strategy =
-    std::make_shared<
-    rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
-
-  dummy.set_memory_strategy(strategy);
-  EXPECT_EQ(dummy.memory_strategy_ptr(), strategy.get());
-}
-
-TEST_F(TestExecutor, spin_once_failed_trigger_guard_condition) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  auto timer =
-    node->create_wall_timer(std::chrono::milliseconds(1), [&]() {});
-
-  dummy.add_node(node);
-  // Wait for the wall timer to have expired.
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
-  RCLCPP_EXPECT_THROW_EQ(
-    dummy.spin_once(std::chrono::milliseconds(1)),
-    std::runtime_error(
-      "Failed to trigger guard condition from execute_any_executable: error not set"));
-}
-
-TEST_F(TestExecutor, spin_some_fail_wait_set_clear) {
+TEST_F(TestExecutor, spin_all_fail_wait_set_clear) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   auto timer =
@@ -371,9 +332,10 @@ TEST_F(TestExecutor, spin_some_fail_wait_set_clear) {
 
   dummy.add_node(node);
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
+
   RCLCPP_EXPECT_THROW_EQ(
-    dummy.spin_some(std::chrono::milliseconds(1)),
-    std::runtime_error("Couldn't clear wait set: error not set"));
+    dummy.spin_all(std::chrono::milliseconds(1)),
+    std::runtime_error("Couldn't clear the wait set: error not set"));
 }
 
 TEST_F(TestExecutor, spin_some_fail_wait_set_resize) {
@@ -401,7 +363,7 @@ TEST_F(TestExecutor, spin_some_fail_add_handles_to_wait_set) {
     RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_some(std::chrono::milliseconds(1)),
-    std::runtime_error("Couldn't fill wait set"));
+    std::runtime_error("Couldn't fill wait set: error not set"));
 }
 
 TEST_F(TestExecutor, spin_some_fail_wait) {
@@ -415,71 +377,6 @@ TEST_F(TestExecutor, spin_some_fail_wait) {
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_some(std::chrono::milliseconds(1)),
     std::runtime_error("rcl_wait() failed: error not set"));
-}
-
-TEST_F(TestExecutor, get_node_by_group_null_group) {
-  DummyExecutor dummy;
-  ASSERT_EQ(nullptr, dummy.local_get_node_by_group(nullptr));
-}
-
-TEST_F(TestExecutor, get_node_by_group) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  dummy.add_callback_group(cb_group, node->get_node_base_interface(), false);
-  ASSERT_EQ(node->get_node_base_interface().get(), dummy.local_get_node_by_group(cb_group).get());
-}
-
-TEST_F(TestExecutor, get_node_by_group_not_found) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  ASSERT_EQ(nullptr, dummy.local_get_node_by_group(cb_group).get());
-}
-
-TEST_F(TestExecutor, get_group_by_timer_nullptr) {
-  DummyExecutor dummy;
-  ASSERT_EQ(nullptr, dummy.local_get_group_by_timer(nullptr));
-}
-
-TEST_F(TestExecutor, get_group_by_timer) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto timer =
-    node->create_wall_timer(std::chrono::milliseconds(1), [&]() {}, cb_group);
-  dummy.add_node(node);
-
-  ASSERT_EQ(cb_group.get(), dummy.local_get_group_by_timer(timer).get());
-}
-
-TEST_F(TestExecutor, get_group_by_timer_with_deleted_group) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto timer =
-    node->create_wall_timer(std::chrono::milliseconds(1), [&]() {}, cb_group);
-  dummy.add_node(node);
-
-  cb_group.reset();
-
-  ASSERT_EQ(nullptr, dummy.local_get_group_by_timer(timer).get());
-}
-
-TEST_F(TestExecutor, get_group_by_timer_add_callback_group) {
-  DummyExecutor dummy;
-  auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto timer =
-    node->create_wall_timer(std::chrono::milliseconds(1), [&]() {}, cb_group);
-  dummy.add_callback_group(cb_group, node->get_node_base_interface(), false);
-
-  ASSERT_EQ(cb_group.get(), dummy.local_get_group_by_timer(timer).get());
 }
 
 TEST_F(TestExecutor, spin_until_future_complete_in_spin_until_future_complete) {

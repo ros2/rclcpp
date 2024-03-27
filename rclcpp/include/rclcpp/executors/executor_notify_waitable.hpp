@@ -48,11 +48,11 @@ public:
   ~ExecutorNotifyWaitable() override = default;
 
   RCLCPP_PUBLIC
-  ExecutorNotifyWaitable(const ExecutorNotifyWaitable & other);
+  ExecutorNotifyWaitable(ExecutorNotifyWaitable & other);
 
 
   RCLCPP_PUBLIC
-  ExecutorNotifyWaitable & operator=(const ExecutorNotifyWaitable & other);
+  ExecutorNotifyWaitable & operator=(ExecutorNotifyWaitable & other);
 
   /// Add conditions to the wait set
   /**

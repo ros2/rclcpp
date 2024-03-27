@@ -56,7 +56,7 @@ TEST_F(TestStaticSingleThreadedExecutor, add_callback_group_trigger_guard_failed
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
       executor.add_callback_group(cb_group, node->get_node_base_interface(), true),
-      std::runtime_error("error not set"));
+      std::runtime_error("Failed to trigger guard condition on callback group add: error not set"));
   }
 }
 
@@ -69,7 +69,7 @@ TEST_F(TestStaticSingleThreadedExecutor, add_node_trigger_guard_failed) {
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
       executor.add_node(node),
-      std::runtime_error("error not set"));
+      std::runtime_error("Failed to trigger guard condition on node add: error not set"));
   }
 }
 
@@ -86,7 +86,8 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_callback_group_trigger_guard_fai
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
       executor.remove_callback_group(cb_group, true),
-      std::runtime_error("error not set"));
+      std::runtime_error(
+        "Failed to trigger guard condition on callback group remove: error not set"));
   }
 }
 
@@ -99,7 +100,7 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_node_failed) {
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
       executor.remove_node(node, true),
-      std::runtime_error("Node needs to be associated with this executor."));
+      std::runtime_error("Node '/ns/node' needs to be associated with an executor."));
   }
 }
 
@@ -114,7 +115,7 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_node_trigger_guard_failed) {
       "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
     RCLCPP_EXPECT_THROW_EQ(
       executor.remove_node(node, true),
-      std::runtime_error("error not set"));
+      std::runtime_error("Failed to trigger guard condition on node remove: error not set"));
   }
 }
 

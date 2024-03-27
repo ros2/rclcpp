@@ -204,15 +204,19 @@ public:
   void
   storage_rebuild_rcl_wait_set(const ArrayOfExtraGuardConditions & extra_guard_conditions)
   {
+    this->storage_acquire_ownerships();
+
     this->storage_rebuild_rcl_wait_set_with_sets(
-      subscriptions_,
-      guard_conditions_,
+      shared_subscriptions_,
+      shared_guard_conditions_,
       extra_guard_conditions,
-      timers_,
-      clients_,
-      services_,
-      waitables_
+      shared_timers_,
+      shared_clients_,
+      shared_services_,
+      shared_waitables_
     );
+
+    this->storage_release_ownerships();
   }
 
   template<class EntityT, class SequenceOfEntitiesT>
@@ -382,6 +386,8 @@ public:
         return weak_ptr.expired();
       };
     // remove guard conditions which have been deleted
+    subscriptions_.erase(
+      std::remove_if(subscriptions_.begin(), subscriptions_.end(), p), subscriptions_.end());
     guard_conditions_.erase(
       std::remove_if(guard_conditions_.begin(), guard_conditions_.end(), p),
       guard_conditions_.end());
@@ -407,6 +413,7 @@ public:
         }
       };
     // Lock all the weak pointers and hold them until released.
+    lock_all(subscriptions_, shared_subscriptions_);
     lock_all(guard_conditions_, shared_guard_conditions_);
     lock_all(timers_, shared_timers_);
     lock_all(clients_, shared_clients_);
@@ -438,11 +445,67 @@ public:
           shared_ptr.reset();
         }
       };
+    reset_all(shared_subscriptions_);
     reset_all(shared_guard_conditions_);
     reset_all(shared_timers_);
     reset_all(shared_clients_);
     reset_all(shared_services_);
     reset_all(shared_waitables_);
+  }
+
+  size_t size_of_subscriptions() const
+  {
+    return shared_subscriptions_.size();
+  }
+
+  size_t size_of_timers() const
+  {
+    return shared_timers_.size();
+  }
+
+  size_t size_of_clients() const
+  {
+    return shared_clients_.size();
+  }
+
+  size_t size_of_services() const
+  {
+    return shared_services_.size();
+  }
+
+  size_t size_of_waitables() const
+  {
+    return shared_waitables_.size();
+  }
+
+  std::shared_ptr<rclcpp::SubscriptionBase>
+  subscriptions(size_t ii) const
+  {
+    return shared_subscriptions_[ii].subscription;
+  }
+
+  std::shared_ptr<rclcpp::TimerBase>
+  timers(size_t ii) const
+  {
+    return shared_timers_[ii];
+  }
+
+  std::shared_ptr<rclcpp::ClientBase>
+  clients(size_t ii) const
+  {
+    return shared_clients_[ii];
+  }
+
+  std::shared_ptr<rclcpp::ServiceBase>
+  services(size_t ii) const
+  {
+    return shared_services_[ii];
+  }
+
+  std::shared_ptr<rclcpp::Waitable>
+  waitables(size_t ii) const
+  {
+    return shared_waitables_[ii].waitable;
   }
 
   size_t ownership_reference_counter_ = 0;

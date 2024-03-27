@@ -178,6 +178,12 @@ struct ExecutorEntitiesCollection
 
   /// Clear the entities collection
   void clear();
+
+  /// Remove entities that have expired weak ownership
+  /**
+   * \return The total number of removed entities
+   */
+  size_t remove_expired_entities();
 };
 
 /// Build an entities collection from callback groups
