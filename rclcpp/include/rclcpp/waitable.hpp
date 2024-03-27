@@ -101,6 +101,16 @@ public:
   size_t
   get_number_of_ready_guard_conditions();
 
+  /// Deprecated.
+  /**
+   * \sa add_to_wait_set(rcl_wait_set_t &)
+   */
+  [[deprecated("Use add_to_wait_set(rcl_wait_set_t & wait_set) signature")]]
+  RCLCPP_PUBLIC
+  virtual
+  void
+  add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
+
   /// Add the Waitable to a wait set.
   /**
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
@@ -109,7 +119,17 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
+  add_to_wait_set(rcl_wait_set_t & wait_set) = 0;
+
+  /// Deprecated.
+  /**
+   * \sa is_ready(const rcl_wait_set_t &)
+   */
+  [[deprecated("Use is_ready(const rcl_wait_set_t & wait_set) signature")]]
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  is_ready(rcl_wait_set_t * wait_set) = 0;
 
   /// Check if the Waitable is ready.
   /**
@@ -124,7 +144,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  is_ready(rcl_wait_set_t * wait_set) = 0;
+  is_ready(const rcl_wait_set_t & wait_set) = 0;
 
   /// Take the data so that it can be consumed with `execute`.
   /**
@@ -178,6 +198,16 @@ public:
   std::shared_ptr<void>
   take_data_by_entity_id(size_t id);
 
+  /// Deprecated.
+  /**
+   * \sa execute(const std::shared_ptr<void> &)
+   */
+  [[deprecated("Use execute(const std::shared_ptr<void> & data) signature")]]
+  RCLCPP_PUBLIC
+  virtual
+  void
+  execute(std::shared_ptr<void> & data) = 0;
+
   /// Execute data that is passed in.
   /**
    * Before calling this method, the Waitable should be added to a wait set,
@@ -203,7 +233,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  execute(std::shared_ptr<void> & data) = 0;
+  execute(const std::shared_ptr<void> & data) = 0;
 
   /// Exchange the "in use by wait set" state for this timer.
   /**
