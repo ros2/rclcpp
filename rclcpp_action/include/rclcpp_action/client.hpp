@@ -418,7 +418,7 @@ public:
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
-  std::shared_future<typename GoalHandle::SharedPtr>
+  [[nodiscard]] std::shared_future<typename GoalHandle::SharedPtr>
   async_send_goal(const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
   {
     // Put promise in the heap to move it around.
@@ -448,7 +448,7 @@ public:
         std::shared_ptr<GoalHandle> goal_handle(
           new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
         {
-          std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+          std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
           goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         }
         promise->set_value(goal_handle);
@@ -466,7 +466,7 @@ public:
     // To prevent the list from growing out of control, forget about any goals
     // with no more user references
     {
-      std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+      std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
       auto goal_handle_it = goal_handles_.begin();
       while (goal_handle_it != goal_handles_.end()) {
         if (!goal_handle_it->second.lock()) {
@@ -496,7 +496,7 @@ public:
     typename GoalHandle::SharedPtr goal_handle,
     ResultCallback result_callback = nullptr)
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
@@ -531,7 +531,7 @@ public:
     typename GoalHandle::SharedPtr goal_handle,
     CancelCallback cancel_callback = nullptr)
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
@@ -562,6 +562,25 @@ public:
     return async_cancel(cancel_request, cancel_callback);
   }
 
+  void drop_goal_handle(typename GoalHandle::SharedPtr goal_handle)
+  {
+    drop_goal_handle(goal_handle->get_goal_id());
+  }
+
+  void drop_goal_handle(const GoalUUID & goal_id)
+  {
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
+    if (goal_handles_.count(goal_id) == 0) {
+      // someone else already deleted the entry
+      // e.g. the result callback
+      RCLCPP_DEBUG(
+        this->get_logger(),
+        "Given goal is unknown. Ignoring...");
+      return;
+    }
+    goal_handles_.erase(goal_id);
+  }
+
   /// Asynchronously request all goals at or before a specified time be canceled.
   /**
    * \param[in] stamp The timestamp for the cancel goal request.
@@ -590,7 +609,7 @@ public:
   virtual
   ~Client()
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     auto it = goal_handles_.begin();
     while (it != goal_handles_.end()) {
       typename GoalHandle::SharedPtr goal_handle = it->second.lock();
@@ -637,7 +656,7 @@ private:
   void
   handle_feedback_message(std::shared_ptr<void> message) override
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
     typename FeedbackMessage::SharedPtr feedback_message =
       std::static_pointer_cast<FeedbackMessage>(message);
@@ -674,7 +693,7 @@ private:
   void
   handle_status_message(std::shared_ptr<void> message) override
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
@@ -708,23 +727,40 @@ private:
     }
     using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
+    const GoalUUID goal_id = goal_handle->get_goal_id();
     goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     try {
       this->send_result_request(
         std::static_pointer_cast<void>(goal_result_request),
-        [goal_handle, this](std::shared_ptr<void> response) mutable
+        [goal_id, this](std::shared_ptr<void> response) mutable
         {
+          std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
+          if (goal_handles_.count(goal_id) == 0) {
+            RCLCPP_DEBUG(
+              this->get_logger(),
+              "Received result for unknown goal. Ignoring...");
+            return;
+          }
+          typename GoalHandle::SharedPtr goal_handle_ = goal_handles_[goal_id].lock();
+          // Forget about the goal if there are no more user references
+          if (!goal_handle_) {
+            RCLCPP_DEBUG(
+              this->get_logger(),
+              "Dropping weak reference to goal handle during result callback");
+            goal_handles_.erase(goal_id);
+            return;
+          }
+
           // Wrap the response in a struct with the fields a user cares about
           WrappedResult wrapped_result;
           using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
           auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
           wrapped_result.result = std::make_shared<typename ActionT::Result>();
           *wrapped_result.result = result_response->result;
-          wrapped_result.goal_id = goal_handle->get_goal_id();
+          wrapped_result.goal_id = goal_id;
           wrapped_result.code = static_cast<ResultCode>(result_response->status);
-          goal_handle->set_result(wrapped_result);
-          std::lock_guard<std::mutex> lock(goal_handles_mutex_);
-          goal_handles_.erase(goal_handle->get_goal_id());
+          goal_handle_->set_result(wrapped_result);
+          goal_handles_.erase(goal_id);
         });
     } catch (rclcpp::exceptions::RCLError & ex) {
       // This will cause an exception when the user tries to access the result
@@ -755,7 +791,7 @@ private:
   }
 
   std::map<GoalUUID, typename GoalHandle::WeakPtr> goal_handles_;
-  std::mutex goal_handles_mutex_;
+  std::recursive_mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
 
