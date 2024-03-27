@@ -231,8 +231,12 @@ StaticSingleThreadedExecutor::execute_ready_executables(bool spin_once)
     if (i < entities_collector_->get_number_of_timers()) {
       if (wait_set_.timers[i] && entities_collector_->get_timer(i)->is_ready()) {
         auto timer = entities_collector_->get_timer(i);
-        timer->call();
-        execute_timer(std::move(timer));
+        auto data = timer->call();
+        if (!data) {
+          // someone canceled the timer between is_ready and call
+          continue;
+        }
+        execute_timer(std::move(timer), data);
         if (spin_once) {
           return true;
         }
