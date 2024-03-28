@@ -367,22 +367,23 @@ TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
   auto timers_manager = std::make_shared<TimersManager>(
     rclcpp::contexts::get_global_default_context());
 
-  size_t t1_runs = 0;
+  std::atomic<size_t> t1_runs = 0;
+  const size_t cancel_iter = 5;
   std::shared_ptr<TimerT> t1;
   // After a while cancel t1. Don't remove it though.
   // Simulates typical usage in a Node where a timer is cancelled but not removed,
   // since typical users aren't going to mess around with the timer manager.
   t1 = TimerT::make_shared(
     1ms,
-    [&t1_runs, &t1]() {
+    [&t1_runs, &t1, cancel_iter]() {
       t1_runs++;
-      if (t1_runs == 5) {
+      if (t1_runs == cancel_iter) {
         t1->cancel();
       }
     },
     rclcpp::contexts::get_global_default_context());
 
-  size_t t2_runs = 0;
+  std::atomic<size_t> t2_runs = 0;
   auto t2 = TimerT::make_shared(
     1ms,
     [&t2_runs]() {
@@ -397,11 +398,42 @@ TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
   // Start timers thread
   timers_manager->start();
 
-  std::this_thread::sleep_for(15ms);
+  // Wait for t1 to be canceled
+  auto loop_start_time = std::chrono::high_resolution_clock::now();
+  while (!t1->is_canceled()) {
+    auto now = std::chrono::high_resolution_clock::now();
+    if (now - loop_start_time >= std::chrono::seconds(30)) {
+      FAIL() << "timeout waiting for t1 to be canceled";
+      break;
+    }
+    std::this_thread::sleep_for(3ms);
+  }
 
-  // t1 has stopped running
-  EXPECT_NE(t1_runs, t2_runs);
-  // Check that t2 has significantly more calls
-  EXPECT_LT(t1_runs + 5, t2_runs);
+  EXPECT_TRUE(t1->is_canceled());
+  EXPECT_FALSE(t2->is_canceled());
+  EXPECT_EQ(t1_runs, cancel_iter);
+
+  // Verify that t2 is still being invoked
+  const size_t start_t2_runs = t2_runs;
+  const size_t num_t2_extra_runs = 6;
+  loop_start_time = std::chrono::high_resolution_clock::now();
+  while (t2_runs < start_t2_runs + num_t2_extra_runs) {
+    auto now = std::chrono::high_resolution_clock::now();
+    if (now - loop_start_time >= std::chrono::seconds(30)) {
+      FAIL() << "timeout waiting for t2 to do some runs";
+      break;
+    }
+    std::this_thread::sleep_for(3ms);
+  }
+
+  EXPECT_TRUE(t1->is_canceled());
+  EXPECT_FALSE(t2->is_canceled());
+  // t1 hasn't run since before
+  EXPECT_EQ(t1_runs, cancel_iter);
+  // t2 has run the expected additional number of times
+  EXPECT_GE(t2_runs, start_t2_runs + num_t2_extra_runs);
+  // the t2 runs are strictly more than the t1 runs
+  EXPECT_GT(t2_runs, t1_runs);
+
   timers_manager->stop();
 }
