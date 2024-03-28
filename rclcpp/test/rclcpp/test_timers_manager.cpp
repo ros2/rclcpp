@@ -399,7 +399,13 @@ TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
   timers_manager->start();
 
   // Wait for t1 to be canceled
+  auto loop_start_time = std::chrono::high_resolution_clock::now();
   while (!t1->is_canceled()) {
+    auto now = std::chrono::high_resolution_clock::now();
+    if (now - loop_start_time >= std::chrono::seconds(30)) {
+      FAIL() << "timeout waiting for t1 to be canceled";
+      break;
+    }
     std::this_thread::sleep_for(3ms);
   }
 
@@ -410,10 +416,16 @@ TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
   // Verify that t2 is still being invoked
   const size_t start_t2_runs = t2_runs;
   const size_t num_t2_extra_runs = 6;
+  loop_start_time = std::chrono::high_resolution_clock::now();
   while (t2_runs < start_t2_runs + num_t2_extra_runs) {
+    auto now = std::chrono::high_resolution_clock::now();
+    if (now - loop_start_time >= std::chrono::seconds(30)) {
+      FAIL() << "timeout waiting for t2 to do some runs";
+      break;
+    }
     std::this_thread::sleep_for(3ms);
   }
-  
+
   EXPECT_TRUE(t1->is_canceled());
   EXPECT_FALSE(t2->is_canceled());
   // t1 hasn't run since before
