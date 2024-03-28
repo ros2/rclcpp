@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+28.0.0 (2024-03-28)
+-------------------
 * Update quality declaration documents (`#2427 <https://github.com/ros2/rclcpp/issues/2427>`_)
 * Contributors: Christophe Bedard
 
