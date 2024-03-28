@@ -105,19 +105,11 @@ TEST_F(TestGuardCondition, add_to_wait_set) {
         "lib:rclcpp", rcl_wait_set_add_guard_condition, RCL_RET_OK);
 
       rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-      EXPECT_NO_THROW(gc->add_to_wait_set(&wait_set));
-      EXPECT_NO_THROW(gc->add_to_wait_set(&wait_set));
+      EXPECT_NO_THROW(gc->add_to_wait_set(wait_set));
+      EXPECT_NO_THROW(gc->add_to_wait_set(wait_set));
 
       rcl_wait_set_t wait_set_2 = rcl_get_zero_initialized_wait_set();
-      EXPECT_THROW(gc->add_to_wait_set(&wait_set_2), std::runtime_error);
-    }
-
-    {
-      auto mock = mocking_utils::patch_and_return(
-        "lib:rclcpp", rcl_wait_set_add_guard_condition, RCL_RET_ERROR);
-
-      auto gd = std::make_shared<rclcpp::GuardCondition>();
-      EXPECT_THROW(gd->add_to_wait_set(nullptr), rclcpp::exceptions::RCLError);
+      EXPECT_THROW(gc->add_to_wait_set(wait_set_2), std::runtime_error);
     }
   }
 }

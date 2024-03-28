@@ -253,20 +253,21 @@ ClientBase::get_number_of_ready_services()
 }
 
 void
-ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+ClientBase::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
   rcl_ret_t ret = rcl_action_wait_set_add_action_client(
-    wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
+    &wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "ClientBase::add_to_wait_set() failed");
   }
 }
 
 bool
-ClientBase::is_ready(rcl_wait_set_t * wait_set)
+ClientBase::is_ready(const rcl_wait_set_t & wait_set)
 {
   rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
-    wait_set, pimpl_->client_handle.get(),
+    &wait_set,
+    pimpl_->client_handle.get(),
     &pimpl_->is_feedback_ready,
     &pimpl_->is_status_ready,
     &pimpl_->is_goal_response_ready,
@@ -619,7 +620,7 @@ ClientBase::take_data_by_entity_id(size_t id)
 }
 
 void
-ClientBase::execute(std::shared_ptr<void> & data)
+ClientBase::execute(const std::shared_ptr<void> & data)
 {
   if (!data) {
     throw std::runtime_error("'data' is empty");

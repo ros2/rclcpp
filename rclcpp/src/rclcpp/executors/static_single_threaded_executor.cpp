@@ -267,8 +267,8 @@ StaticSingleThreadedExecutor::execute_ready_executables(bool spin_once)
   // Execute all the ready waitables
   for (size_t i = 0; i < entities_collector_->get_number_of_waitables(); ++i) {
     auto waitable = entities_collector_->get_waitable(i);
-    if (waitable->is_ready(&wait_set_)) {
-      auto data = waitable->take_data();
+    if (waitable->is_ready(wait_set_)) {
+      const auto data = waitable->take_data();
       waitable->execute(data);
       if (spin_once) {
         return true;

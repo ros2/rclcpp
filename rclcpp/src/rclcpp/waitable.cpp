@@ -86,3 +86,82 @@ Waitable::clear_on_ready_callback()
           "Custom waitables should override clear_on_ready_callback if they "
           "want to use it and make sure to call it on the waitable destructor.");
 }
+
+void
+Waitable::add_to_wait_set(rcl_wait_set_t * wait_set)
+{
+  this->add_to_wait_set(*wait_set);
+}
+
+void
+Waitable::add_to_wait_set(rcl_wait_set_t & wait_set)
+{
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  this->add_to_wait_set(&wait_set);
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+}
+
+bool
+Waitable::is_ready(rcl_wait_set_t * wait_set)
+{
+  const rcl_wait_set_t & const_wait_set_ref = *wait_set;
+  return this->is_ready(const_wait_set_ref);
+}
+
+bool
+Waitable::is_ready(const rcl_wait_set_t & wait_set)
+{
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  // note this const cast is only required to support a deprecated function
+  return this->is_ready(&const_cast<rcl_wait_set_t &>(wait_set));
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+}
+
+void
+Waitable::execute(std::shared_ptr<void> & data)
+{
+  const std::shared_ptr<void> & const_data = data;
+  this->execute(const_data);
+}
+
+void
+Waitable::execute(const std::shared_ptr<void> & data)
+{
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  // note this const cast is only required to support a deprecated function
+  this->execute(const_cast<std::shared_ptr<void> &>(data));
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+}

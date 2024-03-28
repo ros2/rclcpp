@@ -96,7 +96,7 @@ StaticExecutorEntitiesCollector::take_data()
 }
 
 void
-StaticExecutorEntitiesCollector::execute(std::shared_ptr<void> & data)
+StaticExecutorEntitiesCollector::execute(const std::shared_ptr<void> & data)
 {
   (void) data;
   // Fill memory strategy with entities coming from weak_nodes_
@@ -268,12 +268,12 @@ StaticExecutorEntitiesCollector::refresh_wait_set(std::chrono::nanoseconds timeo
 }
 
 void
-StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
+StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
   // Add waitable guard conditions (one for each registered node) into the wait set.
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & gc = pair.second;
-    detail::add_guard_condition_to_rcl_wait_set(*wait_set, *gc);
+    detail::add_guard_condition_to_rcl_wait_set(wait_set, *gc);
   }
 }
 
@@ -434,17 +434,17 @@ StaticExecutorEntitiesCollector::remove_node(
 }
 
 bool
-StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
+StaticExecutorEntitiesCollector::is_ready(const rcl_wait_set_t & p_wait_set)
 {
   // Check wait_set guard_conditions for added/removed entities to/from a node
-  for (size_t i = 0; i < p_wait_set->size_of_guard_conditions; ++i) {
-    if (p_wait_set->guard_conditions[i] != NULL) {
+  for (size_t i = 0; i < p_wait_set.size_of_guard_conditions; ++i) {
+    if (p_wait_set.guard_conditions[i] != NULL) {
       auto found_guard_condition = std::find_if(
         weak_nodes_to_guard_conditions_.begin(), weak_nodes_to_guard_conditions_.end(),
         [&](std::pair<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
         const GuardCondition *> pair) -> bool {
           const rcl_guard_condition_t & rcl_gc = pair.second->get_rcl_guard_condition();
-          return &rcl_gc == p_wait_set->guard_conditions[i];
+          return &rcl_gc == p_wait_set.guard_conditions[i];
         });
       if (found_guard_condition != weak_nodes_to_guard_conditions_.end()) {
         return true;
