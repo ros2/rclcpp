@@ -84,13 +84,22 @@ public:
       options.event_callbacks,
       options.use_default_callbacks,
       DeliveredMessageKind::SERIALIZED_MESSAGE),
-    callback_([callback](
-        std::shared_ptr<const rclcpp::SerializedMessage> serialized_message,
-        const rclcpp::MessageInfo & message_info) mutable {
-        callback.dispatch(serialized_message, message_info);
-      }),
+    any_callback_(callback),
     ts_lib_(ts_lib)
-  {}
+  {
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_subscription_init,
+      static_cast<const void *>(get_subscription_handle().get()),
+      static_cast<const void *>(this));
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_subscription_callback_added,
+      static_cast<const void *>(this),
+      static_cast<const void *>(&any_callback_));
+
+#ifndef TRACETOOLS_DISABLED
+    any_callback_.register_callback_for_tracing();
+#endif
+  }
 
   RCLCPP_PUBLIC
   virtual ~GenericSubscription() = default;
@@ -153,10 +162,7 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)
-
-  std::function<void(
-      std::shared_ptr<const rclcpp::SerializedMessage>,
-      const rclcpp::MessageInfo)> callback_;
+  AnySubscriptionCallback<rclcpp::SerializedMessage, std::allocator<void>> any_callback_;
   // The type support library should stay loaded, so it is stored in the GenericSubscription
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
 };

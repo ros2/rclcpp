@@ -51,7 +51,7 @@ GenericSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo & message_info)
 {
-  callback_(message, message_info);
+  any_callback_.dispatch(message, message_info);
 }
 
 void
