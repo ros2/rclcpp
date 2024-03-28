@@ -15,6 +15,8 @@
 #ifndef RCLCPP__EXECUTOR_OPTIONS_HPP_
 #define RCLCPP__EXECUTOR_OPTIONS_HPP_
 
+#include <string>
+
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -36,6 +38,7 @@ struct ExecutorOptions
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
   rclcpp::Context::SharedPtr context;
   size_t max_conditions;
+  std::string name;
 };
 
 }  // namespace rclcpp

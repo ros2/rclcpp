@@ -18,14 +18,16 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include <set>
-#include <thread>
 #include <unordered_map>
+#include <optional>
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rcpputils/thread/thread_attribute.hpp"
 
 namespace rclcpp
 {
@@ -39,7 +41,7 @@ public:
 
   /// Constructor for MultiThreadedExecutor.
   /**
-   * For the yield_before_execute option, when true std::this_thread::yield()
+   * For the yield_before_execute option, when true rcpputils::this_thread::yield()
    * will be called after acquiring work (as an AnyExecutable) and
    * releasing the spinning lock, but before executing the work.
    * This is useful for reproducing some bugs related to taking work more than
@@ -48,13 +50,28 @@ public:
    * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found (minimum of 2)
-   * \param yield_before_execute if true std::this_thread::yield() is called
+   * \param yield_before_execute if true rcpputils::this_thread::yield() is called
    * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
   explicit MultiThreadedExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions(),
     size_t number_of_threads = 0,
+    bool yield_before_execute = false,
+    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  RCLCPP_PUBLIC
+  explicit MultiThreadedExecutor(
+    size_t number_of_threads,
+    const rcpputils::ThreadAttribute & thread_attr,
+    bool yield_before_execute = false,
+    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  RCLCPP_PUBLIC
+  explicit MultiThreadedExecutor(
+    const rclcpp::ExecutorOptions & options,
+    size_t number_of_threads,
+    const rcpputils::ThreadAttribute & thread_attr,
     bool yield_before_execute = false,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
@@ -73,6 +90,16 @@ public:
   size_t
   get_number_of_threads();
 
+  RCLCPP_PUBLIC
+  const std::optional<rcpputils::ThreadAttribute> &
+  get_thread_attribute() const
+  {
+    return thread_attr_;
+  }
+
+  RCLCPP_PUBLIC
+  static const char default_name[];
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -81,8 +108,17 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
+  RCLCPP_PUBLIC
+  explicit MultiThreadedExecutor(
+    const rclcpp::ExecutorOptions & options,
+    size_t number_of_threads,
+    std::optional<rcpputils::ThreadAttribute> thread_attr,
+    bool yield_before_execute,
+    std::chrono::nanoseconds timeout);
+
   std::mutex wait_mutex_;
   size_t number_of_threads_;
+  std::optional<rcpputils::ThreadAttribute> thread_attr_;
   bool yield_before_execute_;
   std::chrono::nanoseconds next_exec_timeout_;
 };
