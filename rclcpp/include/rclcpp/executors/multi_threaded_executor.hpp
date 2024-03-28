@@ -61,8 +61,12 @@ public:
   RCLCPP_PUBLIC
   virtual ~MultiThreadedExecutor();
 
+  /// Multi-threaded implementation of spin.
   /**
-   * \sa rclcpp::Executor:spin() for more details
+   * This function will block until work comes in, and try to execute all work with
+   * configured multiple threads, and then repeat the process until canceled.
+   * It may be interrupted by a call to rclcpp::Executor::cancel() or by ctrl-c
+   * if the associated context is configured to shutdown on SIGINT.
    * \throws std::runtime_error when spin() called while already spinning
    */
   RCLCPP_PUBLIC
