@@ -397,13 +397,13 @@ TEST_F(TestClient, is_ready) {
   ASSERT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 10, 10, 10, 10, 10, 10, rcl_context, allocator));
-  ASSERT_NO_THROW(action_client->add_to_wait_set(&wait_set));
-  EXPECT_TRUE(action_client->is_ready(&wait_set));
+  ASSERT_NO_THROW(action_client->add_to_wait_set(wait_set));
+  EXPECT_TRUE(action_client->is_ready(wait_set));
 
   {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp_action", rcl_action_client_wait_set_get_entities_ready, RCL_RET_ERROR);
-    EXPECT_THROW(action_client->is_ready(&wait_set), rclcpp::exceptions::RCLError);
+    EXPECT_THROW(action_client->is_ready(wait_set), rclcpp::exceptions::RCLError);
   }
   client_node.reset();  // Drop node before action client
 }
