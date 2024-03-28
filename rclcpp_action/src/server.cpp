@@ -307,7 +307,7 @@ ServerBase::execute(const std::shared_ptr<void> & data)
 }
 
 void
-ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_goal_request_received(const std::shared_ptr<void> & data)
 {
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, rcl_action_goal_info_t, rmw_request_id_t, std::shared_ptr<void>>>(data);
@@ -405,11 +405,10 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     // Tell user to start executing action
     call_goal_accepted_callback(handle, uuid, message);
   }
-  data.reset();
 }
 
 void
-ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_cancel_request_received(const std::shared_ptr<void> & data)
 {
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
@@ -504,11 +503,10 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  data.reset();
 }
 
 void
-ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_result_request_received(const std::shared_ptr<void> & data)
 {
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(data);
@@ -568,7 +566,6 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
       rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
   }
-  data.reset();
 }
 
 void
