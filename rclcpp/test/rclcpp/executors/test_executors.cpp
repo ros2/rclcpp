@@ -382,11 +382,7 @@ public:
   void
   execute(const std::shared_ptr<void> &) override
   {
-<<<<<<< HEAD
-    (void) data;
     trigger_count_--;
-=======
->>>>>>> d4906d61 (fix uses of newly deprecated functions)
     count_++;
     if (nullptr != on_execute_callback_) {
       on_execute_callback_();
