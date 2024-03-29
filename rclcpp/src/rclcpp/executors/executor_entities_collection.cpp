@@ -39,6 +39,30 @@ void ExecutorEntitiesCollection::clear()
   waitables.clear();
 }
 
+size_t ExecutorEntitiesCollection::remove_expired_entities()
+{
+  auto remove_entities = [](auto & collection) -> size_t {
+      size_t removed = 0;
+      for (auto it = collection.begin(); it != collection.end(); ) {
+        if (it->second.entity.expired()) {
+          ++removed;
+          it = collection.erase(it);
+        } else {
+          ++it;
+        }
+      }
+      return removed;
+    };
+
+  return
+    remove_entities(subscriptions) +
+    remove_entities(timers) +
+    remove_entities(guard_conditions) +
+    remove_entities(clients) +
+    remove_entities(services) +
+    remove_entities(waitables);
+}
+
 void
 build_entities_collection(
   const std::vector<rclcpp::CallbackGroup::WeakPtr> & callback_groups,
@@ -203,7 +227,7 @@ ready_executables(
     }
   }
 
-  for (auto & [handle, entry] : collection.waitables) {
+  for (const auto & [handle, entry] : collection.waitables) {
     auto waitable = entry.entity.lock();
     if (!waitable) {
       continue;
@@ -218,13 +242,10 @@ ready_executables(
     rclcpp::AnyExecutable exec;
     exec.waitable = waitable;
     exec.callback_group = group_info;
-    exec.data = waitable->take_data();
     executables.push_back(exec);
     added++;
   }
-
   return added;
 }
-
 }  // namespace executors
 }  // namespace rclcpp

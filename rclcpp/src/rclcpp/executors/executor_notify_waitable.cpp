@@ -27,15 +27,17 @@ ExecutorNotifyWaitable::ExecutorNotifyWaitable(std::function<void(void)> on_exec
 {
 }
 
-ExecutorNotifyWaitable::ExecutorNotifyWaitable(const ExecutorNotifyWaitable & other)
-: ExecutorNotifyWaitable(other.execute_callback_)
+ExecutorNotifyWaitable::ExecutorNotifyWaitable(ExecutorNotifyWaitable & other)
 {
+  std::lock_guard<std::mutex> lock(other.guard_condition_mutex_);
+  this->execute_callback_ = other.execute_callback_;
   this->notify_guard_conditions_ = other.notify_guard_conditions_;
 }
 
-ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(const ExecutorNotifyWaitable & other)
+ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(ExecutorNotifyWaitable & other)
 {
   if (this != &other) {
+    std::lock_guard<std::mutex> lock(other.guard_condition_mutex_);
     this->execute_callback_ = other.execute_callback_;
     this->notify_guard_conditions_ = other.notify_guard_conditions_;
   }
@@ -46,20 +48,17 @@ void
 ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-
   for (auto weak_guard_condition : this->notify_guard_conditions_) {
     auto guard_condition = weak_guard_condition.lock();
-    if (guard_condition) {
-      auto rcl_guard_condition = &guard_condition->get_rcl_guard_condition();
+    if (!guard_condition) {continue;}
 
-      rcl_ret_t ret = rcl_wait_set_add_guard_condition(
-        wait_set,
-        rcl_guard_condition, NULL);
+    rcl_guard_condition_t * cond = &guard_condition->get_rcl_guard_condition();
 
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(
-          ret, "failed to add guard condition to wait set");
-      }
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, cond, NULL);
+
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "failed to add guard condition to wait set");
     }
   }
 }
@@ -71,15 +70,16 @@ ExecutorNotifyWaitable::is_ready(rcl_wait_set_t * wait_set)
 
   bool any_ready = false;
   for (size_t ii = 0; ii < wait_set->size_of_guard_conditions; ++ii) {
-    auto rcl_guard_condition = wait_set->guard_conditions[ii];
+    const auto * rcl_guard_condition = wait_set->guard_conditions[ii];
 
     if (nullptr == rcl_guard_condition) {
       continue;
     }
-    for (auto weak_guard_condition : this->notify_guard_conditions_) {
+    for (const auto & weak_guard_condition : this->notify_guard_conditions_) {
       auto guard_condition = weak_guard_condition.lock();
       if (guard_condition && &guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
         any_ready = true;
+        break;
       }
     }
   }

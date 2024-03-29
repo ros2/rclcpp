@@ -494,12 +494,6 @@ if(TARGET test_multi_threaded_executor)
   target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
 endif()
 
-ament_add_gtest(test_static_executor_entities_collector executors/test_static_executor_entities_collector.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
-if(TARGET test_static_executor_entities_collector)
-  target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick rcpputils::rcpputils ${test_msgs_TARGETS})
-endif()
-
 ament_add_gtest(test_entities_collector executors/test_entities_collector.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
 if(TARGET test_entities_collector)

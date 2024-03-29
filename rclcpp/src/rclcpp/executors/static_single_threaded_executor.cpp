@@ -12,31 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/executors/static_single_threaded_executor.hpp"
-
-#include <chrono>
-#include <memory>
-#include <utility>
-#include <vector>
-
+#include "rclcpp/executors/executor_entities_collection.hpp"
 #include "rcpputils/scope_exit.hpp"
 
-using rclcpp::executors::StaticSingleThreadedExecutor;
-using rclcpp::experimental::ExecutableList;
+#include "rclcpp/executors/static_single_threaded_executor.hpp"
+#include "rclcpp/any_executable.hpp"
 
-StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(
-  const rclcpp::ExecutorOptions & options)
+using rclcpp::executors::StaticSingleThreadedExecutor;
+
+StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(const rclcpp::ExecutorOptions & options)
 : rclcpp::Executor(options)
 {
-  entities_collector_ = std::make_shared<StaticExecutorEntitiesCollector>();
 }
 
-StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor()
-{
-  if (entities_collector_->is_init()) {
-    entities_collector_->fini();
-  }
-}
+StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor() {}
 
 void
 StaticSingleThreadedExecutor::spin()
@@ -46,14 +35,11 @@ StaticSingleThreadedExecutor::spin()
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  // Set memory_strategy_ and exec_list_ based on weak_nodes_
-  // Prepare wait_set_ based on memory_strategy_
-  entities_collector_->init(&wait_set_, memory_strategy_);
-
+  // This is essentially the contents of the rclcpp::Executor::wait_for_work method,
+  // except we need to keep the wait result to reproduce the StaticSingleThreadedExecutor
+  // behavior.
   while (rclcpp::ok(this->context_) && spinning.load()) {
-    // Refresh wait set and wait for work
-    entities_collector_->refresh_wait_set();
-    execute_ready_executables();
+    this->spin_once_impl(std::chrono::nanoseconds(-1));
   }
 }
 
@@ -64,7 +50,6 @@ StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
   if (std::chrono::nanoseconds(0) == max_duration) {
     max_duration = std::chrono::nanoseconds::max();
   }
-
   return this->spin_some_impl(max_duration, false);
 }
 
@@ -80,36 +65,32 @@ StaticSingleThreadedExecutor::spin_all(std::chrono::nanoseconds max_duration)
 void
 StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
 {
-  // Make sure the entities collector has been initialized
-  if (!entities_collector_->is_init()) {
-    entities_collector_->init(&wait_set_, memory_strategy_);
-  }
-
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
-      if (std::chrono::nanoseconds(0) == max_duration) {
-        // told to spin forever if need be
-        return true;
-      } else if (std::chrono::steady_clock::now() - start < max_duration) {
-        // told to spin only for some maximum amount of time
-        return true;
-      }
-      // spun too long
-      return false;
+      const auto spin_forever = std::chrono::nanoseconds(0) == max_duration;
+      const auto cur_duration = std::chrono::steady_clock::now() - start;
+      return spin_forever || (cur_duration < max_duration);
     };
 
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false););
 
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     // Get executables that are ready now
-    entities_collector_->refresh_wait_set(std::chrono::milliseconds::zero());
-    // Execute ready executables
-    bool work_available = execute_ready_executables();
-    if (!work_available || !exhaustive) {
-      break;
+    std::lock_guard<std::mutex> guard(mutex_);
+
+    auto wait_result = this->collect_and_wait(std::chrono::nanoseconds(0));
+    if (wait_result.has_value()) {
+      // Execute ready executables
+      bool work_available = this->execute_ready_executables(
+        current_collection_,
+        wait_result.value(),
+        false);
+      if (!work_available || !exhaustive) {
+        break;
+      }
     }
   }
 }
@@ -117,163 +98,95 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 void
 StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
-  // Make sure the entities collector has been initialized
-  if (!entities_collector_->is_init()) {
-    entities_collector_->init(&wait_set_, memory_strategy_);
-  }
-
   if (rclcpp::ok(context_) && spinning.load()) {
-    // Wait until we have a ready entity or timeout expired
-    entities_collector_->refresh_wait_set(timeout);
-    // Execute ready executables
-    execute_ready_executables(true);
+    std::lock_guard<std::mutex> guard(mutex_);
+    auto wait_result = this->collect_and_wait(timeout);
+    if (wait_result.has_value()) {
+      this->execute_ready_executables(current_collection_, wait_result.value(), true);
+    }
   }
 }
 
-void
-StaticSingleThreadedExecutor::add_callback_group(
-  rclcpp::CallbackGroup::SharedPtr group_ptr,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  bool notify)
+std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
+StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
 {
-  bool is_new_node = entities_collector_->add_callback_group(group_ptr, node_ptr);
-  if (is_new_node && notify) {
-    // Interrupt waiting to handle new node
-    interrupt_guard_condition_->trigger();
+  if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+    this->collect_entities();
   }
-}
-
-void
-StaticSingleThreadedExecutor::add_node(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
-{
-  bool is_new_node = entities_collector_->add_node(node_ptr);
-  if (is_new_node && notify) {
-    // Interrupt waiting to handle new node
-    interrupt_guard_condition_->trigger();
+  auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
+  if (wait_result.kind() == WaitResultKind::Empty) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rclcpp",
+      "empty wait set received in wait(). This should never happen.");
+    return {};
   }
+  return wait_result;
 }
 
-void
-StaticSingleThreadedExecutor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
-{
-  this->add_node(node_ptr->get_node_base_interface(), notify);
-}
-
-void
-StaticSingleThreadedExecutor::remove_callback_group(
-  rclcpp::CallbackGroup::SharedPtr group_ptr, bool notify)
-{
-  bool node_removed = entities_collector_->remove_callback_group(group_ptr);
-  // If the node was matched and removed, interrupt waiting
-  if (node_removed && notify) {
-    interrupt_guard_condition_->trigger();
-  }
-}
-
-void
-StaticSingleThreadedExecutor::remove_node(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
-{
-  bool node_removed = entities_collector_->remove_node(node_ptr);
-  if (!node_removed) {
-    throw std::runtime_error("Node needs to be associated with this executor.");
-  }
-  // If the node was matched and removed, interrupt waiting
-  if (notify) {
-    interrupt_guard_condition_->trigger();
-  }
-}
-
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticSingleThreadedExecutor::get_all_callback_groups()
-{
-  return entities_collector_->get_all_callback_groups();
-}
-
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticSingleThreadedExecutor::get_manually_added_callback_groups()
-{
-  return entities_collector_->get_manually_added_callback_groups();
-}
-
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticSingleThreadedExecutor::get_automatically_added_callback_groups_from_nodes()
-{
-  return entities_collector_->get_automatically_added_callback_groups_from_nodes();
-}
-
-void
-StaticSingleThreadedExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
-{
-  this->remove_node(node_ptr->get_node_base_interface(), notify);
-}
-
-bool
-StaticSingleThreadedExecutor::execute_ready_executables(bool spin_once)
+// This preserves the "scheduling semantics" of the StaticSingleThreadedExecutor
+// from the original implementation.
+bool StaticSingleThreadedExecutor::execute_ready_executables(
+  const rclcpp::executors::ExecutorEntitiesCollection & collection,
+  rclcpp::WaitResult<rclcpp::WaitSet> & wait_result,
+  bool spin_once)
 {
   bool any_ready_executable = false;
+  if (wait_result.kind() != rclcpp::WaitResultKind::Ready) {
+    return any_ready_executable;
+  }
 
-  // Execute all the ready subscriptions
-  for (size_t i = 0; i < wait_set_.size_of_subscriptions; ++i) {
-    if (i < entities_collector_->get_number_of_subscriptions()) {
-      if (wait_set_.subscriptions[i]) {
-        execute_subscription(entities_collector_->get_subscription(i));
-        if (spin_once) {
-          return true;
-        }
+  while (auto subscription = wait_result.next_ready_subscription()) {
+    auto entity_iter = collection.subscriptions.find(subscription->get_subscription_handle().get());
+    if (entity_iter != collection.subscriptions.end()) {
+      execute_subscription(subscription);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
+    }
+  }
+
+  size_t current_timer_index = 0;
+  while (true) {
+    auto [timer, timer_index] = wait_result.peek_next_ready_timer(current_timer_index);
+    if (nullptr == timer) {
+      break;
+    }
+    current_timer_index = timer_index;
+    auto entity_iter = collection.timers.find(timer->get_timer_handle().get());
+    if (entity_iter != collection.timers.end()) {
+      wait_result.clear_timer_with_index(current_timer_index);
+      if (timer->call()) {
+        execute_timer(timer);
         any_ready_executable = true;
+        if (spin_once) {return any_ready_executable;}
       }
     }
   }
-  // Execute all the ready timers
-  for (size_t i = 0; i < wait_set_.size_of_timers; ++i) {
-    if (i < entities_collector_->get_number_of_timers()) {
-      if (wait_set_.timers[i] && entities_collector_->get_timer(i)->is_ready()) {
-        auto timer = entities_collector_->get_timer(i);
-        timer->call();
-        execute_timer(std::move(timer));
-        if (spin_once) {
-          return true;
-        }
-        any_ready_executable = true;
-      }
+
+  while (auto client = wait_result.next_ready_client()) {
+    auto entity_iter = collection.clients.find(client->get_client_handle().get());
+    if (entity_iter != collection.clients.end()) {
+      execute_client(client);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
     }
   }
-  // Execute all the ready services
-  for (size_t i = 0; i < wait_set_.size_of_services; ++i) {
-    if (i < entities_collector_->get_number_of_services()) {
-      if (wait_set_.services[i]) {
-        execute_service(entities_collector_->get_service(i));
-        if (spin_once) {
-          return true;
-        }
-        any_ready_executable = true;
-      }
+
+  while (auto service = wait_result.next_ready_service()) {
+    auto entity_iter = collection.services.find(service->get_service_handle().get());
+    if (entity_iter != collection.services.end()) {
+      execute_service(service);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
     }
   }
-  // Execute all the ready clients
-  for (size_t i = 0; i < wait_set_.size_of_clients; ++i) {
-    if (i < entities_collector_->get_number_of_clients()) {
-      if (wait_set_.clients[i]) {
-        execute_client(entities_collector_->get_client(i));
-        if (spin_once) {
-          return true;
-        }
-        any_ready_executable = true;
-      }
-    }
-  }
-  // Execute all the ready waitables
-  for (size_t i = 0; i < entities_collector_->get_number_of_waitables(); ++i) {
-    auto waitable = entities_collector_->get_waitable(i);
-    if (waitable->is_ready(&wait_set_)) {
+
+  while (auto waitable = wait_result.next_ready_waitable()) {
+    auto entity_iter = collection.waitables.find(waitable.get());
+    if (entity_iter != collection.waitables.end()) {
       auto data = waitable->take_data();
       waitable->execute(data);
-      if (spin_once) {
-        return true;
-      }
       any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
     }
   }
   return any_ready_executable;

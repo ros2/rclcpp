@@ -30,6 +30,7 @@
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 
 #include "tracetools/tracetools.h"
 
@@ -97,6 +98,15 @@ public:
       rclcpp_ipb_to_subscription,
       static_cast<const void *>(buffer_.get()),
       static_cast<const void *>(this));
+  }
+
+  void
+  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    if (this->buffer_->has_data()) {
+      this->trigger_guard_condition();
+    }
+    detail::add_guard_condition_to_rcl_wait_set(*wait_set, this->gc_);
   }
 
   bool
