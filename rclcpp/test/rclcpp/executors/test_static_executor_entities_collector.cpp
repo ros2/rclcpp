@@ -230,9 +230,9 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  void add_to_wait_set(rcl_wait_set_t *) override {}
+  void add_to_wait_set(rcl_wait_set_t &) override {}
 
-  bool is_ready(rcl_wait_set_t *) override {return true;}
+  bool is_ready(const rcl_wait_set_t &) override {return true;}
 
   std::shared_ptr<void>
   take_data() override
@@ -240,10 +240,7 @@ public:
     return nullptr;
   }
   void
-  execute(std::shared_ptr<void> & data) override
-  {
-    (void) data;
-  }
+  execute(const std::shared_ptr<void> &) override {}
 };
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
@@ -512,11 +509,6 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_to_wait_set_nullptr) {
 
   entities_collector_->init(&wait_set, memory_strategy);
   RCPPUTILS_SCOPE_EXIT(entities_collector_->fini());
-
-  EXPECT_THROW(
-    entities_collector_->add_to_wait_set(nullptr),
-    std::invalid_argument);
-  rcl_reset_error();
 
   EXPECT_TRUE(entities_collector_->remove_node(node->get_node_base_interface()));
 }

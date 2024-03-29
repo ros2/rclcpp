@@ -101,16 +101,16 @@ public:
   }
 
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  add_to_wait_set(rcl_wait_set_t & wait_set) override
   {
     if (this->buffer_->has_data()) {
       this->trigger_guard_condition();
     }
-    detail::add_guard_condition_to_rcl_wait_set(*wait_set, this->gc_);
+    detail::add_guard_condition_to_rcl_wait_set(wait_set, this->gc_);
   }
 
   bool
-  is_ready(rcl_wait_set_t * wait_set) override
+  is_ready(const rcl_wait_set_t & wait_set) override
   {
     (void) wait_set;
     return buffer_->has_data();

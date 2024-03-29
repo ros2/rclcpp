@@ -117,12 +117,12 @@ public:
   /// Add the Waitable to a wait set.
   RCLCPP_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+  add_to_wait_set(rcl_wait_set_t & wait_set) override;
 
   /// Check if the Waitable is ready.
   RCLCPP_PUBLIC
   bool
-  is_ready(rcl_wait_set_t * wait_set) override;
+  is_ready(const rcl_wait_set_t & wait_set) override;
 
   /// Set a callback to be called when each new event instance occurs.
   /**
@@ -294,7 +294,7 @@ public:
 
   /// Execute any entities of the Waitable that are ready.
   void
-  execute(std::shared_ptr<void> & data) override
+  execute(const std::shared_ptr<void> & data) override
   {
     if (!data) {
       throw std::runtime_error("'data' is empty");

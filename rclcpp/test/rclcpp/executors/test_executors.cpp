@@ -337,7 +337,7 @@ public:
   TestWaitable() = default;
 
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  add_to_wait_set(rcl_wait_set_t & wait_set) override
   {
     if (trigger_count_ > 0) {
       // Keep the gc triggered until the trigger count is reduced back to zero.
@@ -345,7 +345,7 @@ public:
       // executing this waitable, in which case it needs to be re-triggered.
       gc_.trigger();
     }
-    rclcpp::detail::add_guard_condition_to_rcl_wait_set(*wait_set, gc_);
+    rclcpp::detail::add_guard_condition_to_rcl_wait_set(wait_set, gc_);
   }
 
   void trigger()
@@ -355,10 +355,10 @@ public:
   }
 
   bool
-  is_ready(rcl_wait_set_t * wait_set) override
+  is_ready(const rcl_wait_set_t & wait_set) override
   {
-    for (size_t i = 0; i < wait_set->size_of_guard_conditions; ++i) {
-      auto rcl_guard_condition = wait_set->guard_conditions[i];
+    for (size_t i = 0; i < wait_set.size_of_guard_conditions; ++i) {
+      auto rcl_guard_condition = wait_set.guard_conditions[i];
       if (&gc_.get_rcl_guard_condition() == rcl_guard_condition) {
         return true;
       }
@@ -380,9 +380,8 @@ public:
   }
 
   void
-  execute(std::shared_ptr<void> & data) override
+  execute(const std::shared_ptr<void> &) override
   {
-    (void) data;
     trigger_count_--;
     count_++;
     if (nullptr != on_execute_callback_) {

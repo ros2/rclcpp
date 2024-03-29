@@ -183,7 +183,7 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
   while (auto waitable = wait_result.next_ready_waitable()) {
     auto entity_iter = collection.waitables.find(waitable.get());
     if (entity_iter != collection.waitables.end()) {
-      auto data = waitable->take_data();
+      const auto data = waitable->take_data();
       waitable->execute(data);
       any_ready_executable = true;
       if (spin_once) {return any_ready_executable;}
