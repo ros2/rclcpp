@@ -54,8 +54,16 @@ public:
       std::bind(&TimerNode::Timer2Callback, this));
   }
 
-  int GetTimer1Cnt() {return cnt1_;}
-  int GetTimer2Cnt() {return cnt2_;}
+  int GetTimer1Cnt()
+  {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    return cnt1_;
+  }
+  int GetTimer2Cnt()
+  {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    return cnt2_;
+  }
 
   void ResetTimer1()
   {
@@ -82,15 +90,23 @@ public:
 private:
   void Timer1Callback()
   {
-    cnt1_++;
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      cnt1_++;
+    }
     RCLCPP_DEBUG(this->get_logger(), "Timer 1! (%d)", cnt1_);
   }
 
   void Timer2Callback()
   {
-    cnt2_++;
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      cnt2_++;
+    }
     RCLCPP_DEBUG(this->get_logger(), "Timer 2! (%d)", cnt2_);
   }
+
+  std::mutex mutex_;
 
   rclcpp::TimerBase::SharedPtr timer1_;
   rclcpp::TimerBase::SharedPtr timer2_;
@@ -130,6 +146,18 @@ public:
     }
   }
 
+  bool wait_for_connection(std::chrono::nanoseconds timeout)
+  {
+    auto end_time = std::chrono::steady_clock::now() + timeout;
+    while (clock_publisher_->get_subscription_count() == 0 &&
+      (std::chrono::steady_clock::now() < end_time))
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    return clock_publisher_->get_subscription_count() != 0;
+  }
+
   void sleep_for(rclcpp::Duration duration)
   {
     rclcpp::Time start_time(0, 0, RCL_ROS_TIME);
@@ -148,7 +176,10 @@ public:
         return;
       }
       std::this_thread::sleep_for(realtime_clock_step_.to_chrono<std::chrono::milliseconds>());
-      rostime_ += ros_update_duration_;
+      {
+        const std::lock_guard<std::mutex> lock(mutex_);
+        rostime_ += ros_update_duration_;
+      }
     }
   }
 
@@ -163,9 +194,11 @@ private:
 
   void PublishClock()
   {
-    const std::lock_guard<std::mutex> lock(mutex_);
     auto message = rosgraph_msgs::msg::Clock();
-    message.clock = rostime_;
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      message.clock = rostime_;
+    }
     clock_publisher_->publish(message);
   }
 
@@ -227,6 +260,9 @@ public:
       [this]() {
         executor.spin();
       });
+
+    EXPECT_TRUE(this->sim_clock_node->wait_for_connection(50ms));
+    EXPECT_EQ(RCL_ROS_TIME, node->get_clock()->ros_time_is_active());
   }
 
   void TearDown()
