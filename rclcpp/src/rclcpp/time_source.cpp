@@ -288,10 +288,10 @@ public:
   // Detach the attached node
   void detachNode()
   {
-    std::lock_guard<std::mutex> guard(node_base_lock_);
     // destroy_clock_sub() *must* be first here, to ensure that the executor
     // can't possibly call any of the callbacks as we are cleaning up.
     destroy_clock_sub();
+    std::lock_guard<std::mutex> guard(node_base_lock_);
     clocks_state_.disable_ros_time();
     if (on_set_parameters_callback_) {
       node_parameters_->remove_on_set_parameters_callback(on_set_parameters_callback_.get());
@@ -409,9 +409,14 @@ private:
       "/clock",
       qos_,
       [this](std::shared_ptr<const rosgraph_msgs::msg::Clock> msg) {
-        // We are using node_base_ as an indication if there is a node attached.
-        // Only call the clock_cb if that is the case.
-        if (node_base_ != nullptr) {
+        bool execute_cb = false;
+        {
+          std::lock_guard<std::mutex> guard(node_base_lock_);
+          // We are using node_base_ as an indication if there is a node attached.
+          // Only call the clock_cb if that is the case.
+          execute_cb = node_base_ != nullptr;
+        }
+        if (execute_cb) {
           clock_cb(msg);
         }
       },
