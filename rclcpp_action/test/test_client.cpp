@@ -122,28 +122,28 @@ protected:
           goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
-          client_executor.spin_once();
+          client_executor.spin_some();
           ActionFeedbackMessage feedback_message;
           feedback_message.goal_id.uuid = goal_request->goal_id.uuid;
           feedback_message.feedback.sequence.push_back(0);
           feedback_publisher->publish(feedback_message);
-          client_executor.spin_once();
+          client_executor.spin_some();
           if (goal_request->goal.order > 0) {
             feedback_message.feedback.sequence.push_back(1);
             feedback_publisher->publish(feedback_message);
-            client_executor.spin_once();
+            client_executor.spin_some();
             for (size_t i = 1; i < static_cast<size_t>(goal_request->goal.order); ++i) {
               feedback_message.feedback.sequence.push_back(
                 feedback_message.feedback.sequence[i] +
                 feedback_message.feedback.sequence[i - 1]);
               feedback_publisher->publish(feedback_message);
-              client_executor.spin_once();
+              client_executor.spin_some();
             }
           }
           goal_status.status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
           status_message.status_list[0] = goal_status;
           status_publisher->publish(status_message);
-          client_executor.spin_once();
+          client_executor.spin_some();
           response->result.sequence = feedback_message.feedback.sequence;
           response->status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
           goals.erase(request->goal_id.uuid);
@@ -192,7 +192,7 @@ protected:
           }
         }
         status_publisher->publish(status_message);
-        client_executor.spin_once();
+        client_executor.spin_some();
       });
     ASSERT_TRUE(cancel_service != nullptr);
     allocator.deallocate(cancel_service_name, allocator.state);
@@ -556,6 +556,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
   dual_spin_until_future_complete(future_goal_handle);
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+  EXPECT_EQ(0, feedback_count);
   EXPECT_TRUE(goal_handle->is_feedback_aware());
   EXPECT_FALSE(goal_handle->is_result_aware());
   auto future_result = action_client->async_get_result(goal_handle);
