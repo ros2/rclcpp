@@ -25,6 +25,7 @@
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter_value.hpp"
 #include "node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_parameters_interface.hpp"
 
@@ -43,25 +44,24 @@ public:
 
   // Builder Methods:
   // Describes the instances in a parameter_description object
-  ParameterDescription & SetName(const std::string & name);
-  ParameterDescription & SetType(std::uint8_t type);
-  ParameterDescription & SetDescriptionText(const std::string & description);
-  ParameterDescription & SetAdditionalConstraints(const std::string & constraints);
-  ParameterDescription & SetReadOnly(bool read_only);
-  ParameterDescription & SetDynamicTyping(bool dynamic_typing);
-  ParameterDescription & SetFloatingPointDescriptionRange(float min = 0.0f, float max = 1.0f,
-    float step = 0.0f);
-  ParameterDescription & SetIntegerDescriptionRange(int min = 0, int max = 1, int step = 0);
+  ParameterDescription & set_name(const std::string & name);
+  ParameterDescription & set_type(std::uint8_t type);
+  ParameterDescription & set_description_text(const std::string & description);
+  ParameterDescription & set_additional_constraints(const std::string & constraints);
+  ParameterDescription & set_read_only(bool read_only);
+  ParameterDescription & set_dynamic_typing(bool dynamic_typing);
+  ParameterDescription & set_floating_point_description_range(float min, float max, float step);
+  ParameterDescription & set_integer_description_range(int min, int max, int step);
 
   // Need the current node in order to begin the configuration state
   // for it via the declare_parameter function
-  template<typename ParameterType, typename NodeT>
-  ParameterDescription & DeclareParameter(
-    ParameterType default_value,
+  template<typename NodeT>
+  ParameterDescription & declare_parameter(
+    const rclcpp::ParameterValue & default_value,
     NodeT && node)
   {
     auto node_param = rclcpp::node_interfaces::get_node_parameters_interface(node);
-    node_param->declare_parameter<ParameterType>(
+    node_param->declare_parameter(
       parameter_descriptor.name, default_value,
       parameter_descriptor);
     return *this;
@@ -69,7 +69,7 @@ public:
 
 private:
   // The main descriptor object we're meant to initialize and adjust
-  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor = {};
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor;
 };
 
 }  // namespace rclcpp
