@@ -69,6 +69,7 @@
  * - Executors (responsible for execution of callbacks through a blocking spin):
  *   - rclcpp::spin()
  *   - rclcpp::spin_some()
+ *   - rclcpp::spin_until_complete()
  *   - rclcpp::spin_until_future_complete()
  *   - rclcpp::executors::SingleThreadedExecutor
  *   - rclcpp::executors::SingleThreadedExecutor::add_node()

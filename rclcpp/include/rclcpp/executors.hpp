@@ -67,6 +67,48 @@ namespace executors
 using rclcpp::executors::MultiThreadedExecutor;
 using rclcpp::executors::SingleThreadedExecutor;
 
+/// Spin (blocking) until the conditon is complete, it times out waiting, or rclcpp is interrupted.
+/**
+ * \param[in] executor The executor which will spin the node.
+ * \param[in] node_ptr The node to spin.
+ * \param[in] condition The callable condition to wait on.
+ * \param[in] timeout Optional timeout parameter, which gets passed to
+ *   Executor::spin_node_once.
+ *   `-1` is block forever, `0` is non-blocking.
+ *   If the time spent inside the blocking loop exceeds this timeout, return a `TIMEOUT` return code.
+ * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
+ */
+template<typename TimeRepT = int64_t, typename TimeT = std::milli>
+rclcpp::FutureReturnCode
+spin_node_until_complete(
+  rclcpp::Executor & executor,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  const std::function<bool(void)> & condition,
+  std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
+{
+  // TODO(wjwwood): does not work recursively; can't call spin_node_until_complete
+  // inside a callback executed by an executor.
+  executor.add_node(node_ptr);
+  auto retcode = executor.spin_until_complete(condition, timeout);
+  executor.remove_node(node_ptr);
+  return retcode;
+}
+
+template<typename NodeT = rclcpp::Node, typename TimeRepT = int64_t, typename TimeT = std::milli>
+rclcpp::FutureReturnCode
+spin_node_until_complete(
+  rclcpp::Executor & executor,
+  std::shared_ptr<NodeT> node_ptr,
+  const std::function<bool(void)> & condition,
+  std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
+{
+  return rclcpp::executors::spin_node_until_complete(
+    executor,
+    node_ptr->get_node_base_interface(),
+    condition,
+    timeout);
+}
+
 /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
 /**
  * \param[in] executor The executor which will spin the node.
@@ -112,6 +154,27 @@ spin_node_until_future_complete(
 }
 
 }  // namespace executors
+
+template<typename TimeRepT = int64_t, typename TimeT = std::milli>
+rclcpp::FutureReturnCode
+spin_until_complete(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  const std::function<bool(void)> & condition,
+  std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
+{
+  rclcpp::executors::SingleThreadedExecutor executor;
+  return executors::spin_node_until_complete(executor, node_ptr, condition, timeout);
+}
+
+template<typename NodeT = rclcpp::Node, typename TimeRepT = int64_t, typename TimeT = std::milli>
+rclcpp::FutureReturnCode
+spin_until_complete(
+  std::shared_ptr<NodeT> node_ptr,
+  const std::function<bool(void)> & condition,
+  std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
+{
+  return rclcpp::spin_until_complete(node_ptr->get_node_base_interface(), condition, timeout);
+}
 
 template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
 rclcpp::FutureReturnCode

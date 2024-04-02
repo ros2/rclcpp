@@ -283,6 +283,37 @@ TEST_F(TestExecutor, spin_some_elapsed) {
   ASSERT_TRUE(timer_called);
 }
 
+TEST_F(TestExecutor, spin_for_duration) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool timer_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(0), [&]() {
+      timer_called = true;
+    });
+  dummy.add_node(node);
+  // Wait for the wall timer to have expired.
+  dummy.spin_for(std::chrono::milliseconds(0));
+
+  ASSERT_TRUE(timer_called);
+}
+
+TEST_F(TestExecutor, spin_for_longer_timer) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool timer_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::seconds(10), [&]() {
+      timer_called = true;
+    });
+  dummy.add_node(node);
+  dummy.spin_for(std::chrono::milliseconds(5));
+
+  ASSERT_FALSE(timer_called);
+}
+
 TEST_F(TestExecutor, spin_once_in_spin_once) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
@@ -391,9 +422,7 @@ TEST_F(TestExecutor, spin_until_future_complete_in_spin_until_future_complete) {
         std::future<void> future = promise.get_future();
         dummy.spin_until_future_complete(future, std::chrono::milliseconds(1));
       } catch (const std::runtime_error & err) {
-        if (err.what() == std::string(
-          "spin_until_future_complete() called while already spinning"))
-        {
+        if (err.what() == std::string("spin_until_complete() called while already spinning")) {
           spin_until_future_complete_in_spin_until_future_complete = true;
         }
       }
@@ -486,6 +515,37 @@ TEST_F(TestExecutor, spin_until_future_complete_future_already_complete) {
   EXPECT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
     dummy.spin_until_future_complete(future, std::chrono::milliseconds(1)));
+}
+
+TEST_F(TestExecutor, spin_until_complete_condition_already_complete) {
+  DummyExecutor dummy;
+  auto condition = []() {return true;};
+  EXPECT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    dummy.spin_until_complete(condition, std::chrono::milliseconds(1)));
+}
+
+TEST_F(TestExecutor, spin_until_complete_returns_after_condition) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  bool spin_called = false;
+  auto timer =
+    node->create_wall_timer(
+    std::chrono::milliseconds(1), [&]() {
+      spin_called = true;
+    });
+  dummy.add_node(node);
+  // Check that we stop spinning after the condition is ready
+  const auto condition_delay = std::chrono::milliseconds(10);
+  const auto start = std::chrono::steady_clock::now();
+  auto condition = [&]() {return std::chrono::steady_clock::now() - start > condition_delay;};
+  EXPECT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    dummy.spin_until_complete(condition, std::chrono::seconds(1)));
+  EXPECT_TRUE(spin_called);
+  const auto end_delay = std::chrono::steady_clock::now() - start;
+  EXPECT_GE(end_delay, condition_delay);
+  EXPECT_LT(end_delay, std::chrono::milliseconds(500));
 }
 
 TEST_F(TestExecutor, is_spinning) {
