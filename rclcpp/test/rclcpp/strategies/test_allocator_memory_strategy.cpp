@@ -40,7 +40,6 @@ class TestWaitable : public rclcpp::Waitable
 {
 public:
   void add_to_wait_set(rcl_wait_set_t &) override
-
   {
     if (!test_waitable_result) {
       throw std::runtime_error("TestWaitable add_to_wait_set failed");

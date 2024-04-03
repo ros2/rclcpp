@@ -22,8 +22,8 @@
 class TestIntraProcessWaitable : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
-  static void TearDownTestCase() { rclcpp::shutdown(); }
+  static void SetUpTestCase() {rclcpp::init(0, nullptr);}
+  static void TearDownTestCase() {rclcpp::shutdown();}
 };
 
 TEST_F(TestIntraProcessWaitable, test_that_waitable_stays_ready_after_second_wait) {
@@ -36,8 +36,8 @@ TEST_F(TestIntraProcessWaitable, test_that_waitable_stays_ready_after_second_wai
   auto pub = node->create_publisher<Empty>("test_topic", 10);
 
   auto make_sub_intra_process_waitable_ready = [pub]() {
-    pub->publish(Empty());
-  };
+      pub->publish(Empty());
+    };
 
   rclcpp::test::waitables::do_test_that_waitable_stays_ready_after_second_wait(
     sub->get_intra_process_waitable(),

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__TEST__RCLCPP__WAITABLES__WAITABLE_TEST_HELPERS_HPP_
-#define RCLCPP__TEST__RCLCPP__WAITABLES__WAITABLE_TEST_HELPERS_HPP_
+#ifndef RCLCPP__WAITABLES__WAITABLE_TEST_HELPERS_HPP_
+#define RCLCPP__WAITABLES__WAITABLE_TEST_HELPERS_HPP_
 
 #include <gtest/gtest.h>
 
@@ -104,7 +104,7 @@ do_test_that_waitable_stays_ready_after_second_wait(
     waitable->execute(waitable->take_data());
     auto wait_result = wait_set.wait(std::chrono::seconds(0));
     EXPECT_EQ(wait_result.kind(), rclcpp::WaitResultKind::Timeout)
-        << "wait set did not time out after the waitable should have no longer been ready";
+      << "wait set did not time out after the waitable should have no longer been ready";
     EXPECT_FALSE(waitable->is_ready(wait_set.get_rcl_wait_set()))
       << "waitable was unexpectedly ready after a take_data and execute";
   }
@@ -114,4 +114,4 @@ do_test_that_waitable_stays_ready_after_second_wait(
 }  // namespace test
 }  // namespace rclcpp
 
-#endif  // RCLCPP__TEST__RCLCPP__WAITABLES__WAITABLE_TEST_HELPERS_HPP_
+#endif  // RCLCPP__WAITABLES__WAITABLE_TEST_HELPERS_HPP_
