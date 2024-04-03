@@ -61,7 +61,7 @@ do_test_that_waitable_stays_ready_after_second_wait(
   wait_set.add_waitable(waitable);
 
   // not ready initially
-  EXPECT_FALSE(waitable->is_ready(&wait_set.get_rcl_wait_set()))
+  EXPECT_FALSE(waitable->is_ready(wait_set.get_rcl_wait_set()))
     << "waitable is unexpectedly ready before waiting";
 
   // not ready after a wait that timesout
@@ -69,7 +69,7 @@ do_test_that_waitable_stays_ready_after_second_wait(
     auto wait_result = wait_set.wait(std::chrono::seconds(0));
     EXPECT_EQ(wait_result.kind(), rclcpp::WaitResultKind::Timeout)
       << "wait set did not timeout as expected";
-    EXPECT_FALSE(waitable->is_ready(&wait_set.get_rcl_wait_set()))
+    EXPECT_FALSE(waitable->is_ready(wait_set.get_rcl_wait_set()))
       << "waitable is unexpectedly ready after waiting, but before making ready";
   }
 
@@ -79,7 +79,7 @@ do_test_that_waitable_stays_ready_after_second_wait(
     auto wait_result = wait_set.wait(wait_timeout);
     EXPECT_EQ(wait_result.kind(), rclcpp::WaitResultKind::Ready)
       << "wait set was not ready after the waitable should have been made ready";
-    EXPECT_TRUE(waitable->is_ready(&wait_set.get_rcl_wait_set()))
+    EXPECT_TRUE(waitable->is_ready(wait_set.get_rcl_wait_set()))
       << "waitable is unexpectedly not ready after making it ready and waiting";
   }
 
@@ -89,12 +89,12 @@ do_test_that_waitable_stays_ready_after_second_wait(
     if (expected_to_stay_ready) {
       EXPECT_EQ(wait_result.kind(), rclcpp::WaitResultKind::Ready)
         << "wait set was not ready on a second wait on the waitable";
-      EXPECT_TRUE(waitable->is_ready(&wait_set.get_rcl_wait_set()))
+      EXPECT_TRUE(waitable->is_ready(wait_set.get_rcl_wait_set()))
         << "waitable unexpectedly not ready after second wait";
     } else {
       EXPECT_EQ(wait_result.kind(), rclcpp::WaitResultKind::Timeout)
         << "wait set did not time out after the waitable should have no longer been ready";
-      EXPECT_FALSE(waitable->is_ready(&wait_set.get_rcl_wait_set()))
+      EXPECT_FALSE(waitable->is_ready(wait_set.get_rcl_wait_set()))
         << "waitable was ready after waiting a second time, which was not expected";
     }
   }
@@ -105,7 +105,7 @@ do_test_that_waitable_stays_ready_after_second_wait(
     auto wait_result = wait_set.wait(std::chrono::seconds(0));
     EXPECT_EQ(wait_result.kind(), rclcpp::WaitResultKind::Timeout)
         << "wait set did not time out after the waitable should have no longer been ready";
-    EXPECT_FALSE(waitable->is_ready(&wait_set.get_rcl_wait_set()))
+    EXPECT_FALSE(waitable->is_ready(wait_set.get_rcl_wait_set()))
       << "waitable was unexpectedly ready after a take_data and execute";
   }
 }

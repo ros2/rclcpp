@@ -103,7 +103,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  add_to_wait_set(rcl_wait_set_t & wait_set) override
   {
     // This block is necessary when the guard condition wakes the wait set, but
     // the intra process waitable was not handled before the wait set is waited
