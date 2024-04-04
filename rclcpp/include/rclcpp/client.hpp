@@ -816,7 +816,7 @@ protected:
         "Received invalid sequence number. Ignoring...");
       return std::nullopt;
     }
-    auto value = std::move(it->second.second);
+    std::optional<CallbackInfoVariant> value = std::move(it->second.second);
     this->pending_requests_.erase(request_number);
     return value;
   }
