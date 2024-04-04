@@ -32,6 +32,7 @@
 #include "rclcpp/executors/executor_notify_waitable.hpp"
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/condition_wait_return_code.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/guard_condition.hpp"
@@ -361,7 +362,7 @@ public:
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
   template<typename TimeRepT = int64_t, typename TimeT = std::milli>
-  FutureReturnCode
+  ConditionWaitReturnCode
   spin_until_complete(
     const std::function<bool(void)> & condition,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
@@ -376,7 +377,7 @@ public:
 
     // Preliminary check, finish if condition is done already.
     if (condition()) {
-      return FutureReturnCode::SUCCESS;
+      return ConditionWaitReturnCode::SUCCESS;
     }
 
     if (spinning.exchange(true)) {
@@ -388,7 +389,7 @@ public:
       spin_once_impl(timeout_left);
 
       if (condition()) {
-        return FutureReturnCode::SUCCESS;
+        return ConditionWaitReturnCode::SUCCESS;
       }
       // If the original timeout is < 0, then this is blocking, never TIMEOUT.
       if (timeout_ns < std::chrono::nanoseconds::zero()) {
@@ -397,14 +398,14 @@ public:
       // Otherwise check if we still have time to wait, return TIMEOUT if not.
       auto now = std::chrono::steady_clock::now();
       if (now >= end_time) {
-        return FutureReturnCode::TIMEOUT;
+        return ConditionWaitReturnCode::TIMEOUT;
       }
       // Subtract the elapsed time from the original timeout.
       timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
     }
 
     // The condition did not pass before ok() returned false, return INTERRUPTED.
-    return FutureReturnCode::INTERRUPTED;
+    return ConditionWaitReturnCode::INTERRUPTED;
   }
 
   /// Spin (blocking) for at least the given amount of duration.
@@ -413,7 +414,7 @@ public:
    */
   template<typename TimeRepT = int64_t, typename TimeT = std::milli>
   void
-  spin_for(std::chrono::duration<TimeRepT, TimeT> timeout duration)
+  spin_for(std::chrono::duration<TimeRepT, TimeT> duration)
   {
     (void)spin_until_complete([]() {return false;}, duration);
   }

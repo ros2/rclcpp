@@ -43,6 +43,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/callback_group.cpp
   src/rclcpp/client.cpp
   src/rclcpp/clock.cpp
+  src/rclcpp/condition_wait_return_code.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
   src/rclcpp/create_generic_client.cpp
@@ -73,7 +74,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/experimental/executors/events_executor/events_executor.cpp
   src/rclcpp/experimental/timers_manager.cpp
-  src/rclcpp/future_return_code.cpp
   src/rclcpp/generic_client.cpp
   src/rclcpp/generic_publisher.cpp
   src/rclcpp/generic_subscription.cpp

@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 
+#include "rclcpp/condition_wait_return_code.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -30,17 +31,7 @@ namespace rclcpp
  * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
  * TIMEOUT: Spinning timed out.
  */
-enum class FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
-
-/// Stream operator for FutureReturnCode.
-RCLCPP_PUBLIC
-std::ostream &
-operator<<(std::ostream & os, const FutureReturnCode & future_return_code);
-
-/// String conversion function for FutureReturnCode.
-RCLCPP_PUBLIC
-std::string
-to_string(const FutureReturnCode & future_return_code);
+using FutureReturnCode = ConditionWaitReturnCode;
 
 }  // namespace rclcpp
 
