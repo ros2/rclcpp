@@ -101,7 +101,6 @@ public:
 
   virtual ~SubscriptionIntraProcess() = default;
 
-  RCLCPP_PUBLIC
   void
   add_to_wait_set(rcl_wait_set_t & wait_set) override
   {
