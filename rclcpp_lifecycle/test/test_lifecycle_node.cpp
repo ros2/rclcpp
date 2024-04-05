@@ -513,6 +513,80 @@ TEST_F(TestDefaultStateMachine, shutdown_from_each_primary_state) {
   }
 }
 
+TEST_F(TestDefaultStateMachine, test_shutdown_on_dtor) {
+  auto success = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  auto reset_key = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+
+  bool shutdown_cb_called = false;
+  auto on_shutdown_callback =
+    [&shutdown_cb_called](const rclcpp_lifecycle::State &) ->
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn {
+      shutdown_cb_called = true;
+      return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    };
+
+  // PRIMARY_STATE_UNCONFIGURED to shutdown via dtor
+  shutdown_cb_called = false;
+  {
+    auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
+    test_node->register_on_shutdown(std::bind(on_shutdown_callback, std::placeholders::_1));
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    EXPECT_FALSE(shutdown_cb_called);
+  }
+  EXPECT_TRUE(shutdown_cb_called);
+
+  // PRIMARY_STATE_INACTIVE to shutdown via dtor
+  shutdown_cb_called = false;
+  {
+    auto ret = reset_key;
+    auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
+    test_node->register_on_shutdown(std::bind(on_shutdown_callback, std::placeholders::_1));
+    auto configured = test_node->configure(ret);
+    EXPECT_EQ(success, ret);
+    EXPECT_EQ(configured.id(), State::PRIMARY_STATE_INACTIVE);
+    EXPECT_FALSE(shutdown_cb_called);
+  }
+  EXPECT_TRUE(shutdown_cb_called);
+
+  // PRIMARY_STATE_ACTIVE to shutdown via dtor
+  shutdown_cb_called = false;
+  {
+    auto ret = reset_key;
+    auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
+    test_node->register_on_shutdown(std::bind(on_shutdown_callback, std::placeholders::_1));
+    auto configured = test_node->configure(ret);
+    EXPECT_EQ(success, ret);
+    EXPECT_EQ(configured.id(), State::PRIMARY_STATE_INACTIVE);
+    ret = reset_key;
+    auto activated = test_node->activate(ret);
+    EXPECT_EQ(success, ret);
+    EXPECT_EQ(activated.id(), State::PRIMARY_STATE_ACTIVE);
+    EXPECT_FALSE(shutdown_cb_called);
+  }
+  EXPECT_TRUE(shutdown_cb_called);
+
+  // PRIMARY_STATE_FINALIZED to shutdown via dtor
+  shutdown_cb_called = false;
+  {
+    auto ret = reset_key;
+    auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
+    test_node->register_on_shutdown(std::bind(on_shutdown_callback, std::placeholders::_1));
+    auto configured = test_node->configure(ret);
+    EXPECT_EQ(success, ret);
+    EXPECT_EQ(configured.id(), State::PRIMARY_STATE_INACTIVE);
+    ret = reset_key;
+    auto activated = test_node->activate(ret);
+    EXPECT_EQ(success, ret);
+    EXPECT_EQ(activated.id(), State::PRIMARY_STATE_ACTIVE);
+    ret = reset_key;
+    auto finalized = test_node->shutdown(ret);
+    EXPECT_EQ(success, ret);
+    EXPECT_EQ(finalized.id(), State::PRIMARY_STATE_FINALIZED);
+    EXPECT_TRUE(shutdown_cb_called);  // should be called already
+  }
+  EXPECT_TRUE(shutdown_cb_called);
+}
+
 TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
   auto test_node = std::make_shared<MoodyLifecycleNode<GoodMood>>("testnode");
 
