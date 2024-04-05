@@ -685,21 +685,23 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
   non_default_context->init(0, nullptr);
 
   {
-    auto node = std::make_unique<rclcpp::Node>("node", rclcpp::NodeOptions().context(non_default_context));
+    auto node =
+      std::make_unique<rclcpp::Node>("node", rclcpp::NodeOptions().context(non_default_context));
 
     EXPECT_NO_THROW(rclcpp::spin_some(node->get_node_base_interface()));
 
     EXPECT_NO_THROW(rclcpp::spin_all(node->get_node_base_interface(), 1s));
 
     auto check_spin_until_future_complete = [&]() {
-      std::promise<bool> promise;
-      std::future<bool> future = promise.get_future();
-      promise.set_value(true);
+        std::promise<bool> promise;
+        std::future<bool> future = promise.get_future();
+        promise.set_value(true);
 
-      auto shared_future = future.share();
-      auto ret = rclcpp::spin_until_future_complete(node->get_node_base_interface(), shared_future, 1s);
-      EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
-    };
+        auto shared_future = future.share();
+        auto ret = rclcpp::spin_until_future_complete(
+          node->get_node_base_interface(), shared_future, 1s);
+        EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+      };
     EXPECT_NO_THROW(check_spin_until_future_complete());
   }
 
