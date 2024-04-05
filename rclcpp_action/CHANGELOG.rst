@@ -3,6 +3,20 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+28.0.0 (2024-03-28)
+-------------------
+* Do not generate the exception when action service response timeout. (`#2464 <https://github.com/ros2/rclcpp/issues/2464>`_)
+  * Do not generate the exception when action service response timeout.
+  * address review comment.
+  ---------
+* Modify rclcpp_action::GoalUUID hashing algorithm (`#2441 <https://github.com/ros2/rclcpp/issues/2441>`_)
+  * Add unit tests for hashing rclcpp_action::GoalUUID's
+  * Use the FNV-1a hash algorithm for Goal UUID
+* Various cleanups to deal with uncrustify 0.78. (`#2439 <https://github.com/ros2/rclcpp/issues/2439>`_)
+  These should also work with uncrustify 0.72.
+* Update quality declaration documents (`#2427 <https://github.com/ros2/rclcpp/issues/2427>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Tomoya Fujita, mauropasse
+
 27.0.0 (2024-02-07)
 -------------------
 

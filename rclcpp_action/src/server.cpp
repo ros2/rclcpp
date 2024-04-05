@@ -165,18 +165,18 @@ ServerBase::get_number_of_ready_guard_conditions()
 }
 
 void
-ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+ServerBase::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
   rcl_ret_t ret = rcl_action_wait_set_add_action_server(
-    wait_set, pimpl_->action_server_.get(), NULL);
+    &wait_set, pimpl_->action_server_.get(), NULL);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "ServerBase::add_to_wait_set() failed");
   }
 }
 
 bool
-ServerBase::is_ready(rcl_wait_set_t * wait_set)
+ServerBase::is_ready(const rcl_wait_set_t & wait_set)
 {
   bool goal_request_ready;
   bool cancel_request_ready;
@@ -186,7 +186,7 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
   {
     std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     ret = rcl_action_server_wait_set_get_entities_ready(
-      wait_set,
+      &wait_set,
       pimpl_->action_server_.get(),
       &goal_request_ready,
       &cancel_request_ready,
@@ -287,7 +287,7 @@ ServerBase::take_data_by_entity_id(size_t id)
 }
 
 void
-ServerBase::execute(std::shared_ptr<void> & data)
+ServerBase::execute(const std::shared_ptr<void> & data)
 {
   if (!data && !pimpl_->goal_expired_.load()) {
     throw std::runtime_error("'data' is empty");
@@ -307,7 +307,7 @@ ServerBase::execute(std::shared_ptr<void> & data)
 }
 
 void
-ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_goal_request_received(const std::shared_ptr<void> & data)
 {
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, rcl_action_goal_info_t, rmw_request_id_t, std::shared_ptr<void>>>(data);
@@ -344,7 +344,16 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
   }
 
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
+    if (ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        pimpl_->logger_,
+        "Failed to send goal response %s (timeout): %s",
+        to_string(uuid).c_str(), rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    } else {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
   }
 
   const auto status = response_pair.first;
@@ -396,11 +405,10 @@ ServerBase::execute_goal_request_received(std::shared_ptr<void> & data)
     // Tell user to start executing action
     call_goal_accepted_callback(handle, uuid, message);
   }
-  data.reset();
 }
 
 void
-ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_cancel_request_received(const std::shared_ptr<void> & data)
 {
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
@@ -483,14 +491,22 @@ ServerBase::execute_cancel_request_received(std::shared_ptr<void> & data)
       pimpl_->action_server_.get(), &request_header, response.get());
   }
 
+  if (ret == RCL_RET_TIMEOUT) {
+    GoalUUID uuid = request->goal_info.goal_id.uuid;
+    RCLCPP_WARN(
+      pimpl_->logger_,
+      "Failed to send cancel response %s (timeout): %s",
+      to_string(uuid).c_str(), rcl_get_error_string().str);
+    rcl_reset_error();
+    return;
+  }
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  data.reset();
 }
 
 void
-ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
+ServerBase::execute_result_request_received(const std::shared_ptr<void> & data)
 {
   auto shared_ptr = std::static_pointer_cast
     <std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>>(data);
@@ -538,11 +554,18 @@ ServerBase::execute_result_request_received(std::shared_ptr<void> & data)
     std::lock_guard<std::recursive_mutex> lock(pimpl_->action_server_reentrant_mutex_);
     rcl_ret_t rcl_ret = rcl_action_send_result_response(
       pimpl_->action_server_.get(), &request_header, result_response.get());
+    if (rcl_ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        pimpl_->logger_,
+        "Failed to send result response %s (timeout): %s",
+        to_string(uuid).c_str(), rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    }
     if (RCL_RET_OK != rcl_ret) {
       rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
   }
-  data.reset();
 }
 
 void
@@ -671,7 +694,13 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
       for (auto & request_header : iter->second) {
         rcl_ret_t ret = rcl_action_send_result_response(
           pimpl_->action_server_.get(), &request_header, result_msg.get());
-        if (RCL_RET_OK != ret) {
+        if (ret == RCL_RET_TIMEOUT) {
+          RCLCPP_WARN(
+            pimpl_->logger_,
+            "Failed to send result response %s (timeout): %s",
+            to_string(uuid).c_str(), rcl_get_error_string().str);
+          rcl_reset_error();
+        } else if (RCL_RET_OK != ret) {
           rclcpp::exceptions::throw_from_rcl_error(ret);
         }
       }

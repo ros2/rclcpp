@@ -31,6 +31,11 @@ SingleThreadedExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+
+  // Clear any previous result and rebuild the waitset
+  this->wait_result_.reset();
+  this->entities_need_rebuild_ = true;
+
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {

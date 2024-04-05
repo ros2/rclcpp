@@ -39,14 +39,14 @@ static bool test_waitable_result = false;
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  void add_to_wait_set(rcl_wait_set_t *) override
+  void add_to_wait_set(rcl_wait_set_t &) override
   {
     if (!test_waitable_result) {
       throw std::runtime_error("TestWaitable add_to_wait_set failed");
     }
   }
 
-  bool is_ready(rcl_wait_set_t *) override
+  bool is_ready(const rcl_wait_set_t &) override
   {
     return test_waitable_result;
   }
@@ -57,10 +57,7 @@ public:
     return nullptr;
   }
 
-  void execute(std::shared_ptr<void> & data) override
-  {
-    (void) data;
-  }
+  void execute(const std::shared_ptr<void> &) override {}
 };
 
 static bool test_waitable_result2 = false;
@@ -82,12 +79,12 @@ public:
     EXPECT_EQ(rcl_event_fini(&pub_event_), RCL_RET_OK);
   }
 
-  void add_to_wait_set(rcl_wait_set_t * wait_set) override
+  void add_to_wait_set(rcl_wait_set_t & wait_set) override
   {
-    EXPECT_EQ(rcl_wait_set_add_event(wait_set, &pub_event_, &wait_set_event_index_), RCL_RET_OK);
+    EXPECT_EQ(rcl_wait_set_add_event(&wait_set, &pub_event_, &wait_set_event_index_), RCL_RET_OK);
   }
 
-  bool is_ready(rcl_wait_set_t *) override
+  bool is_ready(const rcl_wait_set_t &) override
   {
     return test_waitable_result2;
   }
@@ -98,7 +95,7 @@ public:
     return nullptr;
   }
 
-  void execute(std::shared_ptr<void> & data) override
+  void execute(const std::shared_ptr<void> & data) override
   {
     (void) data;
   }
@@ -200,9 +197,9 @@ protected:
 
   std::shared_ptr<rclcpp::Node> create_node_with_service(const std::string & name)
   {
-    auto service_callback =
-      [](const test_msgs::srv::Empty::Request::SharedPtr,
-        test_msgs::srv::Empty::Response::SharedPtr) {};
+    auto service_callback = [](
+      const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
     auto node_with_service = create_node_with_disabled_callback_groups(name);
 
     auto callback_group =
@@ -949,9 +946,9 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_service_out_of_scope) {
       node->create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    auto service_callback =
-      [](const test_msgs::srv::Empty::Request::SharedPtr,
-        test_msgs::srv::Empty::Response::SharedPtr) {};
+    auto service_callback = [](
+      const test_msgs::srv::Empty::Request::SharedPtr,
+      test_msgs::srv::Empty::Response::SharedPtr) {};
     auto service = node->create_service<test_msgs::srv::Empty>(
       "service", std::move(service_callback), rclcpp::ServicesQoS(), callback_group);
 

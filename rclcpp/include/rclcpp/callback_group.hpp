@@ -184,18 +184,41 @@ public:
    * \return the number of entities in the callback group.
    */
   RCLCPP_PUBLIC
-  size_t size() const;
+  size_t
+  size() const;
 
+  /// Return a reference to the 'can be taken' atomic boolean.
+  /**
+   * The resulting bool will be true in the case that no executor is currently
+   * using an executable entity from this group.
+   * The resulting bool will be false in the case that an executor is currently
+   * using an executable entity from this group, and the group policy doesn't
+   * allow a second take (eg mutual exclusion)
+   * \return a reference to the flag
+   */
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
 
+  /// Get the group type.
+  /**
+   * \return the group type
+   */
   RCLCPP_PUBLIC
   const CallbackGroupType &
   type() const;
 
+  /// Collect all of the entity pointers contained in this callback group.
+  /**
+   * \param[in] sub_func Function to execute for each subscription
+   * \param[in] service_func Function to execute for each service
+   * \param[in] client_func Function to execute for each client
+   * \param[in] timer_func Function to execute for each timer
+   * \param[in] waitable_fuinc Function to execute for each waitable
+   */
   RCLCPP_PUBLIC
-  void collect_all_ptrs(
+  void
+  collect_all_ptrs(
     std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
     std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
     std::function<void(const rclcpp::ClientBase::SharedPtr &)> client_func,

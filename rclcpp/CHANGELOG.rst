@@ -2,6 +2,54 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.0.0 (2024-03-28)
+-------------------
+* fix spin_some_max_duration unit-test for events-executor (`#2465 <https://github.com/ros2/rclcpp/issues/2465>`_)
+* refactor and improve the parameterized spin_some tests for executors (`#2460 <https://github.com/ros2/rclcpp/issues/2460>`_)
+  * refactor and improve the spin_some parameterized tests for executors
+  * disable spin_some_max_duration for the StaticSingleThreadedExecutor and EventsExecutor
+  * fixup and clarify the docstring for Executor::spin_some()
+  * style
+  * review comments
+  ---------
+* enable simulation clock for timer canceling test. (`#2458 <https://github.com/ros2/rclcpp/issues/2458>`_)
+  * enable simulation clock for timer canceling test.
+  * move MainExecutorTypes to test_executors_timer_cancel_behavior.cpp.
+  ---------
+* Revert "relax the test simulation rate for timer canceling tests. (`#2453 <https://github.com/ros2/rclcpp/issues/2453>`_)" (`#2456 <https://github.com/ros2/rclcpp/issues/2456>`_)
+  This reverts commit 1c350d0d7fb9c7158e0a39057112486ddbd38e9a.
+* relax the test simulation rate for timer canceling tests. (`#2453 <https://github.com/ros2/rclcpp/issues/2453>`_)
+* Fix TypeAdapted publishing with large messages. (`#2443 <https://github.com/ros2/rclcpp/issues/2443>`_)
+  Mostly by ensuring we aren't attempting to store
+  large messages on the stack.  Also add in tests.
+  I verified that before these changes, the tests failed,
+  while after them they succeed.
+* Implement generic client (`#2358 <https://github.com/ros2/rclcpp/issues/2358>`_)
+  * Implement generic client
+  * Fix the incorrect parameter declaration
+  * Deleted copy constructor and assignment for FutureAndRequestId
+  * Update codes after rebase
+  * Address review comments
+  * Address review comments from iuhilnehc-ynos
+  * Correct an error in a description
+  * Fix window build errors
+  * Address review comments from William
+  * Add doc strings to create_generic_client
+  ---------
+* Rule of five: implement move operators (`#2425 <https://github.com/ros2/rclcpp/issues/2425>`_)
+* Various cleanups to deal with uncrustify 0.78. (`#2439 <https://github.com/ros2/rclcpp/issues/2439>`_)
+  These should also work with uncrustify 0.72.
+* Remove the set_deprecated signatures in any_subscription_callback. (`#2431 <https://github.com/ros2/rclcpp/issues/2431>`_)
+  These have been deprecated since April 2021, so it is safe
+  to remove them now.
+* fix doxygen syntax for NodeInterfaces (`#2428 <https://github.com/ros2/rclcpp/issues/2428>`_)
+* Set hints to find the python version we actually want. (`#2426 <https://github.com/ros2/rclcpp/issues/2426>`_)
+  The comment in the commit explains the reasoning behind it.
+* Update quality declaration documents (`#2427 <https://github.com/ros2/rclcpp/issues/2427>`_)
+* feat: add/minus for msg::Time and rclcpp::Duration (`#2419 <https://github.com/ros2/rclcpp/issues/2419>`_)
+  * feat: add/minus for msg::Time and rclcpp::Duration
+* Contributors: Alberto Soragna, Barry Xu, Chris Lalancette, Christophe Bedard, HuaTsai, Jonas Otto, Tim Clephas, Tomoya Fujita, William Woodall
+
 27.0.0 (2024-02-07)
 -------------------
 * Split test_executors up into smaller chunks. (`#2421 <https://github.com/ros2/rclcpp/issues/2421>`_)
