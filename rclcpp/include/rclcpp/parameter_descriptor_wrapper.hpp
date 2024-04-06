@@ -26,8 +26,9 @@
 
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter_value.hpp"
-#include "node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_parameters_interface.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "node_interfaces/node_parameters_interface.hpp"
 
 namespace rclcpp
 {
@@ -36,22 +37,25 @@ namespace rclcpp
 class ParameterDescription
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS(ParameterDescription)
+
   // List of classes the builder manages
+  RCLCPP_PUBLIC
   ParameterDescription();
 
   // Our Main build methods which will construct the base class
-  rcl_interfaces::msg::ParameterDescriptor build() const;
+  RCLCPP_PUBLIC rcl_interfaces::msg::ParameterDescriptor build() const;
 
   // Builder Methods:
   // Describes the instances in a parameter_description object
-  ParameterDescription & set_name(const std::string & name);
-  ParameterDescription & set_type(std::uint8_t type);
-  ParameterDescription & set_description_text(const std::string & description);
-  ParameterDescription & set_additional_constraints(const std::string & constraints);
-  ParameterDescription & set_read_only(bool read_only);
-  ParameterDescription & set_dynamic_typing(bool dynamic_typing);
-  ParameterDescription & set_floating_point_description_range(float min, float max, float step);
-  ParameterDescription & set_integer_description_range(int min, int max, int step);
+  RCLCPP_PUBLIC ParameterDescription & set_name(const std::string & name);
+  RCLCPP_PUBLIC ParameterDescription & set_type(std::uint8_t type);
+  RCLCPP_PUBLIC ParameterDescription & set_description_text(const std::string & description);
+  RCLCPP_PUBLIC ParameterDescription & set_additional_constraints(const std::string & constraints);
+  RCLCPP_PUBLIC ParameterDescription & set_read_only(bool read_only);
+  RCLCPP_PUBLIC ParameterDescription & set_dynamic_typing(bool dynamic_typing);
+  RCLCPP_PUBLIC ParameterDescription & set_floating_point_description_range(float min, float max, float step);
+  RCLCPP_PUBLIC ParameterDescription & set_integer_description_range(int min, int max, int step);
 
   // Need the current node in order to begin the configuration state
   // for it via the declare_parameter function

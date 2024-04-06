@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/parameter_descriptor_wrapper.hpp"
 #include "../../src/rclcpp/parameter_service_names.hpp"
 
 using namespace std::chrono_literals;
