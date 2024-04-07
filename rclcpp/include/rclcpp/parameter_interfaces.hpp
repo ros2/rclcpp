@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__COPY_ALL_PARAMETER_VALUES_HPP_
-#define RCLCPP__COPY_ALL_PARAMETER_VALUES_HPP_
+#ifndef RCLCPP__PARAMETER_INTERFACES_HPP_
+#define RCLCPP__PARAMETER_INTERFACES_HPP_
 
 #include <string>
 #include <vector>
 
+#include "node_interfaces/node_base_interface.hpp"
+#include "node_interfaces/node_parameters_interface.hpp"
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
+#include "rclcpp/node_interfaces/node_interfaces.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_map.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 
@@ -77,6 +83,36 @@ copy_all_parameter_values(
   }
 }
 
+/// Load a list of parameters from a yaml parameter file.
+/**
+ * \param[in] yaml_name The name of the yaml file that needs to be loaded.
+ * \param[in] node_interface The list of variadic NodeInterfaces taken as a template to set parameters for.
+ * \returns an instance of a parameter map.
+ * \throws InvalidParametersException if no valid parameters found.
+ */
+std::vector<rcl_interfaces::msg::SetParametersResult>
+load_parameters(
+  const std::string & yaml_filepath, rclcpp::node_interfaces::NodeInterfaces<
+    rclcpp::node_interfaces::NodeBaseInterface,
+    rclcpp::node_interfaces::NodeParametersInterface> node_interface)
+{
+  auto base_node = node_interface.get<rclcpp::node_interfaces::NodeBaseInterface>();
+  base_node = node_interface.get_node_base_interface();
+  auto parameter_node = node_interface.get<rclcpp::node_interfaces::NodeParametersInterface>();
+  parameter_node = node_interface.get_node_parameters_interface();
+
+  rclcpp::ParameterMap parameter_map =
+    rclcpp::parameter_map_from_yaml_file(yaml_filepath, base_node->get_fully_qualified_name());
+
+  auto iter = parameter_map.find(base_node->get_fully_qualified_name());
+  if (iter == parameter_map.end() || iter->second.size() == 0) {
+    throw rclcpp::exceptions::InvalidParametersException("No valid parameter");
+  }
+  auto params_result = parameter_node->set_parameters(iter->second);
+
+  return params_result;
+}
+
 }  // namespace rclcpp
 
-#endif  // RCLCPP__COPY_ALL_PARAMETER_VALUES_HPP_
+#endif  // RCLCPP__PARAMETER_INTERFACES_HPP_

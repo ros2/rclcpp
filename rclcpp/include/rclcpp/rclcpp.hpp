@@ -168,7 +168,7 @@
 #include <csignal>
 #include <memory>
 
-#include "rclcpp/copy_all_parameter_values.hpp"
+#include "rclcpp/parameter_interfaces.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
