@@ -54,7 +54,8 @@ public:
   RCLCPP_PUBLIC ParameterDescription & set_additional_constraints(const std::string & constraints);
   RCLCPP_PUBLIC ParameterDescription & set_read_only(bool read_only);
   RCLCPP_PUBLIC ParameterDescription & set_dynamic_typing(bool dynamic_typing);
-  RCLCPP_PUBLIC ParameterDescription & set_floating_point_description_range(float min, float max, float step);
+  RCLCPP_PUBLIC ParameterDescription & set_floating_point_description_range(
+    float min, float max, float step);
   RCLCPP_PUBLIC ParameterDescription & set_integer_description_range(int min, int max, int step);
 
   // Need the current node in order to begin the configuration state
