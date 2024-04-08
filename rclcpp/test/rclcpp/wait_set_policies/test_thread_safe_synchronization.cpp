@@ -50,6 +50,7 @@ class TestWaitable : public rclcpp::Waitable
 public:
   TestWaitable()
   : is_ready_(false) {}
+
   void add_to_wait_set(rcl_wait_set_t &) override {}
 
   bool is_ready(const rcl_wait_set_t &) override {return is_ready_;}

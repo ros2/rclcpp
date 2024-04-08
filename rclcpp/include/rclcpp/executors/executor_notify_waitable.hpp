@@ -50,7 +50,6 @@ public:
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable(ExecutorNotifyWaitable & other);
 
-
   RCLCPP_PUBLIC
   ExecutorNotifyWaitable & operator=(ExecutorNotifyWaitable & other);
 
