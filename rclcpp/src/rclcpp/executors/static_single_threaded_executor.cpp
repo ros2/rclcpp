@@ -110,7 +110,7 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
 StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
 {
-  if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+  if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
     this->collect_entities();
   }
   auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
