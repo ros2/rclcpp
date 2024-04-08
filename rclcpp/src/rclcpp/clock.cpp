@@ -50,6 +50,7 @@ public:
   rcl_clock_t rcl_clock_;
   rcl_allocator_t allocator_;
   bool stop_sleeping_ = false;
+  bool shutdown_ = false;
   std::condition_variable cv_;
   std::mutex wait_mutex_;
   std::mutex clock_mutex_;
@@ -109,7 +110,11 @@ Clock::sleep_until(
   // Wake this thread if the context is shutdown
   rclcpp::OnShutdownCallbackHandle shutdown_cb_handle = context->add_on_shutdown_callback(
     [this]() {
-      cancel_sleep_or_wait();
+      {
+        std::unique_lock lock(impl_->wait_mutex_);
+        impl_->shutdown_ = true;
+      }
+      impl_->cv_.notify_one();
     });
   // No longer need the shutdown callback when this function exits
   auto callback_remover = rcpputils::scope_exit(
@@ -127,7 +132,7 @@ Clock::sleep_until(
 
     // loop over spurious wakeups but notice shutdown or stop of sleep
     std::unique_lock lock(impl_->wait_mutex_);
-    while (now() < until && !impl_->stop_sleeping_ && context->is_valid()) {
+    while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid()) {
       impl_->cv_.wait_until(lock, chrono_until);
     }
     impl_->stop_sleeping_ = false;
@@ -139,7 +144,7 @@ Clock::sleep_until(
 
     // loop over spurious wakeups but notice shutdown or stop of sleep
     std::unique_lock lock(impl_->wait_mutex_);
-    while (now() < until && !impl_->stop_sleeping_ && context->is_valid()) {
+    while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid()) {
       impl_->cv_.wait_until(lock, system_time);
     }
     impl_->stop_sleeping_ = false;
@@ -171,7 +176,7 @@ Clock::sleep_until(
 
       // loop over spurious wakeups but notice shutdown, stop of sleep or time source change
       std::unique_lock lock(impl_->wait_mutex_);
-      while (now() < until && !impl_->stop_sleeping_ && context->is_valid() &&
+      while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid() &&
         !time_source_changed)
       {
         impl_->cv_.wait_until(lock, system_time);
@@ -182,7 +187,7 @@ Clock::sleep_until(
       // Just wait without "until" because installed
       // jump callbacks wake the cv on every new sample.
       std::unique_lock lock(impl_->wait_mutex_);
-      while (now() < until && !impl_->stop_sleeping_ && context->is_valid() &&
+      while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid() &&
         !time_source_changed)
       {
         impl_->cv_.wait(lock);

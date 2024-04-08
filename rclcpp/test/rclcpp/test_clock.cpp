@@ -25,7 +25,16 @@
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 using namespace std::chrono_literals;
-class TestClockWakeup : public ::testing::Test
+
+enum class ClockType
+{
+  RCL_STEADY_TIME,
+  RCL_SYSTEM_TIME,
+  RCL_ROS_TIME,
+};
+
+
+class TestClockWakeup : public ::testing::TestWithParam<rcl_clock_type_e>
 {
 public:
   void test_wakeup_before_sleep(const rclcpp::Clock::SharedPtr & clock)
@@ -111,20 +120,15 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-TEST_F(TestClockWakeup, wakeup_sleep_steay_time) {
-  auto clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
-  test_wakeup_after_sleep(clock);
-  test_wakeup_before_sleep(clock);
-}
+INSTANTIATE_TEST_SUITE_P(
+        Clocks,
+        TestClockWakeup,
+        ::testing::Values(
+            RCL_SYSTEM_TIME, RCL_ROS_TIME, RCL_STEADY_TIME
+));
 
-TEST_F(TestClockWakeup, wakeup_sleep_system_time) {
-  auto clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
-  test_wakeup_after_sleep(clock);
-  test_wakeup_before_sleep(clock);
-}
-
-TEST_F(TestClockWakeup, wakeup_sleep_ros_time_not_active) {
-  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+TEST_P(TestClockWakeup, wakeup_sleep) {
+  auto clock = std::make_shared<rclcpp::Clock>(GetParam());
   test_wakeup_after_sleep(clock);
   test_wakeup_before_sleep(clock);
 }
@@ -176,5 +180,57 @@ TEST_F(TestClockWakeup, no_wakeup_on_sim_time) {
   wait_thread.join();
 
   EXPECT_TRUE(thread_finished);
+  EXPECT_LT(cur_time, start_time + std::chrono::seconds(1));
+}
+
+TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+
+  std::vector<bool> thread_finished(10, false);
+
+  std::vector<std::thread> threads;
+
+  for(size_t nr = 0; nr < thread_finished.size(); nr++) {
+    threads.push_back(std::thread(
+        [&clock, &thread_finished, nr]()
+        {
+        // make sure the thread starts sleeping late
+          clock->sleep_until(clock->now() + std::chrono::seconds(10));
+          thread_finished[nr] = true;
+      }));
+  }
+
+  // wait a bit so all threads can execute the sleep_until
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  for(const bool & finished : thread_finished) {
+    EXPECT_FALSE(finished);
+  }
+
+  rclcpp::shutdown();
+
+  auto start_time = std::chrono::steady_clock::now();
+  auto cur_time = start_time;
+  bool threads_finished = false;
+  while (!threads_finished && start_time + std::chrono::seconds(1) > cur_time) {
+    threads_finished = true;
+    for(const bool finished : thread_finished) {
+      if(!finished) {
+        threads_finished = false;
+      }
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    cur_time = std::chrono::steady_clock::now();
+  }
+
+  for(const bool finished : thread_finished) {
+    EXPECT_TRUE(finished);
+  }
+
+  for(auto & thread : threads) {
+    thread.join();
+  }
+
   EXPECT_LT(cur_time, start_time + std::chrono::seconds(1));
 }

@@ -193,10 +193,16 @@ public:
   bool
   ros_time_is_active();
 
+  /**
+   * Cancels an ongoing or future sleep operation of one thread.
+   *
+   * This function is intended for multi threaded signaling. It can
+   * be used by one thread, to wakeup another thread, using any
+   * of the sleep_ or wait_ methods.
+   */
   RCLCPP_PUBLIC
   void
   cancel_sleep_or_wait();
-
 
   /// Return the rcl_clock_t clock handle
   RCLCPP_PUBLIC
