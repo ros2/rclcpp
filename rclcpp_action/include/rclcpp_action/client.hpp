@@ -409,8 +409,17 @@ public:
    * If the goal is rejected by an action server, then the future is set to a `nullptr`.
    *
    * The returned goal handle is used to monitor the status of the goal and get the final result.
-   * It is valid as long as you hold a reference to the shared pointer or until the
-   * rclcpp_action::Client is destroyed at which point the goal status will become UNKNOWN.
+   *
+   * You will receive callbacks for the goal, as long as you hold a reference to the shared pointer,
+   * or rclcpp_action::Client is destroyed. Dropping the shared pointer will not cancel the goal. In order
+   * to cancel it, you must explicitly call async_cancel_goal.
+   *
+   * WARNING this method has inconsistent behaviour and a memory leak bug.
+   * If you set the result callback, the handle will be self referencing, and you will receive callbacks
+   * even though you do not hold a reference to the shared pointer. In this case, the self reference will
+   * be deleted if the result callback was received. If there is no result callback, there will be a memory leak.
+   *
+   * To prevent the memory leak, you may call stop_callbacks() explicit. This will delete the self reference.
    *
    * \param[in] goal The goal request.
    * \param[in] options Options for sending the goal request. Contains references to callbacks for
