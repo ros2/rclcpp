@@ -689,7 +689,8 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
       if (entity_iter != current_collection_.timers.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
+          current_timer_index++;
           continue;
         }
         // At this point the timer is either ready for execution or was perhaps
@@ -699,6 +700,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         wait_result_->clear_timer_with_index(current_timer_index);
         // Check that the timer should be called still, i.e. it wasn't canceled.
         if (!timer->call()) {
+          current_timer_index++;
           continue;
         }
         any_executable.timer = timer;
@@ -706,6 +708,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         valid_executable = true;
         break;
       }
+      current_timer_index++;
     }
   }
 
@@ -715,7 +718,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         subscription->get_subscription_handle().get());
       if (entity_iter != current_collection_.subscriptions.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.subscription = subscription;
@@ -731,7 +734,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
       if (entity_iter != current_collection_.services.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.service = service;
@@ -747,7 +750,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
       if (entity_iter != current_collection_.clients.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.client = client;
@@ -763,7 +766,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.waitables.find(waitable.get());
       if (entity_iter != current_collection_.waitables.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.waitable = waitable;
