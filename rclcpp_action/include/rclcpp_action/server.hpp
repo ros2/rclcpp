@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "action_msgs/srv/cancel_goal.hpp"
 #include "rcl/event_callback.h"
 #include "rcl_action/action_server.h"
 #include "rosidl_runtime_c/action_type_support_struct.h"
@@ -77,6 +78,7 @@ public:
     GoalService,
     ResultService,
     CancelService,
+    Expired,
   };
 
   RCLCPP_ACTION_PUBLIC
@@ -279,19 +281,29 @@ private:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_goal_request_received(const std::shared_ptr<void> & data);
+  execute_goal_request_received(
+    rcl_ret_t ret,
+    rcl_action_goal_info_t goal_info,
+    rmw_request_id_t request_header,
+    std::shared_ptr<void> message);
 
   /// Handle a request to cancel goals on the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_cancel_request_received(const std::shared_ptr<void> & data);
+  execute_cancel_request_received(
+    rcl_ret_t ret,
+    std::shared_ptr<action_msgs::srv::CancelGoal::Request> request,
+    rmw_request_id_t request_header);
 
   /// Handle a request to get the result of an action
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_result_request_received(const std::shared_ptr<void> & data);
+  execute_result_request_received(
+    rcl_ret_t ret,
+    std::shared_ptr<void> result_request,
+    rmw_request_id_t request_header);
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
@@ -345,7 +357,8 @@ public:
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
+        const GoalUUID &,
+        std::shared_ptr<const typename ActionT::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
@@ -455,7 +468,8 @@ protected:
   void
   call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    GoalUUID uuid, std::shared_ptr<void> goal_request_message) override
+    GoalUUID uuid,
+    std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();

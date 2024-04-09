@@ -1110,6 +1110,9 @@ TEST_F(TestGoalRequestServer, is_ready_rcl_error) {
   EXPECT_NO_THROW(action_server_->add_to_wait_set(wait_set));
 
   EXPECT_TRUE(action_server_->is_ready(wait_set));
+
+  EXPECT_NO_THROW(action_server_->take_data());
+
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp_action", rcl_action_server_wait_set_get_entities_ready, RCL_RET_ERROR);
   EXPECT_THROW(action_server_->is_ready(wait_set), rclcpp::exceptions::RCLError);
