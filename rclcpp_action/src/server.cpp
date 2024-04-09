@@ -41,12 +41,18 @@ namespace rclcpp_action
 
 struct ServerBaseData
 {
-  using GoalRequestData = std::tuple<rcl_ret_t, const rcl_action_goal_info_t, rmw_request_id_t,
-      std::shared_ptr<void>>;
+  using GoalRequestData = std::tuple<
+    rcl_ret_t,
+    const rcl_action_goal_info_t,
+    rmw_request_id_t,
+    std::shared_ptr<void>
+  >;
 
-  using CancelRequestData = std::tuple<rcl_ret_t,
-      std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
-      rmw_request_id_t>;
+  using CancelRequestData = std::tuple<
+    rcl_ret_t,
+    std::shared_ptr<action_msgs::srv::CancelGoal::Request>,
+    rmw_request_id_t
+  >;
 
   using ResultRequestData = std::tuple<rcl_ret_t, std::shared_ptr<void>, rmw_request_id_t>;
 
@@ -54,14 +60,14 @@ struct ServerBaseData
 
   std::variant<GoalRequestData, CancelRequestData, ResultRequestData, GoalExpiredData> data;
 
-  explicit ServerBaseData(GoalRequestData && dataIn)
-  : data(std::move(dataIn)) {}
-  explicit ServerBaseData(CancelRequestData && dataIn)
-  : data(std::move(dataIn)) {}
-  explicit ServerBaseData(ResultRequestData && dataIn)
-  : data(std::move(dataIn)) {}
-  explicit ServerBaseData(GoalExpiredData && dataIn)
-  : data(std::move(dataIn)) {}
+  explicit ServerBaseData(GoalRequestData && data_in)
+  : data(std::move(data_in)) {}
+  explicit ServerBaseData(CancelRequestData && data_in)
+  : data(std::move(data_in)) {}
+  explicit ServerBaseData(ResultRequestData && data_in)
+  : data(std::move(data_in)) {}
+  explicit ServerBaseData(GoalExpiredData && data_in)
+  : data(std::move(data_in)) {}
 };
 
 class ServerBaseImpl
@@ -106,7 +112,6 @@ public:
 };
 
 }  // namespace rclcpp_action
-
 
 ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -285,8 +290,7 @@ ServerBase::take_data_by_entity_id(size_t id)
           message.get());
 
         data_ptr = std::make_shared<ServerBaseData>(
-          ServerBaseData::GoalRequestData(
-            ret, goal_info, request_header, message));
+          ServerBaseData::GoalRequestData(ret, goal_info, request_header, message));
       }
       break;
     case EntityType::ResultService:
@@ -301,8 +305,7 @@ ServerBase::take_data_by_entity_id(size_t id)
 
         data_ptr =
           std::make_shared<ServerBaseData>(
-          ServerBaseData::ResultRequestData(
-            ret, result_request, request_header));
+          ServerBaseData::ResultRequestData(ret, result_request, request_header));
       }
       break;
     case EntityType::CancelService:
@@ -321,9 +324,7 @@ ServerBase::take_data_by_entity_id(size_t id)
 
         data_ptr =
           std::make_shared<ServerBaseData>(
-          ServerBaseData::CancelRequestData(
-            ret, request,
-            request_header));
+          ServerBaseData::CancelRequestData(ret, request, request_header));
       }
       break;
     case EntityType::Expired:
@@ -338,13 +339,13 @@ ServerBase::take_data_by_entity_id(size_t id)
 }
 
 void
-ServerBase::execute(const std::shared_ptr<void> & dataIn)
+ServerBase::execute(const std::shared_ptr<void> & data_in)
 {
-  if (!dataIn) {
+  if (!data_in) {
     throw std::runtime_error("ServerBase::execute: give data pointer was null");
   }
 
-  std::shared_ptr<ServerBaseData> dataPtr = std::static_pointer_cast<ServerBaseData>(dataIn);
+  std::shared_ptr<ServerBaseData> data_ptr = std::static_pointer_cast<ServerBaseData>(data_in);
 
   std::visit(
     [&](auto && data) -> void {
@@ -364,12 +365,14 @@ ServerBase::execute(const std::shared_ptr<void> & dataIn)
         execute_check_expired_goals();
       }
     },
-    dataPtr->data);
+    data_ptr->data);
 }
 
 void
 ServerBase::execute_goal_request_received(
-  rcl_ret_t ret, rcl_action_goal_info_t goal_info, rmw_request_id_t request_header,
+  rcl_ret_t ret,
+  rcl_action_goal_info_t goal_info,
+  rmw_request_id_t request_header,
   const std::shared_ptr<void> message)
 {
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
@@ -461,7 +464,8 @@ ServerBase::execute_goal_request_received(
 
 void
 ServerBase::execute_cancel_request_received(
-  rcl_ret_t ret, std::shared_ptr<action_msgs::srv::CancelGoal::Request> request,
+  rcl_ret_t ret,
+  std::shared_ptr<action_msgs::srv::CancelGoal::Request> request,
   rmw_request_id_t request_header)
 {
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
@@ -554,7 +558,8 @@ ServerBase::execute_cancel_request_received(
 
 void
 ServerBase::execute_result_request_received(
-  rcl_ret_t ret, std::shared_ptr<void> result_request,
+  rcl_ret_t ret,
+  std::shared_ptr<void> result_request,
   rmw_request_id_t request_header)
 {
   if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
