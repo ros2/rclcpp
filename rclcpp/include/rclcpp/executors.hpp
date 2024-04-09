@@ -73,7 +73,8 @@ using rclcpp::executors::SingleThreadedExecutor;
 /**
  * \param[in] executor The executor which will spin the node.
  * \param[in] node_ptr The node to spin.
- * \param[in] condition The callable condition to wait on.
+ * \param[in] condition The callable condition to wait on. If this condition is not related to
+ *   what the executor is waiting on and the timeout is infinite, this could block forever.
  * \param[in] timeout Optional timeout parameter, which gets passed to
  *   Executor::spin_node_once.
  *   `-1` is block forever, `0` is non-blocking.
