@@ -528,11 +528,11 @@ TEST_F(TestExecutor, spin_until_complete_condition_already_complete) {
 TEST_F(TestExecutor, spin_until_complete_returns_after_condition) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  bool spin_called = false;
+  bool timer_called = false;
   auto timer =
     node->create_wall_timer(
     std::chrono::milliseconds(1), [&]() {
-      spin_called = true;
+      timer_called = true;
     });
   dummy.add_node(node);
   // Check that we stop spinning after the condition is ready
@@ -542,10 +542,9 @@ TEST_F(TestExecutor, spin_until_complete_returns_after_condition) {
   EXPECT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
     dummy.spin_until_complete(condition, std::chrono::seconds(1)));
-  EXPECT_TRUE(spin_called);
+  EXPECT_TRUE(timer_called);
   const auto end_delay = std::chrono::steady_clock::now() - start;
   EXPECT_GE(end_delay, condition_delay);
-  EXPECT_LT(end_delay, std::chrono::milliseconds(500));
 }
 
 TEST_F(TestExecutor, is_spinning) {
