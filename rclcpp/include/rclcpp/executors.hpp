@@ -18,13 +18,13 @@
 #include <future>
 #include <memory>
 
-#include "rclcpp/condition_wait_return_code.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/future_return_code.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/spin_until_complete_return_code.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -82,7 +82,7 @@ using rclcpp::executors::SingleThreadedExecutor;
  * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
  */
 template<typename TimeRepT = int64_t, typename TimeT = std::milli>
-rclcpp::ConditionWaitReturnCode
+rclcpp::SpinUntilCompleteReturnCode
 spin_node_until_complete(
   rclcpp::Executor & executor,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
@@ -98,7 +98,7 @@ spin_node_until_complete(
 }
 
 template<typename NodeT = rclcpp::Node, typename TimeRepT = int64_t, typename TimeT = std::milli>
-rclcpp::ConditionWaitReturnCode
+rclcpp::SpinUntilCompleteReturnCode
 spin_node_until_complete(
   rclcpp::Executor & executor,
   std::shared_ptr<NodeT> node_ptr,
@@ -159,7 +159,7 @@ spin_node_until_future_complete(
 }  // namespace executors
 
 template<typename TimeRepT = int64_t, typename TimeT = std::milli>
-rclcpp::ConditionWaitReturnCode
+rclcpp::SpinUntilCompleteReturnCode
 spin_until_complete(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   const std::function<bool(void)> & condition,
@@ -170,7 +170,7 @@ spin_until_complete(
 }
 
 template<typename NodeT = rclcpp::Node, typename TimeRepT = int64_t, typename TimeT = std::milli>
-rclcpp::ConditionWaitReturnCode
+rclcpp::SpinUntilCompleteReturnCode
 spin_until_complete(
   std::shared_ptr<NodeT> node_ptr,
   const std::function<bool(void)> & condition,

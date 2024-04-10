@@ -17,26 +17,26 @@
 #include <sstream>
 #include <string>
 
-#include "rclcpp/condition_wait_return_code.hpp"
+#include "rclcpp/spin_until_complete_return_code.hpp"
 
-TEST(TestConditionWaitReturnCode, to_string) {
+TEST(TestSpinUntilCompleteReturnCode, to_string) {
   EXPECT_EQ(
-    "Unknown enum value (-1)", rclcpp::to_string(rclcpp::ConditionWaitReturnCode(-1)));
+    "Unknown enum value (-1)", rclcpp::to_string(rclcpp::SpinUntilCompleteReturnCode(-1)));
   EXPECT_EQ(
-    "SUCCESS (0)", rclcpp::to_string(rclcpp::ConditionWaitReturnCode::SUCCESS));
+    "SUCCESS (0)", rclcpp::to_string(rclcpp::SpinUntilCompleteReturnCode::SUCCESS));
   EXPECT_EQ(
-    "INTERRUPTED (1)", rclcpp::to_string(rclcpp::ConditionWaitReturnCode::INTERRUPTED));
+    "INTERRUPTED (1)", rclcpp::to_string(rclcpp::SpinUntilCompleteReturnCode::INTERRUPTED));
   EXPECT_EQ(
-    "TIMEOUT (2)", rclcpp::to_string(rclcpp::ConditionWaitReturnCode::TIMEOUT));
+    "TIMEOUT (2)", rclcpp::to_string(rclcpp::SpinUntilCompleteReturnCode::TIMEOUT));
   EXPECT_EQ(
-    "Unknown enum value (3)", rclcpp::to_string(rclcpp::ConditionWaitReturnCode(3)));
+    "Unknown enum value (3)", rclcpp::to_string(rclcpp::SpinUntilCompleteReturnCode(3)));
   EXPECT_EQ(
-    "Unknown enum value (100)", rclcpp::to_string(rclcpp::ConditionWaitReturnCode(100)));
+    "Unknown enum value (100)", rclcpp::to_string(rclcpp::SpinUntilCompleteReturnCode(100)));
 }
 
-TEST(TestConditionWaitReturnCode, ostream) {
+TEST(TestSpinUntilCompleteReturnCode, ostream) {
   std::ostringstream ostream;
 
-  ostream << rclcpp::ConditionWaitReturnCode::SUCCESS;
+  ostream << rclcpp::SpinUntilCompleteReturnCode::SUCCESS;
   ASSERT_EQ("SUCCESS (0)", ostream.str());
 }

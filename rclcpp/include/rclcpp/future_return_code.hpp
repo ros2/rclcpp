@@ -18,7 +18,7 @@
 #include <iostream>
 #include <string>
 
-#include "rclcpp/condition_wait_return_code.hpp"
+#include "rclcpp/spin_until_complete_return_code.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -31,7 +31,7 @@ namespace rclcpp
  * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
  * TIMEOUT: Spinning timed out.
  */
-using FutureReturnCode = ConditionWaitReturnCode;
+using FutureReturnCode = SpinUntilCompleteReturnCode;
 
 }  // namespace rclcpp
 

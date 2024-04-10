@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__CONDITION_WAIT_RETURN_CODE_HPP_
-#define RCLCPP__CONDITION_WAIT_RETURN_CODE_HPP_
+#ifndef RCLCPP__SPIN_UNTIL_COMPLETE_RETURN_CODE_HPP_
+#define RCLCPP__SPIN_UNTIL_COMPLETE_RETURN_CODE_HPP_
 
 #include <iostream>
 #include <string>
@@ -30,18 +30,18 @@ namespace rclcpp
  *              error.
  * TIMEOUT: Spinning timed out.
  */
-enum class ConditionWaitReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
+enum class SpinUntilCompleteReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
 
-/// Stream operator for ConditionWaitReturnCode.
+/// Stream operator for SpinUntilCompleteReturnCode.
 RCLCPP_PUBLIC
 std::ostream &
-operator<<(std::ostream & os, const ConditionWaitReturnCode & condition_wait_return_code);
+operator<<(std::ostream & os, const SpinUntilCompleteReturnCode & spin_until_complete_return_code);
 
-/// String conversion function for ConditionWaitReturnCode.
+/// String conversion function for SpinUntilCompleteReturnCode.
 RCLCPP_PUBLIC
 std::string
-to_string(const ConditionWaitReturnCode & condition_wait_return_code);
+to_string(const SpinUntilCompleteReturnCode & spin_until_complete_return_code);
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__CONDITION_WAIT_RETURN_CODE_HPP_
+#endif  // RCLCPP__SPIN_UNTIL_COMPLETE_RETURN_CODE_HPP_

@@ -43,7 +43,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/callback_group.cpp
   src/rclcpp/client.cpp
   src/rclcpp/clock.cpp
-  src/rclcpp/condition_wait_return_code.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
   src/rclcpp/create_generic_client.cpp
@@ -116,6 +115,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/serialized_message.cpp
   src/rclcpp/service.cpp
   src/rclcpp/signal_handler.cpp
+  src/rclcpp/spin_until_complete_return_code.cpp
   src/rclcpp/subscription_base.cpp
   src/rclcpp/subscription_intra_process_base.cpp
   src/rclcpp/time.cpp
