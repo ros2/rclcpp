@@ -72,13 +72,10 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
       }
     });
 
-  notify_waitable_->set_on_ready_callback(
-    [this](auto, auto) {
-      this->entities_need_rebuild_.store(true);
-    });
-
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
+
+  wait_set_.add_waitable(notify_waitable_);
 }
 
 Executor::~Executor()
@@ -122,6 +119,20 @@ Executor::~Executor()
   }
 }
 
+void Executor::trigger_entity_recollect(bool notify)
+{
+  this->entities_need_rebuild_.store(true);
+
+  if (!spinning.load()) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    this->collect_entities();
+  }
+
+  if(notify) {
+    interrupt_guard_condition_->trigger();
+  }
+}
+
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_all_callback_groups()
 {
@@ -152,19 +163,12 @@ Executor::add_callback_group(
   (void) node_ptr;
   this->collector_.add_callback_group(group_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on callback group add: ") + ex.what());
-    }
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition on callback group add: ") + ex.what());
   }
 }
 
@@ -173,19 +177,12 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 {
   this->collector_.add_node(node_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
               std::string(
                 "Failed to trigger guard condition on node add: ") + ex.what());
-    }
   }
 }
 
@@ -196,18 +193,12 @@ Executor::remove_callback_group(
 {
   this->collector_.remove_callback_group(group_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
               std::string(
                 "Failed to trigger guard condition on callback group remove: ") + ex.what());
-    }
   }
 }
 
@@ -222,19 +213,12 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 {
   this->collector_.remove_node(node_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
               std::string(
                 "Failed to trigger guard condition on node remove: ") + ex.what());
-    }
   }
 }
 
@@ -664,6 +648,13 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
+  } else {
+    if(this->wait_result_->kind() == WaitResultKind::Ready && notify_waitable_) {
+      auto & rcl_wait_set = this->wait_result_->get_wait_set().get_rcl_wait_set();
+      if(notify_waitable_->is_ready(rcl_wait_set)) {
+        notify_waitable_->execute(notify_waitable_->take_data());
+      }
+    }
   }
 }
 

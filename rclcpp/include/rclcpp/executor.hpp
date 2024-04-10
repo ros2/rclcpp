@@ -550,6 +550,16 @@ protected:
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
+  /**
+   * This function triggers a recollect of all entities
+   * that are registered to the executor.
+   *
+   * Calling this function is thread safe.
+   *
+   * @param notify if true will execute a trigger that will wake up a waiting executor
+   */
+  void trigger_entity_recollect(bool notify);
+
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
