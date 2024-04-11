@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <iterator>
 #include <memory>
@@ -362,6 +363,9 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   if (!spinning.load()) {
     return;
   }
+
+  assert((void("Internal error, tried to execute a AnyExecutable without a valid callback group"),
+    any_exec.callback_group));
 
   if (any_exec.timer) {
     TRACETOOLS_TRACEPOINT(
