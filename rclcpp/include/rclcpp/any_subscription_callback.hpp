@@ -459,7 +459,7 @@ public:
   {
     auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
     if (ptr == nullptr) {
-      	throw std::bad_alloc();
+        throw std::bad_alloc();
       }
     SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr, *message);
     return std::unique_ptr<SubscribedType, SubscribedTypeDeleter>(ptr, subscribed_type_deleter_);
@@ -471,7 +471,7 @@ public:
     if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
       auto ptr = SubscribedTypeAllocatorTraits::allocate(subscribed_type_allocator_, 1);
       if (ptr == nullptr) {
-      	throw std::bad_alloc();
+        throw std::bad_alloc();
       }
       SubscribedTypeAllocatorTraits::construct(subscribed_type_allocator_, ptr);
       rclcpp::TypeAdapter<MessageT>::convert_to_custom(msg, *ptr);
@@ -489,7 +489,7 @@ public:
     if constexpr (rclcpp::TypeAdapter<MessageT>::is_specialized::value) {
       auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_type_allocator_, 1);
       if (ptr == nullptr) {
-      	throw std::bad_alloc();
+        throw std::bad_alloc();
       }
       ROSMessageTypeAllocatorTraits::construct(ros_message_type_allocator_, ptr);
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, *ptr);
