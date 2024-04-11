@@ -150,13 +150,35 @@ TEST_F(TestQosEvent, test_subscription_constructor)
     topic_name, 10, message_callback, options);
 }
 
-/*
-   Testing construction of a subscriptions with QoS event callback functions.
- */
+TEST_F(TestQosEvent, test_default_incompatible_qos_callback_subscriber)
+{
+  rclcpp::QoS qos_profile_publisher(10);
+  qos_profile_publisher.durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(
+    topic_name, qos_profile_publisher);
+
+  rclcpp::QoS qos_profile_subscription(10);
+  qos_profile_subscription.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, qos_profile_subscription, message_callback);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(node->get_node_base_interface());
+  try {
+    ex.spin_some(std::chrono::milliseconds(100));
+    EXPECT_TRUE(false); // we expected to catch an exception here
+  } catch (const std::runtime_error & e) {
+    const std::string expectedMessage{
+      "New publisher discovered on topic '/ns/test_topic', offering incompatible QoS. "
+      "No messages will ever be received from it. Last incompatible policy: DURABILITY_QOS_POLICY"};
+    EXPECT_EQ(expectedMessage, e.what());
+  }
+}
+
 std::string * g_pub_log_msg;
 std::string * g_sub_log_msg;
 std::promise<void> * g_log_msgs_promise;
-TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
+TEST_F(TestQosEvent, test_default_incompatible_qos_callback_publisher)
 {
   rcutils_logging_output_handler_t original_output_handler = rcutils_logging_get_output_handler();
 
@@ -194,8 +216,14 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 
   rclcpp::QoS qos_profile_subscription(10);
   qos_profile_subscription.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+
+  rclcpp::SubscriptionOptions options;
+  options.event_callbacks.incompatible_qos_callback =
+    [](rclcpp::QOSRequestedIncompatibleQoSInfo &) {
+      return;
+    };
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
-    topic_name, qos_profile_subscription, message_callback);
+    topic_name, qos_profile_subscription, message_callback, options);
 
   rclcpp::executors::SingleThreadedExecutor ex;
   ex.add_node(node->get_node_base_interface());
@@ -208,10 +236,6 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
     "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
     "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
     pub_log_msg);
-  EXPECT_EQ(
-    "New publisher discovered on topic '/ns/test_topic', offering incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    sub_log_msg);
 
   rcutils_logging_set_output_handler(original_output_handler);
 }
