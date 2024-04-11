@@ -379,9 +379,7 @@ TEST_F(TestPublisher, test_large_message_unique)
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 1);
 
   static constexpr size_t length = 10 * 1024 * 1024;
-  auto message_data = std::make_unique<std::string>();
-  message_data->reserve(length);
-  std::fill(message_data->begin(), message_data->begin() + length, '#');
+  auto message_data = std::make_unique<std::string>(length, '#');
   pub->publish(std::move(message_data));
 }
 
@@ -400,8 +398,6 @@ TEST_F(TestPublisher, test_large_message_constref)
   auto pub = node->create_publisher<StringTypeAdapter>(topic_name, 1);
 
   static constexpr size_t length = 10 * 1024 * 1024;
-  std::string message_data;
-  message_data.reserve(length);
-  std::fill(message_data.begin(), message_data.begin() + length, '#');
+  std::string message_data(length, '#');
   pub->publish(message_data);
 }
