@@ -59,7 +59,7 @@ public:
 };
 
 
-TEST(TestCallbackGroup, ValidCbg)
+TEST(TestCallbackGroup, valid_callback_group)
 {
   rclcpp::init(0, nullptr);
 
@@ -95,7 +95,7 @@ TEST(TestCallbackGroup, ValidCbg)
   rclcpp::shutdown();
 }
 
-TEST(TestCallbackGroup, InvalidCbg)
+TEST(TestCallbackGroup, invalid_callback_group)
 {
   rclcpp::init(0, nullptr);
 
