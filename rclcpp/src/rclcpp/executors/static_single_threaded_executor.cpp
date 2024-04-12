@@ -119,6 +119,13 @@ StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
     return {};
+  } else {
+    if (wait_result.kind() == WaitResultKind::Ready && current_notify_waitable_) {
+      auto & rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
+      if (current_notify_waitable_->is_ready(rcl_wait_set)) {
+        current_notify_waitable_->execute(current_notify_waitable_->take_data());
+      }
+    }
   }
   return wait_result;
 }
