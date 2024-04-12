@@ -547,9 +547,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 }
 
 void
-Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & dataPtr)
+Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr)
 {
-  timer->execute_callback(dataPtr);
+  timer->execute_callback(data_ptr);
 }
 
 void
