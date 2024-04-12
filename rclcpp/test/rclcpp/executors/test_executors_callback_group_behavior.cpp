@@ -23,35 +23,42 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <future>
+
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/executor.hpp>
 #include <rclcpp/node.hpp>
 
-class CustomExecutor: public rclcpp::Executor
+std::chrono::milliseconds g_timer_period {1};
+
+class CustomExecutor : public rclcpp::Executor
 {
 public:
   explicit CustomExecutor(const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions())
-    : rclcpp::Executor(options)
-  {
-  }
+  : rclcpp::Executor(options)
+  {}
 
   ~CustomExecutor() override = default;
 
-  void spin() override {};
+  void spin() override {}
 
-  void collect() {
+  void collect()
+  {
     this->collect_entities();
   }
 
-  void wait() {
-    this->wait_for_work(std::chrono::milliseconds(10));
+  void wait()
+  {
+    this->wait_for_work(g_timer_period * 10);
   }
 
-  size_t collected_timers() const {
+  size_t collected_timers() const
+  {
     return this->current_collection_.timers.size();
   }
 
-  rclcpp::AnyExecutable next() {
+  rclcpp::AnyExecutable next()
+  {
     rclcpp::AnyExecutable ret;
     this->get_next_ready_executable(ret);
     return ret;
@@ -66,16 +73,21 @@ TEST(TestCallbackGroup, valid_callback_group)
   // Create a timer associated with a callback group
   auto node = std::make_shared<rclcpp::Node>("node");
 
+  std::promise<void> promise;
+  std::future<void> future = promise.get_future();
+  auto timer_callback = [&promise]() {
+      promise.set_value();
+    };
+
   // Add the callback group to the executor
   auto executor = CustomExecutor();
-  executor.add_node(node);
-  executor.spin_all(std::chrono::milliseconds(10));
-
   auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, true);
-  auto timer = node->create_wall_timer(std::chrono::milliseconds(1), [](){}, cbg);
+  auto timer = node->create_wall_timer(g_timer_period, timer_callback, cbg);
   executor.add_callback_group(cbg, node->get_node_base_interface());
 
-  executor.spin_all(std::chrono::milliseconds(10));
+  ASSERT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    executor.spin_until_future_complete(future, std::chrono::seconds(10)));
 
   // Collect the entities
   executor.collect();
@@ -102,16 +114,21 @@ TEST(TestCallbackGroup, invalid_callback_group)
   // Create a timer associated with a callback group
   auto node = std::make_shared<rclcpp::Node>("node");
 
+  std::promise<void> promise;
+  std::future<void> future = promise.get_future();
+  auto timer_callback = [&promise]() {
+      promise.set_value();
+    };
+
   // Add the callback group to the executor
   auto executor = CustomExecutor();
-  executor.add_node(node);
-  executor.spin_all(std::chrono::milliseconds(10));
-
   auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
-  auto timer = node->create_wall_timer(std::chrono::milliseconds(1), [](){}, cbg);
-  executor.add_callback_group(cbg, nullptr);
+  auto timer = node->create_wall_timer(g_timer_period, timer_callback, cbg);
+  executor.add_callback_group(cbg, node->get_node_base_interface());
 
-  executor.spin_all(std::chrono::milliseconds(10));
+  ASSERT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    executor.spin_until_future_complete(future, std::chrono::seconds(10)));
 
   // Collect the entities
   executor.collect();
