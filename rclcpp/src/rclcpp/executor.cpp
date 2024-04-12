@@ -129,7 +129,7 @@ void Executor::trigger_entity_recollect(bool notify)
     this->collect_entities();
   }
 
-  if(notify) {
+  if (notify) {
     interrupt_guard_condition_->trigger();
   }
 }
@@ -182,8 +182,8 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
     this->trigger_entity_recollect(notify);
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on node add: ") + ex.what());
+            std::string(
+              "Failed to trigger guard condition on node add: ") + ex.what());
   }
 }
 
@@ -198,8 +198,8 @@ Executor::remove_callback_group(
     this->trigger_entity_recollect(notify);
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on callback group remove: ") + ex.what());
+            std::string(
+              "Failed to trigger guard condition on callback group remove: ") + ex.what());
   }
 }
 
@@ -218,8 +218,8 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
     this->trigger_entity_recollect(notify);
   } catch (const rclcpp::exceptions::RCLError & ex) {
     throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on node remove: ") + ex.what());
+            std::string(
+              "Failed to trigger guard condition on node remove: ") + ex.what());
   }
 }
 
@@ -364,7 +364,8 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     return;
   }
 
-  assert((void("Internal error, tried to execute a AnyExecutable without a valid callback group"),
+  assert(
+    (void("cannot execute an AnyExecutable without a valid callback group"),
     any_exec.callback_group));
 
   if (any_exec.timer) {
@@ -650,9 +651,9 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
   } else {
-    if(this->wait_result_->kind() == WaitResultKind::Ready && notify_waitable_) {
+    if (this->wait_result_->kind() == WaitResultKind::Ready && notify_waitable_) {
       auto & rcl_wait_set = this->wait_result_->get_wait_set().get_rcl_wait_set();
-      if(notify_waitable_->is_ready(rcl_wait_set)) {
+      if (notify_waitable_->is_ready(rcl_wait_set)) {
         notify_waitable_->execute(notify_waitable_->take_data());
       }
     }
