@@ -32,8 +32,8 @@ public:
   : TimerBase(node->get_clock(), std::chrono::nanoseconds(1),
       node->get_node_base_interface()->get_context()) {}
 
-  bool call() override {return true;}
-  void execute_callback() override {}
+  std::shared_ptr<void> call() override {return nullptr;}
+  void execute_callback(const std::shared_ptr<void> &) override {}
   bool is_steady() override {return false;}
 };
 

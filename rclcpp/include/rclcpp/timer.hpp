@@ -18,6 +18,7 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <optional>
 #include <memory>
 #include <sstream>
 #include <thread>
@@ -42,6 +43,12 @@
 
 namespace rclcpp
 {
+
+struct TimerInfo
+{
+  Time expected_call_time;
+  Time actual_call_time;
+};
 
 class TimerBase
 {
@@ -101,16 +108,20 @@ public:
    * The multithreaded executor takes advantage of this to avoid scheduling
    * the callback multiple times.
    *
-   * \return `true` if the callback should be executed, `false` if the timer was canceled.
+   * \return a valid shared_ptr if the callback should be executed,
+   *         an invalid shared_ptr (nullptr) if the timer was canceled.
    */
   RCLCPP_PUBLIC
-  virtual bool
+  virtual std::shared_ptr<void>
   call() = 0;
 
   /// Call the callback function when the timer signal is emitted.
+  /**
+   * \param[in] data the pointer returned by the call function
+   */
   RCLCPP_PUBLIC
   virtual void
-  execute_callback() = 0;
+  execute_callback(const std::shared_ptr<void> & data) = 0;
 
   RCLCPP_PUBLIC
   std::shared_ptr<const rcl_timer_t>
@@ -198,16 +209,17 @@ protected:
   set_on_reset_callback(rcl_event_callback_t callback, const void * user_data);
 };
 
-
 using VoidCallbackType = std::function<void ()>;
 using TimerCallbackType = std::function<void (TimerBase &)>;
+using TimerInfoCallbackType = std::function<void (const TimerInfo &)>;
 
 /// Generic timer. Periodically executes a user-specified callback.
 template<
   typename FunctorT,
   typename std::enable_if<
     rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
-    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerInfoCallbackType>::value
   >::type * = nullptr
 >
 class GenericTimer : public TimerBase
@@ -256,27 +268,28 @@ public:
    * \sa rclcpp::TimerBase::call
    * \throws std::runtime_error if it failed to notify timer that callback will occurr
    */
-  bool
+  std::shared_ptr<void>
   call() override
   {
-    rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
+    auto timer_call_info_ = std::make_shared<rcl_timer_call_info_t>();
+    rcl_ret_t ret = rcl_timer_call_with_info(timer_handle_.get(), timer_call_info_.get());
     if (ret == RCL_RET_TIMER_CANCELED) {
-      return false;
+      return nullptr;
     }
     if (ret != RCL_RET_OK) {
       throw std::runtime_error("Failed to notify timer that callback occurred");
     }
-    return true;
+    return timer_call_info_;
   }
 
   /**
    * \sa rclcpp::TimerBase::execute_callback
    */
   void
-  execute_callback() override
+  execute_callback(const std::shared_ptr<void> & data) override
   {
     TRACETOOLS_TRACEPOINT(callback_start, reinterpret_cast<const void *>(&callback_), false);
-    execute_callback_delegate<>();
+    execute_callback_delegate<>(*static_cast<rcl_timer_call_info_t *>(data.get()));
     TRACETOOLS_TRACEPOINT(callback_end, reinterpret_cast<const void *>(&callback_));
   }
 
@@ -288,7 +301,7 @@ public:
     >::type * = nullptr
   >
   void
-  execute_callback_delegate()
+  execute_callback_delegate(const rcl_timer_call_info_t &)
   {
     callback_();
   }
@@ -300,9 +313,24 @@ public:
     >::type * = nullptr
   >
   void
-  execute_callback_delegate()
+  execute_callback_delegate(const rcl_timer_call_info_t &)
   {
     callback_(*this);
+  }
+
+
+  template<
+    typename CallbackT = FunctorT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, TimerInfoCallbackType>::value
+    >::type * = nullptr
+  >
+  void
+  execute_callback_delegate(const rcl_timer_call_info_t & timer_call_info_)
+  {
+    const TimerInfo info{Time{timer_call_info_.expected_call_time, clock_->get_clock_type()},
+      Time{timer_call_info_.actual_call_time, clock_->get_clock_type()}};
+    callback_(info);
   }
 
   /// Is the clock steady (i.e. is the time between ticks constant?)
@@ -323,7 +351,8 @@ template<
   typename FunctorT,
   typename std::enable_if<
     rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
-    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerInfoCallbackType>::value
   >::type * = nullptr
 >
 class WallTimer : public GenericTimer<FunctorT>
