@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <iterator>
 #include <memory>
@@ -72,13 +73,10 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
       }
     });
 
-  notify_waitable_->set_on_ready_callback(
-    [this](auto, auto) {
-      this->entities_need_rebuild_.store(true);
-    });
-
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
+
+  wait_set_.add_waitable(notify_waitable_);
 }
 
 Executor::~Executor()
@@ -122,6 +120,20 @@ Executor::~Executor()
   }
 }
 
+void Executor::trigger_entity_recollect(bool notify)
+{
+  this->entities_need_rebuild_.store(true);
+
+  if (!spinning.load() && entities_need_rebuild_.exchange(false)) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    this->collect_entities();
+  }
+
+  if (notify) {
+    interrupt_guard_condition_->trigger();
+  }
+}
+
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_all_callback_groups()
 {
@@ -152,19 +164,12 @@ Executor::add_callback_group(
   (void) node_ptr;
   this->collector_.add_callback_group(group_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on callback group add: ") + ex.what());
-    }
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition on callback group add: ") + ex.what());
   }
 }
 
@@ -173,19 +178,12 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 {
   this->collector_.add_node(node_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on node add: ") + ex.what());
-    }
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition on node add: ") + ex.what());
   }
 }
 
@@ -196,18 +194,12 @@ Executor::remove_callback_group(
 {
   this->collector_.remove_callback_group(group_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on callback group remove: ") + ex.what());
-    }
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition on callback group remove: ") + ex.what());
   }
 }
 
@@ -222,19 +214,12 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 {
   this->collector_.remove_node(node_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on node remove: ") + ex.what());
-    }
+  try {
+    this->trigger_entity_recollect(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition on node remove: ") + ex.what());
   }
 }
 
@@ -379,6 +364,10 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     return;
   }
 
+  assert(
+    (void("cannot execute an AnyExecutable without a valid callback group"),
+    any_exec.callback_group));
+
   if (any_exec.timer) {
     TRACETOOLS_TRACEPOINT(
       rclcpp_executor_execute,
@@ -403,9 +392,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 
   // Reset the callback_group, regardless of type
-  if (any_exec.callback_group) {
-    any_exec.callback_group->can_be_taken_from().store(true);
-  }
+  any_exec.callback_group->can_be_taken_from().store(true);
 }
 
 template<typename Taker, typename Handler>
@@ -642,7 +629,6 @@ Executor::collect_entities()
   // In the case that an entity already has an expired weak pointer
   // before being removed from the waitset, additionally prune the waitset.
   this->wait_set_.prune_deleted_entities();
-  this->entities_need_rebuild_.store(false);
 }
 
 void
@@ -655,7 +641,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   {
     std::lock_guard<std::mutex> guard(mutex_);
-    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+    if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
       this->collect_entities();
     }
   }
@@ -664,6 +650,13 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
+  } else {
+    if (this->wait_result_->kind() == WaitResultKind::Ready && current_notify_waitable_) {
+      auto & rcl_wait_set = this->wait_result_->get_wait_set().get_rcl_wait_set();
+      if (current_notify_waitable_->is_ready(rcl_wait_set)) {
+        current_notify_waitable_->execute(current_notify_waitable_->take_data());
+      }
+    }
   }
 }
 
@@ -689,7 +682,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
       if (entity_iter != current_collection_.timers.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           current_timer_index++;
           continue;
         }
@@ -719,7 +712,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         subscription->get_subscription_handle().get());
       if (entity_iter != current_collection_.subscriptions.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.subscription = subscription;
@@ -735,7 +728,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
       if (entity_iter != current_collection_.services.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.service = service;
@@ -751,7 +744,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
       if (entity_iter != current_collection_.clients.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.client = client;
@@ -767,7 +760,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.waitables.find(waitable.get());
       if (entity_iter != current_collection_.waitables.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.waitable = waitable;

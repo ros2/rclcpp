@@ -110,7 +110,7 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
 StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
 {
-  if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+  if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
     this->collect_entities();
   }
   auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
@@ -119,6 +119,13 @@ StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
     return {};
+  } else {
+    if (wait_result.kind() == WaitResultKind::Ready && current_notify_waitable_) {
+      auto & rcl_wait_set = wait_result.get_wait_set().get_rcl_wait_set();
+      if (current_notify_waitable_->is_ready(rcl_wait_set)) {
+        current_notify_waitable_->execute(current_notify_waitable_->take_data());
+      }
+    }
   }
   return wait_result;
 }
