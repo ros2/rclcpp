@@ -651,10 +651,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
   } else {
-    if (this->wait_result_->kind() == WaitResultKind::Ready && notify_waitable_) {
+    if (this->wait_result_->kind() == WaitResultKind::Ready && current_notify_waitable_) {
       auto & rcl_wait_set = this->wait_result_->get_wait_set().get_rcl_wait_set();
-      if (notify_waitable_->is_ready(rcl_wait_set)) {
-        notify_waitable_->execute(notify_waitable_->take_data());
+      if (current_notify_waitable_->is_ready(rcl_wait_set)) {
+        current_notify_waitable_->execute(current_notify_waitable_->take_data());
       }
     }
   }
