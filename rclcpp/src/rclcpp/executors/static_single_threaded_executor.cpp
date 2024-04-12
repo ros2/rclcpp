@@ -43,6 +43,24 @@ StaticSingleThreadedExecutor::spin()
   }
 }
 
+
+void
+StaticSingleThreadedExecutor::spin(
+  const std::function<void(const std::exception & e)> & exception_handler)
+{
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin() called while already spinning");
+  }
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+
+  // This is essentially the contents of the rclcpp::Executor::wait_for_work method,
+  // except we need to keep the wait result to reproduce the StaticSingleThreadedExecutor
+  // behavior.
+  while (rclcpp::ok(this->context_) && spinning.load()) {
+    this->spin_once_impl(std::chrono::nanoseconds(-1), exception_handler);
+  }
+}
+
 void
 StaticSingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
 {
@@ -98,11 +116,31 @@ StaticSingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_durati
 void
 StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
+  spin_once_impl(timeout, std::function<void(const std::exception & e)>());
+}
+
+void
+StaticSingleThreadedExecutor::spin_once_impl(
+  std::chrono::nanoseconds timeout,
+  const std::function<void(const std::exception & e)> & exception_handler)
+{
   if (rclcpp::ok(context_) && spinning.load()) {
     std::lock_guard<std::mutex> guard(mutex_);
     auto wait_result = this->collect_and_wait(timeout);
     if (wait_result.has_value()) {
-      this->execute_ready_executables(current_collection_, wait_result.value(), true);
+      if(exception_handler) {
+        try {
+          this->execute_ready_executables(current_collection_, wait_result.value(), true);
+        } catch (const std::exception & e) {
+          RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger("rclcpp"),
+            "Exception while spinning : " << e.what());
+
+          exception_handler(e);
+        }
+      } else {
+        this->execute_ready_executables(current_collection_, wait_result.value(), true);
+      }
     }
   }
 }

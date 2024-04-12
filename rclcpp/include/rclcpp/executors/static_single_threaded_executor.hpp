@@ -68,6 +68,16 @@ public:
   void
   spin() override;
 
+  /**
+   * \sa rclcpp::SingleThreadedExecutor:spin() for more details
+   * \throws std::runtime_error when spin() called while already spinning
+   * @param exception_handler will be called for every exception in the processing threads
+   *
+   * The exception_handler shall rethrow the exception it if wants to terminate the program.
+   */RCLCPP_PUBLIC
+  virtual void
+  spin(const std::function<void(const std::exception & e)> & exception_handler) override;
+
   /// Static executor implementation of spin some
   /**
    * This non-blocking function will execute entities that
@@ -124,6 +134,11 @@ protected:
 
   void
   spin_once_impl(std::chrono::nanoseconds timeout) override;
+
+  void
+  spin_once_impl(
+    std::chrono::nanoseconds timeout,
+    const std::function<void(const std::exception & e)> & exception_handler);
 
   std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
   collect_and_wait(std::chrono::nanoseconds timeout);

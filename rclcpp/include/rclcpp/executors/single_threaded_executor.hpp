@@ -65,6 +65,18 @@ public:
   void
   spin() override;
 
+  /// Single-threaded implementation of spin.
+  /**
+   * \sa rclcpp::SingleThreadedExecutor:spin() for more details
+   * \throws std::runtime_error when spin() called while already spinning
+   * @param exception_handler will be called for every exception in the processing threads
+   *
+   * The exception_handler shall rethrow the exception it if wants to terminate the program.
+   */
+  RCLCPP_PUBLIC
+  void
+  spin(const std::function<void(const std::exception & e)> & exception_handler) override;
+
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
 };

@@ -203,7 +203,7 @@ public:
     executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     executor->add_node(lifecycle_node->get_node_base_interface());
     executor->add_node(lifecycle_client->get_node_base_interface());
-    spinner_ = std::thread(&rclcpp::executors::SingleThreadedExecutor::spin, executor);
+    spinner_ = std::thread([this]() {executor->spin();});
     performance_test_fixture::PerformanceTest::SetUp(state);
   }
 
