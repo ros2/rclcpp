@@ -154,11 +154,15 @@ bool StaticSingleThreadedExecutor::execute_ready_executables(
     auto entity_iter = collection.timers.find(timer->get_timer_handle().get());
     if (entity_iter != collection.timers.end()) {
       wait_result.clear_timer_with_index(current_timer_index);
-      if (timer->call()) {
-        execute_timer(timer);
-        any_ready_executable = true;
-        if (spin_once) {return any_ready_executable;}
+      auto data = timer->call();
+      if (!data) {
+        // someone canceled the timer between is_ready and call
+        continue;
       }
+
+      execute_timer(std::move(timer), data);
+      any_ready_executable = true;
+      if (spin_once) {return any_ready_executable;}
     }
   }
 

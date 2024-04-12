@@ -370,7 +370,8 @@ public:
           ++it;
           continue;
         }
-        if (!timer->call()) {
+        auto data = timer->call();
+        if (!data) {
           // timer was cancelled, skip it.
           ++it;
           continue;
@@ -379,6 +380,7 @@ public:
         any_exec.timer = timer;
         any_exec.callback_group = group;
         any_exec.node_base = get_node_by_group(group, weak_groups_to_nodes);
+        any_exec.data = data;
         timer_handles_.erase(it);
         return;
       }

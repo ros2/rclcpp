@@ -40,10 +40,12 @@ EventsExecutor::EventsExecutor(
   // The timers manager can be used either to only track timers (in this case an expired
   // timer will generate an executor event and then it will be executed by the executor thread)
   // or it can also take care of executing expired timers in its dedicated thread.
-  std::function<void(const rclcpp::TimerBase *)> timer_on_ready_cb = nullptr;
+  std::function<void(const rclcpp::TimerBase *,
+    const std::shared_ptr<void> &)> timer_on_ready_cb = nullptr;
   if (!execute_timers_separate_thread) {
-    timer_on_ready_cb = [this](const rclcpp::TimerBase * timer_id) {
-        ExecutorEvent event = {timer_id, -1, ExecutorEventType::TIMER_EVENT, 1};
+    timer_on_ready_cb =
+      [this](const rclcpp::TimerBase * timer_id, const std::shared_ptr<void> & data) {
+        ExecutorEvent event = {timer_id, data, -1, ExecutorEventType::TIMER_EVENT, 1};
         this->events_queue_->enqueue(event);
       };
   }
@@ -88,7 +90,7 @@ EventsExecutor::EventsExecutor(
       }
 
       ExecutorEvent event =
-      {notify_waitable_entity_id, waitable_data, ExecutorEventType::WAITABLE_EVENT, 1};
+      {notify_waitable_entity_id, nullptr, waitable_data, ExecutorEventType::WAITABLE_EVENT, 1};
       this->events_queue_->enqueue(event);
     });
 
@@ -325,7 +327,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
     case ExecutorEventType::TIMER_EVENT:
       {
         timers_manager_->execute_ready_timer(
-          static_cast<const rclcpp::TimerBase *>(event.entity_key));
+          static_cast<const rclcpp::TimerBase *>(event.entity_key), event.data);
         break;
       }
     case ExecutorEventType::WAITABLE_EVENT:
@@ -485,7 +487,7 @@ EventsExecutor::create_entity_callback(
 {
   std::function<void(size_t)>
   callback = [this, entity_key, event_type](size_t num_events) {
-      ExecutorEvent event = {entity_key, -1, event_type, num_events};
+      ExecutorEvent event = {entity_key, nullptr, -1, event_type, num_events};
       this->events_queue_->enqueue(event);
     };
   return callback;
@@ -497,7 +499,7 @@ EventsExecutor::create_waitable_callback(const rclcpp::Waitable * entity_key)
   std::function<void(size_t, int)>
   callback = [this, entity_key](size_t num_events, int waitable_data) {
       ExecutorEvent event =
-      {entity_key, waitable_data, ExecutorEventType::WAITABLE_EVENT, num_events};
+      {entity_key, nullptr, waitable_data, ExecutorEventType::WAITABLE_EVENT, num_events};
       this->events_queue_->enqueue(event);
     };
   return callback;
