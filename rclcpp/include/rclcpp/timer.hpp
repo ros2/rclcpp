@@ -326,10 +326,10 @@ public:
     >::type * = nullptr
   >
   void
-  execute_callback_delegate(const rcl_timer_call_info_t & timer_call_info_)
+  execute_callback_delegate(const rcl_timer_call_info_t & timer_call_info)
   {
-    const TimerInfo info{Time{timer_call_info_.expected_call_time, clock_->get_clock_type()},
-      Time{timer_call_info_.actual_call_time, clock_->get_clock_type()}};
+    const TimerInfo info{Time{timer_call_info.expected_call_time, clock_->get_clock_type()},
+      Time{timer_call_info.actual_call_time, clock_->get_clock_type()}};
     callback_(info);
   }
 

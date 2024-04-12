@@ -487,7 +487,7 @@ protected:
    */
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & dataPtr);
+  execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr);
 
   /// Run service server executable.
   /**
