@@ -97,12 +97,12 @@ TEST(TestCallbackGroup, valid_callback_group)
   auto next_executable = executor.next();
   EXPECT_EQ(timer, next_executable.timer);
   EXPECT_EQ(cbg, next_executable.callback_group);
+  EXPECT_NE(nullptr, next_executable.data);
 
   EXPECT_EQ(nullptr, next_executable.client);
   EXPECT_EQ(nullptr, next_executable.service);
   EXPECT_EQ(nullptr, next_executable.subscription);
   EXPECT_EQ(nullptr, next_executable.waitable);
-  EXPECT_EQ(nullptr, next_executable.data);
 
   rclcpp::shutdown();
 }
