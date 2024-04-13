@@ -420,6 +420,10 @@ Executor::execute_any_executable(
     return;
   }
 
+  assert(
+    (void("cannot execute an AnyExecutable without a valid callback group"),
+    any_exec.callback_group));
+
   if (any_exec.timer) {
     TRACETOOLS_TRACEPOINT(
       rclcpp_executor_execute,
@@ -450,18 +454,7 @@ Executor::execute_any_executable(
     }, exception_handler);
   }
   // Reset the callback_group, regardless of type
-  if(any_exec.callback_group) {
-    any_exec.callback_group->can_be_taken_from().store(true);
-  }
-  // Wake the wait, because it may need to be recalculated or work that
-  // was previously blocked is now available.
-  try {
-    interrupt_guard_condition_->trigger();
-  } catch (const rclcpp::exceptions::RCLError & ex) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to trigger guard condition from execute_any_executable: ") + ex.what());
-  }
+  any_exec.callback_group->can_be_taken_from().store(true);
 }
 
 
