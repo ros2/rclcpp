@@ -26,14 +26,6 @@
 
 using namespace std::chrono_literals;
 
-enum class ClockType
-{
-  RCL_STEADY_TIME,
-  RCL_SYSTEM_TIME,
-  RCL_ROS_TIME,
-};
-
-
 class TestClockWakeup : public ::testing::TestWithParam<rcl_clock_type_e>
 {
 public:
