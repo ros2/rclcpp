@@ -376,7 +376,7 @@ public:
    * \return True if the executor is currently spinning.
    */
   RCLCPP_PUBLIC
-  virtual bool
+  bool
   is_spinning();
 
 protected:
