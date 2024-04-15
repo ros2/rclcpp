@@ -384,8 +384,8 @@ protected:
   /**
   * This constructor is intended to be used by any derived executor,
   * that explicitly does not want to use the default implementation provided
-  * by this class. This constructor is guaranteed, to not modify the system
-  * state.
+  * by this class.
+  * This constructor is guaranteed to not modify the system state.
   * */
   explicit Executor(const std::shared_ptr<rclcpp::Context> & context);
 
