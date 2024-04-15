@@ -16,31 +16,34 @@
 #include <string>
 #include <type_traits>
 
-#include "rclcpp/future_return_code.hpp"
+#include "rclcpp/spin_until_complete_return_code.hpp"
 
 namespace rclcpp
 {
 
 std::ostream &
-operator<<(std::ostream & os, const rclcpp::FutureReturnCode & future_return_code)
+operator<<(
+  std::ostream & os,
+  const rclcpp::SpinUntilCompleteReturnCode & spin_until_complete_return_code)
 {
-  return os << to_string(future_return_code);
+  return os << to_string(spin_until_complete_return_code);
 }
 
 std::string
-to_string(const rclcpp::FutureReturnCode & future_return_code)
+to_string(const rclcpp::SpinUntilCompleteReturnCode & spin_until_complete_return_code)
 {
-  using enum_type = std::underlying_type<FutureReturnCode>::type;
+  using enum_type = std::underlying_type<SpinUntilCompleteReturnCode>::type;
   std::string prefix = "Unknown enum value (";
-  std::string ret_as_string = std::to_string(static_cast<enum_type>(future_return_code));
-  switch (future_return_code) {
-    case FutureReturnCode::SUCCESS:
+  std::string ret_as_string = std::to_string(
+    static_cast<enum_type>(spin_until_complete_return_code));
+  switch (spin_until_complete_return_code) {
+    case SpinUntilCompleteReturnCode::SUCCESS:
       prefix = "SUCCESS (";
       break;
-    case FutureReturnCode::INTERRUPTED:
+    case SpinUntilCompleteReturnCode::INTERRUPTED:
       prefix = "INTERRUPTED (";
       break;
-    case FutureReturnCode::TIMEOUT:
+    case SpinUntilCompleteReturnCode::TIMEOUT:
       prefix = "TIMEOUT (";
       break;
   }

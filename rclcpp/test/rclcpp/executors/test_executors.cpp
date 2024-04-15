@@ -220,6 +220,26 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete)
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 }
 
+// Check executor exits immediately if condition is complete.
+TYPED_TEST(TestExecutors, testSpinUntilCompleteCallable)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  executor.add_node(this->node);
+
+  // test success of an immediately completed condition
+  auto condition = []() {return true;};
+
+  // spin_until_complete is expected to exit immediately, but would block up until its
+  // timeout if the future is not checked before spin_once_impl.
+  auto start = std::chrono::steady_clock::now();
+  auto ret = executor.spin_until_complete(condition, 1s);
+  executor.remove_node(this->node, true);
+  // Check it didn't reach timeout
+  EXPECT_GT(500ms, (std::chrono::steady_clock::now() - start));
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+}
+
 // Same test, but uses a shared future.
 TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete)
 {

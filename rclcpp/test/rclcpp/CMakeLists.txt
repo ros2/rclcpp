@@ -110,6 +110,12 @@ if(TARGET test_function_traits)
   target_link_libraries(test_function_traits ${PROJECT_NAME})
 endif()
 ament_add_gtest(
+  test_spin_until_complete_return_code
+  test_spin_until_complete_return_code.cpp)
+if(TARGET test_spin_until_complete_return_code)
+  target_link_libraries(test_spin_until_complete_return_code ${PROJECT_NAME})
+endif()
+ament_add_gtest(
   test_future_return_code
   test_future_return_code.cpp)
 if(TARGET test_future_return_code)
