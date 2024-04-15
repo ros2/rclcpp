@@ -272,14 +272,14 @@ Executor::spin_node_once_nanoseconds(
 
 rclcpp::FutureReturnCode Executor::spin_until_future_complete_impl(
   std::chrono::nanoseconds timeout,
-  const std::function<std::future_status ()> & get_future_status)
+  const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & get_future_status)
 {
   // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
 
   // Check the future before entering the while loop.
   // If the future is already complete, don't try to spin.
-  std::future_status status = get_future_status();
+  std::future_status status = get_future_status(std::chrono::seconds(0));
   if (status == std::future_status::ready) {
     return FutureReturnCode::SUCCESS;
   }
@@ -301,7 +301,7 @@ rclcpp::FutureReturnCode Executor::spin_until_future_complete_impl(
     spin_once_impl(timeout_left);
 
     // Check if the future is set, return SUCCESS if it is.
-    status = get_future_status();
+    status = get_future_status(std::chrono::seconds(0));
     if (status == std::future_status::ready) {
       return FutureReturnCode::SUCCESS;
     }

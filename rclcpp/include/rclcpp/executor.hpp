@@ -355,8 +355,8 @@ public:
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
     return spin_until_future_complete_impl(std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout), [&future] () {
-               return future.wait_for(std::chrono::seconds(0));
+      timeout), [&future] (std::chrono::nanoseconds wait_time) {
+               return future.wait_for(wait_time);
     }
     );
   }
@@ -406,17 +406,17 @@ protected:
   /// Spin (blocking) until the get_future_status returns ready, max_duration is reached,
   /// or rclcpp is interrupted.
   /**
-   * \param[in] get_future_status A function returning the status of a future that is been waited for.
    * \param[in] max_duration Optional duration parameter, which gets passed to Executor::spin_node_once.
    *   `-1` is block forever, `0` is non-blocking.
    *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
    *   code.
+   * \param[in] wait_for_future A function waiting for a future to become ready.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
   RCLCPP_PUBLIC
   virtual FutureReturnCode spin_until_future_complete_impl(
     std::chrono::nanoseconds max_duration,
-    const std::function<std::future_status ()> & get_future_status);
+    const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future);
 
   /// Collect work and execute available work, optionally within a duration.
   /**
