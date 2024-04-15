@@ -382,7 +382,7 @@ public:
 protected:
   /// Constructor that will not initialize any non-trivial members.
   /**
-  * This constructor is intended to be used by any derived executor,
+  * This constructor is intended to be used by any derived executor
   * that explicitly does not want to use the default implementation provided
   * by this class.
   * This constructor is guaranteed to not modify the system state.
