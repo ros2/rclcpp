@@ -403,6 +403,17 @@ protected:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds timeout);
 
+  /// Spin (blocking) until the get_future_status returns ready, max_duration is reached,
+  /// or rclcpp is interrupted.
+  /**
+   * \param[in] get_future_status A function returning the status of a future that is been waited for.
+   * \param[in] max_duration Optional duration parameter, which gets passed to Executor::spin_node_once.
+   *   `-1` is block forever, `0` is non-blocking.
+   *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
+   *   code.
+   * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
+   */
+  RCLCPP_PUBLIC
   virtual FutureReturnCode spin_until_future_complete_impl(
     std::chrono::nanoseconds max_duration,
     const std::function<std::future_status ()> & get_future_status);
