@@ -242,18 +242,30 @@ public:
    * spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
    * function to be non-blocking.
    */
-  RCLCPP_PUBLIC
-  virtual void
+  template<typename RepT = int64_t, typename T = std::milli>
+  void
   spin_node_once(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+    std::chrono::duration<RepT, T> timeout = std::chrono::duration<RepT, T>(-1))
+  {
+    return spin_node_once_nanoseconds(
+      node,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
-  RCLCPP_PUBLIC
-  virtual void
+  template<typename NodeT = rclcpp::Node, typename RepT = int64_t, typename T = std::milli>
+  void
   spin_node_once(
-    const std::shared_ptr<rclcpp::Node> & node,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+    std::shared_ptr<NodeT> node,
+    std::chrono::duration<RepT, T> timeout = std::chrono::duration<RepT, T>(-1))
+  {
+    return spin_node_once_nanoseconds(
+      node->get_node_base_interface(),
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   /// Add a node, complete all immediately available work, and remove the node.
   /**

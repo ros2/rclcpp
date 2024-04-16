@@ -238,28 +238,6 @@ Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-Executor::spin_node_once(
-  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
-  std::chrono::nanoseconds timeout)
-{
-  return spin_node_once_nanoseconds(
-    node,
-    std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
-  );
-}
-
-void
-Executor::spin_node_once(
-  const std::shared_ptr<rclcpp::Node> & node,
-  std::chrono::nanoseconds timeout)
-{
-  return spin_node_once_nanoseconds(
-    node->get_node_base_interface(),
-    timeout
-  );
-}
-
-void
 Executor::spin_node_once_nanoseconds(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
   std::chrono::nanoseconds timeout)
