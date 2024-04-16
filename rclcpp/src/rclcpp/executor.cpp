@@ -50,6 +50,14 @@ static constexpr rclcpp::SubscriptionWaitSetMask kDefaultSubscriptionMask = {tru
 
 class rclcpp::ExecutorImplementation {};
 
+Executor::Executor(const std::shared_ptr<rclcpp::Context> & context)
+: spinning(false),
+  entities_need_rebuild_(true),
+  collector_(nullptr),
+  wait_set_({}, {}, {}, {}, {}, {}, context)
+{
+}
+
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
@@ -120,7 +128,8 @@ Executor::~Executor()
   }
 }
 
-void Executor::trigger_entity_recollect(bool notify)
+void
+Executor::trigger_entity_recollect(bool notify)
 {
   this->entities_need_rebuild_.store(true);
 
@@ -238,6 +247,59 @@ Executor::spin_node_once_nanoseconds(
   // non-blocking = true
   spin_once(timeout);
   this->remove_node(node, false);
+}
+
+rclcpp::FutureReturnCode
+Executor::spin_until_future_complete_impl(
+  std::chrono::nanoseconds timeout,
+  const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future)
+{
+  // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
+  // inside a callback executed by an executor.
+
+  // Check the future before entering the while loop.
+  // If the future is already complete, don't try to spin.
+  std::future_status status = wait_for_future(std::chrono::seconds(0));
+  if (status == std::future_status::ready) {
+    return FutureReturnCode::SUCCESS;
+  }
+
+  auto end_time = std::chrono::steady_clock::now();
+  std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    timeout);
+  if (timeout_ns > std::chrono::nanoseconds::zero()) {
+    end_time += timeout_ns;
+  }
+  std::chrono::nanoseconds timeout_left = timeout_ns;
+
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_until_future_complete() called while already spinning");
+  }
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  while (rclcpp::ok(this->context_) && spinning.load()) {
+    // Do one item of work.
+    spin_once_impl(timeout_left);
+
+    // Check if the future is set, return SUCCESS if it is.
+    status = wait_for_future(std::chrono::seconds(0));
+    if (status == std::future_status::ready) {
+      return FutureReturnCode::SUCCESS;
+    }
+    // If the original timeout is < 0, then this is blocking, never TIMEOUT.
+    if (timeout_ns < std::chrono::nanoseconds::zero()) {
+      continue;
+    }
+    // Otherwise check if we still have time to wait, return TIMEOUT if not.
+    auto now = std::chrono::steady_clock::now();
+    if (now >= end_time) {
+      return FutureReturnCode::TIMEOUT;
+    }
+    // Subtract the elapsed time from the original timeout.
+    timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
+  }
+
+  // The future did not complete before ok() returned false, return INTERRUPTED.
+  return FutureReturnCode::INTERRUPTED;
 }
 
 void
