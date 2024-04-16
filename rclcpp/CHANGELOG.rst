@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove references to index.ros.org. (`#2504 <https://github.com/ros2/rclcpp/issues/2504>`_)
+* Reduce overhead for inheriting from rclcpp::Executor when base functionality is not reused (`#2506 <https://github.com/ros2/rclcpp/issues/2506>`_)
+* Contributors: Chris Lalancette, William Woodall, jmachowinski
+
 28.0.1 (2024-04-16)
 -------------------
 * [wjwwood] Updated "Data race fixes" (`#2500 <https://github.com/ros2/rclcpp/issues/2500>`_)
@@ -34,7 +40,7 @@ Changelog for package rclcpp
 * Ensure waitables handle guard condition retriggering (`#2483 <https://github.com/ros2/rclcpp/issues/2483>`_)
   Co-authored-by: Michael Carroll <mjcarroll@intrinsic.ai>
 * fix: init concatenated_vector with begin() & end() (`#2492 <https://github.com/ros2/rclcpp/issues/2492>`_)
-  *. this commit will fix the warning [-Wstringop-overflow=] `#2461 <https://github.com/ros2/rclcpp/issues/2461>`_
+  * this commit will fix the warning [-Wstringop-overflow=] `#2461 <https://github.com/ros2/rclcpp/issues/2461>`_
 * Use the same context for the specified node in rclcpp::spin functions (`#2433 <https://github.com/ros2/rclcpp/issues/2433>`_)
   * Use the same conext for the specified node in rclcpp::spin_xx functions
   * Add test for spinning with non-default-context
