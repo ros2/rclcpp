@@ -113,10 +113,10 @@ protected:
 };
 
 INSTANTIATE_TEST_SUITE_P(
-        Clocks,
-        TestClockWakeup,
-        ::testing::Values(
-            RCL_SYSTEM_TIME, RCL_ROS_TIME, RCL_STEADY_TIME
+  Clocks,
+  TestClockWakeup,
+  ::testing::Values(
+    RCL_SYSTEM_TIME, RCL_ROS_TIME, RCL_STEADY_TIME
 ));
 
 TEST_P(TestClockWakeup, wakeup_sleep) {
@@ -182,20 +182,21 @@ TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
 
   std::vector<std::thread> threads;
 
-  for(size_t nr = 0; nr < thread_finished.size(); nr++) {
-    threads.push_back(std::thread(
+  for (size_t nr = 0; nr < thread_finished.size(); nr++) {
+    threads.push_back(
+      std::thread(
         [&clock, &thread_finished, nr]()
         {
-        // make sure the thread starts sleeping late
+          // make sure the thread starts sleeping late
           clock->sleep_until(clock->now() + std::chrono::seconds(10));
           thread_finished[nr] = true;
-      }));
+        }));
   }
 
   // wait a bit so all threads can execute the sleep_until
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  for(const bool & finished : thread_finished) {
+  for (const bool & finished : thread_finished) {
     EXPECT_FALSE(finished);
   }
 
@@ -206,8 +207,8 @@ TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
   bool threads_finished = false;
   while (!threads_finished && start_time + std::chrono::seconds(1) > cur_time) {
     threads_finished = true;
-    for(const bool finished : thread_finished) {
-      if(!finished) {
+    for (const bool finished : thread_finished) {
+      if (!finished) {
         threads_finished = false;
       }
     }
@@ -216,11 +217,11 @@ TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
     cur_time = std::chrono::steady_clock::now();
   }
 
-  for(const bool finished : thread_finished) {
+  for (const bool finished : thread_finished) {
     EXPECT_TRUE(finished);
   }
 
-  for(auto & thread : threads) {
+  for (auto & thread : threads) {
     thread.join();
   }
 

@@ -128,7 +128,8 @@ Executor::~Executor()
   }
 }
 
-void Executor::trigger_entity_recollect(bool notify)
+void
+Executor::trigger_entity_recollect(bool notify)
 {
   this->entities_need_rebuild_.store(true);
 
@@ -248,23 +249,24 @@ Executor::spin_node_once_nanoseconds(
   this->remove_node(node, false);
 }
 
-rclcpp::FutureReturnCode Executor::spin_until_future_complete_impl(
+rclcpp::FutureReturnCode
+Executor::spin_until_future_complete_impl(
   std::chrono::nanoseconds timeout,
-  const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & get_future_status)
+  const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future)
 {
   // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
 
   // Check the future before entering the while loop.
   // If the future is already complete, don't try to spin.
-  std::future_status status = get_future_status(std::chrono::seconds(0));
+  std::future_status status = wait_for_future(std::chrono::seconds(0));
   if (status == std::future_status::ready) {
     return FutureReturnCode::SUCCESS;
   }
 
   auto end_time = std::chrono::steady_clock::now();
   std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
+    timeout);
   if (timeout_ns > std::chrono::nanoseconds::zero()) {
     end_time += timeout_ns;
   }
@@ -279,7 +281,7 @@ rclcpp::FutureReturnCode Executor::spin_until_future_complete_impl(
     spin_once_impl(timeout_left);
 
     // Check if the future is set, return SUCCESS if it is.
-    status = get_future_status(std::chrono::seconds(0));
+    status = wait_for_future(std::chrono::seconds(0));
     if (status == std::future_status::ready) {
       return FutureReturnCode::SUCCESS;
     }

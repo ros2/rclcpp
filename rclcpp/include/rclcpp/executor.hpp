@@ -366,10 +366,11 @@ public:
     const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
-    return spin_until_future_complete_impl(std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout), [&future] (std::chrono::nanoseconds wait_time) {
-               return future.wait_for(wait_time);
-    }
+    return spin_until_future_complete_impl(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout),
+      [&future](std::chrono::nanoseconds wait_time) {
+        return future.wait_for(wait_time);
+      }
     );
   }
 
