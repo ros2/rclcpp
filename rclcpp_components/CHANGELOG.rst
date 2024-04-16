@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.0.1 (2024-04-16)
+-------------------
+
 28.0.0 (2024-03-28)
 -------------------
 * Add EXECUTOR docs (`#2440 <https://github.com/ros2/rclcpp/issues/2440>`_)

@@ -2,6 +2,141 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.0.1 (2024-04-16)
+-------------------
+* [wjwwood] Updated "Data race fixes" (`#2500 <https://github.com/ros2/rclcpp/issues/2500>`_)
+  * Fix callback group logic in executor
+  * fix: Fixed unnecessary copy of wait_set
+  * fix(executor): Fixed race conditions with rebuild of wait_sets
+  Before this change, the rebuild of wait set would be triggered
+  after the wait set was waken up. With bad timing, this could
+  lead to the rebuild not happening with multi threaded executor.
+  * fix(Executor): Fixed lost of entities rebuild request
+  * chore: Added assert for not set callback_group in execute_any_executable
+  * Add test for cbg getting reset
+  Co-authored-by: Janosch Machowinski <j.machowinski@nospam.org>
+  * chore: renamed test cases to snake_case
+  * style
+  * fixup test to avoid polling and short timeouts
+  * fix: Use correct notify_waitable\_ instance
+  * fix(StaticSingleThreadedExecutor): Added missing special case handling for current_notify_waitable\_
+  * fix(TestCallbackGroup): Fixed test after change to timers
+  ---------
+  Co-authored-by: Janosch Machowinski <j.machowinski@cellumation.com>
+  Co-authored-by: Michael Carroll <mjcarroll@intrinsic.ai>
+  Co-authored-by: Janosch Machowinski <j.machowinski@nospam.org>
+* fixup var names to snake case (`#2501 <https://github.com/ros2/rclcpp/issues/2501>`_)
+* Added optional TimerInfo to timer callback (`#2343 <https://github.com/ros2/rclcpp/issues/2343>`_)
+  Co-authored-by: Alexis Tsogias <a.tsogias@cellumation.com>
+  Co-authored-by: Janosch Machowinski <J.Machowinski@cellumation.com>
+* Fix uninitialized memory in test (`#2498 <https://github.com/ros2/rclcpp/issues/2498>`_)
+  When I added in the tests for large messages, I made a mistake and reserved space in the strings, but didn't actually expand it.  Thus, we were writing into uninitialized memory.  Fix this by just using the correct constructor for string, which will allocate and initialize the memory properly.
+* Ensure waitables handle guard condition retriggering (`#2483 <https://github.com/ros2/rclcpp/issues/2483>`_)
+  Co-authored-by: Michael Carroll <mjcarroll@intrinsic.ai>
+* fix: init concatenated_vector with begin() & end() (`#2492 <https://github.com/ros2/rclcpp/issues/2492>`_)
+  *. this commit will fix the warning [-Wstringop-overflow=] `#2461 <https://github.com/ros2/rclcpp/issues/2461>`_
+* Use the same context for the specified node in rclcpp::spin functions (`#2433 <https://github.com/ros2/rclcpp/issues/2433>`_)
+  * Use the same conext for the specified node in rclcpp::spin_xx functions
+  * Add test for spinning with non-default-context
+  * Format code
+  ---------
+* Disable compare-function-pointers in test_utilities (`#2489 <https://github.com/ros2/rclcpp/issues/2489>`_)
+* address ambiguous auto variable. (`#2481 <https://github.com/ros2/rclcpp/issues/2481>`_)
+* Increase the cppcheck timeout to 1200 seconds (`#2484 <https://github.com/ros2/rclcpp/issues/2484>`_)
+* Removed test_timers_manager clang warning (`#2479 <https://github.com/ros2/rclcpp/issues/2479>`_)
+* Flaky timer test fix (`#2469 <https://github.com/ros2/rclcpp/issues/2469>`_)
+  * fix(time_source): Fixed possible race condition
+  * fix(test_executors_time_cancel_behaviour): Fixed multiple race conditions
+  ---------
+  Co-authored-by: Janosch Machowinski <j.machowinski@nospam.org>
+* Add tracepoint for generic publisher/subscriber (`#2448 <https://github.com/ros2/rclcpp/issues/2448>`_)
+* update rclcpp::Waitable API to use references and const (`#2467 <https://github.com/ros2/rclcpp/issues/2467>`_)
+* Utilize rclcpp::WaitSet as part of the executors (`#2142 <https://github.com/ros2/rclcpp/issues/2142>`_)
+  * Deprecate callback_group call taking context
+  * Add base executor objects that can be used by implementors
+  * Template common operations
+  * Address reviewer feedback:
+  * Add callback to EntitiesCollector constructor
+  * Make function to check automatically added callback groups take a list
+  * Lint
+  * Address reviewer feedback and fix templates
+  * Lint and docs
+  * Make executor own the notify waitable
+  * Add pending queue to collector, remove from waitable
+  Also change node's get_guard_condition to return shared_ptr
+  * Change interrupt guard condition to shared_ptr
+  Check if guard condition is valid before adding it to the waitable
+  * Lint and docs
+  * Utilize rclcpp::WaitSet as part of the executors
+  * Don't exchange atomic twice
+  * Fix add_node and add more tests
+  * Make get_notify_guard_condition follow API tick-tock
+  * Improve callback group tick-tocking
+  * Don't lock twice
+  * Address reviewer feedback
+  * Add thread safety annotations and make locks consistent
+  * @wip
+  * Reset callback groups for multithreaded executor
+  * Avoid many small function calls when building executables
+  * Re-trigger guard condition if buffer has data
+  * Address reviewer feedback
+  * Trace points
+  * Remove tracepoints
+  * Reducing diff
+  * Reduce diff
+  * Uncrustify
+  * Restore tests
+  * Back to weak_ptr and reduce test time
+  * reduce diff and lint
+  * Restore static single threaded tests that weren't working before
+  * Restore more tests
+  * Fix multithreaded test
+  * Fix assert
+  * Fix constructor test
+  * Change ready_executables signature back
+  * Don't enforce removing callback groups before nodes
+  * Remove the "add_valid_node" API
+  * Only notify if the trigger condition is valid
+  * Only trigger if valid and needed
+  * Fix spin_some/spin_all implementation
+  * Restore single threaded executor
+  * Picking ABI-incompatible executor changes
+  * Add PIMPL
+  * Additional waitset prune
+  * Fix bad merge
+  * Expand test timeout
+  * Introduce method to clear expired entities from a collection
+  * Make sure to call remove_expired_entities().
+  * Prune queued work when callback group is removed
+  * Prune subscriptions from dynamic storage
+  * Styles fixes.
+  * Re-trigger guard conditions
+  * Condense to just use watiable.take_data
+  * Lint
+  * Address reviewer comments (nits)
+  * Lock mutex when copying
+  * Refactors to static single threaded based on reviewers
+  * More small refactoring
+  * Lint
+  * Lint
+  * Add ready executable accessors to WaitResult
+  * Make use of accessors from wait_set
+  * Fix tests
+  * Fix more tests
+  * Tidy up single threaded executor implementation
+  * Don't null out timer, rely on call
+  * change how timers are checked from wait result in executors
+  * peak -> peek
+  * fix bug in next_waitable logic
+  * fix bug in StaticSTE that broke the add callback groups to executor tests
+  * style
+  ---------
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+  Co-authored-by: William Woodall <william@osrfoundation.org>
+* fix flakiness in TestTimersManager unit-test (`#2468 <https://github.com/ros2/rclcpp/issues/2468>`_)
+  the previous version of the test was relying on the assumption that a timer with 1ms period gets called at least 6 times if the main thread waits 15ms. this is true most of the times, but it's not guaranteed, especially when running the test on windows CI servers. the new version of the test makes no assumptions on how much time it takes for the timers manager to invoke the timers, but rather focuses on ensuring that they are called the right amount of times, which is what's important for the purpose of the test
+* Contributors: Alberto Soragna, Alejandro Hernández Cordero, Chris Lalancette, Homalozoa X, Kotaro Yoshimoto, Michael Carroll, Tomoya Fujita, William Woodall, h-suzuki-isp, jmachowinski
+
 28.0.0 (2024-03-28)
 -------------------
 * fix spin_some_max_duration unit-test for events-executor (`#2465 <https://github.com/ros2/rclcpp/issues/2465>`_)
