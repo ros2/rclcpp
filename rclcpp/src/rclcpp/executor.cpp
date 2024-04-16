@@ -396,16 +396,17 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
 }
 
 template<typename Function>
-void execute_guarded(
-  const Function & fun,
+void
+execute_guarded(
+  const Function & function,
   const std::function<void(const std::exception & e)> & exception_handler)
 {
   try {
-    fun();
+    function();
   } catch (const std::exception & e) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("rclcpp"),
-      "Exception while spinning : " << e.what());
+      "Exception while spinning: " << e.what());
 
     exception_handler(e);
   }
@@ -456,7 +457,6 @@ Executor::execute_any_executable(
   // Reset the callback_group, regardless of type
   any_exec.callback_group->can_be_taken_from().store(true);
 }
-
 
 template<typename Taker, typename Handler>
 static

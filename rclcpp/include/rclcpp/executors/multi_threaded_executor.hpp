@@ -72,7 +72,7 @@ public:
   /**
    * \sa rclcpp::Executor:spin() for more details
    * \throws std::runtime_error when spin() called while already spinning
-   * @param exception_handler will be called for every exception in the processing threads
+   * \param[in] exception_handler will be called for every exception in the processing threads
    *
    * The exception_handler can be called from multiple threads at the same time.
    * The exception_handler shall rethrow the exception it if wants to terminate the program.

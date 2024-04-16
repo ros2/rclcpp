@@ -27,27 +27,12 @@ SingleThreadedExecutor::~SingleThreadedExecutor() {}
 void
 SingleThreadedExecutor::spin()
 {
-  if (spinning.exchange(true)) {
-    throw std::runtime_error("spin() called while already spinning");
-  }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-
-  // Clear any previous result and rebuild the waitset
-  this->wait_result_.reset();
-  this->entities_need_rebuild_ = true;
-
-  while (rclcpp::ok(this->context_) && spinning.load()) {
-    rclcpp::AnyExecutable any_executable;
-    if (get_next_executable(any_executable)) {
-      execute_any_executable(any_executable);
-    }
-  }
+  spin([](const std::exception & e) {throw e;});
 }
-
 
 void
 SingleThreadedExecutor::spin(
-  const std::function<void(const std::exception & e)> & exception_handler)
+  const std::function<void(const std::exception &)> & exception_handler)
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");

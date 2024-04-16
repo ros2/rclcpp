@@ -72,7 +72,6 @@ void TimersManager::add_timer(rclcpp::TimerBase::SharedPtr timer)
   }
 }
 
-RCLCPP_PUBLIC
 void TimersManager::start(const std::function<void(const std::exception & e)> & exception_handler)
 {
   // Make sure that the thread is not already running

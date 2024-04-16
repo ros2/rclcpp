@@ -56,7 +56,6 @@ MultiThreadedExecutor::spin()
 }
 
 void
-
 MultiThreadedExecutor::spin(const std::function<void(const std::exception & e)> & exception_handler)
 {
   if (spinning.exchange(true)) {

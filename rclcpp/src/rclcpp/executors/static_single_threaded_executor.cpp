@@ -30,17 +30,7 @@ StaticSingleThreadedExecutor::~StaticSingleThreadedExecutor() {}
 void
 StaticSingleThreadedExecutor::spin()
 {
-  if (spinning.exchange(true)) {
-    throw std::runtime_error("spin() called while already spinning");
-  }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-
-  // This is essentially the contents of the rclcpp::Executor::wait_for_work method,
-  // except we need to keep the wait result to reproduce the StaticSingleThreadedExecutor
-  // behavior.
-  while (rclcpp::ok(this->context_) && spinning.load()) {
-    this->spin_once_impl(std::chrono::nanoseconds(-1));
-  }
+  spin([](const std::exception & e) {throw e;});
 }
 
 
