@@ -385,7 +385,6 @@ protected:
   * This constructor is intended to be used by any derived executor
   * that explicitly does not want to use the default implementation provided
   * by this class.
-  * This constructor is guaranteed to not modify the system state.
   */
   explicit Executor(const std::shared_ptr<rclcpp::Context> & context);
 
@@ -403,19 +402,21 @@ protected:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds timeout);
 
-  /// Spin (blocking) until the get_future_status returns ready, max_duration is reached,
-  /// or rclcpp is interrupted.
+  /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
-   * \param[in] max_duration Optional duration parameter, which gets passed to Executor::spin_node_once.
-   *   `-1` is block forever, `0` is non-blocking.
-   *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
-   *   code.
-   * \param[in] wait_for_future A function waiting for a future to become ready.
-   * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
+   * \sa spin_until_future_complete()
+   * The only difference with spin_until_future_complete() is that the future's
+   * type is obscured through a std::function which lets you wait on it
+   * reguardless of type.
+   *
+   * \param[in] timeout see spin_until_future_complete() for details
+   * \param[in] wait_for_future function to wait on the future and get the
+   *   status after waiting
    */
   RCLCPP_PUBLIC
-  virtual FutureReturnCode spin_until_future_complete_impl(
-    std::chrono::nanoseconds max_duration,
+  virtual FutureReturnCode
+  spin_until_future_complete_impl(
+    std::chrono::nanoseconds timeout,
     const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future);
 
   /// Collect work and execute available work, optionally within a duration.

@@ -196,9 +196,8 @@ public:
   /**
    * Cancels an ongoing or future sleep operation of one thread.
    *
-   * This function is intended for multi threaded signaling. It can
-   * be used by one thread, to wakeup another thread, using any
-   * of the sleep_ or wait_ methods.
+   * This function can be used by one thread, to wakeup another thread that is
+   * blocked using any of the sleep_ or wait_ methods of this class.
    */
   RCLCPP_PUBLIC
   void
