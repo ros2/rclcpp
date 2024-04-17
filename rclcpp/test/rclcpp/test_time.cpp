@@ -138,6 +138,8 @@ TEST_F(TestTime, conversions) {
 
     EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
 
+    EXPECT_ANY_THROW(rclcpp::Time(-1));
+
     EXPECT_ANY_THROW(
     {
       rclcpp::Time assignment(1, 2);
@@ -167,48 +169,6 @@ TEST_F(TestTime, conversions) {
     EXPECT_EQ(time_msg.sec, 1);
     EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
     EXPECT_EQ(rclcpp::Time(time_msg).nanoseconds(), ONE_AND_HALF_SEC_IN_NS);
-  }
-
-  {
-    // Can rclcpp::Time be negative or not? The following constructor works:
-    rclcpp::Time time(-HALF_SEC_IN_NS);
-    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
-    EXPECT_EQ(time_msg.sec, -1);
-    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
-
-    // The opposite conversion throws...
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time negative_time(time_msg);
-    });
-  }
-
-  {
-    // Can rclcpp::Time be negative or not? The following constructor works:
-    rclcpp::Time time(-ONE_SEC_IN_NS);
-    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
-    EXPECT_EQ(time_msg.sec, -1);
-    EXPECT_EQ(time_msg.nanosec, 0u);
-
-    // The opposite conversion throws...
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time negative_time(time_msg);
-    });
-  }
-
-  {
-    // Can rclcpp::Time be negative or not? The following constructor works:
-    rclcpp::Time time(-ONE_AND_HALF_SEC_IN_NS);
-    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
-    EXPECT_EQ(time_msg.sec, -2);
-    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
-
-    // The opposite conversion throws...
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time negative_time(time_msg);
-    });
   }
 }
 
