@@ -357,6 +357,7 @@ public:
   bool
   is_ready(const rcl_wait_set_t & wait_set) override
   {
+    is_ready_count_++;
     for (size_t i = 0; i < wait_set.size_of_guard_conditions; ++i) {
       auto rcl_guard_condition = wait_set.guard_conditions[i];
       if (&gc_.get_rcl_guard_condition() == rcl_guard_condition) {
@@ -424,8 +425,14 @@ public:
     return count_;
   }
 
+  size_t get_is_ready_call_count() const
+  {
+    return is_ready_count_;
+  }
+
 private:
   std::atomic<size_t> trigger_count_ = 0;
+  std::atomic<size_t> is_ready_count_ = 0;
   std::atomic<size_t> count_ = 0;
   rclcpp::GuardCondition gc_;
   std::function<void()> on_execute_callback_ = nullptr;
@@ -868,4 +875,76 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
   }
 
   rclcpp::shutdown(non_default_context);
+}
+
+template<typename T>
+class TestBusyWaiting : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+
+    executor = std::make_shared<T>();
+
+    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    std::stringstream test_name;
+    test_name << test_info->test_case_name() << "_" << test_info->name();
+    node = std::make_shared<rclcpp::Node>("node", test_name.str());
+
+    auto waitable_interfaces = node->get_node_waitables_interface();
+    waitable = std::make_shared<TestWaitable>();
+    waitable_interfaces->add_waitable(waitable, nullptr);
+    executor->add_node(node);
+
+    // spin a bit to get all events from the addition of the node processed
+    executor->spin_all(std::chrono::milliseconds(100));
+
+    start_is_ready_count = waitable->get_is_ready_call_count();
+
+    start_time = std::chrono::system_clock::now();
+  }
+
+  void TearDown()
+  {
+    // there were ne events ready, a test iteration should come back in less than 100 ms
+    EXPECT_LT(
+      std::chrono::system_clock::now() - start_time,
+      max_duration / 2)
+      << "spin_some() took a long time to execute when it should have done "
+      << "nothing and should not have blocked either, but this could be a "
+      << "false negative if the computer is really slow";
+
+    // we allow a big number here, as in case of real active waiting
+    // it will be off by a few thousands anyway.
+    ASSERT_LT(waitable->get_is_ready_call_count() - start_is_ready_count, 30);
+
+    waitable.reset();
+    node.reset();
+
+    executor.reset();
+
+    rclcpp::shutdown();
+  }
+
+  static constexpr auto max_duration = 10s;
+
+  rclcpp::Node::SharedPtr node;
+  std::shared_ptr<TestWaitable> waitable;
+  size_t start_is_ready_count;
+  std::chrono::time_point<std::chrono::system_clock> start_time;
+  std::shared_ptr<T> executor;
+};
+
+TYPED_TEST_SUITE(TestBusyWaiting, ExecutorTypes, ExecutorTypeNames);
+
+
+TYPED_TEST(TestBusyWaiting, test_spin_all)
+{
+  this->executor->spin_all(this->max_duration);
+}
+
+TYPED_TEST(TestBusyWaiting, test_spin_some)
+{
+  this->executor->spin_some(this->max_duration);
 }
