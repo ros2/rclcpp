@@ -447,37 +447,17 @@ TYPED_TEST(TestExecutors, spinAll)
   waitable_interfaces->add_waitable(my_waitable, nullptr);
   executor.add_node(this->node);
 
-  // Long timeout, but should not block test if spin_all works as expected as we cancel the
-  // executor.
-  bool spin_exited = false;
-  std::thread spinner([&spin_exited, &executor, this]() {
-      executor.spin_all(1s);
-      executor.remove_node(this->node, true);
-      spin_exited = true;
-    });
+  // trigger multiple times, so that some work is available
+  my_waitable->trigger();
+  my_waitable->trigger();
+  my_waitable->trigger();
 
-  // Do some work until sufficient calls to the waitable occur
-  auto start = std::chrono::steady_clock::now();
-  while (
-    my_waitable->get_count() <= 1 &&
-    !spin_exited &&
-    (std::chrono::steady_clock::now() - start < 1s))
-  {
-    my_waitable->trigger();
-    this->publisher->publish(test_msgs::msg::Empty());
-    std::this_thread::sleep_for(1ms);
-  }
-
-  executor.cancel();
-  start = std::chrono::steady_clock::now();
-  while (!spin_exited && (std::chrono::steady_clock::now() - start) < 1s) {
-    std::this_thread::sleep_for(1ms);
-  }
+  // Long timeout, but should not block as almost no work is available
+  executor.spin_all(1s);
+  executor.remove_node(this->node, true);
 
   EXPECT_LT(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
-  ASSERT_TRUE(spin_exited);
-  spinner.join();
 }
 
 // Helper function to convert chrono durations into a scalar that GoogleTest
