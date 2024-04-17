@@ -891,7 +891,7 @@ public:
     EXPECT_LT(
       std::chrono::system_clock::now() - start_time,
       max_duration / 2)
-      << "spin_some() took a long time to execute when it should have done "
+      << "executor took a long time to execute when it should have done "
       << "nothing and should not have blocked either, but this could be a "
       << "false negative if the computer is really slow";
 
