@@ -253,6 +253,9 @@ Time::operator+=(const rclcpp::Duration & rhs)
   }
 
   rcl_time_.nanoseconds += rhs.nanoseconds();
+  if (rcl_time_.nanoseconds < 0) {
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
+  }
 
   return *this;
 }
@@ -268,6 +271,9 @@ Time::operator-=(const rclcpp::Duration & rhs)
   }
 
   rcl_time_.nanoseconds -= rhs.nanoseconds();
+  if (rcl_time_.nanoseconds < 0) {
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
+  }
 
   return *this;
 }
