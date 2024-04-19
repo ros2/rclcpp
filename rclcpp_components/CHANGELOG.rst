@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 21.0.5 (2024-02-07)
 -------------------
 * Increase the service queue sizes in component_container (`#2381 <https://github.com/ros2/rclcpp/issues/2381>`_)

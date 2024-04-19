@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* address ambiguous auto variable. (`#2486 <https://github.com/ros2/rclcpp/issues/2486>`_)
+* Contributors: Tomoya Fujita
+
 21.0.5 (2024-02-07)
 -------------------
 * Fix data race in EventHandlerBase (`#2387 <https://github.com/ros2/rclcpp/issues/2387>`_)
