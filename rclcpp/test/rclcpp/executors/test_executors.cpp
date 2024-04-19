@@ -928,3 +928,23 @@ TYPED_TEST(TestBusyWaiting, test_spin_some)
 {
   this->executor->spin_some(this->max_duration);
 }
+
+TYPED_TEST(TestBusyWaiting, test_spin)
+{
+  std::thread t([this]() {
+      this->executor->spin();
+    });
+
+  // wait until thread has started
+  while(!this->executor->is_spinning()) {
+    std::this_thread::sleep_for(10ms);
+  }
+
+  // let the executor spin for at least 300ms second
+  // so that even on super slow machines, we generate
+  // a lot of events in case of busy waiting
+  std::this_thread::sleep_for(300ms);
+
+  this->executor->cancel();
+  t.join();
+}
