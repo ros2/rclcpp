@@ -366,6 +366,8 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
+  // clear result, to force recollect of ready executables
+  wait_result_.reset();
   bool work_available = false;
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     if (!wait_result_.has_value()) {
@@ -377,6 +379,10 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
       execute_any_executable(any_exec);
       work_available = true;
     } else {
+      // If nothing is ready, reset the result to signal we are
+      // ready to wait again
+      wait_result_.reset();
+
       if (!work_available || !exhaustive) {
         // In the case of spin some, then we can exit
         // In the case of spin all, then we will allow ourselves to wait again.
@@ -384,10 +390,6 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
       }
 
       work_available = false;
-
-      // If nothing is ready, reset the result to signal we are
-      // ready to wait again
-      wait_result_.reset();
     }
   }
 }
