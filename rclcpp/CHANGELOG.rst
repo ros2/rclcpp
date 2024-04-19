@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.0.6 (2024-04-19)
+-------------------
 * address ambiguous auto variable. (`#2486 <https://github.com/ros2/rclcpp/issues/2486>`_)
 * Contributors: Tomoya Fujita
 

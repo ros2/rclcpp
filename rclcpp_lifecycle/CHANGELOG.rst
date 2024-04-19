@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+21.0.6 (2024-04-19)
+-------------------
 * call shutdown in LifecycleNode dtor to avoid leaving the device in un… (`#2490 <https://github.com/ros2/rclcpp/issues/2490>`_)
 * Contributors: Tomoya Fujita
 
