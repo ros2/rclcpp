@@ -49,6 +49,7 @@ public:
   /**
    * \param nanoseconds since time epoch
    * \param clock_type clock type
+   * \throws std::runtime_error if nanoseconds are negative
    */
   RCLCPP_PUBLIC
   explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
