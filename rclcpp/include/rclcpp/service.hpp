@@ -495,7 +495,7 @@ public:
     }
   }
 
-  /// Configure client introspection.
+  /// Configure service introspection.
   /**
    * \param[in] clock clock to use to generate introspection timestamps
    * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
