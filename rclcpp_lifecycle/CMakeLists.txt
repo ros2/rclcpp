@@ -95,6 +95,7 @@ if(BUILD_TESTING)
   endif()
 
   ament_add_gtest(test_lifecycle_node test/test_lifecycle_node.cpp TIMEOUT 120)
+  ament_add_test_label(test_lifecycle_node mimick)
   if(TARGET test_lifecycle_node)
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME} mimick rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp rcutils::rcutils)
   endif()
@@ -103,6 +104,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_lifecycle_publisher ${PROJECT_NAME} rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp ${test_msgs_TARGETS})
   endif()
   ament_add_gtest(test_lifecycle_service_client test/test_lifecycle_service_client.cpp TIMEOUT 120)
+  ament_add_test_label(test_lifecycle_service_client mimick)
   if(TARGET test_lifecycle_service_client)
     target_link_libraries(test_lifecycle_service_client
       ${PROJECT_NAME}
@@ -113,6 +115,7 @@ if(BUILD_TESTING)
       rcutils::rcutils)
   endif()
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 120)
+  ament_add_test_label(test_client mimick)
   if(TARGET test_client)
     target_link_libraries(test_client
       ${PROJECT_NAME}
@@ -121,6 +124,7 @@ if(BUILD_TESTING)
       rclcpp::rclcpp)
   endif()
   ament_add_gtest(test_service test/test_service.cpp TIMEOUT 120)
+  ament_add_test_label(test_service mimick)
   if(TARGET test_service)
     target_link_libraries(test_service
       ${PROJECT_NAME}
@@ -145,6 +149,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_state_wrapper ${PROJECT_NAME} rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp)
   endif()
   ament_add_gtest(test_transition_wrapper test/test_transition_wrapper.cpp)
+  ament_add_test_label(test_transition_wrapper mimick)
   if(TARGET test_transition_wrapper)
     target_link_libraries(test_transition_wrapper ${PROJECT_NAME} mimick rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp rcutils::rcutils)
     target_compile_definitions(test_transition_wrapper
