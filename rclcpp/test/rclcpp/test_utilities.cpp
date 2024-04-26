@@ -25,7 +25,20 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wordered-compare-function-pointers"
+#endif
+// TODO(ahcorde): the function mocking_utils::patch_and_return called with
+// rcl_logging_configure_with_output_handler is returning: "Comparison between pointer and integer"
+// Disabling this warning is fine for now.
+// Related issue https://github.com/ros2/rclcpp/issues/2488
 #include "../mocking_utils/patch.hpp"
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 TEST(TestUtilities, remove_ros_arguments) {

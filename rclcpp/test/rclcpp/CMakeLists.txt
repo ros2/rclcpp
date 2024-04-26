@@ -55,6 +55,10 @@ ament_add_gtest(test_client test_client.cpp)
 if(TARGET test_client)
   target_link_libraries(test_client ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
 endif()
+ament_add_gtest(test_clock test_clock.cpp)
+if(TARGET test_clock)
+  target_link_libraries(test_clock ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+endif()
 ament_add_gtest(test_copy_all_parameter_values test_copy_all_parameter_values.cpp)
 if(TARGET test_copy_all_parameter_values)
   target_link_libraries(test_copy_all_parameter_values ${PROJECT_NAME})
@@ -474,6 +478,15 @@ if(TARGET test_executors)
 endif()
 
 ament_add_gtest(
+  test_executors_callback_group_behavior
+  executors/test_executors_callback_group_behavior.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors)
+  target_link_libraries(test_executors_callback_group_behavior ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(
   test_executors_intraprocess
   executors/test_executors_intraprocess.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
@@ -492,12 +505,6 @@ ament_add_gtest(test_multi_threaded_executor executors/test_multi_threaded_execu
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_multi_threaded_executor)
   target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
-endif()
-
-ament_add_gtest(test_static_executor_entities_collector executors/test_static_executor_entities_collector.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
-if(TARGET test_static_executor_entities_collector)
-  target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME} mimick rcpputils::rcpputils ${test_msgs_TARGETS})
 endif()
 
 ament_add_gtest(test_entities_collector executors/test_entities_collector.cpp
@@ -570,6 +577,11 @@ endif()
 ament_add_gtest(test_thread_safe_synchronization wait_set_policies/test_thread_safe_synchronization.cpp)
 if(TARGET test_thread_safe_synchronization)
   target_link_libraries(test_thread_safe_synchronization ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
+
+ament_add_gtest(test_intra_process_waitable waitables/test_intra_process_waitable.cpp)
+if(TARGET test_intra_process_waitable)
+  target_link_libraries(test_intra_process_waitable ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
 ament_add_gtest(test_rosout_qos test_rosout_qos.cpp)

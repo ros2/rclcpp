@@ -35,10 +35,11 @@ typedef std::map<rclcpp::CallbackGroup::WeakPtr,
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-  void add_to_wait_set(rcl_wait_set_t *) override {}
-  bool is_ready(rcl_wait_set_t *) override {return true;}
+  void add_to_wait_set(rcl_wait_set_t &) override {}
+  bool is_ready(const rcl_wait_set_t &) override {return true;}
+
   std::shared_ptr<void> take_data() override {return nullptr;}
-  void execute(std::shared_ptr<void> & data) override {(void)data;}
+  void execute(const std::shared_ptr<void> &) override {}
 };
 
 class TestMemoryStrategy : public ::testing::Test

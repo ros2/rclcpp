@@ -2,6 +2,24 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.1.0 (2024-04-16)
+-------------------
+* Remove references to index.ros.org. (`#2504 <https://github.com/ros2/rclcpp/issues/2504>`_)
+* Contributors: Chris Lalancette
+
+28.0.1 (2024-04-16)
+-------------------
+
+28.0.0 (2024-03-28)
+-------------------
+* Add EXECUTOR docs (`#2440 <https://github.com/ros2/rclcpp/issues/2440>`_)
+* Update quality declaration documents (`#2427 <https://github.com/ros2/rclcpp/issues/2427>`_)
+* crash on no class found (`#2415 <https://github.com/ros2/rclcpp/issues/2415>`_)
+  * crash on no class found
+  * error on no class found instead of no callback groups
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+* Contributors: Adam Aposhian, Christophe Bedard, Ruddick Lawrence
+
 27.0.0 (2024-02-07)
 -------------------
 

@@ -3,6 +3,24 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+28.1.0 (2024-04-16)
+-------------------
+* Remove references to index.ros.org. (`#2504 <https://github.com/ros2/rclcpp/issues/2504>`_)
+* Contributors: Chris Lalancette
+
+28.0.1 (2024-04-16)
+-------------------
+* call shutdown in LifecycleNode dtor to avoid leaving the device in un… (`#2450 <https://github.com/ros2/rclcpp/issues/2450>`_)
+  * call shutdown in LifecycleNode dtor to avoid leaving the device in unknown state.
+  * add test to verify LifecycleNode::shutdown is called on destructor.
+  ---------
+* Contributors: Tomoya Fujita
+
+28.0.0 (2024-03-28)
+-------------------
+* Update quality declaration documents (`#2427 <https://github.com/ros2/rclcpp/issues/2427>`_)
+* Contributors: Christophe Bedard
+
 27.0.0 (2024-02-07)
 -------------------
 

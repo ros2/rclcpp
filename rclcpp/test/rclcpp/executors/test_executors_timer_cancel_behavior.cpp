@@ -36,20 +36,34 @@ public:
   explicit TimerNode(std::string subname)
   : Node("timer_node", subname)
   {
+  }
+
+  void CreateTimer1()
+  {
     timer1_ = rclcpp::create_timer(
       this->get_node_base_interface(), get_node_timers_interface(),
       get_clock(), 1ms,
       std::bind(&TimerNode::Timer1Callback, this));
+  }
 
-    timer2_ =
-      rclcpp::create_timer(
+  void CreateTimer2()
+  {
+    timer2_ = rclcpp::create_timer(
       this->get_node_base_interface(), get_node_timers_interface(),
       get_clock(), 1ms,
       std::bind(&TimerNode::Timer2Callback, this));
   }
 
-  int GetTimer1Cnt() {return cnt1_;}
-  int GetTimer2Cnt() {return cnt2_;}
+  int GetTimer1Cnt()
+  {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    return cnt1_;
+  }
+  int GetTimer2Cnt()
+  {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    return cnt2_;
+  }
 
   void ResetTimer1()
   {
@@ -76,15 +90,23 @@ public:
 private:
   void Timer1Callback()
   {
-    RCLCPP_DEBUG(this->get_logger(), "Timer 1!");
-    cnt1_++;
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      cnt1_++;
+    }
+    RCLCPP_DEBUG(this->get_logger(), "Timer 1! (%d)", cnt1_);
   }
 
   void Timer2Callback()
   {
-    RCLCPP_DEBUG(this->get_logger(), "Timer 2!");
-    cnt2_++;
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      cnt2_++;
+    }
+    RCLCPP_DEBUG(this->get_logger(), "Timer 2! (%d)", cnt2_);
   }
+
+  std::mutex mutex_;
 
   rclcpp::TimerBase::SharedPtr timer1_;
   rclcpp::TimerBase::SharedPtr timer2_;
@@ -124,6 +146,18 @@ public:
     }
   }
 
+  bool wait_for_connection(std::chrono::nanoseconds timeout)
+  {
+    auto end_time = std::chrono::steady_clock::now() + timeout;
+    while (clock_publisher_->get_subscription_count() == 0 &&
+      (std::chrono::steady_clock::now() < end_time))
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    return clock_publisher_->get_subscription_count() != 0;
+  }
+
   void sleep_for(rclcpp::Duration duration)
   {
     rclcpp::Time start_time(0, 0, RCL_ROS_TIME);
@@ -142,7 +176,10 @@ public:
         return;
       }
       std::this_thread::sleep_for(realtime_clock_step_.to_chrono<std::chrono::milliseconds>());
-      rostime_ += ros_update_duration_;
+      {
+        const std::lock_guard<std::mutex> lock(mutex_);
+        rostime_ += ros_update_duration_;
+      }
     }
   }
 
@@ -157,9 +194,11 @@ private:
 
   void PublishClock()
   {
-    const std::lock_guard<std::mutex> lock(mutex_);
     auto message = rosgraph_msgs::msg::Clock();
-    message.clock = rostime_;
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      message.clock = rostime_;
+    }
     clock_publisher_->publish(message);
   }
 
@@ -200,10 +239,17 @@ public:
     ASSERT_TRUE(param_client->wait_for_service(5s));
 
     auto set_parameters_results = param_client->set_parameters(
-      {rclcpp::Parameter("use_sim_time", false)});
+      {rclcpp::Parameter("use_sim_time", true)});
     for (auto & result : set_parameters_results) {
       ASSERT_TRUE(result.successful);
     }
+
+    // Check if the clock type is simulation time
+    EXPECT_EQ(RCL_ROS_TIME, node->get_clock()->get_clock_type());
+
+    // Create timers
+    this->node->CreateTimer1();
+    this->node->CreateTimer2();
 
     // Run standalone thread to publish clock time
     sim_clock_node = std::make_shared<ClockPublisher>();
@@ -214,6 +260,9 @@ public:
       [this]() {
         executor.spin();
       });
+
+    EXPECT_TRUE(this->sim_clock_node->wait_for_connection(50ms));
+    EXPECT_EQ(RCL_ROS_TIME, node->get_clock()->ros_time_is_active());
   }
 
   void TearDown()
@@ -233,7 +282,16 @@ public:
   T executor;
 };
 
-TYPED_TEST_SUITE(TestTimerCancelBehavior, ExecutorTypes, ExecutorTypeNames);
+using MainExecutorTypes =
+  ::testing::Types<
+  rclcpp::executors::SingleThreadedExecutor,
+  rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::StaticSingleThreadedExecutor>;
+
+// TODO(@fujitatomoya): this test excludes EventExecutor because it does not
+// support simulation time used for this test to relax the racy condition.
+// See more details for https://github.com/ros2/rclcpp/issues/2457.
+TYPED_TEST_SUITE(TestTimerCancelBehavior, MainExecutorTypes, ExecutorTypeNames);
 
 TYPED_TEST(TestTimerCancelBehavior, testTimer1CancelledWithExecutorSpin) {
   // Validate that cancelling one timer yields no change in behavior for other

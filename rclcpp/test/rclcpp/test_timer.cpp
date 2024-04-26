@@ -252,6 +252,28 @@ TEST_P(TestTimer, callback_with_timer) {
   EXPECT_FALSE(timer_ptr->is_ready());
 }
 
+TEST_P(TestTimer, callback_with_timer_info) {
+  rclcpp::TimerInfo info;
+  auto timer_callback = [&info](const rclcpp::TimerInfo & timer_info) {
+      info = timer_info;
+    };
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      timer = test_node->create_wall_timer(1ms, timer_callback);
+      break;
+    case TimerType::GENERIC_TIMER:
+      timer = test_node->create_timer(1ms, timer_callback);
+      break;
+  }
+  auto start = std::chrono::steady_clock::now();
+  while (info.actual_call_time.nanoseconds() == 0 &&
+    (std::chrono::steady_clock::now() - start) < std::chrono::milliseconds(100))
+  {
+    executor->spin_once(std::chrono::milliseconds(10));
+  }
+  EXPECT_GE(info.actual_call_time, info.expected_call_time);
+}
+
 TEST_P(TestTimer, callback_with_period_zero) {
   rclcpp::TimerBase * timer_ptr = nullptr;
   auto timer_callback = [&timer_ptr](rclcpp::TimerBase & timer) {

@@ -29,25 +29,23 @@
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
+#include "rclcpp/executors/executor_notify_waitable.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors/executor_entities_collection.hpp"
+#include "rclcpp/executors/executor_entities_collector.hpp"
 #include "rclcpp/future_return_code.hpp"
-#include "rclcpp/memory_strategies.hpp"
-#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/wait_set.hpp"
 
 namespace rclcpp
 {
-
-typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
 // Forward declaration is used in convenience method signature.
 class Node;
@@ -274,24 +272,31 @@ public:
    * \param[in] node Shared pointer to the node to add.
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_some(std::shared_ptr<rclcpp::Node> node);
 
-  /// Collect work once and execute all available work, optionally within a duration.
+  /// Collect work once and execute all available work, optionally within a max duration.
   /**
-   * This function can be overridden. The default implementation is suitable for a
-   * single-threaded model of execution.
-   * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
-   * to block (which may have unintended consequences).
+   * This function can be overridden.
+   * The default implementation is suitable for a single-threaded model of execution.
+   * Adding subscriptions, timers, services, etc. with blocking or long running
+   * callbacks may cause the function exceed the max_duration significantly.
+   *
+   * If there is no work to be done when this called, it will return immediately
+   * because the collecting of available work is non-blocking.
+   * Before each piece of ready work is executed this function checks if the
+   * max_duration has been exceeded, and if it has it returns without starting
+   * the execution of the next piece of work.
+   *
+   * If a max_duration of 0 is given, then all of the collected work will be
+   * executed before the function returns.
    *
    * \param[in] max_duration The maximum amount of time to spend executing work, or 0 for no limit.
-   * Note that spin_some() may take longer than this time as it only returns once max_duration has
-   * been exceeded.
    */
   RCLCPP_PUBLIC
   virtual void
@@ -302,14 +307,14 @@ public:
    * \param[in] node Shared pointer to the node to add.
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_all(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds max_duration);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_all(std::shared_ptr<rclcpp::Node> node, std::chrono::nanoseconds max_duration);
 
   /// Collect and execute work repeatedly within a duration or until no more work is available.
@@ -361,52 +366,12 @@ public:
     const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
-    // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
-    // inside a callback executed by an executor.
-
-    // Check the future before entering the while loop.
-    // If the future is already complete, don't try to spin.
-    std::future_status status = future.wait_for(std::chrono::seconds(0));
-    if (status == std::future_status::ready) {
-      return FutureReturnCode::SUCCESS;
-    }
-
-    auto end_time = std::chrono::steady_clock::now();
-    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
-    if (timeout_ns > std::chrono::nanoseconds::zero()) {
-      end_time += timeout_ns;
-    }
-    std::chrono::nanoseconds timeout_left = timeout_ns;
-
-    if (spinning.exchange(true)) {
-      throw std::runtime_error("spin_until_future_complete() called while already spinning");
-    }
-    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-    while (rclcpp::ok(this->context_) && spinning.load()) {
-      // Do one item of work.
-      spin_once_impl(timeout_left);
-
-      // Check if the future is set, return SUCCESS if it is.
-      status = future.wait_for(std::chrono::seconds(0));
-      if (status == std::future_status::ready) {
-        return FutureReturnCode::SUCCESS;
+    return spin_until_future_complete_impl(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout),
+      [&future](std::chrono::nanoseconds wait_time) {
+        return future.wait_for(wait_time);
       }
-      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout_ns < std::chrono::nanoseconds::zero()) {
-        continue;
-      }
-      // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto now = std::chrono::steady_clock::now();
-      if (now >= end_time) {
-        return FutureReturnCode::TIMEOUT;
-      }
-      // Subtract the elapsed time from the original timeout.
-      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
-    }
-
-    // The future did not complete before ok() returned false, return INTERRUPTED.
-    return FutureReturnCode::INTERRUPTED;
+    );
   }
 
   /// Cancel any running spin* function, causing it to return.
@@ -415,19 +380,8 @@ public:
    * \throws std::runtime_error if there is an issue triggering the guard condition
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   cancel();
-
-  /// Support dynamic switching of the memory strategy.
-  /**
-   * Switching the memory strategy while the executor is spinning in another threading could have
-   * unintended consequences.
-   * \param[in] memory_strategy Shared pointer to the memory strategy to set.
-   * \throws std::runtime_error if memory_strategy is null
-   */
-  RCLCPP_PUBLIC
-  void
-  set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
   /// Returns true if the executor is currently spinning.
   /**
@@ -439,6 +393,14 @@ public:
   is_spinning();
 
 protected:
+  /// Constructor that will not initialize any non-trivial members.
+  /**
+  * This constructor is intended to be used by any derived executor
+  * that explicitly does not want to use the default implementation provided
+  * by this class.
+  */
+  explicit Executor(const std::shared_ptr<rclcpp::Context> & context);
+
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
    * Implementation of spin_node_once using std::chrono::nanoseconds
@@ -452,6 +414,23 @@ protected:
   spin_node_once_nanoseconds(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds timeout);
+
+  /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
+  /**
+   * \sa spin_until_future_complete()
+   * The only difference with spin_until_future_complete() is that the future's
+   * type is obscured through a std::function which lets you wait on it
+   * reguardless of type.
+   *
+   * \param[in] timeout see spin_until_future_complete() for details
+   * \param[in] wait_for_future function to wait on the future and get the
+   *   status after waiting
+   */
+  RCLCPP_PUBLIC
+  virtual FutureReturnCode
+  spin_until_future_complete_impl(
+    std::chrono::nanoseconds timeout,
+    const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future);
 
   /// Collect work and execute available work, optionally within a duration.
   /**
@@ -493,7 +472,7 @@ protected:
    */
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::TimerBase::SharedPtr timer);
+  execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr);
 
   /// Run service server executable.
   /**
@@ -513,6 +492,11 @@ protected:
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+  /// Gather all of the waitable entities from associated nodes and callback groups.
+  RCLCPP_PUBLIC
+  void
+  collect_entities();
+
   /// Block until more work becomes avilable or timeout is reached.
   /**
    * Builds a set of waitable entities, which are passed to the middleware.
@@ -524,62 +508,6 @@ protected:
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
-  /// Find node associated with a callback group
-  /**
-   * \param[in] weak_groups_to_nodes map of callback groups to nodes
-   * \param[in] group callback group to find assocatiated node
-   * \return Pointer to associated node if found, else nullptr
-   */
-  RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    rclcpp::CallbackGroup::SharedPtr group);
-
-  /// Return true if the node has been added to this executor.
-  /**
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \param[in] weak_groups_to_nodes map to nodes to lookup
-   * \return true if the node is associated with the executor, otherwise false
-   */
-  RCLCPP_PUBLIC
-  bool
-  has_node(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) const;
-
-  /// Find the callback group associated with a timer
-  /**
-   * \param[in] timer Timer to find associated callback group
-   * \return Pointer to callback group node if found, else nullptr
-   */
-  RCLCPP_PUBLIC
-  rclcpp::CallbackGroup::SharedPtr
-  get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
-
-  /// Add a callback group to an executor
-  /**
-   * \see rclcpp::Executor::add_callback_group
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  add_callback_group_to_map(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
-
-  /// Remove a callback group from the executor.
-  /**
-   * \see rclcpp::Executor::remove_callback_group
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  remove_callback_group_from_map(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
-    bool notify = true) RCPPUTILS_TSA_REQUIRES(mutex_);
-
   /// Check for executable in ready state and populate union structure.
   /**
    * \param[out] any_executable populated union structure of ready executable
@@ -589,33 +517,6 @@ protected:
   RCLCPP_PUBLIC
   bool
   get_next_ready_executable(AnyExecutable & any_executable);
-
-  /// Check for executable in ready state and populate union structure.
-  /**
-   * This is the implementation of get_next_ready_executable that takes into
-   * account the current state of callback groups' association with nodes and
-   * executors.
-   *
-   * This checks in a particular order for available work:
-   *   * Timers
-   *   * Subscriptions
-   *   * Services
-   *   * Clients
-   *   * Waitable
-   *
-   * If the next executable is not associated with this executor/node pair,
-   * then this method will return false.
-   *
-   * \param[out] any_executable populated union structure of ready executable
-   * \param[in] weak_groups_to_nodes mapping of callback groups to nodes
-   * \return true if an executable was ready and any_executable was populated,
-   *   otherwise false
-   */
-  RCLCPP_PUBLIC
-  bool
-  get_next_ready_executable_from_map(
-    AnyExecutable & any_executable,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   /// Wait for executable in ready state and populate union structure.
   /**
@@ -634,20 +535,14 @@ protected:
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
-  /// Add all callback groups that can be automatically added from associated nodes.
+  /// This function triggers a recollect of all entities that are registered to the executor.
   /**
-   * The executor, before collecting entities, verifies if any callback group from
-   * nodes associated with the executor, which is not already associated to an executor,
-   * can be automatically added to this executor.
-   * This takes care of any callback group that has been added to a node but not explicitly added
-   * to the executor.
-   * It is important to note that in order for the callback groups to be automatically added to an
-   * executor through this function, the node of the callback groups needs to have been added
-   * through the `add_node` method.
+   * Calling this function is thread safe.
+   *
+   * \param[in] notify if true will execute a trigger that will wake up a waiting executor
    */
-  RCLCPP_PUBLIC
-  virtual void
-  add_callback_groups_from_nodes_associated_to_executor() RCPPUTILS_TSA_REQUIRES(mutex_);
+  void
+  trigger_entity_recollect(bool notify);
 
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
@@ -658,15 +553,7 @@ protected:
   /// Guard condition for signaling the rmw layer to wake up for system shutdown.
   std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
 
-  /// Wait set for managing entities that the rmw layer waits on.
-  rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
-
-  // Mutex to protect the subsequent memory_strategy_.
   mutable std::mutex mutex_;
-
-  /// The memory strategy: an interface for handling user-defined memory allocation strategies.
-  memory_strategy::MemoryStrategy::SharedPtr
-  memory_strategy_ RCPPUTILS_TSA_PT_GUARDED_BY(mutex_);
 
   /// The context associated with this executor.
   std::shared_ptr<rclcpp::Context> context_;
@@ -677,39 +564,31 @@ protected:
   virtual void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
-  typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rclcpp::GuardCondition *,
-      std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
-    WeakNodesToGuardConditionsMap;
+  /// Waitable containing guard conditions controlling the executor flow.
+  /**
+   * This waitable contains the interrupt and shutdown guard condition, as well
+   * as the guard condition associated with each node and callback group.
+   * By default, if any change is detected in the monitored entities, the notify
+   * waitable will awake the executor and rebuild the collections.
+   */
+  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
-  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-      const rclcpp::GuardCondition *,
-      std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
-    WeakCallbackGroupsToGuardConditionsMap;
+  std::atomic_bool entities_need_rebuild_;
 
-  /// maps nodes to guard conditions
-  WeakNodesToGuardConditionsMap
-  weak_nodes_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  /// Collector used to associate executable entities from nodes and guard conditions
+  rclcpp::executors::ExecutorEntitiesCollector collector_;
 
-  /// maps callback groups to guard conditions
-  WeakCallbackGroupsToGuardConditionsMap
-  weak_groups_to_guard_conditions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  /// WaitSet to be waited on.
+  rclcpp::WaitSet wait_set_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::optional<rclcpp::WaitResult<rclcpp::WaitSet>> wait_result_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
-  /// maps callback groups associated to nodes
-  WeakCallbackGroupsToNodesMap
-  weak_groups_associated_with_executor_to_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  /// Hold the current state of the collection being waited on by the waitset
+  rclcpp::executors::ExecutorEntitiesCollection current_collection_ RCPPUTILS_TSA_GUARDED_BY(
+    mutex_);
 
-  /// maps callback groups to nodes associated with executor
-  WeakCallbackGroupsToNodesMap
-  weak_groups_to_nodes_associated_with_executor_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// maps all callback groups to nodes
-  WeakCallbackGroupsToNodesMap
-  weak_groups_to_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-  /// nodes that are associated with the executor
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>
-  weak_nodes_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  /// Hold the current state of the notify waitable being waited on by the waitset
+  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> current_notify_waitable_
+  RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// shutdown callback handle registered to Context
   rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;

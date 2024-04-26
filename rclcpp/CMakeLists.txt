@@ -69,7 +69,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/executor_notify_waitable.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
-  src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/experimental/executors/events_executor/events_executor.cpp
@@ -299,7 +298,7 @@ install(
 
 if(TEST cppcheck)
   # must set the property after ament_package()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 600)
+  set_tests_properties(cppcheck PROPERTIES TIMEOUT 1200)
 endif()
 
 if(TEST cpplint)
