@@ -80,6 +80,7 @@ if(BUILD_TESTING)
   add_subdirectory(test/benchmark)
 
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
+  ament_add_test_label(test_client mimick)
   if(TARGET test_client)
     target_link_libraries(test_client
       ${PROJECT_NAME}
@@ -93,6 +94,7 @@ if(BUILD_TESTING)
   endif()
 
   ament_add_gtest(test_server test/test_server.cpp TIMEOUT 180)
+  ament_add_test_label(test_server mimick)
   if(TARGET test_server)
     target_link_libraries(test_server
       ${PROJECT_NAME}
@@ -104,6 +106,7 @@ if(BUILD_TESTING)
   endif()
 
   ament_add_gtest(test_server_goal_handle test/test_server_goal_handle.cpp)
+  ament_add_test_label(test_server_goal_handle mimick)
   if(TARGET test_server_goal_handle)
     target_link_libraries(test_server_goal_handle
       ${PROJECT_NAME}
