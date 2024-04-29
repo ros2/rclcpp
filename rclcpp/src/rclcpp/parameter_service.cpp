@@ -85,7 +85,7 @@ ParameterService::ParameterService(
         } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
           RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
           result.successful = false;
-          result.reason = "Parameter is not declared by the node, which only allows declared parameters";
+          result.reason = rcl_interfaces::msg::SetParametersResult::REASON_UNDECLARED_NOT_ALLOWED;
         }
         response->results.push_back(result);
       }
