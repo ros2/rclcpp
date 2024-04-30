@@ -366,30 +366,36 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  // clear result, to force recollect of ready executables
+  // clear the wait result and wait for work without blocking to collect the work
+  // for the first time
+  // both spin_some and spin_all wait for work at the beginning
   wait_result_.reset();
-  bool work_available = false;
-  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-    if (!wait_result_.has_value()) {
-      wait_for_work(std::chrono::milliseconds(0));
-    }
+  wait_for_work(std::chrono::milliseconds(0));
+  bool just_waited = true;
 
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
-      work_available = true;
+      just_waited = false;
     } else {
-      // If nothing is ready, reset the result to signal we are
-      // ready to wait again
+      // if nothing is ready, reset the result to clear it
       wait_result_.reset();
 
-      if (!work_available || !exhaustive) {
-        // In the case of spin some, then we can exit
-        // In the case of spin all, then we will allow ourselves to wait again.
+      if (just_waited) {
+        // there was no work after just waiting, always exit in this case
+        // before the exhaustive condition can be checked
         break;
       }
 
-      work_available = false;
+      if (exhaustive) {
+        // if exhaustive, wait for work again
+        // this only happens for spin_all; spin_some only waits at the start
+        wait_for_work(std::chrono::milliseconds(0));
+        just_waited = true;
+      } else {
+        break;
+      }
     }
   }
 }
