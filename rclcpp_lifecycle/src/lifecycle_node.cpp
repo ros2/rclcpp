@@ -142,6 +142,10 @@ LifecycleNode::LifecycleNode(
       &LifecycleNodeInterface::on_deactivate, this,
       std::placeholders::_1));
   register_on_error(std::bind(&LifecycleNodeInterface::on_error, this, std::placeholders::_1));
+
+  if (options.enable_logger_service()) {
+    node_logging_->create_logger_services(node_services_);
+  }
 }
 
 LifecycleNode::~LifecycleNode()
