@@ -117,6 +117,25 @@ Node::create_wall_timer(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::WallTimer<CallbackT>::SharedPtr
+Node::create_wall_timer(
+  rclcpp::Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  const rclcpp::CallbackGroup::SharedPtr & group,
+  bool autostart)
+{
+  return rclcpp::create_wall_timer(
+    initial_call_time,
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get(),
+    autostart);
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::GenericTimer<CallbackT>::SharedPtr
 Node::create_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
@@ -125,6 +144,24 @@ Node::create_timer(
 {
   return rclcpp::create_timer(
     this->get_clock(),
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get());
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+Node::create_timer(
+  rclcpp::Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  const rclcpp::CallbackGroup::SharedPtr & group)
+{
+  return rclcpp::create_timer(
+    this->get_clock(),
+    initial_call_time,
     period,
     std::move(callback),
     group,

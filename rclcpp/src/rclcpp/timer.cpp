@@ -73,6 +73,52 @@ TimerBase::TimerBase(
   }
 }
 
+TimerBase::TimerBase(
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Time initial_call_time,
+  std::chrono::nanoseconds period,
+  rclcpp::Context::SharedPtr context,
+  bool autostart)
+: clock_(clock), timer_handle_(nullptr)
+{
+  if (nullptr == context) {
+    context = rclcpp::contexts::get_global_default_context();
+  }
+
+  auto rcl_context = context->get_rcl_context();
+
+  timer_handle_ = std::shared_ptr<rcl_timer_t>(
+    new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
+    {
+      {
+        std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+        if (rcl_timer_fini(timer) != RCL_RET_OK) {
+          RCUTILS_LOG_ERROR_NAMED(
+            "rclcpp",
+            "Failed to clean up rcl timer handle: %s", rcl_get_error_string().str);
+          rcl_reset_error();
+        }
+      }
+      delete timer;
+      // Captured shared pointers by copy, reset to make sure timer is finalized before clock
+      clock.reset();
+      rcl_context.reset();
+    });
+
+  *timer_handle_.get() = rcl_get_zero_initialized_timer();
+
+  rcl_clock_t * clock_handle = clock_->get_clock_handle();
+  {
+    std::lock_guard<std::mutex> clock_guard(clock_->get_clock_mutex());
+    rcl_ret_t ret = rcl_timer_init3(
+      timer_handle_.get(), clock_handle, rcl_context.get(), initial_call_time.nanoseconds(),
+      period.count(), nullptr, rcl_get_default_allocator(), autostart);
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize rcl timer handle");
+    }
+  }
+}
+
 TimerBase::~TimerBase()
 {
   clear_on_reset_callback();

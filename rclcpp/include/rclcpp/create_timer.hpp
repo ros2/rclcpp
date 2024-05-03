@@ -170,6 +170,56 @@ create_timer(
   return timer;
 }
 
+/// Convenience method to create a general timer with an initial trigger time using node resources.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param clock clock to be used
+ * \param initial_call_time time at which the callback should be initially triggered
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \param autostart defines if the timer should start it's countdown on initialization or not.
+ * \return shared pointer to a generic timer
+ * \throws std::invalid_argument if either clock, node_base or node_timers
+ * are nullptr, or period is negative or too large
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::GenericTimer<CallbackT>::SharedPtr
+create_timer(
+  rclcpp::Clock::SharedPtr clock,
+  Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true)
+{
+  if (clock == nullptr) {
+    throw std::invalid_argument{"clock cannot be null"};
+  }
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+
+  // Add a new generic timer.
+  auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
+    std::move(clock), initial_call_time, period_ns, std::move(callback),
+    node_base->get_context(), autostart);
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
 /// Convenience method to create a wall timer with node resources.
 /**
  *
@@ -208,6 +258,50 @@ create_wall_timer(
   // Add a new wall timer.
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     period_ns, std::move(callback), node_base->get_context(), autostart);
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
+/// Convenience method to create a wall timer with an initial trigger time using node resources.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param initial_call_time time at which the callback should be initially triggered
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \return shared pointer to a wall timer
+ * \throws std::invalid_argument if either node_base or node_timers
+ * are null, or period is negative or too large
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::WallTimer<CallbackT>::SharedPtr
+create_wall_timer(
+  Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true)
+{
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+
+  // Add a new wall timer.
+  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
+    initial_call_time, period_ns, std::move(callback), node_base->get_context(), autostart);
   node_timers->add_timer(timer, group);
   return timer;
 }
