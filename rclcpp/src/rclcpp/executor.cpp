@@ -366,24 +366,52 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-    if (!wait_result_.has_value()) {
-      wait_for_work(std::chrono::milliseconds(0));
-    }
+  // clear the wait result and wait for work without blocking to collect the work
+  // for the first time
+  // both spin_some and spin_all wait for work at the beginning
+  wait_result_.reset();
+  wait_for_work(std::chrono::milliseconds(0));
+  bool just_waited = true;
 
+  // The logic of this while loop is as follows:
+  //
+  // - while not shutdown, and spinning (not canceled), and not max duration reached...
+  // - try to get an executable item to execute, and execute it if available
+  // - otherwise, reset the wait result, and ...
+  // - if there was no work available just after waiting, break the loop unconditionally
+  //   - this is appropriate for both spin_some and spin_all which use this function
+  // - else if exhaustive = true, then wait for work again
+  //   - this is only used for spin_all and not spin_some
+  // - else break
+  //   - this only occurs with spin_some
+  //
+  // The logic of this loop is subtle and should be carefully changed if at all.
+  // See also:
+  //   https://github.com/ros2/rclcpp/issues/2508
+  //   https://github.com/ros2/rclcpp/pull/2517
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
+      just_waited = false;
     } else {
-      // If nothing is ready, reset the result to signal we are
-      // ready to wait again
+      // if nothing is ready, reset the result to clear it
       wait_result_.reset();
-    }
 
-    if (!wait_result_.has_value() && !exhaustive) {
-      // In the case of spin some, then we can exit
-      // In the case of spin all, then we will allow ourselves to wait again.
-      break;
+      if (just_waited) {
+        // there was no work after just waiting, always exit in this case
+        // before the exhaustive condition can be checked
+        break;
+      }
+
+      if (exhaustive) {
+        // if exhaustive, wait for work again
+        // this only happens for spin_all; spin_some only waits at the start
+        wait_for_work(std::chrono::milliseconds(0));
+        just_waited = true;
+      } else {
+        break;
+      }
     }
   }
 }
