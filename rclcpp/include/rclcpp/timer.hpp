@@ -69,6 +69,25 @@ public:
     rclcpp::Context::SharedPtr context,
     bool autostart = true);
 
+  /// Constructor allowing for specification of an initial trigger time
+  /**
+   * \param clock A clock to use for time and sleeping
+   * \param initial_call_time The time at which the callback should be initially triggered
+   * \param period The interval at which the timer fires
+   * \param context node context
+   * \param autostart timer state on initialization
+   *
+   * In order to activate a timer that is not started on initialization,
+   * user should call the reset() method.
+   */
+  RCLCPP_PUBLIC
+  explicit TimerBase(
+    Clock::SharedPtr clock,
+    Time initial_call_time,
+    std::chrono::nanoseconds period,
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true);
+
   /// TimerBase destructor
   RCLCPP_PUBLIC
   virtual
@@ -258,6 +277,38 @@ public:
 #endif
   }
 
+  /// Constructor allowing for specification of an initial trigger time.
+  /**
+   * \param[in] clock The clock providing the current time.
+   * \param[in] initial_call_time The time at which the callback should be initially triggered.
+   * \param[in] period The interval at which the timer fires.
+   * \param[in] callback User-specified callback function.
+   * \param[in] context custom context to be used.
+   * \param autostart timer state on initialization
+   */
+  explicit GenericTimer(
+    Clock::SharedPtr clock, Time initial_call_time, std::chrono::nanoseconds period,
+    FunctorT && callback, rclcpp::Context::SharedPtr context, bool autostart = true
+  )
+  : TimerBase(clock, initial_call_time, period, context, autostart),
+    callback_(std::forward<FunctorT>(callback))
+  {
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_timer_callback_added,
+      static_cast<const void *>(get_timer_handle().get()),
+      reinterpret_cast<const void *>(&callback_));
+#ifndef TRACETOOLS_DISABLED
+    if (TRACETOOLS_TRACEPOINT_ENABLED(rclcpp_callback_register)) {
+      char * symbol = tracetools::get_symbol(callback_);
+      TRACETOOLS_DO_TRACEPOINT(
+        rclcpp_callback_register,
+        reinterpret_cast<const void *>(&callback_),
+        symbol);
+      std::free(symbol);
+    }
+#endif
+  }
+
   /// Default destructor.
   virtual ~GenericTimer()
   {
@@ -375,6 +426,25 @@ public:
     bool autostart = true)
   : GenericTimer<FunctorT>(
       std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context, autostart)
+  {}
+
+  /// Wall timer constructor allowing for specification of an initial trigger time
+  /**
+   * \param initial_call_time The time at which the callback should be initially triggered.
+   * \param period The interval at which the timer fires
+   * \param callback The callback function to execute every interval
+   * \param context node context
+   * \param autostart timer state on initialization
+   */
+  WallTimer(
+    Time initial_call_time,
+    std::chrono::nanoseconds period,
+    FunctorT && callback,
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true)
+  : GenericTimer<FunctorT>(
+      std::make_shared<Clock>(RCL_STEADY_TIME), initial_call_time, period,
+      std::move(callback), context, autostart)
   {}
 
 protected:
