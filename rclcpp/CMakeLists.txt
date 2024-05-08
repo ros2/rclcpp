@@ -63,6 +63,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/exceptions/exceptions.cpp
   src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
+  src/rclcpp/executor_options.cpp
   src/rclcpp/executors.cpp
   src/rclcpp/executors/executor_entities_collection.cpp
   src/rclcpp/executors/executor_entities_collector.cpp
