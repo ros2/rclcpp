@@ -31,10 +31,16 @@ class ExecutorOptionsImplementation;
 /// Options to be passed to the executor constructor.
 struct ExecutorOptions
 {
+  RCLCPP_PUBLIC
   ExecutorOptions();
+
+  RCLCPP_PUBLIC
   virtual ~ExecutorOptions();
 
+  RCLCPP_PUBLIC
   ExecutorOptions(const ExecutorOptions &);
+
+  RCLCPP_PUBLIC
   ExecutorOptions & operator=(const ExecutorOptions &);
 
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
