@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+28.1.2 (2024-05-13)
+-------------------
 * Revert "call shutdown in LifecycleNode dtor to avoid leaving the device in un… (`#2450 <https://github.com/ros2/rclcpp/issues/2450>`_)" (`#2522 <https://github.com/ros2/rclcpp/issues/2522>`_) (`#2524 <https://github.com/ros2/rclcpp/issues/2524>`_)
   This reverts commit 04ea0bb00293387791522590b7347a2282cda290.
   (cherry picked from commit 42b0b5775b4e68718c5949308c9e1a059930ded7)

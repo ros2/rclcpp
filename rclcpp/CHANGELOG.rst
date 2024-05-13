@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+28.1.2 (2024-05-13)
+-------------------
 * add impl pointer for ExecutorOptions (`#2523 <https://github.com/ros2/rclcpp/issues/2523>`_) (`#2525 <https://github.com/ros2/rclcpp/issues/2525>`_)
   * add impl pointer for ExecutorOptions
   (cherry picked from commit 343b29b617b163ad72b9fe3f6441dd4ed3d3af09)
