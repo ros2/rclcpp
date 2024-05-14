@@ -155,7 +155,7 @@ public:
   size_t num_clients{0u};
   size_t num_services{0u};
 
- // Lock for action_client_
+  // Lock for action_client_
   bool is_status_ready{false};
   std::recursive_mutex action_client_mutex_;
   bool is_goal_response_ready{false};
@@ -650,7 +650,7 @@ ClientBase::clear_on_ready_callback()
 std::shared_ptr<void>
 ClientBase::take_data()
 {
- // next_ready_event is an atomic, caching localy
+  // next_ready_event is an atomic, caching localy
   size_t next_ready_event = pimpl_->next_ready_event.exchange(std::numeric_limits<uint32_t>::max());
 
   if (next_ready_event == std::numeric_limits<uint32_t>::max()) {
@@ -662,7 +662,7 @@ ClientBase::take_data()
 std::shared_ptr<void>
 ClientBase::take_data_by_entity_id(size_t id)
 {
- std::shared_ptr<ClientBaseData> data_ptr;
+  std::shared_ptr<ClientBaseData> data_ptr;
   rcl_ret_t ret;
 
   // Mark as ready the entity from which we want to take data
