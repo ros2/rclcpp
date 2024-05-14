@@ -30,6 +30,7 @@
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/waitable.hpp"
+#include "action_msgs/srv/cancel_goal.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
@@ -77,6 +78,7 @@ public:
     GoalService,
     ResultService,
     CancelService,
+    Expired
   };
 
   RCLCPP_ACTION_PUBLIC
@@ -279,19 +281,29 @@ private:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_goal_request_received(std::shared_ptr<void> & data);
+  execute_goal_request_received(
+    rcl_ret_t ret,
+    rcl_action_goal_info_t goal_info,
+    rmw_request_id_t request_header,
+    std::shared_ptr<void> message);
 
   /// Handle a request to cancel goals on the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_cancel_request_received(std::shared_ptr<void> & data);
+  execute_cancel_request_received(
+    rcl_ret_t ret,
+    std::shared_ptr<action_msgs::srv::CancelGoal::Request> request,
+    rmw_request_id_t request_header);
 
   /// Handle a request to get the result of an action
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_result_request_received(std::shared_ptr<void> & data);
+  execute_result_request_received(
+    rcl_ret_t ret,
+    std::shared_ptr<void> result_request,
+    rmw_request_id_t request_header);
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
