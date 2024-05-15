@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.9 (2024-05-15)
+-------------------
+* call shutdown in LifecycleNode dtor to avoid leaving the device in un… (`#2450 <https://github.com/ros2/rclcpp/issues/2450>`_) (`#2491 <https://github.com/ros2/rclcpp/issues/2491>`_)
+* Contributors: mergify[bot]
+
 16.0.8 (2024-01-24)
 -------------------
 

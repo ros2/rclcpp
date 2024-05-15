@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.9 (2024-05-15)
+-------------------
+* Do not generate the exception when action service response timeout. (`#2464 <https://github.com/ros2/rclcpp/issues/2464>`_) (`#2518 <https://github.com/ros2/rclcpp/issues/2518>`_)
+* Contributors: mergify[bot]
+
 16.0.8 (2024-01-24)
 -------------------
 

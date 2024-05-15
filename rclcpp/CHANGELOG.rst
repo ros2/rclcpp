@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.9 (2024-05-15)
+-------------------
+* Fix logging macros to build with msvc and cpp20 (`#2063 <https://github.com/ros2/rclcpp/issues/2063>`_) (`#2529 <https://github.com/ros2/rclcpp/issues/2529>`_)
+  (cherry picked from commit 86335dd4acd91d5dd973c4e4e97014e5e8a916bc)
+  Co-authored-by: Mateusz Szczygielski <112629916+msz-rai@users.noreply.github.com>
+* address ambiguous auto variable. (`#2481 <https://github.com/ros2/rclcpp/issues/2481>`_) (`#2485 <https://github.com/ros2/rclcpp/issues/2485>`_)
+  (cherry picked from commit 3cdb25934ed261c78bdfbcf5ec9f06e0573be81e)
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Fix clang warning: bugprone-use-after-move (`#2116 <https://github.com/ros2/rclcpp/issues/2116>`_) (`#2459 <https://github.com/ros2/rclcpp/issues/2459>`_)
+  Co-authored-by: mauropasse <mauropasse@hotmail.com>
+  Co-authored-by: Mauro Passerino <mpasserino@irobot.com>
+* Contributors: Tamaki Nishino, mergify[bot]
+
 16.0.8 (2024-01-24)
 -------------------
 * Add missing stdexcept include (`#2186 <https://github.com/ros2/rclcpp/issues/2186>`_) (`#2394 <https://github.com/ros2/rclcpp/issues/2394>`_)
