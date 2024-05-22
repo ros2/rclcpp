@@ -168,7 +168,7 @@ LifecycleNode::~LifecycleNode()
   } else if (current_state > lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED) {
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp_lifecycle"),
-      "Cannot shutdown the LifecycleNode in transition state(%u)",
+      "Shutdown error in destruction of LifecycleNode: Node still in transition state(%u)",
       current_state);
   }
 
