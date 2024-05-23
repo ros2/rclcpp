@@ -511,9 +511,19 @@ EventsExecutor::add_notify_waitable_to_collection(
 {
   // The notify waitable is not associated to any group, so use an invalid one
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr;
-  collection.insert(
+  bool inserted = collection.insert(
   {
     this->notify_waitable_.get(),
     {this->notify_waitable_, weak_group_ptr}
   });
+  // Explicitly ignore if the notify waitable was not inserted because that means
+  // it was already inserted, which happens initially as it is explicitly added
+  // in the constructor as well as every time the collection is reset, so on
+  // the first reset there is a second insertion attempt.
+  // We could check before trying to insert, but that would require a "find" call
+  // on each refresh, which is expensive, and otherwise it would require additional
+  // state in this class to detect the initial case where it is added twice.
+  // Therefore we just insert and ignore it if it fails (the only way it fails
+  // is when a duplicate is inserted).
+  RCUTILS_UNUSED(inserted);
 }

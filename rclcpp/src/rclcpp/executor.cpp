@@ -673,7 +673,11 @@ Executor::collect_entities()
     current_notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
       *notify_waitable_);
     auto notify_waitable = std::static_pointer_cast<rclcpp::Waitable>(current_notify_waitable_);
-    collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
+    bool inserted = collection.waitables.insert({notify_waitable.get(), {notify_waitable, {}}});
+    // Should never be false, so this is a defensive check, mark unused too
+    // in order to avoid a warning in release builds.
+    assert(inserted);
+    RCUTILS_UNUSED(inserted);
   }
 
   // We must remove expired entities here, so that we don't continue to use older entities.
