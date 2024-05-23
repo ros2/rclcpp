@@ -37,6 +37,7 @@
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/time_source.hpp"
+#include "rcpputils/scope_exit.hpp"
 
 #include "test_msgs/msg/empty.hpp"
 
@@ -876,6 +877,114 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
   }
 
   rclcpp::shutdown(non_default_context);
+}
+
+// The purpose of this test is to check that the order of callbacks happen
+// in some relation to the order of events and the order in which the callbacks
+// were registered.
+// This is not a guarantee of executor API, but it is a bit of UB that some
+// have come to depend on, see:
+//
+//   https://github.com/ros2/rclcpp/issues/2532
+//
+// It should not be changed unless there's a good reason for it (users find it
+// the least surprising out come even if it is not guaranteed), but if there
+// is a good reason for changing it, then the executors effected can be skipped,
+// or the test can be removed.
+// The purpose of this test is to catch this regressions and let the authors of
+// the change read up on the above context and act accordingly.
+TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
+{
+  using ExecutorType = TypeParam;
+
+  // number of waitable to test
+  constexpr size_t number_of_waitables = 10;
+  std::vector<size_t> forward(number_of_waitables);
+  std::iota(std::begin(forward), std::end(forward), 0);
+  std::vector<size_t> reverse(number_of_waitables);
+  std::reverse_copy(std::begin(forward), std::end(forward), std::begin(reverse));
+
+  struct test_case
+  {
+    // Order in which to trigger the waitables.
+    std::vector<size_t> call_order;
+    // Order in which we expect the waitables to be executed.
+    std::vector<size_t> expected_execution_order;
+  };
+  std::map<std::string, test_case> test_cases = {
+    {"forward call order", {forward, forward}},
+    {"reverse call order", {reverse, forward}},
+  };
+
+  // Note use this to exclude or modify expected results for executors if this
+  // undefined behavior doesn't hold for them:
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+  {
+    // for the EventsExecutor the call order is the execution order because it
+    // tracks the individual events (triggers in the case of waitables) and
+    // executes in that order
+    test_cases["reverse call order"] = {reverse, reverse};
+  }
+
+  // Set up a situation with N waitables, added in order (1, ..., N) and then
+  // trigger them in various orders between calls to spin, to see that the order
+  // is impacted by the registration order (in most cases).
+  // Note that we always add/register, trigger, then wait/spin, because this
+  // undefined behavior related to execution order only applies to entities
+  // that were "ready" in between calls to spin, i.e. they appear to become
+  // "ready" to the executor at the "same time".
+  // Also note, that this ordering only applies within entities of the same type
+  // as well, there are other parts of the executor that determine the order
+  // between entity types, e.g. the default scheduling (at the time of writing)
+  // prefers timers, then subscriptions, then service servers, then service
+  // clients, and then waitables, see: Executor::get_next_ready_executable()
+  // But that might be different for different executors and may change in the
+  // future.
+  // So here we just test order withing a few different waitable instances only.
+
+  constexpr bool automatically_add_to_executor_with_node = false;
+  auto isolated_callback_group = this->node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    automatically_add_to_executor_with_node);
+
+  auto waitable_interfaces = this->node->get_node_waitables_interface();
+
+  std::vector<std::shared_ptr<TestWaitable>> waitables;
+  for (size_t i = 0; i < number_of_waitables; ++i) {
+    auto my_waitable = std::make_shared<TestWaitable>();
+    waitable_interfaces->add_waitable(my_waitable, isolated_callback_group);
+    waitables.push_back(my_waitable);
+  }
+
+  // perform each of the test cases
+  for (const auto & test_case_pair : test_cases) {
+    const std::string & test_case_name = test_case_pair.first;
+    const auto & test_case = test_case_pair.second;
+
+    ExecutorType executor;
+    executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+
+    RCPPUTILS_SCOPE_EXIT({
+      for (size_t i = 0; i < number_of_waitables; ++i) {
+        waitables[i]->set_on_execute_callback(nullptr);
+      }
+    });
+
+    std::vector<size_t> actual_order;
+    for (size_t i : test_case.call_order) {
+      waitables[i]->set_on_execute_callback([&actual_order, i]() {actual_order.push_back(i);});
+      waitables[i]->trigger();
+    }
+
+    while (actual_order.size() < number_of_waitables) {
+      executor.spin_once(10s);  // large timeout because it should normally exit quickly
+    }
+
+    EXPECT_EQ(actual_order, test_case.expected_execution_order)
+      << "callback call order in test case '" << test_case_name << "' different than expected, "
+      << "this may be a false positive, see test description";
+  }
 }
 
 template<typename T>
