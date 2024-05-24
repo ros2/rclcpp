@@ -55,12 +55,6 @@ public:
   explicit EmptyLifecycleNode(const std::string & node_name, const TimerType & timer_type)
   : rclcpp_lifecycle::LifecycleNode(node_name)
   {
-    rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
-    publisher_ =
-      std::make_shared<rclcpp_lifecycle::LifecyclePublisher<test_msgs::msg::Empty>>(
-      get_node_base_interface().get(), std::string("topic"), rclcpp::QoS(10), options);
-    add_managed_entity(publisher_);
-
     // For coverage this is being added here
     switch (timer_type) {
       case TimerType::WALL_TIMER:
@@ -77,14 +71,6 @@ public:
         }
     }
   }
-
-  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<test_msgs::msg::Empty>> publisher()
-  {
-    return publisher_;
-  }
-
-private:
-  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<test_msgs::msg::Empty>> publisher_;
 };
 
 class TestLifecyclePublisher : public ::testing::TestWithParam<TimerType>
@@ -93,95 +79,103 @@ public:
   void SetUp()
   {
     rclcpp::init(0, nullptr);
-    node_ = std::make_shared<EmptyLifecycleNode>("node", GetParam());
   }
 
   void TearDown()
   {
     rclcpp::shutdown();
   }
-
-protected:
-  std::shared_ptr<EmptyLifecycleNode> node_;
 };
 
 TEST_P(TestLifecyclePublisher, publish_managed_by_node) {
+  auto node = std::make_shared<EmptyLifecycleNode>("node", GetParam());
+
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<test_msgs::msg::Empty>> publisher =
+    node->create_publisher<test_msgs::msg::Empty>(std::string("topic"), rclcpp::QoS(10), options);
+
   // transition via LifecycleNode
   auto success = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   auto reset_key = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   auto ret = reset_key;
 
-  EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, node_->get_current_state().id());
-  node_->trigger_transition(
+  EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, node->get_current_state().id());
+  node->trigger_transition(
     rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE), ret);
   ASSERT_EQ(success, ret);
   ret = reset_key;
-  node_->trigger_transition(
+  node->trigger_transition(
     rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE), ret);
   ASSERT_EQ(success, ret);
   ret = reset_key;
-  EXPECT_TRUE(node_->publisher()->is_activated());
+  EXPECT_TRUE(publisher->is_activated());
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(*msg_ptr));
+    EXPECT_NO_THROW(publisher->publish(*msg_ptr));
   }
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
+    EXPECT_NO_THROW(publisher->publish(std::move(msg_ptr)));
   }
   {
-    auto loaned_msg = node_->publisher()->borrow_loaned_message();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
+    auto loaned_msg = publisher->borrow_loaned_message();
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
   }
-  node_->trigger_transition(
+  node->trigger_transition(
     rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE), ret);
   ASSERT_EQ(success, ret);
   ret = reset_key;
   (void)ret;  // Just to make clang happy
-  EXPECT_FALSE(node_->publisher()->is_activated());
+  EXPECT_FALSE(publisher->is_activated());
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(*msg_ptr));
+    EXPECT_NO_THROW(publisher->publish(*msg_ptr));
   }
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
+    EXPECT_NO_THROW(publisher->publish(std::move(msg_ptr)));
   }
   {
-    auto loaned_msg = node_->publisher()->borrow_loaned_message();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
+    auto loaned_msg = publisher->borrow_loaned_message();
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
   }
 }
 
 TEST_P(TestLifecyclePublisher, publish) {
+  auto node = std::make_shared<EmptyLifecycleNode>("node", GetParam());
+
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<test_msgs::msg::Empty>> publisher =
+    node->create_publisher<test_msgs::msg::Empty>(std::string("topic"), rclcpp::QoS(10), options);
+
   // transition via LifecyclePublisher
-  node_->publisher()->on_deactivate();
-  EXPECT_FALSE(node_->publisher()->is_activated());
+  publisher->on_deactivate();
+  EXPECT_FALSE(publisher->is_activated());
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(*msg_ptr));
-  }
-  {
-    auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
-  }
-  {
-    auto loaned_msg = node_->publisher()->borrow_loaned_message();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
-  }
-  node_->publisher()->on_activate();
-  EXPECT_TRUE(node_->publisher()->is_activated());
-  {
-    auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(*msg_ptr));
+    EXPECT_NO_THROW(publisher->publish(*msg_ptr));
   }
   {
     auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(msg_ptr)));
+    EXPECT_NO_THROW(publisher->publish(std::move(msg_ptr)));
   }
   {
-    auto loaned_msg = node_->publisher()->borrow_loaned_message();
-    EXPECT_NO_THROW(node_->publisher()->publish(std::move(loaned_msg)));
+    auto loaned_msg = publisher->borrow_loaned_message();
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
+  }
+  publisher->on_activate();
+  EXPECT_TRUE(publisher->is_activated());
+  {
+    auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
+    EXPECT_NO_THROW(publisher->publish(*msg_ptr));
+  }
+  {
+    auto msg_ptr = std::make_unique<test_msgs::msg::Empty>();
+    EXPECT_NO_THROW(publisher->publish(std::move(msg_ptr)));
+  }
+  {
+    auto loaned_msg = publisher->borrow_loaned_message();
+    EXPECT_NO_THROW(publisher->publish(std::move(loaned_msg)));
   }
 }
 
