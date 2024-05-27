@@ -26,10 +26,15 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   // parse arguments
   bool use_multi_threaded_executor{false};
+  bool use_events_executor{false};
   std::vector<std::string> args = rclcpp::remove_ros_arguments(argc, argv);
   for (auto & arg : args) {
-    if (arg == std::string("--use_multi_threaded_executor")) {
+    if (arg == std::string("--use_multi_threaded_executor") ||
+      arg == std::string("--use-multi-threaded-executor"))
+    {
       use_multi_threaded_executor = true;
+    } else if (arg == std::string("--use-events-executor")) {
+      use_events_executor = true;
     }
   }
   // create executor and component manager
@@ -38,6 +43,10 @@ int main(int argc, char * argv[])
   if (use_multi_threaded_executor) {
     using ComponentManagerIsolated =
       rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>;
+    node = std::make_shared<ComponentManagerIsolated>(exec);
+  } else if (use_events_executor) {
+    using ComponentManagerIsolated =
+      rclcpp_components::ComponentManagerIsolated<rclcpp::experimental::executors::EventsExecutor>;
     node = std::make_shared<ComponentManagerIsolated>(exec);
   } else {
     using ComponentManagerIsolated =
