@@ -644,11 +644,11 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
 {
   using ExecutorType = TypeParam;
 
-  // number of waitable to test
-  constexpr size_t number_of_waitables = 10;
-  std::vector<size_t> forward(number_of_waitables);
+  // number of each entity to test
+  constexpr size_t number_of_entities = 20;
+  std::vector<size_t> forward(number_of_entities);
   std::iota(std::begin(forward), std::end(forward), 0);
-  std::vector<size_t> reverse(number_of_waitables);
+  std::vector<size_t> reverse(number_of_entities);
   std::reverse_copy(std::begin(forward), std::end(forward), std::begin(reverse));
 
   struct test_case
@@ -695,42 +695,117 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
     rclcpp::CallbackGroupType::MutuallyExclusive,
     automatically_add_to_executor_with_node);
 
-  auto waitable_interfaces = this->node->get_node_waitables_interface();
+  // perform each of the test cases for waitables
+  {
+    auto waitable_interfaces = this->node->get_node_waitables_interface();
 
-  std::vector<std::shared_ptr<TestWaitable>> waitables;
-  for (size_t i = 0; i < number_of_waitables; ++i) {
-    auto my_waitable = std::make_shared<TestWaitable>();
-    waitable_interfaces->add_waitable(my_waitable, isolated_callback_group);
-    waitables.push_back(my_waitable);
+    std::vector<std::shared_ptr<TestWaitable>> waitables;
+    for (size_t i = 0; i < number_of_entities; ++i) {
+      auto my_waitable = std::make_shared<TestWaitable>();
+      waitable_interfaces->add_waitable(my_waitable, isolated_callback_group);
+      waitables.push_back(my_waitable);
+    }
+
+    for (const auto & test_case_pair : test_cases) {
+      const std::string & test_case_name = test_case_pair.first;
+      const auto & test_case = test_case_pair.second;
+
+      ExecutorType executor;
+      executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+
+      RCPPUTILS_SCOPE_EXIT({
+        for (size_t i = 0; i < number_of_entities; ++i) {
+          waitables[i]->set_on_execute_callback(nullptr);
+        }
+      });
+
+      std::vector<size_t> actual_order;
+      for (size_t i : test_case.call_order) {
+        waitables[i]->set_on_execute_callback([&actual_order, i]() {actual_order.push_back(i);});
+        waitables[i]->trigger();
+      }
+
+      while (actual_order.size() < number_of_entities && rclcpp::ok()) {
+        executor.spin_once(10s);  // large timeout because it should normally exit quickly
+      }
+
+      EXPECT_EQ(actual_order, test_case.expected_execution_order)
+        << "callback call order in test case '" << test_case_name << "' different than expected, "
+        << "this may be a false positive, see test description";
+    }
   }
 
-  // perform each of the test cases
-  for (const auto & test_case_pair : test_cases) {
-    const std::string & test_case_name = test_case_pair.first;
-    const auto & test_case = test_case_pair.second;
+  const std::string test_topic_name = "/deterministic_execution_order_ub";
+  std::map<rclcpp::SubscriptionBase *, std::function<void()>> on_sub_data_callbacks;
+  std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
+  rclcpp::SubscriptionOptions so;
+  so.callback_group = isolated_callback_group;
+  for (size_t i = 0; i < number_of_entities; ++i) {
+    size_t next_sub_index = subscriptions.size();
+    auto sub = this->node->template create_subscription<test_msgs::msg::Empty>(
+      test_topic_name,
+      10,
+      [&on_sub_data_callbacks, &subscriptions, next_sub_index](const test_msgs::msg::Empty &) {
+        auto this_sub_pointer = subscriptions[next_sub_index].get();
+        auto callback_for_sub_it = on_sub_data_callbacks.find(this_sub_pointer);
+        ASSERT_NE(callback_for_sub_it, on_sub_data_callbacks.end());
+        auto on_sub_data_callback = callback_for_sub_it->second;
+        if (on_sub_data_callback) {
+          on_sub_data_callback();
+        }
+      },
+      so);
+    subscriptions.push_back(sub);
+  }
 
-    ExecutorType executor;
-    executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+  // perform each of the test cases for subscriptions
+  if (
+    // TODO(wjwwood): the order of subscriptions in the EventsExecutor does not
+    //   follow call order or the insertion order, though it seems to be
+    //   consistently the same order (from what I can tell in testing).
+    //   I don't know why that is, but it means that this part of the test
+    //   will not pass for the EventsExecutor, so skip it.
+    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+  {
+    for (const auto & test_case_pair : test_cases) {
+      const std::string & test_case_name = test_case_pair.first;
+      const auto & test_case = test_case_pair.second;
 
-    RCPPUTILS_SCOPE_EXIT({
-      for (size_t i = 0; i < number_of_waitables; ++i) {
-        waitables[i]->set_on_execute_callback(nullptr);
+      ExecutorType executor;
+      executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+
+      RCPPUTILS_SCOPE_EXIT({
+        for (auto & sub_pair : on_sub_data_callbacks) {
+          sub_pair.second = nullptr;
+        }
+      });
+
+      std::vector<size_t> actual_order;
+      for (size_t i = 0; i < number_of_entities; ++i) {
+        auto sub = subscriptions[i];
+        on_sub_data_callbacks[sub.get()] = [&actual_order, i]() {
+            actual_order.push_back(i);
+          };
       }
-    });
 
-    std::vector<size_t> actual_order;
-    for (size_t i : test_case.call_order) {
-      waitables[i]->set_on_execute_callback([&actual_order, i]() {actual_order.push_back(i);});
-      waitables[i]->trigger();
+      // create publisher and wait for all of the subscriptions to match
+      auto pub = this->node->template create_publisher<test_msgs::msg::Empty>(test_topic_name, 10);
+      size_t number_of_matches = pub->get_subscription_count();
+      while (number_of_matches < number_of_entities && rclcpp::ok()) {
+        executor.spin_once(10s);  // large timeout because it should normally exit quickly
+        number_of_matches = pub->get_subscription_count();
+      }
+
+      // publish once and wait for all subscriptions to be handled
+      pub->publish(test_msgs::msg::Empty());
+      while (actual_order.size() < number_of_entities && rclcpp::ok()) {
+        executor.spin_once(10s);  // large timeout because it should normally exit quickly
+      }
+
+      EXPECT_EQ(actual_order, test_case.expected_execution_order)
+        << "callback call order in test case '" << test_case_name << "' different than expected, "
+        << "this may be a false positive, see test description";
     }
-
-    while (actual_order.size() < number_of_waitables) {
-      executor.spin_once(10s);  // large timeout because it should normally exit quickly
-    }
-
-    EXPECT_EQ(actual_order, test_case.expected_execution_order)
-      << "callback call order in test case '" << test_case_name << "' different than expected, "
-      << "this may be a false positive, see test description";
   }
 }
 
