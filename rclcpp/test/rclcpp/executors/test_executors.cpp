@@ -894,16 +894,45 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
   std::vector<size_t> reverse(number_of_entities);
   std::reverse_copy(std::begin(forward), std::end(forward), std::begin(reverse));
 
+  // The expected results vary based on the registration order (always 0..N-1),
+  // the call order (what this means varies based on the entity type), the
+  // entity types, and in some cases the executor type.
+  // It is also possible that the rmw implementation can play a role in the
+  // ordering, depending on how the executor uses the rmw layer.
+  // The follow structure and logic tries to capture these details.
+  // Each test case represents a case-entity pair,
+  // e.g. "forward call order for waitables" or "reverse call order for timers"
   struct test_case
   {
-    // Order in which to trigger the waitables.
+    // If this is true, then the test case should be skipped.
+    bool should_skip;
+    // Order in which to invoke the entities, where that is possible to control.
+    // For example, the order in which we trigger() the waitables, or the
+    // order in which we set the timers up to execute (using increasing periods).
     std::vector<size_t> call_order;
-    // Order in which we expect the waitables to be executed.
+    // Order in which we expect the entities to be executed by the executor.
     std::vector<size_t> expected_execution_order;
   };
-  std::map<std::string, test_case> test_cases = {
-    {"forward call order", {forward, forward}},
-    {"reverse call order", {reverse, forward}},
+  // tests cases are "test_name: {"entity type": {call_order, expected_execution_order}"
+  std::map<std::string, std::map<std::string, test_case>> test_cases = {
+    {
+      "forward call order",
+      {
+        {"waitable", {false, forward, forward}},
+        {"subscription", {false, forward, forward}},
+        {"timer", {false, forward, forward}}
+      }
+    },
+    {
+      "reverse call order",
+      {
+        {"waitable", {false, reverse, forward}},
+        {"subscription", {false, reverse, forward}},
+        // timers are always called in order of which expires soonest, so
+        // the registration order doesn't necessarily affect them
+        {"timer", {false, reverse, reverse}}
+      }
+    },
   };
 
   // Note use this to exclude or modify expected results for executors if this
@@ -914,7 +943,18 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
     // for the EventsExecutor the call order is the execution order because it
     // tracks the individual events (triggers in the case of waitables) and
     // executes in that order
-    test_cases["reverse call order"] = {reverse, reverse};
+    test_cases["reverse call order"]["waitable"] = {false, reverse, reverse};
+    // timers are unaffected by the above about waitables, as they are always
+    // executed in "call order" even in the other executors
+    // but, subscription execution order is driven by the rmw impl due to
+    // how the EventsExecutor uses the rmw interface, so we'll skip those
+    for (auto & test_case_pair : test_cases) {
+      for (auto & entity_test_case_pair : test_case_pair.second) {
+        if (entity_test_case_pair.first == "subscription") {
+          entity_test_case_pair.second = {true, {}, {}};
+        }
+      }
+    }
   }
 
   // Set up a situation with N waitables, added in order (1, ..., N) and then
@@ -932,6 +972,8 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
   // But that might be different for different executors and may change in the
   // future.
   // So here we just test order withing a few different waitable instances only.
+  // Further down we test similar set ups with other entities like subscriptions
+  // and timers.
 
   constexpr bool automatically_add_to_executor_with_node = false;
   auto isolated_callback_group = this->node->create_callback_group(
@@ -951,7 +993,10 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
 
     for (const auto & test_case_pair : test_cases) {
       const std::string & test_case_name = test_case_pair.first;
-      const auto & test_case = test_case_pair.second;
+      const auto & test_case = test_case_pair.second.at("waitable");
+      if (test_case.should_skip) {
+        continue;
+      }
 
       ExecutorType executor;
       executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
@@ -973,54 +1018,49 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       }
 
       EXPECT_EQ(actual_order, test_case.expected_execution_order)
-        << "callback call order in test case '" << test_case_name << "' different than expected, "
-        << "this may be a false positive, see test description";
+        << "callback call order of waitables in test case '" << test_case_name
+        << "' different than expected, this may be a false positive, see test "
+        << "description";
     }
   }
 
-  const std::string test_topic_name = "/deterministic_execution_order_ub";
-  std::map<rclcpp::SubscriptionBase *, std::function<void()>> on_sub_data_callbacks;
-  std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
-  rclcpp::SubscriptionOptions so;
-  so.callback_group = isolated_callback_group;
-  for (size_t i = 0; i < number_of_entities; ++i) {
-    size_t next_sub_index = subscriptions.size();
-    auto sub = this->node->template create_subscription<test_msgs::msg::Empty>(
-      test_topic_name,
-      10,
-      [&on_sub_data_callbacks, &subscriptions, next_sub_index](const test_msgs::msg::Empty &) {
-        auto this_sub_pointer = subscriptions[next_sub_index].get();
-        auto callback_for_sub_it = on_sub_data_callbacks.find(this_sub_pointer);
-        ASSERT_NE(callback_for_sub_it, on_sub_data_callbacks.end());
-        auto on_sub_data_callback = callback_for_sub_it->second;
-        if (on_sub_data_callback) {
-          on_sub_data_callback();
-        }
-      },
-      so);
-    subscriptions.push_back(sub);
-  }
-
   // perform each of the test cases for subscriptions
-  if (
-    // TODO(wjwwood): the order of subscriptions in the EventsExecutor does not
-    //   follow call order or the insertion order, though it seems to be
-    //   consistently the same order (from what I can tell in testing).
-    //   I don't know why that is, but it means that this part of the test
-    //   will not pass for the EventsExecutor, so skip it.
-    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
   {
+    const std::string test_topic_name = "/deterministic_execution_order_ub";
+    std::map<rclcpp::SubscriptionBase *, std::function<void()>> on_sub_data_callbacks;
+    std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
+    rclcpp::SubscriptionOptions so;
+    so.callback_group = isolated_callback_group;
+    for (size_t i = 0; i < number_of_entities; ++i) {
+      size_t next_sub_index = subscriptions.size();
+      auto sub = this->node->template create_subscription<test_msgs::msg::Empty>(
+        test_topic_name,
+        10,
+        [&on_sub_data_callbacks, &subscriptions, next_sub_index](const test_msgs::msg::Empty &) {
+          auto this_sub_pointer = subscriptions[next_sub_index].get();
+          auto callback_for_sub_it = on_sub_data_callbacks.find(this_sub_pointer);
+          ASSERT_NE(callback_for_sub_it, on_sub_data_callbacks.end());
+          auto on_sub_data_callback = callback_for_sub_it->second;
+          if (on_sub_data_callback) {
+            on_sub_data_callback();
+          }
+        },
+        so);
+      subscriptions.push_back(sub);
+    }
+
     for (const auto & test_case_pair : test_cases) {
       const std::string & test_case_name = test_case_pair.first;
-      const auto & test_case = test_case_pair.second;
+      const auto & test_case = test_case_pair.second.at("subscription");
+      if (test_case.should_skip) {
+        continue;
+      }
 
       ExecutorType executor;
       executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
 
       RCPPUTILS_SCOPE_EXIT({
-        for (auto & sub_pair : on_sub_data_callbacks) {
-          sub_pair.second = nullptr;
-        }
+        on_sub_data_callbacks.clear();
       });
 
       std::vector<size_t> actual_order;
@@ -1046,8 +1086,66 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       }
 
       EXPECT_EQ(actual_order, test_case.expected_execution_order)
-        << "callback call order in test case '" << test_case_name << "' different than expected, "
-        << "this may be a false positive, see test description";
+        << "callback call order of subscriptions in test case '" << test_case_name
+        << "' different than expected, this may be a false positive, see test "
+        << "description";
+    }
+  }
+
+  // perform each of the test cases for timers
+  {
+    for (const auto & test_case_pair : test_cases) {
+      const std::string & test_case_name = test_case_pair.first;
+      const auto & test_case = test_case_pair.second.at("timer");
+      if (test_case.should_skip) {
+        continue;
+      }
+
+      std::map<rclcpp::TimerBase *, std::function<void()>> timer_callbacks;
+      std::vector<rclcpp::TimerBase::SharedPtr> timers;
+      for (size_t i = 0; i < number_of_entities; ++i) {
+        // "call order" for timers will be simulated by setting them at different
+        // periods, with the "first" ones having the smallest period.
+        auto period = 1ms + std::chrono::milliseconds(test_case.call_order[i]);
+        auto timer = this->node->create_timer(
+          period,
+          [&timer_callbacks](rclcpp::TimerBase & timer) {
+            auto timer_callback_it = timer_callbacks.find(&timer);
+            ASSERT_NE(timer_callback_it, timer_callbacks.end());
+            if (nullptr != timer_callback_it->second) {
+              timer_callback_it->second();
+            }
+          },
+          isolated_callback_group);
+        timers.push_back(timer);
+      }
+
+      ExecutorType executor;
+      executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+
+      RCPPUTILS_SCOPE_EXIT({
+        timer_callbacks.clear();
+      });
+
+      std::vector<size_t> actual_order;
+      for (size_t i = 0; i < number_of_entities; ++i) {
+        ASSERT_LT(i, timers.size());
+        auto & timer = timers[i];
+        timer_callbacks[timer.get()] = [&actual_order, &timer, i]() {
+            actual_order.push_back(i);
+            // only allow execution once
+            timer->cancel();
+          };
+      }
+
+      while (actual_order.size() < number_of_entities && rclcpp::ok()) {
+        executor.spin_once(10s);  // large timeout because it should normally exit quickly
+      }
+
+      EXPECT_EQ(actual_order, test_case.expected_execution_order)
+        << "callback call order of timers in test case '" << test_case_name
+        << "' different than expected, this may be a false positive, see test "
+        << "description";
     }
   }
 }
