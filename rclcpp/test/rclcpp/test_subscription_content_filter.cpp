@@ -310,3 +310,25 @@ TEST_F(CLASSNAME(TestContentFilterSubscription, RMW_IMPLEMENTATION), content_fil
     }
   }
 }
+
+TEST_F(
+  CLASSNAME(
+    TestContentFilterSubscription,
+    RMW_IMPLEMENTATION), create_two_content_filters_with_same_topic_name_and_destroy) {
+
+  // Create another content filter
+  auto options = rclcpp::SubscriptionOptions();
+
+  std::string filter_expression = "int32_value > %0";
+  std::vector<std::string> expression_parameters = {"4"};
+
+  options.content_filter_options.filter_expression = filter_expression;
+  options.content_filter_options.expression_parameters = expression_parameters;
+
+  auto callback = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
+  auto sub_2 = node->create_subscription<test_msgs::msg::BasicTypes>(
+    "content_filter_topic", qos, callback, options);
+
+  EXPECT_NE(nullptr, sub_2);
+  sub_2.reset();
+}
