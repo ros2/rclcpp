@@ -146,20 +146,32 @@ LifecycleNode::LifecycleNode(
 
 LifecycleNode::~LifecycleNode()
 {
-  // shutdown if necessary to avoid leaving the device in unknown state
-  if (LifecycleNode::get_current_state().id() !=
-    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
-  {
-    auto ret = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
-    auto finalized = LifecycleNode::shutdown(ret);
-    if (finalized.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED ||
-      ret != rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS)
-    {
-      RCLCPP_WARN(
+  auto current_state = LifecycleNode::get_current_state().id();
+  // shutdown if necessary to avoid leaving the device in any other primary state
+  if (current_state < lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED) {
+    if (node_base_->get_context()->is_valid()) {
+      auto ret = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+      auto finalized = LifecycleNode::shutdown(ret);
+      if (finalized.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED ||
+        ret != rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("rclcpp_lifecycle"),
+          "Shutdown error in destruction of LifecycleNode: final state(%s)",
+          finalized.label().c_str());
+      }
+    } else {
+      // TODO(fujitatomoya): consider when context is gracefully shutdown before.
+      RCLCPP_DEBUG(
         rclcpp::get_logger("rclcpp_lifecycle"),
-        "Shutdown error in destruction of LifecycleNode: final state(%s)",
-        finalized.label().c_str());
+        "Context invalid error in destruction of LifecycleNode: Node still in transition state(%u)",
+        current_state);
     }
+  } else if (current_state > lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp_lifecycle"),
+      "Shutdown error in destruction of LifecycleNode: Node still in transition state(%u)",
+      current_state);
   }
 
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
@@ -172,6 +184,7 @@ LifecycleNode::~LifecycleNode()
   node_timers_.reset();
   node_logging_.reset();
   node_graph_.reset();
+  node_base_.reset();
 }
 
 const char *
