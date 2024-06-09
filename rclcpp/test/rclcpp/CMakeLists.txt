@@ -641,7 +641,7 @@ ament_add_gtest(test_executor test_executor.cpp
   TIMEOUT 120)
 ament_add_test_label(test_executor mimick)
 if(TARGET test_executor)
-  target_link_libraries(test_executor ${PROJECT_NAME} mimick)
+  target_link_libraries(test_executor ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
 endif()
 
 ament_add_gtest(test_graph_listener test_graph_listener.cpp)

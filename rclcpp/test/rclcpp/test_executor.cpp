@@ -23,6 +23,7 @@
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
+#include "test_msgs/srv/empty.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
@@ -507,4 +508,26 @@ TEST_F(TestExecutor, is_spinning) {
   dummy.spin_some(std::chrono::milliseconds(1));
 
   ASSERT_TRUE(timer_called);
+}
+
+TEST_F(TestExecutor, release_ownership_entity_after_spinning_cancel) {
+  using namespace std::chrono_literals;
+
+  // Create an Executor
+  rclcpp::executors::SingleThreadedExecutor executor;
+
+  auto future = std::async(std::launch::async, [&executor] {executor.spin();});
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {
+    };
+  auto server = node->create_service<test_msgs::srv::Empty>("test_service", callback);
+  executor.add_node(node);
+  std::this_thread::sleep_for(50ms);
+  executor.cancel();
+  std::future_status future_status = future.wait_for(1s);
+  EXPECT_EQ(future_status, std::future_status::ready);
+
+  EXPECT_EQ(server.use_count(), 1);
 }

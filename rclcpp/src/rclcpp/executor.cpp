@@ -885,6 +885,8 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
     // Wait for subscriptions or timers to work on
     wait_for_work(timeout);
     if (!spinning.load()) {
+      // Clear wait result to release ownership of entity
+      wait_result_.reset();
       return false;
     }
     // Try again
