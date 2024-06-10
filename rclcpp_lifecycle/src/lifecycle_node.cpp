@@ -133,22 +133,6 @@ LifecycleNode::LifecycleNode(
 
 LifecycleNode::~LifecycleNode()
 {
-  // shutdown if necessary to avoid leaving the device in unknown state
-  if (LifecycleNode::get_current_state().id() !=
-    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
-  {
-    auto ret = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
-    auto finalized = LifecycleNode::shutdown(ret);
-    if (finalized.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED ||
-      ret != rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS)
-    {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp_lifecycle"),
-        "Shutdown error in destruction of LifecycleNode: final state(%s)",
-        finalized.label().c_str());
-    }
-  }
-
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
   node_waitables_.reset();
   node_time_source_.reset();
