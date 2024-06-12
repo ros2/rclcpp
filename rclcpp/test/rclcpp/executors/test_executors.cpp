@@ -40,6 +40,7 @@
 #include "rcpputils/scope_exit.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "test_msgs/srv/empty.hpp"
 
 #include "./executor_types.hpp"
 
@@ -930,6 +931,7 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       {
         {"waitable", {false, forward, forward}},
         {"subscription", {false, forward, forward}},
+        {"service", {false, forward, forward}},
         {"timer", {false, forward, forward}}
       }
     },
@@ -938,6 +940,7 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       {
         {"waitable", {false, reverse, forward}},
         {"subscription", {false, reverse, forward}},
+        {"service", {false, reverse, forward}},
         // timers are always called in order of which expires soonest, so
         // the registration order doesn't necessarily affect them
         {"timer", {false, reverse, reverse}}
@@ -956,11 +959,14 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
     test_cases["reverse call order"]["waitable"] = {false, reverse, reverse};
     // timers are unaffected by the above about waitables, as they are always
     // executed in "call order" even in the other executors
-    // but, subscription execution order is driven by the rmw impl due to
-    // how the EventsExecutor uses the rmw interface, so we'll skip those
+    // but, subscription and service execution order is driven by the rmw impl
+    // due to how the EventsExecutor uses the rmw interface, so we'll skip those
     for (auto & test_case_pair : test_cases) {
       for (auto & entity_test_case_pair : test_case_pair.second) {
-        if (entity_test_case_pair.first == "subscription") {
+        if (
+          entity_test_case_pair.first == "subscription" ||
+          entity_test_case_pair.first == "service")
+        {
           entity_test_case_pair.second = {true, {}, {}};
         }
       }
@@ -1036,7 +1042,7 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
 
   // perform each of the test cases for subscriptions
   {
-    const std::string test_topic_name = "/deterministic_execution_order_ub";
+    const std::string test_topic_name = "~/deterministic_execution_order_ub";
     std::map<rclcpp::SubscriptionBase *, std::function<void()>> on_sub_data_callbacks;
     std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
     rclcpp::SubscriptionOptions so;
@@ -1097,6 +1103,84 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
 
       EXPECT_EQ(actual_order, test_case.expected_execution_order)
         << "callback call order of subscriptions in test case '" << test_case_name
+        << "' different than expected, this may be a false positive, see test "
+        << "description";
+    }
+  }
+
+  // perform each of the test cases for service servers
+  {
+    const std::string test_service_name = "~/deterministic_execution_order_ub";
+    std::map<rclcpp::ServiceBase *, std::function<void()>> on_request_callbacks;
+    std::vector<rclcpp::Service<test_msgs::srv::Empty>::SharedPtr> services;
+    std::vector<rclcpp::Client<test_msgs::srv::Empty>::SharedPtr> clients;
+    for (size_t i = 0; i < number_of_entities; ++i) {
+      size_t next_srv_index = services.size();
+      auto srv = this->node->template create_service<test_msgs::srv::Empty>(
+        test_service_name + "_" + std::to_string(i),
+        [&on_request_callbacks, &services, next_srv_index](
+          std::shared_ptr<test_msgs::srv::Empty::Request>,
+          std::shared_ptr<test_msgs::srv::Empty::Response>
+        ) {
+          auto this_srv_pointer = services[next_srv_index].get();
+          auto callback_for_srv_it = on_request_callbacks.find(this_srv_pointer);
+          ASSERT_NE(callback_for_srv_it, on_request_callbacks.end());
+          auto on_request_callback = callback_for_srv_it->second;
+          if (on_request_callback) {
+            on_request_callback();
+          }
+        },
+        10,
+        isolated_callback_group);
+      services.push_back(srv);
+      auto client = this->node->template create_client<test_msgs::srv::Empty>(
+        test_service_name + "_" + std::to_string(i),
+        10,
+        isolated_callback_group
+      );
+      clients.push_back(client);
+    }
+
+    for (const auto & test_case_pair : test_cases) {
+      const std::string & test_case_name = test_case_pair.first;
+      const auto & test_case = test_case_pair.second.at("service");
+      if (test_case.should_skip) {
+        continue;
+      }
+
+      ExecutorType executor;
+      executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+
+      RCPPUTILS_SCOPE_EXIT({
+        on_request_callbacks.clear();
+      });
+
+      std::vector<size_t> actual_order;
+      for (size_t i = 0; i < number_of_entities; ++i) {
+        auto srv = services[i];
+        on_request_callbacks[srv.get()] = [&actual_order, i]() {
+            actual_order.push_back(i);
+          };
+      }
+
+      // wait for all of the services to match
+      for (const auto & client : clients) {
+        bool matched = client->wait_for_service(10s);  // long timeout, but should be quick
+        ASSERT_TRUE(matched);
+      }
+
+      // send requests in order
+      for (size_t i : test_case.call_order) {
+        clients[i]->async_send_request(std::make_shared<test_msgs::srv::Empty::Request>());
+      }
+
+      // wait for all the requests to be handled
+      while (actual_order.size() < number_of_entities && rclcpp::ok()) {
+        executor.spin_once(10s);  // large timeout because it should normally exit quickly
+      }
+
+      EXPECT_EQ(actual_order, test_case.expected_execution_order)
+        << "callback call order of service servers in test case '" << test_case_name
         << "' different than expected, this may be a false positive, see test "
         << "description";
     }
