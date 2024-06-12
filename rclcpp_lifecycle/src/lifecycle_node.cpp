@@ -152,6 +152,16 @@ LifecycleNode::LifecycleNode(
 
 LifecycleNode::~LifecycleNode()
 {
+  auto current_state = LifecycleNode::get_current_state().id();
+  if (current_state != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED) {
+    // This might be leaveing sensors and devices without shutting down unintentionally.
+    // It is user's responsibility to call shutdown to avoid leaving them unknow states.
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp_lifecycle"),
+      "LifecycleNode is not shut down: Node still in state(%u) in destructor",
+      current_state);
+  }
+
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
   node_waitables_.reset();
   node_type_descriptions_.reset();
