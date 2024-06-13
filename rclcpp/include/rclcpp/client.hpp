@@ -29,6 +29,7 @@
 #include <variant>
 #include <vector>
 
+#include "client_options.hpp"
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
@@ -398,7 +399,7 @@ protected:
   std::atomic<bool> in_use_by_wait_set_{false};
 };
 
-template<typename ServiceT>
+template<typename ServiceT, typename ClientAllocatorT = std::allocator<void>>
 class Client : public ClientBase
 {
 public:
@@ -490,22 +491,28 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] node_graph The node graph interface of the corresponding node.
    * \param[in] service_name Name of the topic to publish to.
-   * \param[in] client_options options for the subscription.
+   * \param[in] qos Quality of Service needed for setup of the rcl_client_options
+   * \param[in] client_options options for the subscription, with custom allocators
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
-    rcl_client_options_t & client_options)
+    const rclcpp::QoS & qos,
+    const rclcpp::ClientOptionsWithAllocator<ClientAllocatorT> & client_options =
+    rclcpp::ClientOptionsWithAllocator<ClientAllocatorT>())
   : ClientBase(node_base, node_graph),
     srv_type_support_handle_(rosidl_typesupport_cpp::get_service_type_support_handle<ServiceT>())
   {
+    rcl_client_options_t client_options_t =
+      client_options.to_rcl_client_options(qos);
+
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),
       srv_type_support_handle_,
       service_name.c_str(),
-      &client_options);
+      &client_options_t);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_SERVICE_NAME_INVALID) {
         auto rcl_node_handle = this->get_rcl_node_handle();

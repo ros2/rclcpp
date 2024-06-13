@@ -120,54 +120,35 @@ LifecycleNode::create_timer(
     this->node_timers_.get());
 }
 
-template<typename ServiceT>
-typename rclcpp::Client<ServiceT>::SharedPtr
-LifecycleNode::create_client(
-  const std::string & service_name,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  return rclcpp::create_client<ServiceT>(
-    node_base_, node_graph_, node_services_,
-    service_name, qos_profile, group);
-}
-
-template<typename ServiceT>
+template<typename ServiceT, typename AllocatorT = std::allocator<void>>
 typename rclcpp::Client<ServiceT>::SharedPtr
 LifecycleNode::create_client(
   const std::string & service_name,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::ClientOptionsWithAllocator<AllocatorT> & options)
 {
-  return rclcpp::create_client<ServiceT>(
+  return rclcpp::create_client<ServiceT, AllocatorT>(
     node_base_, node_graph_, node_services_,
-    service_name, qos, group);
+    service_name, qos, group, options);
 }
 
-template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
-LifecycleNode::create_service(
-  const std::string & service_name,
-  CallbackT && callback,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
-  return rclcpp::create_service<ServiceT, CallbackT>(
-    node_base_, node_services_,
-    service_name, std::forward<CallbackT>(callback), qos_profile, group);
-}
-
-template<typename ServiceT, typename CallbackT>
+template<
+  typename ServiceT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>>
 typename rclcpp::Service<ServiceT>::SharedPtr
 LifecycleNode::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::ServiceOptionsWithAllocator<AllocatorT> & options
+)
 {
-  return rclcpp::create_service<ServiceT, CallbackT>(
+  return rclcpp::create_service<ServiceT, CallbackT, AllocatorT>(
     node_base_, node_services_,
-    service_name, std::forward<CallbackT>(callback), qos, group);
+    service_name, std::forward<CallbackT>(callback), qos, group, options);
 }
 
 template<typename AllocatorT>

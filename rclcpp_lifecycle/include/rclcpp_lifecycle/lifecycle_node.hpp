@@ -282,56 +282,39 @@ public:
 
   /// Create and return a Client.
   /**
-   * \sa rclcpp::Node::create_client
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Client<ServiceT>::SharedPtr
-  create_client(
-    const std::string & service_name,
-    const rmw_qos_profile_t & qos_profile,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Client.
-  /**
    * \param[in] service_name The name on which the service is accessible.
    * \param[in] qos Quality of service profile for client.
    * \param[in] group Callback group to handle the reply to service calls.
+   * \param[in[ options Customization for allocator.
    * \return Shared pointer to the created client.
    */
-  template<typename ServiceT>
+  template<typename ServiceT, typename AllocatorT>
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Service.
-  /**
-   * \sa rclcpp::Node::create_service
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT, typename CallbackT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service(
-    const std::string & service_name,
-    CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    const rclcpp::ClientOptionsWithAllocator<AllocatorT> & options =
+    rclcpp::ClientOptionsWithAllocator<AllocatorT>()
+  );
 
   /// Create and return a Service.
   /**
    * \sa rclcpp::Node::create_service
    */
-  template<typename ServiceT, typename CallbackT>
+  template<
+    typename ServiceT,
+    typename CallbackT,
+    typename AllocatorT>
   typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
     CallbackT && callback,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    const rclcpp::ServiceOptionsWithAllocator<AllocatorT> & options =
+    rclcpp::ServiceOptionsWithAllocator<AllocatorT>()
+  );
 
   /// Create and return a GenericPublisher.
   /**
