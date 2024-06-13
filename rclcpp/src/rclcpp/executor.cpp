@@ -275,7 +275,7 @@ Executor::spin_until_future_complete_impl(
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_until_future_complete() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false);wait_result_.reset(););
   while (rclcpp::ok(this->context_) && spinning.load()) {
     // Do one item of work.
     spin_once_impl(timeout_left);
@@ -364,7 +364,7 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false);wait_result_.reset(););
 
   // clear the wait result and wait for work without blocking to collect the work
   // for the first time
@@ -431,7 +431,7 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false);wait_result_.reset(););
   spin_once_impl(timeout);
 }
 
@@ -885,8 +885,6 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
     // Wait for subscriptions or timers to work on
     wait_for_work(timeout);
     if (!spinning.load()) {
-      // Clear wait result to release ownership of entity
-      wait_result_.reset();
       return false;
     }
     // Try again
