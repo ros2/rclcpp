@@ -17,6 +17,9 @@
 #ifndef RCLCPP__LOGGING_HPP_
 #define RCLCPP__LOGGING_HPP_
 
+#if __has_include(<format>)
+#include <format>
+#endif
 #include <sstream>
 #include <type_traits>
 
@@ -65,18 +68,20 @@ for combinations, feature in feature_combinations.items():
     if 'named' in combinations:
         continue
     rclcpp_feature_combinations[combinations] = feature
-# add a stream variant for each available feature combination
+# add a stream and format variant for each available feature combination
 stream_arg = 'stream_arg'
-for combinations, feature in list(rclcpp_feature_combinations.items()):
-    combinations = ('stream', ) + combinations
-    feature = deepcopy(feature)
-    feature.params[stream_arg] = 'The argument << into a stringstream'
-    rclcpp_feature_combinations[combinations] = feature
+base_feature_combinations = deepcopy(rclcpp_feature_combinations)
+for combinations, feature in base_feature_combinations.items():
+    rclcpp_feature_combinations[('stream', ) + combinations] = feature
+for combinations, feature in base_feature_combinations.items():
+    rclcpp_feature_combinations[('format', ) + combinations] = feature
 
 def get_rclcpp_suffix_from_features(features):
     suffix = get_suffix_from_features(features)
     if 'stream' in features:
         suffix = '_STREAM' + suffix
+    elif 'format' in features:
+        suffix = '_FORMAT' + suffix
     return suffix
 }@
 @[for severity in severities]@
@@ -112,13 +117,19 @@ def get_rclcpp_suffix_from_features(features):
 @[ for param_name, doc_line in rclcpp_feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
-@[ if 'stream' not in feature_combination]@
+@[ if 'stream' in feature_combination]@
+ * \param stream_arg The argument << into a stringstream
+@[ elif 'format' in feature_combination]@
+ * \param ... The variable arguments passed into std::format.
+@[ else]@
  * \param ... The format string, followed by the variable arguments for the format string.
 @[ end if]@
  */
 @{params = rclcpp_feature_combinations[feature_combination].params.keys()}@
 #define RCLCPP_@(severity)@(suffix)(logger@(''.join([', ' + p for p in params]))@
-@[ if 'stream' not in feature_combination]@
+@[ if 'stream' in feature_combination]@
+, @(stream_arg)@
+@[ else]@
 , ...@
 @[ end if]@
 ) \
@@ -149,10 +160,12 @@ def get_rclcpp_suffix_from_features(features):
 @(''.join(['      ' + p + ', \\\n' for p in params if p != stream_arg]))@
 @[ end if]@
       (logger).get_name(), \
-@[ if 'stream' not in feature_combination]@
-      __VA_ARGS__); \
-@[ else]@
+@[ if 'stream' in feature_combination]@
       "%s", rclcpp_stream_ss_.str().c_str()); \
+@[ elif 'format' in feature_combination]@
+      "%s", std::format(__VA_ARGS__).c_str()); \
+@[ else]@
+      __VA_ARGS__); \
 @[ end if]@
   } while (0)
 
