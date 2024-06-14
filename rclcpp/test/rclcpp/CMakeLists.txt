@@ -649,3 +649,8 @@ function(test_subscription_content_filter_for_rmw_implementation)
   endif()
 endfunction()
 call_for_each_rmw_implementation(test_subscription_content_filter_for_rmw_implementation)
+
+ament_add_gtest(test_list_parameter_override_prefixes test_list_parameter_override_prefixes.cpp)
+if(TARGET test_list_parameter_override_prefixes)
+  target_link_libraries(test_list_parameter_override_prefixes ${PROJECT_NAME})
+endif()
