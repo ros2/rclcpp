@@ -341,6 +341,10 @@ EventsExecutor::refresh_current_collection(
   // Acquire lock before modifying the current collection
   std::lock_guard<std::mutex> guard(mutex_);
 
+  // Remove expired timers before updating the timers collection
+  // to ensure any re-initialized timer objects are properly reflected.
+  current_collection_.remove_expired_entities();
+
   current_collection_.timers.update(
     new_collection.timers,
     [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->add_timer(timer);},
