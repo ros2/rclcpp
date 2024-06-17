@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+28.3.0 (2024-06-17)
+-------------------
 * revert call shutdown in LifecycleNode destructor (`#2557 <https://github.com/ros2/rclcpp/issues/2557>`_)
 * LifecycleNode shutdown on dtor only with valid context. (`#2545 <https://github.com/ros2/rclcpp/issues/2545>`_)
 * call shutdown in LifecycleNode dtor to avoid leaving the device in unknown state (2nd) (`#2528 <https://github.com/ros2/rclcpp/issues/2528>`_)
