@@ -807,6 +807,67 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
   }
 }
 
+// Check that executors are correctly notified while they are spinning
+// we notify twice to ensure that the notify waitable is still working
+// after the first notification
+TYPED_TEST(TestExecutors, notifyTwiceWhileSpinning)
+{
+  using ExecutorType = TypeParam;
+
+  // Create executor, add the node and start spinning
+  ExecutorType executor;
+  executor.add_node(this->node);
+  std::thread spinner([&]() {executor.spin();});
+
+  // Wait for executor to be spinning
+  while (!executor.is_spinning()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // Create the first subscription while the executor is already spinning
+  std::atomic<size_t> sub1_msg_count {0};
+  auto sub1 = this->node->template create_subscription<test_msgs::msg::Empty>(
+    this->publisher->get_topic_name(),
+    rclcpp::QoS(10),
+    [&sub1_msg_count](test_msgs::msg::Empty::ConstSharedPtr) {
+      sub1_msg_count++;
+    });
+
+  // Publish a message and verify it's received
+  this->publisher->publish(test_msgs::msg::Empty());
+  auto start = std::chrono::steady_clock::now();
+  while (sub1_msg_count == 0 && (std::chrono::steady_clock::now() - start) < 10s) {
+    std::this_thread::sleep_for(1ms);
+  }
+  EXPECT_EQ(sub1_msg_count, 1u);
+
+  // Create a second subscription while the executor is already spinning
+  std::atomic<size_t> sub2_msg_count {0};
+  auto sub2 = this->node->template create_subscription<test_msgs::msg::Empty>(
+    this->publisher->get_topic_name(),
+    rclcpp::QoS(10),
+    [&sub2_msg_count](test_msgs::msg::Empty::ConstSharedPtr) {
+      sub2_msg_count++;
+    });
+
+  // Publish a message and verify it's received by both subscriptions
+  this->publisher->publish(test_msgs::msg::Empty());
+  start = std::chrono::steady_clock::now();
+  while (
+    sub1_msg_count == 1 &&
+    sub2_msg_count == 0 &&
+    (std::chrono::steady_clock::now() - start) < 10s)
+  {
+    std::this_thread::sleep_for(1ms);
+  }
+  EXPECT_EQ(sub1_msg_count, 2u);
+  EXPECT_EQ(sub2_msg_count, 1u);
+
+  // Cancel needs to be called before join, so that executor.spin() returns.
+  executor.cancel();
+  spinner.join();
+}
+
 // Check spin_until_future_complete with node base pointer (instantiates its own executor)
 TEST(TestExecutors, testSpinUntilFutureCompleteNodeBasePtr)
 {
