@@ -116,7 +116,7 @@ create_server(
  *
  * \sa Server::Server() for more information.
  *
- * \param[in] node] The action server will be added to this node.
+ * \param[in] node The action server will be added to this node.
  * \param[in] name The action name.
  * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
  * \param[in] handle_cancel A callback that decides if a goal should be attempted to be canceled.

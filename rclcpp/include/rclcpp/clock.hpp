@@ -217,13 +217,13 @@ public:
   std::mutex &
   get_clock_mutex() noexcept;
 
-  // Add a callback to invoke if the jump threshold is exceeded.
+  /// Add a callback to invoke if the jump threshold is exceeded.
   /**
    * These callback functions must remain valid as long as the
    * returned shared pointer is valid.
    *
    * Function will register callbacks to the callback queue. On time jump all
-   * callbacks will be executed whose threshold is greater then the time jump;
+   * callbacks will be executed whose threshold is greater than the time jump;
    * The logic will first call selected pre_callbacks and then all selected
    * post_callbacks.
    *
@@ -232,7 +232,7 @@ public:
    * \param pre_callback Must be non-throwing
    * \param post_callback Must be non-throwing.
    * \param threshold Callbacks will be triggered if the time jump is greater
-   * then the threshold.
+   * than the threshold.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    * \throws std::bad_alloc if the allocation of the JumpHandler fails.
    * \warning the instance of the clock must remain valid as long as any created
