@@ -490,7 +490,7 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] node_graph The node graph interface of the corresponding node.
    * \param[in] service_name Name of the topic to publish to.
-   * \param[in] client_options options for the subscription.
+   * \param[in] client_options options for the client.
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
