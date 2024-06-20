@@ -23,7 +23,6 @@
 
 #include "rclcpp/node.hpp"
 #include "test_msgs/msg/empty.hpp"
-#include "test_msgs/msg/empty.h"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
