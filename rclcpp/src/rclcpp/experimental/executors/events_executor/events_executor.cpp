@@ -420,9 +420,6 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   // to the current collection in the constructor)
   this->add_notify_waitable_to_collection(new_collection.waitables);
 
-  // Acquire lock before modifying the current collection
-  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-
   this->refresh_current_collection(new_collection);
 }
 
