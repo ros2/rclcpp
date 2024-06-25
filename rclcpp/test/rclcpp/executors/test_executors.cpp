@@ -889,7 +889,7 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
 //   https://github.com/ros2/rclcpp/issues/2532
 //
 // It should not be changed unless there's a good reason for it (users find it
-// the least surprising out come even if it is not guaranteed), but if there
+// the least surprising outcome even if it is not guaranteed), but if there
 // is a good reason for changing it, then the executors effected can be skipped,
 // or the test can be removed.
 // The purpose of this test is to catch this regressions and let the authors of
@@ -924,7 +924,7 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
     // Order in which we expect the entities to be executed by the executor.
     std::vector<size_t> expected_execution_order;
   };
-  // tests cases are "test_name: {"entity type": {call_order, expected_execution_order}"
+  // tests cases are "test_name: {"entity type": {skip, call_order, expected_execution_order}"
   std::map<std::string, std::map<std::string, test_case>> test_cases = {
     {
       "forward call order",
