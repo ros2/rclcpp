@@ -273,8 +273,10 @@ ServerBase::take_data()
 {
   size_t next_ready_event = pimpl_->next_ready_event.exchange(ServerBaseImpl::NO_EVENT_READY);
 
-  if (next_ready_event == ServerBaseImpl::NO_EVENT_READY;) {
-    throw std::runtime_error("ServerBase::take_data() called but no data is ready");
+  if (next_ready_event == ServerBaseImpl::NO_EVENT_READY) {
+    // there is a known bug in iron, that take_data might be called multiple
+    // times. Therefore instead of throwing, we just return a nullptr as a workaround.
+    return nullptr;
   }
 
   return take_data_by_entity_id(next_ready_event);
@@ -363,7 +365,9 @@ void
 ServerBase::execute(std::shared_ptr<void> & data_in)
 {
   if (!data_in) {
-    throw std::runtime_error("ServerBase::execute: give data pointer was null");
+    // workaround, if take_data was called multiple timed, it returns a nullptr
+    // normally we should throw here, but as an API stable bug fix, we just ignore this...
+    return;
   }
 
   std::shared_ptr<ServerBaseData> data_ptr = std::static_pointer_cast<ServerBaseData>(data_in);

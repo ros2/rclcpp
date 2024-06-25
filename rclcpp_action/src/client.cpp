@@ -161,6 +161,8 @@ public:
 
   // next ready event for taking, will be set by is_ready and will be processed by take_data
   std::atomic<size_t> next_ready_event;
+  // used to indicate that next_ready_event has no ready event for processing
+  static constexpr size_t NO_EVENT_READY = std::numeric_limits<size_t>::max();
 
   rclcpp::Context::SharedPtr context_;
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
@@ -351,7 +353,7 @@ ClientBase::is_ready(rcl_wait_set_t * wait_set)
     }
   }
 
-  pimpl_->next_ready_event = std::numeric_limits<size_t>::max();
+  pimpl_->next_ready_event = ClientBaseImpl::NO_EVENT_READY;
 
   if (is_feedback_ready) {
     pimpl_->next_ready_event = static_cast<size_t>(EntityType::FeedbackSubscription);
@@ -647,10 +649,12 @@ std::shared_ptr<void>
 ClientBase::take_data()
 {
   // next_ready_event is an atomic, caching localy
-  size_t next_ready_event = pimpl_->next_ready_event.exchange(std::numeric_limits<uint32_t>::max());
+  size_t next_ready_event = pimpl_->next_ready_event.exchange(ClientBaseImpl::NO_EVENT_READY);
 
-  if (next_ready_event == std::numeric_limits<uint32_t>::max()) {
-    throw std::runtime_error("Taking data from action client but nothing is ready");
+  if (next_ready_event == ClientBaseImpl::NO_EVENT_READY) {
+    // there is a known bug in iron, that take_data might be called multiple
+    // times. Therefore instead of throwing, we just return a nullptr as a workaround.
+    return nullptr;
   }
 
   return take_data_by_entity_id(next_ready_event);
@@ -751,7 +755,9 @@ void
 ClientBase::execute(std::shared_ptr<void> & data_in)
 {
   if (!data_in) {
-    throw std::invalid_argument("'data_in' is unexpectedly empty");
+    // workaround, if take_data was called multiple timed, it returns a nullptr
+    // normally we should throw here, but as an API stable bug fix, we just ignore this...
+    return;
   }
 
   std::shared_ptr<ClientBaseData> data_ptr = std::static_pointer_cast<ClientBaseData>(data_in);
