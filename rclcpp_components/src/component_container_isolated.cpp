@@ -27,7 +27,6 @@ int main(int argc, char * argv[])
 
   // parse arguments
   // valid entries: --executor-type single-threaded, --executor-type multi-threaded, --executor-type events
-  // --use-multi-threaded-executor and --use_multi_threaded_executor are kept for backward compatibility
   std::vector<std::string> args = rclcpp::remove_ros_arguments(argc, argv);
 
   std::string executor_type = "single-threaded";  // default
@@ -37,9 +36,7 @@ int main(int argc, char * argv[])
         executor_type = args[i + 1];
         break;
       }
-    } else if (
-      args[i] == "--use-multi-threaded-executor" || args[i] == "--use_multi_threaded_executor")
-    {
+    } else if (args[i] == "--use_multi_threaded_executor") { // backward compatibility
       executor_type = "multi-threaded";
     }
   }
