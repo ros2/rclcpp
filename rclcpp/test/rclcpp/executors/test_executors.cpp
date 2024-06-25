@@ -1012,7 +1012,8 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       ExecutorType executor;
       executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
 
-      RCPPUTILS_SCOPE_EXIT({
+      RCPPUTILS_SCOPE_EXIT(
+      {
         for (size_t i = 0; i < number_of_entities; ++i) {
           waitables[i]->set_on_execute_callback(nullptr);
         }
@@ -1070,7 +1071,8 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       ExecutorType executor;
       executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
 
-      RCPPUTILS_SCOPE_EXIT({
+      RCPPUTILS_SCOPE_EXIT(
+      {
         on_sub_data_callbacks.clear();
       });
 
@@ -1146,7 +1148,8 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       ExecutorType executor;
       executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
 
-      RCPPUTILS_SCOPE_EXIT({
+      RCPPUTILS_SCOPE_EXIT(
+      {
         on_request_callbacks.clear();
       });
 
@@ -1212,7 +1215,8 @@ TYPED_TEST(TestExecutors, deterministic_execution_order_ub)
       ExecutorType executor;
       executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
 
-      RCPPUTILS_SCOPE_EXIT({
+      RCPPUTILS_SCOPE_EXIT(
+      {
         timer_callbacks.clear();
       });
 
