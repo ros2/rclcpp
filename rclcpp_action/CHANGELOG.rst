@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+28.3.1 (2024-06-25)
+-------------------
 * Fix typo in function doc (`#2563 <https://github.com/ros2/rclcpp/issues/2563>`_)
 * Contributors: Christophe Bedard
 
