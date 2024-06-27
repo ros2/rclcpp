@@ -3,6 +3,15 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Revert "call shutdown in LifecycleNode dtor to avoid leaving the device in unknown state (2nd) (backport `#2528 <https://github.com/ros2/rclcpp/issues/2528>`_) (`#2542 <https://github.com/ros2/rclcpp/issues/2542>`_)" (`#2558 <https://github.com/ros2/rclcpp/issues/2558>`_)
+* call shutdown in LifecycleNode dtor to avoid leaving the device in unknown state (2nd) (backport `#2528 <https://github.com/ros2/rclcpp/issues/2528>`_) (`#2542 <https://github.com/ros2/rclcpp/issues/2542>`_)
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* rclcpp::shutdown should not be called before LifecycleNode dtor. (`#2527 <https://github.com/ros2/rclcpp/issues/2527>`_) (`#2540 <https://github.com/ros2/rclcpp/issues/2540>`_)
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Contributors: Tomoya Fujita, mergify[bot]
+
 28.1.2 (2024-05-13)
 -------------------
 * Revert "call shutdown in LifecycleNode dtor to avoid leaving the device in un… (`#2450 <https://github.com/ros2/rclcpp/issues/2450>`_)" (`#2522 <https://github.com/ros2/rclcpp/issues/2522>`_) (`#2524 <https://github.com/ros2/rclcpp/issues/2524>`_)

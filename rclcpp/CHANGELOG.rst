@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add test creating two content filter topics with the same topic name (`#2546 <https://github.com/ros2/rclcpp/issues/2546>`_) (`#2549 <https://github.com/ros2/rclcpp/issues/2549>`_) (`#2552 <https://github.com/ros2/rclcpp/issues/2552>`_)
+  Co-authored-by: Mario Domínguez López <116071334+Mario-DL@users.noreply.github.com>
+  (cherry picked from commit 7c096888caf92aa7557e1d3efc5448b56d8ce81c)
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Contributors: mergify[bot]
+
 28.1.2 (2024-05-13)
 -------------------
 * add impl pointer for ExecutorOptions (`#2523 <https://github.com/ros2/rclcpp/issues/2523>`_) (`#2525 <https://github.com/ros2/rclcpp/issues/2525>`_)

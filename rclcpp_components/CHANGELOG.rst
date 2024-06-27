@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 28.1.2 (2024-05-13)
 -------------------
 
