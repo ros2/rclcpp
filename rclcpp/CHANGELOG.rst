@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+28.1.3 (2024-06-27)
+-------------------
 * Add test creating two content filter topics with the same topic name (`#2546 <https://github.com/ros2/rclcpp/issues/2546>`_) (`#2549 <https://github.com/ros2/rclcpp/issues/2549>`_) (`#2552 <https://github.com/ros2/rclcpp/issues/2552>`_)
   Co-authored-by: Mario Domínguez López <116071334+Mario-DL@users.noreply.github.com>
   (cherry picked from commit 7c096888caf92aa7557e1d3efc5448b56d8ce81c)
