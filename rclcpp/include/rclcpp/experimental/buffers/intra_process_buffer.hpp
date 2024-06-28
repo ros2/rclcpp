@@ -19,11 +19,13 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
+#include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/macros.hpp"
 #include "tracetools/tracetools.h"
 
@@ -33,6 +35,18 @@ namespace experimental
 {
 namespace buffers
 {
+
+template<
+  typename MessageT,
+  typename MessageDeleter = std::default_delete<MessageT>>
+struct IntraProcessBufferNode
+{
+  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
+  using MessageSharedPtr = std::shared_ptr<const MessageT>;
+
+  std::variant<MessageUniquePtr, MessageSharedPtr> message;
+  rmw_message_info_t message_info;
+};
 
 class IntraProcessBufferBase
 {
@@ -44,13 +58,12 @@ public:
   virtual void clear() = 0;
 
   virtual bool has_data() const = 0;
-  virtual bool use_take_shared_method() const = 0;
+  virtual IntraProcessBufferType buffer_type() const = 0;
   virtual size_t available_capacity() const = 0;
 };
 
 template<
   typename MessageT,
-  typename Alloc = std::allocator<void>,
   typename MessageDeleter = std::default_delete<MessageT>>
 class IntraProcessBuffer : public IntraProcessBufferBase
 {
@@ -59,47 +72,37 @@ public:
 
   virtual ~IntraProcessBuffer() {}
 
-  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
-  using MessageSharedPtr = std::shared_ptr<const MessageT>;
+  using Node = IntraProcessBufferNode<MessageT, MessageDeleter>;
 
-  virtual void add_shared(MessageSharedPtr msg) = 0;
-  virtual void add_unique(MessageUniquePtr msg) = 0;
+  virtual void add(Node node) = 0;
 
-  virtual MessageSharedPtr consume_shared() = 0;
-  virtual MessageUniquePtr consume_unique() = 0;
+  virtual Node consume() = 0;
 
-  virtual std::vector<MessageSharedPtr> get_all_data_shared() = 0;
-  virtual std::vector<MessageUniquePtr> get_all_data_unique() = 0;
+  virtual std::vector<Node> get_all_data() = 0;
 };
 
 template<
   typename MessageT,
   typename Alloc = std::allocator<void>,
   typename MessageDeleter = std::default_delete<MessageT>,
-  typename BufferT = std::unique_ptr<MessageT>>
-class TypedIntraProcessBuffer : public IntraProcessBuffer<MessageT, Alloc, MessageDeleter>
+  IntraProcessBufferType BufferType = IntraProcessBufferType::CallbackDefault>
+class TypedIntraProcessBuffer : public IntraProcessBuffer<MessageT, MessageDeleter>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(TypedIntraProcessBuffer)
 
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
-  using MessageSharedPtr = std::shared_ptr<const MessageT>;
+  using Node = IntraProcessBufferNode<MessageT, MessageDeleter>;
+  using MessageSharedPtr = typename Node::MessageSharedPtr;
+  using MessageUniquePtr = typename Node::MessageUniquePtr;
 
   explicit
   TypedIntraProcessBuffer(
-    std::unique_ptr<BufferImplementationBase<BufferT>> buffer_impl,
+    std::unique_ptr<BufferImplementationBase<Node>> buffer_impl,
     std::shared_ptr<Alloc> allocator = nullptr)
+  : buffer_(std::move(buffer_impl))
   {
-    bool valid_type = (std::is_same<BufferT, MessageSharedPtr>::value ||
-      std::is_same<BufferT, MessageUniquePtr>::value);
-    if (!valid_type) {
-      throw std::runtime_error("Creating TypedIntraProcessBuffer with not valid BufferT");
-    }
-
-    buffer_ = std::move(buffer_impl);
-
     TRACETOOLS_TRACEPOINT(
       rclcpp_buffer_to_ipb,
       static_cast<const void *>(buffer_.get()),
@@ -113,34 +116,19 @@ public:
 
   virtual ~TypedIntraProcessBuffer() {}
 
-  void add_shared(MessageSharedPtr msg) override
+  void add(Node node) override
   {
-    add_shared_impl<BufferT>(std::move(msg));
+    add_impl<BufferType>(std::move(node));
   }
 
-  void add_unique(MessageUniquePtr msg) override
+  Node consume() override
   {
-    buffer_->enqueue(std::move(msg));
+    return buffer_->dequeue();
   }
 
-  MessageSharedPtr consume_shared() override
+  std::vector<Node> get_all_data() override
   {
-    return consume_shared_impl<BufferT>();
-  }
-
-  MessageUniquePtr consume_unique() override
-  {
-    return consume_unique_impl<BufferT>();
-  }
-
-  std::vector<MessageSharedPtr> get_all_data_shared() override
-  {
-    return get_all_data_shared_impl();
-  }
-
-  std::vector<MessageUniquePtr> get_all_data_unique() override
-  {
-    return get_all_data_unique_impl();
+    return buffer_->get_all_data();
   }
 
   bool has_data() const override
@@ -153,9 +141,9 @@ public:
     buffer_->clear();
   }
 
-  bool use_take_shared_method() const override
+  IntraProcessBufferType buffer_type() const override
   {
-    return std::is_same<BufferT, MessageSharedPtr>::value;
+    return BufferType;
   }
 
   size_t available_capacity() const override
@@ -164,163 +152,52 @@ public:
   }
 
 private:
-  std::unique_ptr<BufferImplementationBase<BufferT>> buffer_;
+  std::unique_ptr<BufferImplementationBase<Node>> buffer_;
 
   std::shared_ptr<MessageAlloc> message_allocator_;
 
-  // MessageSharedPtr to MessageSharedPtr
-  template<typename DestinationT>
-  typename std::enable_if<
-    std::is_same<DestinationT, MessageSharedPtr>::value
-  >::type
-  add_shared_impl(MessageSharedPtr shared_msg)
+  template<IntraProcessBufferType BufferT>
+  typename std::enable_if_t<
+    BufferT == IntraProcessBufferType::CallbackDefault>
+  add_impl(Node node)
   {
-    buffer_->enqueue(std::move(shared_msg));
+    buffer_->enqueue(std::move(node));
   }
 
-  // MessageSharedPtr to MessageUniquePtr
-  template<typename DestinationT>
-  typename std::enable_if<
-    std::is_same<DestinationT, MessageUniquePtr>::value
-  >::type
-  add_shared_impl(MessageSharedPtr shared_msg)
+  template<IntraProcessBufferType BufferT>
+  typename std::enable_if_t<
+    BufferT == IntraProcessBufferType::SharedPtr>
+  add_impl(Node node)
   {
-    // This should not happen: here a copy is unconditionally made, while the intra-process manager
-    // can decide whether a copy is needed depending on the number and the type of buffers
-
-    MessageUniquePtr unique_msg;
-    MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(shared_msg);
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *shared_msg);
-    if (deleter) {
-      unique_msg = MessageUniquePtr(ptr, *deleter);
+    if (std::holds_alternative<MessageSharedPtr>(node.message)) {
+      buffer_->enqueue(std::move(node));
     } else {
-      unique_msg = MessageUniquePtr(ptr);
+      // Promote to a shared pointer
+      auto unique_msg = std::move(std::get<MessageUniquePtr>(node.message));
+      node.message = MessageSharedPtr(unique_msg.release());
+      buffer_->enqueue(std::move(node));
     }
-
-    buffer_->enqueue(std::move(unique_msg));
   }
 
-  // MessageSharedPtr to MessageSharedPtr
-  template<typename OriginT>
-  typename std::enable_if<
-    std::is_same<OriginT, MessageSharedPtr>::value,
-    MessageSharedPtr
-  >::type
-  consume_shared_impl()
+  template<IntraProcessBufferType BufferT>
+  typename std::enable_if_t<
+    BufferT == IntraProcessBufferType::UniquePtr>
+  add_impl(Node node)
   {
-    return buffer_->dequeue();
-  }
-
-  // MessageUniquePtr to MessageSharedPtr
-  template<typename OriginT>
-  typename std::enable_if<
-    (std::is_same<OriginT, MessageUniquePtr>::value),
-    MessageSharedPtr
-  >::type
-  consume_shared_impl()
-  {
-    // automatic cast from unique ptr to shared ptr
-    return buffer_->dequeue();
-  }
-
-  // MessageSharedPtr to MessageUniquePtr
-  template<typename OriginT>
-  typename std::enable_if<
-    (std::is_same<OriginT, MessageSharedPtr>::value),
-    MessageUniquePtr
-  >::type
-  consume_unique_impl()
-  {
-    MessageSharedPtr buffer_msg = buffer_->dequeue();
-
-    MessageUniquePtr unique_msg;
-    MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(buffer_msg);
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *buffer_msg);
-    if (deleter) {
-      unique_msg = MessageUniquePtr(ptr, *deleter);
+    if (std::holds_alternative<MessageUniquePtr>(node.message)) {
+      buffer_->enqueue(std::move(node));
     } else {
-      unique_msg = MessageUniquePtr(ptr);
-    }
-
-    return unique_msg;
-  }
-
-  // MessageUniquePtr to MessageUniquePtr
-  template<typename OriginT>
-  typename std::enable_if<
-    (std::is_same<OriginT, MessageUniquePtr>::value),
-    MessageUniquePtr
-  >::type
-  consume_unique_impl()
-  {
-    return buffer_->dequeue();
-  }
-
-  // MessageSharedPtr to MessageSharedPtr
-  template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageSharedPtr>::value,
-    std::vector<MessageSharedPtr>
-  >::type
-  get_all_data_shared_impl()
-  {
-    return buffer_->get_all_data();
-  }
-
-  // MessageUniquePtr to MessageSharedPtr
-  template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageUniquePtr>::value,
-    std::vector<MessageSharedPtr>
-  >::type
-  get_all_data_shared_impl()
-  {
-    std::vector<MessageSharedPtr> result;
-    auto uni_ptr_vec = buffer_->get_all_data();
-    result.reserve(uni_ptr_vec.size());
-    for (MessageUniquePtr & uni_ptr : uni_ptr_vec) {
-      result.emplace_back(std::move(uni_ptr));
-    }
-    return result;
-  }
-
-  // MessageSharedPtr to MessageUniquePtr
-  template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageSharedPtr>::value,
-    std::vector<MessageUniquePtr>
-  >::type
-  get_all_data_unique_impl()
-  {
-    std::vector<MessageUniquePtr> result;
-    auto shared_ptr_vec = buffer_->get_all_data();
-    result.reserve(shared_ptr_vec.size());
-    for (MessageSharedPtr shared_msg : shared_ptr_vec) {
-      MessageUniquePtr unique_msg;
+      auto shared_msg = std::move(std::get<MessageSharedPtr>(node.message));
       MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(shared_msg);
       auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
       MessageAllocTraits::construct(*message_allocator_.get(), ptr, *shared_msg);
       if (deleter) {
-        unique_msg = MessageUniquePtr(ptr, *deleter);
+        node.message = MessageUniquePtr(ptr, *deleter);
       } else {
-        unique_msg = MessageUniquePtr(ptr);
+        node.message = MessageUniquePtr(ptr);
       }
-      result.push_back(std::move(unique_msg));
+      buffer_->enqueue(std::move(node));
     }
-    return result;
-  }
-
-  // MessageUniquePtr to MessageUniquePtr
-  template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageUniquePtr>::value,
-    std::vector<MessageUniquePtr>
-  >::type
-  get_all_data_unique_impl()
-  {
-    return buffer_->get_all_data();
   }
 };
 

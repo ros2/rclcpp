@@ -94,11 +94,11 @@ public:
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
-  using BufferSharedPtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
+  using IntraProcessBuffer = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     ROSMessageType,
-    ROSMessageTypeAllocator,
     ROSMessageTypeDeleter
-    >::SharedPtr;
+  >;
+  using BufferSharedPtr = typename IntraProcessBuffer::SharedPtr;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -238,17 +238,23 @@ public:
       get_subscription_count() > get_intra_process_subscription_count() || buffer_;
 
     if (inter_process_publish_needed) {
-      auto shared_msg =
+      auto msg_info_pair =
         this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
       if (buffer_) {
-        buffer_->add_shared(shared_msg);
+        typename IntraProcessBuffer::Node node;
+        node.message = msg_info_pair.first;
+        node.message_info = msg_info_pair.second;
+        buffer_->add(std::move(node));
       }
-      this->do_inter_process_publish(*shared_msg);
+      this->do_inter_process_publish(*msg_info_pair.first);
     } else {
       if (buffer_) {
-        auto shared_msg =
+        auto msg_info_pair =
           this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
-        buffer_->add_shared(shared_msg);
+        typename IntraProcessBuffer::Node node;
+        node.message = msg_info_pair.first;
+        node.message_info = msg_info_pair.second;
+        buffer_->add(std::move(node));
       } else {
         this->do_intra_process_ros_message_publish(std::move(msg));
       }
@@ -321,18 +327,28 @@ public:
     if (inter_process_publish_needed) {
       auto ros_msg_ptr = std::make_shared<ROSMessageType>();
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
-      this->do_intra_process_publish(std::move(msg));
+      rmw_message_info_t message_info;
+      this->do_intra_process_publish(std::move(msg), &message_info);
       this->do_inter_process_publish(*ros_msg_ptr);
       if (buffer_) {
-        buffer_->add_shared(ros_msg_ptr);
+        typename IntraProcessBuffer::Node node;
+        node.message = std::move(ros_msg_ptr);
+        node.message_info = std::move(message_info);
+        buffer_->add(std::move(node));
       }
     } else {
       if (buffer_) {
         auto ros_msg_ptr = std::make_shared<ROSMessageType>();
         rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
-        buffer_->add_shared(ros_msg_ptr);
+        rmw_message_info_t message_info;
+        this->do_intra_process_publish(std::move(msg), &message_info);
+        typename IntraProcessBuffer::Node node;
+        node.message = std::move(ros_msg_ptr);
+        node.message_info = std::move(message_info);
+        buffer_->add(std::move(node));
+      } else {
+        this->do_intra_process_publish(std::move(msg));
       }
-      this->do_intra_process_publish(std::move(msg));
     }
   }
 
@@ -482,7 +498,9 @@ protected:
   }
 
   void
-  do_intra_process_publish(std::unique_ptr<PublishedType, PublishedTypeDeleter> msg)
+  do_intra_process_publish(
+    std::unique_ptr<PublishedType, PublishedTypeDeleter> msg,
+    rmw_message_info_t * message_info_out = nullptr)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -500,11 +518,14 @@ protected:
     ipm->template do_intra_process_publish<PublishedType, ROSMessageType, AllocatorT>(
       intra_process_publisher_id_,
       std::move(msg),
-      published_type_allocator_);
+      published_type_allocator_,
+      message_info_out);
   }
 
   void
-  do_intra_process_ros_message_publish(std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> msg)
+  do_intra_process_ros_message_publish(
+    std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> msg,
+    rmw_message_info_t * message_info_out = nullptr)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -522,10 +543,11 @@ protected:
     ipm->template do_intra_process_publish<ROSMessageType, ROSMessageType, AllocatorT>(
       intra_process_publisher_id_,
       std::move(msg),
-      ros_message_type_allocator_);
+      ros_message_type_allocator_,
+      message_info_out);
   }
 
-  std::shared_ptr<const ROSMessageType>
+  std::pair<std::shared_ptr<const ROSMessageType>, rmw_message_info_t>
   do_intra_process_ros_message_publish_and_return_shared(
     std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> msg)
   {
