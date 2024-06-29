@@ -722,6 +722,22 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
 
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * \sa rclcpp::Node::get_clients_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about server on a given service.
+  /**
+   * \sa rclcpp::Node::get_servers_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the load just let it go
