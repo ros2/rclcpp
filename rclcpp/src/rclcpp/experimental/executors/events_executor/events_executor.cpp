@@ -429,7 +429,7 @@ EventsExecutor::refresh_current_collection(
   const rclcpp::executors::ExecutorEntitiesCollection & new_collection)
 {
   // Acquire lock before modifying the current collection
-  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
+  std::lock_guard<std::mutex> guard(mutex_);
 
   current_entities_collection_->timers.update(
     new_collection.timers,

@@ -260,7 +260,7 @@ private:
     // Note: we lock the mutex because we assume that you are trying to get an element from the
     // current collection... If there will be a use-case to retrieve elements also from other
     // collections, we can move the mutex back to the calling codes.
-    std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
+    std::lock_guard<std::mutex> guard(mutex_);
 
     // Check if the entity_id is in the collection
     auto it = collection.find(entity_id);
@@ -285,8 +285,6 @@ private:
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollector> entities_collector_;
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
-  /// Mutex to protect the current_entities_collection_
-  std::recursive_mutex collection_mutex_;
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
 
   /// Timers manager used to track and/or execute associated timers
