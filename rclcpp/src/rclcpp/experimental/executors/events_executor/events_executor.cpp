@@ -63,15 +63,16 @@ EventsExecutor::EventsExecutor(
   // Make sure that the notify waitable is immediately added to the collection
   // to avoid missing events
   this->add_notify_waitable_to_collection(current_collection_.waitables);
-
-  this->entities_collector_ =
-    std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable_);
 }
 
 void
 EventsExecutor::setup_notify_waitable()
 {
-  notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
+  // The base class already created this object but the events-executor
+  // needs different callbacks.
+  assert(notify_waitable_ && "The notify waitable should have already been constructed");
+
+  notify_waitable_->set_execute_callback(
     [this]() {
       // This callback is invoked when:
       // - the interrupt or shutdown guard condition is triggered:
@@ -81,9 +82,6 @@ EventsExecutor::setup_notify_waitable()
       entities_need_rebuild_ = false;
       this->refresh_current_collection_from_callback_groups();
     });
-
-  notify_waitable_->add_guard_condition(interrupt_guard_condition_);
-  notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 
   auto notify_waitable_entity_id = notify_waitable_.get();
   notify_waitable_->set_on_ready_callback(
@@ -243,7 +241,7 @@ EventsExecutor::add_node(
   (void) notify;
 
   // Add node to entities collector
-  this->entities_collector_->add_node(node_ptr);
+  this->collector_.add_node(node_ptr);
 
   this->refresh_current_collection_from_callback_groups();
 }
@@ -265,7 +263,7 @@ EventsExecutor::remove_node(
   // This will result in un-setting all the event callbacks from its entities.
   // After this function returns, this executor will not receive any more events associated
   // to these entities.
-  this->entities_collector_->remove_node(node_ptr);
+  this->collector_.remove_node(node_ptr);
 
   this->refresh_current_collection_from_callback_groups();
 }
@@ -363,7 +361,7 @@ EventsExecutor::add_callback_group(
   (void)notify;
   (void)node_ptr;
 
-  this->entities_collector_->add_callback_group(group_ptr);
+  this->collector_.add_callback_group(group_ptr);
 
   this->refresh_current_collection_from_callback_groups();
 }
@@ -376,7 +374,7 @@ EventsExecutor::remove_callback_group(
   // the executor when a callback group is removed.
   (void)notify;
 
-  this->entities_collector_->remove_callback_group(group_ptr);
+  this->collector_.remove_callback_group(group_ptr);
 
   this->refresh_current_collection_from_callback_groups();
 }
@@ -384,30 +382,30 @@ EventsExecutor::remove_callback_group(
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 EventsExecutor::get_all_callback_groups()
 {
-  this->entities_collector_->update_collections();
-  return this->entities_collector_->get_all_callback_groups();
+  this->collector_.update_collections();
+  return this->collector_.get_all_callback_groups();
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 EventsExecutor::get_manually_added_callback_groups()
 {
-  this->entities_collector_->update_collections();
-  return this->entities_collector_->get_manually_added_callback_groups();
+  this->collector_.update_collections();
+  return this->collector_.get_manually_added_callback_groups();
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 EventsExecutor::get_automatically_added_callback_groups_from_nodes()
 {
-  this->entities_collector_->update_collections();
-  return this->entities_collector_->get_automatically_added_callback_groups();
+  this->collector_.update_collections();
+  return this->collector_.get_automatically_added_callback_groups();
 }
 
 void
 EventsExecutor::refresh_current_collection_from_callback_groups()
 {
   // Build the new collection
-  this->entities_collector_->update_collections();
-  auto callback_groups = this->entities_collector_->get_all_callback_groups();
+  this->collector_.update_collections();
+  auto callback_groups = this->collector_.get_all_callback_groups();
   rclcpp::executors::ExecutorEntitiesCollection new_collection;
   rclcpp::executors::build_entities_collection(callback_groups, new_collection);
 

@@ -282,9 +282,6 @@ private:
   /// Queue where entities can push events
   rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue_;
 
-  std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollector> entities_collector_;
-  std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
-
   /// Timers manager used to track and/or execute associated timers
   std::shared_ptr<rclcpp::experimental::TimersManager> timers_manager_;
 };
