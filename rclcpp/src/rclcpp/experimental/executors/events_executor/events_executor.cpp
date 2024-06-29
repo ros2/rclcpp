@@ -54,9 +54,11 @@ EventsExecutor::EventsExecutor(
 
   entities_need_rebuild_ = false;
 
-  this->current_collection_.clear();
-
   this->setup_notify_waitable();
+
+  // Ensure that the entities collection is empty (the base class may have added elements that we are not
+  // interested in)
+  this->current_collection_.clear();
 
   // Make sure that the notify waitable is immediately added to the collection
   // to avoid missing events
