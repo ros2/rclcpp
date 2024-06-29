@@ -42,6 +42,10 @@ public:
   {
   }
 
+  void spin(const std::function<void(const std::exception & e)> &) override
+  {
+  }
+
   void spin_nanoseconds(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
   {
     spin_node_once_nanoseconds(node, std::chrono::milliseconds(100));

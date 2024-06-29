@@ -82,6 +82,19 @@ public:
   virtual void
   spin() = 0;
 
+  /// Version of spin() that takes an exception handler to be called when a callback throws.
+  /**
+   * \sa rclcpp::Executor:spin() for more details
+   * \throws std::runtime_error when spin() called while already spinning
+   * \param[in] exception_handler will be called for every exception in the processing threads
+   *
+   * The exception_handler can be called from multiple threads at the same time.
+   * The exception_handler shall rethrow the exception it if wants to terminate the program.
+   */
+  RCLCPP_PUBLIC
+  virtual void
+  spin(const std::function<void(const std::exception & e)> & exception_handler) = 0;
+
   /// Add a callback group to an executor.
   /**
    * An executor can have zero or more callback groups which provide work during `spin` functions.
@@ -447,13 +460,26 @@ protected:
 
   /// Find the next available executable and do the work associated with it.
   /**
-   * \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
+   * \param[in] any_exec Structure that can hold any executable type (timer, subscription,
    * service, client).
    * \throws std::runtime_error if there is an issue triggering the guard condition
    */
   RCLCPP_PUBLIC
   void
   execute_any_executable(AnyExecutable & any_exec);
+
+  /// Find the next available executable and do the work associated with it.
+  /**
+   * \param[in] any_exec Structure that can hold any executable type (timer, subscription,
+   * service, client).
+   * \param[in] exception_handler will be called for every exception in the processing threads
+   * \throws std::runtime_error if there is an issue triggering the guard condition
+   */
+  RCLCPP_PUBLIC
+  void
+  execute_any_executable(
+    AnyExecutable & any_exec,
+    const std::function<void(const std::exception & e)> & exception_handler);
 
   /// Run subscription executable.
   /**
