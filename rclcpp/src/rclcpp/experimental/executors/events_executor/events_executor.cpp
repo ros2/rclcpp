@@ -284,7 +284,6 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       {
         rclcpp::ClientBase::SharedPtr client;
         {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
           client = this->retrieve_entity(
             static_cast<const rcl_client_t *>(event.entity_key),
             current_entities_collection_->clients);
@@ -301,7 +300,6 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       {
         rclcpp::SubscriptionBase::SharedPtr subscription;
         {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
           subscription = this->retrieve_entity(
             static_cast<const rcl_subscription_t *>(event.entity_key),
             current_entities_collection_->subscriptions);
@@ -317,7 +315,6 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       {
         rclcpp::ServiceBase::SharedPtr service;
         {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
           service = this->retrieve_entity(
             static_cast<const rcl_service_t *>(event.entity_key),
             current_entities_collection_->services);
@@ -340,7 +337,6 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
       {
         rclcpp::Waitable::SharedPtr waitable;
         {
-          std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
           waitable = this->retrieve_entity(
             static_cast<const rclcpp::Waitable *>(event.entity_key),
             current_entities_collection_->waitables);
