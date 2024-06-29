@@ -84,9 +84,6 @@ EventsExecutor::setup_notify_waitable()
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 
-  notify_waitable_->set_on_ready_callback(
-    this->create_waitable_callback(notify_waitable_.get()));
-
   auto notify_waitable_entity_id = notify_waitable_.get();
   notify_waitable_->set_on_ready_callback(
     [this, notify_waitable_entity_id](size_t num_events, int waitable_data) {
