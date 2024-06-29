@@ -52,6 +52,8 @@ EventsExecutor::EventsExecutor(
   timers_manager_ =
     std::make_shared<rclcpp::experimental::TimersManager>(context_, timer_on_ready_cb);
 
+  entities_need_rebuild_ = false;
+
   this->current_entities_collection_ =
     std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
 
@@ -71,7 +73,7 @@ EventsExecutor::setup_notify_waitable()
       //    ---> we need to wake up the executor so that it can terminate
       // - a node or callback group guard condition is triggered:
       //    ---> the entities collection is changed, we need to update callbacks
-      notify_waitable_event_pushed_ = false;
+      entities_need_rebuild_ = false;
       this->refresh_current_collection_from_callback_groups();
     });
 
@@ -94,7 +96,7 @@ EventsExecutor::setup_notify_waitable()
       // For the same reason, if an event of this type has already been pushed but it has not been
       // processed yet, we avoid pushing additional events.
       (void)num_events;
-      if (notify_waitable_event_pushed_.exchange(true)) {
+      if (entities_need_rebuild_.exchange(true)) {
         return;
       }
 

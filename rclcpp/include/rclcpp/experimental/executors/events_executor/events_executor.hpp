@@ -289,9 +289,6 @@ private:
   std::recursive_mutex collection_mutex_;
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
 
-  /// Flag used to reduce the number of unnecessary waitable events
-  std::atomic<bool> notify_waitable_event_pushed_ {false};
-
   /// Timers manager used to track and/or execute associated timers
   std::shared_ptr<rclcpp::experimental::TimersManager> timers_manager_;
 };
