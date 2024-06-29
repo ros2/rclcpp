@@ -285,8 +285,6 @@ private:
   std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollector> entities_collector_;
   std::shared_ptr<rclcpp::executors::ExecutorNotifyWaitable> notify_waitable_;
 
-  std::shared_ptr<rclcpp::executors::ExecutorEntitiesCollection> current_entities_collection_;
-
   /// Timers manager used to track and/or execute associated timers
   std::shared_ptr<rclcpp::experimental::TimersManager> timers_manager_;
 };

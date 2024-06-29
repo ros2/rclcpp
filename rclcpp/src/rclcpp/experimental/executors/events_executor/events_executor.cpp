@@ -54,8 +54,7 @@ EventsExecutor::EventsExecutor(
 
   entities_need_rebuild_ = false;
 
-  this->current_entities_collection_ =
-    std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
+  this->current_collection_.clear();
 
   this->setup_notify_waitable();
 
@@ -79,7 +78,7 @@ EventsExecutor::setup_notify_waitable()
 
   // Make sure that the notify waitable is immediately added to the collection
   // to avoid missing events
-  this->add_notify_waitable_to_collection(current_entities_collection_->waitables);
+  this->add_notify_waitable_to_collection(current_collection_.waitables);
 
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
@@ -285,7 +284,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
         {
           client = this->retrieve_entity(
             static_cast<const rcl_client_t *>(event.entity_key),
-            current_entities_collection_->clients);
+            current_collection_.clients);
         }
         if (client) {
           for (size_t i = 0; i < event.num_events; i++) {
@@ -301,7 +300,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
         {
           subscription = this->retrieve_entity(
             static_cast<const rcl_subscription_t *>(event.entity_key),
-            current_entities_collection_->subscriptions);
+            current_collection_.subscriptions);
         }
         if (subscription) {
           for (size_t i = 0; i < event.num_events; i++) {
@@ -316,7 +315,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
         {
           service = this->retrieve_entity(
             static_cast<const rcl_service_t *>(event.entity_key),
-            current_entities_collection_->services);
+            current_collection_.services);
         }
         if (service) {
           for (size_t i = 0; i < event.num_events; i++) {
@@ -338,7 +337,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
         {
           waitable = this->retrieve_entity(
             static_cast<const rclcpp::Waitable *>(event.entity_key),
-            current_entities_collection_->waitables);
+            current_collection_.waitables);
         }
         if (waitable) {
           for (size_t i = 0; i < event.num_events; i++) {
@@ -431,12 +430,12 @@ EventsExecutor::refresh_current_collection(
   // Acquire lock before modifying the current collection
   std::lock_guard<std::mutex> guard(mutex_);
 
-  current_entities_collection_->timers.update(
+  current_collection_.timers.update(
     new_collection.timers,
     [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->add_timer(timer);},
     [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->remove_timer(timer);});
 
-  current_entities_collection_->subscriptions.update(
+  current_collection_.subscriptions.update(
     new_collection.subscriptions,
     [this](auto subscription) {
       subscription->set_on_new_message_callback(
@@ -445,7 +444,7 @@ EventsExecutor::refresh_current_collection(
     },
     [](auto subscription) {subscription->clear_on_new_message_callback();});
 
-  current_entities_collection_->clients.update(
+  current_collection_.clients.update(
     new_collection.clients,
     [this](auto client) {
       client->set_on_new_response_callback(
@@ -454,7 +453,7 @@ EventsExecutor::refresh_current_collection(
     },
     [](auto client) {client->clear_on_new_response_callback();});
 
-  current_entities_collection_->services.update(
+  current_collection_.services.update(
     new_collection.services,
     [this](auto service) {
       service->set_on_new_request_callback(
@@ -465,12 +464,12 @@ EventsExecutor::refresh_current_collection(
 
   // DO WE NEED THIS? WE ARE NOT DOING ANYTHING WITH GUARD CONDITIONS
   /*
-  current_entities_collection_->guard_conditions.update(new_collection.guard_conditions,
+  current_collection_.guard_conditions.update(new_collection.guard_conditions,
     [](auto guard_condition) {(void)guard_condition;},
     [](auto guard_condition) {guard_condition->set_on_trigger_callback(nullptr);});
   */
 
-  current_entities_collection_->waitables.update(
+  current_collection_.waitables.update(
     new_collection.waitables,
     [this](auto waitable) {
       waitable->set_on_ready_callback(
