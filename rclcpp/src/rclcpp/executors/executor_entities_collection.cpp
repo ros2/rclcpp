@@ -43,10 +43,10 @@ size_t ExecutorEntitiesCollection::remove_expired_entities()
 {
   auto remove_entities = [](auto & collection) -> size_t {
       size_t removed = 0;
-      for (auto it = collection.begin(); it != collection.end(); ) {
+      for (auto it = collection.begin_ordered(); it != collection.end_ordered(); ) {
         if (it->second.entity.expired()) {
           ++removed;
-          it = collection.erase(it);
+          it = collection.erase_ordered(it);
         } else {
           ++it;
         }
@@ -79,39 +79,59 @@ build_entities_collection(
     if (group_ptr->can_be_taken_from().load()) {
       group_ptr->collect_all_ptrs(
         [&collection, weak_group_ptr](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-          collection.subscriptions.insert(
+          bool inserted = collection.subscriptions.insert(
             {
               subscription->get_subscription_handle().get(),
               {subscription, weak_group_ptr}
             });
+          // Should never be false, so this is a defensive check, mark unused too
+          // in order to avoid a warning in release builds.
+          assert(inserted);
+          RCUTILS_UNUSED(inserted);
         },
         [&collection, weak_group_ptr](const rclcpp::ServiceBase::SharedPtr & service) {
-          collection.services.insert(
+          bool inserted = collection.services.insert(
             {
               service->get_service_handle().get(),
               {service, weak_group_ptr}
             });
+          // Should never be false, so this is a defensive check, mark unused too
+          // in order to avoid a warning in release builds.
+          assert(inserted);
+          RCUTILS_UNUSED(inserted);
         },
         [&collection, weak_group_ptr](const rclcpp::ClientBase::SharedPtr & client) {
-          collection.clients.insert(
+          bool inserted = collection.clients.insert(
             {
               client->get_client_handle().get(),
               {client, weak_group_ptr}
             });
+          // Should never be false, so this is a defensive check, mark unused too
+          // in order to avoid a warning in release builds.
+          assert(inserted);
+          RCUTILS_UNUSED(inserted);
         },
         [&collection, weak_group_ptr](const rclcpp::TimerBase::SharedPtr & timer) {
-          collection.timers.insert(
+          bool inserted = collection.timers.insert(
             {
               timer->get_timer_handle().get(),
               {timer, weak_group_ptr}
             });
+          // Should never be false, so this is a defensive check, mark unused too
+          // in order to avoid a warning in release builds.
+          assert(inserted);
+          RCUTILS_UNUSED(inserted);
         },
         [&collection, weak_group_ptr](const rclcpp::Waitable::SharedPtr & waitable) {
-          collection.waitables.insert(
+          bool inserted = collection.waitables.insert(
             {
               waitable.get(),
               {waitable, weak_group_ptr}
             });
+          // Should never be false, so this is a defensive check, mark unused too
+          // in order to avoid a warning in release builds.
+          assert(inserted);
+          RCUTILS_UNUSED(inserted);
         }
       );
     }

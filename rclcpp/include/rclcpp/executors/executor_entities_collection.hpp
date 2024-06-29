@@ -18,6 +18,7 @@
 #include <deque>
 #include <functional>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <rclcpp/any_executable.hpp>
@@ -72,24 +73,28 @@ void update_entities(
   std::function<void(const typename CollectionType::EntitySharedPtr &)> on_removed
 )
 {
-  for (auto it = update_to.begin(); it != update_to.end(); ) {
+  for (auto it = update_to.begin_ordered(); it != update_to.end_ordered(); ) {
     if (update_from.count(it->first) == 0) {
       auto entity = it->second.entity.lock();
       if (entity) {
         on_removed(entity);
       }
-      it = update_to.erase(it);
+      it = update_to.erase_ordered(it);
     } else {
       ++it;
     }
   }
-  for (auto it = update_from.begin(); it != update_from.end(); ++it) {
+  for (auto it = update_from.begin_ordered(); it != update_from.end_ordered(); ++it) {
     if (update_to.count(it->first) == 0) {
       auto entity = it->second.entity.lock();
       if (entity) {
         on_added(entity);
       }
-      update_to.insert(*it);
+      bool inserted = update_to.insert(*it);
+      // Should never be false, so this is a defensive check, mark unused too
+      // in order to avoid a warning in release builds.
+      assert(inserted);
+      RCUTILS_UNUSED(inserted);
     }
   }
 }
@@ -97,9 +102,18 @@ void update_entities(
 /// A collection of entities, indexed by their corresponding handles
 template<typename EntityKeyType, typename EntityValueType>
 class EntityCollection
-  : public std::unordered_map<const EntityKeyType *, CollectionEntry<EntityValueType>>
 {
 public:
+  /// Type of the map used for random access
+  using MapType = std::unordered_map<const EntityKeyType *, CollectionEntry<EntityValueType>>;
+
+  /// Type of the vector for insertion order access
+  // Note, we cannot use typename MapType::value_type because it makes the first
+  // item in the pair const, which prevents copy assignment of the pair, which
+  // prevents std::vector::erase from working later...
+  using VectorType = std::vector<std::pair<const EntityKeyType *,
+      CollectionEntry<EntityValueType>>>;
+
   /// Key type of the map
   using Key = const EntityKeyType *;
 
@@ -125,6 +139,125 @@ public:
   {
     update_entities(other, *this, on_added, on_removed);
   }
+
+  // Below are some forwarded functions to the map and vector as appropriate.
+
+  typename MapType::size_type count(const Key & key) const
+  {
+    return map_.count(key);
+  }
+
+  typename MapType::iterator begin()
+  {
+    return map_.begin();
+  }
+
+  typename MapType::const_iterator begin() const
+  {
+    return map_.begin();
+  }
+
+  typename MapType::iterator end()
+  {
+    return map_.end();
+  }
+
+  typename MapType::const_iterator end() const
+  {
+    return map_.end();
+  }
+
+  typename VectorType::iterator begin_ordered()
+  {
+    return insertion_order_.begin();
+  }
+
+  typename VectorType::const_iterator begin_ordered() const
+  {
+    return insertion_order_.begin();
+  }
+
+  typename VectorType::iterator end_ordered()
+  {
+    return insertion_order_.end();
+  }
+
+  typename VectorType::const_iterator end_ordered() const
+  {
+    return insertion_order_.end();
+  }
+
+  typename MapType::const_iterator find(const Key & key) const
+  {
+    return map_.find(key);
+  }
+
+  bool empty() const noexcept
+  {
+    return insertion_order_.empty();
+  }
+
+  typename VectorType::size_type size() const noexcept
+  {
+    return insertion_order_.size();
+  }
+
+  typename MapType::iterator erase(typename MapType::const_iterator pos)
+  {
+    // from: https://en.cppreference.com/w/cpp/container/unordered_map/erase
+    // The iterator pos must be valid and dereferenceable.
+    // Thus the end() iterator (which is valid, but is not dereferenceable)
+    // cannot be used as a value for pos.
+    //
+    // Therefore we can use pos-> here safely.
+    insertion_order_.erase(
+      std::remove_if(
+        insertion_order_.begin(),
+        insertion_order_.end(),
+        [&pos](auto value) {
+          return value.first == pos->first;
+        }));
+    return map_.erase(pos);
+  }
+
+  typename VectorType::iterator erase_ordered(typename VectorType::const_iterator pos)
+  {
+    // from: https://en.cppreference.com/w/cpp/container/vector/erase
+    // The iterator pos must be valid and dereferenceable. Thus the end
+    // () iterator (which is valid, but is not dereferenceable) cannot be used
+    // as a value for pos.
+    //
+    // Therefore we can use pos-> here safely.
+
+    assert(map_.erase(pos->first) == 1);
+    return insertion_order_.erase(pos);
+  }
+
+  void clear() noexcept
+  {
+    insertion_order_.clear();
+    return map_.clear();
+  }
+
+  /// Insert into the collection and return true if inserted, otherwise false
+  /**
+   * Insertion will fail, and return false, if attempting to insert a duplicate
+   * entity.
+   */
+  [[nodiscard]]
+  bool insert(typename MapType::value_type value)
+  {
+    if (!map_.insert(value).second) {
+      // attempting to insert a duplicate entity
+      return false;
+    }
+    insertion_order_.push_back(value);
+    return true;
+  }
+
+private:
+  MapType map_;
+  VectorType insertion_order_;
 };
 
 /// Represent the total set of entities for a single executor
