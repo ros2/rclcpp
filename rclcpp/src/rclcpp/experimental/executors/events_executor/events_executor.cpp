@@ -415,13 +415,10 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   // We could explicitly check for the notify waitable ID when we receive a waitable event
   // but I think that it's better if the waitable was in the collection and it could be
   // retrieved in the "standard" way.
-  // To do it, we need to add the notify waitable as an entry in both the new and
-  // current collections such that it's neither added or removed.
+  // To do it, we need to add the notify waitable as an entry in the new collection
+  // such that it's neither added or removed (it should have already been added
+  // to the current collection in the constructor)
   this->add_notify_waitable_to_collection(new_collection.waitables);
-
-  // Acquire lock before modifying the current collection
-  std::lock_guard<std::recursive_mutex> lock(collection_mutex_);
-  this->add_notify_waitable_to_collection(current_entities_collection_->waitables);
 
   this->refresh_current_collection(new_collection);
 }
