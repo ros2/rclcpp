@@ -247,26 +247,14 @@ public:
 
       this->template add_shared_msg_to_buffers<MessageT, Alloc, Deleter, ROSMessageType>(
         msg, sub_ids.take_shared_subscriptions);
-    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
-      sub_ids.take_shared_subscriptions.size() <= 1)
-    {
+    } else if (!sub_ids.concatenated_take_ownership_subscriptions.empty()) {
       // There is at maximum 1 buffer that does not require ownership.
       // So this case is equivalent to all the buffers requiring ownership
-
-      // Merge the two vector of ids into a unique one
-      std::vector<uint64_t> concatenated_vector(
-        sub_ids.take_shared_subscriptions.begin(), sub_ids.take_shared_subscriptions.end());
-      concatenated_vector.insert(
-        concatenated_vector.end(),
-        sub_ids.take_ownership_subscriptions.begin(),
-        sub_ids.take_ownership_subscriptions.end());
       this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter, ROSMessageType>(
         std::move(message),
-        concatenated_vector,
+        sub_ids.concatenated_take_ownership_subscriptions,
         allocator);
-    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
-      sub_ids.take_shared_subscriptions.size() > 1)
-    {
+    } else {
       // Construct a new shared pointer from the message
       // for the buffers that do not require ownership
       auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(allocator, *message);
@@ -385,6 +373,10 @@ private:
   {
     std::vector<uint64_t> take_shared_subscriptions;
     std::vector<uint64_t> take_ownership_subscriptions;
+    // If there is at maximum 1 buffer that does not require ownership,
+    // this case is equivalent to all the buffers requiring ownership
+    // and this vector will contain all of the subscriptions.
+    std::vector<uint64_t> concatenated_take_ownership_subscriptions;
   };
 
   /// Hash function for rmw_gid_t to enable use in unordered_map

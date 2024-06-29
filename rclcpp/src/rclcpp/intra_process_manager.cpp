@@ -208,10 +208,37 @@ IntraProcessManager::insert_sub_id_for_pub(
   uint64_t pub_id,
   bool use_take_shared_method)
 {
+  auto & splitted_subs = pub_to_subs_[pub_id];
+  auto & take_shared_subscriptions = splitted_subs.take_shared_subscriptions;
+  auto & take_ownership_subscriptions = splitted_subs.take_ownership_subscriptions;
+  auto & concatenated_take_ownership_subscriptions =
+    splitted_subs.concatenated_take_ownership_subscriptions;
+
   if (use_take_shared_method) {
-    pub_to_subs_[pub_id].take_shared_subscriptions.push_back(sub_id);
+    take_shared_subscriptions.push_back(sub_id);
   } else {
-    pub_to_subs_[pub_id].take_ownership_subscriptions.push_back(sub_id);
+    take_ownership_subscriptions.push_back(sub_id);
+  }
+
+  concatenated_take_ownership_subscriptions.clear();
+  if (!take_ownership_subscriptions.empty() &&
+    take_shared_subscriptions.size() <= 1)
+  {
+    // There is at maximum 1 buffer that does not require ownership.
+    // So this case is equivalent to all the buffers requiring ownership
+
+    // Merge the two vector of ids into a unique one
+    concatenated_take_ownership_subscriptions.reserve(
+      take_ownership_subscriptions.size() +
+      take_shared_subscriptions.size());
+    concatenated_take_ownership_subscriptions.insert(
+      concatenated_take_ownership_subscriptions.end(),
+      take_shared_subscriptions.begin(),
+      take_shared_subscriptions.end());
+    concatenated_take_ownership_subscriptions.insert(
+      concatenated_take_ownership_subscriptions.end(),
+      take_ownership_subscriptions.begin(),
+      take_ownership_subscriptions.end());
   }
 }
 
