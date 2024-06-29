@@ -80,7 +80,7 @@ EventsExecutor::setup_notify_waitable()
       // - a node or callback group guard condition is triggered:
       //    ---> the entities collection is changed, we need to update callbacks
       entities_need_rebuild_ = false;
-      this->refresh_current_collection_from_callback_groups();
+      this->handle_updated_entities(false);
     });
 
   auto notify_waitable_entity_id = notify_waitable_.get();
@@ -233,46 +233,6 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
   }
 }
 
-void
-EventsExecutor::add_node(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
-{
-  // This field is unused because we don't have to wake up the executor when a node is added.
-  (void) notify;
-
-  // Add node to entities collector
-  this->collector_.add_node(node_ptr);
-
-  this->refresh_current_collection_from_callback_groups();
-}
-
-void
-EventsExecutor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
-{
-  this->add_node(node_ptr->get_node_base_interface(), notify);
-}
-
-void
-EventsExecutor::remove_node(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
-{
-  // This field is unused because we don't have to wake up the executor when a node is removed.
-  (void)notify;
-
-  // Remove node from entities collector.
-  // This will result in un-setting all the event callbacks from its entities.
-  // After this function returns, this executor will not receive any more events associated
-  // to these entities.
-  this->collector_.remove_node(node_ptr);
-
-  this->refresh_current_collection_from_callback_groups();
-}
-
-void
-EventsExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
-{
-  this->remove_node(node_ptr->get_node_base_interface(), notify);
-}
 
 void
 EventsExecutor::execute_event(const ExecutorEvent & event)
@@ -351,57 +311,7 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
 }
 
 void
-EventsExecutor::add_callback_group(
-  rclcpp::CallbackGroup::SharedPtr group_ptr,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  bool notify)
-{
-  // This field is unused because we don't have to wake up
-  // the executor when a callback group is added.
-  (void)notify;
-  (void)node_ptr;
-
-  this->collector_.add_callback_group(group_ptr);
-
-  this->refresh_current_collection_from_callback_groups();
-}
-
-void
-EventsExecutor::remove_callback_group(
-  rclcpp::CallbackGroup::SharedPtr group_ptr, bool notify)
-{
-  // This field is unused because we don't have to wake up
-  // the executor when a callback group is removed.
-  (void)notify;
-
-  this->collector_.remove_callback_group(group_ptr);
-
-  this->refresh_current_collection_from_callback_groups();
-}
-
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-EventsExecutor::get_all_callback_groups()
-{
-  this->collector_.update_collections();
-  return this->collector_.get_all_callback_groups();
-}
-
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-EventsExecutor::get_manually_added_callback_groups()
-{
-  this->collector_.update_collections();
-  return this->collector_.get_manually_added_callback_groups();
-}
-
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-EventsExecutor::get_automatically_added_callback_groups_from_nodes()
-{
-  this->collector_.update_collections();
-  return this->collector_.get_automatically_added_callback_groups();
-}
-
-void
-EventsExecutor::refresh_current_collection_from_callback_groups()
+EventsExecutor::handle_updated_entities(bool /*notify*/)
 {
   // Build the new collection
   this->collector_.update_collections();

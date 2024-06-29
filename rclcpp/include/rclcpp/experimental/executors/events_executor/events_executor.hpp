@@ -59,8 +59,6 @@ namespace executors
  */
 class EventsExecutor : public rclcpp::Executor
 {
-  friend class EventsExecutorEntitiesCollector;
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutor)
 
@@ -72,7 +70,7 @@ public:
    * \param[in] options Options used to configure the executor.
    */
   RCLCPP_PUBLIC
-  explicit EventsExecutor(
+  EventsExecutor(
     rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue = std::make_unique<
       rclcpp::experimental::executors::SimpleEventsQueue>(),
     bool execute_timers_separate_thread = false,
@@ -128,87 +126,6 @@ public:
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
 
-  /// Add a node to the executor.
-  /**
-   * \sa rclcpp::Executor::add_node
-   */
-  RCLCPP_PUBLIC
-  void
-  add_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify = true) override;
-
-  /// Convenience function which takes Node and forwards NodeBaseInterface.
-  /**
-   * \sa rclcpp::EventsExecutor::add_node
-   */
-  RCLCPP_PUBLIC
-  void
-  add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
-
-  /// Remove a node from the executor.
-  /**
-   * \sa rclcpp::Executor::remove_node
-   */
-  RCLCPP_PUBLIC
-  void
-  remove_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify = true) override;
-
-  /// Convenience function which takes Node and forwards NodeBaseInterface.
-  /**
-   * \sa rclcpp::Executor::remove_node
-   */
-  RCLCPP_PUBLIC
-  void
-  remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
-
-  /// Add a callback group to an executor.
-  /**
-   * \sa rclcpp::Executor::add_callback_group
-   */
-  RCLCPP_PUBLIC
-  void
-  add_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify = true) override;
-
-  /// Remove callback group from the executor
-  /**
-   * \sa rclcpp::Executor::remove_callback_group
-   */
-  RCLCPP_PUBLIC
-  void
-  remove_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    bool notify = true) override;
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \sa rclcpp::Executor::get_all_callback_groups()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_all_callback_groups() override;
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \sa rclcpp::Executor::get_manually_added_callback_groups()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_manually_added_callback_groups() override;
-
-  /// Get callback groups that belong to executor.
-  /**
-   * \sa rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_automatically_added_callback_groups_from_nodes() override;
-
 protected:
   /// Internal implementation of spin_once
   RCLCPP_PUBLIC
@@ -220,6 +137,11 @@ protected:
   void
   spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
 
+  /// Collect entities from callback groups and refresh the current collection with them
+  RCLCPP_PUBLIC
+  void
+  handle_updated_entities(bool notify) override;
+
 private:
   RCLCPP_DISABLE_COPY(EventsExecutor)
 
@@ -230,10 +152,6 @@ private:
   /// Rebuilds the executor's notify waitable, as we can't use the one built in the base class
   void
   setup_notify_waitable();
-
-  /// Collect entities from callback groups and refresh the current collection with them
-  void
-  refresh_current_collection_from_callback_groups();
 
   /// Refresh the current collection using the provided new_collection
   void
