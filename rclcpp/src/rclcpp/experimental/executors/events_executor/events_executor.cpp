@@ -58,6 +58,10 @@ EventsExecutor::EventsExecutor(
 
   this->setup_notify_waitable();
 
+  // Make sure that the notify waitable is immediately added to the collection
+  // to avoid missing events
+  this->add_notify_waitable_to_collection(current_collection_.waitables);
+
   this->entities_collector_ =
     std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable_);
 }
@@ -75,10 +79,6 @@ EventsExecutor::setup_notify_waitable()
       entities_need_rebuild_ = false;
       this->refresh_current_collection_from_callback_groups();
     });
-
-  // Make sure that the notify waitable is immediately added to the collection
-  // to avoid missing events
-  this->add_notify_waitable_to_collection(current_collection_.waitables);
 
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
