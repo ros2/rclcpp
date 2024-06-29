@@ -227,6 +227,10 @@ private:
   void
   execute_event(const ExecutorEvent & event);
 
+  /// Rebuilds the executor's notify waitable, as we can't use the one built in the base class
+  void
+  setup_notify_waitable();
+
   /// Collect entities from callback groups and refresh the current collection with them
   void
   refresh_current_collection_from_callback_groups();

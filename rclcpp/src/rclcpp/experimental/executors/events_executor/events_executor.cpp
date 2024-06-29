@@ -55,6 +55,15 @@ EventsExecutor::EventsExecutor(
   this->current_entities_collection_ =
     std::make_shared<rclcpp::executors::ExecutorEntitiesCollection>();
 
+  this->setup_notify_waitable();
+
+  this->entities_collector_ =
+    std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable_);
+}
+
+void
+EventsExecutor::setup_notify_waitable()
+{
   notify_waitable_ = std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
     [this]() {
       // This callback is invoked when:
@@ -93,9 +102,6 @@ EventsExecutor::EventsExecutor(
       {notify_waitable_entity_id, nullptr, waitable_data, ExecutorEventType::WAITABLE_EVENT, 1};
       this->events_queue_->enqueue(event);
     });
-
-  this->entities_collector_ =
-    std::make_shared<rclcpp::executors::ExecutorEntitiesCollector>(notify_waitable_);
 }
 
 EventsExecutor::~EventsExecutor()
