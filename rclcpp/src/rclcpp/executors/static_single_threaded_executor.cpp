@@ -35,11 +35,19 @@ StaticSingleThreadedExecutor::spin()
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  // This is essentially the contents of the rclcpp::Executor::wait_for_work method,
-  // except we need to keep the wait result to reproduce the StaticSingleThreadedExecutor
-  // behavior.
-  while (rclcpp::ok(this->context_) && spinning.load()) {
-    this->spin_once_impl(std::chrono::nanoseconds(-1));
+  while (rclcpp::ok(context_) && spinning.load()) {
+    // Get executables that are ready now
+    std::lock_guard<std::mutex> guard(mutex_);
+
+    // wait forever until the wait returns
+    auto wait_result = this->collect_and_wait(std::chrono::nanoseconds(-1));
+    if (wait_result.has_value()) {
+      // Execute ready executables
+      this->execute_ready_executables(
+        current_collection_,
+        wait_result.value(),
+        false);
+    }
   }
 }
 
