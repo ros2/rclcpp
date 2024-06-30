@@ -118,8 +118,8 @@ struct TypeAdapter<std::string, rclcpp::msg::LargeMessage>
     const custom_type & source,
     ros_message_type & destination)
   {
-    destination.size = source.size();
-    std::memcpy(destination.data.data(), source.data(), source.size());
+    destination.size = std::min(source.size(), destination.data.max_size());
+    std::memcpy(destination.data.data(), source.data(), destination.size);
   }
 
   static void

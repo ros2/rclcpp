@@ -320,7 +320,7 @@ public:
   {
     if (!intra_process_is_enabled_) {
       // In this case we're not using intra process.
-      auto ros_msg_ptr = std::make_unique<ROSMessageType>();
+      auto ros_msg_ptr = create_ros_message_unique_ptr();
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
       this->do_inter_process_publish(*ros_msg_ptr);
       return;
@@ -330,7 +330,8 @@ public:
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
-      auto ros_msg_ptr = std::make_shared<ROSMessageType>();
+      auto ros_msg_ptr = std::allocate_shared<
+        ROSMessageType, ROSMessageTypeAllocator>(ros_message_type_allocator_);
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
       this->do_intra_process_publish(std::move(msg));
       this->do_inter_process_publish(*ros_msg_ptr);
@@ -339,7 +340,8 @@ public:
       }
     } else {
       if (buffer_) {
-        auto ros_msg_ptr = std::make_shared<ROSMessageType>();
+        auto ros_msg_ptr = std::allocate_shared<
+          ROSMessageType, ROSMessageTypeAllocator>(ros_message_type_allocator_);
         rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
         buffer_->add_shared(ros_msg_ptr);
       }
@@ -367,7 +369,7 @@ public:
   {
     if (!intra_process_is_enabled_) {
       // Convert to the ROS message equivalent and publish it.
-      auto ros_msg_ptr = std::make_unique<ROSMessageType>();
+      auto ros_msg_ptr = create_ros_message_unique_ptr();
       rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(msg, *ros_msg_ptr);
       this->do_inter_process_publish(*ros_msg_ptr);
       return;
