@@ -15,6 +15,7 @@
 #include <gmock/gmock.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -102,25 +103,22 @@ public:
     return num_msgs;
   }
 
-  std::vector<ConstMessageSharedPtr> get_all_data_shared()
+  void for_each_shared(std::function<void(const ConstMessageSharedPtr &)> f)
   {
     if (shared_msg) {
-      return {shared_msg};
+      f(shared_msg);
     } else if (unique_msg) {
-      return {std::make_shared<const MessageT>(*unique_msg)};
+      f(std::make_shared<const MessageT>(*unique_msg));
     }
-    return {};
   }
 
-  std::vector<MessageUniquePtr> get_all_data_unique()
+  void for_each_unique(std::function<void(MessageUniquePtr)> f)
   {
-    std::vector<MessageUniquePtr> result;
     if (shared_msg) {
-      result.push_back(std::make_unique<MessageT>(*shared_msg));
+      f(std::make_unique<MessageT>(*shared_msg));
     } else if (unique_msg) {
-      result.push_back(std::make_unique<MessageT>(*unique_msg));
+      f(std::make_unique<MessageT>(*unique_msg));
     }
-    return result;
   }
 
 private:

@@ -480,20 +480,20 @@ private:
               "subscription use different allocator types, which is not supported");
     }
     if (use_take_shared_method) {
-      auto data_vec = buffer->get_all_data_shared();
-      for (auto shared_data : data_vec) {
-        this->template add_shared_msg_to_buffer<
-          ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
-          shared_data, sub_id);
-      }
+      buffer->for_each_shared(
+        [this, sub_id](const auto & shared_data) {
+          this->template add_shared_msg_to_buffer<
+            ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
+            shared_data, sub_id);
+        });
     } else {
-      auto data_vec = buffer->get_all_data_unique();
-      for (auto & owned_data : data_vec) {
-        auto allocator = ROSMessageTypeAllocator();
-        this->template add_owned_msg_to_buffer<
-          ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
-          std::move(owned_data), sub_id, allocator);
-      }
+      buffer->for_each_unique(
+        [this, sub_id](auto owned_data) {
+          auto allocator = ROSMessageTypeAllocator();
+          this->template add_owned_msg_to_buffer<
+            ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter, ROSMessageType>(
+            std::move(owned_data), sub_id, allocator);
+        });
     }
   }
 

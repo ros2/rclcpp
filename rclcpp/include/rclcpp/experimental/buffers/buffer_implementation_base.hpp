@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
 #define RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
 
+#include <functional>
 #include <vector>
 
 namespace rclcpp
@@ -28,12 +29,14 @@ template<typename BufferT>
 class BufferImplementationBase
 {
 public:
+  using ForEachFunc = std::function<void(const BufferT &)>;
+
   virtual ~BufferImplementationBase() {}
 
   virtual BufferT dequeue() = 0;
   virtual void enqueue(BufferT request) = 0;
 
-  virtual std::vector<BufferT> get_all_data() = 0;
+  virtual void for_each(ForEachFunc && f) const = 0;
 
   virtual void clear() = 0;
   virtual bool has_data() const = 0;

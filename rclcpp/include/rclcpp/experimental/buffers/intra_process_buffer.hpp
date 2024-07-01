@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EXPERIMENTAL__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
 #define RCLCPP__EXPERIMENTAL__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
 
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
@@ -61,6 +62,11 @@ public:
 
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
+  using ForEachSharedFunc = std::function<void(const MessageSharedPtr &)>;
+  // Takes ownership by value: the callee must be able to move from it, and a
+  // buffer storing unique_ptr can only ever hand out an independent copy, never
+  // a reference to the ring buffer's own stored element.
+  using ForEachUniqueFunc = std::function<void(MessageUniquePtr)>;
 
   virtual void add_shared(MessageSharedPtr msg) = 0;
   virtual void add_unique(MessageUniquePtr msg) = 0;
@@ -68,8 +74,8 @@ public:
   virtual MessageSharedPtr consume_shared() = 0;
   virtual MessageUniquePtr consume_unique() = 0;
 
-  virtual std::vector<MessageSharedPtr> get_all_data_shared() = 0;
-  virtual std::vector<MessageUniquePtr> get_all_data_unique() = 0;
+  virtual void for_each_shared(ForEachSharedFunc && f) = 0;
+  virtual void for_each_unique(ForEachUniqueFunc && f) = 0;
 };
 
 template<
@@ -82,6 +88,7 @@ class TypedIntraProcessBuffer : public IntraProcessBuffer<MessageT, Alloc, Messa
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(TypedIntraProcessBuffer)
 
+  using Buffer = IntraProcessBuffer<MessageT, Alloc, MessageDeleter>;
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
@@ -133,14 +140,14 @@ public:
     return consume_unique_impl<BufferT>();
   }
 
-  std::vector<MessageSharedPtr> get_all_data_shared() override
+  void for_each_shared(typename Buffer::ForEachSharedFunc && f) override
   {
-    return get_all_data_shared_impl();
+    for_each_shared_impl<BufferT>(std::move(f));
   }
 
-  std::vector<MessageUniquePtr> get_all_data_unique() override
+  void for_each_unique(typename Buffer::ForEachUniqueFunc && f) override
   {
-    return get_all_data_unique_impl();
+    for_each_unique_impl<BufferT>(std::move(f));
   }
 
   bool has_data() const override
@@ -260,67 +267,62 @@ private:
 
   // MessageSharedPtr to MessageSharedPtr
   template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageSharedPtr>::value,
-    std::vector<MessageSharedPtr>
-  >::type
-  get_all_data_shared_impl()
+  typename std::enable_if<std::is_same<T, MessageSharedPtr>::value>::type
+  for_each_shared_impl(typename Buffer::ForEachSharedFunc && f)
   {
-    return buffer_->get_all_data();
+    buffer_->for_each(std::move(f));
   }
 
   // MessageUniquePtr to MessageSharedPtr
   template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageUniquePtr>::value,
-    std::vector<MessageSharedPtr>
-  >::type
-  get_all_data_shared_impl()
+  typename std::enable_if<std::is_same<T, MessageUniquePtr>::value>::type
+  for_each_shared_impl(typename Buffer::ForEachSharedFunc && f)
   {
-    std::vector<MessageSharedPtr> result;
-    auto uni_ptr_vec = buffer_->get_all_data();
-    result.reserve(uni_ptr_vec.size());
-    for (MessageUniquePtr & uni_ptr : uni_ptr_vec) {
-      result.emplace_back(std::move(uni_ptr));
-    }
-    return result;
+    // The buffer keeps ownership of each unique_ptr (needed for future transient-local
+    // replays), so an independent copy must be made for each shared_ptr view handed out.
+    buffer_->for_each(
+      [this, &f](const MessageUniquePtr & msg) {
+        auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+        MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg);
+        MessageSharedPtr shared_msg(ptr, msg.get_deleter());
+        f(shared_msg);
+      });
   }
 
   // MessageSharedPtr to MessageUniquePtr
   template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageSharedPtr>::value,
-    std::vector<MessageUniquePtr>
-  >::type
-  get_all_data_unique_impl()
+  typename std::enable_if<std::is_same<T, MessageSharedPtr>::value>::type
+  for_each_unique_impl(typename Buffer::ForEachUniqueFunc && f)
   {
-    std::vector<MessageUniquePtr> result;
-    auto shared_ptr_vec = buffer_->get_all_data();
-    result.reserve(shared_ptr_vec.size());
-    for (MessageSharedPtr shared_msg : shared_ptr_vec) {
-      MessageUniquePtr unique_msg;
-      MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(shared_msg);
-      auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-      MessageAllocTraits::construct(*message_allocator_.get(), ptr, *shared_msg);
-      if (deleter) {
-        unique_msg = MessageUniquePtr(ptr, *deleter);
-      } else {
-        unique_msg = MessageUniquePtr(ptr);
-      }
-      result.push_back(std::move(unique_msg));
-    }
-    return result;
+    buffer_->for_each(
+      [this, &f](const MessageSharedPtr & shared_msg) {
+        MessageUniquePtr unique_msg;
+        MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(shared_msg);
+        auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+        MessageAllocTraits::construct(*message_allocator_.get(), ptr, *shared_msg);
+        if (deleter) {
+          unique_msg = MessageUniquePtr(ptr, *deleter);
+        } else {
+          unique_msg = MessageUniquePtr(ptr);
+        }
+        f(std::move(unique_msg));
+      });
   }
 
   // MessageUniquePtr to MessageUniquePtr
   template<typename T = BufferT>
-  typename std::enable_if<
-    std::is_same<T, MessageUniquePtr>::value,
-    std::vector<MessageUniquePtr>
-  >::type
-  get_all_data_unique_impl()
+  typename std::enable_if<std::is_same<T, MessageUniquePtr>::value>::type
+  for_each_unique_impl(typename Buffer::ForEachUniqueFunc && f)
   {
-    return buffer_->get_all_data();
+    // The buffer keeps ownership of each unique_ptr (needed for future transient-local
+    // replays), so an independent copy must be made for each unique_ptr handed out.
+    buffer_->for_each(
+      [this, &f](const MessageUniquePtr & msg) {
+        auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+        MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg);
+        MessageUniquePtr unique_msg(ptr, msg.get_deleter());
+        f(std::move(unique_msg));
+      });
   }
 };
 

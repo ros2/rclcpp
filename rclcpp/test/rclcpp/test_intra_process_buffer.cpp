@@ -199,7 +199,11 @@ TEST(TestIntraProcessBuffer, shared_buffer_consume) {
   intra_process_buffer.add_shared(original_shared_msg);
   intra_process_buffer.add_shared(original_shared_msg_2);
 
-  auto shared_data_vec = intra_process_buffer.get_all_data_shared();
+  std::vector<SharedMessageT> shared_data_vec;
+  intra_process_buffer.for_each_shared(
+    [&shared_data_vec](const SharedMessageT & msg) {
+      shared_data_vec.push_back(msg);
+    });
   EXPECT_EQ(2L, shared_data_vec.size());
   EXPECT_EQ(3L, original_shared_msg.use_count());
   EXPECT_EQ(original_shared_msg.use_count(), shared_data_vec[0].use_count());
@@ -210,7 +214,11 @@ TEST(TestIntraProcessBuffer, shared_buffer_consume) {
   EXPECT_EQ(*original_shared_msg_2, *shared_data_vec[1]);
   EXPECT_EQ(original_message_pointer_2, reinterpret_cast<std::uintptr_t>(shared_data_vec[1].get()));
 
-  auto unique_data_vec = intra_process_buffer.get_all_data_unique();
+  std::vector<UniqueMessageT> unique_data_vec;
+  intra_process_buffer.for_each_unique(
+    [&unique_data_vec](UniqueMessageT msg) {
+      unique_data_vec.push_back(std::move(msg));
+    });
   EXPECT_EQ(2L, unique_data_vec.size());
   EXPECT_EQ(3L, original_shared_msg.use_count());
   EXPECT_EQ(*original_shared_msg, *unique_data_vec[0]);
@@ -275,7 +283,11 @@ TEST(TestIntraProcessBuffer, unique_buffer_consume) {
   intra_process_buffer.add_unique(std::move(original_unique_msg));
   intra_process_buffer.add_unique(std::move(original_unique_msg_2));
 
-  auto shared_data_vec = intra_process_buffer.get_all_data_shared();
+  std::vector<SharedMessageT> shared_data_vec;
+  intra_process_buffer.for_each_shared(
+    [&shared_data_vec](const SharedMessageT & msg) {
+      shared_data_vec.push_back(msg);
+    });
   EXPECT_EQ(2L, shared_data_vec.size());
   EXPECT_EQ(1L, shared_data_vec[0].use_count());
   EXPECT_EQ(original_value, *shared_data_vec[0]);
@@ -284,7 +296,11 @@ TEST(TestIntraProcessBuffer, unique_buffer_consume) {
   EXPECT_EQ(original_value_2, *shared_data_vec[1]);
   EXPECT_NE(original_message_pointer_2, reinterpret_cast<std::uintptr_t>(shared_data_vec[1].get()));
 
-  auto unique_data_vec = intra_process_buffer.get_all_data_unique();
+  std::vector<UniqueMessageT> unique_data_vec;
+  intra_process_buffer.for_each_unique(
+    [&unique_data_vec](UniqueMessageT msg) {
+      unique_data_vec.push_back(std::move(msg));
+    });
   EXPECT_EQ(2L, unique_data_vec.size());
   EXPECT_EQ(1L, shared_data_vec[0].use_count());
   EXPECT_EQ(original_value, *unique_data_vec[0]);

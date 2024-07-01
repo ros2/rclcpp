@@ -65,7 +65,11 @@ TEST(TestRingBufferImplementation, basic_usage) {
 
   rb.enqueue('d');
 
-  const auto all_data_vec = rb.get_all_data();
+  std::vector<char> all_data_vec;
+  rb.for_each(
+    [&all_data_vec](const auto & data) {
+      all_data_vec.push_back(data);
+    });
 
   EXPECT_EQ(2u, all_data_vec.size());
   EXPECT_EQ('c', all_data_vec[0]);
@@ -90,7 +94,7 @@ TEST(TestRingBufferImplementation, basic_usage) {
 /*
  * Basic usage with unique_ptr
  * - insert unique_ptr data and check that it has data
- * - get all data
+ * - iterate over all data
  * - extract data
  * - overwrite old data writing over the buffer capacity
  */
@@ -114,13 +118,20 @@ TEST(TestRingBufferImplementation, basic_usage_unique_ptr) {
   EXPECT_EQ(true, rb.has_data());
   EXPECT_EQ(true, rb.is_full());
 
-  const auto all_data_vec = rb.get_all_data();
+  std::vector<char> values;
+  std::vector<std::uintptr_t> pointers;
+  rb.for_each(
+    [&values, &pointers](const auto & data) {
+      values.push_back(*data);
+      pointers.push_back(reinterpret_cast<std::uintptr_t>(data.get()));
+    });
 
-  EXPECT_EQ(2u, all_data_vec.size());
-  EXPECT_EQ('b', *all_data_vec[0]);
-  EXPECT_EQ('c', *all_data_vec[1]);
-  EXPECT_NE(original_b_pointer, reinterpret_cast<std::uintptr_t>(all_data_vec[0].get()));
-  EXPECT_NE(original_c_pointer, reinterpret_cast<std::uintptr_t>(all_data_vec[1].get()));
+  EXPECT_EQ(2u, values.size());
+  EXPECT_EQ('b', values[0]);
+  EXPECT_EQ('c', values[1]);
+  // for_each does not copy the elements, it observes the buffer's own storage in place.
+  EXPECT_EQ(original_b_pointer, pointers[0]);
+  EXPECT_EQ(original_c_pointer, pointers[1]);
 
   EXPECT_EQ(true, rb.has_data());
   EXPECT_EQ(true, rb.is_full());
@@ -147,14 +158,14 @@ TEST(TestRingBufferImplementation, test_buffer_clear) {
 
   EXPECT_EQ(true, rb.has_data());
   EXPECT_EQ(true, rb.is_full());
-  const auto all_data_vec = rb.get_all_data();
-  EXPECT_EQ(2u, all_data_vec.capacity());
+  std::vector<char> all_data_vec;
+  rb.for_each([&all_data_vec](const auto & data) {all_data_vec.push_back(data);});
   EXPECT_EQ(2u, all_data_vec.size());
   rb.clear();
   EXPECT_EQ(false, rb.has_data());
   EXPECT_EQ(false, rb.is_full());
-  const auto all_data_vec_empty = rb.get_all_data();
-  EXPECT_EQ(0u, all_data_vec_empty.capacity());
+  std::vector<char> all_data_vec_empty;
+  rb.for_each([&all_data_vec_empty](const auto & data) {all_data_vec_empty.push_back(data);});
   EXPECT_EQ(0u, all_data_vec_empty.size());
   rb.enqueue('c');
   rb.enqueue('d');
@@ -206,9 +217,19 @@ TEST(TestRingBufferImplementation, handle_nullptr_deletion) {
   rb.enqueue(std::make_unique<int>(42));
   rb.enqueue(nullptr);  // intentionally enqueuing nullptr
   rb.enqueue(std::make_unique<int>(84));
-  auto all_data = rb.get_all_data();
-  EXPECT_EQ(3u, all_data.size());
-  EXPECT_EQ(42, *(all_data[0]));
-  EXPECT_EQ(nullptr, all_data[1]);
-  EXPECT_EQ(84, *(all_data[2]));
+
+  std::vector<bool> is_null;
+  std::vector<int> values;
+  rb.for_each(
+    [&is_null, &values](const auto & data) {
+      is_null.push_back(data == nullptr);
+      values.push_back(data ? *data : 0);
+    });
+
+  ASSERT_EQ(3u, is_null.size());
+  EXPECT_FALSE(is_null[0]);
+  EXPECT_EQ(42, values[0]);
+  EXPECT_TRUE(is_null[1]);
+  EXPECT_FALSE(is_null[2]);
+  EXPECT_EQ(84, values[2]);
 }
