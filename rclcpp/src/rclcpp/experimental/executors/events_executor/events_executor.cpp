@@ -56,8 +56,8 @@ EventsExecutor::EventsExecutor(
 
   this->setup_notify_waitable();
 
-  // Ensure that the entities collection is empty (the base class may have added elements that we are not
-  // interested in)
+  // Ensure that the entities collection is empty (the base class may have added elements
+  // that we are not interested in)
   this->current_collection_.clear();
 
   // Make sure that the notify waitable is immediately added to the collection
@@ -311,8 +311,9 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
 }
 
 void
-EventsExecutor::handle_updated_entities(bool /*notify*/)
+EventsExecutor::handle_updated_entities(bool notify)
 {
+  (void)notify;
   // Build the new collection
   this->collector_.update_collections();
   auto callback_groups = this->collector_.get_all_callback_groups();
