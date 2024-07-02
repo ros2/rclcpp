@@ -241,20 +241,20 @@ public:
       auto msg_info_pair =
         this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
       if (buffer_) {
-        typename IntraProcessBuffer::Node node;
-        node.message = msg_info_pair.first;
-        node.message_info = msg_info_pair.second;
-        buffer_->add(std::move(node));
+        typename IntraProcessBuffer::Data data;
+        data.message = msg_info_pair.first;
+        data.message_info = msg_info_pair.second;
+        buffer_->add(std::move(data));
       }
       this->do_inter_process_publish(*msg_info_pair.first);
     } else {
       if (buffer_) {
         auto msg_info_pair =
           this->do_intra_process_ros_message_publish_and_return_shared(std::move(msg));
-        typename IntraProcessBuffer::Node node;
-        node.message = msg_info_pair.first;
-        node.message_info = msg_info_pair.second;
-        buffer_->add(std::move(node));
+        typename IntraProcessBuffer::Data data;
+        data.message = msg_info_pair.first;
+        data.message_info = msg_info_pair.second;
+        buffer_->add(std::move(data));
       } else {
         this->do_intra_process_ros_message_publish(std::move(msg));
       }
@@ -331,10 +331,10 @@ public:
       this->do_intra_process_publish(std::move(msg), &message_info);
       this->do_inter_process_publish(*ros_msg_ptr);
       if (buffer_) {
-        typename IntraProcessBuffer::Node node;
-        node.message = std::move(ros_msg_ptr);
-        node.message_info = std::move(message_info);
-        buffer_->add(std::move(node));
+        typename IntraProcessBuffer::Data data;
+        data.message = std::move(ros_msg_ptr);
+        data.message_info = std::move(message_info);
+        buffer_->add(std::move(data));
       }
     } else {
       if (buffer_) {
@@ -342,10 +342,10 @@ public:
         rclcpp::TypeAdapter<MessageT>::convert_to_ros_message(*msg, *ros_msg_ptr);
         rmw_message_info_t message_info;
         this->do_intra_process_publish(std::move(msg), &message_info);
-        typename IntraProcessBuffer::Node node;
-        node.message = std::move(ros_msg_ptr);
-        node.message_info = std::move(message_info);
-        buffer_->add(std::move(node));
+        typename IntraProcessBuffer::Data data;
+        data.message = std::move(ros_msg_ptr);
+        data.message_info = std::move(message_info);
+        buffer_->add(std::move(data));
       } else {
         this->do_intra_process_publish(std::move(msg));
       }

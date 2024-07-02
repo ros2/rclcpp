@@ -126,8 +126,8 @@ public:
   std::shared_ptr<void>
   take_data() override
   {
-    auto node = this->buffer_->consume();
-    if (node.message.index() == std::variant_npos) {
+    auto data = this->buffer_->consume();
+    if (data.message.index() == std::variant_npos) {
       return nullptr;
     }
 
@@ -139,8 +139,8 @@ public:
 
     return std::static_pointer_cast<void>(
       std::make_shared<
-        typename SubscriptionIntraProcessBufferT::IntraProcessBuffer::Node>(
-        std::move(node))
+        typename SubscriptionIntraProcessBufferT::IntraProcessBuffer::Data>(
+        std::move(data))
     );
   }
 
@@ -199,7 +199,7 @@ protected:
     }
 
     auto shared_ptr = std::static_pointer_cast<
-      typename SubscriptionIntraProcessBufferT::IntraProcessBuffer::Node>(
+      typename SubscriptionIntraProcessBufferT::IntraProcessBuffer::Data>(
       data);
 
     // Copy the message info out before the callback (potentially) moves the message, since

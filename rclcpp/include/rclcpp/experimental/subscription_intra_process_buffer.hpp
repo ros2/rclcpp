@@ -135,19 +135,19 @@ public:
     std::variant<MessageUniquePtr, ConstMessageSharedPtr> message,
     const rmw_message_info_t & message_info) override
   {
-    typename IntraProcessBuffer::Node node;
-    node.message_info = message_info;
+    typename IntraProcessBuffer::Data data;
+    data.message_info = message_info;
     if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
-      node.message = std::move(message);
+      data.message = std::move(message);
       trigger_guard_condition();
     } else {
       std::visit(
-        [this, &node](auto && msg) {
-          node.message = convert_ros_message_to_subscribed_type_unique_ptr(*msg);
+        [this, &data](auto && msg) {
+          data.message = convert_ros_message_to_subscribed_type_unique_ptr(*msg);
         }, message);
       trigger_guard_condition();
     }
-    buffer_->add(std::move(node));
+    buffer_->add(std::move(data));
     this->invoke_on_new_message();
   }
 
@@ -156,10 +156,10 @@ public:
     std::variant<SubscribedTypeUniquePtr, ConstDataSharedPtr> message,
     const rmw_message_info_t & message_info)
   {
-    typename IntraProcessBuffer::Node node;
-    node.message_info = message_info;
-    node.message = std::move(message);
-    buffer_->add(std::move(node));
+    typename IntraProcessBuffer::Data data;
+    data.message_info = message_info;
+    data.message = std::move(message);
+    buffer_->add(std::move(data));
     trigger_guard_condition();
     this->invoke_on_new_message();
   }

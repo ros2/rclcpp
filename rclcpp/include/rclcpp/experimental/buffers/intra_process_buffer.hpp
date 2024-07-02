@@ -25,6 +25,7 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer_data.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/macros.hpp"
 #include "tracetools/tracetools.h"
@@ -35,18 +36,6 @@ namespace experimental
 {
 namespace buffers
 {
-
-template<
-  typename MessageT,
-  typename MessageDeleter = std::default_delete<MessageT>>
-struct IntraProcessBufferNode
-{
-  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
-  using MessageSharedPtr = std::shared_ptr<const MessageT>;
-
-  std::variant<MessageUniquePtr, MessageSharedPtr> message;
-  rmw_message_info_t message_info;
-};
 
 class IntraProcessBufferBase
 {
@@ -72,13 +61,13 @@ public:
 
   virtual ~IntraProcessBuffer() {}
 
-  using Node = IntraProcessBufferNode<MessageT, MessageDeleter>;
+  using Data = IntraProcessBufferData<MessageT, MessageDeleter>;
 
-  virtual void add(Node node) = 0;
+  virtual void add(Data data) = 0;
 
-  virtual Node consume() = 0;
+  virtual Data consume() = 0;
 
-  virtual std::vector<Node> get_all_data() = 0;
+  virtual std::vector<Data> get_all_data() = 0;
 };
 
 template<
@@ -91,15 +80,16 @@ class TypedIntraProcessBuffer : public IntraProcessBuffer<MessageT, MessageDelet
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(TypedIntraProcessBuffer)
 
+  using Buffer = IntraProcessBuffer<MessageT, MessageDeleter>;
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using Node = IntraProcessBufferNode<MessageT, MessageDeleter>;
-  using MessageSharedPtr = typename Node::MessageSharedPtr;
-  using MessageUniquePtr = typename Node::MessageUniquePtr;
+  using Data = typename Buffer::Data;
+  using MessageSharedPtr = typename Data::MessageSharedPtr;
+  using MessageUniquePtr = typename Data::MessageUniquePtr;
 
   explicit
   TypedIntraProcessBuffer(
-    std::unique_ptr<BufferImplementationBase<Node>> buffer_impl,
+    std::unique_ptr<BufferImplementationBase<Data>> buffer_impl,
     std::shared_ptr<Alloc> allocator = nullptr)
   : buffer_(std::move(buffer_impl))
   {
@@ -116,17 +106,17 @@ public:
 
   virtual ~TypedIntraProcessBuffer() {}
 
-  void add(Node node) override
+  void add(Data data) override
   {
-    add_impl<BufferType>(std::move(node));
+    add_impl<BufferType>(std::move(data));
   }
 
-  Node consume() override
+  Data consume() override
   {
     return buffer_->dequeue();
   }
 
-  std::vector<Node> get_all_data() override
+  std::vector<Data> get_all_data() override
   {
     return buffer_->get_all_data();
   }
@@ -152,51 +142,51 @@ public:
   }
 
 private:
-  std::unique_ptr<BufferImplementationBase<Node>> buffer_;
+  std::unique_ptr<BufferImplementationBase<Data>> buffer_;
 
   std::shared_ptr<MessageAlloc> message_allocator_;
 
   template<IntraProcessBufferType BufferT>
   typename std::enable_if_t<
     BufferT == IntraProcessBufferType::CallbackDefault>
-  add_impl(Node node)
+  add_impl(Data data)
   {
-    buffer_->enqueue(std::move(node));
+    buffer_->enqueue(std::move(data));
   }
 
   template<IntraProcessBufferType BufferT>
   typename std::enable_if_t<
     BufferT == IntraProcessBufferType::SharedPtr>
-  add_impl(Node node)
+  add_impl(Data data)
   {
-    if (std::holds_alternative<MessageSharedPtr>(node.message)) {
-      buffer_->enqueue(std::move(node));
+    if (std::holds_alternative<MessageSharedPtr>(data.message)) {
+      buffer_->enqueue(std::move(data));
     } else {
       // Promote to a shared pointer
-      auto unique_msg = std::move(std::get<MessageUniquePtr>(node.message));
-      node.message = MessageSharedPtr(unique_msg.release());
-      buffer_->enqueue(std::move(node));
+      auto unique_msg = std::move(std::get<MessageUniquePtr>(data.message));
+      data.message = MessageSharedPtr(unique_msg.release());
+      buffer_->enqueue(std::move(data));
     }
   }
 
   template<IntraProcessBufferType BufferT>
   typename std::enable_if_t<
     BufferT == IntraProcessBufferType::UniquePtr>
-  add_impl(Node node)
+  add_impl(Data data)
   {
-    if (std::holds_alternative<MessageUniquePtr>(node.message)) {
-      buffer_->enqueue(std::move(node));
+    if (std::holds_alternative<MessageUniquePtr>(data.message)) {
+      buffer_->enqueue(std::move(data));
     } else {
-      auto shared_msg = std::move(std::get<MessageSharedPtr>(node.message));
+      auto shared_msg = std::move(std::get<MessageSharedPtr>(data.message));
       MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(shared_msg);
       auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
       MessageAllocTraits::construct(*message_allocator_.get(), ptr, *shared_msg);
       if (deleter) {
-        node.message = MessageUniquePtr(ptr, *deleter);
+        data.message = MessageUniquePtr(ptr, *deleter);
       } else {
-        node.message = MessageUniquePtr(ptr);
+        data.message = MessageUniquePtr(ptr);
       }
-      buffer_->enqueue(std::move(node));
+      buffer_->enqueue(std::move(data));
     }
   }
 };

@@ -544,18 +544,18 @@ private:
     using ROSMessageTypeAllocatorTraits = allocator::AllocRebind<ROSMessageType, Alloc>;
     using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
     using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
-    using IntraProcessBuffer = rclcpp::experimental::buffers::IntraProcessBuffer<
-        ROSMessageType,
-        ROSMessageTypeDeleter
-      >;
-    using ROSMessageSharedPtr = typename IntraProcessBuffer::Node::MessageSharedPtr;
-    using ROSMessageUniquePtr = typename IntraProcessBuffer::Node::MessageUniquePtr;
+    using BufferType = rclcpp::experimental::buffers::IntraProcessBuffer<
+      ROSMessageType,
+      ROSMessageTypeDeleter
+    >;
+    using ROSMessageSharedPtr = typename BufferType::Data::MessageSharedPtr;
+    using ROSMessageUniquePtr = typename BufferType::Data::MessageUniquePtr;
 
     auto publisher_buffer = publisher_buffers_[pub_id].lock();
     if (!publisher_buffer) {
       throw std::runtime_error("publisher buffer has unexpectedly gone out of scope");
     }
-    auto buffer = std::dynamic_pointer_cast<IntraProcessBuffer>(publisher_buffer);
+    auto buffer = std::dynamic_pointer_cast<BufferType>(publisher_buffer);
     if (!buffer) {
       throw std::runtime_error(
               "failed to dynamic cast publisher's IntraProcessBufferBase to "

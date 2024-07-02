@@ -41,11 +41,11 @@ create_intra_process_buffer(
   size_t buffer_size = qos.depth();
 
   using rclcpp::experimental::buffers::IntraProcessBuffer;
-  using rclcpp::experimental::buffers::IntraProcessBufferNode;
+  using rclcpp::experimental::buffers::IntraProcessBufferData;
   using rclcpp::experimental::buffers::TypedIntraProcessBuffer;
   using rclcpp::experimental::buffers::RingBufferImplementation;
 
-  using BufferT = IntraProcessBufferNode<MessageT, Deleter>;
+  using BufferT = IntraProcessBufferData<MessageT, Deleter>;
   using BufferImplT = RingBufferImplementation<BufferT>;
 
   auto buffer_implementation = std::make_unique<BufferImplT>(buffer_size);
