@@ -122,6 +122,14 @@ public:
   void
   clear_on_ready_callback() override;
 
+  /// Set a new callback to be called whenever this waitable is executed.
+  /**
+   * \param[in] on_execute_callback The new callback
+   */
+  RCLCPP_PUBLIC
+  void
+  set_execute_callback(std::function<void(void)> on_execute_callback);
+
   /// Remove a guard condition from being waited on.
   /**
    * \param[in] weak_guard_condition The guard condition to remove.
@@ -142,7 +150,10 @@ private:
   /// Callback to run when waitable executes
   std::function<void(void)> execute_callback_;
 
+  /// Mutex to procetect the guard conditions
   std::mutex guard_condition_mutex_;
+  /// Mutex to protect the execute callback
+  std::mutex execute_mutex_;
 
   std::function<void(size_t)> on_ready_callback_;
 

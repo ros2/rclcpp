@@ -138,7 +138,7 @@ TEST_F(TestExecutor, add_callback_group_failed_trigger_guard_condition) {
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.add_callback_group(cb_group, node->get_node_base_interface(), true),
-    std::runtime_error("Failed to trigger guard condition on callback group add: error not set"));
+    std::runtime_error("Failed to handle entities update on callback group add: error not set"));
 }
 
 TEST_F(TestExecutor, remove_callback_group_null_node) {
@@ -175,7 +175,7 @@ TEST_F(TestExecutor, remove_callback_group_failed_trigger_guard_condition) {
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_callback_group(cb_group, true),
     std::runtime_error(
-      "Failed to trigger guard condition on callback group remove: error not set"));
+      "Failed to handle entities update on callback group remove: error not set"));
 }
 
 TEST_F(TestExecutor, remove_node_not_associated) {
