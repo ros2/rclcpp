@@ -352,6 +352,7 @@ public:
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
+   * The implementation is suitable for a single-thread model of execution.
    * \param[in] future The future to wait on. If this function returns SUCCESS, the future can be
    *   accessed without blocking (though it may still throw an exception).
    * \param[in] timeout Optional timeout parameter, which gets passed to Executor::spin_node_once.
