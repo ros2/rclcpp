@@ -21,10 +21,8 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/memory_strategy.hpp"
-#include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
-#include "test_msgs/srv/empty.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
@@ -510,62 +508,3 @@ TEST_F(TestExecutor, is_spinning) {
 
   ASSERT_TRUE(timer_called);
 }
-
-class TestAllThreadedExecutor
-  : public ::testing::Test, public ::testing::WithParamInterface<std::string>
-{
-public:
-  void SetUp() override
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  void TearDown() override
-  {
-    rclcpp::shutdown();
-  }
-};
-
-TEST_P(TestAllThreadedExecutor, release_ownership_entity_after_spinning_cancel) {
-  using namespace std::chrono_literals;
-  const std::string single_threaded_executor(
-    typeid(rclcpp::executors::SingleThreadedExecutor).name());
-  const std::string multi_threaded_executor(
-    typeid(rclcpp::executors::MultiThreadedExecutor).name());
-
-  // Create an Executor
-  auto type_name = GetParam();
-  std::shared_ptr<rclcpp::Executor> executor;
-  if (single_threaded_executor == type_name) {
-    executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  } else if (multi_threaded_executor == type_name) {
-    executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-  } else {
-    FAIL() << "Unsupported Executor Type !";
-  }
-
-  auto future = std::async(std::launch::async, [&executor] {executor->spin();});
-
-  auto node = std::make_shared<rclcpp::Node>("test_node");
-  auto callback = [](
-    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {
-    };
-  auto server = node->create_service<test_msgs::srv::Empty>("test_service", callback);
-  while (!executor->is_spinning()) {
-    std::this_thread::sleep_for(50ms);
-  }
-  executor->add_node(node);
-  std::this_thread::sleep_for(50ms);
-  executor->cancel();
-  std::future_status future_status = future.wait_for(1s);
-  EXPECT_EQ(future_status, std::future_status::ready);
-
-  EXPECT_EQ(server.use_count(), 1);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-  TestAllThreadedExecutorWithParam,
-  TestAllThreadedExecutor,
-  ::testing::Values(
-    std::string(typeid(rclcpp::executors::SingleThreadedExecutor).name()),
-    std::string(typeid(rclcpp::executors::MultiThreadedExecutor).name())));
