@@ -52,8 +52,6 @@ struct OnSetParametersCallbackHandle
     std::function<
     rcl_interfaces::msg::SetParametersResult(
       const std::vector<rclcpp::Parameter> &)>;
-  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
-    OnSetParametersCallbackType;
 
   OnSetParametersCallbackType callback;
 };

@@ -233,8 +233,6 @@ protected:
   size_t wait_set_event_index_;
 };
 
-using QOSEventHandlerBase [[deprecated("Use rclcpp::EventHandlerBase")]] = EventHandlerBase;
-
 template<typename EventCallbackT, typename ParentHandleT>
 class EventHandler : public EventHandlerBase
 {
@@ -311,11 +309,6 @@ private:
   ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
 };
-
-template<typename EventCallbackT, typename ParentHandleT>
-using QOSEventHandler [[deprecated("Use rclcpp::EventHandler")]] = EventHandler<EventCallbackT,
-    ParentHandleT>;
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__EVENT_HANDLER_HPP_
