@@ -14,6 +14,7 @@
 
 #include "rclcpp_components/component_manager.hpp"
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
@@ -96,7 +97,7 @@ ComponentManager::get_component_resources(
     }
 
     std::string library_path = parts[1];
-    if (!rcpputils::fs::path(library_path).is_absolute()) {
+    if (!std::filesystem::path(library_path).is_absolute()) {
       library_path = base_path + "/" + library_path;
     }
     resources.push_back({parts[0], library_path});
