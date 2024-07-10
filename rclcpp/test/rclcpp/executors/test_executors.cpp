@@ -879,7 +879,30 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
   rclcpp::shutdown(non_default_context);
 }
 
-<<<<<<< HEAD
+TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  auto future = std::async(std::launch::async, [&executor] {executor.spin();});
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {
+    };
+  auto server = node->create_service<test_msgs::srv::Empty>("test_service", callback);
+  while (!executor.is_spinning()) {
+    std::this_thread::sleep_for(50ms);
+  }
+  executor.add_node(node);
+  std::this_thread::sleep_for(50ms);
+  executor.cancel();
+  std::future_status future_status = future.wait_for(1s);
+  EXPECT_EQ(future_status, std::future_status::ready);
+
+  EXPECT_EQ(server.use_count(), 1);
+}
+
 template<typename T>
 class TestBusyWaiting : public ::testing::Test
 {
@@ -1030,28 +1053,4 @@ TYPED_TEST(TestBusyWaiting, test_spin)
   this->check_for_busy_waits(start_time);
   // this should get the initial trigger, and the follow up from in the callback
   ASSERT_EQ(this->waitable->get_count(), 2u);
-=======
-TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
-{
-  using ExecutorType = TypeParam;
-  ExecutorType executor;
-
-  auto future = std::async(std::launch::async, [&executor] {executor.spin();});
-
-  auto node = std::make_shared<rclcpp::Node>("test_node");
-  auto callback = [](
-    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {
-    };
-  auto server = node->create_service<test_msgs::srv::Empty>("test_service", callback);
-  while (!executor.is_spinning()) {
-    std::this_thread::sleep_for(50ms);
-  }
-  executor.add_node(node);
-  std::this_thread::sleep_for(50ms);
-  executor.cancel();
-  std::future_status future_status = future.wait_for(1s);
-  EXPECT_EQ(future_status, std::future_status::ready);
-
-  EXPECT_EQ(server.use_count(), 1);
->>>>>>> 069a0018 (Release ownership of entities after spinning cancelled (#2556))
 }
