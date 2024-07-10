@@ -598,7 +598,7 @@ ament_add_gtest(test_executor test_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 120)
 if(TARGET test_executor)
-  target_link_libraries(test_executor ${PROJECT_NAME} mimick)
+  target_link_libraries(test_executor ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
 endif()
 
 ament_add_gtest(test_graph_listener test_graph_listener.cpp)
