@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+21.0.7 (2024-07-10)
+-------------------
 * Add test creating two content filter topics with the same topic name (`#2550 <https://github.com/ros2/rclcpp/issues/2550>`_)
 * Revise the description of service configure_introspection() (`#2514 <https://github.com/ros2/rclcpp/issues/2514>`_)
 * Contributors: Alejandro Hernández Cordero, Barry Xu

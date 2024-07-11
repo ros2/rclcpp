@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+21.0.7 (2024-07-10)
+-------------------
 * revert call shutdown in LifecycleNode destructor (Iron) (`#2559 <https://github.com/ros2/rclcpp/issues/2559>`_)
 * lifecycle node dtor shutdown should be called only in primary state. (`#2543 <https://github.com/ros2/rclcpp/issues/2543>`_)
 * rclcpp::shutdown should not be called before LifecycleNode dtor. (`#2539 <https://github.com/ros2/rclcpp/issues/2539>`_)
