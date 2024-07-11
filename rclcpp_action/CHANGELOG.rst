@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* fix: Fixed race condition in action server between is_ready and take"… (`#2531 <https://github.com/ros2/rclcpp/issues/2531>`_)
+* Do not generate the exception when action service response timeout. (`#2519 <https://github.com/ros2/rclcpp/issues/2519>`_)
+* Contributors: Janosch Machowinski, Tomoya Fujita, William Woodall
+
 21.0.6 (2024-04-19)
 -------------------
 

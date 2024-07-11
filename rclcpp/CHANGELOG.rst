@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add test creating two content filter topics with the same topic name (`#2550 <https://github.com/ros2/rclcpp/issues/2550>`_)
+* Revise the description of service configure_introspection() (`#2514 <https://github.com/ros2/rclcpp/issues/2514>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu
+
 21.0.6 (2024-04-19)
 -------------------
 * address ambiguous auto variable. (`#2486 <https://github.com/ros2/rclcpp/issues/2486>`_)
