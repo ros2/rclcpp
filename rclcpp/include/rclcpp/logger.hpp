@@ -15,6 +15,7 @@
 #ifndef RCLCPP__LOGGER_HPP_
 #define RCLCPP__LOGGER_HPP_
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>

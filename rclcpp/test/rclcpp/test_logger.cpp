@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -211,6 +212,6 @@ TEST(TestLogger, get_logging_directory) {
   ASSERT_EQ(true, rcutils_set_env("ROS_HOME", nullptr));
 
   auto path = rclcpp::get_log_directory();
-  auto expected_path = rcpputils::fs::path{"/fake_home_dir"} / ".ros" / "log";
-  EXPECT_EQ(path.string(), expected_path.string());
+  auto expected_path = std::filesystem::path{"/fake_home_dir"} / ".ros" / "log";
+  EXPECT_EQ(path, expected_path);
 }

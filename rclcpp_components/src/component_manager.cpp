@@ -97,10 +97,11 @@ ComponentManager::get_component_resources(
     }
 
     std::string library_path = parts[1];
-    if (!std::filesystem::path(library_path).is_absolute()) {
-      library_path = base_path + "/" + library_path;
+    std::filesystem::path library_path = parts[1];
+    if (!library_path.is_absolute()) {
+      library_path = (base_path / library_path);
     }
-    resources.push_back({parts[0], library_path});
+    resources.push_back({parts[0], library_path.string()});
   }
   return resources;
 }
