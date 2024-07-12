@@ -215,7 +215,6 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   std::atomic_size_t timer_count {0};
   auto timer_callback = [&executor, &timer_count]() {
       auto cur_timer_count = timer_count++;
-      printf("in timer_callback(%zu)\n", cur_timer_count);
       if (cur_timer_count > 0) {
         executor.cancel();
       }
@@ -344,32 +343,26 @@ TYPED_TEST(TestAddCallbackGroupsToExecutorStable, subscriber_triggered_to_receiv
       received_message_promise.set_value(true);
     };
 
-  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
-  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
-  // to create a timer with a callback run on another executor
-  rclcpp::TimerBase::SharedPtr timer = nullptr;
   std::promise<void> timer_promise;
+  // create a subscription using the 'cb_grp' callback group
+  rclcpp::QoS qos = rclcpp::QoS(1).reliable();
+  auto options = rclcpp::SubscriptionOptions();
+  options.callback_group = cb_grp;
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription =
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
+  // create a publisher to send data
+  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher =
+    node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
   auto timer_callback =
-    [&subscription, &publisher, &timer, &cb_grp, &node, &sub_callback, &timer_promise]() {
-      if (timer) {
-        timer.reset();
-      }
-
-      // create a subscription using the `cb_grp` callback group
-      rclcpp::QoS qos = rclcpp::QoS(1).reliable();
-      auto options = rclcpp::SubscriptionOptions();
-      options.callback_group = cb_grp;
-      subscription =
-        node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
-      // create a publisher to send data
-      publisher =
-        node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
+    [&publisher, &timer_promise]() {
       publisher->publish(test_msgs::msg::Empty());
       timer_promise.set_value();
     };
 
+  // Another executor to run the timer with a callback
   ExecutorType timer_executor;
-  timer = node->create_wall_timer(100ms, timer_callback);
+
+  rclcpp::TimerBase::SharedPtr timer = node->create_wall_timer(100ms, timer_callback);
   timer_executor.add_node(node);
   auto future = timer_promise.get_future();
   timer_executor.spin_until_future_complete(future);
