@@ -96,7 +96,6 @@ ComponentManager::get_component_resources(
       throw ComponentManagerException("Invalid resource entry");
     }
 
-    std::string library_path = parts[1];
     std::filesystem::path library_path = parts[1];
     if (!library_path.is_absolute()) {
       library_path = (base_path / library_path);
