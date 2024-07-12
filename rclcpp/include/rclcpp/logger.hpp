@@ -94,6 +94,7 @@ get_node_logger(const rcl_node_t * node);
  * \returns the logging directory being used.
  * \throws rclcpp::exceptions::RCLError if an unexpected error occurs.
  */
+[[deprecated("use rclcpp::get_log_directory instead of rclcpp::get_logging_directory")]]
 RCLCPP_PUBLIC
 rcpputils::fs::path
 get_logging_directory();
