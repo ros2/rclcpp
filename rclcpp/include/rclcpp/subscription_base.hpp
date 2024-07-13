@@ -645,6 +645,14 @@ protected:
   rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
+
+  std::recursive_mutex callback_mutex_;
+  // It is important to declare on_new_message_callback_ before
+  // subscription_handle_, so on destruction the subscription is
+  // destroyed first. Otherwise, the rmw subscription callback
+  // would point briefly to a destroyed function.
+  std::function<void(size_t)> on_new_message_callback_{nullptr};
+  // Declare subscription_handle_ after callback
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
   rclcpp::Logger node_logger_;
@@ -669,9 +677,6 @@ private:
   std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
   std::unordered_map<rclcpp::EventHandlerBase *,
     std::atomic<bool>> qos_events_in_use_by_wait_set_;
-
-  std::recursive_mutex callback_mutex_;
-  std::function<void(size_t)> on_new_message_callback_{nullptr};
 };
 
 }  // namespace rclcpp
