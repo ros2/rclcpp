@@ -99,6 +99,13 @@ if(BUILD_TESTING)
   if(TARGET test_lifecycle_node)
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME} mimick rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp rcutils::rcutils)
   endif()
+
+  ament_add_gtest(test_lifecycle_node_errors test/test_lifecycle_node_errors.cpp)
+  ament_add_test_label(test_lifecycle_node_errors mimick)
+  if(TARGET test_lifecycle_node_errors)
+    target_link_libraries(test_lifecycle_node_errors ${PROJECT_NAME} mimick rcl_lifecycle::rcl_lifecycle)
+  endif()
+
   ament_add_gtest(test_lifecycle_publisher test/test_lifecycle_publisher.cpp)
   if(TARGET test_lifecycle_publisher)
     target_link_libraries(test_lifecycle_publisher ${PROJECT_NAME} rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp ${test_msgs_TARGETS})

@@ -237,22 +237,6 @@ TEST_F(TestDefaultStateMachine, empty_initializer) {
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
 }
 
-TEST_F(TestDefaultStateMachine, empty_initializer_rcl_errors) {
-  {
-    auto patch = mocking_utils::inject_on_return(
-      "lib:rclcpp_lifecycle", rcl_lifecycle_state_machine_init, RCL_RET_ERROR);
-    EXPECT_THROW(
-      std::make_shared<EmptyLifecycleNode>("testnode").reset(),
-      std::runtime_error);
-  }
-  {
-    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
-    auto patch = mocking_utils::inject_on_return(
-      "lib:rclcpp_lifecycle", rcl_lifecycle_state_machine_fini, RCL_RET_ERROR);
-    EXPECT_NO_THROW(test_node.reset());
-  }
-}
-
 TEST_F(TestDefaultStateMachine, check_logger_services_exist) {
   // Logger level services are disabled
   {
