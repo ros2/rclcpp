@@ -55,8 +55,7 @@ get_node_logger(const rcl_node_t * node)
   return rclcpp::get_logger(logger_name);
 }
 
-
-// TODO(ahcorde): Remove deprecated class on the next release.
+// TODO(ahcorde): Remove deprecated class on the next release (in Rolling after Kilted).
 #if !defined(_WIN32)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
