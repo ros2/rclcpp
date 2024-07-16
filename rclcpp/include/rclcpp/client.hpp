@@ -415,7 +415,6 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
-
   /// A convenient Client::Future and request id pair.
   /**
    * Public members:
