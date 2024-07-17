@@ -90,18 +90,6 @@ public:
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
-  using MessageAllocatorTraits [[deprecated("use ROSMessageTypeAllocatorTraits")]] =
-    ROSMessageTypeAllocatorTraits;
-  using MessageAllocator [[deprecated("use ROSMessageTypeAllocator")]] =
-    ROSMessageTypeAllocator;
-  using MessageDeleter [[deprecated("use ROSMessageTypeDeleter")]] =
-    ROSMessageTypeDeleter;
-
-  using ConstMessageSharedPtr [[deprecated]] = std::shared_ptr<const ROSMessageType>;
-  using MessageUniquePtr
-  [[deprecated("use std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> instead")]] =
-    std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>;
-
 private:
   using SubscriptionTopicStatisticsSharedPtr =
     std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>;

@@ -48,27 +48,8 @@ create_client(
   const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
   rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
-  return create_client<ServiceT>(
-    node_base, node_graph, node_services,
-    service_name,
-    qos.get_rmw_qos_profile(),
-    group);
-}
-
-/// Create a service client with a given type.
-/// \internal
-template<typename ServiceT>
-typename rclcpp::Client<ServiceT>::SharedPtr
-create_client(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
-{
   rcl_client_options_t options = rcl_client_get_default_options();
-  options.qos = qos_profile;
+  options.qos = qos.get_rmw_qos_profile();
 
   auto cli = rclcpp::Client<ServiceT>::make_shared(
     node_base.get(),
@@ -80,7 +61,6 @@ create_client(
   node_services->add_client(cli_base_ptr, group);
   return cli;
 }
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CREATE_CLIENT_HPP_

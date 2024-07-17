@@ -96,22 +96,6 @@ public:
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
-  using MessageAllocatorTraits
-  [[deprecated("use PublishedTypeAllocatorTraits")]] =
-    PublishedTypeAllocatorTraits;
-  using MessageAllocator
-  [[deprecated("use PublishedTypeAllocator")]] =
-    PublishedTypeAllocator;
-  using MessageDeleter
-  [[deprecated("use PublishedTypeDeleter")]] =
-    PublishedTypeDeleter;
-  using MessageUniquePtr
-  [[deprecated("use std::unique_ptr<PublishedType, PublishedTypeDeleter>")]] =
-    std::unique_ptr<PublishedType, PublishedTypeDeleter>;
-  using MessageSharedPtr
-  [[deprecated("use std::shared_ptr<const PublishedType>")]] =
-    std::shared_ptr<const PublishedType>;
-
   using BufferSharedPtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     ROSMessageType,
     ROSMessageTypeAllocator,
@@ -421,13 +405,6 @@ public:
       // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
       this->publish(loaned_msg.get());
     }
-  }
-
-  [[deprecated("use get_published_type_allocator() or get_ros_message_type_allocator() instead")]]
-  std::shared_ptr<PublishedTypeAllocator>
-  get_allocator() const
-  {
-    return std::make_shared<PublishedTypeAllocator>(published_type_allocator_);
   }
 
   PublishedTypeAllocator
