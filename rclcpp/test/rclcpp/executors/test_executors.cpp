@@ -39,6 +39,7 @@
 #include "rclcpp/time_source.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "test_msgs/srv/empty.hpp"
 
 #include "./executor_types.hpp"
 
@@ -876,6 +877,30 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
   }
 
   rclcpp::shutdown(non_default_context);
+}
+
+TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  auto future = std::async(std::launch::async, [&executor] {executor.spin();});
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {
+    };
+  auto server = node->create_service<test_msgs::srv::Empty>("test_service", callback);
+  while (!executor.is_spinning()) {
+    std::this_thread::sleep_for(50ms);
+  }
+  executor.add_node(node);
+  std::this_thread::sleep_for(50ms);
+  executor.cancel();
+  std::future_status future_status = future.wait_for(1s);
+  EXPECT_EQ(future_status, std::future_status::ready);
+
+  EXPECT_EQ(server.use_count(), 1);
 }
 
 template<typename T>
