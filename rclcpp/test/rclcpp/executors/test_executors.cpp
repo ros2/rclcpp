@@ -638,7 +638,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted)
 // and b) refreshing the executor collections.
 // The inconsistent state would happen if the event was processed before the collections were
 // finished to be refreshed: the executor would pick up the event but be unable to process it.
-// This would leave the `notify_waitable_event_pushed_` flag to true, preventing additional
+// This would leave the `entities_need_rebuild_` flag to true, preventing additional
 // notify waitable events to be pushed.
 // The behavior is observable only under heavy load, so this test spawns several worker
 // threads. Due to the nature of the bug, this test may still succeed even if the
