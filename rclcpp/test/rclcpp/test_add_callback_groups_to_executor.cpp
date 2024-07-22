@@ -355,6 +355,10 @@ TYPED_TEST(TestAddCallbackGroupsToExecutorStable, subscriber_triggered_to_receiv
     node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
   auto timer_callback =
     [&publisher, &timer_promise]() {
+      if (publisher->get_subscription_count() == 0) {
+        // If discovery hasn't happened yet, get out.
+        return;
+      }
       publisher->publish(test_msgs::msg::Empty());
       timer_promise.set_value();
     };
