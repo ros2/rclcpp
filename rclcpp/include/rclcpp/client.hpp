@@ -70,14 +70,6 @@ struct FutureAndRequestId
   /// Allow implicit conversions to `std::future` by reference.
   operator FutureT &() {return this->future;}
 
-  /// Deprecated, use the `future` member variable instead.
-  /**
-   * Allow implicit conversions to `std::future` by value.
-   * \deprecated
-   */
-  [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
-  operator FutureT() {return this->future;}
-
   // delegate future like methods in the std::future impl_
 
   /// See std::future::get().
@@ -435,15 +427,6 @@ public:
     : detail::FutureAndRequestId<std::future<SharedResponse>>
   {
     using detail::FutureAndRequestId<std::future<SharedResponse>>::FutureAndRequestId;
-
-    /// Deprecated, use `.future.share()` instead.
-    /**
-     * Allow implicit conversions to `std::shared_future` by value.
-     * \deprecated
-     */
-    [[deprecated(
-      "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
-    operator SharedFuture() {return this->future.share();}
 
     // delegate future like methods in the std::future impl_
 
