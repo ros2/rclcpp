@@ -451,7 +451,7 @@ if(TARGET test_interface_traits)
 endif()
 
 ament_add_gtest(test_reinitialized_timers
-  test_reinitialized_timers.cpp
+  executors/test_reinitialized_timers.cpp
   TIMEOUT 30)
 if(TARGET test_reinitialized_timers)
   target_link_libraries(test_reinitialized_timers ${PROJECT_NAME})
