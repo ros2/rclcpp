@@ -3,6 +3,18 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+28.3.2 (2024-07-24)
+-------------------
+* Removed deprecated methods and classes (`#2575 <https://github.com/ros2/rclcpp/issues/2575>`_)
+* Fix the lifecycle tests on RHEL-9. (`#2583 <https://github.com/ros2/rclcpp/issues/2583>`_)
+  * Fix the lifecycle tests on RHEL-9.
+  The full explanation is in the comment, but basically since
+  RHEL doesn't support mocking_utils::inject_on_return, we have
+  to split out certain tests to make sure resources within a
+  process don't collide.
+  Co-authored-by: Alejandro Hernández Cordero <ahcorde@gmail.com>
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette
+
 28.3.1 (2024-06-25)
 -------------------
 

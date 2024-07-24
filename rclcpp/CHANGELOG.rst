@@ -2,6 +2,57 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.3.2 (2024-07-24)
+-------------------
+* Updated rcpputils path API (`#2579 <https://github.com/ros2/rclcpp/issues/2579>`_)
+* Make the subscriber_triggered_to_receive_message test more reliable. (`#2584 <https://github.com/ros2/rclcpp/issues/2584>`_)
+  * Make the subscriber_triggered_to_receive_message test more reliable.
+  In the current code, inside of the timer we create the subscription
+  and the publisher, publish immediately, and expect the subscription
+  to get it immediately.  But it may be the case that discovery
+  hasn't even happened between the publisher and the subscription
+  by the time the publish call happens.
+  To make this more reliable, create the subscription and publish *before*
+  we ever create and spin on the timer.  This at least gives 100
+  milliseconds for discovery to happen.  That may not be quite enough
+  to make this reliable on all platforms, but in my local testing this
+  helps a lot.  Prior to this change I can make this fail one out of 10
+  times, and after the change I've run 100 times with no failures.
+* Have the EventsExecutor use more common code  (`#2570 <https://github.com/ros2/rclcpp/issues/2570>`_)
+  * move notify waitable setup to its own function
+  * move mutex lock to retrieve_entity utility
+  * use entities_need_rebuild\_ atomic bool in events-executors
+  * remove duplicated set_on_ready_callback for notify_waitable
+  * use mutex from base class rather than a new recursive mutex
+  * use current_collection\_ member in events-executor
+  * delay adding notify waitable to collection
+  * postpone clearing the current collection
+  * commonize notify waitable and collection
+  * commonize add/remove node/cbg methods
+  * fix linter errors
+  ---------
+* Removed deprecated methods and classes (`#2575 <https://github.com/ros2/rclcpp/issues/2575>`_)
+* Release ownership of entities after spinning cancelled (`#2556 <https://github.com/ros2/rclcpp/issues/2556>`_)
+  * Release ownership of entities after spinning cancelled
+  * Move release action to every exit point in different spin functions
+  * Move wait_result\_.reset() before setting spinning to false
+  * Update test code
+  * Move test code to test_executors.cpp
+  ---------
+* Split test_executors.cpp even further. (`#2572 <https://github.com/ros2/rclcpp/issues/2572>`_)
+  That's because it is too large for Windows Debug to compile,
+  so split into smaller bits.
+  Even with this split, the file is too big; that's likely
+  because we are using TYPED_TEST here, which generates multiple
+  symbols per test case.  To deal with this, without further
+  breaking up the file, also add in the /bigobj flag when
+  compiling on Windows Debug.
+* avoid adding notify waitable twice to events-executor collection (`#2564 <https://github.com/ros2/rclcpp/issues/2564>`_)
+  * avoid adding notify waitable twice to events-executor entities collection
+  * remove redundant mutex lock
+  ---------
+* Contributors: Alberto Soragna, Alejandro Hernández Cordero, Barry Xu, Chris Lalancette
+
 28.3.1 (2024-06-25)
 -------------------
 * Remove unnecessary msg includes in tests (`#2566 <https://github.com/ros2/rclcpp/issues/2566>`_)

@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+28.3.2 (2024-07-24)
+-------------------
+
 28.3.1 (2024-06-25)
 -------------------
 * Fix typo in function doc (`#2563 <https://github.com/ros2/rclcpp/issues/2563>`_)
