@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
+#include <cstddef>
+#include <memory>
+#include <thread>
+
 #include <gtest/gtest.h>
 
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
