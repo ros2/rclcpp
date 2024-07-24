@@ -25,6 +25,7 @@
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+template <typename ExecutorType>
 class TestTimersLifecycle
 : public testing::Test
 {
@@ -40,13 +41,19 @@ public:
   }
 };
 
-TEST_F(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
+using ExecutorTypes = ::testing::Types<
+  rclcpp::executors::SingleThreadedExecutor,
+  rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::StaticSingleThreadedExecutor,
+  rclcpp::experimental::executors::EventsExecutor>;
+
+TYPED_TEST_SUITE(TestTimersLifecycle, ExecutorTypes);
+
+TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
 {
   auto timers_period = std::chrono::milliseconds(50);
   auto node = std::make_shared<rclcpp::Node>("test_node");
-  auto single_threaded_executor = std::make_unique<rclcpp::executors::SingleThreadedExecutor>();
-  auto multi_threaded_executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
-  auto executor = std::make_unique<rclcpp::experimental::executors::EventsExecutor>();
+  auto executor = std::make_unique<TypeParam>();
 
   executor->add_node(node);
 
