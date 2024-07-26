@@ -99,17 +99,6 @@ ament_add_gtest(test_create_subscription test_create_subscription.cpp)
 if(TARGET test_create_subscription)
   target_link_libraries(test_create_subscription ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
-function(test_add_callback_groups_to_executor_for_rmw_implementation)
-  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_add_callback_groups_to_executor${target_suffix} test_add_callback_groups_to_executor.cpp
-    ENV ${rmw_implementation_env_var}
-    TIMEOUT 120
-  )
-  if(TARGET test_add_callback_groups_to_executor${target_suffix})
-    target_link_libraries(test_add_callback_groups_to_executor${target_suffix} ${PROJECT_NAME} ${test_msgs_TARGETS})
-  endif()
-endfunction()
-call_for_each_rmw_implementation(test_add_callback_groups_to_executor_for_rmw_implementation)
 ament_add_gtest(test_expand_topic_or_service_name test_expand_topic_or_service_name.cpp)
 ament_add_test_label(test_expand_topic_or_service_name mimick)
 if(TARGET test_expand_topic_or_service_name)
@@ -337,28 +326,6 @@ if(TARGET test_qos)
     rmw::rmw
   )
 endif()
-function(test_generic_pubsub_for_rmw_implementation)
-  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_generic_pubsub${target_suffix} test_generic_pubsub.cpp
-    ENV ${rmw_implementation_env_var}
-  )
-  if(TARGET test_generic_pubsub${target_suffix})
-    target_link_libraries(test_generic_pubsub${target_suffix} ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
-  endif()
-endfunction()
-call_for_each_rmw_implementation(test_generic_pubsub_for_rmw_implementation)
-
-function(test_qos_event_for_rmw_implementation)
-  set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_qos_event${target_suffix} test_qos_event.cpp
-    ENV ${rmw_implementation_env_var}
-  )
-  ament_add_test_label(test_qos_event${target_suffix} mimick)
-  if(TARGET test_qos_event${target_suffix})
-    target_link_libraries(test_qos_event${target_suffix} ${PROJECT_NAME} mimick rcutils::rcutils rmw::rmw ${test_msgs_TARGETS})
-  endif()
-endfunction()
-call_for_each_rmw_implementation(test_qos_event_for_rmw_implementation)
 
 ament_add_gmock(test_qos_overriding_options test_qos_overriding_options.cpp)
 if(TARGET test_qos_overriding_options)
@@ -650,16 +617,51 @@ if(TARGET test_graph_listener)
   target_link_libraries(test_graph_listener ${PROJECT_NAME} mimick)
 endif()
 
-function(test_subscription_content_filter_for_rmw_implementation)
+ament_add_gmock_executable(test_qos_event test_qos_event.cpp)
+if(TARGET test_qos_event)
+  target_link_libraries(test_qos_event ${PROJECT_NAME} mimick rcutils::rcutils rmw::rmw ${test_msgs_TARGETS})
+endif()
+
+ament_add_gmock_executable(test_generic_pubsub test_generic_pubsub.cpp)
+if(TARGET test_generic_pubsub)
+  target_link_libraries(test_generic_pubsub ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
+endif()
+
+ament_add_gmock_executable(test_add_callback_groups_to_executor test_add_callback_groups_to_executor.cpp)
+if(TARGET test_add_callback_groups_to_executor)
+  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
+
+ament_add_gmock_executable(test_subscription_content_filter test_subscription_content_filter.cpp)
+if(TARGET test_subscription_content_filter)
+  target_link_libraries(test_subscription_content_filter ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+endif()
+
+function(test_on_all_rmws)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
-  ament_add_gmock(test_subscription_content_filter${target_suffix}
-    test_subscription_content_filter.cpp
+
+  ament_add_gmock_test(test_qos_event
+    TEST_NAME test_qos_event${target_suffix}
+    ENV ${rmw_implementation_env_var}
+  )
+  ament_add_test_label(test_qos_event${target_suffix} mimick)
+
+  ament_add_gmock_test(test_generic_pubsub
+    TEST_NAME test_generic_pubsub${target_suffix}
+    ENV ${rmw_implementation_env_var}
+  )
+
+  ament_add_gmock_test(test_add_callback_groups_to_executor
+    TEST_NAME test_add_callback_groups_to_executor${target_suffix}
+    ENV ${rmw_implementation_env_var}
+    TIMEOUT 120
+  )
+
+  ament_add_gmock_test(test_subscription_content_filter
+    TEST_NAME test_subscription_content_filter${target_suffix}
     ENV ${rmw_implementation_env_var}
     TIMEOUT 120
   )
   ament_add_test_label(test_subscription_content_filter${target_suffix} mimick)
-  if(TARGET test_subscription_content_filter${target_suffix})
-    target_link_libraries(test_subscription_content_filter${target_suffix} ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
-  endif()
 endfunction()
-call_for_each_rmw_implementation(test_subscription_content_filter_for_rmw_implementation)
+call_for_each_rmw_implementation(test_on_all_rmws)
