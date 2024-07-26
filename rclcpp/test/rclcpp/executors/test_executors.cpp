@@ -856,3 +856,44 @@ TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
 
   EXPECT_EQ(server.use_count(), 1);
 }
+
+// This test verifies that spin_all is correctly collecting work multiple times
+// even when one of the items of work is a notifier waitable event and thus results in
+// rebuilding the entities collection.
+// When spin_all goes back to collect more work, it should see the ready items from
+// the new added entities
+TYPED_TEST(TestExecutors, spin_all_doesnt_require_warmup)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  // Enable intra-process to guarantee deterministic and synchronous delivery of the message / event
+  auto node_options = rclcpp::NodeOptions().use_intra_process_comms(true);
+  auto node = std::make_shared<rclcpp::Node>("test_node", node_options);
+
+  // Add node to the executor before creating the entities
+  executor.add_node(node);
+
+  // Create entities, this will produce a notifier waitable event, telling the executor to refresh
+  // the entities collection
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("test_topic", rclcpp::QoS(10));
+  auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
+  auto subscription =
+    node->create_subscription<test_msgs::msg::Empty>(
+    "test_topic", rclcpp::QoS(10), std::move(callback));
+
+  ASSERT_EQ(this->callback_count, 0u);
+
+  // Publish a message so that the new entities (i.e. the subscriber) already have work to do
+  publisher->publish(test_msgs::msg::Empty());
+
+  // This is unfortunately open to flakiness... We need to select a duration that is greater than
+  // the time taken to refresh the entities collection and rebuild the waitset.
+  // On my 8-core laptop this reliably works with 1ms, but using 500ms to increase robustness.
+  // spin-all is expected to process the notifier waitable event, rebuild the collection,
+  // and then collect more work, finding the subscription message event.
+  executor.spin_all(std::chrono::milliseconds(500));
+
+  // Verify that the callback is called as part of the spin above
+  EXPECT_EQ(this->callback_count, 1u);
+}
