@@ -3,6 +3,13 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.10 (2024-07-26)
+--------------------
+* revert call shutdown in LifecycleNode destructor (Humble) (`#2560 <https://github.com/ros2/rclcpp/issues/2560>`_)
+* lifecycle node dtor shutdown should be called only in primary state. (`#2544 <https://github.com/ros2/rclcpp/issues/2544>`_)
+* rclcpp::shutdown should not be called before LifecycleNode dtor. (backport `#2527 <https://github.com/ros2/rclcpp/issues/2527>`_) (`#2538 <https://github.com/ros2/rclcpp/issues/2538>`_)
+* Contributors: Tomoya Fujita, mergify[bot]
+
 16.0.9 (2024-05-15)
 -------------------
 * call shutdown in LifecycleNode dtor to avoid leaving the device in un… (`#2450 <https://github.com/ros2/rclcpp/issues/2450>`_) (`#2491 <https://github.com/ros2/rclcpp/issues/2491>`_)
