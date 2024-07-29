@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+28.3.3 (2024-07-29)
+-------------------
 * Only compile the tests once. (`#2590 <https://github.com/ros2/rclcpp/issues/2590>`_)
 * Contributors: Chris Lalancette
 
