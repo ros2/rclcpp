@@ -172,7 +172,10 @@ private:
   {
     auto received_message_age = std::make_unique<ReceivedMessageAge>();
     received_message_age->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
+    }
 
     auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
