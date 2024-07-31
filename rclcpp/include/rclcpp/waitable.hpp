@@ -109,7 +109,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  add_to_wait_set(rcl_wait_set_t & wait_set);
+  add_to_wait_set(rcl_wait_set_t & wait_set) = 0;
 
   /// Check if the Waitable is ready.
   /**
@@ -124,7 +124,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  is_ready(const rcl_wait_set_t & wait_set);
+  is_ready(const rcl_wait_set_t & wait_set) = 0;
 
   /// Take the data so that it can be consumed with `execute`.
   /**
@@ -203,7 +203,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  execute(const std::shared_ptr<void> & data);
+  execute(const std::shared_ptr<void> & data) = 0;
 
   /// Exchange the "in use by wait set" state for this timer.
   /**

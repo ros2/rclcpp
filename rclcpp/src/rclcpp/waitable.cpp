@@ -86,22 +86,3 @@ Waitable::clear_on_ready_callback()
           "Custom waitables should override clear_on_ready_callback if they "
           "want to use it and make sure to call it on the waitable destructor.");
 }
-
-bool
-Waitable::is_ready(const rcl_wait_set_t & wait_set)
-{
-  return this->is_ready(wait_set);
-}
-
-void
-Waitable::add_to_wait_set(rcl_wait_set_t & wait_set)
-{
-  this->add_to_wait_set(wait_set);
-}
-
-void
-Waitable::execute(const std::shared_ptr<void> & data)
-{
-  // note this const cast is only required to support a deprecated function
-  this->execute(const_cast<std::shared_ptr<void> &>(data));
-}
