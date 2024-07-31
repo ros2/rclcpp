@@ -176,7 +176,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   std::shared_ptr<void>
-  take_data_by_entity_id(size_t id);
+  take_data_by_entity_id(size_t id) = 0;
 
   /// Execute data that is passed in.
   /**
@@ -246,7 +246,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  set_on_ready_callback(std::function<void(size_t, int)> callback);
+  set_on_ready_callback(std::function<void(size_t, int)> callback) = 0;
 
   /// Unset any callback registered via set_on_ready_callback.
   /**
@@ -256,7 +256,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  clear_on_ready_callback();
+  clear_on_ready_callback() = 0;
 
 private:
   std::atomic<bool> in_use_by_wait_set_{false};
