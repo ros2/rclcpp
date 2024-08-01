@@ -178,7 +178,6 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, <)
 
 TEST(TestUtilities, test_context_init_shutdown_fails) {
   {
-    auto context = std::make_shared<rclcpp::contexts::DefaultContext>();
     auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_init, RCL_RET_ERROR);
