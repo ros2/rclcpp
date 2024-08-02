@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <chrono>
 #include <cstddef>
 #include <memory>
 #include <thread>
-
-#include <gtest/gtest.h>
 
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
@@ -26,26 +26,17 @@
 #include "rclcpp/rclcpp.hpp"
 
 template <typename ExecutorType>
-class TestTimersLifecycle
-: public testing::Test
+class TestTimersLifecycle : public testing::Test
 {
 public:
-  void SetUp() override
-  {
-    rclcpp::init(0, nullptr);
-  }
+  void SetUp() override { rclcpp::init(0, nullptr); }
 
-  void TearDown() override
-  {
-    rclcpp::shutdown();
-  }
+  void TearDown() override { rclcpp::shutdown(); }
 };
 
 using ExecutorTypes = ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
+  rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>;
 
 TYPED_TEST_SUITE(TestTimersLifecycle, ExecutorTypes);
 
@@ -59,26 +50,14 @@ TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
 
   size_t count_1 = 0;
   auto timer_1 = rclcpp::create_timer(
-    node,
-    node->get_clock(),
-    rclcpp::Duration(timers_period),
-    [&count_1]() {
-      count_1++;
-    });
+    node, node->get_clock(), rclcpp::Duration(timers_period), [&count_1]() { count_1++; });
 
   size_t count_2 = 0;
   auto timer_2 = rclcpp::create_timer(
-    node,
-    node->get_clock(),
-    rclcpp::Duration(timers_period),
-    [&count_2]() {
-      count_2++;
-    });
+    node, node->get_clock(), rclcpp::Duration(timers_period), [&count_2]() { count_2++; });
 
   {
-    std::thread executor_thread([&executor](){
-      executor->spin();
-    });
+    std::thread executor_thread([&executor]() { executor->spin(); });
 
     while (count_2 < 10u) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -92,26 +71,14 @@ TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
 
   count_1 = 0;
   timer_1 = rclcpp::create_timer(
-    node,
-    node->get_clock(),
-    rclcpp::Duration(timers_period),
-    [&count_1]() {
-      count_1++;
-    });
+    node, node->get_clock(), rclcpp::Duration(timers_period), [&count_1]() { count_1++; });
 
   count_2 = 0;
   timer_2 = rclcpp::create_timer(
-    node,
-    node->get_clock(),
-    rclcpp::Duration(timers_period),
-    [&count_2]() {
-      count_2++;
-    });
+    node, node->get_clock(), rclcpp::Duration(timers_period), [&count_2]() { count_2++; });
 
   {
-    std::thread executor_thread([&executor](){
-      executor->spin();
-    });
+    std::thread executor_thread([&executor]() { executor->spin(); });
 
     while (count_2 < 10u) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
