@@ -183,6 +183,7 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_init, RCL_RET_ERROR);
     EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
+    EXPECT_FALSE(context_fail_init->is_valid());
   }
 
   {
@@ -190,6 +191,7 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
     auto mock = mocking_utils::patch_and_return(
       "lib:rclcpp", rcl_logging_configure_with_output_handler, RCL_RET_ERROR);
     EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
+    EXPECT_FALSE(context_fail_init->is_valid());
   }
 
   {
