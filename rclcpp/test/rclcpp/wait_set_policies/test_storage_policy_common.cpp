@@ -61,13 +61,16 @@ public:
   bool is_ready(const rcl_wait_set_t &) override {return is_ready_;}
 
   std::shared_ptr<void> take_data() override {return nullptr;}
-
-  void
-  execute(const std::shared_ptr<void> & data) override {(void)data;}
+  void execute(const std::shared_ptr<void> &) override {}
 
   void set_is_ready(bool value) {is_ready_ = value;}
 
   void set_add_to_wait_set(bool value) {add_to_wait_set_ = value;}
+
+  void set_on_ready_callback(std::function<void(size_t, int)>) override {}
+  void clear_on_ready_callback() override {}
+
+  std::shared_ptr<void> take_data_by_entity_id(size_t) override {return nullptr;}
 
 private:
   bool is_ready_;
