@@ -468,7 +468,7 @@ ament_add_gtest(
   executors/test_executors_timer_cancel_behavior.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_timer_cancel_behavior)
   target_link_libraries(test_executors_timer_cancel_behavior ${PROJECT_NAME} ${rosgraph_msgs_TARGETS})
 endif()
 
@@ -477,7 +477,7 @@ ament_add_gtest(
   executors/test_executors_callback_group_behavior.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_callback_group_behavior)
   target_link_libraries(test_executors_callback_group_behavior ${PROJECT_NAME})
 endif()
 
@@ -486,7 +486,7 @@ ament_add_gtest(
   executors/test_executors_intraprocess.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_intraprocess)
   target_link_libraries(test_executors_intraprocess ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
@@ -496,7 +496,7 @@ ament_add_gtest(
   executors/test_waitable.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_busy_waiting)
   target_link_libraries(test_executors_busy_waiting ${PROJECT_NAME})
 endif()
 
