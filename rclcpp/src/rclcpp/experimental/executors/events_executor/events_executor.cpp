@@ -79,7 +79,6 @@ EventsExecutor::setup_notify_waitable()
       //    ---> we need to wake up the executor so that it can terminate
       // - a node or callback group guard condition is triggered:
       //    ---> the entities collection is changed, we need to update callbacks
-      entities_need_rebuild_ = false;
       this->handle_updated_entities(false);
     });
 
@@ -167,6 +166,14 @@ EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhau
       // spun too long
       return false;
     };
+
+  // If this spin is not exhaustive (e.g. spin_some), we need to explicitly check
+  // if entities need to be rebuilt here rather than letting the notify waitable event do it.
+  // A non-exhaustive spin would not check for work a second time, thus delaying the execution
+  // of some entities to the next invocation of spin.
+  if (!exhaustive) {
+    this->handle_updated_entities(false);
+  }
 
   // Get the number of events and timers ready at start
   const size_t ready_events_at_start = events_queue_->size();
@@ -311,9 +318,18 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
 }
 
 void
-EventsExecutor::handle_updated_entities(bool notify)
+EventsExecutor::handle_updated_entities(bool /*notify*/)
 {
-  (void)notify;
+  // Do not rebuild if we don't need to.
+  // A rebuild event could be generated, but then
+  // this function could end up being called from somewhere else
+  // before that event gets processed, for example if
+  // a node or callback group is manually added to the executor.
+  const bool notify_waitable_triggered = entities_need_rebuild_.exchange(false);
+  if (!notify_waitable_triggered && !this->collector_.has_pending()) {
+    return;
+  }
+
   // Build the new collection
   this->collector_.update_collections();
   auto callback_groups = this->collector_.get_all_callback_groups();
