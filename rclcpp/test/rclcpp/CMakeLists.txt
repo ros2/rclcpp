@@ -450,6 +450,13 @@ if(TARGET test_interface_traits)
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_reinitialized_timers
+  executors/test_reinitialized_timers.cpp
+  TIMEOUT 30)
+if(TARGET test_reinitialized_timers)
+  target_link_libraries(test_reinitialized_timers ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(
   test_executors
   executors/test_executors.cpp
