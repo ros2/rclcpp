@@ -31,7 +31,7 @@ namespace executors
 /// Static executor implementation
 /**
  * This executor is a static version of the original single threaded executor.
- * It contains some performance optimization to avoid unnecessary reconstructions of 
+ * It contains some performance optimization to avoid unnecessary reconstructions of
  * the executable list for every iteration.
  * All nodes, callbackgroups, timers, subscriptions etc. are created before
  * spin() is called, and modified only when an entity is added/removed to/from a node.
@@ -50,8 +50,8 @@ namespace executors
  * exec.spin();
  * exec.remove_node(node);
  */
-class [[deprecated("Use rclcpp::executors::SingleThreadedExecutor).")]]
-StaticSingleThreadedExecutor : public rclcpp::Executor
+class [[deprecated("Use rclcpp::executors::SingleThreadedExecutor")]] StaticSingleThreadedExecutor
+  : public rclcpp::Executor
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(StaticSingleThreadedExecutor)
