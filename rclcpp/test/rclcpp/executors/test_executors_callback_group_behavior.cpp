@@ -42,6 +42,8 @@ public:
 
   void spin() override {}
 
+  void spin(const std::function<void(const std::exception & e)> &) override {}
+
   void collect()
   {
     this->collect_entities();
