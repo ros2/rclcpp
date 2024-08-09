@@ -29,6 +29,8 @@
 #include "rclcpp/executor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "./executors/executor_types.hpp"
+
 using namespace std::chrono_literals;
 
 template<typename T>
@@ -48,48 +50,8 @@ public:
 template<typename T>
 class TestAddCallbackGroupsToExecutorStable : public TestAddCallbackGroupsToExecutor<T> {};
 
-using ExecutorTypes =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
-
-class ExecutorTypeNames
-{
-public:
-  template<typename T>
-  static std::string GetName(int idx)
-  {
-    (void)idx;
-    if (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
-      return "SingleThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
-      return "MultiThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
-      return "StaticSingleThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
-      return "EventsExecutor";
-    }
-
-    return "";
-  }
-};
-
 TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutor, ExecutorTypes, ExecutorTypeNames);
 
-// StaticSingleThreadedExecutor is not included in these tests for now
-using StandardExecutors =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
 TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutorStable, StandardExecutors, ExecutorTypeNames);
 
 /*

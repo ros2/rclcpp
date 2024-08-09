@@ -489,7 +489,7 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
   //   for them in the meantime.
   //   see: https://github.com/ros2/rclcpp/issues/2462
   if (
-    std::is_same<ExecutorType, rclcpp::executors::StaticSingleThreadedExecutor>())
+    std::is_same<ExecutorType, DeprecatedStaticSingleThreadedExecutor>())
   {
     GTEST_SKIP();
   }

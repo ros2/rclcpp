@@ -20,12 +20,13 @@
 #include <stdexcept>
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/executors.hpp"
 
 #include "test_msgs/srv/empty.hpp"
 
+#include "./executor_types.hpp"
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
@@ -46,7 +47,7 @@ public:
 };
 
 TEST_F(TestStaticSingleThreadedExecutor, add_callback_group_trigger_guard_failed) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
+  DeprecatedStaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -61,7 +62,7 @@ TEST_F(TestStaticSingleThreadedExecutor, add_callback_group_trigger_guard_failed
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, add_node_trigger_guard_failed) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
+  DeprecatedStaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
 
   {
@@ -74,7 +75,7 @@ TEST_F(TestStaticSingleThreadedExecutor, add_node_trigger_guard_failed) {
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, remove_callback_group_trigger_guard_failed) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
+  DeprecatedStaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -92,7 +93,7 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_callback_group_trigger_guard_fai
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, remove_node_failed) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
+  DeprecatedStaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
 
   {
@@ -105,7 +106,7 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_node_failed) {
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, remove_node_trigger_guard_failed) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
+  DeprecatedStaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
 
   executor.add_node(node);
@@ -120,7 +121,7 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_node_trigger_guard_failed) {
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, execute_service) {
-  rclcpp::executors::StaticSingleThreadedExecutor executor;
+  DeprecatedStaticSingleThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   executor.add_node(node);
 

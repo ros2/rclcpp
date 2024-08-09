@@ -25,11 +25,29 @@
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 
+// suppress deprecated StaticSingleThreadedExecutor warning
+// we define an alias that explicitly indicates that this class is deprecated, while avoiding
+// polluting a lot of files the gcc pragmas
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+using DeprecatedStaticSingleThreadedExecutor = rclcpp::executors::StaticSingleThreadedExecutor;
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
 using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor,
+  DeprecatedStaticSingleThreadedExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
 
 class ExecutorTypeNames
@@ -47,7 +65,7 @@ public:
       return "MultiThreadedExecutor";
     }
 
-    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
+    if (std::is_same<T, DeprecatedStaticSingleThreadedExecutor>()) {
       return "StaticSingleThreadedExecutor";
     }
 
