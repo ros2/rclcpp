@@ -31,12 +31,8 @@
 
 using namespace std::chrono_literals;
 
-/**
- * @brief This test suite is meant to be used by Executors tests that
- * require test-specific initialization routines.
- */
 template<typename T>
-class TestExecutorsMinimalInitialization : public ::testing::Test
+class TestExecutorsWarmup : public ::testing::Test
 {
 public:
   void SetUp()
@@ -50,14 +46,14 @@ public:
   }
 };
 
-TYPED_TEST_SUITE(TestExecutorsMinimalInitialization, ExecutorTypes, ExecutorTypeNames);
+TYPED_TEST_SUITE(TestExecutorsWarmup, ExecutorTypes, ExecutorTypeNames);
 
 // This test verifies that spin_all is correctly collecting work multiple times
 // even when one of the items of work is a notifier waitable event and thus results in
 // rebuilding the entities collection.
 // When spin_all goes back to collect more work, it should see the ready items from
 // the new added entities
-TYPED_TEST(TestExecutorsMinimalInitialization, spin_all_doesnt_require_warmup)
+TYPED_TEST(TestExecutorsWarmup, spin_all_doesnt_require_warmup)
 {
   using ExecutorType = TypeParam;
   ExecutorType executor;
@@ -96,9 +92,18 @@ TYPED_TEST(TestExecutorsMinimalInitialization, spin_all_doesnt_require_warmup)
 
 // Same test as `spin_all_doesnt_require_warmup`, but uses a callback group
 // This test reproduces the bug reported by https://github.com/ros2/rclcpp/issues/2589
-TYPED_TEST(TestExecutorsMinimalInitialization, spin_all_doesnt_require_warmup_with_cbgroup)
+TYPED_TEST(TestExecutorsWarmup, spin_all_doesnt_require_warmup_with_cbgroup)
 {
   using ExecutorType = TypeParam;
+
+  // TODO(alsora): Enable when https://github.com/ros2/rclcpp/pull/2595 gets merged
+  if (
+    std::is_same<ExecutorType, rclcpp::executors::SingleThreadedExecutor>() ||
+    std::is_same<ExecutorType, rclcpp::executors::MultiThreadedExecutor>())
+  {
+    GTEST_SKIP();
+  }
+
   ExecutorType executor;
 
   // Enable intra-process to guarantee deterministic and synchronous delivery of the message / event
@@ -134,6 +139,102 @@ TYPED_TEST(TestExecutorsMinimalInitialization, spin_all_doesnt_require_warmup_wi
   // and then collect more work, finding the subscription message event.
   // This duration has been selected empirically.
   executor.spin_all(std::chrono::milliseconds(500));
+
+  // Verify that the callback is called as part of the spin above
+  EXPECT_EQ(callback_count, 1u);
+}
+
+TYPED_TEST(TestExecutorsWarmup, spin_some_doesnt_require_warmup)
+{
+  using ExecutorType = TypeParam;
+
+  // TODO(alsora): currently only the events-executor passes this test.
+  // Enable single-threaded and multi-threaded executors
+  // when https://github.com/ros2/rclcpp/pull/2595 gets merged
+  if (
+    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+  {
+    GTEST_SKIP();
+  }
+
+  ExecutorType executor;
+
+  // Enable intra-process to guarantee deterministic and synchronous delivery of the message / event
+  auto node_options = rclcpp::NodeOptions().use_intra_process_comms(true);
+  auto node = std::make_shared<rclcpp::Node>("test_node", node_options);
+
+  // Add node to the executor before creating the entities
+  executor.add_node(node);
+
+  // Create entities, this will produce a notifier waitable event, telling the executor to refresh
+  // the entities collection
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("test_topic", rclcpp::QoS(10));
+  size_t callback_count = 0;
+  auto callback = [&callback_count](test_msgs::msg::Empty::ConstSharedPtr) {callback_count++;};
+  auto subscription =
+    node->create_subscription<test_msgs::msg::Empty>(
+    "test_topic", rclcpp::QoS(10), std::move(callback));
+
+  ASSERT_EQ(callback_count, 0u);
+
+  // Publish a message so that the new entities (i.e. the subscriber) already have work to do
+  publisher->publish(test_msgs::msg::Empty());
+
+  // NOTE: intra-process communication is enabled, so the subscription will immediately see
+  // the new message, no risk of race conditions where spin_some gets called before the
+  // message has been delivered.
+  executor.spin_some();
+
+  // Verify that the callback is called as part of the spin above
+  EXPECT_EQ(callback_count, 1u);
+}
+
+TYPED_TEST(TestExecutorsWarmup, spin_some_doesnt_require_warmup_with_cbgroup)
+{
+  using ExecutorType = TypeParam;
+
+  // TODO(alsora): currently only the events-executor passes this test.
+  // Enable single-threaded and multi-threaded executors
+  // when https://github.com/ros2/rclcpp/pull/2595 gets merged
+  if (
+    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+  {
+    GTEST_SKIP();
+  }
+
+  ExecutorType executor;
+
+  // Enable intra-process to guarantee deterministic and synchronous delivery of the message / event
+  auto node_options = rclcpp::NodeOptions().use_intra_process_comms(true);
+  auto node = std::make_shared<rclcpp::Node>("test_node", node_options);
+
+  auto callback_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    false);
+
+  // Add callback group to the executor before creating the entities
+  executor.add_callback_group(callback_group, node->get_node_base_interface());
+
+  // Create entities, this will produce a notifier waitable event, telling the executor to refresh
+  // the entities collection
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("test_topic", rclcpp::QoS(10));
+  size_t callback_count = 0;
+  auto callback = [&callback_count](test_msgs::msg::Empty::ConstSharedPtr) {callback_count++;};
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.callback_group = callback_group;
+  auto subscription =
+    node->create_subscription<test_msgs::msg::Empty>(
+    "test_topic", rclcpp::QoS(10), std::move(callback), sub_options);
+
+  ASSERT_EQ(callback_count, 0u);
+
+  // Publish a message so that the new entities (i.e. the subscriber) already have work to do
+  publisher->publish(test_msgs::msg::Empty());
+
+  // NOTE: intra-process communication is enabled, so the subscription will immediately see
+  // the new message, no risk of race conditions where spin_some gets called before the
+  // message has been delivered.
+  executor.spin_some();
 
   // Verify that the callback is called as part of the spin above
   EXPECT_EQ(callback_count, 1u);

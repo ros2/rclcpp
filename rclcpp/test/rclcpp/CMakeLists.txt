@@ -501,13 +501,13 @@ if(TARGET test_executors)
 endif()
 
 ament_add_gtest(
-  test_executors_minimal_init
-  executors/test_executors_minimal_init.cpp
+  test_executors_warmup
+  executors/test_executors_warmup.cpp
   executors/test_waitable.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors_minimal_init)
-  target_link_libraries(test_executors_minimal_init ${PROJECT_NAME} ${test_msgs_TARGETS})
+if(TARGET test_executors_warmup)
+  target_link_libraries(test_executors_warmup ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
 ament_add_gtest(test_static_single_threaded_executor executors/test_static_single_threaded_executor.cpp
