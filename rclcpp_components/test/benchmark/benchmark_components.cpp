@@ -109,7 +109,7 @@ BENCHMARK_F(ComponentTest, create_node_instance)(benchmark::State & state)
   }
 
   // Choosing resource 0 - the other two test components were shown empirically to yield
-  // the same performance charactarisitics, so they shouldn't need their own benchmarks.
+  // the same performance characteristics, so they shouldn't need their own benchmarks.
   const std::shared_ptr<rclcpp_components::NodeFactory> factory =
     manager->create_component_factory(resources[0]);
 
