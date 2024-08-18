@@ -126,7 +126,7 @@ struct ParameterEventCallbackHandle
  *         // Now that we know the event matches the regular expression we scanned for, we can
  *         // use 'get_parameter_from_event' to get a specific parameter name that we're looking for
  *         rclcpp::Parameter p;
- *         if (rclcpp::ParameterEventsSubscriber::get_parameter_from_event(
+ *         if (rclcpp::ParameterEventHandler::get_parameter_from_event(
  *             event, p, remote_param_name, fqn))
  *         {
  *           RCLCPP_INFO(
@@ -139,7 +139,7 @@ struct ParameterEventCallbackHandle
  *
  *         // You can also use 'get_parameter*s*_from_event' to enumerate all changes that came
  *         // in on this event
- *         auto params = rclcpp::ParameterEventsSubscriber::get_parameters_from_event(event);
+ *         auto params = rclcpp::ParameterEventHandler::get_parameters_from_event(event);
  *         for (auto & p : params) {
  *           RCLCPP_INFO(
  *             node->get_logger(),
