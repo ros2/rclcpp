@@ -19,11 +19,9 @@
 #include <memory>
 #include <thread>
 
-#include "rclcpp/executors/multi_threaded_executor.hpp"
-#include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/executors/static_single_threaded_executor.hpp"
-#include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include "./executor_types.hpp"
 
 template<typename ExecutorType>
 class TestTimersLifecycle : public testing::Test
@@ -33,10 +31,6 @@ public:
 
   void TearDown() override {rclcpp::shutdown();}
 };
-
-using ExecutorTypes = ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>;
 
 TYPED_TEST_SUITE(TestTimersLifecycle, ExecutorTypes);
 
