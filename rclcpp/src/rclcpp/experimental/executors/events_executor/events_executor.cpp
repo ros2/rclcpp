@@ -341,6 +341,11 @@ EventsExecutor::refresh_current_collection(
   // Acquire lock before modifying the current collection
   std::lock_guard<std::mutex> guard(mutex_);
 
+  // Remove expired entities to ensure re-initialized objects
+  // are updated. This fixes issues with stale state entities.
+  // See: https://github.com/ros2/rclcpp/pull/2586
+  current_collection_.remove_expired_entities();
+
   current_collection_.timers.update(
     new_collection.timers,
     [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->add_timer(timer);},

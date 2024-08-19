@@ -212,28 +212,27 @@ Context::init(
   }
   rcl_context_.reset(context, __delete_context);
 
-  if (init_options.auto_initialize_logging()) {
-    logging_mutex_ = get_global_logging_mutex();
-    std::lock_guard<std::recursive_mutex> guard(*logging_mutex_);
-    size_t & count = get_logging_reference_count();
-    if (0u == count) {
-      ret = rcl_logging_configure_with_output_handler(
-        &rcl_context_->global_arguments,
-        rcl_init_options_get_allocator(init_options.get_rcl_init_options()),
-        rclcpp_logging_output_handler);
-      if (RCL_RET_OK != ret) {
-        rcl_context_.reset();
-        rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure logging");
-      }
-    } else {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "logging was initialized more than once");
-    }
-    ++count;
-  }
-
   try {
+    if (init_options.auto_initialize_logging()) {
+      logging_mutex_ = get_global_logging_mutex();
+      std::lock_guard<std::recursive_mutex> guard(*logging_mutex_);
+      size_t & count = get_logging_reference_count();
+      if (0u == count) {
+        ret = rcl_logging_configure_with_output_handler(
+          &rcl_context_->global_arguments,
+          rcl_init_options_get_allocator(init_options.get_rcl_init_options()),
+          rclcpp_logging_output_handler);
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure logging");
+        }
+      } else {
+        RCLCPP_WARN(
+          rclcpp::get_logger("rclcpp"),
+          "logging was initialized more than once");
+      }
+      ++count;
+    }
+
     std::vector<std::string> unparsed_ros_arguments = detail::get_unparsed_ros_arguments(
       argc, argv, &(rcl_context_->global_arguments), rcl_get_default_allocator());
     if (!unparsed_ros_arguments.empty()) {
