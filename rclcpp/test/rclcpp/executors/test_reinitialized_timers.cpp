@@ -19,11 +19,9 @@
 #include <memory>
 #include <thread>
 
-#include "rclcpp/executors/multi_threaded_executor.hpp"
-#include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/executors/static_single_threaded_executor.hpp"
-#include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include "./executor_types.hpp"
 
 template<typename ExecutorType>
 class TestTimersLifecycle : public testing::Test
@@ -34,19 +32,17 @@ public:
   void TearDown() override {rclcpp::shutdown();}
 };
 
-using ExecutorTypes = ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor, rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor, rclcpp::experimental::executors::EventsExecutor>;
-
 TYPED_TEST_SUITE(TestTimersLifecycle, ExecutorTypes);
 
 TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
 {
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
   auto timers_period = std::chrono::milliseconds(50);
   auto node = std::make_shared<rclcpp::Node>("test_node");
-  auto executor = std::make_unique<TypeParam>();
 
-  executor->add_node(node);
+  executor.add_node(node);
 
   size_t count_1 = 0;
   auto timer_1 = rclcpp::create_timer(
@@ -57,12 +53,12 @@ TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
     node, node->get_clock(), rclcpp::Duration(timers_period), [&count_2]() {count_2++;});
 
   {
-    std::thread executor_thread([&executor]() {executor->spin();});
+    std::thread executor_thread([&executor]() {executor.spin();});
 
     while (count_2 < 10u) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    executor->cancel();
+    executor.cancel();
     executor_thread.join();
 
     EXPECT_GE(count_2, 10u);
@@ -78,12 +74,12 @@ TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
     node, node->get_clock(), rclcpp::Duration(timers_period), [&count_2]() {count_2++;});
 
   {
-    std::thread executor_thread([&executor]() {executor->spin();});
+    std::thread executor_thread([&executor]() {executor.spin();});
 
     while (count_2 < 10u) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    executor->cancel();
+    executor.cancel();
     executor_thread.join();
 
     EXPECT_GE(count_2, 10u);

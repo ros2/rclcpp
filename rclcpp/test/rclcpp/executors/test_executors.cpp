@@ -489,7 +489,7 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
   //   for them in the meantime.
   //   see: https://github.com/ros2/rclcpp/issues/2462
   if (
-    std::is_same<ExecutorType, rclcpp::executors::StaticSingleThreadedExecutor>())
+    std::is_same<ExecutorType, DeprecatedStaticSingleThreadedExecutor>())
   {
     GTEST_SKIP();
   }
@@ -674,20 +674,20 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
   }
 
   // Create an executor
-  auto executor = std::make_shared<ExecutorType>();
+  ExecutorType executor;
   // Start spinning
   auto executor_thread = std::thread(
-    [executor]() {
-      executor->spin();
+    [&executor]() {
+      executor.spin();
     });
   // Add a node to the executor
-  executor->add_node(this->node);
+  executor.add_node(this->node);
 
   // Cancel the executor (make sure that it's already spinning first)
-  while (!executor->is_spinning() && rclcpp::ok()) {
+  while (!executor.is_spinning() && rclcpp::ok()) {
     continue;
   }
-  executor->cancel();
+  executor.cancel();
 
   // Try to join the thread after cancelling the executor
   // This is the "test". We want to make sure that we can still cancel the executor
