@@ -32,7 +32,7 @@ public:
   void TearDown() override {rclcpp::shutdown();}
 };
 
-TYPED_TEST_SUITE(TestTimersLifecycle, ExecutorTypes);
+TYPED_TEST_SUITE(TestTimersLifecycle, ExecutorTypes, );
 
 TYPED_TEST(TestTimersLifecycle, timers_lifecycle_reinitialized_object)
 {
