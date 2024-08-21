@@ -187,7 +187,7 @@ public:
    * the loaned message will be directly allocated in the middleware.
    * If not, the message allocator of this rclcpp::Publisher instance is being used.
    *
-   * With a call to \sa `publish` the LoanedMessage instance is being returned to the middleware
+   * With a call to `publish` the LoanedMessage instance is being returned to the middleware
    * or free'd accordingly to the allocator.
    * If the message is not being published but processed differently, the destructor of this
    * class will either return the message to the middleware or deallocate it via the internal
