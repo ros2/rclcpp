@@ -488,11 +488,19 @@ TYPED_TEST(TestExecutors, spin_some_max_duration)
   //   do not properly implement max_duration (it seems), so disable this test
   //   for them in the meantime.
   //   see: https://github.com/ros2/rclcpp/issues/2462
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   if (
     std::is_same<ExecutorType, DeprecatedStaticSingleThreadedExecutor>())
   {
     GTEST_SKIP();
   }
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
   // Use an isolated callback group to avoid interference from any housekeeping
   // items that may be in the default callback group of the node.

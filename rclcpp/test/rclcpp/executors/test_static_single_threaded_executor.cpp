@@ -47,7 +47,15 @@ public:
 };
 
 TEST_F(TestStaticSingleThreadedExecutor, add_callback_group_trigger_guard_failed) {
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   DeprecatedStaticSingleThreadedExecutor executor;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -62,7 +70,15 @@ TEST_F(TestStaticSingleThreadedExecutor, add_callback_group_trigger_guard_failed
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, add_node_trigger_guard_failed) {
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   DeprecatedStaticSingleThreadedExecutor executor;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
 
   {
@@ -75,7 +91,15 @@ TEST_F(TestStaticSingleThreadedExecutor, add_node_trigger_guard_failed) {
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, remove_callback_group_trigger_guard_failed) {
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   DeprecatedStaticSingleThreadedExecutor executor;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -93,7 +117,15 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_callback_group_trigger_guard_fai
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, remove_node_failed) {
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   DeprecatedStaticSingleThreadedExecutor executor;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
 
   {
@@ -106,7 +138,15 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_node_failed) {
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, remove_node_trigger_guard_failed) {
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   DeprecatedStaticSingleThreadedExecutor executor;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
 
   executor.add_node(node);
@@ -121,7 +161,15 @@ TEST_F(TestStaticSingleThreadedExecutor, remove_node_trigger_guard_failed) {
 }
 
 TEST_F(TestStaticSingleThreadedExecutor, execute_service) {
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
   DeprecatedStaticSingleThreadedExecutor executor;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   executor.add_node(node);
 

@@ -43,12 +43,19 @@ using DeprecatedStaticSingleThreadedExecutor = rclcpp::executors::StaticSingleTh
 # pragma warning(pop)
 #endif
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
   DeprecatedStaticSingleThreadedExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 class ExecutorTypeNames
 {
@@ -64,10 +71,16 @@ public:
     if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
       return "MultiThreadedExecutor";
     }
-
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
     if (std::is_same<T, DeprecatedStaticSingleThreadedExecutor>()) {
       return "StaticSingleThreadedExecutor";
     }
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
     if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
       return "EventsExecutor";
