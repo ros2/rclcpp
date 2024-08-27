@@ -79,6 +79,20 @@ if(BUILD_TESTING)
 
   add_subdirectory(test/benchmark)
 
+  ament_add_gtest(test_ros2_actions test/test_actions.cpp TIMEOUT 180)
+  ament_add_test_label(test_ros2_actions mimick)
+  if(TARGET test_ros2_actions)
+    target_link_libraries(test_ros2_actions
+      ${PROJECT_NAME}
+      mimick
+      rcl::rcl
+      rcl_action::rcl_action
+      rclcpp::rclcpp
+      rcutils::rcutils
+      ${test_msgs_TARGETS}
+    )
+  endif()
+
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   ament_add_test_label(test_client mimick)
   if(TARGET test_client)
