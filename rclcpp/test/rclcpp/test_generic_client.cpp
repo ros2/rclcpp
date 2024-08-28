@@ -28,6 +28,7 @@
 #include "../mocking_utils/patch.hpp"
 
 #include "test_msgs/srv/empty.hpp"
+#include "test_msgs/srv/basic_types.hpp"
 
 using namespace std::chrono_literals;
 
@@ -227,4 +228,70 @@ TEST_F(TestGenericClientSub, construction_and_destruction) {
       auto client = node->create_generic_client("invalid_service?", "test_msgs/srv/Empty");
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
+}
+
+TEST_F(TestGenericClientSub, async_send_request_with_request) {
+  const std::string service_name = "test_service";
+  int64_t expected_change = 1111;
+
+  auto client = node->create_generic_client(service_name, "test_msgs/srv/BasicTypes");
+
+  auto callback = [&expected_change](
+    const test_msgs::srv::BasicTypes::Request::SharedPtr request,
+    test_msgs::srv::BasicTypes::Response::SharedPtr response) {
+      response->int64_value = request->int64_value + expected_change;
+    };
+
+  auto service =
+    node->create_service<test_msgs::srv::BasicTypes>(service_name, std::move(callback));
+
+  ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(5)));
+  ASSERT_TRUE(client->service_is_ready());
+
+  test_msgs::srv::BasicTypes::Request request;
+  request.int64_value = 12345678;
+
+  auto future = client->async_send_request(static_cast<void *>(&request));
+  rclcpp::spin_until_future_complete(
+    node->get_node_base_interface(), future, std::chrono::seconds(5));
+  ASSERT_TRUE(future.valid());
+  auto get_untyped_response = future.get();
+  auto typed_response =
+    static_cast<test_msgs::srv::BasicTypes::Response *>(get_untyped_response.get());
+  EXPECT_EQ(typed_response->int64_value, (request.int64_value + expected_change));
+}
+
+TEST_F(TestGenericClientSub, async_send_request_with_request_and_callback) {
+  const std::string service_name = "test_service";
+  int64_t expected_change = 2222;
+
+  auto client = node->create_generic_client(service_name, "test_msgs/srv/BasicTypes");
+
+  auto server_callback = [&expected_change](
+    const test_msgs::srv::BasicTypes::Request::SharedPtr request,
+    test_msgs::srv::BasicTypes::Response::SharedPtr response) {
+      response->int64_value = request->int64_value + expected_change;
+    };
+
+  auto service =
+    node->create_service<test_msgs::srv::BasicTypes>(service_name, std::move(server_callback));
+
+  ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(5)));
+  ASSERT_TRUE(client->service_is_ready());
+
+  test_msgs::srv::BasicTypes::Request request;
+  request.int64_value = 12345678;
+
+  auto client_callback = [&request, &expected_change](
+    rclcpp::GenericClient::SharedFuture future) {
+      auto untyped_response = future.get();
+      auto typed_response =
+        static_cast<test_msgs::srv::BasicTypes::Response *>(untyped_response.get());
+      EXPECT_EQ(typed_response->int64_value, (request.int64_value + expected_change));
+    };
+
+  auto future =
+    client->async_send_request(static_cast<void *>(&request), client_callback);
+  rclcpp::spin_until_future_complete(
+    node->get_node_base_interface(), future, std::chrono::seconds(5));
 }
