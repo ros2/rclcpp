@@ -54,54 +54,8 @@ Waitable::get_number_of_ready_guard_conditions()
   return 0u;
 }
 
-std::shared_ptr<void>
-Waitable::take_data_by_entity_id(size_t id)
-{
-  (void)id;
-  throw std::runtime_error(
-          "Custom waitables should override take_data_by_entity_id "
-          "if they want to use it.");
-}
-
 bool
 Waitable::exchange_in_use_by_wait_set_state(bool in_use_state)
 {
   return in_use_by_wait_set_.exchange(in_use_state);
-}
-
-void
-Waitable::set_on_ready_callback(std::function<void(size_t, int)> callback)
-{
-  (void)callback;
-
-  throw std::runtime_error(
-          "Custom waitables should override set_on_ready_callback "
-          "if they want to use it.");
-}
-
-void
-Waitable::clear_on_ready_callback()
-{
-  throw std::runtime_error(
-          "Custom waitables should override clear_on_ready_callback if they "
-          "want to use it and make sure to call it on the waitable destructor.");
-}
-
-bool
-Waitable::is_ready(const rcl_wait_set_t & wait_set)
-{
-  return this->is_ready(wait_set);
-}
-
-void
-Waitable::add_to_wait_set(rcl_wait_set_t & wait_set)
-{
-  this->add_to_wait_set(wait_set);
-}
-
-void
-Waitable::execute(const std::shared_ptr<void> & data)
-{
-  // note this const cast is only required to support a deprecated function
-  this->execute(const_cast<std::shared_ptr<void> &>(data));
 }

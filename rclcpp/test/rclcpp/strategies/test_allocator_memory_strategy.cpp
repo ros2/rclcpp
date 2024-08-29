@@ -51,13 +51,13 @@ public:
     return test_waitable_result;
   }
 
-  std::shared_ptr<void>
-  take_data() override
-  {
-    return nullptr;
-  }
-
+  std::shared_ptr<void> take_data() override {return nullptr;}
   void execute(const std::shared_ptr<void> &) override {}
+
+  void set_on_ready_callback(std::function<void(size_t, int)>) override {}
+  void clear_on_ready_callback() override {}
+
+  std::shared_ptr<void> take_data_by_entity_id(size_t) override {return nullptr;}
 };
 
 struct RclWaitSetSizes

@@ -18,11 +18,14 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -368,26 +371,34 @@ TEST_F(TestLifecycleServiceClient, lifecycle_transitions) {
 
 TEST_F(TestLifecycleServiceClient, get_service_names_and_types_by_node)
 {
-  auto node1 = std::make_shared<LifecycleServiceClient>("client1");
-  auto node2 = std::make_shared<LifecycleServiceClient>("client2");
-
-  auto node_graph = node1->get_node_graph_interface();
-  ASSERT_NE(nullptr, node_graph);
-
   EXPECT_THROW(
-    node_graph->get_service_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
+    lifecycle_node()->get_service_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
     std::runtime_error);
-  auto service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
-  auto service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+  auto service_names_and_types =
+    lifecycle_node()->get_service_names_and_types_by_node(lifecycle_node_name, "/");
   auto start = std::chrono::steady_clock::now();
-  while (0 == service_names_and_types1.size() ||
-    service_names_and_types1.size() != service_names_and_types2.size() ||
+  while (0 == service_names_and_types.size() ||
     (std::chrono::steady_clock::now() - start) < std::chrono::seconds(1))
   {
-    service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
-    service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+    service_names_and_types =
+      lifecycle_node()->get_service_names_and_types_by_node(lifecycle_node_name, "/");
   }
-  EXPECT_EQ(service_names_and_types1.size(), service_names_and_types2.size());
+  const std::array services = {
+    std::make_pair(node_get_state_topic, "lifecycle_msgs/srv/GetState"),
+    std::make_pair(node_change_state_topic, "lifecycle_msgs/srv/ChangeState"),
+    std::make_pair(node_get_available_states_topic, "lifecycle_msgs/srv/GetAvailableStates"),
+    std::make_pair(
+      node_get_available_transitions_topic, "lifecycle_msgs/srv/GetAvailableTransitions"),
+    std::make_pair(node_get_transition_graph_topic, "lifecycle_msgs/srv/GetAvailableTransitions"),
+  };
+  for (const auto & [service_name, service_type] : services) {
+    ASSERT_TRUE(service_names_and_types.find(service_name) != service_names_and_types.end())
+      << service_name;
+    const auto service_types = service_names_and_types.at(service_name);
+    EXPECT_TRUE(
+      std::find(service_types.cbegin(), service_types.cend(), service_type) != service_types.cend())
+      << service_name;
+  }
 }
 
 TEST_F(TestLifecycleServiceClient, declare_parameter_with_no_initial_values)

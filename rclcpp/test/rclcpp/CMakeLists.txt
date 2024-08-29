@@ -450,6 +450,13 @@ if(TARGET test_interface_traits)
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_reinitialized_timers
+  executors/test_reinitialized_timers.cpp
+  TIMEOUT 30)
+if(TARGET test_reinitialized_timers)
+  target_link_libraries(test_reinitialized_timers ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(
   test_executors
   executors/test_executors.cpp
@@ -468,7 +475,7 @@ ament_add_gtest(
   executors/test_executors_timer_cancel_behavior.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_timer_cancel_behavior)
   target_link_libraries(test_executors_timer_cancel_behavior ${PROJECT_NAME} ${rosgraph_msgs_TARGETS})
 endif()
 
@@ -477,7 +484,7 @@ ament_add_gtest(
   executors/test_executors_callback_group_behavior.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_callback_group_behavior)
   target_link_libraries(test_executors_callback_group_behavior ${PROJECT_NAME})
 endif()
 
@@ -486,7 +493,7 @@ ament_add_gtest(
   executors/test_executors_intraprocess.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_intraprocess)
   target_link_libraries(test_executors_intraprocess ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
@@ -496,7 +503,7 @@ ament_add_gtest(
   executors/test_waitable.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
-if(TARGET test_executors)
+if(TARGET test_executors_busy_waiting)
   target_link_libraries(test_executors_busy_waiting ${PROJECT_NAME})
 endif()
 
