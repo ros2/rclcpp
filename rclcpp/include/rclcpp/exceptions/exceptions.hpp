@@ -100,6 +100,15 @@ public:
   {}
 };
 
+class InvalidServiceTypeError : public std::runtime_error
+{
+public:
+  InvalidServiceTypeError()
+  : std::runtime_error("Service type is invalid.") {}
+  explicit InvalidServiceTypeError(const std::string & msg)
+  : std::runtime_error(msg) {}
+};
+
 class UnimplementedError : public std::runtime_error
 {
 public:
