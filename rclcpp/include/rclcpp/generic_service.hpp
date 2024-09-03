@@ -15,10 +15,13 @@
 #ifndef RCLCPP__GENERIC_SERVICE_HPP_
 #define RCLCPP__GENERIC_SERVICE_HPP_
 
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
+#include <variant>
 
 #include "rclcpp/typesupport_helpers.hpp"
 
