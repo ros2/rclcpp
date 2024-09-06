@@ -2,6 +2,37 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Split test_executors.cpp even further. (`#2572 <https://github.com/ros2/rclcpp/issues/2572>`_) (`#2619 <https://github.com/ros2/rclcpp/issues/2619>`_)
+  That's because it is too large for Windows Debug to compile,
+  so split into smaller bits.
+  Even with this split, the file is too big; that's likely
+  because we are using TYPED_TEST here, which generates multiple
+  symbols per test case.  To deal with this, without further
+  breaking up the file, also add in the /bigobj flag when
+  compiling on Windows Debug.
+  (cherry picked from commit c743c173e68d92af872cf163e10721a8dbe51dd0)
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+* Correct node name in service test code (`#2615 <https://github.com/ros2/rclcpp/issues/2615>`_) (`#2616 <https://github.com/ros2/rclcpp/issues/2616>`_)
+  (cherry picked from commit e846f56224a39b93f1c609e7ee03fff0662b7453)
+  Co-authored-by: Barry Xu <barry.xu@sony.com>
+* Release ownership of entities after spinning cancelled (backport `#2556 <https://github.com/ros2/rclcpp/issues/2556>`_) (`#2580 <https://github.com/ros2/rclcpp/issues/2580>`_)
+  * Release ownership of entities after spinning cancelled (`#2556 <https://github.com/ros2/rclcpp/issues/2556>`_)
+  * Release ownership of entities after spinning cancelled
+  * Move release action to every exit point in different spin functions
+  * Move wait_result\_.reset() before setting spinning to false
+  * Update test code
+  * Move test code to test_executors.cpp
+  ---------
+  (cherry picked from commit 069a0018935b33a14632a1cdf4074984a1cf80fe)
+  # Conflicts:
+  #	rclcpp/test/rclcpp/executors/test_executors.cpp
+  * Fix backport issue (`#2581 <https://github.com/ros2/rclcpp/issues/2581>`_)
+  ---------
+  Co-authored-by: Barry Xu <barry.xu@sony.com>
+* Contributors: mergify[bot]
+
 28.1.3 (2024-06-27)
 -------------------
 * Add test creating two content filter topics with the same topic name (`#2546 <https://github.com/ros2/rclcpp/issues/2546>`_) (`#2549 <https://github.com/ros2/rclcpp/issues/2549>`_) (`#2552 <https://github.com/ros2/rclcpp/issues/2552>`_)
