@@ -462,8 +462,12 @@ endif()
 ament_add_gtest(
   test_executors
   executors/test_executors.cpp
+  executors/test_waitable.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND MSVC)
+  target_compile_options(test_executors PRIVATE "/bigobj")
+endif()
 if(TARGET test_executors)
   target_link_libraries(test_executors ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
 endif()
@@ -493,6 +497,16 @@ ament_add_gtest(
   TIMEOUT 180)
 if(TARGET test_executors)
   target_link_libraries(test_executors_intraprocess ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
+
+ament_add_gtest(
+  test_executors_busy_waiting
+  executors/test_executors_busy_waiting.cpp
+  executors/test_waitable.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors_busy_waiting)
+  target_link_libraries(test_executors_busy_waiting ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_static_single_threaded_executor executors/test_static_single_threaded_executor.cpp
