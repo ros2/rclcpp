@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2024 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,11 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include "rclcpp/rclcpp.hpp"
 
