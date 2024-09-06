@@ -135,6 +135,10 @@ ament_add_gtest(test_loaned_message test_loaned_message.cpp)
 ament_add_test_label(test_loaned_message mimick)
 target_link_libraries(test_loaned_message ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
 
+ament_add_gtest(test_shared_memory test_shared_memory.cpp)
+ament_add_test_label(test_shared_memory mimick)
+target_link_libraries(test_shared_memory ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+
 ament_add_gtest(test_memory_strategy test_memory_strategy.cpp)
 target_link_libraries(test_memory_strategy ${PROJECT_NAME} ${test_msgs_TARGETS})
 
