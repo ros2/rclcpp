@@ -107,7 +107,9 @@ spin_until_future_complete(
   const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
-  rclcpp::executors::SingleThreadedExecutor executor;
+  rclcpp::ExecutorOptions options;
+  options.context = node_ptr->get_context();
+  rclcpp::executors::SingleThreadedExecutor executor(options);
   return executors::spin_node_until_future_complete<FutureT>(executor, node_ptr, future, timeout);
 }
 

@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <future>
 #include <limits>
 #include <memory>
 #include <string>
@@ -695,4 +696,32 @@ TYPED_TEST(TestIntraprocessExecutors, testIntraprocessRetrigger) {
     });
   executor.spin();
   EXPECT_EQ(kNumMessages, this->callback_count.load());
+}
+
+// Check spin functions with non default context
+TEST(TestExecutors, testSpinWithNonDefaultContext)
+{
+  auto non_default_context = std::make_shared<rclcpp::Context>();
+  non_default_context->init(0, nullptr);
+
+  {
+    auto node =
+      std::make_unique<rclcpp::Node>("node", rclcpp::NodeOptions().context(non_default_context));
+
+    EXPECT_NO_THROW(rclcpp::spin_some(node->get_node_base_interface()));
+
+    auto check_spin_until_future_complete = [&]() {
+        std::promise<bool> promise;
+        std::future<bool> future = promise.get_future();
+        promise.set_value(true);
+
+        auto shared_future = future.share();
+        auto ret = rclcpp::spin_until_future_complete(
+          node->get_node_base_interface(), shared_future, 1s);
+        EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+      };
+    EXPECT_NO_THROW(check_spin_until_future_complete());
+  }
+
+  rclcpp::shutdown(non_default_context);
 }
