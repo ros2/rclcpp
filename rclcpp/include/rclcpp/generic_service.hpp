@@ -266,23 +266,29 @@ public:
    * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
    *   rcl calls fail.
    */
+  RCLCPP_PUBLIC
   bool
   take_request(SharedRequest request_out, rmw_request_id_t & request_id_out);
 
+  RCLCPP_PUBLIC
   std::shared_ptr<void>
   create_request() override;
 
+  RCLCPP_PUBLIC
   std::shared_ptr<void>
   create_response();
 
+  RCLCPP_PUBLIC
   std::shared_ptr<rmw_request_id_t>
   create_request_header() override;
 
+  RCLCPP_PUBLIC
   void
   handle_request(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) override;
 
+  RCLCPP_PUBLIC
   void
   send_response(rmw_request_id_t & req_id, SharedResponse & response);
 
