@@ -480,27 +480,13 @@ TYPED_TEST(TestExecutors, spin_some)
 
 // The purpose of this test is to check that the ExecutorT.spin_some() method:
 //   - does not continue executing after max_duration has elapsed
-TYPED_TEST(TestExecutors, spin_some_max_duration)
+// TODO(wjwwood): The `StaticSingleThreadedExecutor`
+//   do not properly implement max_duration (it seems), so disable this test
+//   for them in the meantime.
+//   see: https://github.com/ros2/rclcpp/issues/2462
+TYPED_TEST(TestExecutorsStable, spin_some_max_duration)
 {
   using ExecutorType = TypeParam;
-
-  // TODO(wjwwood): The `StaticSingleThreadedExecutor`
-  //   do not properly implement max_duration (it seems), so disable this test
-  //   for them in the meantime.
-  //   see: https://github.com/ros2/rclcpp/issues/2462
-#ifdef __clang__
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-  if (
-    std::is_same<ExecutorType, DeprecatedStaticSingleThreadedExecutor>())
-  {
-    GTEST_SKIP();
-  }
-#ifdef __clang__
-# pragma clang diagnostic pop
-#endif
 
   // Use an isolated callback group to avoid interference from any housekeeping
   // items that may be in the default callback group of the node.
@@ -655,13 +641,6 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted)
 TYPED_TEST(TestExecutors, testRaceConditionAddNode)
 {
   using ExecutorType = TypeParam;
-  // rmw_connextdds doesn't support events-executor
-  if (
-    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
-    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
-  {
-    GTEST_SKIP();
-  }
 
   // Spawn some threads to do some heavy work
   std::atomic<bool> should_cancel = false;

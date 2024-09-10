@@ -123,7 +123,7 @@ TEST_F(TestServiceSub, construction_and_destruction) {
   {
     ASSERT_THROW(
     {
-      auto service = node->create_service<rcl_interfaces::srv::ListParameters>(
+      auto service = subnode->create_service<rcl_interfaces::srv::ListParameters>(
         "invalid_service?", callback);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
