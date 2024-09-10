@@ -43,7 +43,6 @@ namespace rclcpp
  * \return Shared pointer to the created service.
  */
 template<typename CallbackT>
-RCLCPP_PUBLIC
 typename rclcpp::GenericService::SharedPtr
 create_generic_service(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
@@ -82,7 +81,6 @@ create_generic_service(
  * \return Shared pointer to the created service.
  */
 template<typename NodeT, typename CallbackT>
-RCLCPP_PUBLIC
 typename rclcpp::GenericService::SharedPtr
 create_generic_service(
   NodeT node,
