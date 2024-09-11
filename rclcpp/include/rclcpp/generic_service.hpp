@@ -243,6 +243,7 @@ public:
    * \param[in] any_callback User defined callback to call when a client request is received.
    * \param[in] service_options options for the service.
    */
+  RCLCPP_PUBLIC
   GenericService(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name,
@@ -252,6 +253,7 @@ public:
 
   GenericService() = delete;
 
+  RCLCPP_PUBLIC
   virtual ~GenericService() {}
 
   /// Take the next request from the service.
