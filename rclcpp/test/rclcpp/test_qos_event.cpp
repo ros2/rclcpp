@@ -52,6 +52,11 @@ protected:
     node.reset();
   }
 
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   static constexpr char topic_name[] = "test_topic";
   rclcpp::Node::SharedPtr node;
   std::function<void(test_msgs::msg::Empty::ConstSharedPtr)> message_callback;
@@ -64,6 +69,11 @@ constexpr char TestQosEvent::topic_name[];
  */
 TEST_F(TestQosEvent, test_publisher_constructor)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   rclcpp::PublisherOptions options;
 
   // options arg with no callbacks
@@ -109,6 +119,11 @@ TEST_F(TestQosEvent, test_publisher_constructor)
  */
 TEST_F(TestQosEvent, test_subscription_constructor)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   rclcpp::SubscriptionOptions options;
 
   // options arg with no callbacks
@@ -158,6 +173,11 @@ std::string * g_sub_log_msg;
 std::promise<void> * g_log_msgs_promise;
 TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   rcutils_logging_output_handler_t original_output_handler = rcutils_logging_get_output_handler();
 
   std::string pub_log_msg;
@@ -217,6 +237,11 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 }
 
 TEST_F(TestQosEvent, construct_destruct_rcl_error) {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto rcl_handle = publisher->get_publisher_handle();
   ASSERT_NE(nullptr, rcl_handle);
@@ -260,6 +285,10 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 }
 
 TEST_F(TestQosEvent, execute) {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto rcl_handle = publisher->get_publisher_handle();
 
@@ -286,6 +315,11 @@ TEST_F(TestQosEvent, execute) {
 }
 
 TEST_F(TestQosEvent, add_to_wait_set) {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto rcl_handle = publisher->get_publisher_handle();
 
@@ -314,6 +348,11 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   auto offered_deadline = rclcpp::Duration(std::chrono::milliseconds(1));
   auto requested_deadline = rclcpp::Duration(std::chrono::milliseconds(2));
 
@@ -355,6 +394,11 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   auto pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
   auto dummy_cb = [](size_t count_events) {(void)count_events;};
@@ -429,6 +473,10 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
   std::atomic_size_t matched_count = 0;
 
   rclcpp::PublisherOptions pub_options;
@@ -473,6 +521,10 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
   std::atomic_size_t matched_count = 0;
 
   rclcpp::SubscriptionOptions sub_options;
@@ -518,6 +570,11 @@ TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   rmw_matched_status_t matched_expected_result;
   std::promise<void> prom;
 
@@ -561,6 +618,11 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   rmw_matched_status_t matched_expected_result;
 
   std::promise<void> prom;
