@@ -62,8 +62,12 @@ EventsExecutor::EventsExecutor(
       //    ---> we need to wake up the executor so that it can terminate
       // - a node or callback group guard condition is triggered:
       //    ---> the entities collection is changed, we need to update callbacks
+<<<<<<< HEAD
       notify_waitable_event_pushed_ = false;
       this->refresh_current_collection_from_callback_groups();
+=======
+      this->handle_updated_entities(false);
+>>>>>>> f7056c0d (fix events-executor warm-up bug and add unit-tests (#2591))
     });
 
   // Make sure that the notify waitable is immediately added to the collection
@@ -163,6 +167,14 @@ EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhau
       // spun too long
       return false;
     };
+
+  // If this spin is not exhaustive (e.g. spin_some), we need to explicitly check
+  // if entities need to be rebuilt here rather than letting the notify waitable event do it.
+  // A non-exhaustive spin would not check for work a second time, thus delaying the execution
+  // of some entities to the next invocation of spin.
+  if (!exhaustive) {
+    this->handle_updated_entities(false);
+  }
 
   // Get the number of events and timers ready at start
   const size_t ready_events_at_start = events_queue_->size();
@@ -359,6 +371,7 @@ EventsExecutor::add_callback_group(
   // This field is unused because we don't have to wake up
   // the executor when a callback group is added.
   (void)notify;
+<<<<<<< HEAD
   (void)node_ptr;
 
   this->entities_collector_->add_callback_group(group_ptr);
@@ -403,6 +416,19 @@ EventsExecutor::get_automatically_added_callback_groups_from_nodes()
 void
 EventsExecutor::refresh_current_collection_from_callback_groups()
 {
+=======
+
+  // Do not rebuild if we don't need to.
+  // A rebuild event could be generated, but then
+  // this function could end up being called from somewhere else
+  // before that event gets processed, for example if
+  // a node or callback group is manually added to the executor.
+  const bool notify_waitable_triggered = entities_need_rebuild_.exchange(false);
+  if (!notify_waitable_triggered && !this->collector_.has_pending()) {
+    return;
+  }
+
+>>>>>>> f7056c0d (fix events-executor warm-up bug and add unit-tests (#2591))
   // Build the new collection
   this->entities_collector_->update_collections();
   auto callback_groups = this->entities_collector_->get_all_callback_groups();
