@@ -175,6 +175,11 @@ TEST_F(TestContentFilterSubscription, set_content_filter)
 
 TEST_F(TestContentFilterSubscription, content_filter_get_begin)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   using namespace std::chrono_literals;
   {
     test_msgs::msg::BasicTypes msg;
@@ -218,6 +223,11 @@ TEST_F(TestContentFilterSubscription, content_filter_get_begin)
 
 TEST_F(TestContentFilterSubscription, content_filter_get_later)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   using namespace std::chrono_literals;
   {
     test_msgs::msg::BasicTypes msg;
@@ -266,6 +276,11 @@ TEST_F(TestContentFilterSubscription, content_filter_get_later)
 
 TEST_F(TestContentFilterSubscription, content_filter_reset)
 {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    GTEST_SKIP();
+  }
+
   using namespace std::chrono_literals;
   {
     test_msgs::msg::BasicTypes msg;
