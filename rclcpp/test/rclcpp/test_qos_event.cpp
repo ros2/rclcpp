@@ -117,12 +117,11 @@ TEST_F(TestQosEvent, test_publisher_constructor)
 /*
    Testing construction of a subscriptions with QoS event callback functions.
  */
-TEST_F(TestQosEvent, test_subscription_constructor)
+TEST_F(TestQosEvent, test_subscription_constructor_with_event_callbacks)
 {
+  // While rmw_zenoh does not support Deadline/LivelinessChanged events,
+  // it does support IncompatibleQoS
   std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    GTEST_SKIP();
-  }
 
   rclcpp::SubscriptionOptions options;
 
@@ -130,26 +129,30 @@ TEST_F(TestQosEvent, test_subscription_constructor)
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, 10, message_callback, options);
 
-  // options arg with one of the callbacks
-  options.event_callbacks.deadline_callback =
-    [node = node.get()](rclcpp::QOSDeadlineRequestedInfo & event) {
-      RCLCPP_INFO(
-        node->get_logger(),
-        "Requested deadline missed - total %d (delta %d)",
-        event.total_count, event.total_count_change);
-    };
+  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+    // options arg with one of the callbacks
+    options.event_callbacks.deadline_callback =
+      [node = node.get()](rclcpp::QOSDeadlineRequestedInfo & event) {
+        RCLCPP_INFO(
+          node->get_logger(),
+          "Requested deadline missed - total %d (delta %d)",
+          event.total_count, event.total_count_change);
+      };
+  }
   subscription = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, 10, message_callback, options);
 
-  // options arg with two of the callbacks
-  options.event_callbacks.liveliness_callback =
-    [node = node.get()](rclcpp::QOSLivelinessChangedInfo & event) {
-      RCLCPP_INFO(
-        node->get_logger(),
-        "Liveliness changed - alive %d (delta %d), not alive %d (delta %d)",
-        event.alive_count, event.alive_count_change,
-        event.not_alive_count, event.not_alive_count_change);
-    };
+  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+    // options arg with two of the callbacks
+    options.event_callbacks.liveliness_callback =
+      [node = node.get()](rclcpp::QOSLivelinessChangedInfo & event) {
+        RCLCPP_INFO(
+          node->get_logger(),
+          "Liveliness changed - alive %d (delta %d), not alive %d (delta %d)",
+          event.alive_count, event.alive_count_change,
+          event.not_alive_count, event.not_alive_count_change);
+      };
+  }
   subscription = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, 10, message_callback, options);
 
@@ -173,11 +176,6 @@ std::string * g_sub_log_msg;
 std::promise<void> * g_log_msgs_promise;
 TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    GTEST_SKIP();
-  }
-
   rcutils_logging_output_handler_t original_output_handler = rcutils_logging_get_output_handler();
 
   std::string pub_log_msg;
@@ -224,14 +222,20 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   const auto timeout = std::chrono::seconds(10);
   ex.spin_until_future_complete(log_msgs_future, timeout);
 
-  EXPECT_EQ(
-    "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    pub_log_msg);
-  EXPECT_EQ(
-    "New publisher discovered on topic '/ns/test_topic', offering incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    sub_log_msg);
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+    EXPECT_EQ(rclcpp::QoSCompatibility::Ok,
+      qos_check_compatible(qos_profile_publisher, qos_profile_subscription).compatibility);
+  } else {
+    EXPECT_EQ(
+      "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
+      "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
+      pub_log_msg);
+    EXPECT_EQ(
+      "New publisher discovered on topic '/ns/test_topic', offering incompatible QoS. "
+      "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
+      sub_log_msg);
+  }
 
   rcutils_logging_set_output_handler(original_output_handler);
 }
@@ -521,10 +525,6 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    GTEST_SKIP();
-  }
   std::atomic_size_t matched_count = 0;
 
   rclcpp::SubscriptionOptions sub_options;
@@ -574,7 +574,6 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
-
   rmw_matched_status_t matched_expected_result;
   std::promise<void> prom;
 
@@ -622,7 +621,6 @@ TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
-
   rmw_matched_status_t matched_expected_result;
 
   std::promise<void> prom;
