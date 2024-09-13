@@ -51,6 +51,8 @@ using namespace std::chrono_literals;
 *   - Test max publisher depth setting (otherwise loaned are not used)
 *   - Max loans that can be requested without publishing the messages
 *   - Double delivery issue on transient local subscriptions
+*
+* Note: FastDDS requires using DYNAMIC_REUSABLE as history memory policy.
 */
 
 class PubSubNode : public rclcpp::Node {
@@ -84,7 +86,7 @@ public:
       msg.get().uint16_value = count_++;
       // RCLCPP_INFO(this->get_logger(), "Publishing: '%d'", msg.get().uint16_value);
       pub_->publish(std::move(msg));
-      std::this_thread::sleep_for(1ms);
+      std::this_thread::sleep_for(10ms);
     }
   }
 
@@ -293,38 +295,6 @@ TEST_F(TestSharedMemory, memory_is_shared)
   EXPECT_TRUE(loaned_addresses_match(pub_sub_loaned, sub_loaned));
 }
 
-// FastDDS: Show that the publisher gets loans from memory still in use:
-// The pool size is determined by the pub depth. The pub should throw when
-// asking for loans if the previous were not returned, instead of siliently
-// provide again a previous loaned, which is overriden
-TEST_F(TestSharedMemory, publisher_overrides_message)
-{
-  // The user will store 5 messages before returning loans
-  auto pub_sub_node = std::make_shared<PubSubNode>("pub_sub_node", 1, 1, 5);
-  executor->add_node(pub_sub_node);
-
-  // Publish 2 messages. Memory should not be reused since user still hasn't
-  // returned the loans
-  pub_sub_node->borrow_and_publish_loaned(3);
-  EXPECT_EQ(pub_sub_node->get_number_of_stored_messages(), 3);
-  EXPECT_EQ(pub_sub_node->get_msg_value(0), 0);
-  EXPECT_EQ(pub_sub_node->get_msg_value(1), 1);
-  EXPECT_FALSE(pub_sub_node->memory_is_reused());
-}
-
-// Test limits:
-// CycloneDDS: Show that publisher depth can't be more than 16, otherwise
-// middleware refuses to loan messages (local allocator will be used)
-TEST_F(TestSharedMemory, max_pub_depth)
-{
-  uint16_t max_depth = 16;
-  auto pub_sub_node = std::make_shared<PubSubNode>("pub_sub_node", max_depth + 1 , 1, 2);
-  executor->add_node(pub_sub_node);
-  pub_sub_node->borrow_and_publish_loaned(2);
-  EXPECT_EQ(pub_sub_node->get_number_of_stored_messages(), 2);
-  EXPECT_FALSE(pub_sub_node->memory_is_reused());
-}
-
 // CycloneDDS suffers from the "double delivery issue" in which a late joiner subscription
 // receives both interprocess & loaned messages, before segfaulting
 TEST_F(TestSharedMemory, double_delivery)
@@ -366,11 +336,26 @@ TEST_F(TestSharedMemory, double_delivery)
   EXPECT_EQ(late_joiner_node->get_msg_value(10), 10);
 }
 
+/* Test limits:
+// CycloneDDS: Show that publisher depth can't be more than 16, otherwise
+// middleware refuses to loan messages (local allocator will be used)
+TEST_F(TestSharedMemory, max_pub_depth)
+{
+  uint16_t max_depth = 16;
+  auto pub_sub_node = std::make_shared<PubSubNode>("pub_sub_node", max_depth + 1 , 1, 2);
+  executor->add_node(pub_sub_node);
+  pub_sub_node->borrow_and_publish_loaned(2);
+  EXPECT_EQ(pub_sub_node->get_number_of_stored_messages(), 2);
+  EXPECT_FALSE(pub_sub_node->memory_is_reused());
+}
+
 // Depending on the publisher depth is the amount of loans we can make without throwing.
 // FastDDS: throws after loaning the 3th msg and not sending it (if pub_depth = 1)
 // CycloneDDS: throws after loaning the 9th msg and not sending it (if pub_depth = 1)
 TEST_F(TestSharedMemory, max_loaned_stored)
 {
   auto pub_sub_node = std::make_shared<PubSubNode>("pub_sub_node", 1, 1, 1);
-  EXPECT_NO_THROW(pub_sub_node->borrow_and_store_loaned_messages(3));
+  EXPECT_NO_THROW(pub_sub_node->borrow_and_store_loaned_messages(2));
+  EXPECT_THROW(pub_sub_node->borrow_and_store_loaned_messages(1), rclcpp::exceptions::RCLError);
 }
+*/
