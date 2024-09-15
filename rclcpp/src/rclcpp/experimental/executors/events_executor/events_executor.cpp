@@ -62,7 +62,6 @@ EventsExecutor::EventsExecutor(
       //    ---> we need to wake up the executor so that it can terminate
       // - a node or callback group guard condition is triggered:
       //    ---> the entities collection is changed, we need to update callbacks
-      notify_waitable_event_pushed_ = false;
       this->refresh_current_collection_from_callback_groups();
     });
 
@@ -417,7 +416,7 @@ EventsExecutor::refresh_current_collection_from_callback_groups()
   // before that event gets processed, for example if
   // a node or callback group is manually added to the executor.
   const bool notify_waitable_triggered = notify_waitable_event_pushed_.exchange(false);
-  if (!notify_waitable_triggered && !this->collector_.has_pending()) {
+  if (!notify_waitable_triggered && !this->entities_collector_->has_pending()) {
     return;
   }
 
