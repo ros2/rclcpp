@@ -72,6 +72,8 @@ enum class CancelResponse : int8_t
 class ServerBase : public rclcpp::Waitable
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServerBase)
+
   /// Enum to identify entities belonging to the action server
   enum class EntityType : std::size_t
   {

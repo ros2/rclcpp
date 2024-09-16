@@ -62,6 +62,8 @@ class ClientBaseImpl;
 class ClientBase : public rclcpp::Waitable
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase)
+
   RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
 
