@@ -352,6 +352,10 @@ ClientBase::is_ready(const rcl_wait_set_t & wait_set)
   }
 
   pimpl_->next_ready_event = std::numeric_limits<size_t>::max();
+  if (is_status_ready) {
+    pimpl_->next_ready_event = static_cast<size_t>(EntityType::StatusSubscription);
+    return true;
+  }
 
   if (is_goal_response_ready) {
     pimpl_->next_ready_event = static_cast<size_t>(EntityType::GoalClient);
@@ -370,11 +374,6 @@ ClientBase::is_ready(const rcl_wait_set_t & wait_set)
 
   if (is_feedback_ready) {
     pimpl_->next_ready_event = static_cast<size_t>(EntityType::FeedbackSubscription);
-    return true;
-  }
-
-  if (is_status_ready) {
-    pimpl_->next_ready_event = static_cast<size_t>(EntityType::StatusSubscription);
     return true;
   }
 

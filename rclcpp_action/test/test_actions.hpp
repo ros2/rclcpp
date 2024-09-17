@@ -12,9 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.#include <gtest/gtest.h>
 
-#pragma once
+#ifndef TEST_ACTIONS_HPP_
+#define TEST_ACTIONS_HPP_
 
+#include <atomic>
+#include <memory>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include <test_msgs/action/fibonacci.hpp>
 #include <rclcpp_action/client_goal_handle.hpp>
@@ -46,18 +51,17 @@ public:
   rclcpp::Node::SharedPtr
   create_node(std::string name, bool ipc_enabled)
   {
-      auto node_options = rclcpp::NodeOptions();
-      node_options.use_intra_process_comms(ipc_enabled);
+    auto node_options = rclcpp::NodeOptions();
+    node_options.use_intra_process_comms(ipc_enabled);
 
-      return rclcpp::Node::make_shared(name, "test_namespace", node_options);
+    return rclcpp::Node::make_shared(name, "test_namespace", node_options);
   }
 
   rclcpp_action::Client<Fibonacci>::SharedPtr
   create_action_client(rclcpp::Node::SharedPtr & node)
   {
-      return rclcpp_action::create_client<Fibonacci>(
-        node, "fibonacci"
-      );
+    return rclcpp_action::create_client<Fibonacci>(
+        node, "fibonacci");
   }
 
   // The server executes the following in a thread when accepting the goal
@@ -65,12 +69,11 @@ public:
   {
     auto & goal_handle = this->server_goal_handle_;
 
-    rclcpp::Rate loop_rate(double(this->server_rate_hz)); // 100Hz
+    rclcpp::Rate loop_rate(static_cast<double>(this->server_rate_hz));
     auto feedback = std::make_shared<Fibonacci::Feedback>();
     feedback->sequence = this->feedback_sequence;
 
-    while(!this->exit_thread && rclcpp::ok())
-    {
+    while (!this->exit_thread && rclcpp::ok()) {
       if (goal_handle->is_canceling()) {
         auto result = std::make_shared<Fibonacci::Result>();
         result->sequence = this->canceled_sequence;
@@ -120,30 +123,28 @@ public:
   void handle_accepted(const std::shared_ptr<GoalHandleFibonacci> goal_handle)
   {
     this->server_goal_handle_ = goal_handle;
-    this->server_thread = std::thread([&]() { execute(); });
+    this->server_thread = std::thread([&](){execute();});
   }
 
   rclcpp_action::Server<Fibonacci>::SharedPtr
   create_action_server(rclcpp::Node::SharedPtr & node)
   {
     return rclcpp_action::create_server<Fibonacci>(
-            node,
-            "fibonacci",
-            [this] (const rclcpp_action::GoalUUID & guuid,
-                std::shared_ptr<const Fibonacci::Goal> goal)
-            {
-                return this->handle_goal(guuid, goal);
-            },
-            [this] (const std::shared_ptr<GoalHandleFibonacci> goal_handle)
-            {
-                (void) goal_handle;
-                return rclcpp_action::CancelResponse::ACCEPT;
-            },
-            [this] (const std::shared_ptr<GoalHandleFibonacci> goal_handle)
-            {
-                return this->handle_accepted(goal_handle);
-            }
-      );
+      node,
+      "fibonacci",
+      [this](const rclcpp_action::GoalUUID & guuid, std::shared_ptr<const Fibonacci::Goal> goal)
+      {
+        return this->handle_goal(guuid, goal);
+      },
+      [this](const std::shared_ptr<GoalHandleFibonacci> goal_handle)
+      {
+        (void)goal_handle;
+        return rclcpp_action::CancelResponse::ACCEPT;
+      },
+      [this](const std::shared_ptr<GoalHandleFibonacci> goal_handle)
+      {
+        return this->handle_accepted(goal_handle);
+      });
   }
 
   rclcpp::Executor::UniquePtr create_executor(bool use_events_executor)
@@ -168,19 +169,19 @@ public:
 
     send_goal_options.goal_response_callback =
       [this](typename ActionGoalHandle::SharedPtr goal_handle)
-        {
-          this->goal_response_cb_called = true;
-          (void)goal_handle;
-        };
+      {
+        this->goal_response_cb_called = true;
+        (void)goal_handle;
+      };
 
-    send_goal_options.feedback_callback = [this](
-          typename ActionGoalHandle::SharedPtr handle,
-          const std::shared_ptr<const Fibonacci::Feedback> feedback)
-        {
-          (void) handle;
-          this->feedback_cb_called = result_is_correct(
-            feedback->sequence, rclcpp_action::ResultCode::UNKNOWN);
-        };
+    send_goal_options.feedback_callback =
+      [this](typename ActionGoalHandle::SharedPtr handle,
+      const std::shared_ptr<const Fibonacci::Feedback> feedback)
+      {
+        (void)handle;
+        this->feedback_cb_called = result_is_correct(
+          feedback->sequence, rclcpp_action::ResultCode::UNKNOWN);
+      };
 
     return send_goal_options;
   }
@@ -189,9 +190,10 @@ public:
   {
     rclcpp::Rate loop_rate(100);
     auto start_time = std::chrono::steady_clock::now();
-    while(!this->feedback_cb_called && rclcpp::ok()) {
+    while (!this->feedback_cb_called && rclcpp::ok()) {
       auto current_time = std::chrono::steady_clock::now();
-      auto elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time).count();
+      auto elapsed_time =
+        std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time).count();
       if (elapsed_time >= 5) {
         break;
       }
@@ -232,8 +234,8 @@ public:
     return true;
   }
 
-  bool result_callback_called() { return result_cb_called; }
-  bool feedback_callback_called() { return feedback_cb_called; }
+  bool result_callback_called() {return result_cb_called;}
+  bool feedback_callback_called() {return feedback_cb_called;}
   size_t server_rate_hz{500};
 
 private:
@@ -248,3 +250,5 @@ private:
   std::vector<int> aborted_sequence{6, 6, 6};
   std::thread server_thread;
 };
+
+#endif  // TEST_ACTIONS_HPP_
