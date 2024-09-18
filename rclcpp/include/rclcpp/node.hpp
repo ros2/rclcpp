@@ -44,6 +44,7 @@
 #include "rclcpp/event.hpp"
 #include "rclcpp/generic_client.hpp"
 #include "rclcpp/generic_publisher.hpp"
+#include "rclcpp/generic_service.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
@@ -300,6 +301,24 @@ public:
   create_generic_client(
     const std::string & service_name,
     const std::string & service_type,
+    const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a GenericService.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] service_type The name of service type, e.g. "std_srvs/srv/SetBool"
+   * \param[in] callback User-defined callback function.
+   * \param[in] qos Quality of service profile for the service.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created service.
+   */
+  template<typename CallbackT>
+  typename rclcpp::GenericService::SharedPtr
+  create_generic_service(
+    const std::string & service_name,
+    const std::string & service_type,
+    CallbackT && callback,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 

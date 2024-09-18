@@ -40,6 +40,7 @@
 #include "rclcpp/create_generic_subscription.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
+#include "rclcpp/create_generic_service.hpp"
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
@@ -166,6 +167,25 @@ Node::create_service(
     node_base_,
     node_services_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    std::forward<CallbackT>(callback),
+    qos,
+    group);
+}
+
+template<typename CallbackT>
+typename rclcpp::GenericService::SharedPtr
+Node::create_generic_service(
+  const std::string & service_name,
+  const std::string & service_type,
+  CallbackT && callback,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return rclcpp::create_generic_service<CallbackT>(
+    node_base_,
+    node_services_,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    service_type,
     std::forward<CallbackT>(callback),
     qos,
     group);
