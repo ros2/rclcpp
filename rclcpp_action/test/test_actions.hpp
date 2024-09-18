@@ -35,7 +35,6 @@ using GoalHandleSharedPtr = typename std::shared_ptr<GoalHandleFibonacci>;
 
 using rclcpp::experimental::executors::EventsExecutor;
 
-// Define a structure to hold test info and utilities
 class TestInfo
 {
 public:
@@ -107,7 +106,6 @@ public:
     this->server_goal_handle_->abort(result);
   }
 
-  // Server: Handle goal callback
   rclcpp_action::GoalResponse
   handle_goal(
     const rclcpp_action::GoalUUID & uuid,
