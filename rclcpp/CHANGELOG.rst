@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+28.1.5 (2024-09-19)
+-------------------
 * backport fix events-executor warm-up bug and add unit-tests (`#2591 <https://github.com/ros2/rclcpp/issues/2591>`_) (`#2628 <https://github.com/ros2/rclcpp/issues/2628>`_)
 * Contributors: Alberto Soragna
 
