@@ -64,6 +64,11 @@ public:
     rclcpp::shutdown();
   }
 
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
 protected:
   std::shared_ptr<rclcpp::Node> node() {return node_;}
 
