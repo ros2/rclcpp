@@ -38,9 +38,7 @@ class TestPublisher : public ::testing::Test
 public:
   static void SetUpTestCase()
   {
-    if (!rclcpp::ok()) {
-      rclcpp::init(0, nullptr);
-    }
+    rclcpp::init(0, nullptr);
   }
 
 protected:
@@ -86,6 +84,7 @@ class TestPublisherSub : public ::testing::Test
 protected:
   static void SetUpTestCase()
   {
+    rclcpp::init(0, nullptr);
   }
 
   void SetUp()
@@ -97,6 +96,11 @@ protected:
   void TearDown()
   {
     node.reset();
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
   }
 
   rclcpp::Node::SharedPtr node;
