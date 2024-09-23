@@ -47,9 +47,14 @@ constexpr char absolute_namespace[] = "/ns";
 class TestNodeGraph : public ::testing::Test
 {
 public:
-  void SetUp()
+
+  static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
+  }
+
+  void SetUp()
+  {
     node_ = std::make_shared<rclcpp::Node>(node_name, node_namespace);
 
     // This dynamic cast is not necessary for the unittests, but instead is used to ensure
@@ -57,11 +62,6 @@ public:
     node_graph_ =
       dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node_->get_node_graph_interface().get());
     ASSERT_NE(nullptr, node_graph_);
-  }
-
-  void TearDown()
-  {
-    rclcpp::shutdown();
   }
 
   static void TearDownTestCase()
