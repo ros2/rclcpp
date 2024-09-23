@@ -47,7 +47,6 @@ constexpr char absolute_namespace[] = "/ns";
 class TestNodeGraph : public ::testing::Test
 {
 public:
-
   static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
