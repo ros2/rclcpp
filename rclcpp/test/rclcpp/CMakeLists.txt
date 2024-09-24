@@ -83,6 +83,18 @@ if(TARGET test_generic_client)
     ${test_msgs_TARGETS}
   )
 endif()
+ament_add_gtest(test_generic_service test_generic_service.cpp)
+ament_add_test_label(test_generic_service mimick)
+if(TARGET test_generic_service)
+  target_link_libraries(test_generic_service ${PROJECT_NAME}
+    mimick
+    ${rcl_interfaces_TARGETS}
+    rmw::rmw
+    rosidl_runtime_cpp::rosidl_runtime_cpp
+    rosidl_typesupport_cpp::rosidl_typesupport_cpp
+    ${test_msgs_TARGETS}
+  )
+endif()
 ament_add_gtest(test_client_common test_client_common.cpp)
 ament_add_test_label(test_client_common mimick)
 if(TARGET test_client_common)
@@ -505,6 +517,16 @@ ament_add_gtest(
   TIMEOUT 180)
 if(TARGET test_executors_busy_waiting)
   target_link_libraries(test_executors_busy_waiting ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(
+  test_executors_warmup
+  executors/test_executors_warmup.cpp
+  executors/test_waitable.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors_warmup)
+  target_link_libraries(test_executors_warmup ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
 ament_add_gtest(test_static_single_threaded_executor executors/test_static_single_threaded_executor.cpp

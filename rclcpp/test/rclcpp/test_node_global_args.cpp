@@ -32,6 +32,11 @@ protected:
     const int argc = sizeof(args) / sizeof(const char *);
     rclcpp::init(argc, args);
   }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };
 
 TEST_F(TestNodeWithGlobalArgs, local_arguments_before_global) {

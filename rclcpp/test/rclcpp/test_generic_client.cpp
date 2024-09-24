@@ -105,7 +105,7 @@ TEST_F(TestGenericClient, construction_and_destruction) {
     ASSERT_THROW(
     {
       auto client = node->create_generic_client("test_service", "test_msgs/srv/InvalidType");
-    }, std::runtime_error);
+    }, rclcpp::exceptions::InvalidServiceTypeError);
   }
 }
 

@@ -60,6 +60,11 @@ protected:
     node_with_option.reset();
   }
 
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   // "start_type_description_service" and "use_sim_time"
   const uint64_t builtin_param_count = 2;
   rclcpp::Node::SharedPtr node;
