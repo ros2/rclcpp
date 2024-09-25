@@ -45,6 +45,7 @@ protected:
     message_callback = [node = node.get()](test_msgs::msg::Empty::ConstSharedPtr /*msg*/) {
         RCLCPP_INFO(node->get_logger(), "Message received");
       };
+    rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   }
 
   void TearDown()
@@ -60,6 +61,7 @@ protected:
   static constexpr char topic_name[] = "test_topic";
   rclcpp::Node::SharedPtr node;
   std::function<void(test_msgs::msg::Empty::ConstSharedPtr)> message_callback;
+  std::string rmw_implementation_str;
 };
 
 constexpr char TestQosEvent::topic_name[];
@@ -69,7 +71,6 @@ constexpr char TestQosEvent::topic_name[];
  */
 TEST_F(TestQosEvent, test_publisher_constructor)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -121,8 +122,6 @@ TEST_F(TestQosEvent, test_subscription_constructor_with_event_callbacks)
 {
   // While rmw_zenoh does not support Deadline/LivelinessChanged events,
   // it does support IncompatibleQoS
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
-
   rclcpp::SubscriptionOptions options;
 
   // options arg with no callbacks
@@ -222,7 +221,6 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   const auto timeout = std::chrono::seconds(10);
   ex.spin_until_future_complete(log_msgs_future, timeout);
 
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     EXPECT_EQ(rclcpp::QoSCompatibility::Ok,
       qos_check_compatible(qos_profile_publisher, qos_profile_subscription).compatibility);
@@ -241,7 +239,6 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
 }
 
 TEST_F(TestQosEvent, construct_destruct_rcl_error) {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -289,7 +286,6 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 }
 
 TEST_F(TestQosEvent, execute) {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -319,7 +315,6 @@ TEST_F(TestQosEvent, execute) {
 }
 
 TEST_F(TestQosEvent, add_to_wait_set) {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -352,7 +347,6 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -398,7 +392,6 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -477,7 +470,6 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -570,7 +562,6 @@ TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
@@ -617,7 +608,6 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
 {
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   if (rmw_implementation_str == "rmw_zenoh_cpp") {
     GTEST_SKIP();
   }
