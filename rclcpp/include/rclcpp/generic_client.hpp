@@ -277,6 +277,7 @@ protected:
     std::promise<SharedResponse>,
     CallbackTypeValueVariant>;  // Use variant for extension
 
+  RCLCPP_PUBLIC
   int64_t
   async_send_request_impl(
     const Request request,
