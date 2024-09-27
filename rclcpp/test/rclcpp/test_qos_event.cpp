@@ -30,8 +30,6 @@
 
 using namespace std::chrono_literals;
 
-static const std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
-
 class TestQosEvent : public ::testing::Test
 {
 protected:
@@ -40,6 +38,8 @@ protected:
     // We initialize and shutdown the context (and hence also the rmw_context),
     // for each test case to reset the ROS graph for each test case.
     rclcpp::init(0, nullptr);
+
+    rmw_implementation_str = std::string(rmw_get_implementation_identifier());
 
     node = std::make_shared<rclcpp::Node>("test_qos_event", "/ns");
 
@@ -54,6 +54,7 @@ protected:
     rclcpp::shutdown();
   }
 
+  std::string rmw_implementation_str;
   static constexpr char topic_name[] = "test_topic";
   rclcpp::Node::SharedPtr node;
   std::function<void(test_msgs::msg::Empty::ConstSharedPtr)> message_callback;
