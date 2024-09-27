@@ -33,13 +33,12 @@ using namespace std::chrono_literals;
 class TestQosEvent : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
   void SetUp()
   {
+    // We initialize and shutdown the context (and hence also the rmw_context),
+    // for each test case to reset the ROS graph for each test case.
+    rclcpp::init(0, nullptr);
+
     node = std::make_shared<rclcpp::Node>("test_qos_event", "/ns");
 
     message_callback = [node = node.get()](test_msgs::msg::Empty::ConstSharedPtr /*msg*/) {
@@ -51,10 +50,6 @@ protected:
   void TearDown()
   {
     node.reset();
-  }
-
-  static void TearDownTestCase()
-  {
     rclcpp::shutdown();
   }
 
@@ -470,9 +465,6 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
 {
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    GTEST_SKIP();
-  }
   std::atomic_size_t matched_count = 0;
 
   rclcpp::PublisherOptions pub_options;
@@ -562,9 +554,6 @@ TEST_F(TestQosEvent, test_sub_matched_event_by_set_event_callback)
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 {
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    GTEST_SKIP();
-  }
   rmw_matched_status_t matched_expected_result;
   std::promise<void> prom;
 
@@ -608,9 +597,6 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
 {
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    GTEST_SKIP();
-  }
   rmw_matched_status_t matched_expected_result;
 
   std::promise<void> prom;
