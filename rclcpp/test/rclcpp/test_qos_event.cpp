@@ -30,6 +30,8 @@
 
 using namespace std::chrono_literals;
 
+static const std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+
 class TestQosEvent : public ::testing::Test
 {
 protected:
@@ -44,7 +46,6 @@ protected:
     message_callback = [node = node.get()](test_msgs::msg::Empty::ConstSharedPtr /*msg*/) {
         RCLCPP_INFO(node->get_logger(), "Message received");
       };
-    rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   }
 
   void TearDown()
@@ -56,7 +57,6 @@ protected:
   static constexpr char topic_name[] = "test_topic";
   rclcpp::Node::SharedPtr node;
   std::function<void(test_msgs::msg::Empty::ConstSharedPtr)> message_callback;
-  std::string rmw_implementation_str;
 };
 
 constexpr char TestQosEvent::topic_name[];
