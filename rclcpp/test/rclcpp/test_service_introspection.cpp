@@ -124,6 +124,20 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
   ASSERT_THAT(
     client_gid_arr,
     testing::Eq(event_map[ServiceEventInfo::REQUEST_SENT]->info.client_gid));
+  // TODO(@fujitatomoya): Remove this if statement once other rmw implementations support test.
+  // Only rmw_connextdds can pass this test requirement for now.
+  // See more details for https://github.com/ros2/rmw/issues/357
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    ASSERT_THAT(
+      client_gid_arr,
+      testing::Eq(event_map[ServiceEventInfo::REQUEST_RECEIVED]->info.client_gid));
+    ASSERT_THAT(
+      client_gid_arr,
+      testing::Eq(event_map[ServiceEventInfo::RESPONSE_SENT]->info.client_gid));
+  }
+  ASSERT_THAT(
+    client_gid_arr,
+    testing::Eq(event_map[ServiceEventInfo::RESPONSE_RECEIVED]->info.client_gid));
 
   ASSERT_EQ(
     event_map[ServiceEventInfo::REQUEST_SENT]->info.sequence_number,
