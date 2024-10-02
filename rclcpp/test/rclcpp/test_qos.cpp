@@ -242,6 +242,7 @@ TEST(TestQoS, qos_check_compatible)
   // TODO(jacobperron): programmatically check if current RMW is one of the officially
   //                    supported DDS middlewares before running the following tests
 
+  // If the RMW implementation is rmw_zenoh_cpp, we do not expect any QoS incompatibilities.
   std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   // Incompatible
   {
