@@ -135,3 +135,8 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
+
+if(TEST cppcheck)
+  # must set the property after ament_package()
+  set_tests_properties(cppcheck PROPERTIES TIMEOUT 600)
+endif()
