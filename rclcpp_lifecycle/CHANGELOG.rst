@@ -3,6 +3,13 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Shutdown the context before context's destructor is invoked in tests (`#2633 <https://github.com/ros2/rclcpp/issues/2633>`_)
+* LifecycleNode bugfix and add test cases (`#2562 <https://github.com/ros2/rclcpp/issues/2562>`_)
+* Properly test get_service_names_and_types_by_node in rclcpp_lifecycle (`#2599 <https://github.com/ros2/rclcpp/issues/2599>`_)
+* Contributors: Alejandro Hernández Cordero, Christophe Bedard, Tomoya Fujita
+
 28.3.3 (2024-07-29)
 -------------------
 

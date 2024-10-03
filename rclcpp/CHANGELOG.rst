@@ -2,6 +2,30 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed test qos rmw zenoh (`#2639 <https://github.com/ros2/rclcpp/issues/2639>`_)
+* verify client gid uniqueness for a single service event. (`#2636 <https://github.com/ros2/rclcpp/issues/2636>`_)
+* Skip some tests in test_qos_event and run others with event types supported by rmw_zenoh (`#2626 <https://github.com/ros2/rclcpp/issues/2626>`_)
+* Shutdown the context before context's destructor is invoked in tests (`#2633 <https://github.com/ros2/rclcpp/issues/2633>`_)
+* Skip rmw zenoh content filtering tests (`#2627 <https://github.com/ros2/rclcpp/issues/2627>`_)
+* Use InvalidServiceTypeError for unavailable service type in GenericClient (`#2629 <https://github.com/ros2/rclcpp/issues/2629>`_)
+* Implement generic service (`#2617 <https://github.com/ros2/rclcpp/issues/2617>`_)
+* fix events-executor warm-up bug and add unit-tests (`#2591 <https://github.com/ros2/rclcpp/issues/2591>`_)
+* remove unnecessary gtest-skip in test_executors (`#2600 <https://github.com/ros2/rclcpp/issues/2600>`_)
+* Correct node name in service test code (`#2615 <https://github.com/ros2/rclcpp/issues/2615>`_)
+* Minor naming fixes for ParameterValue to_string() function (`#2609 <https://github.com/ros2/rclcpp/issues/2609>`_)
+* Removed clang warnings (`#2605 <https://github.com/ros2/rclcpp/issues/2605>`_)
+* Fix a couple of issues in the documentation. (`#2608 <https://github.com/ros2/rclcpp/issues/2608>`_)
+* deprecate the static single threaded executor (`#2598 <https://github.com/ros2/rclcpp/issues/2598>`_)
+* Fix name of ParameterEventHandler class in doc (`#2604 <https://github.com/ros2/rclcpp/issues/2604>`_)
+* subscriber_statistics_collectors\_ should be protected by mutex. (`#2592 <https://github.com/ros2/rclcpp/issues/2592>`_)
+* Fix bug in timers lifecycle for events executor (`#2586 <https://github.com/ros2/rclcpp/issues/2586>`_)
+* fix rclcpp/test/rclcpp/CMakeLists.txt to check for the correct targets existance (`#2596 <https://github.com/ros2/rclcpp/issues/2596>`_)
+* Shut down context during init if logging config fails (`#2594 <https://github.com/ros2/rclcpp/issues/2594>`_)
+* Make more of the Waitable API abstract (`#2593 <https://github.com/ros2/rclcpp/issues/2593>`_)
+* Contributors: Alberto Soragna, Alejandro Hernández Cordero, Alexis Pojomovsky, Barry Xu, Chris Lalancette, Christophe Bedard, Kang, Hsin-Yi, Tomoya Fujita
+
 28.3.3 (2024-07-29)
 -------------------
 * Only compile the tests once. (`#2590 <https://github.com/ros2/rclcpp/issues/2590>`_)

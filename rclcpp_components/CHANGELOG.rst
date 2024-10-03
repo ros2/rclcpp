@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Shutdown the context before context's destructor is invoked in tests (`#2633 <https://github.com/ros2/rclcpp/issues/2633>`_)
+* Fix typo in rclcpp_components benchmark_components (`#2602 <https://github.com/ros2/rclcpp/issues/2602>`_)
+* Contributors: Alejandro Hernández Cordero, Christophe Bedard
+
 28.3.3 (2024-07-29)
 -------------------
 

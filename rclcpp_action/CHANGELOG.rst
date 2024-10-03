@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Increase the timeout for the cppcheck on rclcpp_action. (`#2640 <https://github.com/ros2/rclcpp/issues/2640>`_)
+* add smart pointer macros definitions to action server and client base classes (`#2631 <https://github.com/ros2/rclcpp/issues/2631>`_)
+* Contributors: Alberto Soragna, Chris Lalancette
+
 28.3.3 (2024-07-29)
 -------------------
 
