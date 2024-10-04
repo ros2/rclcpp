@@ -109,6 +109,13 @@ GenericClient::handle_response(
   if (std::holds_alternative<Promise>(value)) {
     auto & promise = std::get<Promise>(value);
     promise.set_value(std::move(response));
+  } else if (std::holds_alternative<CallbackTypeValueVariant>(value)) {
+    auto & inner = std::get<CallbackTypeValueVariant>(value);
+    const auto & callback = std::get<CallbackType>(inner);
+    auto & promise = std::get<Promise>(inner);
+    auto & future = std::get<SharedFuture>(inner);
+    promise.set_value(std::move(response));
+    callback(std::move(future));
   }
 }
 
@@ -126,6 +133,18 @@ GenericClient::remove_pending_request(int64_t request_id)
 {
   std::lock_guard guard(pending_requests_mutex_);
   return pending_requests_.erase(request_id) != 0u;
+}
+
+bool
+GenericClient::remove_pending_request(const FutureAndRequestId & future)
+{
+  return this->remove_pending_request(future.request_id);
+}
+
+bool
+GenericClient::remove_pending_request(const SharedFutureAndRequestId & future)
+{
+  return this->remove_pending_request(future.request_id);
 }
 
 std::optional<GenericClient::CallbackInfoVariant>
