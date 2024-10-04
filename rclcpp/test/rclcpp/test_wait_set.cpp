@@ -260,7 +260,10 @@ TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
     }, std::runtime_error);
 
     rclcpp::PublisherOptions po;
-    po.event_callbacks.deadline_callback = [](rclcpp::QOSDeadlineOfferedInfo &) {};
+    std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+    if (rmw_implementation_str != "rmw_zenoh_cpp") {
+      po.event_callbacks.deadline_callback = [](rclcpp::QOSDeadlineOfferedInfo &) {};
+    }
     auto pub = node->create_publisher<test_msgs::msg::BasicTypes>("~/test", 1, po);
     auto qos_event = pub->get_event_handlers().begin()->second;
     wait_set1.add_waitable(qos_event, pub);
@@ -276,6 +279,8 @@ TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
  * Testing adding each entity and waiting, and removing each entity and waiting
  */
 TEST_F(TestWaitSet, add_remove_wait) {
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+
   rclcpp::WaitSet wait_set;
   auto node = std::make_shared<rclcpp::Node>("add_remove_wait");
 
@@ -284,8 +289,10 @@ TEST_F(TestWaitSet, add_remove_wait) {
 
   // For coverage reasons, this subscription should have event handlers
   rclcpp::SubscriptionOptions subscription_options;
-  subscription_options.event_callbacks.deadline_callback = [](auto) {};
-  subscription_options.event_callbacks.liveliness_callback = [](auto) {};
+  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+    subscription_options.event_callbacks.deadline_callback = [](auto) {};
+    subscription_options.event_callbacks.liveliness_callback = [](auto) {};
+  }
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
   auto sub =
     node->create_subscription<test_msgs::msg::BasicTypes>(
@@ -302,8 +309,10 @@ TEST_F(TestWaitSet, add_remove_wait) {
     node->create_service<rcl_interfaces::srv::ListParameters>("~/test", srv_do_nothing);
 
   rclcpp::PublisherOptions publisher_options;
-  publisher_options.event_callbacks.deadline_callback =
-    [](rclcpp::QOSDeadlineOfferedInfo &) {};
+  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+    publisher_options.event_callbacks.deadline_callback =
+      [](rclcpp::QOSDeadlineOfferedInfo &) {};
+  }
   auto pub = node->create_publisher<test_msgs::msg::BasicTypes>(
     "~/test", 1, publisher_options);
   auto qos_event = pub->get_event_handlers().begin()->second;
