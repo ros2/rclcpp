@@ -93,6 +93,111 @@ TEST_F(TestAnySubscriptionCallback, construct_destruct) {
   rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc2(allocator);
 }
 
+TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](const rclcpp::SerializedMessage &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](const rclcpp::SerializedMessage &, const rclcpp::MessageInfo &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](const rclcpp::SerializedMessage &, const rclcpp::MessageInfo &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](std::unique_ptr<rclcpp::SerializedMessage>) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](std::unique_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](std::shared_ptr<const rclcpp::SerializedMessage>) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](std::shared_ptr<const rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](const std::shared_ptr<const rclcpp::SerializedMessage> &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set(
+      [](
+        const std::shared_ptr<const rclcpp::SerializedMessage> &,
+        const rclcpp::MessageInfo &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](std::shared_ptr<rclcpp::SerializedMessage>) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+  {
+    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+    asc.set([](std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {});
+    EXPECT_TRUE(asc.is_serialized_message_callback());
+    EXPECT_NO_THROW(
+      asc.dispatch(
+        std::make_shared<rclcpp::SerializedMessage>(),
+        rclcpp::MessageInfo{}));
+  }
+}
+
 TEST_F(TestAnySubscriptionCallback, unset_dispatch_throw) {
   EXPECT_THROW(
     any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_),
