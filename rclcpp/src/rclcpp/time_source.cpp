@@ -54,9 +54,7 @@ public:
     ros_time_active_ = true;
 
     // Update all attached clocks to zero or last recorded time
-    for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-      set_clock(last_time_msg_, true, *it);
-    }
+    set_all_clocks(last_time_msg_, true);
   }
 
   // An internal method to use in the clock callback that iterates and disables all clocks
@@ -71,11 +69,8 @@ public:
     ros_time_active_ = false;
 
     // Update all attached clocks
-    std::lock_guard<std::mutex> guard(clock_list_lock_);
-    for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-      auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-      set_clock(msg, false, *it);
-    }
+    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    set_all_clocks(msg, false);
   }
 
   // Check if ROS time is active
