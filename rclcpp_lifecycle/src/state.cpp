@@ -167,7 +167,7 @@ State::reset() noexcept
   if (ret != RCL_RET_OK) {
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp_lifecycle"),
-      "rcl_lifecycle_transition_fini did not complete successfully, leaking memory");
+      "rcl_lifecycle_state_fini did not complete successfully, leaking memory");
   }
 }
 
