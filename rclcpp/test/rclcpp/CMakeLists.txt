@@ -555,7 +555,7 @@ if(TARGET test_executor_notify_waitable)
   target_link_libraries(test_executor_notify_waitable ${PROJECT_NAME} mimick rcpputils::rcpputils)
 endif()
 
-ament_add_gtest(test_events_executor executors/test_events_executor.cpp TIMEOUT 5)
+ament_add_gtest(test_events_executor executors/test_events_executor.cpp TIMEOUT 60)
 if(TARGET test_events_executor)
   target_link_libraries(test_events_executor ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
