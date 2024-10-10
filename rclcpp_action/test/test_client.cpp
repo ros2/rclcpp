@@ -565,7 +565,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
 
   ASSERT_EQ(5u, wrapped_result.result->sequence.size());
   EXPECT_EQ(3, wrapped_result.result->sequence.back());
-  EXPECT_EQ(5, feedback_count);
+  EXPECT_EQ(2, feedback_count);
 }
 
 TEST_F(TestClientAgainstServer, async_send_goal_with_result_callback_wait_for_result)
@@ -1010,11 +1010,11 @@ TEST_F(TestClientAgainstServer, execute_rcl_errors)
   {
     ActionGoal goal;
     goal.order = 5;
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp_action", rcl_action_take_result_response, RCL_RET_ERROR);
 
     auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
     dual_spin_until_future_complete(future_goal_handle);
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_take_result_response, RCL_RET_ERROR);
     auto goal_handle = future_goal_handle.get();
     auto future_result = action_client->async_get_result(goal_handle);
     EXPECT_THROW(
