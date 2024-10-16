@@ -482,8 +482,11 @@ TEST(TestIntraProcessManager, add_pub_sub) {
   bool unique_ids = p1_id != p2_id && p2_id != s1_id;
   ASSERT_TRUE(unique_ids);
 
+  // p1 has 1 subcription, s1
   size_t p1_subs = ipm->get_subscription_count(p1_id);
+  // p2 has 0 subscriptions
   size_t p2_subs = ipm->get_subscription_count(p2_id);
+  // Non-existent publisher_id has 0 subscriptions
   size_t non_existing_pub_subs = ipm->get_subscription_count(42);
   ASSERT_EQ(1u, p1_subs);
   ASSERT_EQ(0u, p2_subs);
@@ -493,13 +496,28 @@ TEST(TestIntraProcessManager, add_pub_sub) {
 
   auto s2 = std::make_shared<SubscriptionIntraProcessT>("topic", rclcpp::QoS(10).reliable());
 
+  // s2 may be able to communicate with p1 depending on the RMW
   auto s2_id = ipm->template add_subscription<MessageT>(s2);
+  // p3 can definitely communicate with s2, may be able to communicate with s1 depending on the RMW
   auto p3_id = ipm->add_publisher(p3);
 
+  // p1 definitely matches subscription s1, since the topic name and QoS match exactly.
+  // If the RMW can match best-effort publishers to reliable subscriptions (like Zenoh can),
+  // then p1 will also match s2.
   p1_subs = ipm->get_subscription_count(p1_id);
+  // No subscriptions with a topic name of "different_topic_name" were added.
   p2_subs = ipm->get_subscription_count(p2_id);
+  // On all current RMWs (DDS and Zenoh), a reliable publisher like p3 can communicate with both
+  // reliable and best-effort subscriptions (s1 and s2).
   size_t p3_subs = ipm->get_subscription_count(p3_id);
-  ASSERT_EQ(1u, p1_subs);
+
+  rclcpp::QoSCheckCompatibleResult qos_compatible =
+    rclcpp::qos_check_compatible(p1->get_actual_qos(), s2->get_actual_qos());
+  if (qos_compatible.compatibility == rclcpp::QoSCompatibility::Error) {
+    ASSERT_EQ(1u, p1_subs);
+  } else {
+    ASSERT_EQ(2u, p1_subs);
+  }
   ASSERT_EQ(0u, p2_subs);
   ASSERT_EQ(2u, p3_subs);
 
