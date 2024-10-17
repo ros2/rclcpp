@@ -664,7 +664,8 @@ get_info_by_topic(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const std::string & topic_name,
   bool no_mangle,
-  FunctionT rcl_get_info_by_topic)
+  bool is_service,
+  FunctionT rcl_get_info_by_topic_or_service)
 {
   std::string fqdn;
   auto rcl_node_handle = node_base->get_rcl_node_handle();
@@ -676,7 +677,7 @@ get_info_by_topic(
       topic_name,
       rcl_node_get_name(rcl_node_handle),
       rcl_node_get_namespace(rcl_node_handle),
-      false);    // false = not a service
+      is_service);
 
     // Get the node options
     const rcl_node_options_t * node_options = rcl_node_get_options(rcl_node_handle);
@@ -687,9 +688,9 @@ get_info_by_topic(
     if (node_options->use_global_arguments) {
       global_args = &(rcl_node_handle->context->global_arguments);
     }
-
+    auto rcl_remap_name = is_service ? rcl_remap_service_name : rcl_remap_topic_name;
     char * remapped_topic_name = nullptr;
-    rcl_ret_t ret = rcl_remap_topic_name(
+    rcl_ret_t ret = rcl_remap_name(
       &(node_options->arguments),
       global_args,
       fqdn.c_str(),
@@ -708,7 +709,13 @@ get_info_by_topic(
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcl_topic_endpoint_info_array_t info_array = rcl_get_zero_initialized_topic_endpoint_info_array();
   rcl_ret_t ret =
-    rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
+    rcl_get_info_by_topic_or_service(
+      rcl_node_handle,
+      &allocator,
+      fqdn.c_str(),
+      no_mangle,
+      &info_array
+    );
   if (RCL_RET_OK != ret) {
     auto error_msg =
       std::string("Failed to get information by topic for ") + EndpointType + std::string(":");
@@ -745,6 +752,7 @@ NodeGraph::get_publishers_info_by_topic(
     node_base_,
     topic_name,
     no_mangle,
+    false,
     rcl_get_publishers_info_by_topic);
 }
 
@@ -758,7 +766,36 @@ NodeGraph::get_subscriptions_info_by_topic(
     node_base_,
     topic_name,
     no_mangle,
+    false,
     rcl_get_subscriptions_info_by_topic);
+}
+
+static constexpr char kClientsEndpointTypeName[] = "clients";
+std::vector<rclcpp::TopicEndpointInfo>
+NodeGraph::get_clients_info_by_service(
+  const std::string & service_name,
+  bool no_mangle) const
+{
+  return get_info_by_topic<kClientsEndpointTypeName>(
+    node_base_,
+    service_name,
+    no_mangle,
+    true,
+    rcl_get_clients_info_by_service);
+}
+
+static constexpr char kServersEndpointTypeName[] = "servers";
+std::vector<rclcpp::TopicEndpointInfo>
+NodeGraph::get_servers_info_by_service(
+  const std::string & service_name,
+  bool no_mangle) const
+{
+  return get_info_by_topic<kServersEndpointTypeName>(
+    node_base_,
+    service_name,
+    no_mangle,
+    true,
+    rcl_get_servers_info_by_service);
 }
 
 std::string &
