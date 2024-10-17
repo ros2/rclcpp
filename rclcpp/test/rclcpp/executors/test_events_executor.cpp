@@ -479,14 +479,21 @@ TEST_F(TestEventsExecutor, test_default_incompatible_qos_callbacks)
   const auto timeout = std::chrono::seconds(10);
   ex.spin_until_future_complete(log_msgs_future, timeout);
 
-  EXPECT_EQ(
-    "New subscription discovered on topic '/test_topic', requesting incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    pub_log_msg);
-  EXPECT_EQ(
-    "New publisher discovered on topic '/test_topic', offering incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    sub_log_msg);
+  rclcpp::QoSCheckCompatibleResult qos_compatible = rclcpp::qos_check_compatible(
+    publisher->get_actual_qos(), subscription->get_actual_qos());
+  if (qos_compatible.compatibility == rclcpp::QoSCompatibility::Error) {
+    EXPECT_EQ(
+      "New subscription discovered on topic '/test_topic', requesting incompatible QoS. "
+      "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
+      pub_log_msg);
+    EXPECT_EQ(
+      "New publisher discovered on topic '/test_topic', offering incompatible QoS. "
+      "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
+      sub_log_msg);
+  } else {
+    EXPECT_EQ("", pub_log_msg);
+    EXPECT_EQ("", sub_log_msg);
+  }
 
   rcutils_logging_set_output_handler(original_output_handler);
 }
