@@ -159,7 +159,7 @@ class PublisherBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
 
-  explicit PublisherBase(const std::string & topic, rclcpp::QoS qos)
+  explicit PublisherBase(const std::string & topic, const rclcpp::QoS & qos)
   : topic_name(topic),
     qos_profile(qos)
   {}
@@ -226,7 +226,7 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>)
 
-  explicit Publisher(const std::string & topic, rclcpp::QoS qos)
+  explicit Publisher(const std::string & topic, const rclcpp::QoS & qos)
   : PublisherBase(topic, qos)
   {
     auto allocator = std::make_shared<Alloc>();
@@ -262,7 +262,7 @@ public:
   explicit SubscriptionIntraProcessBase(
     rclcpp::Context::SharedPtr context,
     const std::string & topic,
-    rclcpp::QoS qos)
+    const rclcpp::QoS & qos)
   : topic_name(topic), qos_profile(qos)
   {
     (void)context;
@@ -310,7 +310,7 @@ class SubscriptionIntraProcessBuffer : public SubscriptionIntraProcessBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
 
-  explicit SubscriptionIntraProcessBuffer(const std::string & topic, rclcpp::QoS qos)
+  explicit SubscriptionIntraProcessBuffer(const std::string & topic, const rclcpp::QoS & qos)
   : SubscriptionIntraProcessBase(nullptr, topic, qos), take_shared_method(false)
   {
     buffer = std::make_unique<rclcpp::experimental::buffers::mock::IntraProcessBuffer<MessageT>>();
@@ -378,7 +378,7 @@ class SubscriptionIntraProcess : public SubscriptionIntraProcessBuffer<
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcess)
 
-  explicit SubscriptionIntraProcess(const std::string & topic, rclcpp::QoS qos)
+  explicit SubscriptionIntraProcess(const std::string & topic, const rclcpp::QoS & qos)
   : SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>(topic, qos)
   {
   }
