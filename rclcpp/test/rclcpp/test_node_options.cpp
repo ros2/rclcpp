@@ -206,22 +206,27 @@ TEST(TestNodeOptions, copy) {
     //    "arguments" because it is already tested in the above scopes
     //    "parameter_event_publisher_options" because it can not be directly compared with EXPECT_EQ
     //    "allocator" because it can not be directly compared with EXPECT_EQ
-    auto non_default_options = rclcpp::NodeOptions()
-      .parameter_overrides({rclcpp::Parameter("foo", 0), rclcpp::Parameter("bar", "1")})
-      .use_global_arguments(false)
-      .enable_rosout(false)
-      .use_intra_process_comms(true)
-      .enable_topic_statistics(true)
-      .start_parameter_services(false)
-      .enable_logger_service(true)
-      .start_parameter_event_publisher(false)
-      .clock_type(RCL_SYSTEM_TIME)
-      .clock_qos(rclcpp::SensorDataQoS())
-      .use_clock_thread(false)
-      .parameter_event_qos(rclcpp::ClockQoS())
-      .rosout_qos(rclcpp::ParameterEventsQoS())
-      .allow_undeclared_parameters(true)
-      .automatically_declare_parameters_from_overrides(true);
+
+    // We separate attribute modification from variable initialisation (copy assignment operator)
+    // to be sure the "non_default_options"'s properties are correctly set before testing the
+    // assignment operator.
+    auto non_default_options = rclcpp::NodeOptions();
+    non_default_options
+    .parameter_overrides({rclcpp::Parameter("foo", 0), rclcpp::Parameter("bar", "1")})
+    .use_global_arguments(false)
+    .enable_rosout(false)
+    .use_intra_process_comms(true)
+    .enable_topic_statistics(true)
+    .start_parameter_services(false)
+    .enable_logger_service(true)
+    .start_parameter_event_publisher(false)
+    .clock_type(RCL_SYSTEM_TIME)
+    .clock_qos(rclcpp::SensorDataQoS())
+    .use_clock_thread(false)
+    .parameter_event_qos(rclcpp::ClockQoS())
+    .rosout_qos(rclcpp::ParameterEventsQoS())
+    .allow_undeclared_parameters(true)
+    .automatically_declare_parameters_from_overrides(true);
 
     auto copied_options = non_default_options;
     EXPECT_EQ(non_default_options.parameter_overrides(), copied_options.parameter_overrides());
