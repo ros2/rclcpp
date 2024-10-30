@@ -200,6 +200,57 @@ TEST(TestNodeOptions, copy) {
       rcl_arguments_get_count_unparsed(&other_rcl_options->arguments),
       rcl_arguments_get_count_unparsed(&rcl_options->arguments));
   }
+
+  {
+    // The following scope test is missing:
+    //    "arguments" because it is already tested in the above scopes
+    //    "parameter_event_publisher_options" because it can not be directly compared with EXPECT_EQ
+    //    "allocator" because it can not be directly compared with EXPECT_EQ
+
+    // We separate attribute modification from variable initialisation (copy assignment operator)
+    // to be sure the "non_default_options"'s properties are correctly set before testing the
+    // assignment operator.
+    auto non_default_options = rclcpp::NodeOptions();
+    non_default_options
+    .parameter_overrides({rclcpp::Parameter("foo", 0), rclcpp::Parameter("bar", "1")})
+    .use_global_arguments(false)
+    .enable_rosout(false)
+    .use_intra_process_comms(true)
+    .enable_topic_statistics(true)
+    .start_parameter_services(false)
+    .enable_logger_service(true)
+    .start_parameter_event_publisher(false)
+    .clock_type(RCL_SYSTEM_TIME)
+    .clock_qos(rclcpp::SensorDataQoS())
+    .use_clock_thread(false)
+    .parameter_event_qos(rclcpp::ClockQoS())
+    .rosout_qos(rclcpp::ParameterEventsQoS())
+    .allow_undeclared_parameters(true)
+    .automatically_declare_parameters_from_overrides(true);
+
+    auto copied_options = non_default_options;
+    EXPECT_EQ(non_default_options.parameter_overrides(), copied_options.parameter_overrides());
+    EXPECT_EQ(non_default_options.use_global_arguments(), copied_options.use_global_arguments());
+    EXPECT_EQ(non_default_options.enable_rosout(), copied_options.enable_rosout());
+    EXPECT_EQ(non_default_options.use_intra_process_comms(),
+      copied_options.use_intra_process_comms());
+    EXPECT_EQ(non_default_options.enable_topic_statistics(),
+      copied_options.enable_topic_statistics());
+    EXPECT_EQ(non_default_options.start_parameter_services(),
+      copied_options.start_parameter_services());
+    EXPECT_EQ(non_default_options.enable_logger_service(), copied_options.enable_logger_service());
+    EXPECT_EQ(non_default_options.start_parameter_event_publisher(),
+      copied_options.start_parameter_event_publisher());
+    EXPECT_EQ(non_default_options.clock_type(), copied_options.clock_type());
+    EXPECT_EQ(non_default_options.clock_qos(), copied_options.clock_qos());
+    EXPECT_EQ(non_default_options.use_clock_thread(), copied_options.use_clock_thread());
+    EXPECT_EQ(non_default_options.parameter_event_qos(), copied_options.parameter_event_qos());
+    EXPECT_EQ(non_default_options.rosout_qos(), copied_options.rosout_qos());
+    EXPECT_EQ(non_default_options.allow_undeclared_parameters(),
+      copied_options.allow_undeclared_parameters());
+    EXPECT_EQ(non_default_options.automatically_declare_parameters_from_overrides(),
+      copied_options.automatically_declare_parameters_from_overrides());
+  }
 }
 
 TEST(TestNodeOptions, append_parameter_override) {
