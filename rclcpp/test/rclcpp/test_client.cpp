@@ -521,7 +521,7 @@ TEST_F(TestClient, rcl_client_response_subscription_get_actual_qos_error) {
 }
 
 TEST_F(TestClient, client_qos) {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") != std::string::npos) {
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
     GTEST_SKIP() << "Skipping. The tests is known to be flaky in the rmw_connextdds.";
   }
 
