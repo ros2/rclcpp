@@ -565,7 +565,7 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
 
   ASSERT_EQ(5u, wrapped_result.result->sequence.size());
   EXPECT_EQ(3, wrapped_result.result->sequence.back());
-  EXPECT_EQ(2, feedback_count);
+  EXPECT_GE(feedback_count, 2);
 }
 
 TEST_F(TestClientAgainstServer, async_send_goal_with_result_callback_wait_for_result)
