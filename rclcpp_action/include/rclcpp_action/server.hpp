@@ -30,6 +30,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
@@ -173,6 +174,17 @@ public:
   void
   set_on_ready_callback(std::function<void(size_t, int)> callback) override;
 
+  /// \internal
+  /// Set up a one-shot timer to trigger when a goal's expiration time is reached
+  /**
+   * Initializes a timer to trigger a callback when a goal expires,
+   * enabling cleanup of expired goals. The timer is removed after the callback
+   * is called
+   */
+  RCLCPP_ACTION_PUBLIC
+  void
+  setup_expire_goal_timer();
+
   /// Unset the callback to be called whenever the waitable becomes ready.
   RCLCPP_ACTION_PUBLIC
   void
@@ -187,6 +199,7 @@ protected:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     const std::string & name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_server_options_t & options);
@@ -330,6 +343,13 @@ protected:
   // Storage for std::function callbacks to keep them in scope
   std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
 
+  // Store elements required to create goal expiration timers
+  std::mutex expire_goal_timers_mutex_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
+  std::vector<std::pair<unsigned int, rclcpp::TimerBase::SharedPtr>> expire_goal_timers_;
+  rcl_duration_value_t goal_expire_timeout_;
+
   /// Set a callback to be called when the specified entity is ready
   RCLCPP_ACTION_PUBLIC
   void
@@ -396,6 +416,7 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     const std::string & name,
     const rcl_action_server_options_t & options,
     GoalCallback handle_goal,
@@ -406,6 +427,7 @@ public:
       node_base,
       node_clock,
       node_logging,
+      node_timers,
       name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
       options),

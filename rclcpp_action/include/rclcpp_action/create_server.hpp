@@ -24,6 +24,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 
 #include "rclcpp_action/server.hpp"
@@ -42,6 +43,7 @@ namespace rclcpp_action
  * \param[in] node_base_interface The node base interface of the corresponding node.
  * \param[in] node_clock_interface The node clock interface of the corresponding node.
  * \param[in] node_logging_interface The node logging interface of the corresponding node.
+ * \param[in] node_timers_interface The node timers interface of the corresponding node.
  * \param[in] node_waitables_interface The node waitables interface of the corresponding node.
  * \param[in] name The action name.
  * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
@@ -59,6 +61,7 @@ create_server(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_interface,
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
   const std::string & name,
   typename Server<ActionT>::GoalCallback handle_goal,
@@ -100,6 +103,7 @@ create_server(
       node_base_interface,
       node_clock_interface,
       node_logging_interface,
+      node_timers_interface,
       name,
       options,
       handle_goal,
@@ -142,6 +146,7 @@ create_server(
     node->get_node_base_interface(),
     node->get_node_clock_interface(),
     node->get_node_logging_interface(),
+    node->get_node_timers_interface(),
     node->get_node_waitables_interface(),
     name,
     handle_goal,

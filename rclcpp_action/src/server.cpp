@@ -29,6 +29,7 @@
 
 #include "action_msgs/msg/goal_status_array.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/create_timer.hpp"
 #include "rclcpp_action/server.hpp"
 
 using rclcpp_action::ServerBase;
@@ -117,12 +118,15 @@ ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
   const std::string & name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_server_options_t & options
 )
 : pimpl_(new ServerBaseImpl(
-      node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
+      node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action"))),
+      node_base_(node_base), node_timers_(node_timers),
+      goal_expire_timeout_(options.result_timeout.nanoseconds)
 {
   auto deleter = [node_base](rcl_action_server_t * ptr)
     {
@@ -645,6 +649,37 @@ ServerBase::execute_check_expired_goals()
   }
 }
 
+void ServerBase::setup_expire_goal_timer()
+{
+  std::lock_guard<std::mutex> lock(expire_goal_timers_mutex_);
+  unsigned int timer_id = expire_goal_timers_.empty() ? 1 : expire_goal_timers_.back().first + 1;
+
+  auto one_shot_timer_callback = [this, timer_id]() mutable {
+    execute_check_expired_goals();
+
+    std::lock_guard<std::mutex> lock_mutex(expire_goal_timers_mutex_);
+    auto it = std::find_if(
+      expire_goal_timers_.begin(), expire_goal_timers_.end(),
+      [timer_id](const std::pair<unsigned int, rclcpp::TimerBase::SharedPtr>& element) {
+        return element.first == timer_id;
+      });
+
+    if (it != expire_goal_timers_.end()) {
+      expire_goal_timers_.erase(it);
+    }
+  };
+
+  auto timer = rclcpp::create_wall_timer(
+    std::chrono::nanoseconds(goal_expire_timeout_),
+    std::function<void()>(one_shot_timer_callback),
+    nullptr,
+    node_base_.get(),
+    node_timers_.get()
+  );
+
+  expire_goal_timers_.emplace_back(timer_id, timer);
+}
+
 void
 ServerBase::publish_status()
 {
@@ -718,6 +753,10 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
 
   if (!goal_exists) {
     throw std::runtime_error("Asked to publish result for goal that does not exist");
+  }
+
+  if (on_ready_callback_set_) {
+    setup_expire_goal_timer();
   }
 
   {
