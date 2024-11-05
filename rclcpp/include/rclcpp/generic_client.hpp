@@ -36,8 +36,8 @@ namespace rclcpp
 class GenericClient : public ClientBase
 {
 public:
-  using Request = void *;   // Serialized data pointer of request message
-  using Response = void *;  // Serialized data pointer of response message
+  using Request = void *;   // Deserialized data pointer of request message
+  using Response = void *;  // Deserialized data pointer of response message
 
   using SharedResponse = std::shared_ptr<void>;
 
