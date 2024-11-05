@@ -15,6 +15,7 @@
 #ifndef RCLCPP_ACTION__SERVER_HPP_
 #define RCLCPP_ACTION__SERVER_HPP_
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -32,6 +33,7 @@
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
