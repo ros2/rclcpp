@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <set>
 
 #include "action_msgs/srv/cancel_goal.hpp"
 #include "rcl/event_callback.h"
@@ -174,16 +175,30 @@ public:
   void
   set_on_ready_callback(std::function<void(size_t, int)> callback) override;
 
+  /// Initialize the goal expiration timer.
   /// \internal
-  /// Set up a one-shot timer to trigger when a goal's expiration time is reached
-  /**
-   * Initializes a timer to trigger a callback when a goal expires,
-   * enabling cleanup of expired goals. The timer is removed after the callback
-   * is called
-   */
   RCLCPP_ACTION_PUBLIC
   void
-  setup_expire_goal_timer();
+  initialize_expire_goal_timer();
+
+  /// Set timer to trigger on the goal expiration time
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  set_expire_goal_timer();
+
+  /// Timer callback to handle goal expiration.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  expire_goal_timer_callback();
+
+  /// Calculates the time until the next goal expiration and updates the timer period.
+  /// Cancels the timer if no goals remain or invokes the callback directly if expiration is immediate.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  reset_timer_to_next_goal();
 
   /// Unset the callback to be called whenever the waitable becomes ready.
   RCLCPP_ACTION_PUBLIC
@@ -344,11 +359,12 @@ protected:
   std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
 
   // Store elements required to create goal expiration timers
-  std::mutex expire_goal_timers_mutex_;
+  std::mutex goal_entry_times_mutex_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
-  std::vector<std::pair<unsigned int, rclcpp::TimerBase::SharedPtr>> expire_goal_timers_;
-  rcl_duration_value_t goal_expire_timeout_;
+  std::set<std::chrono::steady_clock::time_point> goal_entry_times_;
+  rclcpp::TimerBase::SharedPtr expire_goal_timer_;
+  std::chrono::nanoseconds goal_expire_timeout_;
 
   /// Set a callback to be called when the specified entity is ready
   RCLCPP_ACTION_PUBLIC

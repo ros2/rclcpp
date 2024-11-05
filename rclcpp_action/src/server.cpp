@@ -126,7 +126,7 @@ ServerBase::ServerBase(
 : pimpl_(new ServerBaseImpl(
       node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action"))),
       node_base_(node_base), node_timers_(node_timers),
-      goal_expire_timeout_(options.result_timeout.nanoseconds)
+      goal_expire_timeout_(std::chrono::nanoseconds(options.result_timeout.nanoseconds))
 {
   auto deleter = [node_base](rcl_action_server_t * ptr)
     {
@@ -649,37 +649,6 @@ ServerBase::execute_check_expired_goals()
   }
 }
 
-void ServerBase::setup_expire_goal_timer()
-{
-  std::lock_guard<std::mutex> lock(expire_goal_timers_mutex_);
-  unsigned int timer_id = expire_goal_timers_.empty() ? 1 : expire_goal_timers_.back().first + 1;
-
-  auto one_shot_timer_callback = [this, timer_id]() mutable {
-    execute_check_expired_goals();
-
-    std::lock_guard<std::mutex> lock_mutex(expire_goal_timers_mutex_);
-    auto it = std::find_if(
-      expire_goal_timers_.begin(), expire_goal_timers_.end(),
-      [timer_id](const std::pair<unsigned int, rclcpp::TimerBase::SharedPtr>& element) {
-        return element.first == timer_id;
-      });
-
-    if (it != expire_goal_timers_.end()) {
-      expire_goal_timers_.erase(it);
-    }
-  };
-
-  auto timer = rclcpp::create_wall_timer(
-    std::chrono::nanoseconds(goal_expire_timeout_),
-    std::function<void()>(one_shot_timer_callback),
-    nullptr,
-    node_base_.get(),
-    node_timers_.get()
-  );
-
-  expire_goal_timers_.emplace_back(timer_id, timer);
-}
-
 void
 ServerBase::publish_status()
 {
@@ -740,6 +709,100 @@ ServerBase::publish_status()
 }
 
 void
+ServerBase::initialize_expire_goal_timer()
+{
+  expire_goal_timer_ = rclcpp::create_wall_timer(
+    std::chrono::nanoseconds(goal_expire_timeout_),
+    std::bind(&ServerBase::expire_goal_timer_callback, this),
+    nullptr,
+    node_base_.get(),
+    node_timers_.get()
+  );
+
+  expire_goal_timer_->cancel();
+}
+
+void
+ServerBase::expire_goal_timer_callback()
+{
+  {
+    std::lock_guard<std::mutex> lock(goal_entry_times_mutex_);
+    auto now = std::chrono::steady_clock::now();
+    auto it = goal_entry_times_.begin();
+
+    // Remove expired time entries for goals.
+    while (it != goal_entry_times_.end() && *it + goal_expire_timeout_ <= now) {
+      it = goal_entry_times_.erase(it);
+    }
+  }
+
+  execute_check_expired_goals();
+  reset_timer_to_next_goal();
+}
+
+void
+ServerBase::reset_timer_to_next_goal()
+{
+  std::lock_guard<std::mutex> lock(goal_entry_times_mutex_);
+
+  // If no more goals, cancel the timer.
+  if (goal_entry_times_.empty()) {
+    expire_goal_timer_->cancel();
+    return;
+  }
+
+  auto now = std::chrono::steady_clock::now();
+  auto earliest_entry_time = *goal_entry_times_.begin();
+  auto expiration_time = earliest_entry_time + goal_expire_timeout_;
+
+  // Calculate time until expiration of the next goal.
+  auto time_until_expiration = expiration_time > now
+                               ? expiration_time - now
+                               : std::chrono::nanoseconds(0);
+
+  // If the time is zero, directly call the callback.
+  if (time_until_expiration.count() == 0) {
+    expire_goal_timer_->cancel();
+    expire_goal_timer_callback();
+    return;
+  }
+
+  // Update the timer to the calculated next expiration time.
+  rcl_timer_t * rcl_timer_handle = const_cast<rcl_timer_t *>(expire_goal_timer_->get_timer_handle().get());
+  int64_t old_period;
+  rcl_ret_t ret = rcl_timer_exchange_period(rcl_timer_handle, time_until_expiration.count(), &old_period);
+
+  if (ret != RCL_RET_OK) {
+    RCLCPP_ERROR(pimpl_->logger_, "Failed to update expire timer period");
+  }
+
+  // Reset timer to count down from the new period.
+  expire_goal_timer_->reset();
+}
+
+void
+ServerBase::set_expire_goal_timer()
+{
+  {
+    std::lock_guard<std::mutex> lock(goal_entry_times_mutex_);
+    goal_entry_times_.insert(std::chrono::steady_clock::now());
+  }
+
+  // Only reset timer if it is canceled; otherwise, let the current timer run its full duration.
+  if (expire_goal_timer_->is_canceled()) {
+    rcl_timer_t * rcl_timer_handle = const_cast<rcl_timer_t *>(expire_goal_timer_->get_timer_handle().get());
+    int64_t old_period;
+    rcl_ret_t ret = rcl_timer_exchange_period(rcl_timer_handle, goal_expire_timeout_.count(), &old_period);
+
+    if (ret != RCL_RET_OK) {
+      RCLCPP_ERROR(pimpl_->logger_, "Failed to reset timer period to goal_expire_timeout_");
+    }
+
+    expire_goal_timer_->reset();
+  }
+}
+
+void
 ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_msg)
 {
   // Check that the goal exists
@@ -756,7 +819,7 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
   }
 
   if (on_ready_callback_set_) {
-    setup_expire_goal_timer();
+    set_expire_goal_timer();
   }
 
   {
@@ -827,6 +890,7 @@ ServerBase::set_on_ready_callback(std::function<void(size_t, int)> callback)
   set_callback_to_entity(EntityType::GoalService, callback);
   set_callback_to_entity(EntityType::ResultService, callback);
   set_callback_to_entity(EntityType::CancelService, callback);
+  initialize_expire_goal_timer();
 }
 
 void
