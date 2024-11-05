@@ -521,6 +521,10 @@ TEST_F(TestClient, rcl_client_response_subscription_get_actual_qos_error) {
 }
 
 TEST_F(TestClient, client_qos) {
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0) {
+    GTEST_SKIP() << "Skipping. The tests is known to be flaky in the rmw_connextdds.";
+  }
+
   rclcpp::ServicesQoS qos_profile;
   qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
   rclcpp::Duration duration(std::chrono::nanoseconds(1));
