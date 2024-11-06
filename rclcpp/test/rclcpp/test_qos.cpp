@@ -184,7 +184,7 @@ TEST(TestQoS, DerivedTypes) {
   EXPECT_EQ(rmw_qos_profile_parameter_events, parameter_events_qos.get_rmw_qos_profile());
 
   rclcpp::RosoutQoS rosout_qos;
-  EXPECT_EQ(rcl_qos_profile_rosout_default, rosout_qos.get_rmw_qos_profile());
+  EXPECT_EQ(rmw_qos_profile_rosout_default, rosout_qos.get_rmw_qos_profile());
 
   rclcpp::SystemDefaultsQoS system_default_qos;
   const rclcpp::KeepLast expected_initialization(RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT);
