@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 21.0.7 (2024-07-10)
 -------------------
 * fix: Fixed race condition in action server between is_ready and take"… (`#2531 <https://github.com/ros2/rclcpp/issues/2531>`_)

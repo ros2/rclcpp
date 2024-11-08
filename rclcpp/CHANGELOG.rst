@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* associated clocks should be protected by mutex. (`#2258 <https://github.com/ros2/rclcpp/issues/2258>`_)
+* Skip client_qos test (`#2658 <https://github.com/ros2/rclcpp/issues/2658>`_)
+* Use the same context for the specified node in rclcpp::spin functions. (`#2618 <https://github.com/ros2/rclcpp/issues/2618>`_)
+* Contributors: Cristóbal Arroyo, Tomoya Fujita
+
 21.0.7 (2024-07-10)
 -------------------
 * Add test creating two content filter topics with the same topic name (`#2550 <https://github.com/ros2/rclcpp/issues/2550>`_)

@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* add logger level service to lifecycle node. (`#2288 <https://github.com/ros2/rclcpp/issues/2288>`_)
+* Contributors: Tomoya Fujita
+
 21.0.7 (2024-07-10)
 -------------------
 * revert call shutdown in LifecycleNode destructor (Iron) (`#2559 <https://github.com/ros2/rclcpp/issues/2559>`_)
