@@ -501,6 +501,15 @@ if(TARGET test_executors_callback_group_behavior)
 endif()
 
 ament_add_gtest(
+  test_executors_cbg_destroyed
+  executors/test_executors_cbg_destroyed.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors_cbg_destroyed)
+  target_link_libraries(test_executors_cbg_destroyed ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(
   test_executors_intraprocess
   executors/test_executors_intraprocess.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
