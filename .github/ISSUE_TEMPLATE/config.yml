@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Robotics Stack Exchange
+    url: https://robotics.stackexchange.com/
+    about: Please ask and answer questions here.
+  - name: Documentation for Active ROS Distributions
+    url: https://docs.ros.org/
+    about: Please check our documentation here.
+  - name: ROS Discourse
+    url: https://discourse.ros.org/
+    about: Discussion on ROS and ROS-related things.
