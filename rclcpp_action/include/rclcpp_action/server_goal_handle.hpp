@@ -43,7 +43,7 @@ class ServerGoalHandleBase
 {
 public:
   /// Indicate if client has requested this goal be cancelled.
-  /// \return true if a cancelation request has been accepted for this goal.
+  /// \return true if a cancellation request has been accepted for this goal.
   RCLCPP_ACTION_PUBLIC
   bool
   is_canceling() const;
@@ -128,7 +128,7 @@ class Server;
  * accepted.
  * A `Server` will create an instance and give it to the user in their `handle_accepted` callback.
  *
- * Internally, this class is responsible for coverting between the C++ action type and generic
+ * Internally, this class is responsible for converting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
  */
 template<typename ActionT>
