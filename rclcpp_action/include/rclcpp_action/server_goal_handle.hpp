@@ -43,7 +43,7 @@ class ServerGoalHandleBase
 {
 public:
   /// Indicate if client has requested this goal be cancelled.
-  /// \return true if a cancelation request has been accepted for this goal.
+  /// \return true if a cancellation request has been accepted for this goal.
   RCLCPP_ACTION_PUBLIC
   bool
   is_canceling() const;
