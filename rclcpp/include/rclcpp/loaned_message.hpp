@@ -58,7 +58,7 @@ public:
    */
   LoanedMessage(
     const rclcpp::PublisherBase & pub,
-    std::allocator<MessageT> allocator)
+    MessageAllocator allocator)
   : pub_(pub),
     message_(nullptr),
     message_allocator_(std::move(allocator))
