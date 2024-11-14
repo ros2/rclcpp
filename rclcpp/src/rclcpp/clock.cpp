@@ -118,7 +118,7 @@ Clock::sleep_until(
     });
   // No longer need the shutdown callback when this function exits
   auto callback_remover = rcpputils::scope_exit(
-    [context, &shutdown_cb_handle]() {
+    [&context, &shutdown_cb_handle]() {
       context->remove_on_shutdown_callback(shutdown_cb_handle);
     });
 
