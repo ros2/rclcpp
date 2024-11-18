@@ -40,12 +40,12 @@ public:
    * The constructor of this class allocates memory for a given message type
    * and associates this with a given publisher.
    *
-   * Given the publisher instance, a case differentiation is being performaned
+   * Given the publisher instance, a case differentiation is being performed
    * which decides whether the underlying middleware is able to allocate the appropriate
    * memory for this message type or not.
    * In the case that the middleware can not loan messages, the passed in allocator instance
    * is being used to allocate the message within the scope of this class.
-   * Otherwise, the allocator is being ignored and the allocation is solely performaned
+   * Otherwise, the allocator is being ignored and the allocation is solely performed
    * in the underlying middleware with its appropriate allocation strategy.
    * The need for this arises as the user code can be written explicitly targeting a middleware
    * capable of loaning messages.
