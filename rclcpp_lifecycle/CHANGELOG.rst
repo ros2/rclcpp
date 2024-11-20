@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+29.1.0 (2024-11-20)
+-------------------
 * Fix error message in rclcpp_lifecycle::State::reset() (`#2647 <https://github.com/ros2/rclcpp/issues/2647>`_)
 * Contributors: Christophe Bedard
 
