@@ -2,6 +2,20 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* a couple of typo fixes in doc section for LoanedMessage. (`#2676 <https://github.com/ros2/rclcpp/issues/2676>`_)
+* Make sure callback_end tracepoint is triggered in AnyServiceCallback (`#2670 <https://github.com/ros2/rclcpp/issues/2670>`_)
+* Correct the incorrect comments in generic_client.hpp (`#2662 <https://github.com/ros2/rclcpp/issues/2662>`_)
+* Fix NodeOptions assignment operator (`#2656 <https://github.com/ros2/rclcpp/issues/2656>`_)
+* set QoS History KEEP_ALL explicitly for statistics publisher. (`#2650 <https://github.com/ros2/rclcpp/issues/2650>`_)
+* Fix test_intra_process_manager.cpp with rmw_zenoh_cpp (`#2653 <https://github.com/ros2/rclcpp/issues/2653>`_)
+* Fixed test_events_executors in zenoh (`#2643 <https://github.com/ros2/rclcpp/issues/2643>`_)
+* rmw_fastrtps supports service event gid uniqueness test. (`#2638 <https://github.com/ros2/rclcpp/issues/2638>`_)
+* print warning if event callback is not supported instead of passing exception. (`#2648 <https://github.com/ros2/rclcpp/issues/2648>`_)
+* Implement callback support of async_send_request for service generic client (`#2614 <https://github.com/ros2/rclcpp/issues/2614>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Chris Lalancette, Christophe Bedard, Romain DESILLE, Tomoya Fujita
+
 29.0.0 (2024-10-03)
 -------------------
 * Fixed test qos rmw zenoh (`#2639 <https://github.com/ros2/rclcpp/issues/2639>`_)

@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Fix documentation typo in server_goal_handle.hpp (`#2669 <https://github.com/ros2/rclcpp/issues/2669>`_)
+* Contributors: YR
+
 29.0.0 (2024-10-03)
 -------------------
 * Increase the timeout for the cppcheck on rclcpp_action. (`#2640 <https://github.com/ros2/rclcpp/issues/2640>`_)
