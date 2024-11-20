@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Fix error message in rclcpp_lifecycle::State::reset() (`#2647 <https://github.com/ros2/rclcpp/issues/2647>`_)
+* Contributors: Christophe Bedard
+
 29.0.0 (2024-10-03)
 -------------------
 * Shutdown the context before context's destructor is invoked in tests (`#2633 <https://github.com/ros2/rclcpp/issues/2633>`_)
