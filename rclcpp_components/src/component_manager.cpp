@@ -169,24 +169,60 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
 
   for (const auto & a : request->extra_arguments) {
     const rclcpp::Parameter extra_argument = rclcpp::Parameter::from_parameter_msg(a);
-    if (extra_argument.get_name() == "use_intra_process_comms") {
+    if (extra_argument.get_name() == "forward_global_arguments") {
       if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
         throw ComponentManagerException(
-                "Extra component argument 'use_intra_process_comms' must be a boolean");
-      }
-      options.use_intra_process_comms(extra_argument.get_value<bool>());
-    } else if (extra_argument.get_name() == "forward_global_arguments") {
-      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
-        throw ComponentManagerException(
-                "Extra component argument 'forward_global_arguments' must be a boolean");
+            "Extra component argument 'forward_global_arguments' must be a boolean");
       }
       options.use_global_arguments(extra_argument.get_value<bool>());
       if (extra_argument.get_value<bool>()) {
         RCLCPP_WARN(
-          get_logger(), "forward_global_arguments is true by default in nodes, but is not "
-          "recommended in a component manager. If true, this will cause this node's behavior "
-          "to be influenced by global arguments, not only those targeted at this node.");
+            get_logger(), "forward_global_arguments is true by default in nodes, but is not "
+            "recommended in a component manager. If true, this will cause this node's behavior "
+            "to be influenced by global arguments, not only those targeted at this node.");
       }
+    } else if (extra_argument.get_name() == "enable_rosout") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'enable_rosout' must be a boolean");
+      }
+      options.enable_rosout(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "use_intra_process_comms") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'use_intra_process_comms' must be a boolean");
+      }
+      options.use_intra_process_comms(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "enable_topic_statistics") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'enable_topic_statistics' must be a boolean");
+      }
+      options.enable_topic_statistics(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "start_parameter_services") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'start_parameter_services' must be a boolean");
+      }
+      options.start_parameter_services(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "start_parameter_event_publisher") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'start_parameter_event_publisher' must be a boolean");
+      }
+      options.start_parameter_event_publisher(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "use_clock_thread") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'use_clock_thread' must be a boolean");
+      }
+      options.use_clock_thread(extra_argument.get_value<bool>());
+    } else if (extra_argument.get_name() == "enable_logger_service") {
+      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+        throw ComponentManagerException(
+            "Extra component argument 'enable_logger_service' must be a boolean");
+      }
+      options.enable_logger_service(extra_argument.get_value<bool>());
     }
   }
 
