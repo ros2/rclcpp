@@ -31,10 +31,10 @@ namespace rclcpp
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class LoanedMessage
 {
+public:
   using MessageAllocatorTraits = rclcpp::allocator::AllocRebind<MessageT, AllocatorT>;
   using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
-public:
   /// Constructor of the LoanedMessage class.
   /**
    * The constructor of this class allocates memory for a given message type
@@ -57,7 +57,7 @@ public:
    */
   LoanedMessage(
     const rclcpp::PublisherBase & pub,
-    std::allocator<MessageT> allocator)
+    MessageAllocator allocator)
   : pub_(pub),
     message_(nullptr),
     message_allocator_(std::move(allocator))
