@@ -180,6 +180,25 @@ void test_components_api(bool use_dedicated_executor)
     EXPECT_EQ(result->unique_id, 5u);
   }
 
+  {
+    // invalid extra argument
+    auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
+    request->package_name = "rclcpp_components";
+    request->plugin_name = "test_rclcpp_components::TestComponentFoo";
+    request->node_name = "test_component_allow_undeclared_parameters";
+    rclcpp::Parameter extra_argument("allow_undeclared_parameters", rclcpp::ParameterValue(true));
+    request->extra_arguments.push_back(extra_argument.to_parameter_msg());
+
+    auto future = composition_client->async_send_request(request);
+    auto ret = exec->spin_until_future_complete(future, 5s);    // Wait for the result.
+    auto result = future.get();
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(result->success, false);
+    EXPECT_EQ(result->error_message,
+      "Extra component argument 'allow_undeclared_parameters' is not supported");
+    EXPECT_EQ(result->full_node_name, "");
+    EXPECT_EQ(result->unique_id, 0u);
+  }
 
   std::array<std::string, 8u> valid_extra_arguments = {
     "forward_global_arguments",
