@@ -843,3 +843,42 @@ TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
 
   EXPECT_EQ(server.use_count(), 1);
 }
+
+TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
+{
+  using ExecutorType = TypeParam;
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  // Create an executor
+  auto executor = std::make_shared<ExecutorType>();
+  executor->add_node(this->node);
+
+  // Start spinning
+  auto executor_thread = std::thread(
+    [executor]() {
+      executor->spin();
+    });
+
+  // As the problem is a race, we do this multiple times,
+  // to raise our chances of hitting the problem
+  for(size_t i = 0; i < 10; i++) {
+    auto cg = this->node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    auto timer = this->node->create_timer(1s, [] {}, cg);
+    // sleep a bit, so that the spin thread can pick up the callback group
+    // and add it to the executor
+    std::this_thread::sleep_for(5ms);
+
+    // At this point the callbackgroup should be used within the waitset of the executor
+    // as we leave the scope, the reference to cg will be dropped.
+    // If the executor has a race, we will experience a segfault at this point.
+  }
+
+  executor->cancel();
+  executor_thread.join();
+}
