@@ -92,9 +92,9 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
   request->set__int64_value(42);
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
 
   auto future = client->async_send_request(request);
   ASSERT_EQ(
@@ -163,9 +163,9 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
 TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
 {
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
 
   auto request = std::make_shared<BasicTypes::Request>();
   request->set__bool_value(true);
@@ -183,9 +183,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -200,9 +200,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -217,9 +217,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -235,9 +235,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
 TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_content)
 {
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
 
   auto request = std::make_shared<BasicTypes::Request>();
   request->set__bool_value(true);
@@ -259,9 +259,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -292,9 +292,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -325,9 +325,9 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
 
   future = client->async_send_request(request);
   ASSERT_EQ(

@@ -714,6 +714,12 @@ TYPED_TEST(TestExecutors, notifyTwiceWhileSpinning)
       sub1_msg_count++;
     });
 
+  // Wait for the subscription to be matched
+  size_t tries = 1000;
+  while (this->publisher->get_subscription_count() < 1 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
   // Publish a message and verify it's received
   this->publisher->publish(test_msgs::msg::Empty());
   auto start = std::chrono::steady_clock::now();
@@ -730,6 +736,12 @@ TYPED_TEST(TestExecutors, notifyTwiceWhileSpinning)
     [&sub2_msg_count](test_msgs::msg::Empty::ConstSharedPtr) {
       sub2_msg_count++;
     });
+
+  // Wait for the subscription to be matched
+  tries = 1000;
+  while (this->publisher->get_subscription_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
 
   // Publish a message and verify it's received by both subscriptions
   this->publisher->publish(test_msgs::msg::Empty());
