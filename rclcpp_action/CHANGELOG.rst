@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.11 (2024-11-25)
+--------------------
+* fix: Fixed race condition in action server between is_ready and take. Backport from iron `#2531 <https://github.com/ros2/rclcpp/issues/2531>`_ (`#2635 <https://github.com/ros2/rclcpp/issues/2635>`_)
+* Contributors: Camilo Camacho
+
 16.0.10 (2024-07-26)
 --------------------
 

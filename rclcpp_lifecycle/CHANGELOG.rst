@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+16.0.11 (2024-11-25)
+--------------------
+
 16.0.10 (2024-07-26)
 --------------------
 * revert call shutdown in LifecycleNode destructor (Humble) (`#2560 <https://github.com/ros2/rclcpp/issues/2560>`_)

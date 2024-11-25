@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.11 (2024-11-25)
+--------------------
+* Fix subscription.is_serialized() for callbacks with message info (`#1950 <https://github.com/ros2/rclcpp/issues/1950>`_) (`#2622 <https://github.com/ros2/rclcpp/issues/2622>`_)
+* Use the same context for the specified node in rclcpp::spin functions… (`#2618 <https://github.com/ros2/rclcpp/issues/2618>`_) (`#2620 <https://github.com/ros2/rclcpp/issues/2620>`_)
+* Contributors: mergify[bot], roscan-tech
+
 16.0.10 (2024-07-26)
 --------------------
 * Add test creating two content filter topics with the same topic name (`#2546 <https://github.com/ros2/rclcpp/issues/2546>`_) (`#2549 <https://github.com/ros2/rclcpp/issues/2549>`_) (`#2551 <https://github.com/ros2/rclcpp/issues/2551>`_)
