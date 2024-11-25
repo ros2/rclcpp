@@ -96,6 +96,13 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
   service->configure_introspection(
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
 
+  // Wait for the introspection to attach to our subscription
+  size_t tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
+
   auto future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
@@ -192,7 +199,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   // Wait for the introspection to attach to our subscription
   size_t tries = 1000;
   while (this->sub->get_publisher_count() < 1 && tries-- > 0) {
-     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   ASSERT_EQ(sub->get_publisher_count(), 1u);
 
@@ -216,7 +223,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   // Wait for the introspection to attach to our subscription
   tries = 1000;
   while (this->sub->get_publisher_count() < 1 && tries-- > 0) {
-     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   ASSERT_EQ(sub->get_publisher_count(), 1u);
 
@@ -240,7 +247,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   // Wait for the introspection to attach to our subscription
   tries = 1000;
   while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
-     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   ASSERT_EQ(sub->get_publisher_count(), 2u);
 
@@ -261,6 +268,13 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+
+  // Wait for the introspection to attach to our subscription
+  size_t tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   auto request = std::make_shared<BasicTypes::Request>();
   request->set__bool_value(true);
@@ -286,6 +300,13 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   service->configure_introspection(
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
 
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
+
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
@@ -319,6 +340,13 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   service->configure_introspection(
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
 
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
+
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
@@ -351,6 +379,13 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
     node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
