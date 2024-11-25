@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 29.1.0 (2024-11-20)
 -------------------
 * Fix documentation typo in server_goal_handle.hpp (`#2669 <https://github.com/ros2/rclcpp/issues/2669>`_)
