@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+29.2.0 (2024-11-25)
+-------------------
 * accept custom allocator for LoanedMessage. (`#2672 <https://github.com/ros2/rclcpp/issues/2672>`_)
 * Contributors: Tomoya Fujita
 
