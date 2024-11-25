@@ -715,10 +715,11 @@ TYPED_TEST(TestExecutors, notifyTwiceWhileSpinning)
     });
 
   // Wait for the subscription to be matched
-  size_t tries = 1000;
-  while (this->publisher->get_subscription_count() < 1 && tries-- > 0) {
+  size_t tries = 10000;
+  while (this->publisher->get_subscription_count() < 2 && tries-- > 0) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
+  ASSERT_EQ(this->publisher->get_subscription_count(), 2);
 
   // Publish a message and verify it's received
   this->publisher->publish(test_msgs::msg::Empty());
@@ -738,10 +739,11 @@ TYPED_TEST(TestExecutors, notifyTwiceWhileSpinning)
     });
 
   // Wait for the subscription to be matched
-  tries = 1000;
-  while (this->publisher->get_subscription_count() < 2 && tries-- > 0) {
+  tries = 10000;
+  while (this->publisher->get_subscription_count() < 3 && tries-- > 0) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
+  ASSERT_EQ(this->publisher->get_subscription_count(), 3);
 
   // Publish a message and verify it's received by both subscriptions
   this->publisher->publish(test_msgs::msg::Empty());
