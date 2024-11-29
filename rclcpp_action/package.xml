@@ -14,6 +14,7 @@
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
   <author email="jacob@openrobotics.org">Jacob Perron</author>
 
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
   <build_export_depend>rosidl_runtime_c</build_export_depend>
@@ -25,8 +26,6 @@
   <depend>rcl_action</depend>
   <depend>rcl</depend>
   <depend>rcpputils</depend>
-
-  <depend>ament_cmake</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
