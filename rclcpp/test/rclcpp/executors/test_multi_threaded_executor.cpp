@@ -105,6 +105,9 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
    Test that no tasks are starved
  */
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 104b5d5b (Updated test for multi-threaded executor starvation)
 /**
  * @brief Test case for checking starvation in MultiThreadedExecutor.
  *
@@ -118,6 +121,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
  * starve any of the timers and that both timers are executed in a balanced
  * manner.
  */
+<<<<<<< HEAD
 TEST_F(TestMultiThreadedExecutor, starvation) {
   rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(),
     2u);
@@ -170,62 +174,56 @@ TEST_F(TestMultiThreadedExecutor, starvation) {
   executor.spin();
 }
 =======
+=======
+>>>>>>> 104b5d5b (Updated test for multi-threaded executor starvation)
 TEST_F(TestMultiThreadedExecutor, starvation) {
   rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(),
                                                     2u);
-
+  // Create a node for the test
   std::shared_ptr<rclcpp::Node> node =
       std::make_shared<rclcpp::Node>("test_multi_threaded_executor_starvation");
 
+  // Atomic counters for the timers
   std::atomic_int timer_one_count{0};
   std::atomic_int timer_two_count{0};
 
-  rclcpp::TimerBase::SharedPtr timer_one;
-  rclcpp::TimerBase::SharedPtr timer_two;
+  // Callback for the timers
+  auto timer_one_callback = [](std::atomic_int &count_one,
+                               std::atomic_int &count_two) -> void {
+    std::cout << "Timer one callback executed. Count: " << count_one.load()
+              << std::endl;
 
-  auto timer_one_callback = [&timer_one_count, &timer_two_count]() {
-    std::cout << "Timer one callback executed. Count: "
-              << timer_one_count.load() << std::endl;
-
+    // Simulate work by busy-waiting for 100ms
     auto start_time = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start_time < 100ms) {
     }
 
-    timer_one_count++;
+    // Increment the counter for the first timer
+    count_one++;
 
-    auto diff = std::abs(timer_one_count - timer_two_count);
+    // Calculate the difference between the two counters
+    auto diff = std::abs(count_one - count_two);
 
     std::cout << "Difference in counts: " << diff << std::endl;
 
+    // If the difference exceeds 1, shut down and assert failure
     if (diff > 1) {
       rclcpp::shutdown();
       ASSERT_LE(diff, 1);
     }
   };
 
-  auto timer_two_callback = [&timer_one_count, &timer_two_count]() {
-    std::cout << "Timer two callback executed. Count: "
-              << timer_two_count.load() << std::endl;
+  // Create the timers with 0ms period
+  auto timer_one = node->create_wall_timer(
+      0ms, [timer_one_callback, &timer_one_count, &timer_two_count]() {
+        timer_one_callback(timer_one_count, timer_two_count);
+      });
+  auto timer_two = node->create_wall_timer(
+      0ms, [timer_one_callback, &timer_two_count, &timer_one_count]() {
+        timer_one_callback(timer_two_count, timer_one_count);
+      });
 
-    auto start_time = std::chrono::steady_clock::now();
-    while (std::chrono::steady_clock::now() - start_time < 100ms) {
-    }
-
-    timer_two_count++;
-
-    auto diff = std::abs(timer_one_count - timer_two_count);
-
-    std::cout << "Difference in counts: " << diff << std::endl;
-
-    if (diff > 1) {
-      rclcpp::shutdown();
-      ASSERT_LE(diff, 1);
-    }
-  };
-
-  timer_one = node->create_wall_timer(0ms, timer_one_callback);
-  timer_two = node->create_wall_timer(0ms, timer_two_callback);
-
+  // Add the node to the executor and spin
   executor.add_node(node);
   executor.spin();
 }
