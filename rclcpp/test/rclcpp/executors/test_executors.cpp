@@ -861,6 +861,7 @@ TYPED_TEST(TestExecutors, releaseOwnershipEntityAfterSpinningCancel)
 TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
 {
   using ExecutorType = TypeParam;
+<<<<<<< HEAD
 
   // Create an executor
   ExecutorType executor;
@@ -870,13 +871,36 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   auto executor_thread = std::thread(
     [&executor]() {
       executor.spin();
+=======
+  // rmw_connextdds doesn't support events-executor
+  if (
+    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
+  {
+    GTEST_SKIP();
+  }
+
+  // Create an executor
+  auto executor = std::make_shared<ExecutorType>();
+  executor->add_node(this->node);
+
+  // Start spinning
+  auto executor_thread = std::thread(
+    [executor]() {
+      executor->spin();
+>>>>>>> e9b10042 (fix(Executor): Fix segfault if callback group is deleted during rmw_wait (#2683))
     });
 
   // As the problem is a race, we do this multiple times,
   // to raise our chances of hitting the problem
+<<<<<<< HEAD
   for (size_t i = 0; i < 10; i++) {
     auto cg = this->node->create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
+=======
+  for(size_t i = 0; i < 10; i++) {
+    auto cg = this->node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+>>>>>>> e9b10042 (fix(Executor): Fix segfault if callback group is deleted during rmw_wait (#2683))
     auto timer = this->node->create_timer(1s, [] {}, cg);
     // sleep a bit, so that the spin thread can pick up the callback group
     // and add it to the executor
@@ -887,6 +911,10 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
     // If the executor has a race, we will experience a segfault at this point.
   }
 
+<<<<<<< HEAD
   executor.cancel();
+=======
+  executor->cancel();
+>>>>>>> e9b10042 (fix(Executor): Fix segfault if callback group is deleted during rmw_wait (#2683))
   executor_thread.join();
 }
