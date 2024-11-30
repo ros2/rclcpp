@@ -92,9 +92,16 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
   request->set__int64_value(42);
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+
+  // Wait for the introspection to attach to our subscription
+  size_t tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   auto future = client->async_send_request(request);
   ASSERT_EQ(
@@ -163,9 +170,11 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
 TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
 {
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+
+  ASSERT_EQ(sub->get_publisher_count(), 0);
 
   auto request = std::make_shared<BasicTypes::Request>();
   request->set__bool_value(true);
@@ -183,9 +192,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+
+  // Wait for the introspection to attach to our subscription
+  size_t tries = 1000;
+  while (this->sub->get_publisher_count() < 1 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 1u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -200,9 +216,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 1 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 1u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -217,9 +240,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -235,9 +265,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
 TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_content)
 {
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+
+  // Wait for the introspection to attach to our subscription
+  size_t tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   auto request = std::make_shared<BasicTypes::Request>();
   request->set__bool_value(true);
@@ -259,9 +296,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -292,9 +336,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
@@ -325,9 +376,16 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   events.clear();
 
   client->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
   service->configure_introspection(
-    node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+    node->get_clock(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+
+  // Wait for the introspection to attach to our subscription
+  tries = 1000;
+  while (this->sub->get_publisher_count() < 2 && tries-- > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_EQ(sub->get_publisher_count(), 2u);
 
   future = client->async_send_request(request);
   ASSERT_EQ(
