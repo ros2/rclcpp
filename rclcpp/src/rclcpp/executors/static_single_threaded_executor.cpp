@@ -110,10 +110,29 @@ StaticSingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 std::optional<rclcpp::WaitResult<rclcpp::WaitSet>>
 StaticSingleThreadedExecutor::collect_and_wait(std::chrono::nanoseconds timeout)
 {
+  // we need to make sure that callback groups don't get out of scope
+  // during the wait. As in jazzy, they are not covered by the DynamicStorage,
+  // we explicitly hold them here as a bugfix
+  std::vector<rclcpp::CallbackGroup::SharedPtr> cbgs;
+
   if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
     this->collect_entities();
   }
+
+  auto callback_groups = this->collector_.get_all_callback_groups();
+  cbgs.resize(callback_groups.size());
+  for(const auto & w_ptr : callback_groups) {
+    auto shr_ptr = w_ptr.lock();
+    if(shr_ptr) {
+      cbgs.push_back(std::move(shr_ptr));
+    }
+  }
+
   auto wait_result = wait_set_.wait(std::chrono::nanoseconds(timeout));
+
+  // drop references to the callback groups, before trying to execute anything
+  cbgs.clear();
+
   if (wait_result.kind() == WaitResultKind::Empty) {
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
