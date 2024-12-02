@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <rcpputils/compile_warnings.hpp>
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
@@ -41,9 +42,10 @@ public:
         clock->sleep_until(clock->now() + std::chrono::seconds(3));
         thread_finished = true;
       });
-
+    RCPPUTILS_DEPRECATION_WARNING_OFF_START
     // notify the clock, that the sleep shall be interrupted
     clock->cancel_sleep_or_wait();
+    RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 
     auto start_time = std::chrono::steady_clock::now();
     auto cur_time = start_time;
@@ -72,8 +74,10 @@ public:
     // make sure the thread is already sleeping before we send the cancel
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+    RCPPUTILS_DEPRECATION_WARNING_OFF_START
     // notify the clock, that the sleep shall be interrupted
     clock->cancel_sleep_or_wait();
+    RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 
     auto start_time = std::chrono::steady_clock::now();
     auto cur_time = start_time;
@@ -159,8 +163,10 @@ TEST_F(TestClockWakeup, no_wakeup_on_sim_time) {
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
   EXPECT_FALSE(thread_finished);
 
+  RCPPUTILS_DEPRECATION_WARNING_OFF_START
   // notify the clock, that the sleep shall be interrupted
   clock->cancel_sleep_or_wait();
+  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 
   auto start_time = std::chrono::steady_clock::now();
   auto cur_time = start_time;
