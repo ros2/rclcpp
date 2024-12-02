@@ -27,10 +27,10 @@
 using namespace std::chrono_literals;
 
 class TestMultiThreadedExecutor : public ::testing::Test {
- protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+protected:
+  static void SetUpTestCase() {rclcpp::init(0, nullptr);}
 
-  static void TearDownTestCase() { rclcpp::shutdown(); }
+  static void TearDownTestCase() {rclcpp::shutdown();}
 };
 
 constexpr std::chrono::milliseconds PERIOD_MS = 1000ms;
@@ -55,7 +55,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   bool yield_before_execute = true;
 
   rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(),
-                                                    2u, yield_before_execute);
+    2u, yield_before_execute);
 
   ASSERT_GT(executor.get_number_of_threads(), 1u);
 
@@ -71,30 +71,30 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   std::atomic_int timer_count{0};
 
   auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex,
-                         &last]() {
+      &last]() {
     // While this tolerance is a little wide, if the bug occurs, the next step
     // will happen almost instantly. The purpose of this test is not to measure
     // the jitter in timers, just assert that a reasonable amount of time has
     // passed.
-    rclcpp::Time now = system_clock.now();
-    timer_count++;
+      rclcpp::Time now = system_clock.now();
+      timer_count++;
 
-    if (timer_count > 5) {
-      executor.cancel();
-    }
-
-    {
-      std::lock_guard<std::mutex> lock(last_mutex);
-      double diff =
-          static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
-      last = now;
-
-      if (diff < PERIOD - TOLERANCE) {
+      if (timer_count > 5) {
         executor.cancel();
-        ASSERT_GT(diff, PERIOD - TOLERANCE);
       }
-    }
-  };
+
+      {
+        std::lock_guard<std::mutex> lock(last_mutex);
+        double diff =
+          static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
+        last = now;
+
+        if (diff < PERIOD - TOLERANCE) {
+          executor.cancel();
+          ASSERT_GT(diff, PERIOD - TOLERANCE);
+        }
+      }
+    };
 
   auto timer = node->create_wall_timer(PERIOD_MS, timer_callback, cbg);
   executor.add_node(node);
@@ -119,49 +119,49 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
  */
 TEST_F(TestMultiThreadedExecutor, starvation) {
   rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(),
-                                                    2u);
+    2u);
   // Create a node for the test
   std::shared_ptr<rclcpp::Node> node =
-      std::make_shared<rclcpp::Node>("test_multi_threaded_executor_starvation");
+    std::make_shared<rclcpp::Node>("test_multi_threaded_executor_starvation");
 
   // Atomic counters for the timers
   std::atomic_int timer_one_count{0};
   std::atomic_int timer_two_count{0};
 
   // Callback for the timers
-  auto timer_one_callback = [](std::atomic_int &count_one,
-                               std::atomic_int &count_two) -> void {
-    std::cout << "Timer one callback executed. Count: " << count_one.load()
-              << std::endl;
+  auto timer_one_callback = [](std::atomic_int & count_one,
+    std::atomic_int & count_two) -> void {
+      std::cout << "Timer one callback executed. Count: " << count_one.load()
+                << std::endl;
 
     // Simulate work by busy-waiting for 100ms
-    auto start_time = std::chrono::steady_clock::now();
-    while (std::chrono::steady_clock::now() - start_time < 100ms) {
-    }
+      auto start_time = std::chrono::steady_clock::now();
+      while (std::chrono::steady_clock::now() - start_time < 100ms) {
+      }
 
     // Increment the counter for the first timer
-    count_one++;
+      count_one++;
 
     // Calculate the difference between the two counters
-    auto diff = std::abs(count_one - count_two);
+      auto diff = std::abs(count_one - count_two);
 
-    std::cout << "Difference in counts: " << diff << std::endl;
+      std::cout << "Difference in counts: " << diff << std::endl;
 
     // If the difference exceeds 1, shut down and assert failure
-    if (diff > 1) {
-      rclcpp::shutdown();
-      ASSERT_LE(diff, 1);
-    }
-  };
+      if (diff > 1) {
+        rclcpp::shutdown();
+        ASSERT_LE(diff, 1);
+      }
+    };
 
   // Create the timers with 0ms period
   auto timer_one = node->create_wall_timer(
       0ms, [timer_one_callback, &timer_one_count, &timer_two_count]() {
-        timer_one_callback(timer_one_count, timer_two_count);
+      timer_one_callback(timer_one_count, timer_two_count);
       });
   auto timer_two = node->create_wall_timer(
       0ms, [timer_one_callback, &timer_two_count, &timer_one_count]() {
-        timer_one_callback(timer_two_count, timer_one_count);
+      timer_one_callback(timer_two_count, timer_one_count);
       });
 
   // Add the node to the executor and spin
