@@ -861,13 +861,6 @@ TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
 TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
 {
   using ExecutorType = TypeParam;
-  // rmw_connextdds doesn't support events-executor
-  if (
-    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
-    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
-  {
-    GTEST_SKIP();
-  }
 
   // Create an executor
   auto executor = std::make_shared<ExecutorType>();
