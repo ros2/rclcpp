@@ -862,6 +862,7 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
 {
   using ExecutorType = TypeParam;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   // Create an executor
   ExecutorType executor;
@@ -879,6 +880,8 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   {
     GTEST_SKIP();
   }
+=======
+>>>>>>> d7245365 (Re-enable executor test on rmw_connextdds. (#2693))
 
   // Create an executor
   ExecutorType executor;
