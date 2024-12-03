@@ -881,18 +881,24 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   }
 
   // Create an executor
-  auto executor = std::make_shared<ExecutorType>();
-  executor->add_node(this->node);
+  ExecutorType executor;
+  executor.add_node(this->node);
 
   // Start spinning
   auto executor_thread = std::thread(
+<<<<<<< HEAD
     [executor]() {
       executor->spin();
 >>>>>>> e9b10042 (fix(Executor): Fix segfault if callback group is deleted during rmw_wait (#2683))
+=======
+    [&executor]() {
+      executor.spin();
+>>>>>>> 3310f9ea (Fix warnings on Windows. (#2692))
     });
 
   // As the problem is a race, we do this multiple times,
   // to raise our chances of hitting the problem
+<<<<<<< HEAD
 <<<<<<< HEAD
   for (size_t i = 0; i < 10; i++) {
     auto cg = this->node->create_callback_group(
@@ -901,6 +907,11 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   for(size_t i = 0; i < 10; i++) {
     auto cg = this->node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 >>>>>>> e9b10042 (fix(Executor): Fix segfault if callback group is deleted during rmw_wait (#2683))
+=======
+  for (size_t i = 0; i < 10; i++) {
+    auto cg = this->node->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive);
+>>>>>>> 3310f9ea (Fix warnings on Windows. (#2692))
     auto timer = this->node->create_timer(1s, [] {}, cg);
     // sleep a bit, so that the spin thread can pick up the callback group
     // and add it to the executor
@@ -912,9 +923,13 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   executor.cancel();
 =======
   executor->cancel();
 >>>>>>> e9b10042 (fix(Executor): Fix segfault if callback group is deleted during rmw_wait (#2683))
+=======
+  executor.cancel();
+>>>>>>> 3310f9ea (Fix warnings on Windows. (#2692))
   executor_thread.join();
 }
