@@ -388,7 +388,7 @@ to_nanoseconds_helper(DurationT duration)
 //   - works nominally (it can execute entities)
 //   - it can execute multiple items at once
 //   - it does not wait for work to be available before returning
-TYPED_TEST(TestExecutors, spin_some)
+TYPED_TEST(TestExecutors, spinSome)
 {
   using ExecutorType = TypeParam;
 
@@ -480,7 +480,7 @@ TYPED_TEST(TestExecutors, spin_some)
 
 // The purpose of this test is to check that the ExecutorT.spin_some() method:
 //   - does not continue executing after max_duration has elapsed
-TYPED_TEST(TestExecutors, spin_some_max_duration)
+TYPED_TEST(TestExecutors, spinSomeMaxDuration)
 {
   using ExecutorType = TypeParam;
 
@@ -772,7 +772,7 @@ TEST(TestExecutors, testSpinWithNonDefaultContext)
   rclcpp::shutdown(non_default_context);
 }
 
-TYPED_TEST(TestExecutors, release_ownership_entity_after_spinning_cancel)
+TYPED_TEST(TestExecutors, releaseOwnershipEntityAfterSpinningCancel)
 {
   using ExecutorType = TypeParam;
   ExecutorType executor;
@@ -808,19 +808,20 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   }
 
   // Create an executor
-  auto executor = std::make_shared<ExecutorType>();
-  executor->add_node(this->node);
+  ExecutorType executor;
+  executor.add_node(this->node);
 
   // Start spinning
   auto executor_thread = std::thread(
-    [executor]() {
-      executor->spin();
+    [&executor]() {
+      executor.spin();
     });
 
   // As the problem is a race, we do this multiple times,
   // to raise our chances of hitting the problem
-  for(size_t i = 0; i < 10; i++) {
-    auto cg = this->node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  for (size_t i = 0; i < 10; i++) {
+    auto cg = this->node->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive);
     auto timer = this->node->create_timer(1s, [] {}, cg);
     // sleep a bit, so that the spin thread can pick up the callback group
     // and add it to the executor
@@ -831,6 +832,6 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
     // If the executor has a race, we will experience a segfault at this point.
   }
 
-  executor->cancel();
+  executor.cancel();
   executor_thread.join();
 }
