@@ -52,6 +52,12 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
+  spin([](const std::exception & e) {throw e;});
+}
+
+void
+MultiThreadedExecutor::spin(const std::function<void(const std::exception & e)> & exception_handler)
+{
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
@@ -61,12 +67,12 @@ MultiThreadedExecutor::spin()
   {
     std::lock_guard wait_lock{wait_mutex_};
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
-      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
+      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id, exception_handler);
       threads.emplace_back(func);
     }
   }
 
-  run(thread_id);
+  run(thread_id, exception_handler);
   for (auto & thread : threads) {
     thread.join();
   }
@@ -79,7 +85,9 @@ MultiThreadedExecutor::get_number_of_threads()
 }
 
 void
-MultiThreadedExecutor::run(size_t this_thread_number)
+MultiThreadedExecutor::run(
+  size_t this_thread_number,
+  const std::function<void(const std::exception & e)> & exception_handler)
 {
   (void)this_thread_number;
   while (rclcpp::ok(this->context_) && spinning.load()) {
@@ -97,7 +105,7 @@ MultiThreadedExecutor::run(size_t this_thread_number)
       std::this_thread::yield();
     }
 
-    execute_any_executable(any_exec);
+    execute_any_executable(any_exec, exception_handler);
 
     if (any_exec.callback_group &&
       any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
