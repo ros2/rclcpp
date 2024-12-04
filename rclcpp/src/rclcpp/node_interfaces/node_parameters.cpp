@@ -528,7 +528,7 @@ declare_parameter_helper(
     if (rclcpp::PARAMETER_NOT_SET == type) {
       throw rclcpp::exceptions::InvalidParameterTypeException{
               name,
-              "cannot declare a statically typed parameter with an uninitialized value"
+              "cannot declare a statically typed parameter with an uninitialized type"
       };
     }
     parameter_descriptor.type = static_cast<uint8_t>(type);
