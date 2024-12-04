@@ -647,13 +647,6 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted)
 TYPED_TEST(TestExecutors, testRaceConditionAddNode)
 {
   using ExecutorType = TypeParam;
-  // rmw_connextdds doesn't support events-executor
-  if (
-    std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
-    std::string(rmw_get_implementation_identifier()).find("rmw_connextdds") == 0)
-  {
-    GTEST_SKIP();
-  }
 
   // Spawn some threads to do some heavy work
   std::atomic<bool> should_cancel = false;
