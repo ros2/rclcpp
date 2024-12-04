@@ -241,12 +241,17 @@ endif()
 
 # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ref_wrapped_node
 #   node_interfaces/test_does_not_compile/get_node_topics_interface_const_ref_wrapped_node.cpp)
-# target_link_libraries(build_failure__get_node_topics_interface_const_ref_rclcpp_node
+# target_link_libraries(build_failure__get_node_topics_interface_const_ref_wrapped_node
 #   ${PROJECT_NAME})
 
 # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ptr_wrapped_node
 #   node_interfaces/test_does_not_compile/get_node_topics_interface_const_ptr_wrapped_node.cpp)
-# target_link_libraries(build_failure__get_node_topics_interface_const_ptr_rclcpp_node
+# target_link_libraries(build_failure__get_node_topics_interface_const_ptr_wrapped_node
+#   ${PROJECT_NAME})
+
+# rclcpp_add_build_failure_test(build_failure__pass_non_string_literal_to_logging_macro
+#   test_does_not_compile/pass_non_string_literal_to_logging_macro.cpp)
+# target_link_libraries(build_failure__pass_non_string_literal_to_logging_macro
 #   ${PROJECT_NAME})
 
 ament_add_gtest(test_node_global_args test_node_global_args.cpp)
