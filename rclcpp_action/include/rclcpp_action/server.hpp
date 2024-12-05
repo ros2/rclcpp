@@ -15,12 +15,14 @@
 #ifndef RCLCPP_ACTION__SERVER_HPP_
 #define RCLCPP_ACTION__SERVER_HPP_
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <set>
 
 #include "action_msgs/srv/cancel_goal.hpp"
 #include "rcl/event_callback.h"
@@ -30,6 +32,8 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
@@ -173,6 +177,31 @@ public:
   void
   set_on_ready_callback(std::function<void(size_t, int)> callback) override;
 
+  /// Initialize the goal expiration timer.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  initialize_expire_goal_timer();
+
+  /// Set timer to trigger on the goal expiration time
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  set_expire_goal_timer();
+
+  /// Timer callback to handle goal expiration.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  expire_goal_timer_callback();
+
+  /// Calculates the time until the next goal expiration and updates the timer period.
+  /// Cancels the timer if no goals remain or invokes the callback directly if expiration is immediate.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  reset_timer_to_next_goal();
+
   /// Unset the callback to be called whenever the waitable becomes ready.
   RCLCPP_ACTION_PUBLIC
   void
@@ -187,6 +216,7 @@ protected:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     const std::string & name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_server_options_t & options);
@@ -330,6 +360,14 @@ protected:
   // Storage for std::function callbacks to keep them in scope
   std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
 
+  // Store elements required to create goal expiration timers
+  std::mutex goal_entry_times_mutex_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
+  std::set<std::chrono::steady_clock::time_point> goal_entry_times_;
+  rclcpp::TimerBase::SharedPtr expire_goal_timer_;
+  std::chrono::nanoseconds goal_expire_timeout_;
+
   /// Set a callback to be called when the specified entity is ready
   RCLCPP_ACTION_PUBLIC
   void
@@ -396,6 +434,7 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     const std::string & name,
     const rcl_action_server_options_t & options,
     GoalCallback handle_goal,
@@ -406,6 +445,7 @@ public:
       node_base,
       node_clock,
       node_logging,
+      node_timers,
       name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
       options),
