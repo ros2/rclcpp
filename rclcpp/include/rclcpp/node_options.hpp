@@ -27,6 +27,7 @@
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 
 namespace rclcpp
 {
@@ -408,6 +409,16 @@ public:
   NodeOptions &
   allocator(rcl_allocator_t allocator);
 
+  /// Return the time source to be used.
+  RCLCPP_PUBLIC
+  const rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
+  time_source() const;
+
+  /// Set the time source to be used.
+  RCLCPP_PUBLIC
+  NodeOptions &
+  time_source(rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr time_source);
+
 private:
   // This is mutable to allow for a const accessor which lazily creates the node options instance.
   /// Underlying rcl_node_options structure.
@@ -456,6 +467,8 @@ private:
   bool automatically_declare_parameters_from_overrides_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
+
+  rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr time_source_ {nullptr};
 };
 
 }  // namespace rclcpp
