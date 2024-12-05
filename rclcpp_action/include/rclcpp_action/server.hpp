@@ -86,6 +86,12 @@ public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ServerBase();
 
+  /// Compute the name of the action by expanding the namespace.
+  /** \return The name of the action. */
+  RCLCPP_ACTION_PUBLIC
+  std::string
+  expand_action_name() const;
+
   // -------------
   // Waitables API
 
