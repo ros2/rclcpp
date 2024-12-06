@@ -86,6 +86,8 @@ public:
 
   rclcpp::Clock::SharedPtr clock_;
 
+  rclcpp::TimerBase::SharedPtr expire_timer_;
+
   // Do not declare this before clock_ as this depends on clock_(see #1526)
   std::shared_ptr<rcl_action_server_t> action_server_;
 
@@ -144,10 +146,17 @@ ServerBase::ServerBase(
   *(pimpl_->action_server_) = rcl_action_get_zero_initialized_server();
 
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
-  rcl_clock_t * rcl_clock = pimpl_->clock_->get_clock_handle();
 
-  rcl_ret_t ret = rcl_action_server_init(
-    pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &options);
+  // This timer callback will never be called, we are only interested in
+  // weather the timer itself becomes ready or not.
+  std::function<void()> timer_callback = [] () {};
+  pimpl_->expire_timer_ = std::make_shared<rclcpp::GenericTimer<decltype (timer_callback)>>(
+      node_clock->get_clock(), std::chrono::nanoseconds(options.result_timeout.nanoseconds),
+      std::move(timer_callback), node_base->get_context(), false);
+
+  rcl_ret_t ret = rcl_action_server_init2(
+      pimpl_->action_server_.get(), rcl_node, pimpl_->expire_timer_->get_timer_handle().get(),
+      type_support, name.c_str(), &options);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -913,4 +922,10 @@ ServerBase::clear_on_ready_callback()
   }
 
   entity_type_to_on_ready_callback_.clear();
+}
+
+std::vector<std::shared_ptr<rclcpp::TimerBase>>
+ServerBase::get_timers() const
+{
+  return {pimpl_->expire_timer_};
 }

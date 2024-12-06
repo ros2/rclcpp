@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <vector>
 
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/waitable.hpp"
@@ -145,6 +146,14 @@ public:
   RCLCPP_PUBLIC
   size_t
   get_number_of_ready_guard_conditions() override;
+
+  /// Returns the number of used Timers
+  /**
+   * Will always return an empty vector.
+   */
+  RCLCPP_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override;
 
 private:
   /// Callback to run when waitable executes

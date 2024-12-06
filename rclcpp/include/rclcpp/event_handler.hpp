@@ -20,6 +20,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
@@ -219,6 +220,13 @@ public:
       set_on_new_event_callback(nullptr, nullptr);
       on_new_event_callback_ = nullptr;
     }
+  }
+
+  RCLCPP_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override
+  {
+    return {};
   }
 
 protected:

@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "rcl/wait.h"
 #include "rmw/impl/cpp/demangle.hpp"
@@ -178,6 +179,13 @@ public:
   {
     std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
     on_new_message_callback_ = nullptr;
+  }
+
+  RCLCPP_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override
+  {
+    return {};
   }
 
 protected:

@@ -189,5 +189,12 @@ ExecutorNotifyWaitable::get_number_of_ready_guard_conditions()
   return notify_guard_conditions_.size();
 }
 
+std::vector<std::shared_ptr<rclcpp::TimerBase>>
+ExecutorNotifyWaitable::get_timers() const
+{
+  return {};
+}
+
+
 }  // namespace executors
 }  // namespace rclcpp

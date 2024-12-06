@@ -164,7 +164,7 @@ TEST_F(TestServer, construction_and_destruction_callback_group)
 TEST_F(TestServer, construction_and_destruction_server_init_error)
 {
   auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp_action", rcl_action_server_init, RCL_RET_ERROR);
+    "lib:rclcpp_action", rcl_action_server_init2, RCL_RET_ERROR);
   auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
 
   EXPECT_THROW(

@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "action_msgs/srv/cancel_goal.hpp"
 #include "rcl/event_callback.h"
@@ -177,6 +178,11 @@ public:
   RCLCPP_ACTION_PUBLIC
   void
   clear_on_ready_callback() override;
+
+  /// Returns all timers used by this waitable
+  RCLCPP_ACTION_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override;
 
   // End Waitables API
   // -----------------
