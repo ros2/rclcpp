@@ -15,22 +15,28 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <memory>
 #include <string>
+#include <memory>
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/utilities.hpp"
+#include "rclcpp/executors.hpp"
 
 using namespace std::chrono_literals;
 
-class TestMultiThreadedExecutor : public ::testing::Test {
+class TestMultiThreadedExecutor : public ::testing::Test
+{
 protected:
-  static void SetUpTestCase() {rclcpp::init(0, nullptr);}
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-  static void TearDownTestCase() {rclcpp::shutdown();}
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };
 
 constexpr std::chrono::milliseconds PERIOD_MS = 1000ms;
@@ -38,13 +44,12 @@ constexpr double PERIOD = PERIOD_MS.count() / 1000.0;
 constexpr double TOLERANCE = PERIOD / 4.0;
 
 /*
-   Test that timers are not taken multiple times when using reentrant callback
-   groups.
+   Test that timers are not taken multiple times when using reentrant callback groups.
  */
 TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 #ifdef __linux__
-  // This seems to be the most effective way to force the bug to happen on
-  // Linux. This is unnecessary on MacOS, since the default scheduler causes it.
+  // This seems to be the most effective way to force the bug to happen on Linux.
+  // This is unnecessary on MacOS, since the default scheduler causes it.
   struct sched_param param;
   param.sched_priority = 0;
   if (sched_setscheduler(0, SCHED_BATCH, &param) != 0) {
@@ -54,13 +59,13 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
   bool yield_before_execute = true;
 
-  rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(),
-    2u, yield_before_execute);
+  rclcpp::executors::MultiThreadedExecutor executor(
+    rclcpp::ExecutorOptions(), 2u, yield_before_execute);
 
   ASSERT_GT(executor.get_number_of_threads(), 1u);
 
-  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>(
-      "test_multi_threaded_executor_timer_over_take");
+  std::shared_ptr<rclcpp::Node> node =
+    std::make_shared<rclcpp::Node>("test_multi_threaded_executor_timer_over_take");
 
   auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
@@ -68,14 +73,12 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   std::mutex last_mutex;
   auto last = system_clock.now();
 
-  std::atomic_int timer_count{0};
+  std::atomic_int timer_count {0};
 
-  auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex,
-      &last]() {
-    // While this tolerance is a little wide, if the bug occurs, the next step
-    // will happen almost instantly. The purpose of this test is not to measure
-    // the jitter in timers, just assert that a reasonable amount of time has
-    // passed.
+  auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex, &last]() {
+      // While this tolerance is a little wide, if the bug occurs, the next step will
+      // happen almost instantly. The purpose of this test is not to measure the jitter
+      // in timers, just assert that a reasonable amount of time has passed.
       rclcpp::Time now = system_clock.now();
       timer_count++;
 
@@ -85,8 +88,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
       {
         std::lock_guard<std::mutex> lock(last_mutex);
-        double diff =
-          static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
+        double diff = static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
         last = now;
 
         if (diff < PERIOD - TOLERANCE) {
