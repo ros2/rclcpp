@@ -212,6 +212,9 @@ TEST_F(TestTimeSource, ROS_time_valid_attach_detach) {
   ts.attachNode(node);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
+  ts.attachClock(ros_clock);
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
+
   ts.detachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
