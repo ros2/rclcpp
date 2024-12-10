@@ -38,6 +38,11 @@ public:
   void clear_on_ready_callback() override {}
 
   std::shared_ptr<void> take_data_by_entity_id(size_t) override {return nullptr;}
+
+  std::vector<std::shared_ptr<rclcpp::TimerBase>> get_timers() const override
+  {
+    return {};
+  }
 };
 
 class TestNodeWaitables : public ::testing::Test
