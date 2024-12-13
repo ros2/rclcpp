@@ -436,7 +436,8 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
     node->create_publisher<test_msgs::msg::Empty>(
       "topic", rclcpp::QoS(0), options),
     std::invalid_argument(
-      "intraprocess communication on topic topic is not allowed with a zero qos history depth value"));
+      "intraprocess communication on topic 'topic' "
+      "is not allowed with a zero qos history depth value"));
 }
 
 TEST_F(TestPublisher, inter_process_publish_failures) {

@@ -157,13 +157,13 @@ public:
       // Register the publisher with the intra process manager.
       if (qos.history() != rclcpp::HistoryPolicy::KeepLast) {
         throw std::invalid_argument(
-                "intraprocess communication on topic " + topic +
-                " allowed only with keep last history qos policy");
+                "intraprocess communication on topic '" + topic +
+                "' allowed only with keep last history qos policy");
       }
       if (qos.depth() == 0) {
         throw std::invalid_argument(
-                "intraprocess communication on topic " + topic +
-                " is not allowed with a zero qos history depth value");
+                "intraprocess communication on topic '" + topic +
+                "' is not allowed with a zero qos history depth value");
       }
       if (qos.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
         buffer_ = rclcpp::experimental::create_intra_process_buffer<
