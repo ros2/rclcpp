@@ -725,9 +725,8 @@ TEST_F(TestPublisher, intra_process_transient_local) {
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
   struct IntraProcessCallback
   {
-    void callback_fun(size_t s)
+    void callback_fun(size_t)
     {
-      (void) s;
       called = true;
     }
     bool called = false;
@@ -785,4 +784,47 @@ TEST_F(TestPublisher, intra_process_transient_local) {
   EXPECT_FALSE(callback2.called);
   EXPECT_FALSE(callback3.called);
   EXPECT_FALSE(callback4.called);
+}
+
+TEST_F(TestPublisher, intra_process_inter_process_mix_transient_local) {
+  constexpr auto history_depth = 10u;
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> pub_options_ipm_disabled;
+  pub_options_ipm_disabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+
+  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> pub_options_ipm_enabled;
+  pub_options_ipm_enabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+
+  auto pub_ipm_enabled_transient_local_enabled = node->create_publisher<test_msgs::msg::Empty>(
+    "topic1",
+    rclcpp::QoS(rclcpp::KeepLast(history_depth)).transient_local(), pub_options_ipm_enabled);
+
+  test_msgs::msg::Empty msg;
+  pub_ipm_enabled_transient_local_enabled->publish(msg);
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
+  struct SubscriptionCallback
+  {
+    void callback_fun(size_t)
+    {
+      called = true;
+    }
+    bool called = false;
+  };
+  rclcpp::SubscriptionOptions sub_options_ipm_disabled;
+  sub_options_ipm_disabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+  rclcpp::SubscriptionOptions sub_options_ipm_enabled;
+  sub_options_ipm_enabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+  SubscriptionCallback intra_callback, inter_callback;
+  auto sub_ipm_disabled_transient_local_enabled = node->create_subscription<test_msgs::msg::Empty>(
+    "topic1",
+    rclcpp::QoS(rclcpp::KeepLast(history_depth)).transient_local(),
+    do_nothing, sub_options_ipm_disabled);
+  sub_ipm_disabled_transient_local_enabled->set_on_new_intra_process_message_callback(
+    std::bind(&SubscriptionCallback::callback_fun, &intra_callback, std::placeholders::_1));
+  sub_ipm_disabled_transient_local_enabled->set_on_new_message_callback(
+    std::bind(&SubscriptionCallback::callback_fun, &inter_callback, std::placeholders::_1));
+
+  EXPECT_FALSE(intra_callback.called);
+  EXPECT_TRUE(inter_callback.called);
 }
