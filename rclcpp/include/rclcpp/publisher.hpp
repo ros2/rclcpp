@@ -147,6 +147,7 @@ public:
     const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
   {
     // Topic is unused for now.
+    (void)qos;
     (void)options;
 
     // If needed, setup intra process communication.
@@ -154,24 +155,26 @@ public:
       auto context = node_base->get_context();
       // Get the intra process manager instance for this context.
       auto ipm = context->get_sub_context<rclcpp::experimental::IntraProcessManager>();
-      // Register the publisher with the intra process manager.
-      if (qos.history() != rclcpp::HistoryPolicy::KeepLast) {
+      // Check if the QoS is compatible with intra-process.
+      auto qos_profile = get_actual_qos();
+      if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
         throw std::invalid_argument(
                 "intraprocess communication on topic '" + topic +
                 "' allowed only with keep last history qos policy");
       }
-      if (qos.depth() == 0) {
+      if (qos_profile.depth() == 0) {
         throw std::invalid_argument(
                 "intraprocess communication on topic '" + topic +
                 "' is not allowed with a zero qos history depth value");
       }
-      if (qos.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
+      if (qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
         buffer_ = rclcpp::experimental::create_intra_process_buffer<
           ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter>(
           rclcpp::detail::resolve_intra_process_buffer_type(options_.intra_process_buffer_type),
-          qos,
+          qos_profile,
           std::make_shared<ROSMessageTypeAllocator>(ros_message_type_allocator_));
       }
+      // Register the publisher with the intra process manager.
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this(), buffer_);
       this->setup_intra_process(
         intra_process_publisher_id,
