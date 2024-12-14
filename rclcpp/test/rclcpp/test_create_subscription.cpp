@@ -102,9 +102,8 @@ TEST_F(TestCreateSubscription, create_with_intra_process_com) {
   rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
   ASSERT_NO_THROW(
   {
-    subscription =
-      rclcpp::create_subscription<test_msgs::msg::Empty>(
-        node, "topic_name", rclcpp::SystemDefaultsQoS(), callback, options);
+    subscription = rclcpp::create_subscription<test_msgs::msg::Empty>(
+      node, "topic_name", rclcpp::SystemDefaultsQoS(), callback, options);
   });
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());

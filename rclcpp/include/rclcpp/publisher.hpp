@@ -146,7 +146,6 @@ public:
     const rclcpp::QoS & qos,
     const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
   {
-    // Topic is unused for now.
     (void)qos;
     (void)options;
 
