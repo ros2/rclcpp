@@ -186,11 +186,13 @@ public:
       auto qos_profile = get_actual_qos();
       if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
         throw std::invalid_argument(
-                "intraprocess communication allowed only with keep last history qos policy");
+                "intraprocess communication on topic '" + topic_name +
+                "' allowed only with keep last history qos policy");
       }
       if (qos_profile.depth() == 0) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with 0 depth qos policy");
+                "intraprocess communication on topic '" + topic_name +
+                "' is not allowed with 0 depth qos policy");
       }
       if (qos_profile.durability() != rclcpp::DurabilityPolicy::Volatile) {
         throw std::invalid_argument(
