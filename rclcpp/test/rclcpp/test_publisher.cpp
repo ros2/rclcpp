@@ -725,10 +725,7 @@ TEST_F(TestPublisher, intra_process_transient_local) {
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
   struct IntraProcessCallback
   {
-    void callback_fun(size_t)
-    {
-      called = true;
-    }
+    void callback_fun(size_t) {called = true;}
     bool called = false;
   };
   rclcpp::SubscriptionOptions sub_options_ipm_disabled;
@@ -805,10 +802,7 @@ TEST_F(TestPublisher, intra_process_inter_process_mix_transient_local) {
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
   struct SubscriptionCallback
   {
-    void callback_fun(size_t)
-    {
-      called = true;
-    }
+    void callback_fun(size_t) {called = true;}
     bool called = false;
   };
   rclcpp::SubscriptionOptions sub_options_ipm_disabled;
