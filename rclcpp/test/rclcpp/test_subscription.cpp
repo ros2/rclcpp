@@ -354,9 +354,9 @@ TEST_F(TestSubscription, handle_loaned_message) {
   auto callback = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
   auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
 
-  test_msgs::msg::Empty msg;
+  auto msg = std::make_shared<test_msgs::msg::Empty>();
   rclcpp::MessageInfo message_info;
-  EXPECT_NO_THROW(sub->handle_loaned_message(&msg, message_info));
+  EXPECT_NO_THROW(sub->handle_loaned_message(msg, message_info));
 }
 
 /*
