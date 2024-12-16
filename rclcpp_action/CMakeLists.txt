@@ -79,6 +79,16 @@ if(BUILD_TESTING)
 
   add_subdirectory(test/benchmark)
 
+  ament_add_gtest(test_actions test/test_actions.cpp TIMEOUT 180)
+  ament_add_test_label(test_actions)
+  if(TARGET test_actions)
+    target_link_libraries(test_actions
+      ${PROJECT_NAME}
+      rclcpp::rclcpp
+      ${test_msgs_TARGETS}
+    )
+  endif()
+
   ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   ament_add_test_label(test_client mimick)
   if(TARGET test_client)
