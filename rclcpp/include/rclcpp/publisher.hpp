@@ -197,23 +197,12 @@ public:
                 "intraprocess communication on topic '" + topic +
                 "' is not allowed with a zero qos history depth value");
       }
-<<<<<<< HEAD
-      if (qos.durability() != rclcpp::DurabilityPolicy::Volatile) {
+      if (qos_profile.durability() != rclcpp::DurabilityPolicy::Volatile) {
         throw std::invalid_argument(
                 "intraprocess communication allowed only with volatile durability");
       }
+       // Register the publisher with the intra process manager.
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
-=======
-      if (qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
-        buffer_ = rclcpp::experimental::create_intra_process_buffer<
-          ROSMessageType, ROSMessageTypeAllocator, ROSMessageTypeDeleter>(
-          rclcpp::detail::resolve_intra_process_buffer_type(options_.intra_process_buffer_type),
-          qos_profile,
-          std::make_shared<ROSMessageTypeAllocator>(ros_message_type_allocator_));
-      }
-      // Register the publisher with the intra process manager.
-      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this(), buffer_);
->>>>>>> 016cfea (apply actual QoS from rmw to the IPC publisher. (#2707))
       this->setup_intra_process(
         intra_process_publisher_id,
         ipm);
