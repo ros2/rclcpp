@@ -389,6 +389,30 @@ TEST_F(TestClient, wait_for_action_server_rcl_errors)
   TearDownServer();
 }
 
+TEST_F(TestClient, action_name)
+{
+  {
+    // Default namespace
+    auto test_node = std::make_shared<rclcpp::Node>("test_node");
+    auto action_client = rclcpp_action::create_client<ActionType>(test_node, "my_action");
+    EXPECT_EQ(action_client->expand_action_name(), "/my_action");
+  }
+
+  {
+    // Custom namespace
+    auto test_node = std::make_shared<rclcpp::Node>("test_node", "test_namespace");
+    auto action_client = rclcpp_action::create_client<ActionType>(test_node, "my_action");
+    EXPECT_EQ(action_client->expand_action_name(), "/test_namespace/my_action");
+  }
+
+  {
+    // Action with absolute (global) name
+    auto test_node = std::make_shared<rclcpp::Node>("test_node", "test_namespace");
+    auto action_client = rclcpp_action::create_client<ActionType>(test_node, "/my_action");
+    EXPECT_EQ(action_client->expand_action_name(), "/my_action");
+  }
+}
+
 TEST_F(TestClient, is_ready) {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
