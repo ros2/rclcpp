@@ -177,6 +177,21 @@ TEST_F(TestPublisher, various_creation_signatures) {
 }
 
 /*
+   Testing publisher with intraprocess enabled and SystemDefaultQoS
+ */
+TEST_F(TestPublisher, test_publisher_with_system_default_qos) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+  // explicitly enable intra-process comm with publisher option
+  auto options = rclcpp::PublisherOptions();
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+  using test_msgs::msg::Empty;
+  ASSERT_NO_THROW(
+  {
+    auto publisher = node->create_publisher<Empty>("topic", rclcpp::SystemDefaultsQoS());
+  });
+}
+
+/*
    Testing publisher with intraprocess enabled and invalid QoS
  */
 TEST_P(TestPublisherInvalidIntraprocessQos, test_publisher_throws) {
@@ -418,12 +433,10 @@ TEST_F(TestPublisher, intra_process_publish_failures) {
       publisher->publish(std::move(loaned_msg)),
       std::runtime_error("loaned message is not valid"));
   }
-  RCLCPP_EXPECT_THROW_EQ(
-    node->create_publisher<test_msgs::msg::Empty>(
-      "topic", rclcpp::QoS(0), options),
-    std::invalid_argument(
-      "intraprocess communication on topic 'topic' "
-      "is not allowed with a zero qos history depth value"));
+  // a zero depth with KEEP_LAST doesn't make sense,
+  // this will be interpreted as SystemDefaultQoS by rclcpp.
+  EXPECT_NO_THROW(
+    node->create_publisher<test_msgs::msg::Empty>("topic", rclcpp::QoS(0), options));
 }
 
 TEST_F(TestPublisher, inter_process_publish_failures) {
