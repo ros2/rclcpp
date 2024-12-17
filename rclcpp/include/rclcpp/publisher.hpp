@@ -201,7 +201,7 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication allowed only with volatile durability");
       }
-       // Register the publisher with the intra process manager.
+      // Register the publisher with the intra process manager.
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
       this->setup_intra_process(
         intra_process_publisher_id,
