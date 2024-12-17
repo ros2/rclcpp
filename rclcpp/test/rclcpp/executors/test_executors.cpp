@@ -889,3 +889,121 @@ TYPED_TEST(TestExecutors, testRaceDropCallbackGroupFromSecondThread)
   executor.cancel();
   executor_thread.join();
 }
+
+TYPED_TEST(TestExecutors, dropSomeTimer)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+
+  bool timer1_works = false;
+  bool timer2_works = false;
+
+  auto timer1 = node->create_timer(std::chrono::milliseconds(10), [&timer1_works]() {
+        timer1_works = true;
+  });
+  auto timer2 = node->create_timer(std::chrono::milliseconds(10), [&timer2_works]() {
+        timer2_works = true;
+  });
+
+  executor.add_node(node);
+
+  // first let's make sure that both timers work
+  auto max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!timer1_works || !timer2_works) {
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  // delete timer 2. Note, the executor uses an unordered map internally, to order
+  // the entities added to the rcl waitset therefore the order is kind of undefined,
+  // and this test may be flaky. In case it triggers, something is most likely
+  // really broken.
+  timer2.reset();
+
+  timer1_works = false;
+  timer2_works = false;
+  max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!timer1_works && !timer2_works) {
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  ASSERT_TRUE(timer1_works || timer2_works);
+}
+
+TYPED_TEST(TestExecutors, dropSomeSubscription)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+
+  bool sub1_works = false;
+  bool sub2_works = false;
+
+  auto sub1 = node->create_subscription<test_msgs::msg::Empty>("/test_drop", 10,
+      [&sub1_works](const test_msgs::msg::Empty & msg) {
+        sub1_works = true;
+  });
+  auto sub2 = node->create_subscription<test_msgs::msg::Empty>("/test_drop", 10,
+      [&sub2_works](const test_msgs::msg::Empty & msg) {
+        sub2_works = true;
+  });
+
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("/test_drop", 10);
+
+  executor.add_node(node);
+
+  // first let's make sure that both timers work
+  auto max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!sub1_works || !sub2_works) {
+    pub->publish(test_msgs::msg::Empty());
+
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  // delete subscription 2. Note, the executor uses an unordered map internally, to order
+  // the entities added to the rcl waitset therefore the order is kind of undefined,
+  // and this test may be flaky. In case it triggers, something is most likely
+  // really broken.
+  sub2.reset();
+
+  sub1_works = false;
+  sub2_works = false;
+  max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!sub1_works && !sub2_works) {
+    pub->publish(test_msgs::msg::Empty());
+
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  ASSERT_TRUE(sub1_works || sub2_works);
+}
