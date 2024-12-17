@@ -93,3 +93,19 @@ TEST_F(TestCreateSubscription, create_with_statistics) {
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
 }
+
+TEST_F(TestCreateSubscription, create_with_intra_process_com) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  auto options = rclcpp::SubscriptionOptions();
+  options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
+  ASSERT_NO_THROW(
+  {
+    subscription = rclcpp::create_subscription<test_msgs::msg::Empty>(
+      node, "topic_name", rclcpp::SystemDefaultsQoS(), callback, options);
+  });
+  ASSERT_NE(nullptr, subscription);
+  EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
+}
