@@ -2,6 +2,92 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* apply actual QoS from rmw to the IPC publisher. (`#2707 <https://github.com/ros2/rclcpp/issues/2707>`_) (`#2712 <https://github.com/ros2/rclcpp/issues/2712>`_)
+  * apply actual QoS from rmw to the IPC publisher.
+  * address uncrustify warning.
+  ---------
+  (cherry picked from commit 016cfeac99e4b67f58abdf247e57f05b85c09ec4)
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Adding in topic name to logging on IPC issues (`#2706 <https://github.com/ros2/rclcpp/issues/2706>`_) (`#2710 <https://github.com/ros2/rclcpp/issues/2710>`_)
+  * Adding in topic name to logging on IPC issues
+  * Update test matching output logging
+  * adding in single quotes
+  ---------
+  (cherry picked from commit a13e16e2cbaeacb14ff31272d01cbb21bd8ac037)
+  Co-authored-by: Steve Macenski <stevenmacenski@gmail.com>
+* enable testRaceConditionAddNode for rmw_connextdds. (`#2698 <https://github.com/ros2/rclcpp/issues/2698>`_)
+* Re-enable executor test on rmw_connextdds. (`#2693 <https://github.com/ros2/rclcpp/issues/2693>`_) (`#2695 <https://github.com/ros2/rclcpp/issues/2695>`_)
+  It supports the events executor now, so re-enable the test.
+  (cherry picked from commit d7245365ed867db9b309ed3efbfb0391bda09bd5)
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+* Fix warnings on Windows. (backport `#2692 <https://github.com/ros2/rclcpp/issues/2692>`_) (`#2694 <https://github.com/ros2/rclcpp/issues/2694>`_)
+  * Fix warnings on Windows. (`#2692 <https://github.com/ros2/rclcpp/issues/2692>`_)
+  For reasons I admit I do not understand, the deprecation
+  warnings for StaticSingleThreadedExecutor on Windows
+  happen when we construct a shared_ptr for it in the tests.
+  If we construct a regular object, then it is fine.  Luckily
+  this test does not require a shared_ptr, so just make it
+  a regular object here, which rixes the warning.
+  While we are in here, make all of the tests camel case to
+  be consistent.
+  (cherry picked from commit 3310f9eaed967e0c18d17bb2f82d2def838bb7a5)
+  # Conflicts:
+  #	rclcpp/test/rclcpp/executors/test_executors.cpp
+  * resolve backport conflict.
+  ---------
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Omnibus fixes for running tests with Connext. (backport `#2684 <https://github.com/ros2/rclcpp/issues/2684>`_) (`#2690 <https://github.com/ros2/rclcpp/issues/2690>`_)
+  * Omnibus fixes for running tests with Connext. (`#2684 <https://github.com/ros2/rclcpp/issues/2684>`_)
+  * Omnibus fixes for running tests with Connext.
+  When running the tests with RTI Connext as the default
+  RMW, some of the tests are failing.  There are three
+  different failures fixed here:
+  1.  Setting the liveliness duration to a value smaller than
+  a microsecond causes Connext to throw an error.  Set it to
+  a millisecond.
+  2.  Using the SystemDefaultsQoS sets the QoS to KEEP_LAST 1.
+  Connext is somewhat slow in this regard, so it can be the case
+  that we are overwriting a previous service introspection event
+  with the next one.  Switch to the ServicesDefaultQoS in the test,
+  which ensures we will not lose events.
+  3.  Connext is slow to match publishers and subscriptions.  Thus,
+  when creating a subscription "on-the-fly", we should wait for the
+  publisher to match it before expecting the subscription to actually
+  receive data from it.
+  With these fixes in place, the test_client_common, test_generic_service,
+  test_service_introspection, and test_executors tests all pass for
+  me with rmw_connextdds.
+  * Fixes for executors.
+  * One more fix for services.
+  * More fixes for service_introspection.
+  * More fixes for introspection.
+  ---------
+  (cherry picked from commit 9984197c292d6c5ae0e7661aaea245ffb0fea057)
+  # Conflicts:
+  #	rclcpp/test/rclcpp/executors/test_executors.cpp
+  #	rclcpp/test/rclcpp/test_generic_service.cpp
+  * address backport merge conflicts.
+  ---------
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* fix(Executor): Fix segfault if callback group is deleted during rmw_wait (`#2682 <https://github.com/ros2/rclcpp/issues/2682>`_)
+* Fix NodeOptions assignment operator (`#2656 <https://github.com/ros2/rclcpp/issues/2656>`_) (`#2660 <https://github.com/ros2/rclcpp/issues/2660>`_)
+  * Fix NodeOptions assignment operator
+  Also copy the enable_logger_service\_ member during the assignment operation
+  * Add more checks for NodeOptions copy test
+  * Set non default values by avoiding the copy-assignement
+  Co-authored-by: Christophe Bedard <bedard.christophe@gmail.com>
+  (cherry picked from commit 9b654942f99f17850e0e95480958abdbb508bc00)
+  Co-authored-by: Romain DESILLE <r.desille@gmail.com>
+* set QoS History KEEP_ALL explicitly for statistics publisher. (`#2650 <https://github.com/ros2/rclcpp/issues/2650>`_) (`#2657 <https://github.com/ros2/rclcpp/issues/2657>`_)
+  * set QoS History KEEP_ALL explicitly for statistics publisher.
+  * test_subscription_options adjustment.
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Contributors: Cristóbal Arroyo, Tomoya Fujita, jmachowinski, mergify[bot]
+
 28.1.5 (2024-09-19)
 -------------------
 * backport fix events-executor warm-up bug and add unit-tests (`#2591 <https://github.com/ros2/rclcpp/issues/2591>`_) (`#2628 <https://github.com/ros2/rclcpp/issues/2628>`_)
