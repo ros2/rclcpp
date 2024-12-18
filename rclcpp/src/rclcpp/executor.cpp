@@ -84,7 +84,9 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 
-  wait_set_.add_waitable(notify_waitable_);
+  // we need to initially rebuild the collection,
+  // so that the notify_waitable_ is added
+  collect_entities();
 }
 
 Executor::~Executor()
