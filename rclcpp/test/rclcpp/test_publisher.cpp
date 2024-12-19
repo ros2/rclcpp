@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <future>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -800,12 +801,14 @@ TEST_F(TestPublisher, intra_process_inter_process_mix_transient_local) {
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
   struct SubscriptionCallback
   {
-    void callback_fun(size_t) {called = true;}
-    bool called = false;
+    void callback_fun(size_t) {called.set_value();}
+    std::promise<void> called;
   };
   rclcpp::SubscriptionOptions sub_options_ipm_disabled;
   sub_options_ipm_disabled.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
   SubscriptionCallback intra_callback, inter_callback;
+  std::future<void> intra_callback_future = intra_callback.called.get_future(),
+    inter_callback_future = inter_callback.called.get_future();
   auto sub_ipm_disabled_transient_local_enabled = node->create_subscription<test_msgs::msg::Empty>(
     "topic1",
     rclcpp::QoS(rclcpp::KeepLast(history_depth)).transient_local(),
@@ -814,7 +817,10 @@ TEST_F(TestPublisher, intra_process_inter_process_mix_transient_local) {
     std::bind(&SubscriptionCallback::callback_fun, &intra_callback, std::placeholders::_1));
   sub_ipm_disabled_transient_local_enabled->set_on_new_message_callback(
     std::bind(&SubscriptionCallback::callback_fun, &inter_callback, std::placeholders::_1));
-
-  EXPECT_FALSE(intra_callback.called);
-  EXPECT_TRUE(inter_callback.called);
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  EXPECT_EQ(executor.spin_until_future_complete(inter_callback_future,
+    std::chrono::milliseconds(100)), rclcpp::FutureReturnCode::SUCCESS);
+  EXPECT_EQ(executor.spin_until_future_complete(intra_callback_future,
+    std::chrono::milliseconds(0)), rclcpp::FutureReturnCode::TIMEOUT);
 }
