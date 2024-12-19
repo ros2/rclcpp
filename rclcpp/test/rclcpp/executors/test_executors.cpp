@@ -945,6 +945,59 @@ TYPED_TEST(TestExecutors, dropSomeTimer)
   ASSERT_TRUE(timer1_works || timer2_works);
 }
 
+TYPED_TEST(TestExecutors, dropSomeNodeWithTimer)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  auto node1 = std::make_shared<rclcpp::Node>("test_node_1");
+  auto node2 = std::make_shared<rclcpp::Node>("test_node_2");
+
+  bool timer1_works = false;
+  bool timer2_works = false;
+
+  auto timer1 = node1->create_timer(std::chrono::milliseconds(10), [&timer1_works]() {
+        timer1_works = true;
+  });
+  auto timer2 = node2->create_timer(std::chrono::milliseconds(10), [&timer2_works]() {
+        timer2_works = true;
+  });
+
+  executor.add_node(node1);
+  executor.add_node(node2);
+
+  // first let's make sure that both timers work
+  auto max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!timer1_works || !timer2_works) {
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  // delete node 1.
+  node1 = nullptr;
+
+  timer2_works = false;
+  max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!timer2_works) {
+    // let the executor pick up the node and the timer
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  ASSERT_TRUE(timer2_works);
+}
+
 TYPED_TEST(TestExecutors, dropSomeSubscription)
 {
   using ExecutorType = TypeParam;
@@ -1006,4 +1059,67 @@ TYPED_TEST(TestExecutors, dropSomeSubscription)
   }
 
   ASSERT_TRUE(sub1_works || sub2_works);
+}
+
+TYPED_TEST(TestExecutors, dropSomeNodesWithSubscription)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+  auto node1 = std::make_shared<rclcpp::Node>("test_node_1");
+  auto node2 = std::make_shared<rclcpp::Node>("test_node_2");
+
+  bool sub1_works = false;
+  bool sub2_works = false;
+
+  auto sub1 = node1->create_subscription<test_msgs::msg::Empty>("/test_drop", 10,
+      [&sub1_works](const test_msgs::msg::Empty & msg) {
+        sub1_works = true;
+  });
+  auto sub2 = node2->create_subscription<test_msgs::msg::Empty>("/test_drop", 10,
+      [&sub2_works](const test_msgs::msg::Empty & msg) {
+        sub2_works = true;
+  });
+
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("/test_drop", 10);
+
+  executor.add_node(node);
+  executor.add_node(node1);
+  executor.add_node(node2);
+
+  // first let's make sure that both subscribers work
+  auto max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!sub1_works || !sub2_works) {
+    pub->publish(test_msgs::msg::Empty());
+
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  // delete node 2.
+  node2 = nullptr;
+
+  sub1_works = false;
+  max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while(!sub1_works) {
+    pub->publish(test_msgs::msg::Empty());
+
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+    if(cur_time > max_end_time) {
+      return;
+    }
+  }
+
+  ASSERT_TRUE(sub1_works);
 }
