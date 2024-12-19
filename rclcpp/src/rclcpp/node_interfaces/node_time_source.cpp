@@ -46,7 +46,11 @@ NodeTimeSource::NodeTimeSource(
     node_logging_,
     node_clock_,
     node_parameters_);
-  time_source_.attachClock(node_clock_->get_clock());
+}
+
+void NodeTimeSource::attachClock(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock)
+{
+  time_source_.attachClock(clock->get_clock());
 }
 
 NodeTimeSource::~NodeTimeSource()

@@ -88,6 +88,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->automatically_declare_parameters_from_overrides_ =
       other.automatically_declare_parameters_from_overrides_;
     this->allocator_ = other.allocator_;
+    this->time_source_ = other.time_source_;
   }
   return *this;
 }
@@ -394,6 +395,19 @@ NodeOptions::allocator(rcl_allocator_t allocator)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->allocator_ = allocator;
+  return *this;
+}
+
+const rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
+NodeOptions::time_source() const
+{
+  return this->time_source_;
+}
+
+NodeOptions &
+NodeOptions::time_source(rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr time_source)
+{
+  this->time_source_ = time_source;
   return *this;
 }
 

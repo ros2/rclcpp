@@ -213,7 +213,9 @@ Node::Node(
       options.allow_undeclared_parameters(),
       options.automatically_declare_parameters_from_overrides()
     )),
-  node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
+  node_time_source_(
+    options.time_source() ? options.time_source() :
+    std::make_shared<rclcpp::node_interfaces::NodeTimeSource>(
       node_base_,
       node_topics_,
       node_graph_,
@@ -235,6 +237,7 @@ Node::Node(
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
+  node_time_source_->attachClock(node_clock_);
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
   rclcpp::detail::declare_qos_parameters(
