@@ -43,6 +43,7 @@
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/lifecycle_subscriber.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 namespace rclcpp_lifecycle
@@ -65,12 +66,11 @@ LifecycleNode::create_publisher(
   return pub;
 }
 
-// TODO(karsten1987): Create LifecycleSubscriber
 template<
   typename MessageT,
   typename CallbackT,
   typename AllocatorT,
-  typename SubscriptionT,
+  typename SubscriptionT = rclcpp_lifecycle::LifecycleSubscription<MessageT>,
   typename MessageMemoryStrategyT>
 std::shared_ptr<SubscriptionT>
 LifecycleNode::create_subscription(
@@ -80,13 +80,15 @@ LifecycleNode::create_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  return rclcpp::create_subscription<MessageT>(
+  auto sub = rclcpp::create_subscription<MessageT, CallbackT, AllocatorT, SubscriptionT>(
     *this,
     topic_name,
     qos,
     std::forward<CallbackT>(callback),
     options,
     msg_mem_strat);
+  this->add_managed_entity(sub);
+  return sub;
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
