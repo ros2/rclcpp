@@ -20,8 +20,8 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "rcl/event_callback.h"
 #include "rcl/subscription.h"
