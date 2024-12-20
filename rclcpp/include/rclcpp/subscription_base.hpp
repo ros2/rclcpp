@@ -232,7 +232,9 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  handle_loaned_message(void * loaned_message, const rclcpp::MessageInfo & message_info) = 0;
+  handle_loaned_message(
+    std::shared_ptr<void> loaned_message,
+    const rclcpp::MessageInfo & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */

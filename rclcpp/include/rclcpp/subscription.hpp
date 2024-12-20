@@ -332,7 +332,7 @@ public:
 
   void
   handle_loaned_message(
-    void * loaned_message,
+    std::shared_ptr<void> loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
     if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
@@ -341,10 +341,7 @@ public:
       return;
     }
 
-    auto typed_message = static_cast<ROSMessageType *>(loaned_message);
-    // message is loaned, so we have to make sure that the deleter does not deallocate the message
-    auto sptr = std::shared_ptr<ROSMessageType>(
-      typed_message, [](ROSMessageType * msg) {(void) msg;});
+    auto sptr = std::static_pointer_cast<ROSMessageType>(loaned_message);
 
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {
