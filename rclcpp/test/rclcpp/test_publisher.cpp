@@ -822,5 +822,5 @@ TEST_F(TestPublisher, intra_process_inter_process_mix_transient_local) {
   EXPECT_EQ(executor.spin_until_future_complete(inter_callback_future,
     std::chrono::milliseconds(100)), rclcpp::FutureReturnCode::SUCCESS);
   EXPECT_EQ(executor.spin_until_future_complete(intra_callback_future,
-    std::chrono::milliseconds(0)), rclcpp::FutureReturnCode::TIMEOUT);
+    std::chrono::milliseconds(100)), rclcpp::FutureReturnCode::TIMEOUT);
 }
