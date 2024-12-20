@@ -41,15 +41,11 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::GetParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::GetParameters::Response> response)
     {
-      try {
-        auto parameters = node_params->get_parameters(request->names);
-        for (const auto & param : parameters) {
-          response->values.push_back(param.get_value_message());
-        }
-      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
-        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
-      } catch (const rclcpp::exceptions::ParameterUninitializedException & ex) {
-        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
+      response->values.reserve(request->names.size());
+      for (const auto & name : request->names) {
+        rclcpp::Parameter value;
+        node_params->get_parameter(name, value);
+        response->values.push_back(value.get_value_message());
       }
     },
     qos_profile, nullptr);
@@ -62,15 +58,11 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Request> request,
       std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Response> response)
     {
-      try {
-        auto types = node_params->get_parameter_types(request->names);
-        std::transform(
-          types.cbegin(), types.cend(),
-          std::back_inserter(response->types), [](const uint8_t & type) {
-            return static_cast<rclcpp::ParameterType>(type);
-          });
-      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
-        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameter types: %s", ex.what());
+      response->types.reserve(request->names.size());
+      for (const auto & name : request->names) {
+        rclcpp::Parameter value;
+        node_params->get_parameter(name, value);
+        response->types.push_back(value.get_type());
       }
     },
     qos_profile, nullptr);
@@ -93,7 +85,7 @@ ParameterService::ParameterService(
         } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
           RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
           result.successful = false;
-          result.reason = ex.what();
+          result.reason = rcl_interfaces::msg::SetParametersResult::REASON_UNDECLARED_NOT_ALLOWED;
         }
         response->results.push_back(result);
       }
@@ -135,11 +127,28 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Response> response)
     {
-      try {
-        auto descriptors = node_params->describe_parameters(request->names);
-        response->descriptors = descriptors;
-      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
-        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to describe parameters: %s", ex.what());
+      // TODO(@mxgrey): This could have fewer heap allocations if
+      // NodeParametersInterface had a singular describe_parameter function or
+      // if describe_parameters could accept an argument to behave as if
+      // allow_undeclared_ is true.
+      for (const auto & name : request->names) {
+        bool description_found = false;
+        try {
+          auto description = node_params->describe_parameters({name});
+          if (!description.empty()) {
+            description_found = true;
+            response->descriptors.push_back(std::move(description.front()));
+          }
+        } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+          // If the parameter was not declared then we will just push_back a
+          // default-initialized descriptor.
+        }
+
+        if (!description_found) {
+          auto default_description = rcl_interfaces::msg::ParameterDescriptor();
+          default_description.name = name;
+          response->descriptors.push_back(default_description);
+        }
       }
     },
     qos_profile, nullptr);
