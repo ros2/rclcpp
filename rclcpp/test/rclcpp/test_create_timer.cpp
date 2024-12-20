@@ -194,11 +194,51 @@ TEST(TestCreateTimer, timer_function_pointer)
   rclcpp::shutdown();
 }
 
+TEST(TestCreateTimer, timer_triggered_twice)
+{
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("test_timer_triggered_twice");
+
+  std::atomic<int> callback_counter{0};
+
+  rclcpp::TimerBase::SharedPtr timer;
+  timer = rclcpp::create_timer(
+    node,
+    node->get_clock(),
+    rclcpp::Duration(0ms),
+    [&callback_counter]() {
+      callback_counter += 1;
+    }, nullptr, true, 2);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(1, callback_counter);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(2, callback_counter);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(2, callback_counter);
+  ASSERT_TRUE(timer->is_canceled());
+
+  timer->reset();
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(3, callback_counter);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(4, callback_counter);
+
+  rclcpp::spin_some(node);
+  ASSERT_EQ(4, callback_counter);
+  ASSERT_TRUE(timer->is_canceled());
+
+  rclcpp::shutdown();
+}
+
 TEST(TestCreateTimer, timer_without_autostart)
 {
   rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>("test_create_timer_node");
-
   rclcpp::TimerBase::SharedPtr timer;
   timer = rclcpp::create_timer(
     node,

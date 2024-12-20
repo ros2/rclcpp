@@ -107,6 +107,7 @@ TimerBase::reset()
     std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
     ret = rcl_timer_reset(timer_handle_.get());
   }
+  callbacks_called_ = 0;
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't reset timer");
   }
