@@ -222,6 +222,27 @@ ClientBase::action_server_is_ready() const
   return is_ready;
 }
 
+std::string
+ClientBase::expand_action_name() const
+{
+  char * output_cstr = NULL;
+  auto allocator = rcl_get_default_allocator();
+  // Call `rcl_node_resolve_name with `only_expand` mode: remapping action names is not supported
+  rcl_ret_t ret = rcl_node_resolve_name(
+    this->pimpl_->node_handle.get(),
+    rcl_action_client_get_action_name(this->pimpl_->client_handle.get()),
+    allocator,
+    /*is_service*/ true,
+    /*only_expand*/ true,
+    &output_cstr);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to resolve name", rcl_get_error_state());
+  }
+  std::string output{output_cstr};
+  allocator.deallocate(output_cstr, allocator.state);
+  return output;
+}
+
 bool
 ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
 {

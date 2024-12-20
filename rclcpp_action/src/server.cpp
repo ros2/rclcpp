@@ -86,6 +86,8 @@ public:
 
   rclcpp::Clock::SharedPtr clock_;
 
+  // node_handle_ must be destroyed after client_handle to prevent memory leak
+  std::shared_ptr<rcl_node_t> node_handle_{nullptr};
   // Do not declare this before clock_ as this depends on clock_(see #1526)
   std::shared_ptr<rcl_action_server_t> action_server_;
 
@@ -138,6 +140,7 @@ ServerBase::ServerBase(
       }
     };
 
+  pimpl_->node_handle_ = node_base->get_shared_rcl_node_handle();
   pimpl_->action_server_.reset(new rcl_action_server_t, deleter);
   *(pimpl_->action_server_) = rcl_action_get_zero_initialized_server();
 
@@ -166,6 +169,27 @@ ServerBase::ServerBase(
 
 ServerBase::~ServerBase()
 {
+}
+
+std::string
+ServerBase::expand_action_name() const
+{
+  char * output_cstr = NULL;
+  auto allocator = rcl_get_default_allocator();
+  // Call `rcl_node_resolve_name with `only_expand` mode: remapping action names is not supported
+  rcl_ret_t ret = rcl_node_resolve_name(
+    this->pimpl_->node_handle_.get(),
+    rcl_action_server_get_action_name(this->pimpl_->action_server_.get()),
+    allocator,
+    /*is_service*/ true,
+    /*only_expand*/ true,
+    &output_cstr);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to resolve name", rcl_get_error_state());
+  }
+  std::string output{output_cstr};
+  allocator.deallocate(output_cstr, allocator.state);
+  return output;
 }
 
 size_t

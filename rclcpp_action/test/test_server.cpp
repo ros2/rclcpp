@@ -226,6 +226,45 @@ TEST_F(TestServer, construction_and_destruction_sub_node)
   });
 }
 
+TEST_F(TestServer, action_name)
+{
+  auto create_server_func = [](std::shared_ptr<rclcpp::Node> node, const std::string & action_name)
+    {
+      using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+      auto as = rclcpp_action::create_server<Fibonacci>(
+        node, action_name,
+        [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+          return rclcpp_action::GoalResponse::REJECT;
+        },
+        [](std::shared_ptr<GoalHandle>) {
+          return rclcpp_action::CancelResponse::REJECT;
+        },
+        [](std::shared_ptr<GoalHandle>) {});
+      return as;
+    };
+
+  {
+    // Default namespace
+    auto test_node = std::make_shared<rclcpp::Node>("test_node");
+    auto action_server = create_server_func(test_node, "my_action");
+    EXPECT_EQ(action_server->expand_action_name(), "/my_action");
+  }
+
+  {
+    // Custom namespace
+    auto test_node = std::make_shared<rclcpp::Node>("test_node", "test_namespace");
+    auto action_server = create_server_func(test_node, "my_action");
+    EXPECT_EQ(action_server->expand_action_name(), "/test_namespace/my_action");
+  }
+
+  {
+    // Action with absolute (global) name
+    auto test_node = std::make_shared<rclcpp::Node>("test_node", "test_namespace");
+    auto action_server = create_server_func(test_node, "/my_action");
+    EXPECT_EQ(action_server->expand_action_name(), "/my_action");
+  }
+}
+
 TEST_F(TestServer, handle_goal_called)
 {
   auto node = std::make_shared<rclcpp::Node>("handle_goal_node", "/rclcpp_action/handle_goal");
