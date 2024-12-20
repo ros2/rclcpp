@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix transient local IPC publish  (`#2708 <https://github.com/ros2/rclcpp/issues/2708>`_)
+* apply actual QoS from rmw to the IPC publisher. (`#2707 <https://github.com/ros2/rclcpp/issues/2707>`_)
+* Adding in topic name to logging on IPC issues (`#2706 <https://github.com/ros2/rclcpp/issues/2706>`_)
+* fix TestTimeSource.ROS_time_valid_attach_detach. (`#2700 <https://github.com/ros2/rclcpp/issues/2700>`_)
+* Update docstring for `rclcpp::Node::now()` (`#2696 <https://github.com/ros2/rclcpp/issues/2696>`_)
+* Re-enable executor test on rmw_connextdds. (`#2693 <https://github.com/ros2/rclcpp/issues/2693>`_)
+* Fix warnings on Windows. (`#2692 <https://github.com/ros2/rclcpp/issues/2692>`_)
+* Omnibus fixes for running tests with Connext. (`#2684 <https://github.com/ros2/rclcpp/issues/2684>`_)
+* fix(Executor): Fix segfault if callback group is deleted during rmw_wait (`#2683 <https://github.com/ros2/rclcpp/issues/2683>`_)
+* Contributors: Chris Lalancette, Jeffery Hsu, Patrick Roncagliolo, Steve Macenski, Tomoya Fujita, jmachowinski
+
 29.2.0 (2024-11-25)
 -------------------
 * accept custom allocator for LoanedMessage. (`#2672 <https://github.com/ros2/rclcpp/issues/2672>`_)

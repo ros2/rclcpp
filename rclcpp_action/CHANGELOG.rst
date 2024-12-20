@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Make ament_cmake a buildtool dependency (`#2689 <https://github.com/ros2/rclcpp/issues/2689>`_)
+* Contributors: Nathan Wiebe Neufeldt
+
 29.2.0 (2024-11-25)
 -------------------
 

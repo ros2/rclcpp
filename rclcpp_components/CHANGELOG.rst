@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add parsing for rest of obvious boolean extra arguments and throw for unsupported ones (`#2685 <https://github.com/ros2/rclcpp/issues/2685>`_)
+* Contributors: rcp1
+
 29.2.0 (2024-11-25)
 -------------------
 
