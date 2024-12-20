@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+29.3.0 (2024-12-20)
+-------------------
 * Fix transient local IPC publish  (`#2708 <https://github.com/ros2/rclcpp/issues/2708>`_)
 * apply actual QoS from rmw to the IPC publisher. (`#2707 <https://github.com/ros2/rclcpp/issues/2707>`_)
 * Adding in topic name to logging on IPC issues (`#2706 <https://github.com/ros2/rclcpp/issues/2706>`_)

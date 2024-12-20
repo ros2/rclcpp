@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+29.3.0 (2024-12-20)
+-------------------
 * Update docstring for `rclcpp::Node::now()` (`#2696 <https://github.com/ros2/rclcpp/issues/2696>`_)
 * Contributors: Patrick Roncagliolo
 
