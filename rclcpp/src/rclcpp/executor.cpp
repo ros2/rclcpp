@@ -66,7 +66,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   notify_waitable_(std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
       [this]() {
         this->entities_need_rebuild_.store(true);
-      })),
+      }, options.context)),
   entities_need_rebuild_(true),
   collector_(notify_waitable_),
   wait_set_({}, {}, {}, {}, {}, {}, options.context),
@@ -84,7 +84,9 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 
-  wait_set_.add_waitable(notify_waitable_);
+  // we need to initially rebuild the collection,
+  // so that the notify_waitable_ is added
+  collect_entities();
 }
 
 Executor::~Executor()
@@ -729,32 +731,15 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Clear any previous wait result
   this->wait_result_.reset();
 
-  // we need to make sure that callback groups don't get out of scope
-  // during the wait. As in jazzy, they are not covered by the DynamicStorage,
-  // we explicitly hold them here as a bugfix
-  std::vector<rclcpp::CallbackGroup::SharedPtr> cbgs;
-
   {
     std::lock_guard<std::mutex> guard(mutex_);
 
     if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
       this->collect_entities();
     }
-
-    auto callback_groups = this->collector_.get_all_callback_groups();
-    cbgs.resize(callback_groups.size());
-    for(const auto & w_ptr : callback_groups) {
-      auto shr_ptr = w_ptr.lock();
-      if(shr_ptr) {
-        cbgs.push_back(std::move(shr_ptr));
-      }
-    }
   }
 
   this->wait_result_.emplace(wait_set_.wait(timeout));
-
-  // drop references to the callback groups, before trying to execute anything
-  cbgs.clear();
 
   if (!this->wait_result_ || this->wait_result_->kind() == WaitResultKind::Empty) {
     RCUTILS_LOG_WARN_NAMED(
