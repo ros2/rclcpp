@@ -323,6 +323,12 @@ PublisherBase::can_loan_messages() const
 }
 
 bool
+PublisherBase::is_intra_process_comm_enabled() const
+{
+  return intra_process_is_enabled_;
+}
+
+bool
 PublisherBase::operator==(const rmw_gid_t & gid) const
 {
   return *this == &gid;

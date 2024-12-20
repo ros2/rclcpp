@@ -182,6 +182,15 @@ public:
   bool
   can_loan_messages() const;
 
+  /// Check if the publisher has intra-process comms enabled
+  /**
+   * This is just a getter method for the intra-process publisher state.
+   * \return True if intra-process is enabled on the publisher.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_intra_process_comm_enabled() const;
+
   /// Compare this publisher to a gid.
   /**
    * Note that this function calls the next function.
