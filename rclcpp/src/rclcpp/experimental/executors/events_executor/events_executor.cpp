@@ -130,6 +130,35 @@ EventsExecutor::spin()
 }
 
 void
+EventsExecutor::spin(const std::function<void(const std::exception & e)> & exception_handler)
+{
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin() called while already spinning");
+  }
+  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+
+  timers_manager_->start(exception_handler);
+  RCPPUTILS_SCOPE_EXIT(timers_manager_->stop(); );
+
+  while (rclcpp::ok(context_) && spinning.load()) {
+    // Wait until we get an event
+    ExecutorEvent event;
+    bool has_event = events_queue_->dequeue(event);
+    if (has_event) {
+      try {
+        this->execute_event(event);
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("rclcpp"),
+          "Exception while spinning : " << e.what());
+
+        exception_handler(e);
+      }
+    }
+  }
+}
+
+void
 EventsExecutor::spin_some(std::chrono::nanoseconds max_duration)
 {
   return this->spin_some_impl(max_duration, false);

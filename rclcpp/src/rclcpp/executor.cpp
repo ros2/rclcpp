@@ -485,6 +485,69 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   any_exec.callback_group->can_be_taken_from().store(true);
 }
 
+template<typename Function>
+void
+execute_guarded(
+  const Function & function,
+  const std::function<void(const std::exception & e)> & exception_handler)
+{
+  try {
+    function();
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("rclcpp"),
+      "Exception while spinning: " << e.what());
+
+    exception_handler(e);
+  }
+}
+
+void
+Executor::execute_any_executable(
+  AnyExecutable & any_exec,
+  const std::function<void(const std::exception & e)> & exception_handler)
+{
+  if (!spinning.load()) {
+    return;
+  }
+
+  assert(
+    (void("cannot execute an AnyExecutable without a valid callback group"),
+    any_exec.callback_group));
+
+  if (any_exec.timer) {
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_executor_execute,
+      static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
+    execute_guarded([&any_exec]() {
+        execute_timer(any_exec.timer, any_exec.data);
+      }, exception_handler);
+  }
+  if (any_exec.subscription) {
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_executor_execute,
+      static_cast<const void *>(any_exec.subscription->get_subscription_handle().get()));
+    execute_guarded(
+      [&any_exec]() {
+        execute_subscription(any_exec.subscription);
+      }, exception_handler);
+  }
+  if (any_exec.service) {
+    execute_guarded([&any_exec]() {execute_service(any_exec.service);}, exception_handler);
+  }
+  if (any_exec.client) {
+    execute_guarded([&any_exec]() {execute_client(any_exec.client);}, exception_handler);
+  }
+  if (any_exec.waitable) {
+    execute_guarded([&any_exec]() {
+        const std::shared_ptr<void> & const_data = any_exec.data;
+        any_exec.waitable->execute(const_data);
+    }, exception_handler);
+  }
+  // Reset the callback_group, regardless of type
+  any_exec.callback_group->can_be_taken_from().store(true);
+}
+
 template<typename Taker, typename Handler>
 static
 void

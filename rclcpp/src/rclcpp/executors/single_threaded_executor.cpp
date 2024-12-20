@@ -27,6 +27,13 @@ SingleThreadedExecutor::~SingleThreadedExecutor() {}
 void
 SingleThreadedExecutor::spin()
 {
+  spin([](const std::exception & e) {throw e;});
+}
+
+void
+SingleThreadedExecutor::spin(
+  const std::function<void(const std::exception &)> & exception_handler)
+{
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
@@ -39,7 +46,7 @@ SingleThreadedExecutor::spin()
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {
-      execute_any_executable(any_executable);
+      execute_any_executable(any_executable, exception_handler);
     }
   }
 }
