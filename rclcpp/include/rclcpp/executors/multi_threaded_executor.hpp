@@ -75,7 +75,7 @@ public:
 
 protected:
   RCLCPP_PUBLIC
-  void
+  virtual void
   run(size_t this_thread_number);
 
 private:

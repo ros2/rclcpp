@@ -61,8 +61,10 @@ MultiThreadedExecutor::spin()
   {
     std::lock_guard wait_lock{wait_mutex_};
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
-      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
-      threads.emplace_back(func);
+      threads.emplace_back(
+        [&](size_t this_thread_number) -> void {
+          this->run(this_thread_number);
+        }, thread_id);
     }
   }
 
