@@ -408,6 +408,30 @@ public:
   virtual
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
+
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name.
+   * \sa rclcpp::Node::get_clients_info_by_service
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const = 0;
+
+  /// Return the service endpoint information about servers on a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name.
+   * \sa rclcpp::Node::get_servers_info_by_service
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const = 0;
 };
 
 }  // namespace node_interfaces

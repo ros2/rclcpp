@@ -159,6 +159,18 @@ public:
     const std::string & topic_name,
     bool no_mangle = false) const override;
 
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_clients_info_by_service(
+    const std::string & service_name,
+    bool no_mangle = false) const override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_servers_info_by_service(
+    const std::string & service_name,
+    bool no_mangle = false) const override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeGraph)
 

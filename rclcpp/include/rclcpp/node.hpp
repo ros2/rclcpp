@@ -1388,6 +1388,58 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
 
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * The returned parameter is a list of service endpoint information, where each item will contain
+   * the node name, node namespace, service type, endpoint type, service endpoint's GID, and its QoS
+   * profile.
+   *
+   * When the `no_mangle` parameter is `true`, the provided `service_name` should be a valid service
+   * name for the middleware (useful when combining ROS with native middleware (e.g. DDS) apps).
+   * When the `no_mangle` parameter is `false`, the provided `service_name` should follow
+   * ROS service name conventions.
+   *
+   * 'service_name` may be a relative, private, or fully qualified service name.
+   * A relative or private service will be expanded using this node's namespace and name.
+   * The queried `service_name` is not remapped.
+   *
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name. Defaults to `false`.
+   * \return a list of TopicEndpointInfo representing all the clients on this service.
+   * \throws InvalidTopicNameError if the given service_name is invalid.
+   * \throws std::runtime_error if internal error happens.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about servers on a given service.
+  /**
+   * The returned parameter is a list of service endpoint information, where each item will contain
+   * the node name, node namespace, service type, endpoint type, service endpoint's GID, and its QoS
+   * profile.
+   *
+   * When the `no_mangle` parameter is `true`, the provided `service_name` should be a valid service
+   * name for the middleware (useful when combining ROS with native middleware (e.g. DDS) apps).
+   * When the `no_mangle` parameter is `false`, the provided `service_name` should follow
+   * ROS service name conventions.
+   *
+   * 'service_name` may be a relative, private, or fully qualified service name.
+   * A relative or private service will be expanded using this node's namespace and name.
+   * The queried `service_name` is not remapped.
+   *
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name. Defaults to `false`.
+   * \return a list of TopicEndpointInfo representing all the servers on this service.
+   * \throws InvalidTopicNameError if the given service_name is invalid.
+   * \throws std::runtime_error if internal error happens.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the loan just let it go
