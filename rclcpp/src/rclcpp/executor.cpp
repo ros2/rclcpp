@@ -726,6 +726,27 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   TRACETOOLS_TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
 
+  // query, if notify_waitable_ was triggered by a guard condition
+  // make sure that it is executed before the wait, as this enforces
+  // a collection rebuild before the wait.
+  {
+    // the real one has been added to the main waitset, therefore we need to create a copy
+    executors::ExecutorNotifyWaitable::SharedPtr notify_cpy = std::make_shared<executors::ExecutorNotifyWaitable>(*notify_waitable_);
+
+    rclcpp::WaitSet notify_only_wait_set_({}, {}, {}, {}, {}, {}, context_);
+    notify_only_wait_set_.add_waitable(notify_cpy);
+    auto res = notify_only_wait_set_.wait(std::chrono::nanoseconds(0));
+    if(res.kind() == WaitResultKind::Ready) {
+      auto & rcl_wait_set = res.get_wait_set().get_rcl_wait_set();
+      if (notify_cpy->is_ready(rcl_wait_set)) {
+        notify_cpy->execute(notify_cpy->take_data());
+
+        // make sure we don't loos a wakeup
+        interrupt_guard_condition_->trigger();
+      }
+    }
+  }
+
   // Clear any previous wait result
   this->wait_result_.reset();
 
