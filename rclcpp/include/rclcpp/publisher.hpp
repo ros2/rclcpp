@@ -251,8 +251,12 @@ public:
     // interprocess publish, resulting in lower publish-to-subscribe latency.
     // It's not possible to do that with an unique_ptr,
     // as do_intra_process_publish takes the ownership of the message.
+
+    // When durability is set to TransientLocal (i.e. there is a buffer),
+    // inter process publish should always take place to ensure
+    // late joiners receive past data.
     bool inter_process_publish_needed =
-      get_subscription_count() > get_intra_process_subscription_count();
+      get_subscription_count() > get_intra_process_subscription_count() || buffer_;
 
     if (inter_process_publish_needed) {
       auto shared_msg =
@@ -329,8 +333,11 @@ public:
       return;
     }
 
+    // When durability is set to TransientLocal (i.e. there is a buffer),
+    // inter process publish should always take place to ensure
+    // late joiners receive past data.
     bool inter_process_publish_needed =
-      get_subscription_count() > get_intra_process_subscription_count();
+      get_subscription_count() > get_intra_process_subscription_count() || buffer_;
 
     if (inter_process_publish_needed) {
       auto ros_msg_ptr = std::make_shared<ROSMessageType>();
