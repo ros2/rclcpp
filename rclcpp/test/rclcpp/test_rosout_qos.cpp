@@ -58,8 +58,8 @@ TEST(TestRosoutQoS, test_rosout_qos_with_default_value) {
   rclcpp::NodeOptions node_options;
   rclcpp::QoS rosout_qos_profile = node_options.rosout_qos();
   rmw_qos_profile_t rmw_qos_profile = rosout_qos_profile.get_rmw_qos_profile();
-  EXPECT_EQ(rcl_qos_profile_rosout_default, rmw_qos_profile);
-  EXPECT_EQ(rcl_qos_profile_rosout_default, node_options.get_rcl_node_options()->rosout_qos);
+  EXPECT_EQ(rmw_qos_profile_rosout_default, rmw_qos_profile);
+  EXPECT_EQ(rmw_qos_profile_rosout_default, node_options.get_rcl_node_options()->rosout_qos);
 }
 
 /*
