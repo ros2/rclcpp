@@ -39,6 +39,7 @@
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 
+#include "rclcpp_lifecycle/lifecycle_subscription.hpp"
 #include "rmw/types.h"
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -65,7 +66,6 @@ LifecycleNode::create_publisher(
   return pub;
 }
 
-// TODO(karsten1987): Create LifecycleSubscriber
 template<
   typename MessageT,
   typename CallbackT,
@@ -80,13 +80,15 @@ LifecycleNode::create_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  return rclcpp::create_subscription<MessageT>(
+  auto sub = rclcpp::create_subscription<MessageT, CallbackT, AllocatorT, SubscriptionT>(
     *this,
     topic_name,
     qos,
     std::forward<CallbackT>(callback),
     options,
     msg_mem_strat);
+  this->add_managed_entity(sub);
+  return sub;
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

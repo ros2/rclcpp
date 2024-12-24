@@ -118,12 +118,13 @@ create_subscription(
     subscription_topic_stats->set_publisher_timer(timer);
   }
 
-  auto factory = rclcpp::create_subscription_factory<MessageT>(
-    std::forward<CallbackT>(callback),
-    options,
-    msg_mem_strat,
-    subscription_topic_stats
-  );
+  auto factory =
+    rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT, SubscriptionT>(
+      std::forward<CallbackT>(callback),
+      options,
+      msg_mem_strat,
+      subscription_topic_stats
+    );
 
   const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
     rclcpp::detail::declare_qos_parameters(
