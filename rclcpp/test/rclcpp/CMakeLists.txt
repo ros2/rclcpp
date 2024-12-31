@@ -28,6 +28,13 @@ ament_add_gtest(
 if(TARGET test_allocator_deleter)
   target_link_libraries(test_allocator_deleter ${PROJECT_NAME})
 endif()
+
+ament_add_gtest(test_type_description_conversions
+  dynamic_typesupport/test_type_description_conversions.cpp)
+if(TARGET test_type_description_conversions)
+  target_link_libraries(test_type_description_conversions ${PROJECT_NAME} ${rcl_interfaces_TARGETS})
+endif()
+
 ament_add_gtest(
   test_exceptions
   exceptions/test_exceptions.cpp)
