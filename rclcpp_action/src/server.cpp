@@ -132,7 +132,9 @@ ServerBase::ServerBase(
         if (RCL_RET_OK != ret) {
           RCLCPP_DEBUG(
             rclcpp::get_logger("rclcpp_action"),
-            "failed to fini rcl_action_server_t in deleter");
+            "failed to fini rcl_action_server_t in deleter: %s",
+            rcl_get_error_string().str);
+          rcl_reset_error();
         }
         delete ptr;
       }
@@ -424,7 +426,9 @@ ServerBase::execute_goal_request_received(
           if (RCL_RET_OK != fail_ret) {
             RCLCPP_DEBUG(
               rclcpp::get_logger("rclcpp_action"),
-              "failed to fini rcl_action_goal_handle_t in deleter");
+              "failed to fini rcl_action_goal_handle_t in deleter: %s",
+              rcl_get_error_string().str);
+            rcl_reset_error();
           }
           delete ptr;
         }

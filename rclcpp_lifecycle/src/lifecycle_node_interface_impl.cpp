@@ -70,7 +70,9 @@ LifecycleNode::LifecycleNodeInterfaceImpl::~LifecycleNodeInterfaceImpl()
   if (ret != RCL_RET_OK) {
     RCLCPP_FATAL(
       node_logging_interface_->get_logger(),
-      "failed to destroy rcl_state_machine");
+      "failed to destroy rcl_state_machine: %s",
+      rcl_get_error_string().str);
+    rcl_reset_error();
   }
 }
 
