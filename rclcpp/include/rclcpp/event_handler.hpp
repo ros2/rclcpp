@@ -278,6 +278,7 @@ public:
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "Couldn't take event info: %s", rcl_get_error_string().str);
+      rcl_reset_error();
       return nullptr;
     }
     return std::static_pointer_cast<void>(std::make_shared<EventCallbackInfoT>(callback_info));

@@ -407,6 +407,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
         node_logging_interface_->get_logger(),
         "Unable to change state for state machine for %s: %s",
         node_base_interface_->get_name(), rcl_get_error_string().str);
+      rcl_reset_error();
       return RCL_RET_ERROR;
     }
 

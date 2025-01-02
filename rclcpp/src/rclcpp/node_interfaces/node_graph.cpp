@@ -87,9 +87,11 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
 
   ret = rcl_names_and_types_fini(&topic_names_and_types);
   if (ret != RCL_RET_OK) {
+    auto ex_msg = rcl_get_error_string().str;
+    rcl_reset_error();
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not destroy topic names and types: ") + rcl_get_error_string().str);
+      std::string("could not destroy topic names and types: ") + ex_msg);
     // *INDENT-ON*
   }
 
@@ -129,9 +131,11 @@ NodeGraph::get_service_names_and_types() const
 
   ret = rcl_names_and_types_fini(&service_names_and_types);
   if (ret != RCL_RET_OK) {
+    auto ex_msg = rcl_get_error_string().str;
+    rcl_reset_error();
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not destroy service names and types: ") + rcl_get_error_string().str);
+      std::string("could not destroy service names and types: ") + ex_msg);
     // *INDENT-ON*
   }
 

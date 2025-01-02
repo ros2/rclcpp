@@ -105,6 +105,7 @@ public:
         RCLCPP_ERROR(
           logger_, "Failed to initialize ~/get_type_description service: %s",
           rcl_get_error_string().str);
+        rcl_reset_error();
         throw std::runtime_error(
                 "Failed to initialize ~/get_type_description service.");
       }

@@ -568,6 +568,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
                 "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
                 "'%s': %s",
                 subscription->get_topic_name(), rcl_get_error_string().str);
+              rcl_reset_error();
             }
             loaned_msg = nullptr;
           }
