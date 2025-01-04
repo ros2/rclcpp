@@ -535,8 +535,8 @@ TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_bad_arguments) {
     });
   allocator_memory_strategy()->collect_entities(weak_groups_to_nodes);
   EXPECT_FALSE(allocator_memory_strategy()->add_handles_to_wait_set(nullptr));
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
+  // The error message is collected and already reset.
+  EXPECT_FALSE(rcl_error_is_set());
 }
 
 TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_subscription) {
