@@ -181,7 +181,7 @@ void test_components_api(bool use_dedicated_executor)
   }
 
   {
-    // invalid extra argument
+    // invalid extra argument to be ignored
     auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
     request->package_name = "rclcpp_components";
     request->plugin_name = "test_rclcpp_components::TestComponentFoo";
@@ -193,11 +193,10 @@ void test_components_api(bool use_dedicated_executor)
     auto ret = exec->spin_until_future_complete(future, 5s);    // Wait for the result.
     auto result = future.get();
     EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result->success, false);
-    EXPECT_EQ(result->error_message,
-      "Extra component argument 'allow_undeclared_parameters' is not supported");
-    EXPECT_EQ(result->full_node_name, "");
-    EXPECT_EQ(result->unique_id, 0u);
+    EXPECT_EQ(result->success, true);
+    EXPECT_EQ(result->error_message, "");
+    EXPECT_EQ(result->full_node_name, "/test_component_allow_undeclared_parameters");
+    EXPECT_EQ(result->unique_id, 6u);
   }
 
   std::array<std::string, 8u> valid_extra_arguments = {
@@ -229,7 +228,7 @@ void test_components_api(bool use_dedicated_executor)
       EXPECT_EQ(result->success, true);
       EXPECT_EQ(result->error_message, "");
       EXPECT_EQ(result->full_node_name, "/test_component_" + arg);
-      EXPECT_EQ(result->unique_id, 6u + i);
+      EXPECT_EQ(result->unique_id, 7u + i);
     }
 
     {
@@ -279,16 +278,16 @@ void test_components_api(bool use_dedicated_executor)
       auto result_node_names = result->full_node_names;
       auto result_unique_ids = result->unique_ids;
 
-      EXPECT_EQ(result_node_names.size(), 5u + valid_extra_arguments.size());
+      EXPECT_EQ(result_node_names.size(), 6u + valid_extra_arguments.size());
       EXPECT_EQ(result_node_names[0], "/test_component_foo");
       EXPECT_EQ(result_node_names[1], "/test_component_bar");
       EXPECT_EQ(result_node_names[2], "/test_component_baz");
       EXPECT_EQ(result_node_names[3], "/ns/test_component_bing");
       EXPECT_EQ(result_node_names[4], "/test_component_remap");
       for (size_t i = 0u; i < valid_extra_arguments.size(); ++i) {
-        EXPECT_EQ(result_node_names[5u + i], "/test_component_" + valid_extra_arguments[i]);
+        EXPECT_EQ(result_node_names[6u + i], "/test_component_" + valid_extra_arguments[i]);
       }
-      EXPECT_EQ(result_unique_ids.size(), 5u + valid_extra_arguments.size());
+      EXPECT_EQ(result_unique_ids.size(), 6u + valid_extra_arguments.size());
       for (size_t i = 0u; i < result_unique_ids.size(); ++i) {
         EXPECT_EQ(result_unique_ids[i], 1u + i);
       }
@@ -345,15 +344,15 @@ void test_components_api(bool use_dedicated_executor)
       auto result_node_names = result->full_node_names;
       auto result_unique_ids = result->unique_ids;
 
-      EXPECT_EQ(result_node_names.size(), 4u + valid_extra_arguments.size());
+      EXPECT_EQ(result_node_names.size(), 5u + valid_extra_arguments.size());
       EXPECT_EQ(result_node_names[0], "/test_component_bar");
       EXPECT_EQ(result_node_names[1], "/test_component_baz");
       EXPECT_EQ(result_node_names[2], "/ns/test_component_bing");
       EXPECT_EQ(result_node_names[3], "/test_component_remap");
       for (size_t i = 0u; i < valid_extra_arguments.size(); ++i) {
-        EXPECT_EQ(result_node_names[4u + i], "/test_component_" + valid_extra_arguments[i]);
+        EXPECT_EQ(result_node_names[5u + i], "/test_component_" + valid_extra_arguments[i]);
       }
-      EXPECT_EQ(result_unique_ids.size(), 4u + valid_extra_arguments.size());
+      EXPECT_EQ(result_unique_ids.size(), 5u + valid_extra_arguments.size());
       for (size_t i = 0u; i < result_unique_ids.size(); ++i) {
         EXPECT_EQ(result_unique_ids[i], 2u + i);
       }
