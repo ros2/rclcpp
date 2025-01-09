@@ -166,8 +166,8 @@ public:
       // in case of invalid entries
 
       throw std::runtime_error(
-            "StaticStorage : storage_rebuild_rcl_wait_set: Detected"
-            " invalid entity in static entity storage");
+            "StaticStorage::storage_rebuild_rcl_wait_set(): entity weak_ptr "
+            "unexpectedly expired in static entity storage");
     }
   }
 
