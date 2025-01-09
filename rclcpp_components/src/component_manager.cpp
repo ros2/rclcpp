@@ -223,9 +223,6 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
             "Extra component argument 'enable_logger_service' must be a boolean");
       }
       options.enable_logger_service(extra_argument.get_value<bool>());
-    } else {
-      throw ComponentManagerException("Extra component argument '" + extra_argument.get_name() +
-          "' is not supported");
     }
   }
 
