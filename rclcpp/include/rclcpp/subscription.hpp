@@ -156,6 +156,29 @@ public:
                 "' is not allowed with 0 depth qos policy");
       }
 
+      // Use std::weak_ptr owner_before trick to determine if user
+      // has assigned a subscription options_.callback_lifetime weak_ptr.
+      // https://stackoverflow.com/a/45507610
+      std::weak_ptr<void> empty;
+      if (!options_.callback_lifetime.owner_before(empty) &&
+          !empty.owner_before(options_.callback_lifetime)) {
+        // options_.callback_lifetime was not user assigned,
+        // So use options_.callback_group if user assigned,
+        // falling back to node's default_callback_group
+        std::shared_ptr<void> vsp = options_.callback_group != nullptr ?
+          options_.callback_group :
+          node_base->get_default_callback_group();
+        std::weak_ptr<void> vwp = vsp;
+        options_.callback_lifetime = vwp;
+      }
+
+      if (options_.callback_lifetime.expired())
+      {
+        throw std::invalid_argument(
+                "callback_lifetime weak_ptr for topic '" + topic_name +
+                "' has already expired");
+      }
+
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
         MessageT,
         SubscribedType,
@@ -172,7 +195,8 @@ public:
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
-        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
+        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback),
+        options_.callback_lifetime);
       TRACETOOLS_TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
@@ -300,12 +324,15 @@ public:
       now = std::chrono::system_clock::now();
     }
 
-    any_callback_.dispatch(typed_message, message_info);
+    if (!options_.callback_lifetime.expired())
+    {
+      any_callback_.dispatch(typed_message, message_info);
 
-    if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+      if (subscription_topic_statistics_) {
+        const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+        const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+        subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+      }
     }
   }
 
@@ -321,12 +348,15 @@ public:
       now = std::chrono::system_clock::now();
     }
 
-    any_callback_.dispatch(serialized_message, message_info);
+    if (!options_.callback_lifetime.expired())
+    {
+      any_callback_.dispatch(serialized_message, message_info);
 
-    if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+      if (subscription_topic_statistics_) {
+        const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+        const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+        subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+      }
     }
   }
 
@@ -353,12 +383,15 @@ public:
       now = std::chrono::system_clock::now();
     }
 
-    any_callback_.dispatch(sptr, message_info);
+    if (!options_.callback_lifetime.expired())
+    {
+      any_callback_.dispatch(sptr, message_info);
 
-    if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+      if (subscription_topic_statistics_) {
+        const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+        const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+        subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+      }
     }
   }
 
@@ -449,7 +482,9 @@ private:
    * It is important to save a copy of this so that the rmw payload which it
    * may contain is kept alive for the duration of the subscription.
    */
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
+  // NOTE: Had to drop const in order to set default options_.callback_lifetime
+  // if not set in user code.
+  rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
   typename message_memory_strategy::MessageMemoryStrategy<ROSMessageType, AllocatorT>::SharedPtr
     message_memory_strategy_;
 

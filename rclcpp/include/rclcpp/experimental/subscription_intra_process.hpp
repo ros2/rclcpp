@@ -77,7 +77,8 @@ public:
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
-    rclcpp::IntraProcessBufferType buffer_type)
+    rclcpp::IntraProcessBufferType buffer_type,
+    std::weak_ptr<void> callback_lifetime)
   : SubscriptionIntraProcessBuffer<SubscribedType, SubscribedTypeAlloc,
       SubscribedTypeDeleter, ROSMessageType>(
       std::make_shared<SubscribedTypeAlloc>(*allocator),
@@ -85,6 +86,7 @@ public:
       topic_name,
       qos_profile,
       buffer_type),
+    callback_lifetime_(callback_lifetime),
     any_callback_(callback)
   {
     TRACETOOLS_TRACEPOINT(
@@ -166,6 +168,10 @@ protected:
   typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value, void>::type
   execute_impl(const std::shared_ptr<void> & data)
   {
+    if (callback_lifetime_.expired()) {
+      return;
+    }
+
     if (nullptr == data) {
       return;
     }
@@ -187,6 +193,7 @@ protected:
     shared_ptr.reset();
   }
 
+  std::weak_ptr<void> callback_lifetime_;
   AnySubscriptionCallback<MessageT, Alloc> any_callback_;
 };
 

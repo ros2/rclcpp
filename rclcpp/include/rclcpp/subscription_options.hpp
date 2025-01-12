@@ -89,6 +89,8 @@ struct SubscriptionOptionsBase
   QosOverridingOptions qos_overriding_options;
 
   ContentFilterOptions content_filter_options;
+
+  std::weak_ptr<void> callback_lifetime;
 };
 
 /// Structure containing optional configuration for Subscriptions.
