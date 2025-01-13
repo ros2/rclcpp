@@ -749,8 +749,7 @@ TYPED_TEST(TestExecutors, notifyTwiceWhileSpinning)
   this->publisher->publish(test_msgs::msg::Empty());
   start = std::chrono::steady_clock::now();
   while (
-    sub1_msg_count == 1 &&
-    sub2_msg_count == 0 &&
+    (sub1_msg_count == 1 || sub2_msg_count == 0) &&
     (std::chrono::steady_clock::now() - start) < 10s)
   {
     std::this_thread::sleep_for(1ms);
