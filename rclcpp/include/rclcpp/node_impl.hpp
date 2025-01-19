@@ -97,7 +97,8 @@ Node::create_subscription(
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  return rclcpp::create_subscription<MessageT>(
+  return rclcpp::create_subscription<
+    MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
     *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos,
