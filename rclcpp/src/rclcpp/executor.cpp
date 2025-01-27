@@ -371,7 +371,14 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   // both spin_some and spin_all wait for work at the beginning
   wait_result_.reset();
   wait_for_work(std::chrono::milliseconds(0));
-  bool just_waited = true;
+  bool entity_states_fully_polled = true;
+
+  if (entities_need_rebuild_) {
+    // if the last wait triggered a collection rebuild, we need to call
+    // wait_for_work once more, in order to do a collection rebuild and collect
+    // events from the just added entities
+    entity_states_fully_polled = false;
+  }
 
   // The logic of this while loop is as follows:
   //
@@ -393,12 +400,14 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
-      just_waited = false;
+      // during the execution some entity might got ready therefore we need
+      // to repoll the states of all entities
+      entity_states_fully_polled = false;
     } else {
       // if nothing is ready, reset the result to clear it
       wait_result_.reset();
 
-      if (just_waited) {
+      if (entity_states_fully_polled) {
         // there was no work after just waiting, always exit in this case
         // before the exhaustive condition can be checked
         break;
@@ -408,7 +417,13 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
         // if exhaustive, wait for work again
         // this only happens for spin_all; spin_some only waits at the start
         wait_for_work(std::chrono::milliseconds(0));
-        just_waited = true;
+        entity_states_fully_polled = true;
+        if (entities_need_rebuild_) {
+          // if the last wait triggered a collection rebuild, we need to call
+          // wait_for_work once more, in order to do a collection rebuild and
+          // collect events from the just added entities
+          entity_states_fully_polled = false;
+        }
       } else {
         break;
       }
