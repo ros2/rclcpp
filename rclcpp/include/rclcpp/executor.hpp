@@ -287,6 +287,11 @@ public:
    * Adding subscriptions, timers, services, etc. with blocking or long running
    * callbacks may cause the function exceed the max_duration significantly.
    *
+   * It tries to collect and execute work just only once that are available in each entity
+   * within a duration.
+   * It only can collect and execute the first available item in the queue for each entity,
+   * even if there are multiple works available in the entity.
+   *
    * If there is no work to be done when this called, it will return immediately
    * because the collecting of available work is non-blocking.
    * Before each piece of ready work is executed this function checks if the
@@ -323,6 +328,9 @@ public:
    * single-threaded model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
+   *
+   * It tries to collect and execute work reapeatedly that are available in any entitites within
+   * a duration or until no more work is available in any entities.
    * If the time that waitables take to be executed is longer than the period on which new waitables
    * become ready, this method will execute work repeatedly until `max_duration` has elapsed.
    *
@@ -343,6 +351,10 @@ public:
    * a single-thread model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
+   *
+   * It tries to collect and execute a single work just only once that is available in any entities
+   * within a timeout.
+   *
    * \param[in] timeout The maximum amount of time to spend waiting for work.
    *   `-1` is potentially block forever waiting for work.
    */
