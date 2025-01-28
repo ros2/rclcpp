@@ -287,10 +287,17 @@ public:
    * Adding subscriptions, timers, services, etc. with blocking or long running
    * callbacks may cause the function exceed the max_duration significantly.
    *
-   * It tries to collect and execute work just only once that are available in each entity
-   * within a duration.
-   * It only can collect and execute the first available item in the queue for each entity,
-   * even if there are multiple works available in the entity.
+   * Work that is ready to be done is collected only once, and when collecting that work
+   * entities which may have multiple pieces of work ready will only be executed at most
+   * one time.
+   * The reason for this is that it is not possible to tell if, for example, a ready
+   * subscription has only one message ready or multiple without checking again.
+   * Because, in order to find out if there are multiple messages, one message must
+   * be taken and executed before checking again if that subscription is still ready.
+   * However, this function only checks for ready entities to work on once,
+   * and so it will never execute a single entity more than once per call to this function.
+   * See spin_all() variants for a function that will repeatedly work on a single entity
+   * in a single call.
    *
    * If there is no work to be done when this called, it will return immediately
    * because the collecting of available work is non-blocking.
@@ -328,9 +335,6 @@ public:
    * single-threaded model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
-   *
-   * It tries to collect and execute work reapeatedly that are available in any entitites within
-   * a duration or until no more work is available in any entities.
    * If the time that waitables take to be executed is longer than the period on which new waitables
    * become ready, this method will execute work repeatedly until `max_duration` has elapsed.
    *
@@ -351,10 +355,6 @@ public:
    * a single-thread model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
-   *
-   * It tries to collect and execute a single work just only once that is available in any entities
-   * within a timeout.
-   *
    * \param[in] timeout The maximum amount of time to spend waiting for work.
    *   `-1` is potentially block forever waiting for work.
    */
