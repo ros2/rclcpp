@@ -119,14 +119,14 @@ create_subscription(
   }
 
   auto factory = rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT,
-                                          SubscriptionT, MessageMemoryStrategyT,
-                                          ROSMessageType
->(
+      SubscriptionT, MessageMemoryStrategyT,
+      ROSMessageType
+    >(
     std::forward<CallbackT>(callback),
     options,
     msg_mem_strat,
     subscription_topic_stats
-  );
+    );
 
   const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
     rclcpp::detail::declare_qos_parameters(
