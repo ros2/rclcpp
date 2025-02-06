@@ -355,20 +355,21 @@ __call_on_set_parameters_callbacks(
   OnSetCallbacksHandleContainer & callback_container)
 {
   rcl_interfaces::msg::SetParametersResult result;
-  result.successful = true;
+  bool successful = true;
   auto it = callback_container.begin();
   while (it != callback_container.end()) {
     auto shared_handle = it->lock();
     if (nullptr != shared_handle) {
       result = shared_handle->callback(parameters);
       if (!result.successful) {
-        return result;
+        successful = false;
       }
       it++;
     } else {
       it = callback_container.erase(it);
     }
   }
+  result.successful = successful;
   return result;
 }
 
