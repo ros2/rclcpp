@@ -267,12 +267,15 @@ public:
 
   void TearDown()
   {
-    node.reset();
+    executor.cancel();
 
     // Clean up thread object
     if (standalone_thread.joinable()) {
       standalone_thread.join();
     }
+
+    node.reset();
+    sim_clock_node.reset();
   }
 
   std::shared_ptr<TimerNode> node;
@@ -302,7 +305,6 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer1CancelledWithExecutorSpin) {
   this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer1();
   this->sim_clock_node->sleep_for(150ms);
-  this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
   int t2_runs = this->node->GetTimer2Cnt();
@@ -320,7 +322,6 @@ TYPED_TEST(TestTimerCancelBehavior, testTimer2CancelledWithExecutorSpin) {
   this->sim_clock_node->sleep_for(50ms);
   this->node->CancelTimer2();
   this->sim_clock_node->sleep_for(150ms);
-  this->executor.cancel();
 
   int t1_runs = this->node->GetTimer1Cnt();
   int t2_runs = this->node->GetTimer2Cnt();
@@ -346,8 +347,6 @@ TYPED_TEST(TestTimerCancelBehavior, testHeadTimerCancelThenResetBehavior) {
   this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
-
-  this->executor.cancel();
 
   // T1 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
@@ -375,8 +374,6 @@ TYPED_TEST(TestTimerCancelBehavior, testBackTimerCancelThenResetBehavior) {
   this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
-
-  this->executor.cancel();
 
   // T2 should have been restarted, and execute about 15 additional times.
   // Check 10 greater than initial, to account for some timing jitter.
@@ -410,8 +407,6 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT1Behavior) {
   this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
-
-  this->executor.cancel();
 
   // T1 and T2 should have the same initial count.
   EXPECT_LE(std::abs(t1_runs_initial - t2_runs_initial), 1);
@@ -449,8 +444,6 @@ TYPED_TEST(TestTimerCancelBehavior, testBothTimerCancelThenResetT2Behavior) {
   this->sim_clock_node->sleep_for(150ms);
   int t1_runs_final = this->node->GetTimer1Cnt();
   int t2_runs_final = this->node->GetTimer2Cnt();
-
-  this->executor.cancel();
 
   // T1 and T2 should have the same initial count.
   EXPECT_LE(std::abs(t1_runs_initial - t2_runs_initial), 1);
