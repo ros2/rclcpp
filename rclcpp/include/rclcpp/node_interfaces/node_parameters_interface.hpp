@@ -270,6 +270,12 @@ public:
   virtual
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const = 0;
+
+  /// Enable parameter modification recursively just once.
+  RCLCPP_PUBLIC
+  virtual
+  void
+  enable_parameter_modification() = 0;
 };
 
 }  // namespace node_interfaces

@@ -1191,3 +1191,9 @@ NodeParameters::get_parameter_overrides() const
 {
   return parameter_overrides_;
 }
+
+void
+NodeParameters::enable_parameter_modification()
+{
+  parameter_modification_enabled_ = true;
+}
