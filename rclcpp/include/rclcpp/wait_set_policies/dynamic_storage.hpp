@@ -216,6 +216,11 @@ public:
       shared_waitables_
     );
 
+    if (this->needs_pruning_) {
+      this->storage_prune_deleted_entities();
+      this->needs_pruning_ = false;
+    }
+
     this->storage_release_ownerships();
   }
 
