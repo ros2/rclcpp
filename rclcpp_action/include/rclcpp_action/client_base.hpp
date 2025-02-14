@@ -177,6 +177,22 @@ public:
   // End Waitables API
   // -----------------
 
+  /// Configure action client introspection.
+  /**
+   * \param[in] clock clock to use to generate introspection timestamps
+   * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
+   * \param[in] introspection_state the state to set introspection to
+   *
+   * \throws std::invalid_argument if clock is nullptr
+   * \throws rclcpp::exceptions::throw_from_rcl_error if rcl error occurs.
+   */
+  RCLCPP_ACTION_PUBLIC
+  void
+  configure_introspection(
+    rclcpp::Clock::SharedPtr clock,
+    const rclcpp::QoS & qos_service_event_pub,
+    rcl_service_introspection_state_t introspection_state);
+
 protected:
   RCLCPP_ACTION_PUBLIC
   ClientBase(

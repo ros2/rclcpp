@@ -103,6 +103,7 @@ public:
     const rcl_action_client_options_t & client_options)
   : node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
+    action_type_support_(type_support),
     logger(node_logging->get_logger().get_child("rclcpp_action")),
     random_bytes_generator(std::random_device{}())
   {
@@ -165,6 +166,7 @@ public:
   // node_handle must be destroyed after client_handle to prevent memory leak
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
   std::shared_ptr<rcl_action_client_t> client_handle{nullptr};
+  const rosidl_action_type_support_t * action_type_support_;
   rclcpp::Logger logger;
 
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
@@ -799,6 +801,33 @@ ClientBase::execute(const std::shared_ptr<void> & data_in)
         }
       }
     }, data_ptr->data);
+}
+
+void
+ClientBase::configure_introspection(
+  rclcpp::Clock::SharedPtr clock,
+  const rclcpp::QoS & qos_service_event_pub,
+  rcl_service_introspection_state_t introspection_state)
+{
+  rcl_publisher_options_t pub_opts = rcl_publisher_get_default_options();
+  pub_opts.qos = qos_service_event_pub.get_rmw_qos_profile();
+
+  if (clock == nullptr) {
+    throw std::invalid_argument("clock is nullptr");
+  }
+
+  rcl_ret_t ret = rcl_action_client_configure_action_introspection(
+    pimpl_->client_handle.get(),
+    pimpl_->node_handle.get(),
+    clock->get_clock_handle(),
+    pimpl_->action_type_support_,
+    pub_opts,
+    introspection_state);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to configure action client introspection");
+  }
 }
 
 }  // namespace rclcpp_action

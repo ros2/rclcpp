@@ -1035,3 +1035,20 @@ TEST_F(TestClientAgainstServer, execute_rcl_errors)
       rclcpp::exceptions::RCLError);
   }
 }
+
+TEST_F(TestClientAgainstServer, test_configure_introspection)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+
+  EXPECT_THROW(
+    action_client->configure_introspection(
+      nullptr, rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS),
+      std::invalid_argument);
+
+  EXPECT_NO_THROW(
+    action_client->configure_introspection(
+      client_node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS));
+
+  // No method was found to make rcl_action_client_configure_internal_service_introspection return
+  // a value other than RCL_RET_OK. mocking_utils::patch_and_return does not work for this function.
+}
