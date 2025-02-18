@@ -76,14 +76,16 @@ macro(rclcpp_components_register_node target)
     if(linker_supports_no_undefined)
       target_link_options("${target}" PRIVATE "-Wl,--no-undefined")
     else()
-      message(WARNING "NO_UNDEFINED_SYMBOLS is enabled for target \"${target}\", but the linker does not support the \"--no-undefined\" flag.")
+      message(WARNING "NO_UNDEFINED_SYMBOLS is enabled for target \"${target}\",\
+                but the linker does not support the \"--no-undefined\" flag.")
     endif()
 
     check_cxx_compiler_flag("-Wl,--no-allow-shlib-undefined" linker_supports_no_allow_shlib_undefined)
     if(linker_supports_no_allow_shlib_undefined)
       target_link_options("${target}" PRIVATE "-Wl,--no-allow-shlib-undefined")
     else()
-      message(WARNING "NO_UNDEFINED_SYMBOLS is enabled for target \"${target}\", but the linker does not support the \"--no-allow-shlib-undefined\" flag.")
+      message(WARNING "NO_UNDEFINED_SYMBOLS is enabled for target \"${target}\",\
+                but the linker does not support the \"--no-allow-shlib-undefined\" flag.")
     endif()
   endif()
 
