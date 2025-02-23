@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <rclcpp/logging.hpp>
 
 #include "rcpputils/scope_exit.hpp"
 
@@ -71,14 +72,17 @@ void TimersManager::add_timer(rclcpp::TimerBase::SharedPtr timer)
   }
 }
 
-void TimersManager::start()
+void TimersManager::start(const std::function<void(const std::exception & e)> & exception_handler)
 {
   // Make sure that the thread is not already running
   if (running_.exchange(true)) {
     throw std::runtime_error("TimersManager::start() can't start timers thread as already running");
   }
 
-  timers_thread_ = std::thread(&TimersManager::run_timers, this);
+  timers_thread_ = std::thread(
+    [this, exception_handler]() {
+      run_timers(exception_handler);
+    });
 }
 
 void TimersManager::stop()
@@ -203,7 +207,8 @@ std::optional<std::chrono::nanoseconds> TimersManager::get_head_timeout_unsafe()
   return head_timer->time_until_trigger();
 }
 
-void TimersManager::execute_ready_timers_unsafe()
+void TimersManager::execute_ready_timers_unsafe(
+  std::function<void(const std::exception & e)> exception_handler)
 {
   // We start by locking the timers
   TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
@@ -226,7 +231,19 @@ void TimersManager::execute_ready_timers_unsafe()
       if (on_ready_callback_) {
         on_ready_callback_(head_timer.get(), data);
       } else {
-        head_timer->execute_callback(data);
+        if (exception_handler) {
+          try {
+            head_timer->execute_callback(data);
+          } catch (const std::exception & e) {
+            RCLCPP_ERROR_STREAM(
+              rclcpp::get_logger("rclcpp"),
+              "Exception while spinning : " << e.what());
+
+            exception_handler(e);
+          }
+        } else {
+          head_timer->execute_callback(data);
+        }
       }
     } else {
       // someone canceled the timer between is_ready and call
@@ -245,7 +262,8 @@ void TimersManager::execute_ready_timers_unsafe()
   weak_timers_heap_.store(locked_heap);
 }
 
-void TimersManager::run_timers()
+void TimersManager::run_timers(
+  const std::function<void(const std::exception & e)> & exception_handler)
 {
   // Make sure the running flag is set to false when we exit from this function
   // to allow restarting the timers thread.
@@ -289,7 +307,7 @@ void TimersManager::run_timers()
     timers_updated_ = false;
 
     // Execute timers
-    this->execute_ready_timers_unsafe();
+    this->execute_ready_timers_unsafe(exception_handler);
   }
 }
 

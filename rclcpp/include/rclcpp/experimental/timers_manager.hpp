@@ -125,9 +125,14 @@ public:
   /**
    * @brief Starts a thread that takes care of executing the timers stored in this object.
    * Function will throw an error if the timers thread was already running.
+   *
+   * @param exception_handler if valid, the execution of the timer will be done in a try catch block,
+   *                          and any occurring exception will be passed to the given handler
    */
   RCLCPP_PUBLIC
-  void start();
+  void start(
+    const std::function<void(const std::exception & e)> & exception_handler = std::function<void(
+      const std::exception & e)>());
 
   /**
    * @brief Stops the timers thread.
@@ -512,6 +517,11 @@ private:
   void run_timers();
 
   /**
+   * @brief calls run_timers with a try catch block.
+   */
+  void run_timers(const std::function<void(const std::exception & e)> & exception_handler);
+
+  /**
    * @brief Get the amount of time before the next timer triggers.
    * This function is not thread safe, acquire a mutex before calling it.
    *
@@ -528,7 +538,7 @@ private:
    * while keeping the heap correctly sorted.
    * This function is not thread safe, acquire the timers_mutex_ before calling it.
    */
-  void execute_ready_timers_unsafe();
+  void execute_ready_timers_unsafe(std::function<void(const std::exception & e)> exception_handler);
 
   // Callback to be called when timer is ready
   std::function<void(const rclcpp::TimerBase *,
