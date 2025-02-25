@@ -23,7 +23,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 add_library(${PROJECT_NAME}
-  src/client.cpp
+  src/client_base.cpp
+  src/create_generic_client.cpp
+  src/generic_client.cpp
+  src/generic_client_goal_handle.cpp
   src/qos.cpp
   src/server.cpp
   src/server_goal_handle.cpp
@@ -83,6 +86,20 @@ if(BUILD_TESTING)
   ament_add_test_label(test_client mimick)
   if(TARGET test_client)
     target_link_libraries(test_client
+      ${PROJECT_NAME}
+      mimick
+      rcl::rcl
+      rcl_action::rcl_action
+      rclcpp::rclcpp
+      rcutils::rcutils
+      ${test_msgs_TARGETS}
+    )
+  endif()
+
+  ament_add_gtest(test_generic_client test/test_generic_client.cpp TIMEOUT 180)
+  ament_add_test_label(test_generic_client mimick)
+  if(TARGET test_generic_client)
+    target_link_libraries(test_generic_client
       ${PROJECT_NAME}
       mimick
       rcl::rcl

@@ -17,7 +17,6 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <variant>
 
@@ -26,8 +25,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 
-#include "rclcpp_action/client.hpp"
-#include "rclcpp_action/exceptions.hpp"
+#include "rclcpp_action/client_base.hpp"
 
 namespace rclcpp_action
 {
