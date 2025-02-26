@@ -822,9 +822,8 @@ TEST_F(TestDefaultStateMachine, test_callback_groups) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
   size_t num_groups = 0;
   test_node->for_each_callback_group(
-    [&num_groups](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    [&num_groups]([[maybe_unused]] rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      (void)group_ptr;
       num_groups++;
     });
   EXPECT_EQ(num_groups, 1u);
@@ -835,9 +834,8 @@ TEST_F(TestDefaultStateMachine, test_callback_groups) {
 
   num_groups = 0;
   test_node->for_each_callback_group(
-    [&num_groups](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    [&num_groups]([[maybe_unused]] rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      (void)group_ptr;
       num_groups++;
     });
   EXPECT_EQ(num_groups, 2u);

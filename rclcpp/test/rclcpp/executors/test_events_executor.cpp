@@ -48,9 +48,8 @@ TEST_F(TestEventsExecutor, run_pub_sub)
   bool msg_received = false;
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
     "topic", rclcpp::SensorDataQoS(),
-    [&msg_received](test_msgs::msg::Empty::ConstSharedPtr msg)
+    [&msg_received]([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
     {
-      (void)msg;
       msg_received = true;
     });
 
@@ -115,8 +114,8 @@ TEST_F(TestEventsExecutor, run_clients_servers)
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
   client->async_send_request(
     request,
-    [&response_received](rclcpp::Client<test_msgs::srv::Empty>::SharedFuture result_future) {
-      (void)result_future;
+    [&response_received]([[maybe_unused]] rclcpp::Client<test_msgs::srv::Empty>::SharedFuture
+    result_future){
       response_received = true;
     });
 

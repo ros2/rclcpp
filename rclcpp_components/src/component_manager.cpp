@@ -253,12 +253,10 @@ ComponentManager::remove_node_from_executor(uint64_t node_id)
 
 void
 ComponentManager::on_load_node(
-  const std::shared_ptr<rmw_request_id_t> request_header,
+  [[maybe_unused]] const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<LoadNode::Request> request,
   std::shared_ptr<LoadNode::Response> response)
 {
-  (void) request_header;
-
   try {
     auto resources = get_component_resources(request->package_name);
 
@@ -322,12 +320,10 @@ ComponentManager::on_load_node(
 
 void
 ComponentManager::on_unload_node(
-  const std::shared_ptr<rmw_request_id_t> request_header,
+  [[maybe_unused]] const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<UnloadNode::Request> request,
   std::shared_ptr<UnloadNode::Response> response)
 {
-  (void) request_header;
-
   auto wrapper = node_wrappers_.find(request->unique_id);
 
   if (wrapper == node_wrappers_.end()) {
@@ -345,13 +341,10 @@ ComponentManager::on_unload_node(
 
 void
 ComponentManager::on_list_nodes(
-  const std::shared_ptr<rmw_request_id_t> request_header,
-  const std::shared_ptr<ListNodes::Request> request,
+  [[maybe_unused]] const std::shared_ptr<rmw_request_id_t> request_header,
+  [[maybe_unused]] const std::shared_ptr<ListNodes::Request> request,
   std::shared_ptr<ListNodes::Response> response)
 {
-  (void) request_header;
-  (void) request;
-
   for (auto & wrapper : node_wrappers_) {
     response->unique_ids.push_back(wrapper.first);
     response->full_node_names.push_back(

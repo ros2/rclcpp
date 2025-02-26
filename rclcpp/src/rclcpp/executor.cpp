@@ -167,10 +167,9 @@ Executor::get_automatically_added_callback_groups_from_nodes()
 void
 Executor::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  [[maybe_unused]] rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
-  (void) node_ptr;
   this->collector_.add_callback_group(group_ptr);
 
   try {

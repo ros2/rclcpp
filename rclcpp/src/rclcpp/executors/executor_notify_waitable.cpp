@@ -102,9 +102,8 @@ ExecutorNotifyWaitable::take_data()
 }
 
 std::shared_ptr<void>
-ExecutorNotifyWaitable::take_data_by_entity_id(size_t id)
+ExecutorNotifyWaitable::take_data_by_entity_id([[maybe_unused]] size_t id)
 {
-  (void) id;
   return nullptr;
 }
 

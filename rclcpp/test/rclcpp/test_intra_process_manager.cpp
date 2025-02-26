@@ -193,16 +193,14 @@ public:
   }
 
   bool
-  operator==(const rmw_gid_t & gid) const
+  operator==([[maybe_unused]] const rmw_gid_t & gid) const
   {
-    (void)gid;
     return false;
   }
 
   bool
-  operator==(const rmw_gid_t * gid) const
+  operator==([[maybe_unused]] const rmw_gid_t * gid) const
   {
-    (void)gid;
     return false;
   }
 
@@ -260,12 +258,12 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
   explicit SubscriptionIntraProcessBase(
-    rclcpp::Context::SharedPtr context,
+    [[maybe_unused]] rclcpp::Context::SharedPtr context,
     const std::string & topic,
     const rclcpp::QoS & qos)
   : topic_name(topic), qos_profile(qos)
   {
-    (void)context;
+    // This function is intentionally left empty.
   }
 
   virtual ~SubscriptionIntraProcessBase() {}

@@ -189,8 +189,8 @@ public:
     options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
     options.topic_stats_options.publish_period = publish_period;
 
-    auto callback = [](typename MessageT::UniquePtr msg) {
-        (void) msg;
+    auto callback = []([[maybe_unused]] typename MessageT::UniquePtr msg) {
+        // This function is intentionally left empty.
       };
     subscription_ = create_subscription<MessageT,
         std::function<void(typename MessageT::UniquePtr)>>(

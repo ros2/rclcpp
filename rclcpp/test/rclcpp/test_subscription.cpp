@@ -36,9 +36,9 @@ using namespace std::chrono_literals;
 class TestSubscription : public ::testing::Test
 {
 public:
-  void on_message(test_msgs::msg::Empty::ConstSharedPtr msg)
+  void on_message([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
   {
-    (void)msg;
+    // This function is intentionally left empty.
   }
 
 protected:
@@ -66,8 +66,8 @@ protected:
 TEST_F(TestSubscription, construction_and_destruction) {
   initialize();
   using test_msgs::msg::Empty;
-  auto callback = [](Empty::ConstSharedPtr msg) {
-      (void)msg;
+  auto callback = []([[maybe_unused]] Empty::ConstSharedPtr msg) {
+    // This function is intentionally left empty.
     };
   {
     constexpr size_t depth = 10u;
@@ -156,9 +156,9 @@ public:
   }
 
 private:
-  void on_message(test_msgs::msg::Empty::ConstSharedPtr msg)
+  void on_message([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
   {
-    (void)msg;
+    // This function is intentionally left empty.
   }
 };
 
@@ -178,9 +178,9 @@ public:
   }
 
 private:
-  void on_message(test_msgs::msg::Empty::ConstSharedPtr msg)
+  void on_message([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
   {
-    (void)msg;
+    // This function is intentionally left empty.
   }
 };
 
@@ -502,8 +502,8 @@ TEST_F(TestSubscription, on_new_intra_process_message_callback) {
 TEST_F(TestSubscription, get_network_flow_endpoints_errors) {
   initialize();
   const rclcpp::QoS subscription_qos(1);
-  auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr msg) {
-      (void)msg;
+  auto subscription_callback = []([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg) {
+      // This function is intentionally left empty.
     };
   auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
     "topic", subscription_qos, subscription_callback);
@@ -560,8 +560,8 @@ protected:
    Testing subscription construction and destruction for subnodes.
  */
 TEST_F(TestSubscriptionSub, construction_and_destruction) {
-  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr msg) {
-      (void)msg;
+  auto callback = []([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg) {
+    // This function is intentionally left empty.
     };
   {
     auto sub = subnode_->create_subscription<test_msgs::msg::Empty>("topic", 1, callback);
