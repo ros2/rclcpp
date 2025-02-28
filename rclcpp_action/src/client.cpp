@@ -103,7 +103,8 @@ public:
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
-  : node_graph_(node_graph),
+  : context_(node_base->get_context()), 
+    node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
     logger(node_logging->get_logger().get_child("rclcpp_action")),
     random_bytes_generator(std::random_device{}())
