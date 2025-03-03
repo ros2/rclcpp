@@ -26,6 +26,7 @@
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 #include "rclcpp/executors/executor_notify_waitable.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rcpputils/scope_exit.hpp"
 
@@ -480,9 +481,18 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     const std::shared_ptr<void> & const_data = any_exec.data;
     any_exec.waitable->execute(const_data);
   }
+}
 
-  // Reset the callback_group, regardless of type
-  any_exec.callback_group->can_be_taken_from().store(true);
+void
+Executor::trigger_executor_notify()
+{
+  try {
+    interrupt_guard_condition_->trigger();
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to trigger guard condition on callback group change: ") + ex.what());
+  }
 }
 
 template<typename Taker, typename Handler>
@@ -770,6 +780,53 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   }
 }
 
+void Executor::prepare_work()
+{
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Rebuilding executor entities");
+      this->collect_entities();
+    }
+
+    auto callback_groups = this->collector_.get_all_callback_groups();
+    wait_for_work_cbgs_.resize(callback_groups.size());
+    for(const auto & w_ptr : callback_groups) {
+      auto shr_ptr = w_ptr.lock();
+      if(shr_ptr) {
+        wait_for_work_cbgs_.push_back(std::move(shr_ptr));
+      }
+    }
+  }
+}
+
+void
+Executor::wait_for_work_simple(std::chrono::nanoseconds timeout)
+{
+  TRACETOOLS_TRACEPOINT(rclcpp_executor_wait_for_work, timeout.count());
+
+  this->wait_result_.reset();
+  this->wait_result_.emplace(wait_set_.wait(timeout));
+
+  // drop references to the callback groups, before trying to execute anything
+  wait_for_work_cbgs_.clear();
+
+  if (!this->wait_result_ || this->wait_result_->kind() == WaitResultKind::Empty) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rclcpp",
+      "empty wait set received in wait(). This should never happen.");
+  } else {
+    if (this->wait_result_->kind() == WaitResultKind::Ready && current_notify_waitable_) {
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Getting wait set");
+      auto & rcl_wait_set = this->wait_result_->get_wait_set().get_rcl_wait_set();
+      if (current_notify_waitable_->is_ready(rcl_wait_set)) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Executing notify waitable");
+        current_notify_waitable_->execute(current_notify_waitable_->take_data());
+      }
+    }
+  }
+}
+
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
@@ -896,6 +953,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 bool
 Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
 {
+  notify_mutex_.lock();
   bool success = false;
   // Check to see if there are any subscriptions or timers needing service
   // TODO(wjwwood): improve run to run efficiency of this function
@@ -903,12 +961,17 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
   // If there are none
   if (!success) {
     // Wait for subscriptions or timers to work on
+    prepare_work();
+    notify_mutex_.unlock();
     wait_for_work(timeout);
     if (!spinning.load()) {
       return false;
     }
     // Try again
     success = get_next_ready_executable(any_executable);
+  }
+  else {
+    notify_mutex_.unlock();
   }
   return success;
 }

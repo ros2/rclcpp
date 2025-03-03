@@ -99,15 +99,15 @@ MultiThreadedExecutor::run(size_t this_thread_number)
 
     execute_any_executable(any_exec);
 
-    if (any_exec.callback_group &&
-      any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
     {
-      try {
-        interrupt_guard_condition_->trigger();
-      } catch (const rclcpp::exceptions::RCLError & ex) {
-        throw std::runtime_error(
-                std::string(
-                  "Failed to trigger guard condition on callback group change: ") + ex.what());
+      std::lock_guard wait_lock{notify_mutex_};
+
+      any_exec.callback_group->can_be_taken_from().store(true);
+
+      if (any_exec.callback_group &&
+        any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
+      {
+        trigger_executor_notify();
       }
     }
 

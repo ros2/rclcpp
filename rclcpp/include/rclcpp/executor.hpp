@@ -455,6 +455,14 @@ protected:
   void
   execute_any_executable(AnyExecutable & any_exec);
 
+  /// Trigger the notify guard condition to wake up the executor.
+  /**
+   * This function is thread safe.
+   */
+  RCLCPP_PUBLIC
+  void
+  trigger_executor_notify();
+
   /// Run subscription executable.
   /**
    * Do necessary setup and tear-down as well as executing the subscription.
@@ -508,6 +516,27 @@ protected:
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
+  /// Prepare the wait set to bee waited on.
+  /**
+   * Builds a set of waitable entities, which are passed to the middleware.
+   * After building wait set, waits on middleware to notify.
+   * \throws std::runtime_error if the wait set can be cleared
+   */
+  RCLCPP_PUBLIC
+  void
+  prepare_work();
+
+  /// Block until more work becomes avilable or timeout is reached.
+  /**
+   * Builds a set of waitable entities, which are passed to the middleware.
+   * After building wait set, waits on middleware to notify.
+   * \param[in] timeout duration to wait for new work to become available.
+   * \throws std::runtime_error if the wait set can be cleared
+   */
+  RCLCPP_PUBLIC
+  void
+  wait_for_work_simple(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
   /// Check for executable in ready state and populate union structure.
   /**
    * \param[out] any_executable populated union structure of ready executable
@@ -556,6 +585,10 @@ protected:
 
   mutable std::mutex mutex_;
 
+  mutable std::mutex notify_mutex_;
+
+  std::vector<rclcpp::CallbackGroup::SharedPtr> wait_for_work_cbgs_;
+
   /// The context associated with this executor.
   std::shared_ptr<rclcpp::Context> context_;
 
@@ -582,6 +615,10 @@ protected:
   /// WaitSet to be waited on.
   rclcpp::WaitSet wait_set_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
   std::optional<rclcpp::WaitResult<rclcpp::WaitSet>> wait_result_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+
+  /// Previous WaitSet to be waited on.
+  rclcpp::WaitSet previous_wait_set_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::optional<rclcpp::WaitResult<rclcpp::WaitSet>> previous_wait_result_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
   /// Hold the current state of the collection being waited on by the waitset
   rclcpp::executors::ExecutorEntitiesCollection current_collection_ RCPPUTILS_TSA_GUARDED_BY(
