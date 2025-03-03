@@ -132,6 +132,7 @@ NodeBase::NodeBase(
             RCUTILS_LOG_ERROR_NAMED(
               "rclcpp",
               "Error in destruction of rosout publisher: %s", rcl_get_error_string().str);
+            rcl_reset_error();
           }
         }
       }
@@ -139,6 +140,7 @@ NodeBase::NodeBase(
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Error in destruction of rcl node handle: %s", rcl_get_error_string().str);
+        rcl_reset_error();
       }
       delete node;
     });

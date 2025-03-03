@@ -545,11 +545,9 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
   int feedback_count = 0;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.feedback_callback = [&feedback_count](
-    typename ActionGoalHandle::SharedPtr goal_handle,
-    const std::shared_ptr<const ActionFeedback> feedback)
+    [[maybe_unused]] typename ActionGoalHandle::SharedPtr goal_handle,
+    [[maybe_unused]] const std::shared_ptr<const ActionFeedback> feedback)
     {
-      (void)goal_handle;
-      (void)feedback;
       feedback_count++;
     };
   auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);

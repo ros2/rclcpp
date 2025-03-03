@@ -67,7 +67,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   notify_waitable_(std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
       [this]() {
         this->entities_need_rebuild_.store(true);
-      })),
+      }, options.context)),
   entities_need_rebuild_(true),
   collector_(notify_waitable_),
   wait_set_({}, {}, {}, {}, {}, {}, options.context),
@@ -85,7 +85,9 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
 
-  wait_set_.add_waitable(notify_waitable_);
+  // we need to initially rebuild the collection,
+  // so that the notify_waitable_ is added
+  collect_entities();
 }
 
 Executor::~Executor()
@@ -168,10 +170,9 @@ Executor::get_automatically_added_callback_groups_from_nodes()
 void
 Executor::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  [[maybe_unused]] rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
-  (void) node_ptr;
   this->collector_.add_callback_group(group_ptr);
 
   try {
@@ -372,7 +373,14 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   // both spin_some and spin_all wait for work at the beginning
   wait_result_.reset();
   wait_for_work(std::chrono::milliseconds(0));
-  bool just_waited = true;
+  bool entity_states_fully_polled = true;
+
+  if (entities_need_rebuild_) {
+    // if the last wait triggered a collection rebuild, we need to call
+    // wait_for_work once more, in order to do a collection rebuild and collect
+    // events from the just added entities
+    entity_states_fully_polled = false;
+  }
 
   // The logic of this while loop is as follows:
   //
@@ -394,12 +402,14 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
-      just_waited = false;
+      // during the execution some entity might got ready therefore we need
+      // to repoll the states of all entities
+      entity_states_fully_polled = false;
     } else {
       // if nothing is ready, reset the result to clear it
       wait_result_.reset();
 
-      if (just_waited) {
+      if (entity_states_fully_polled) {
         // there was no work after just waiting, always exit in this case
         // before the exhaustive condition can be checked
         break;
@@ -409,7 +419,13 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
         // if exhaustive, wait for work again
         // this only happens for spin_all; spin_some only waits at the start
         wait_for_work(std::chrono::milliseconds(0));
-        just_waited = true;
+        entity_states_fully_polled = true;
+        if (entities_need_rebuild_) {
+          // if the last wait triggered a collection rebuild, we need to call
+          // wait_for_work once more, in order to do a collection rebuild and
+          // collect events from the just added entities
+          entity_states_fully_polled = false;
+        }
       } else {
         break;
       }
@@ -578,6 +594,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
                 "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
                 "'%s': %s",
                 subscription->get_topic_name(), rcl_get_error_string().str);
+              rcl_reset_error();
             }
             loaned_msg = nullptr;
           }
@@ -739,32 +756,15 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Clear any previous wait result
   this->wait_result_.reset();
 
-  // we need to make sure that callback groups don't get out of scope
-  // during the wait. As in jazzy, they are not covered by the DynamicStorage,
-  // we explicitly hold them here as a bugfix
-  std::vector<rclcpp::CallbackGroup::SharedPtr> cbgs;
-
   {
     std::lock_guard<std::mutex> guard(mutex_);
 
     if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
       this->collect_entities();
     }
-
-    auto callback_groups = this->collector_.get_all_callback_groups();
-    cbgs.resize(callback_groups.size());
-    for(const auto & w_ptr : callback_groups) {
-      auto shr_ptr = w_ptr.lock();
-      if(shr_ptr) {
-        cbgs.push_back(std::move(shr_ptr));
-      }
-    }
   }
 
   this->wait_result_.emplace(wait_set_.wait(timeout));
-
-  // drop references to the callback groups, before trying to execute anything
-  cbgs.clear();
 
   if (!this->wait_result_ || this->wait_result_->kind() == WaitResultKind::Empty) {
     RCUTILS_LOG_WARN_NAMED(

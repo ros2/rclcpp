@@ -114,9 +114,9 @@ public:
    * all references.
    * \param[in] msg Shared pointer to the message to return.
    */
-  void return_message(std::shared_ptr<MessageT> & msg)
+  void return_message([[maybe_unused]] std::shared_ptr<MessageT> & msg)
   {
-    (void)msg;
+    // This function is intentionally left empty.
   }
 
 protected:

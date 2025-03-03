@@ -34,9 +34,9 @@ using namespace std::chrono_literals;
 class TestParameterClient : public ::testing::Test
 {
 public:
-  void OnMessage(rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
+  void OnMessage([[maybe_unused]] rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
   {
-    (void)event;
+    // This function is intentionally left empty.
   }
 
 protected:

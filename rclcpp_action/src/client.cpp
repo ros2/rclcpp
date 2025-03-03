@@ -643,6 +643,12 @@ ClientBase::clear_on_ready_callback()
   entity_type_to_on_ready_callback_.clear();
 }
 
+std::vector<std::shared_ptr<rclcpp::TimerBase>>
+ClientBase::get_timers() const
+{
+  return {};
+}
+
 std::shared_ptr<void>
 ClientBase::take_data()
 {

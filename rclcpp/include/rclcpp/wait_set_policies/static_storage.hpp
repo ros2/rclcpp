@@ -160,6 +160,15 @@ public:
       services_,
       waitables_
     );
+
+    if(this->needs_pruning_) {
+      // we need to throw here, as the indexing of the rcl_waitset is broken,
+      // in case of invalid entries
+
+      throw std::runtime_error(
+            "StaticStorage::storage_rebuild_rcl_wait_set(): entity weak_ptr "
+            "unexpectedly expired in static entity storage");
+    }
   }
 
   // storage_add_subscription() explicitly not declared here

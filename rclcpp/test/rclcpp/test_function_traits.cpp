@@ -74,29 +74,23 @@ struct FunctionObjectOneIntOneChar
 
 struct ObjectMember
 {
-  int callback_one_bool(bool a)
+  int callback_one_bool([[maybe_unused]] bool a)
   {
-    (void)a;
     return 7;
   }
 
-  int callback_one_bool_const(bool a) const
+  int callback_one_bool_const([[maybe_unused]] bool a) const
   {
-    (void)a;
     return 7;
   }
 
-  int callback_two_bools(bool a, bool b)
+  int callback_two_bools([[maybe_unused]] bool a, [[maybe_unused]] bool b)
   {
-    (void)a;
-    (void)b;
     return 8;
   }
 
-  int callback_one_bool_one_float(bool a, float b)
+  int callback_one_bool_one_float([[maybe_unused]] bool a, [[maybe_unused]] float b)
   {
-    (void)a;
-    (void)b;
     return 9;
   }
 };
@@ -212,20 +206,15 @@ TEST(TestFunctionTraits, arity) {
       return 0;
     };
 
-  auto lambda_one_int = [](int one) {
-      (void)one;
+  auto lambda_one_int = []([[maybe_unused]] int one) {
       return 1;
     };
 
-  auto lambda_two_ints = [](int one, int two) {
-      (void)one;
-      (void)two;
+  auto lambda_two_ints = []([[maybe_unused]] int one, [[maybe_unused]] int two) {
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int one, char two) {
-      (void)one;
-      (void)two;
+  auto lambda_one_int_one_char = []([[maybe_unused]] int one, [[maybe_unused]] char two) {
       return 3;
     };
 
@@ -303,20 +292,15 @@ TEST(TestFunctionTraits, argument_types) {
     >::value, "Functor accepts a char as second argument");
 
   // Test lambdas
-  auto lambda_one_int = [](int one) {
-      (void)one;
+  auto lambda_one_int = []([[maybe_unused]] int one) {
       return 1;
     };
 
-  auto lambda_two_ints = [](int one, int two) {
-      (void)one;
-      (void)two;
+  auto lambda_two_ints = []([[maybe_unused]] int one, [[maybe_unused]] int two) {
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int one, char two) {
-      (void)one;
-      (void)two;
+  auto lambda_one_int_one_char = []([[maybe_unused]] int one, [[maybe_unused]]  char two) {
       return 3;
     };
 
@@ -533,22 +517,17 @@ TEST(TestFunctionTraits, check_arguments) {
     "Functor accepts an int and a char as arguments");
 
   // Test lambdas
-  auto lambda_one_int = [](int one) {
-      (void)one;
+  auto lambda_one_int = []([[maybe_unused]] int one) {
       return 1;
     };
   (void)lambda_one_int;  // to quiet clang
 
-  auto lambda_two_ints = [](int one, int two) {
-      (void)one;
-      (void)two;
+  auto lambda_two_ints = []([[maybe_unused]] int one, [[maybe_unused]] int two) {
       return 2;
     };
   (void)lambda_two_ints;  // to quiet clang
 
-  auto lambda_one_int_one_char = [](int one, char two) {
-      (void)one;
-      (void)two;
+  auto lambda_one_int_one_char = []([[maybe_unused]] int one, [[maybe_unused]]  char two) {
       return 3;
     };
   (void)lambda_one_int_one_char;  // to quiet clang
@@ -603,14 +582,11 @@ TEST(TestFunctionTraits, check_arguments) {
    Tests that same_arguments work.
 */
 TEST(TestFunctionTraits, same_arguments) {
-  auto lambda_one_int = [](int one) {
-      (void)one;
+  auto lambda_one_int = []([[maybe_unused]] int one) {
       return 1;
     };
 
-  auto lambda_two_ints = [](int one, int two) {
-      (void)one;
-      (void)two;
+  auto lambda_two_ints = []([[maybe_unused]] int one, [[maybe_unused]]  int two) {
       return 1;
     };
 
@@ -658,8 +634,7 @@ TEST(TestFunctionTraits, return_type) {
     "Functor return ints");
 
   // Test lambda
-  auto lambda_one_int_return_double = [](int one) -> double {
-      (void)one;
+  auto lambda_one_int_return_double = []([[maybe_unused]] int one) -> double {
       return 1.0;
     };
 
@@ -697,20 +672,15 @@ TEST(TestFunctionTraits, sfinae_match) {
       return 0;
     };
 
-  auto lambda_one_int = [](int one) {
-      (void)one;
+  auto lambda_one_int = []([[maybe_unused]] int one) {
       return 1;
     };
 
-  auto lambda_two_ints = [](int one, int two) {
-      (void)one;
-      (void)two;
+  auto lambda_two_ints = []([[maybe_unused]] int one, [[maybe_unused]]  int two) {
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int one, char two) {
-      (void)one;
-      (void)two;
+  auto lambda_one_int_one_char = []([[maybe_unused]] int one, [[maybe_unused]]  char two) {
       return 3;
     };
 

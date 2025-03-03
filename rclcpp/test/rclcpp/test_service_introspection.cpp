@@ -63,7 +63,6 @@ protected:
 
     auto callback = [this](const std::shared_ptr<const BasicTypes::Event> & msg) {
         events.push_back(msg);
-        (void)msg;
       };
 
     client = node->create_client<BasicTypes>("service");

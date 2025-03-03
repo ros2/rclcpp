@@ -25,6 +25,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "rcl/event_callback.h"
 
@@ -178,6 +179,10 @@ public:
   RCLCPP_ACTION_PUBLIC
   void
   clear_on_ready_callback() override;
+
+  RCLCPP_ACTION_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override;
 
   // End Waitables API
   // -----------------

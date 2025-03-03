@@ -61,9 +61,8 @@ class ExecutorTypeNames
 {
 public:
   template<typename T>
-  static std::string GetName(int idx)
+  static std::string GetName([[maybe_unused]] int idx)
   {
-    (void)idx;
     if (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
       return "SingleThreadedExecutor";
     }

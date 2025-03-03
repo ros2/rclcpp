@@ -475,7 +475,7 @@ public:
   explicit
   RosoutQoS(
     const QoSInitialization & rosout_qos_initialization = (
-      QoSInitialization::from_rmw(rcl_qos_profile_rosout_default)
+      QoSInitialization::from_rmw(rmw_qos_profile_rosout_default)
   ));
 };
 
