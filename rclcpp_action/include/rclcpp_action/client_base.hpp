@@ -15,8 +15,12 @@
 #ifndef RCLCPP_ACTION__CLIENT_BASE_HPP_
 #define RCLCPP_ACTION__CLIENT_BASE_HPP_
 
+#include <cstddef>
+#include <cstdint>
 #include <chrono>
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>

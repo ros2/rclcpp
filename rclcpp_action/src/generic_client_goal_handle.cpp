@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
+#include <future>
+#include <mutex>
+
 #include "rclcpp_action/generic_client_goal_handle.hpp"
 
 #include "rclcpp/logging.hpp"

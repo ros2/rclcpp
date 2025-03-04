@@ -12,7 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <future>
 #include <memory>
+#include <mutex>
+#include <string>
 
 #include "rclcpp_action/generic_client.hpp"
 

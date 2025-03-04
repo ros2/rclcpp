@@ -15,8 +15,12 @@
 #ifndef RCLCPP_ACTION__GENERIC_CLIENT_HPP_
 #define RCLCPP_ACTION__GENERIC_CLIENT_HPP_
 
+#include <cstddef>
+#include <functional>
+#include <future>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "action_msgs/srv/cancel_goal.hpp"
@@ -143,7 +147,7 @@ public:
 
   /// Send an action goal request and asynchronously get the result.
   /**
-   * \param[in] goal The goal request (uuid+goal).
+   * \param[in] goal_request The goal request (uuid+goal).
    * \param[in] options Options for sending the goal request. Contains references to callbacks for
    *   the goal response (accepted/rejected), feedback, and the final result.
    * \return A future that completes when the goal has been accepted or rejected.

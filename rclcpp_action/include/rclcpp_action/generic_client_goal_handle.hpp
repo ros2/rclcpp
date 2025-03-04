@@ -15,6 +15,8 @@
 #ifndef RCLCPP_ACTION__GENERIC_CLIENT_GOAL_HANDLE_HPP_
 #define RCLCPP_ACTION__GENERIC_CLIENT_GOAL_HANDLE_HPP_
 
+#include <cstdint>
+#include <functional>
 #include <future>
 #include <memory>
 #include <mutex>

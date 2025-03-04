@@ -35,6 +35,7 @@ namespace rclcpp_action
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \return newly created generic client.
  */
 typename GenericClient::SharedPtr
 create_generic_client(
@@ -55,6 +56,7 @@ create_generic_client(
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \return newly created generic client.
  */
 template<typename NodeT>
 typename GenericClient::SharedPtr
