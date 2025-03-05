@@ -119,8 +119,7 @@ create_subscription(
   }
 
   auto factory = rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT,
-      SubscriptionT, MessageMemoryStrategyT,
-      ROSMessageType
+      SubscriptionT, MessageMemoryStrategyT
     >(
     std::forward<CallbackT>(callback),
     options,
