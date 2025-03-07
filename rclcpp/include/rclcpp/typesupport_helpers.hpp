@@ -76,7 +76,7 @@ get_message_typesupport_handle(
 
 /// Extract the service type support handle from the library.
 /**
- * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
+ * The library needs to match the service type. The shared library must stay loaded for the lifetime of the result.
  *
  * \param[in] type The service type, e.g. "std_srvs/srv/Empty"
  * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"

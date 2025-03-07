@@ -1031,3 +1031,66 @@ TYPED_TEST(TestExecutors, dropSomeNodesWithSubscription)
 
   ASSERT_TRUE(sub1_works);
 }
+
+TYPED_TEST(TestExecutors, dropSubscriptionDuringCallback)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+
+  auto node = std::make_shared<rclcpp::Node>("test_node");
+
+  bool sub1_works = false;
+  bool sub2_works = false;
+
+  auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, true);
+  rclcpp::SubscriptionOptions sub_ops;
+  sub_ops.callback_group = cbg;
+
+  rclcpp::SubscriptionBase::SharedPtr sub1;
+  rclcpp::SubscriptionBase::SharedPtr sub2;
+
+  // Note, the executor uses an unordered map internally, to order
+  // the entities added to the rcl waitset therefore the order of the subscriptions
+  // is kind of undefined. Therefore each sub deletes the other one.
+  sub1 = node->create_subscription<test_msgs::msg::Empty>("/test_drop", 10,
+      [&sub1_works, &sub2](const test_msgs::msg::Empty &) {
+        sub1_works = true;
+        // delete the other subscriber
+        sub2.reset();
+  }, sub_ops);
+  sub2 = node->create_subscription<test_msgs::msg::Empty>("/test_drop", 10,
+      [&sub2_works, &sub1](const test_msgs::msg::Empty &) {
+        sub2_works = true;
+        // delete the other subscriber
+        sub1.reset();
+  }, sub_ops);
+
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("/test_drop", 10);
+
+  // wait for both subs to be connected
+  auto max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(1500);
+  while ((sub1->get_publisher_count() == 0) || (sub2->get_publisher_count() == 0)) {
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+  }
+
+  executor.add_node(node);
+
+  // publish some messages, until one subscriber fired. As both subscribers are
+  // connected to the same topic, they should fire in the same wait.
+  max_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
+  while (!sub1_works && !sub2_works) {
+    pub->publish(test_msgs::msg::Empty());
+
+    // let the executor pick up the node and the timers
+    executor.spin_all(std::chrono::milliseconds(10));
+
+    const auto cur_time = std::chrono::steady_clock::now();
+    ASSERT_LT(cur_time, max_end_time);
+  }
+
+  // only one subscriber must have worked, as the other
+  // one was deleted during the callback
+  ASSERT_TRUE(!sub1_works || !sub2_works);
+}
