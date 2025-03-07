@@ -37,6 +37,7 @@ namespace rclcpp_action
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
  * \return newly created generic client.
  */
+RCLCPP_ACTION_PUBLIC
 typename GenericClient::SharedPtr
 create_generic_client(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,

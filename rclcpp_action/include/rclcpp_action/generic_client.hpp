@@ -104,6 +104,7 @@ public:
    * \param[in] action_typesupport_handle the action type support handle
    * \param[in] client_options Options to pass to the underlying `rcl_action::rcl_action_client_t`.
    */
+  RCLCPP_ACTION_PUBLIC
   GenericClient(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
@@ -139,6 +140,7 @@ public:
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
+  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename GenericClientGoalHandle::SharedPtr>
   async_send_goal(
     const Goal goal,
@@ -153,6 +155,7 @@ public:
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
+  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename GenericClientGoalHandle::SharedPtr>
   async_send_goal(
     const GoalRequest goal_request,
@@ -166,6 +169,7 @@ public:
    * \param[in] result_callback Optional callback that is called when the result is received.
    * \return A future that is set to the goal result when the goal is finished.
    */
+  RCLCPP_ACTION_PUBLIC
   std::shared_future<WrappedResult>
   async_get_result(
     typename GenericClientGoalHandle::SharedPtr goal_handle,
@@ -184,6 +188,7 @@ public:
    * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
    * action_msgs/CancelGoal.srv</a>.
    */
+  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goal(
     typename GenericClientGoalHandle::SharedPtr goal_handle,
@@ -199,6 +204,7 @@ public:
    * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
    * action_msgs/CancelGoal.srv</a>.
    */
+  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_all_goals(CancelCallback cancel_callback = nullptr);
 
@@ -213,6 +219,7 @@ public:
    *
    * \param[in] goal_handle The goal were the callbacks shall be stopped
    */
+  RCLCPP_ACTION_PUBLIC
   void
   stop_callbacks(typename GenericClientGoalHandle::SharedPtr goal_handle);
 
@@ -220,6 +227,7 @@ public:
   /**
    * For further information see stop_callbacks(typename GenericGoalHandle::SharedPtr goal_handle)
    */
+  RCLCPP_ACTION_PUBLIC
   void
   stop_callbacks(const GoalUUID & goal_id);
 
@@ -234,11 +242,13 @@ public:
    * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
    * action_msgs/CancelGoal.srv</a>.
    */
+  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goals_before(
     const rclcpp::Time & stamp,
     CancelCallback cancel_callback = nullptr);
 
+  RCLCPP_ACTION_PUBLIC
   virtual
   ~GenericClient();
 

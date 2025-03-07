@@ -67,25 +67,32 @@ public:
         const void *)>;
   using ResultCallback = std::function<void (const WrappedResult & result)>;
 
-  virtual ~GenericClientGoalHandle();
+  RCLCPP_ACTION_PUBLIC
+  virtual
+  ~GenericClientGoalHandle();
 
   /// Get the unique ID for the goal.
+  RCLCPP_ACTION_PUBLIC
   const GoalUUID &
   get_goal_id() const;
 
   /// Get the time when the goal was accepted.
+  RCLCPP_ACTION_PUBLIC
   rclcpp::Time
   get_goal_stamp() const;
 
   /// Get the goal status code.
+  RCLCPP_ACTION_PUBLIC
   int8_t
   get_status();
 
   /// Check if an action client has subscribed to feedback for the goal.
+  RCLCPP_ACTION_PUBLIC
   bool
   is_feedback_aware();
 
   /// Check if an action client has requested the result for the goal.
+  RCLCPP_ACTION_PUBLIC
   bool
   is_result_aware();
 
