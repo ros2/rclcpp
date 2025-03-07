@@ -73,7 +73,9 @@ TEST_F(TestQosEvent, test_publisher_constructor)
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(
     topic_name, 10, options);
 
-  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+  if (rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) &&
+    rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_LOST))
+  {
     // options arg with one of the callbacks
     options.event_callbacks.deadline_callback =
       [node = node.get()](rclcpp::QOSDeadlineOfferedInfo & event) {
@@ -121,7 +123,9 @@ TEST_F(TestQosEvent, test_subscription_constructor)
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, 10, message_callback, options);
 
-  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+  if (rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) &&
+    rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_CHANGED))
+  {
     // options arg with one of the callbacks
     options.event_callbacks.deadline_callback =
       [node = node.get()](rclcpp::QOSDeadlineRequestedInfo & event) {
@@ -211,10 +215,9 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   const auto timeout = std::chrono::seconds(10);
   ex.spin_until_future_complete(log_msgs_future, timeout);
 
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
-    EXPECT_EQ(rclcpp::QoSCompatibility::Ok,
-      qos_check_compatible(qos_profile_publisher, qos_profile_subscription).compatibility);
-  } else {
+  if (qos_check_compatible(qos_profile_publisher,
+    qos_profile_subscription).compatibility != rclcpp::QoSCompatibility::Ok)
+  {
     EXPECT_EQ(
       "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
       "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
@@ -235,7 +238,8 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 
   // This callback requires some type of parameter, but it could be anything
   auto callback = [](int) {};
-  const rcl_publisher_event_type_t event_type = rmw_implementation_str == "rmw_zenoh_cpp" ?
+  const rcl_publisher_event_type_t event_type =
+    !rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) ?
     RCL_PUBLISHER_MATCHED : RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
 
   {
@@ -273,9 +277,10 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 }
 
 TEST_F(TestQosEvent, execute) {
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+  if (!rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED)) {
     GTEST_SKIP();
   }
+
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto rcl_handle = publisher->get_publisher_handle();
 
@@ -308,9 +313,11 @@ TEST_F(TestQosEvent, add_to_wait_set) {
   // This callback requires some type of parameter, but it could be anything
   auto callback = [](int) {};
 
-  const rcl_publisher_event_type_t event_type = rmw_implementation_str == "rmw_zenoh_cpp" ?
+  const rcl_publisher_event_type_t event_type =
+    !rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) ?
     RCL_PUBLISHER_MATCHED : RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
-   rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
+
+  rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
     callback, rcl_publisher_event_init, rcl_handle, event_type);
 
   EXPECT_EQ(1u, handler.get_number_of_ready_events());
@@ -331,7 +338,9 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+  if (!rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) ||
+    !rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED))
+  {
     GTEST_SKIP();
   }
 
@@ -380,7 +389,9 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
   auto dummy_cb = [](size_t count_events) {(void)count_events;};
 
-  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+  if (rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) &&
+    rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_LOST))
+  {
     EXPECT_NO_THROW(
       pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
 
@@ -405,7 +416,9 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   EXPECT_NO_THROW(
     pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_MATCHED));
 
-  if (rmw_implementation_str == "rmw_zenoh_cpp") {
+  if (rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) &&
+    rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_CHANGED))
+  {
     EXPECT_NO_THROW(
       sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
 
@@ -430,7 +443,9 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   EXPECT_NO_THROW(
     sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_MATCHED));
 
-  if (rmw_implementation_str != "rmw_zenoh_cpp") {
+  if (rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) &&
+    rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED))
+  {
     std::function<void(size_t)> invalid_cb;
 
     rclcpp::SubscriptionOptions sub_options;
