@@ -26,7 +26,7 @@
 
 using namespace std::chrono_literals;
 
-class TestCreateSubscription : public ::testing::Test
+class TestCreateCustomSubscription : public ::testing::Test
 {
 public:
   void SetUp() override
