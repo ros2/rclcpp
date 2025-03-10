@@ -526,7 +526,7 @@ class ClockConditionalVariable::Impl
   ClockWaiter::UniquePtr clock_;
 
 public:
-  Impl(rclcpp::Clock::SharedPtr & clock, rclcpp::Context::SharedPtr context)
+  Impl(const rclcpp::Clock::SharedPtr & clock, rclcpp::Context::SharedPtr context)
   :context_(context),
     clock_(std::make_unique<ClockWaiter>(clock))
   {
@@ -544,6 +544,11 @@ public:
     });
   }
 
+  ~Impl()
+  {
+    context_->remove_on_shutdown_callback(shutdown_cb_handle_);
+  }
+
   bool
   wait_until(
     std::unique_lock<std::mutex> & lock, rclcpp::Time until,
@@ -557,7 +562,7 @@ public:
 
     clock_->wait_until(lock, until, [this, &pred] () -> bool {
         return shutdown_ || pred();
-                                  });
+      });
     return true;
   }
 
@@ -575,7 +580,7 @@ public:
 };
 
 ClockConditionalVariable::ClockConditionalVariable(
-  rclcpp::Clock::SharedPtr & clock,
+  const rclcpp::Clock::SharedPtr & clock,
   rclcpp::Context::SharedPtr context)
 :impl_(std::make_unique<Impl>(clock, context))
 {

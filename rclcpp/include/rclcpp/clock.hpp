@@ -329,7 +329,7 @@ public:
 
   RCLCPP_PUBLIC
   ClockConditionalVariable(
-    rclcpp::Clock::SharedPtr & clock,
+    const rclcpp::Clock::SharedPtr & clock,
     rclcpp::Context::SharedPtr context = rclcpp::contexts::get_global_default_context());
   RCLCPP_PUBLIC
   ~ClockConditionalVariable();
