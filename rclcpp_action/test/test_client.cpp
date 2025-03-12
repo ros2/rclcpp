@@ -1049,6 +1049,6 @@ TEST_F(TestClientAgainstServer, test_configure_introspection)
     action_client->configure_introspection(
       client_node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS));
 
-  // No method was found to make rcl_action_client_configure_internal_service_introspection return
+  // No method was found to make rcl_action_client_configure_action_introspection return
   // a value other than RCL_RET_OK. mocking_utils::patch_and_return does not work for this function.
 }
