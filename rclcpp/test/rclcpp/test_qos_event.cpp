@@ -70,29 +70,6 @@ TEST_F(TestQosEvent, test_publisher_constructor)
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(
     topic_name, 10, options);
 
-<<<<<<< HEAD
-  // options arg with one of the callbacks
-  options.event_callbacks.deadline_callback =
-    [node = node.get()](rclcpp::QOSDeadlineOfferedInfo & event) {
-      RCLCPP_INFO(
-        node->get_logger(),
-        "Offered deadline missed - total %d (delta %d)",
-        event.total_count, event.total_count_change);
-    };
-  publisher = node->create_publisher<test_msgs::msg::Empty>(
-    topic_name, 10, options);
-
-  // options arg with two of the callbacks
-  options.event_callbacks.liveliness_callback =
-    [node = node.get()](rclcpp::QOSLivelinessLostInfo & event) {
-      RCLCPP_INFO(
-        node->get_logger(),
-        "Liveliness lost - total %d (delta %d)",
-        event.total_count, event.total_count_change);
-    };
-  publisher = node->create_publisher<test_msgs::msg::Empty>(
-    topic_name, 10, options);
-=======
   if (rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) &&
     rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_LOST))
   {
@@ -106,7 +83,18 @@ TEST_F(TestQosEvent, test_publisher_constructor)
       };
     publisher = node->create_publisher<test_msgs::msg::Empty>(
       topic_name, 10, options);
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
+
+    // options arg with two of the callbacks
+    options.event_callbacks.liveliness_callback =
+      [node = node.get()](rclcpp::QOSLivelinessLostInfo & event) {
+        RCLCPP_INFO(
+          node->get_logger(),
+          "Liveliness lost - total %d (delta %d)",
+          event.total_count, event.total_count_change);
+      };
+    publisher = node->create_publisher<test_msgs::msg::Empty>(
+      topic_name, 10, options);
+  }
 
   // options arg with three of the callbacks
   options.event_callbacks.incompatible_qos_callback =
@@ -131,30 +119,6 @@ TEST_F(TestQosEvent, test_subscription_constructor)
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, 10, message_callback, options);
 
-<<<<<<< HEAD
-  // options arg with one of the callbacks
-  options.event_callbacks.deadline_callback =
-    [node = node.get()](rclcpp::QOSDeadlineRequestedInfo & event) {
-      RCLCPP_INFO(
-        node->get_logger(),
-        "Requested deadline missed - total %d (delta %d)",
-        event.total_count, event.total_count_change);
-    };
-  subscription = node->create_subscription<test_msgs::msg::Empty>(
-    topic_name, 10, message_callback, options);
-
-  // options arg with two of the callbacks
-  options.event_callbacks.liveliness_callback =
-    [node = node.get()](rclcpp::QOSLivelinessChangedInfo & event) {
-      RCLCPP_INFO(
-        node->get_logger(),
-        "Liveliness changed - alive %d (delta %d), not alive %d (delta %d)",
-        event.alive_count, event.alive_count_change,
-        event.not_alive_count, event.not_alive_count_change);
-    };
-  subscription = node->create_subscription<test_msgs::msg::Empty>(
-    topic_name, 10, message_callback, options);
-=======
   if (rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) &&
     rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_CHANGED))
   {
@@ -168,7 +132,19 @@ TEST_F(TestQosEvent, test_subscription_constructor)
       };
     subscription = node->create_subscription<test_msgs::msg::Empty>(
       topic_name, 10, message_callback, options);
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
+
+    // options arg with two of the callbacks
+    options.event_callbacks.liveliness_callback =
+      [node = node.get()](rclcpp::QOSLivelinessChangedInfo & event) {
+        RCLCPP_INFO(
+          node->get_logger(),
+          "Liveliness changed - alive %d (delta %d), not alive %d (delta %d)",
+          event.alive_count, event.alive_count_change,
+          event.not_alive_count, event.not_alive_count_change);
+      };
+    subscription = node->create_subscription<test_msgs::msg::Empty>(
+      topic_name, 10, message_callback, options);
+  }
 
   // options arg with three of the callbacks
   options.event_callbacks.incompatible_qos_callback =
@@ -236,16 +212,6 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   const auto timeout = std::chrono::seconds(10);
   ex.spin_until_future_complete(log_msgs_future, timeout);
 
-<<<<<<< HEAD
-  EXPECT_EQ(
-    "New subscription discovered on topic '/ns/test_topic', requesting incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    pub_log_msg);
-  EXPECT_EQ(
-    "New publisher discovered on topic '/ns/test_topic', offering incompatible QoS. "
-    "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
-    sub_log_msg);
-=======
   if (qos_check_compatible(qos_profile_publisher,
     qos_profile_subscription).compatibility != rclcpp::QoSCompatibility::Ok)
   {
@@ -258,7 +224,6 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
       "No messages will be sent to it. Last incompatible policy: DURABILITY_QOS_POLICY",
       sub_log_msg);
   }
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
 
   rcutils_logging_set_output_handler(original_output_handler);
 }
@@ -270,13 +235,9 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 
   // This callback requires some type of parameter, but it could be anything
   auto callback = [](int) {};
-<<<<<<< HEAD
-  const rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
-=======
   const rcl_publisher_event_type_t event_type =
     !rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) ?
     RCL_PUBLISHER_MATCHED : RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
 
   {
     // Logs error and returns
@@ -313,13 +274,10 @@ TEST_F(TestQosEvent, construct_destruct_rcl_error) {
 }
 
 TEST_F(TestQosEvent, execute) {
-<<<<<<< HEAD
-=======
   if (!rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED)) {
     GTEST_SKIP();
   }
 
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
   auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
   auto rcl_handle = publisher->get_publisher_handle();
 
@@ -352,14 +310,10 @@ TEST_F(TestQosEvent, add_to_wait_set) {
   // This callback requires some type of parameter, but it could be anything
   auto callback = [](int) {};
 
-<<<<<<< HEAD
-  rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
-=======
   const rcl_publisher_event_type_t event_type =
     !rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) ?
     RCL_PUBLISHER_MATCHED : RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
 
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
   rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
     callback, rcl_publisher_event_init, rcl_handle, event_type);
 
@@ -381,15 +335,12 @@ TEST_F(TestQosEvent, add_to_wait_set) {
 
 TEST_F(TestQosEvent, test_on_new_event_callback)
 {
-<<<<<<< HEAD
-=======
   if (!rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) ||
     !rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED))
   {
     GTEST_SKIP();
   }
 
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
   auto offered_deadline = rclcpp::Duration(std::chrono::milliseconds(1));
   auto requested_deadline = rclcpp::Duration(std::chrono::milliseconds(2));
 
@@ -435,25 +386,21 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
   auto dummy_cb = [](size_t count_events) {(void)count_events;};
 
-<<<<<<< HEAD
-  EXPECT_NO_THROW(
-    pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
-=======
   if (rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED) &&
     rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_LOST))
   {
     EXPECT_NO_THROW(
       pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
 
-  EXPECT_NO_THROW(
-    pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
+    EXPECT_NO_THROW(
+      pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_OFFERED_DEADLINE_MISSED));
 
-  EXPECT_NO_THROW(
-    pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_LIVELINESS_LOST));
+    EXPECT_NO_THROW(
+      pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_LIVELINESS_LOST));
 
-  EXPECT_NO_THROW(
-    pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_LIVELINESS_LOST));
+    EXPECT_NO_THROW(
+      pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_LIVELINESS_LOST));
+  }
 
   EXPECT_NO_THROW(
     pub->set_on_new_qos_event_callback(dummy_cb, RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS));
@@ -467,19 +414,15 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   EXPECT_NO_THROW(
     pub->clear_on_new_qos_event_callback(RCL_PUBLISHER_MATCHED));
 
-<<<<<<< HEAD
-  EXPECT_NO_THROW(
-    sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
-=======
   if (rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) &&
     rmw_event_type_is_supported(RMW_EVENT_LIVELINESS_CHANGED))
   {
     EXPECT_NO_THROW(
       sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
 
-  EXPECT_NO_THROW(
-    sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
+    EXPECT_NO_THROW(
+      sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED));
+  }
 
   EXPECT_NO_THROW(
     sub->set_on_new_qos_event_callback(dummy_cb, RCL_SUBSCRIPTION_LIVELINESS_CHANGED));
@@ -499,31 +442,28 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   EXPECT_NO_THROW(
     sub->clear_on_new_qos_event_callback(RCL_SUBSCRIPTION_MATCHED));
 
-<<<<<<< HEAD
-  std::function<void(size_t)> invalid_cb;
-=======
   if (rmw_event_type_is_supported(RMW_EVENT_REQUESTED_DEADLINE_MISSED) &&
     rmw_event_type_is_supported(RMW_EVENT_OFFERED_DEADLINE_MISSED))
   {
     std::function<void(size_t)> invalid_cb;
->>>>>>> 9db7fa2 (Use rmw_event_type_is_supported in test_qos_event (#2761))
 
-  rclcpp::SubscriptionOptions sub_options;
-  sub_options.event_callbacks.deadline_callback = [](auto) {};
-  sub = node->create_subscription<test_msgs::msg::Empty>(
-    topic_name, 10, message_callback, sub_options);
+    rclcpp::SubscriptionOptions sub_options;
+    sub_options.event_callbacks.deadline_callback = [](auto) {};
+    sub = node->create_subscription<test_msgs::msg::Empty>(
+      topic_name, 10, message_callback, sub_options);
 
-  EXPECT_THROW(
-    sub->set_on_new_qos_event_callback(invalid_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED),
-    std::invalid_argument);
+    EXPECT_THROW(
+      sub->set_on_new_qos_event_callback(invalid_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED),
+      std::invalid_argument);
 
-  rclcpp::PublisherOptions pub_options;
-  pub_options.event_callbacks.deadline_callback = [](auto) {};
-  pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10, pub_options);
+    rclcpp::PublisherOptions pub_options;
+    pub_options.event_callbacks.deadline_callback = [](auto) {};
+    pub = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10, pub_options);
 
-  EXPECT_THROW(
-    pub->set_on_new_qos_event_callback(invalid_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED),
-    std::invalid_argument);
+    EXPECT_THROW(
+      pub->set_on_new_qos_event_callback(invalid_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED),
+      std::invalid_argument);
+  }
 }
 
 TEST_F(TestQosEvent, test_pub_matched_event_by_set_event_callback)
