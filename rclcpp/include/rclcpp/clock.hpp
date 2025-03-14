@@ -61,7 +61,7 @@ public:
    * Initializes the clock instance with the given clock_type.
    *
    * WARNING Don't instantiate a clock using RCL_ROS_TIME directly,
-   * unless your really know what you are doing. By default no TimeSource
+   * unless you really know what you are doing. By default no TimeSource
    * is attached to a new clock. This will lead to the unexpected behavior,
    * that your RCL_ROS_TIME will run always on system time. If you want
    * a RCL_ROS_TIME use Node::get_clock(), or make sure to attach a
