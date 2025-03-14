@@ -220,7 +220,9 @@ Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
-Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
+Executor::remove_node(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify,
+  bool wait_until_removed)
 {
   this->collector_.remove_node(node_ptr);
 
@@ -231,12 +233,24 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
             std::string(
               "Failed to handle entities update on node remove: ") + ex.what());
   }
+
+  if(wait_until_removed) {
+    // some other thread is spinning, wait until the executor
+    // picked up the remove
+    while(spinning && collector_.has_pending()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    // if we are not spinning, we can directly update the collection
+    if(!spinning) {
+      this->collector_.update_collections();
+    }
+  }
 }
 
 void
-Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
+Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify, bool wait_until_removed)
 {
-  this->remove_node(node_ptr->get_node_base_interface(), notify);
+  this->remove_node(node_ptr->get_node_base_interface(), notify, wait_until_removed);
 }
 
 void

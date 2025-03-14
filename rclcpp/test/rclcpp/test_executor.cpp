@@ -528,3 +528,71 @@ TEST_F(TestExecutor, is_spinning) {
 
   ASSERT_TRUE(timer_called);
 }
+
+TEST_F(TestExecutor, remove_node) {
+  using namespace std::chrono_literals;
+
+  // Create an Executor
+  rclcpp::executors::SingleThreadedExecutor executor;
+
+  auto future = std::async(std::launch::async, [&executor] {executor.spin();});
+
+  auto node = std::make_shared<rclcpp::Node>("remove_node_test");
+  std::vector<rclcpp::TimerBase::SharedPtr> timers;
+
+  std::atomic_bool timer_running = false;
+  auto timer = node->create_timer(std::chrono::milliseconds(1), [&timer_running] () {
+        timer_running = true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(400));
+        timer_running = false;
+    });
+  timer->reset();
+
+  executor.add_node(node);
+
+  while(!timer_running) {
+    // let the executor pick up the nodes
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+  }
+  ASSERT_GT(timer.use_count(), 1);
+
+  executor.remove_node(node, true, true);
+
+  ASSERT_EQ(timer.use_count(), 1);
+
+  std::future_status future_status = std::future_status::timeout;
+  do {
+    executor.cancel();
+    future_status = future.wait_for(1s);
+  } while (future_status == std::future_status::timeout);
+  EXPECT_EQ(future_status, std::future_status::ready);
+  future.get();
+}
+
+TEST_F(TestExecutor, remove_node_not_spinning) {
+  using namespace std::chrono_literals;
+
+  // Create an Executor
+  rclcpp::executors::SingleThreadedExecutor executor;
+
+  auto node = std::make_shared<rclcpp::Node>("remove_node_test");
+  std::vector<rclcpp::TimerBase::SharedPtr> timers;
+
+  bool executed = false;
+  auto timer = node->create_timer(std::chrono::milliseconds(1), [&executed] () {
+        executed = true;
+    });
+  timer->reset();
+
+  executor.add_node(node);
+
+  while(!executed) {
+    // let the executor pick up the nodes
+    executor.spin_some(std::chrono::milliseconds(2));
+  }
+
+  executor.remove_node(node, true, true);
+
+  ASSERT_EQ(timer.use_count(), 1);
+
+}
