@@ -60,7 +60,7 @@ public:
       std::forward<Args>(args)...) {}
 };
 
-TEST_F(TestCreateSubscription, create) {
+TEST_F(TestCreateCustomSubscription, create) {
   using MessageT = test_msgs::msg::Empty;
 
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
