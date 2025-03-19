@@ -789,6 +789,9 @@ public:
    * \param[in] clock clock to use to generate introspection timestamps
    * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
    * \param[in] introspection_state the state to set introspection to
+   *
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw if
+   *   it failed to configure introspection.
    */
   void
   configure_introspection(
