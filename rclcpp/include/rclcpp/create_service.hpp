@@ -26,6 +26,32 @@
 
 namespace rclcpp
 {
+/// Create a service with a given type.
+/**
+ * \param[in] node_base NodeBaseInterface implementation of the node on which
+ *  to create the service.
+ * \param[in] node_services NodeServicesInterface implementation of the node on
+ *  which to create the service.
+ * \param[in] service_name The name on which the service is accessible.
+ * \param[in] callback The callback to call when the service gets a request.
+ * \param[in] qos Quality of service profile for the service.
+ * \param[in] group Callback group to handle the reply to service calls.
+ * \return Shared pointer to the created service.
+ */
+template<typename ServiceT, typename CallbackT>
+typename rclcpp::Service<ServiceT>::SharedPtr
+create_service(
+  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
+  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+  const std::string & service_name,
+  CallbackT && callback,
+  const rclcpp::QoS & qos,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  return create_service<ServiceT, CallbackT>(
+    node_base, node_services, service_name,
+    std::forward<CallbackT>(callback), qos.get_rmw_qos_profile(), group);
+}
 
 /// Create a service with a given type.
 /// \internal

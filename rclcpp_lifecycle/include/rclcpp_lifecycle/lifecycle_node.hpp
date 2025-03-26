@@ -275,7 +275,19 @@ public:
   create_service(
     const std::string & service_name,
     CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    const rmw_qos_profile_t & qos_profile,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a Service.
+  /**
+   * \sa rclcpp::Node::create_service
+   */
+  template<typename ServiceT, typename CallbackT>
+  typename rclcpp::Service<ServiceT>::SharedPtr
+  create_service(
+    const std::string & service_name,
+    CallbackT && callback,
+    const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create and return a GenericPublisher.
