@@ -649,9 +649,9 @@ NodeParameters::undeclare_parameter(const std::string & name)
     throw rclcpp::exceptions::ParameterImmutableException(
             "cannot undeclare parameter '" + name + "' because it is read-only");
   }
-  if (!parameter_info->second.descriptor.dynamic_typing) {
+  if (!parameter_info->second.descriptor.undeclarable) {
     throw rclcpp::exceptions::InvalidParameterTypeException{
-            name, "cannot undeclare a statically typed parameter"};
+            name, "cannot undeclare an parameter with undeclarable set to false"};
   }
 
   parameters_.erase(parameter_info);
