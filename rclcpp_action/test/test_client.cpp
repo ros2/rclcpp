@@ -429,6 +429,38 @@ TEST_F(TestClientAgainstServer, async_send_goal_no_callbacks)
   EXPECT_FALSE(goal_handle->is_result_aware());
 }
 
+TEST_F(TestClientAgainstServer, receive_status_before_service_response)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal good_goal;
+  good_goal.order = 5;
+  auto future_goal_handle = action_client->async_send_goal(good_goal);
+  // Spin the client, to send out the goals
+  client_executor.spin_some();
+  // Spin the server until a goal is received
+  while (goals.empty()) {
+    server_executor.spin_once();
+  }
+  // Set the goals to an executing state
+  ActionStatusMessage status_message;
+  for (const auto & [goal_uuid, goal] : goals) {
+    rclcpp_action::GoalStatus goal_status;
+    goal_status.goal_info.goal_id.uuid = goal.first->goal_id.uuid;
+    goal_status.goal_info.stamp = goal.second->stamp;
+    goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
+    status_message.status_list.push_back(goal_status);
+  }
+  status_publisher->publish(status_message);
+  // Spin until the client receives the goal
+  dual_spin_until_future_complete(future_goal_handle);
+  auto goal_handle = future_goal_handle.get();
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_EXECUTING, goal_handle->get_status());
+  EXPECT_FALSE(goal_handle->is_feedback_aware());
+  EXPECT_FALSE(goal_handle->is_result_aware());
+}
+
 TEST_F(TestClientAgainstServer, bad_goal_handles)
 {
   auto action_client0 = rclcpp_action::create_client<ActionType>(client_node, action_name);
