@@ -545,9 +545,7 @@ const State &
 LifecycleNode::LifecycleNodeInterfaceImpl::trigger_transition(uint8_t transition_id)
 {
   node_interfaces::LifecycleNodeInterface::CallbackReturn error;
-  change_state(transition_id, error);
-  (void) error;
-  return get_current_state();
+  return trigger_transition(transition_id, error);
 }
 
 const State &
@@ -555,7 +553,16 @@ LifecycleNode::LifecycleNodeInterfaceImpl::trigger_transition(
   uint8_t transition_id,
   node_interfaces::LifecycleNodeInterface::CallbackReturn & cb_return_code)
 {
-  change_state(transition_id, cb_return_code);
+  const rcl_lifecycle_transition_t * transition;
+  {
+    std::lock_guard<std::recursive_mutex> lock(state_machine_mutex_);
+
+    transition =
+      rcl_lifecycle_get_transition_by_id(state_machine_.current_state, transition_id);
+  }
+  if (transition) {
+    change_state(static_cast<uint8_t>(transition->id), cb_return_code);
+  }
   return get_current_state();
 }
 
