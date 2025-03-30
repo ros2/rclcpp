@@ -145,38 +145,18 @@ public:
   // cppcheck-suppress noExplicitConstructor
   QoS(size_t history_depth);  // NOLINT(runtime/explicit): conversion constructor
 
+  /// Return the rmw qos profile.
   /**
-   * Return the rmw qos profile where a profile is comprised of these policies:
-   *   - history (an enum from `HistoryPolicy`)
-   *   - queue size/depth
-   *   - reliability (an enum from `ReliabilityPolicy`)
-   *   - durability (an enum from `DurabilityPolicy`)
-   *   - deadline
-   *   - lifespan
-   *   - liveliness (an enum from `LivelinessPolicy`)
-   *   - lease duration
-   *   - boolean for `avoid_ros_namespace_conventions`
-   * 
-   * To retrieve an individual policy comprising the profile,
-   * use the the getter function for that policy.
+   * The profile consists of various QoS policies such as history, reliability, and durability.
+   * Use the corresponding getter functions to retrieve individual policies.
    */
   rmw_qos_profile_t &
   get_rmw_qos_profile();
 
+  /// Return the rmw qos profile.
   /**
-   * Return the rmw qos profile where a profile is comprised of these policies:
-   *   - history (an enum from `HistoryPolicy`)
-   *   - queue size/depth
-   *   - reliability (an enum from `ReliabilityPolicy`)
-   *   - durability (an enum from `DurabilityPolicy`)
-   *   - deadline
-   *   - lifespan
-   *   - liveliness (an enum from `LivelinessPolicy`)
-   *   - lease duration
-   *   - boolean for `avoid_ros_namespace_conventions`
-   * 
-   * To retrieve an individual policy comprising the profile,
-   * use the the getter function for that policy.
+   * The profile consists of various QoS policies such as history, reliability, and durability.
+   * Use the corresponding getter functions to retrieve individual policies.
    */
   const rmw_qos_profile_t &
   get_rmw_qos_profile() const;
