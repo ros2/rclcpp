@@ -33,14 +33,10 @@ to_string(const GoalUUID & goal_id)
 void
 convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 {
-<<<<<<< HEAD
-  for (size_t i = 0; i < 16; ++i) {
-=======
   if (info == nullptr) {
     throw std::invalid_argument("info is nullptr");
   }
-  for (size_t i = 0; i < UUID_SIZE; ++i) {
->>>>>>> ce86ef7 (Harden rclcpp_action::convert(). (#2786))
+  for (size_t i = 0; i < 16; ++i) {
     info->goal_id.uuid[i] = goal_id[i];
   }
 }
@@ -48,14 +44,10 @@ convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 void
 convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id)
 {
-<<<<<<< HEAD
-  for (size_t i = 0; i < 16; ++i) {
-=======
   if (goal_id == nullptr) {
     throw std::invalid_argument("goal_id is nullptr");
   }
-  for (size_t i = 0; i < UUID_SIZE; ++i) {
->>>>>>> ce86ef7 (Harden rclcpp_action::convert(). (#2786))
+  for (size_t i = 0; i < 16; ++i) {
     (*goal_id)[i] = info.goal_id.uuid[i];
   }
 }
