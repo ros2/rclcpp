@@ -69,4 +69,3 @@ macro(rclcpp_components_register_nodes target)
     endforeach()
   endif()
 endmacro()
-
