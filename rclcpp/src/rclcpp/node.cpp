@@ -374,6 +374,13 @@ Node::undeclare_parameter(const std::string & name)
   this->node_parameters_->undeclare_parameter(name);
 }
 
+void
+Node::undeclare_all_parameters()
+{
+  this->node_parameters_->undeclare_all_parameters();
+}
+
+
 bool
 Node::has_parameter(const std::string & name) const
 {

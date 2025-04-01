@@ -113,6 +113,14 @@ public:
   void
   undeclare_parameter(const std::string & name) = 0;
 
+  ///Undeclare all parameters.
+  /** 
+  * \sa rclcpp::Node::undeclare_all_parameters
+  */
+  RCLCPP_PUBLIC
+  virtual
+  void undeclare_all_parameters() = 0;
+
   /// Return true if the parameter has been declared, otherwise false.
   /**
    * \sa rclcpp::Node::has_parameter

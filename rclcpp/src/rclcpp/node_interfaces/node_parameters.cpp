@@ -657,6 +657,23 @@ NodeParameters::undeclare_parameter(const std::string & name)
   parameters_.erase(parameter_info);
 }
 
+void 
+NodeParameters::undeclare_all_parameters()
+{
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
+
+  for(auto it = parameters_.begin(); it != parameters_.end(); ){
+    if(it->second.descriptor.undeclarable){
+      it = parameters_.erase(it);
+    }
+    else{
+      ++it;
+    }
+  }
+}
+
 bool
 NodeParameters::has_parameter(const std::string & name) const
 {

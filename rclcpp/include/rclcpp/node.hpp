@@ -583,10 +583,22 @@ public:
    *   has not been declared.
    * \throws rclcpp::exceptions::ParameterImmutableException if the parameter
    *   was create as read_only (immutable).
+   * \throws rclcpp::exceptions::InvalidParameterTypeException if the parameter was set as not undeclareable
    */
   RCLCPP_PUBLIC
   void
   undeclare_parameter(const std::string & name);
+
+
+  /// Undeclare all previously declared parameters.
+  /**
+   * This method will not cause a callback registered with add_on_set_parameters_callback to be called. 
+   * 
+   * Unlike undeclare_parameter, this method will not throw exceptions if a parameter can not be undeclared, any parameters that can not be undeclared will not be effected.
+   */
+  RCLCPP_PUBLIC
+  void
+  undeclare_all_parameters();
 
   /// Return true if a given parameter is declared.
   /**
