@@ -271,7 +271,17 @@ public:
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const = 0;
 
-  /// Enable parameter modification recursively just once.
+  /// Enable parameter modification recursively during parameter callbacks.
+  /**
+   * This function is used to enable parameter modification during parameter operations.
+   *
+   * There are times when it does not allow parameter modification, such as when the parameter
+   * callbacks are being called and tries to modify the parameters with set_parameter and
+   * declare_parameter to avoid recursive parameter modification.
+   *
+   * This function is explicitly called to allow the recursive parameter operation during
+   * parameter callbacks by the application.
+   */
   RCLCPP_PUBLIC
   virtual
   void
