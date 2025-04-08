@@ -97,8 +97,8 @@ declare_parameter_or_get(
   rcl_interfaces::msg::ParameterDescriptor descriptor)
 {
   try {
-    // enable parameter modification just once to make it possible
-    // to declare QoS override parameters.
+    // enable parameter modification to make it possible
+    // to declare QoS override parameters during parameter callbacks.
     parameters_interface.enable_parameter_modification();
     return parameters_interface.declare_parameter(
       param_name, param_value, descriptor);

@@ -1195,5 +1195,6 @@ NodeParameters::get_parameter_overrides() const
 void
 NodeParameters::enable_parameter_modification()
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   parameter_modification_enabled_ = true;
 }
