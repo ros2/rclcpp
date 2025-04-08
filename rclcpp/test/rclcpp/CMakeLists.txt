@@ -196,7 +196,7 @@ ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
 ament_add_test_label(test_node_interfaces__node_parameters mimick)
 if(TARGET test_node_interfaces__node_parameters)
-  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick rcpputils::rcpputils)
+  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick rcpputils::rcpputils ${test_msgs_TARGETS})
 endif()
 ament_add_gtest(test_node_interfaces__node_services
   node_interfaces/test_node_services.cpp)
