@@ -172,13 +172,13 @@ public:
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
 
   std::map<int64_t, ResponseCallback> pending_goal_responses;
-  std::mutex goal_requests_mutex;
+  std::recursive_mutex goal_requests_mutex;
 
   std::map<int64_t, ResponseCallback> pending_result_responses;
-  std::mutex result_requests_mutex;
+  std::recursive_mutex result_requests_mutex;
 
   std::map<int64_t, ResponseCallback> pending_cancel_responses;
-  std::mutex cancel_requests_mutex;
+  std::recursive_mutex cancel_requests_mutex;
 
   std::independent_bits_engine<
     std::default_random_engine, 8, unsigned int> random_bytes_generator;
@@ -386,7 +386,7 @@ ClientBase::handle_goal_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->goal_requests_mutex);
+  std::lock_guard<std::recursive_mutex> guard(pimpl_->goal_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_goal_responses.count(sequence_number) == 0) {
     RCLCPP_ERROR(pimpl_->logger, "unknown goal response, ignoring...");
@@ -399,7 +399,7 @@ ClientBase::handle_goal_response(
 void
 ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::unique_lock<std::mutex> guard(pimpl_->goal_requests_mutex);
+  std::lock_guard<std::recursive_mutex> guard(pimpl_->goal_requests_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_goal_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
@@ -417,7 +417,7 @@ ClientBase::handle_result_response(
 {
   std::map<int64_t, ResponseCallback>::node_type pending_result_response;
   {
-    std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
+    std::lock_guard<std::recursive_mutex> guard(pimpl_->result_requests_mutex);
     const int64_t & sequence_number = response_header.sequence_number;
     if (pimpl_->pending_result_responses.count(sequence_number) == 0) {
       RCLCPP_ERROR(pimpl_->logger, "unknown result response, ignoring...");
@@ -433,7 +433,7 @@ ClientBase::handle_result_response(
 void
 ClientBase::send_result_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
+  std::lock_guard<std::recursive_mutex> guard(pimpl_->result_requests_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_result_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
@@ -449,7 +449,7 @@ ClientBase::handle_cancel_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->cancel_requests_mutex);
+  std::lock_guard<std::recursive_mutex> guard(pimpl_->cancel_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_cancel_responses.count(sequence_number) == 0) {
     RCLCPP_ERROR(pimpl_->logger, "unknown cancel response, ignoring...");
@@ -462,7 +462,7 @@ ClientBase::handle_cancel_response(
 void
 ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->cancel_requests_mutex);
+  std::lock_guard<std::recursive_mutex> guard(pimpl_->cancel_requests_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_cancel_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
