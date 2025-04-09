@@ -346,7 +346,6 @@ private:
   std::mutex clock_sub_lock_;
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
-  std::promise<void> cancel_clock_executor_promise_;
 
   // The clock callback itself
   void clock_cb(std::shared_ptr<const rosgraph_msgs::msg::Clock> msg)
@@ -392,12 +391,10 @@ private:
       clock_executor_ =
         std::make_shared<rclcpp::executors::SingleThreadedExecutor>(exec_options);
       if (!clock_executor_thread_.joinable()) {
-        cancel_clock_executor_promise_ = std::promise<void>{};
         clock_executor_thread_ = std::thread(
           [this]() {
-            auto future = cancel_clock_executor_promise_.get_future();
             clock_executor_->add_callback_group(clock_callback_group_, node_base_);
-            clock_executor_->spin_until_future_complete(future);
+            clock_executor_->spin();
           }
         );
       }
@@ -429,7 +426,6 @@ private:
   {
     std::lock_guard<std::mutex> guard(clock_sub_lock_);
     if (clock_executor_thread_.joinable()) {
-      cancel_clock_executor_promise_.set_value();
       clock_executor_->cancel();
       clock_executor_thread_.join();
       clock_executor_->remove_callback_group(clock_callback_group_);
