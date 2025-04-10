@@ -184,9 +184,8 @@ public:
 
               auto ret2 = rcl_timer_get_time_until_next_call(expire_timer, &time_until_call);
               if (ret2 == RCL_RET_TIMER_CANCELED) {
-                rclcpp::Time endless(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                  std::chrono::hours(100)).count(), clock_type);
-                expire_cv->wait_until(l, endless, [this] () -> bool {
+                rclcpp::Duration endless(std::chrono::hours(100));
+                expire_cv->wait_until(l, clock_->now() + endless, [this] () -> bool {
                   return expire_time_changed || terminate_expire_thread;
                 });
                 continue;
