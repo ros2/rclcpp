@@ -214,6 +214,10 @@ public:
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const override;
 
+  RCLCPP_PUBLIC
+  void
+  enable_parameter_modification() override;
+
   using PreSetCallbacksHandleContainer = std::list<PreSetParametersCallbackHandle::WeakPtr>;
   using OnSetCallbacksHandleContainer = std::list<OnSetParametersCallbackHandle::WeakPtr>;
   using PostSetCallbacksHandleContainer = std::list<PostSetParametersCallbackHandle::WeakPtr>;

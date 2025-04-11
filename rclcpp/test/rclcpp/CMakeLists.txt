@@ -62,6 +62,11 @@ ament_add_test_label(test_clock mimick)
 if(TARGET test_clock)
   target_link_libraries(test_clock ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
 endif()
+ament_add_gtest(test_clock_conditional test_clock_conditional.cpp)
+ament_add_test_label(test_clock_conditional mimick)
+if(TARGET test_clock_conditional)
+  target_link_libraries(test_clock_conditional ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+endif()
 ament_add_gtest(test_copy_all_parameter_values test_copy_all_parameter_values.cpp)
 if(TARGET test_copy_all_parameter_values)
   target_link_libraries(test_copy_all_parameter_values ${PROJECT_NAME})
@@ -191,7 +196,7 @@ ament_add_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
 ament_add_test_label(test_node_interfaces__node_parameters mimick)
 if(TARGET test_node_interfaces__node_parameters)
-  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick rcpputils::rcpputils)
+  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick rcpputils::rcpputils ${test_msgs_TARGETS})
 endif()
 ament_add_gtest(test_node_interfaces__node_services
   node_interfaces/test_node_services.cpp)
@@ -668,6 +673,14 @@ endif()
 
 function(test_on_all_rmws)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
+
+  # If the rmw_implementation is rmw_zenoh_cpp, run the tests with multicast discovery enabled.
+  # Note: This is a temporary change that will be reverted before we branch into Kilted.
+  if(rmw_implementation STREQUAL "rmw_zenoh_cpp")
+    list(APPEND rmw_implementation_env_var
+      ZENOH_CONFIG_OVERRIDE=scouting/multicast/enabled=true
+    )
+  endif()
 
   ament_add_gmock_test(test_qos_event
     TEST_NAME test_qos_event${target_suffix}

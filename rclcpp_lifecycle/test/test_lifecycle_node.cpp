@@ -282,9 +282,144 @@ TEST_F(TestDefaultStateMachine, trigger_transition) {
   ASSERT_EQ(
     State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
       rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+  // supposed to fail because primary state is NOT active
+  ASSERT_EQ(
+    State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVE_SHUTDOWN)).id());
+  // supposed to fail because primary state is NOT inactive
+  ASSERT_EQ(
+    State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+      rclcpp_lifecycle::Transition(Transition::TRANSITION_INACTIVE_SHUTDOWN)).id());
   ASSERT_EQ(
     State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
       rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN)).id());
+}
+
+TEST_F(TestDefaultStateMachine, trigger_transition_shutdown_id) {
+  // test Transition::TRANSITION_ACTIVE_SHUTDOWN
+  {
+    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVE_SHUTDOWN)).id());
+  }
+
+  // test Transition::TRANSITION_INACTIVE_SHUTDOWN
+  {
+    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+    // supposed to fail because primary state is NOT active
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVE_SHUTDOWN)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_INACTIVE_SHUTDOWN)).id());
+  }
+
+  // test Transition::TRANSITION_UNCONFIGURED_SHUTDOWN
+  {
+    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+    // supposed to fail because primary state is NOT active
+    ASSERT_EQ(
+      State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVE_SHUTDOWN)).id());
+    // supposed to fail because primary state is NOT inactive
+    ASSERT_EQ(
+      State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_INACTIVE_SHUTDOWN)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN)).id());
+  }
+}
+
+TEST_F(TestDefaultStateMachine, trigger_transition_shutdown_label) {
+  // test Transition::TRANSITION_ACTIVE_SHUTDOWN
+  {
+    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_FINALIZED, test_node->shutdown().id());
+  }
+
+  // test Transition::TRANSITION_INACTIVE_SHUTDOWN
+  {
+    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_FINALIZED, test_node->shutdown().id());
+  }
+
+  // test Transition::TRANSITION_UNCONFIGURED_SHUTDOWN
+  {
+    auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+    ASSERT_EQ(
+      State::PRIMARY_STATE_FINALIZED, test_node->shutdown().id());
+  }
 }
 
 TEST_F(TestDefaultStateMachine, trigger_transition_rcl_errors) {
@@ -822,9 +957,8 @@ TEST_F(TestDefaultStateMachine, test_callback_groups) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
   size_t num_groups = 0;
   test_node->for_each_callback_group(
-    [&num_groups](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    [&num_groups]([[maybe_unused]] rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      (void)group_ptr;
       num_groups++;
     });
   EXPECT_EQ(num_groups, 1u);
@@ -835,9 +969,8 @@ TEST_F(TestDefaultStateMachine, test_callback_groups) {
 
   num_groups = 0;
   test_node->for_each_callback_group(
-    [&num_groups](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    [&num_groups]([[maybe_unused]] rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-      (void)group_ptr;
       num_groups++;
     });
   EXPECT_EQ(num_groups, 2u);

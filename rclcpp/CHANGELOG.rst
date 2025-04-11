@@ -2,6 +2,31 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.4.0 (2025-04-04)
+-------------------
+* Removed trailing whitespace from the codebase. (`#2791 <https://github.com/ros2/rclcpp/issues/2791>`_)
+* Expanded docstring of `get_rmw_qos_profile()` (`#2787 <https://github.com/ros2/rclcpp/issues/2787>`_)
+* Set envars to run tests with rmw_zenoh_cpp with multicast discovery (`#2776 <https://github.com/ros2/rclcpp/issues/2776>`_)
+* fix: Compilefix for clang (`#2775 <https://github.com/ros2/rclcpp/issues/2775>`_)
+* add exception doc for configure_introspection. (`#2773 <https://github.com/ros2/rclcpp/issues/2773>`_)
+* feat: Add ClockWaiter and ClockConditionalVariable (`#2691 <https://github.com/ros2/rclcpp/issues/2691>`_)
+* doc: Added warning to not instantiate Clock directly with RCL_ROS_TIME (`#2768 <https://github.com/ros2/rclcpp/issues/2768>`_)
+* Use rmw_event_type_is_supported in test_qos_event (`#2761 <https://github.com/ros2/rclcpp/issues/2761>`_)
+* Support action typesupport helper (`#2750 <https://github.com/ros2/rclcpp/issues/2750>`_)
+* use maybe_unused attribute for the portability. (`#2758 <https://github.com/ros2/rclcpp/issues/2758>`_)
+* Executor strong reference fix (`#2745 <https://github.com/ros2/rclcpp/issues/2745>`_)
+* Cleanup of https://github.com/ros2/rclcpp/pull/2683 (`#2714 <https://github.com/ros2/rclcpp/issues/2714>`_)
+* Fix typo in doc section for get_service_typesupport_handle (`#2751 <https://github.com/ros2/rclcpp/issues/2751>`_)
+* Test case and fix for for https://github.com/ros2/rclcpp/issues/2652 (`#2713 <https://github.com/ros2/rclcpp/issues/2713>`_)
+* fix(timer): Delete node, after executor thread terminated (`#2737 <https://github.com/ros2/rclcpp/issues/2737>`_)
+* update doc section for spin_xxx methods. (`#2730 <https://github.com/ros2/rclcpp/issues/2730>`_)
+* fix: Expose timers used by rclcpp::Waitables (`#2699 <https://github.com/ros2/rclcpp/issues/2699>`_)
+* use rmw_qos_profile_rosout_default instead of rcl. (`#2663 <https://github.com/ros2/rclcpp/issues/2663>`_)
+* fix(Executor): Fixed entities not beeing executed after just beeing added (`#2724 <https://github.com/ros2/rclcpp/issues/2724>`_)
+* fix: make the loop condition align with the description (`#2726 <https://github.com/ros2/rclcpp/issues/2726>`_)
+* Collect log messages from rcl, and reset. (`#2720 <https://github.com/ros2/rclcpp/issues/2720>`_)
+* Contributors: Abhishek Kashyap, Alejandro Hernández Cordero, Barry Xu, Janosch Machowinski, Leander Stephen D'Souza, Tomoya Fujita, Yuyuan Yuan
+
 29.3.0 (2024-12-20)
 -------------------
 * Fix transient local IPC publish  (`#2708 <https://github.com/ros2/rclcpp/issues/2708>`_)

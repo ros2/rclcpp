@@ -734,8 +734,6 @@ private:
     wait_result_dirty_ = false;
     // this method comes from the SynchronizationPolicy
     this->sync_wait_result_acquire();
-    // this method comes from the StoragePolicy
-    this->storage_acquire_ownerships();
   }
 
   /// Called by the WaitResult's destructor to release resources.
@@ -752,8 +750,6 @@ private:
     }
     wait_result_holding_ = false;
     wait_result_dirty_ = false;
-    // this method comes from the StoragePolicy
-    this->storage_release_ownerships();
     // this method comes from the SynchronizationPolicy
     this->sync_wait_result_release();
   }

@@ -41,6 +41,7 @@ TEST(TestActionTypes, goal_uuid_to_rcl_action_goal_info) {
   for (uint8_t i = 0; i < UUID_SIZE; ++i) {
     goal_id[i] = i;
   }
+  ASSERT_THROW(rclcpp_action::convert(goal_id, nullptr), std::invalid_argument);
   rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
   rclcpp_action::convert(goal_id, &goal_info);
   for (uint8_t i = 0; i < UUID_SIZE; ++i) {
@@ -54,6 +55,7 @@ TEST(TestActionTypes, rcl_action_goal_info_to_goal_uuid) {
     goal_info.goal_id.uuid[i] = i;
   }
 
+  ASSERT_THROW(rclcpp_action::convert(goal_info, nullptr), std::invalid_argument);
   rclcpp_action::GoalUUID goal_id;
   rclcpp_action::convert(goal_info, &goal_id);
   for (uint8_t i = 0; i < UUID_SIZE; ++i) {

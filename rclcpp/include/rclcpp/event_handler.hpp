@@ -293,9 +293,8 @@ public:
   }
 
   std::shared_ptr<void>
-  take_data_by_entity_id(size_t id) override
+  take_data_by_entity_id([[maybe_unused]] size_t id) override
   {
-    (void)id;
     return take_data();
   }
 

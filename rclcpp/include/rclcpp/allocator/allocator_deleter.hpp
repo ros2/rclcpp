@@ -69,18 +69,17 @@ private:
 };
 
 template<typename Alloc, typename T, typename D>
-void set_allocator_for_deleter(D * deleter, Alloc * alloc)
+void set_allocator_for_deleter([[maybe_unused]] D * deleter, [[maybe_unused]] Alloc * alloc)
 {
-  (void) alloc;
-  (void) deleter;
   throw std::runtime_error("Reached unexpected template specialization");
 }
 
 template<typename T, typename U>
-void set_allocator_for_deleter(std::default_delete<T> * deleter, std::allocator<U> * alloc)
+void set_allocator_for_deleter(
+  [[maybe_unused]] std::default_delete<T> * deleter,
+  [[maybe_unused]] std::allocator<U> * alloc)
 {
-  (void) deleter;
-  (void) alloc;
+  // This function is intentionally left empty.
 }
 
 template<typename Alloc, typename T>

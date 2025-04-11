@@ -42,7 +42,9 @@ public:
    *   of this waitable has signaled the wait_set.
    */
   RCLCPP_PUBLIC
-  explicit ExecutorNotifyWaitable(std::function<void(void)> on_execute_callback = {});
+  explicit ExecutorNotifyWaitable(
+    std::function<void(void)> on_execute_callback = {}, const rclcpp::Context::SharedPtr & context =
+    rclcpp::contexts::get_global_default_context());
 
   // Destructor
   RCLCPP_PUBLIC
@@ -167,8 +169,17 @@ private:
   std::function<void(size_t)> on_ready_callback_;
 
   /// The collection of guard conditions to be waited on.
-  std::set<rclcpp::GuardCondition::WeakPtr,
-    std::owner_less<rclcpp::GuardCondition::WeakPtr>> notify_guard_conditions_;
+  std::set<rclcpp::GuardCondition::SharedPtr> notify_guard_conditions_;
+
+  /// The indixes were our guard conditions were stored in the
+  /// rcl waitset
+  std::vector<size_t> idxs_of_added_guard_condition_;
+
+  /// set to true, if we got a pending trigger
+  bool needs_processing = false;
+
+  /// A guard condition needed to generate wakeups
+  rclcpp::GuardCondition::SharedPtr guard_condition_;
 };
 
 }  // namespace executors

@@ -1073,6 +1073,21 @@ protected:
   std::shared_ptr<GoalHandle> goal_handle_;
 };
 
+TEST_F(TestBasicServer, test_configure_introspection)
+{
+  EXPECT_THROW(
+    action_server_->configure_introspection(
+      nullptr, rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS),
+      std::invalid_argument);
+
+  EXPECT_NO_THROW(
+    action_server_->configure_introspection(
+      node_->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS));
+
+  // No method was found to make rcl_action_server_configure_action_introspection return
+  // a value other than RCL_RET_OK. mocking_utils::patch_and_return does not work for this function.
+}
+
 class TestGoalRequestServer : public TestBasicServer {};
 
 TEST_F(TestGoalRequestServer, execute_goal_request_received_take_goal)

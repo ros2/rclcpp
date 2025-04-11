@@ -106,6 +106,36 @@ TEST(TypesupportHelpersTest, returns_service_type_info_for_valid_library) {
   }
 }
 
+TEST(TypesupportHelpersTest, returns_action_type_info_for_valid_legacy_library) {
+  try {
+    auto library = rclcpp::get_typesupport_library(
+      "test_msgs/NestedMessage", "rosidl_typesupport_cpp");
+    auto nestedmessage_typesupport = rclcpp::get_action_typesupport_handle(
+      "test_msgs/NestedMessage", "rosidl_typesupport_cpp", *library);
+
+    EXPECT_THAT(
+      std::string(nestedmessage_typesupport->goal_service_type_support->typesupport_identifier),
+      ContainsRegex("rosidl_typesupport"));
+  } catch (const std::runtime_error & e) {
+    FAIL() << e.what();
+  }
+}
+
+TEST(TypesupportHelpersTest, returns_action_type_info_for_valid_library) {
+  try {
+    auto library = rclcpp::get_typesupport_library(
+      "test_msgs/action/NestedMessage", "rosidl_typesupport_cpp");
+    auto nestedmessage_typesupport = rclcpp::get_action_typesupport_handle(
+      "test_msgs/action/NestedMessage", "rosidl_typesupport_cpp", *library);
+
+    EXPECT_THAT(
+      std::string(nestedmessage_typesupport->goal_service_type_support->typesupport_identifier),
+      ContainsRegex("rosidl_typesupport"));
+  } catch (const std::runtime_error & e) {
+    FAIL() << e.what();
+  }
+}
+
 TEST(TypesupportHelpersTest, test_throw_exception_with_invalid_type) {
   // message
   std::string invalid_type = "test_msgs/msg/InvalidType";
@@ -113,14 +143,18 @@ TEST(TypesupportHelpersTest, test_throw_exception_with_invalid_type) {
   EXPECT_THROW(
     rclcpp::get_message_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
-  EXPECT_THROW(
-    rclcpp::get_service_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
-    std::runtime_error);
 
   // service
   invalid_type = "test_msgs/srv/InvalidType";
   library = rclcpp::get_typesupport_library(invalid_type, "rosidl_typesupport_cpp");
   EXPECT_THROW(
     rclcpp::get_service_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
+    std::runtime_error);
+
+  // action
+  invalid_type = "test_msgs/action/InvalidType";
+  library = rclcpp::get_typesupport_library(invalid_type, "rosidl_typesupport_cpp");
+  EXPECT_THROW(
+    rclcpp::get_action_typesupport_handle(invalid_type, "rosidl_typesupport_cpp", *library),
     std::runtime_error);
 }
