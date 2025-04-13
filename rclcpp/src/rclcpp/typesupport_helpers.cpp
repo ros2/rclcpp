@@ -139,14 +139,6 @@ get_typesupport_library(const std::string & type, const std::string & typesuppor
   return std::make_shared<rcpputils::SharedLibrary>(library_path);
 }
 
-const rosidl_message_type_support_t * get_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library)
-{
-  return get_message_typesupport_handle(type, typesupport_identifier, library);
-}
-
 const rosidl_message_type_support_t * get_message_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
