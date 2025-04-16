@@ -184,7 +184,10 @@ TEST_F(TestClockWakeup, no_wakeup_on_sim_time) {
 TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
   auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
 
-  std::vector<bool> thread_finished(10, false);
+  std::vector<std::atomic_bool> thread_finished(10);
+  for (std::atomic_bool & finished : thread_finished) {
+    finished = false;
+  }
 
   std::vector<std::thread> threads;
 
@@ -202,7 +205,7 @@ TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
   // wait a bit so all threads can execute the sleep_until
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  for (const bool & finished : thread_finished) {
+  for (const std::atomic_bool & finished : thread_finished) {
     EXPECT_FALSE(finished);
   }
 
@@ -213,7 +216,7 @@ TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
   bool threads_finished = false;
   while (!threads_finished && start_time + std::chrono::seconds(1) > cur_time) {
     threads_finished = true;
-    for (const bool finished : thread_finished) {
+    for (const std::atomic_bool & finished : thread_finished) {
       if (!finished) {
         threads_finished = false;
       }
@@ -223,7 +226,7 @@ TEST_F(TestClockWakeup, multiple_threads_wait_on_one_clock) {
     cur_time = std::chrono::steady_clock::now();
   }
 
-  for (const bool finished : thread_finished) {
+  for (const std::atomic_bool & finished : thread_finished) {
     EXPECT_TRUE(finished);
   }
 
