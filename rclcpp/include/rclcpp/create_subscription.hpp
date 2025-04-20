@@ -125,7 +125,7 @@ create_subscription(
     options,
     msg_mem_strat,
     subscription_topic_stats
-    );
+  );
 
   const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
     rclcpp::detail::declare_qos_parameters(
