@@ -306,6 +306,7 @@ TEST_F(TestNode, subnode_get_name_and_namespace) {
     }, rclcpp::exceptions::NameValidationError);
   }
 }
+
 /*
    Testing node construction and destruction.
  */

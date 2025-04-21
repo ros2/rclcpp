@@ -689,7 +689,7 @@ Node::create_generic_client(
     node_base_,
     node_graph_,
     node_services_,
-    service_name,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     service_type,
     qos,
     group);
