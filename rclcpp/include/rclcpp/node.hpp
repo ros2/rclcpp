@@ -1559,9 +1559,9 @@ public:
    * which has been created using an existing instance of this class, but which
    * has an additional sub-namespace (short for subordinate namespace)
    * associated with it.
-   * A suboardinate node and an instance of this class share all the node interfaces
+   * A subordinate node and an instance of this class share all the node interfaces
    * such as `rclcpp::node_interfaces::NodeParameterInterface`.
-   * Suboardinate nodes are primarily used to organize namespaces and provide a
+   * Subordinate nodes are primarily used to organize namespaces and provide a
    * hierarchical structure, but they are not meant to be completely independent nodes.
    * The sub-namespace will extend the node's namespace for the purpose of
    * creating additional entities, such as Publishers, Subscriptions, Service
