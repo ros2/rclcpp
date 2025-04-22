@@ -336,7 +336,7 @@ TEST_F(TestExecutor, spin_all_fail_wait_set_clear) {
     node->create_wall_timer(std::chrono::milliseconds(1), [&]() {});
 
   dummy.add_node(node);
-  auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {};
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
   auto node_topics = node->get_node_topics_interface();
   subscription =
@@ -371,7 +371,7 @@ TEST_F(TestExecutor, spin_some_fail_add_handles_to_wait_set) {
 
   // create subscription explicitly, because we do not create subscription
   // on /parameter_events for 'use_sim_time' parameter anymore.
-  auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {};
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
   subscription =
     node->create_subscription<test_msgs::msg::Empty>(
