@@ -45,6 +45,7 @@ public:
    * \param[in] names A list of parameter names of interest.
    * \param[in] types A list of the types of parameter events of iterest.
    *    EventType NEW, DELETED, or CHANGED
+   * \throws std::invalid_argument if event is NULL.
    *
    * Example Usage:
    *
