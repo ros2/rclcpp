@@ -229,7 +229,6 @@ __check_parameter_value_in_range(
       if (val == integer_range.from_value || val == integer_range.to_value) {
         continue;
       }
-      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "val: %ld, from_value: %ld, to_value: %ld", val, integer_range.from_value, integer_range.to_value);
       if ((val < integer_range.from_value) || (val > integer_range.to_value)) {
         result.successful = false;
         result.reason = format_range_reason(descriptor.name, "integer");
@@ -247,7 +246,7 @@ __check_parameter_value_in_range(
     }
     return result;
   }
-  
+
   if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
     double v = value.get<double>();
     auto fp_range = descriptor.floating_point_range.at(0);
@@ -271,24 +270,28 @@ __check_parameter_value_in_range(
     return result;
   }
 
-  if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE_ARRAY) {
+  if (!descriptor.floating_point_range.empty() &&
+    value.get_type() == rclcpp::PARAMETER_DOUBLE_ARRAY)
+  {
     std::vector<double> v = value.get<std::vector<double>>();
     auto fp_range = descriptor.floating_point_range.at(0);
     for (const double & val : v) {
-      if (__are_doubles_equal(val, fp_range.from_value) || __are_doubles_equal(val, fp_range.to_value)) {
-          continue;
+      if (__are_doubles_equal(val, fp_range.from_value) || __are_doubles_equal(val,
+        fp_range.to_value))
+      {
+        continue;
       }
       if ((val < fp_range.from_value) || (val > fp_range.to_value)) {
-          result.successful = false;
-          result.reason = format_range_reason(descriptor.name, "floating point");
-          return result;
+        result.successful = false;
+        result.reason = format_range_reason(descriptor.name, "floating point");
+        return result;
       }
       if (fp_range.step == 0.0) {
-          continue;
+        continue;
       }
       double rounded_div = std::round((val - fp_range.from_value) / fp_range.step);
       if (__are_doubles_equal(val, fp_range.from_value + rounded_div * fp_range.step)) {
-          continue;
+        continue;
       }
       result.successful = false;
       result.reason = format_range_reason(descriptor.name, "floating point");

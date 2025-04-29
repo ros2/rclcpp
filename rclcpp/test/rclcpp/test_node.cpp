@@ -1347,22 +1347,38 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({10, 12, 14, 16, 18}));
 
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({12, 14, 10}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({12, 14, 10}));
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({10, 10, 10}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({10, 10, 10}));
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({14}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({14}));
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({18}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({15}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({20}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({8}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({12, 8, 18}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({12, 14, 10}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({12, 14, 10}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({10, 10, 10}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 10, 10}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({14}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({14}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({18}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({15}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({20}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({8}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({12, 8, 18}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
   }
   {
     // setting an array parameter with integer range descriptor, from_value > to_value
@@ -1379,14 +1395,22 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 20}));
 
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({20, 18}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({20, 18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({18, 19, 20}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({20, 18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({10}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({20, 18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({25}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({20, 18}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({20, 18}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({18, 19, 20}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({10}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({25}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
   }
   {
     // setting an array parameter with integer range descriptor, from_value = to_value
@@ -1403,10 +1427,14 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({17}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({19}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({17}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
   }
   {
     // setting an array parameter with integer range descriptor, step > distance(from_value, to_value)
@@ -1423,12 +1451,18 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({17}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({19}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({26}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({17}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({26}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25}));
   }
   {
     // setting an array parameter with integer range descriptor, distance not multiple of the step.
@@ -1445,12 +1479,18 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25, 28}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({17}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25, 28}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({19}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25, 28}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({32}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25, 28}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({17}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25, 28}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25, 28}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({32}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25, 28}));
   }
   {
     // setting an array parameter with integer range descriptor, step=0
@@ -1461,16 +1501,22 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     integer_range.from_value = 10;
     integer_range.to_value = 18;
     integer_range.step = 0;
-    node->declare_parameter(name, std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}), descriptor);
+    node->declare_parameter(name, std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}),
+      descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
-    EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({9}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<int64_t>({19}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(), std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({9}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
   }
   {
     // setting an array parameter with integer range descriptor and wrong default value will throw
@@ -1482,9 +1528,10 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     integer_range.to_value = 18;
     integer_range.step = 2;
     ASSERT_THROW(
-      node->declare_parameter(name, std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}), descriptor),
+      node->declare_parameter(name, std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}),
+      descriptor),
       rclcpp::exceptions::InvalidParameterValueException);
-  } // check here
+  }
   {
     // setting a parameter with floating point range descriptor
     auto name = "parameter"_unq;
@@ -1664,20 +1711,30 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     floating_point_range.from_value = 10.0;
     floating_point_range.to_value = 11.0;
     floating_point_range.step = 0.2;
-    node->declare_parameter(name, std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}), descriptor);
+    node->declare_parameter(name, std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}),
+      descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
-    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
 
-    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({10.8, 10.0, 10.6}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.8, 10.0, 10.6}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({11.3}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.8, 10.0, 10.6}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({12.0}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.8, 10.0, 10.6}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({9.4}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.8, 10.0, 10.6}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.8, 10.0, 10.6}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.8, 10.0, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.8, 10.0, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.8, 10.0, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.8, 10.0, 10.6}));
   }
   {
     // setting an array parameter with floating point range descriptor, negative step
@@ -1688,18 +1745,26 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     floating_point_range.from_value = 10.0;
     floating_point_range.to_value = 11.0;
     floating_point_range.step = -0.2;
-    node->declare_parameter(name, std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}), descriptor);
+    node->declare_parameter(name, std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}),
+      descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
-    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({10.3}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({12.0}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({9.4}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
   }
   {
     // setting an array parameter with floating point range descriptor, from_value > to_value
@@ -1716,12 +1781,18 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({10.2}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({12.0}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({9.4}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
   }
   {
     // setting an array parameter with floating point range descriptor, from_value = to_value
@@ -1738,12 +1809,18 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({11.2}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({12.0}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({9.4}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
   }
   {
     // setting an array parameter with floating point range descriptor, step > distance
@@ -1760,10 +1837,14 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({12.2}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({7.8}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({7.8}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
   }
   {
     // setting an array parameter with floating point range descriptor, distance not multiple of the step.
@@ -1780,12 +1861,18 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
     EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 10.7, 11.0}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({12.2}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.7, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({11.4}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.7, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({9.3}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
   }
   {
     // setting an array parameter with floating point range descriptor, step=0
@@ -1796,16 +1883,22 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     floating_point_range.from_value = 10.0;
     floating_point_range.to_value = 11.0;
     floating_point_range.step = 0.0;
-    node->declare_parameter(name, std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}), descriptor);
+    node->declare_parameter(name, std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}),
+      descriptor);
     EXPECT_TRUE(node->has_parameter(name));
     auto value = node->get_parameter(name);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
-    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({11.001}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, std::vector<double>({9.999}))).successful);
-    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(), std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.001}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.999}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
   }
   {
     // setting a parameter with a different type is still possible
