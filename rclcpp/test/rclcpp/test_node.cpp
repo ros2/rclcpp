@@ -1437,7 +1437,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
       std::vector<int64_t>({18}));
   }
   {
-    // setting an array parameter with integer range descriptor, step > distance(from_value, to_value)
+    // setting an array parameter with integer range descriptor,
+    // step > distance(from_value, to_value)
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.integer_range.resize(1);
@@ -1847,7 +1848,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
       std::vector<double>({10.0, 11.0}));
   }
   {
-    // setting an array parameter with floating point range descriptor, distance not multiple of the step.
+    // setting an array parameter with floating point range descriptor,
+    // distance not multiple of the step.
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.floating_point_range.resize(1);
