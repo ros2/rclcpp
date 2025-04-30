@@ -313,7 +313,7 @@ TEST_F(TestNode, subnode_parameter_operation) {
 
   auto value = subnode->declare_parameter("param", 5);
   EXPECT_EQ(value, 5);
-  // node and sub-node shares NodeParameterInterface, so expecting the exception.
+  // node and sub-node shares NodeParametersInterface, so expecting the exception.
   EXPECT_THROW(
     node->declare_parameter("param", 0),
     rclcpp::exceptions::ParameterAlreadyDeclaredException);
