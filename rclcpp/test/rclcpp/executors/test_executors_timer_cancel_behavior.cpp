@@ -285,20 +285,11 @@ public:
   T executor;
 };
 
-#if !defined(_WIN32)
-# ifdef __clang__
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wdeprecated-declarations"
-# endif
-#endif
 using MainExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  DeprecatedStaticSingleThreadedExecutor>;
-#ifdef __clang__
-# pragma clang diagnostic pop
-#endif
+  rclcpp::executors::MultiThreadedExecutor>;
+
 // TODO(@fujitatomoya): this test excludes EventExecutor because it does not
 // support simulation time used for this test to relax the racy condition.
 // See more details for https://github.com/ros2/rclcpp/issues/2457.

@@ -534,13 +534,6 @@ if(TARGET test_executors_warmup)
   target_link_libraries(test_executors_warmup ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
-ament_add_gtest(test_static_single_threaded_executor executors/test_static_single_threaded_executor.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
-ament_add_test_label(test_static_single_threaded_executor mimick)
-if(TARGET test_static_single_threaded_executor)
-  target_link_libraries(test_static_single_threaded_executor ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
-endif()
-
 ament_add_gtest(test_multi_threaded_executor executors/test_multi_threaded_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_multi_threaded_executor)
