@@ -200,21 +200,6 @@ public:
   bool
   ros_time_is_active();
 
-  /**
-   * Deprecated. This API is broken, as there is no way to get a deep
-   * copy of a clock. Therefore one can experience spurious wakeups triggered
-   * by some other instance of a clock.
-   *
-   * Cancels an ongoing or future sleep operation of one thread.
-   *
-   * This function can be used by one thread, to wakeup another thread that is
-   * blocked using any of the sleep_ or wait_ methods of this class.
-   */
-  [[deprecated("Use ClockConditionalVariable")]]
-  RCLCPP_PUBLIC
-  void
-  cancel_sleep_or_wait();
-
   /// Return the rcl_clock_t clock handle
   RCLCPP_PUBLIC
   rcl_clock_t *
