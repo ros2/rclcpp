@@ -180,7 +180,7 @@ public:
     TRACETOOLS_TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
     std::lock_guard<std::mutex> lock(mutex_);
     clear_();
-    }
+  }
 
 private:
   /// Get the next index value for the ring buffer
