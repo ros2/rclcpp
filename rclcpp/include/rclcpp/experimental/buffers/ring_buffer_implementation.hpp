@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -69,7 +70,7 @@ public:
    */
   void enqueue(BufferT request) override
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     write_index_ = next_(write_index_);
     ring_buffer_[write_index_] = std::move(request);
@@ -95,7 +96,7 @@ public:
    */
   BufferT dequeue() override
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     if (!has_data_()) {
       return BufferT();
@@ -134,7 +135,7 @@ public:
    */
   inline size_t next(size_t val)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
     return next_(val);
   }
 
@@ -146,7 +147,7 @@ public:
    */
   inline bool has_data() const override
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock lock(mutex_);
     return has_data_();
   }
 
@@ -159,7 +160,7 @@ public:
    */
   inline bool is_full() const
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock lock(mutex_);
     return is_full_();
   }
 
@@ -171,14 +172,14 @@ public:
    */
   size_t available_capacity() const override
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock lock(mutex_);
     return available_capacity_();
   }
 
   void clear() override
   {
     TRACETOOLS_TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
     clear_();
   }
 
@@ -261,7 +262,7 @@ private:
     void> * = nullptr>
   std::vector<BufferT> get_all_data_impl()
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
     std::vector<BufferT> result_vtr;
     result_vtr.reserve(size_);
     for (size_t id = 0; id < size_; ++id) {
@@ -276,7 +277,7 @@ private:
       std::is_copy_constructible<T>::value, void> * = nullptr>
   std::vector<BufferT> get_all_data_impl()
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
     std::vector<BufferT> result_vtr;
     result_vtr.reserve(size_);
     for (size_t id = 0; id < size_; ++id) {
@@ -310,7 +311,7 @@ private:
   size_t read_index_;
   size_t size_;
 
-  mutable std::mutex mutex_;
+  mutable std::shared_mutex mutex_;
 };
 
 }  // namespace buffers
