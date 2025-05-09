@@ -409,10 +409,14 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
       rcl_lifecycle_trigger_transition_by_id(
         &state_machine_, transition_id, publish_update) != RCL_RET_OK)
     {
+      const char * transition_label = rcl_lifecycle_get_transition_label_by_id(
+        &state_machine_.transition_map, transition_id);
       RCLCPP_ERROR(
         node_logging_interface_->get_logger(),
-        "Unable to start transition %u from current state %s: %s",
-        transition_id, state_machine_.current_state->label, rcl_get_error_string().str);
+        "Unable to start transition %u (%s) from current state %s: %s",
+        transition_id,
+        transition_label ? transition_label : "unknown transition",
+        state_machine_.current_state->label, rcl_get_error_string().str);
       rcutils_reset_error();
       return RCL_RET_ERROR;
     }

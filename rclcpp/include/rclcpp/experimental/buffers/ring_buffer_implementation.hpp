@@ -178,6 +178,8 @@ public:
   void clear() override
   {
     TRACETOOLS_TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    clear_();
   }
 
 private:
@@ -225,6 +227,14 @@ private:
   inline size_t available_capacity_() const
   {
     return capacity_ - size_;
+  }
+
+  inline void clear_()
+  {
+    ring_buffer_.clear();
+    size_ = 0;
+    read_index_ = 0;
+    write_index_ = capacity_ - 1;
   }
 
   /// Traits for checking if a type is std::unique_ptr
@@ -292,7 +302,7 @@ private:
     return {};
   }
 
-  size_t capacity_;
+  const size_t capacity_;
 
   std::vector<BufferT> ring_buffer_;
 
