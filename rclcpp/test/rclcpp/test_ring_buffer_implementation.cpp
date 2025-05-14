@@ -164,3 +164,15 @@ TEST(TestRingBufferImplementation, test_buffer_clear) {
   EXPECT_EQ('c', c);
   EXPECT_EQ('d', d);
 }
+
+TEST(TestRingBufferImplementation, handle_nullptr_deletion) {
+  rclcpp::experimental::buffers::RingBufferImplementation<std::unique_ptr<int>> rb(3);
+  rb.enqueue(std::make_unique<int>(42));
+  rb.enqueue(nullptr);  // intentionally enqueuing nullptr
+  rb.enqueue(std::make_unique<int>(84));
+  auto all_data = rb.get_all_data();
+  EXPECT_EQ(3u, all_data.size());
+  EXPECT_EQ(42, *(all_data[0]));
+  EXPECT_EQ(nullptr, all_data[1]);
+  EXPECT_EQ(84, *(all_data[2]));
+}
