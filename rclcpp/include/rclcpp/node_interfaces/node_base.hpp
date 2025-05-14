@@ -121,11 +121,6 @@ public:
   std::atomic_bool &
   get_associated_with_executor_atomic() override;
 
-  [[deprecated("Use get_shared_notify_guard_condition or trigger_notify_guard_condition instead")]]
-  RCLCPP_PUBLIC
-  rclcpp::GuardCondition &
-  get_notify_guard_condition() override;
-
   RCLCPP_PUBLIC
   rclcpp::GuardCondition::SharedPtr
   get_shared_notify_guard_condition() override;

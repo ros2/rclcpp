@@ -275,16 +275,6 @@ NodeBase::get_associated_with_executor_atomic()
   return associated_with_executor_;
 }
 
-rclcpp::GuardCondition &
-NodeBase::get_notify_guard_condition()
-{
-  std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
-  if (!notify_guard_condition_is_valid_) {
-    throw std::runtime_error("failed to get notify guard condition because it is invalid");
-  }
-  return *notify_guard_condition_;
-}
-
 rclcpp::GuardCondition::SharedPtr
 NodeBase::get_shared_notify_guard_condition()
 {
