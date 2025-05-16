@@ -67,7 +67,7 @@ TEST(TestActionTypes, goal_uuid_to_hashed_uuid_random) {
   // Use std::random_device to seed the generator of goal IDs.
   std::random_device rd;
   std::independent_bits_engine<
-    std::default_random_engine, 8, decltype(rd())> random_bytes_generator(rd());
+    std::mt19937, 8, decltype(rd())> random_bytes_generator(rd());
 
   std::vector<size_t> hashed_guuids;
   constexpr size_t iterations = 1000;
