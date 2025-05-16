@@ -56,8 +56,10 @@ QoSInitialization::from_rmw(const rmw_qos_profile_t & rmw_qos)
     case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
     case RMW_QOS_POLICY_HISTORY_UNKNOWN:
-    default:
       return KeepLast(rmw_qos.depth);
+    default:
+      throw std::invalid_argument(
+        "Invalid history policy enum value passed to QoSInitialization::from_rmw");
   }
 }
 
