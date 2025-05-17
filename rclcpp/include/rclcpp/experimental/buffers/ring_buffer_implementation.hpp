@@ -255,9 +255,13 @@ private:
     std::vector<BufferT> result_vtr;
     result_vtr.reserve(size_);
     for (size_t id = 0; id < size_; ++id) {
-      result_vtr.emplace_back(
-        new typename is_std_unique_ptr<T>::Ptr_type(
-          *(ring_buffer_[(read_index_ + id) % capacity_])));
+      const auto & elem(ring_buffer_[(read_index_ + id) % capacity_]);
+      if (elem != nullptr) {
+        result_vtr.emplace_back(new typename is_std_unique_ptr<T>::Ptr_type(
+          *elem));
+      } else {
+        result_vtr.emplace_back(nullptr);
+      }
     }
     return result_vtr;
   }
