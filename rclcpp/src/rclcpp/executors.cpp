@@ -26,24 +26,12 @@ rclcpp::spin_all(
 }
 
 void
-rclcpp::spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration)
-{
-  rclcpp::spin_all(node_ptr->get_node_base_interface(), max_duration);
-}
-
-void
 rclcpp::spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::ExecutorOptions options;
   options.context = node_ptr->get_context();
   rclcpp::executors::SingleThreadedExecutor exec(options);
   exec.spin_node_some(node_ptr);
-}
-
-void
-rclcpp::spin_some(rclcpp::Node::SharedPtr node_ptr)
-{
-  rclcpp::spin_some(node_ptr->get_node_base_interface());
 }
 
 void
@@ -62,3 +50,30 @@ rclcpp::spin(rclcpp::Node::SharedPtr node_ptr)
 {
   rclcpp::spin(node_ptr->get_node_base_interface());
 }
+
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+void
+rclcpp::spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration)
+{
+  rclcpp::spin_all(node_ptr->get_node_base_interface(), max_duration);
+}
+
+void
+rclcpp::spin_some(rclcpp::Node::SharedPtr node_ptr)
+{
+  rclcpp::spin_some(node_ptr->get_node_base_interface());
+}
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif

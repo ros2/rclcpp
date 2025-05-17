@@ -240,14 +240,17 @@ private:
 
   void spin()
   {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(lifecycle_node_->get_node_base_interface());
+    executor.add_node(lifecycle_client_);
+
     while (true) {
       {
         std::lock_guard<std::mutex> guard(shutdown_mutex_);
         if (!rclcpp::ok()) {
           break;
         }
-        rclcpp::spin_some(lifecycle_node_->get_node_base_interface());
-        rclcpp::spin_some(lifecycle_client_);
+        executor.spin_some();
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -455,34 +458,39 @@ TEST_F(TestLifecycleServiceClientRCLErrors, call_services_rcl_errors) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp_lifecycle", rcl_lifecycle_state_machine_is_initialized, RCL_RET_ERROR);
 
+  rclcpp::executors::SingleThreadedExecutor lifecycle_node_executor;
+  lifecycle_node_executor.add_node(lifecycle_node->get_node_base_interface());
+  rclcpp::executors::SingleThreadedExecutor client_executor;
+  client_executor.add_node(lifecycle_client);
+
   // on_change_state
   lifecycle_client->change_state(
     lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
-  rclcpp::spin_some(lifecycle_client);
+  client_executor.spin_some();
   EXPECT_THROW(
-    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+    lifecycle_node_executore.spin_some(), std::runtime_error);
 
   // on_get_state
   lifecycle_client->get_state();
-  rclcpp::spin_some(lifecycle_client);
+  client_executor.spin_some();
   EXPECT_THROW(
-    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+    lifecycle_node_executore.spin_some(), std::runtime_error);
 
   // on_get_avilable_states
   lifecycle_client->get_available_states();
-  rclcpp::spin_some(lifecycle_client);
+  client_executor.spin_some();
   EXPECT_THROW(
-    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+    lifecycle_node_executore.spin_some(), std::runtime_error);
 
   // on_get_available_transitions
   lifecycle_client->get_available_transitions();
-  rclcpp::spin_some(lifecycle_client);
+  client_executor.spin_some();
   EXPECT_THROW(
-    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+    lifecycle_node_executore.spin_some(), std::runtime_error);
 
   // on_get_transition_graph
   lifecycle_client->get_transition_graph();
-  rclcpp::spin_some(lifecycle_client);
+  client_executor.spin_some();
   EXPECT_THROW(
-    rclcpp::spin_some(lifecycle_node->get_node_base_interface()), std::runtime_error);
+    lifecycle_node_executore.spin_some(), std::runtime_error);
 }

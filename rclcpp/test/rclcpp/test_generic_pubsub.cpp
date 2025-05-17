@@ -78,8 +78,10 @@ public:
         counter++;
       });
 
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node_);
     while (counter < expected_recv_msg_count) {
-      rclcpp::spin_some(node_);
+      executor.spin_some();
     }
     return messages;
   }
@@ -107,11 +109,13 @@ public:
   {
     using clock = std::chrono::system_clock;
     auto start = clock::now();
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node_);
     while (!condition()) {
       if ((clock::now() - start) > timeout) {
         return false;
       }
-      rclcpp::spin_some(node_);
+      executor.spin_some();
     }
     return true;
   }
