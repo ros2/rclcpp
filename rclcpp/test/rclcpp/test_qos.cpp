@@ -257,7 +257,8 @@ TEST(TestQoS, from_rmw_validity)
   memset(&invalid_qos, 0, sizeof(invalid_qos));
   reinterpret_cast<uint32_t &>(invalid_qos.history) = 999;
 
-  EXPECT_THROW({
+  EXPECT_THROW(
+  {
     rclcpp::QoSInitialization::from_rmw(invalid_qos);
   }, std::invalid_argument);
 }
