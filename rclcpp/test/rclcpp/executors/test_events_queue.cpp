@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
 
 #include "rclcpp/experimental/executors/events_executor/events_executor_event_types.hpp"
