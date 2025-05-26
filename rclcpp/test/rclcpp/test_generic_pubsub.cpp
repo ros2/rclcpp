@@ -15,6 +15,7 @@
 
 #include <gmock/gmock.h>
 
+#include <chrono>
 #include <future>
 #include <memory>
 #include <string>
