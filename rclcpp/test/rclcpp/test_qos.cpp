@@ -264,7 +264,8 @@ TEST(TestQoS, from_rmw_validity)
 {
   rmw_qos_profile_t invalid_qos;
   memset(&invalid_qos, 0, sizeof(invalid_qos));
-  reinterpret_cast<uint32_t &>(invalid_qos.history) = 999;
+  unsigned int n = 999;
+  memcpy(&invalid_qos.history, &n, sizeof(n));
 
   EXPECT_THROW({
     rclcpp::QoSInitialization::from_rmw(invalid_qos);
