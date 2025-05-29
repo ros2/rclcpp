@@ -181,7 +181,7 @@ public:
   std::recursive_mutex cancel_requests_mutex;
 
   std::independent_bits_engine<
-    std::default_random_engine, 8, unsigned int> random_bytes_generator;
+    std::mt19937, 8, unsigned int> random_bytes_generator;
 };
 
 ClientBase::ClientBase(
