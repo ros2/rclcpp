@@ -320,7 +320,7 @@ TEST_F(TestGenericService, rcl_service_request_subscription_get_actual_qos_error
 TEST_F(TestGenericService, generic_service_qos) {
   rclcpp::ServicesQoS qos_profile;
   qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
-  rclcpp::Duration duration(std::chrono::nanoseconds(1));
+  rclcpp::Duration duration(std::chrono::milliseconds(1));
   qos_profile.deadline(duration);
   qos_profile.lifespan(duration);
   qos_profile.liveliness_lease_duration(duration);

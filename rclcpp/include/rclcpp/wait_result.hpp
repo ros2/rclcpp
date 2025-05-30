@@ -176,7 +176,9 @@ public:
       for (; ii < wait_set.size_of_timers(); ++ii) {
         if (rcl_wait_set.timers[ii] != nullptr) {
           ret = wait_set.timers(ii);
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -217,7 +219,9 @@ public:
         if (rcl_wait_set.subscriptions[ii] != nullptr) {
           ret = wait_set.subscriptions(ii);
           rcl_wait_set.subscriptions[ii] = nullptr;
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -237,7 +241,9 @@ public:
         if (rcl_wait_set.services[ii] != nullptr) {
           ret = wait_set.services(ii);
           rcl_wait_set.services[ii] = nullptr;
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -257,7 +263,9 @@ public:
         if (rcl_wait_set.clients[ii] != nullptr) {
           ret = wait_set.clients(ii);
           rcl_wait_set.clients[ii] = nullptr;
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }

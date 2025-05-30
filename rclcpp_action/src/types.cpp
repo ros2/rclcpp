@@ -41,6 +41,9 @@ to_string(const GoalUUID & goal_id)
 void
 convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 {
+  if (info == nullptr) {
+    throw std::invalid_argument("info is nullptr");
+  }
   for (size_t i = 0; i < UUID_SIZE; ++i) {
     info->goal_id.uuid[i] = goal_id[i];
   }
@@ -49,6 +52,9 @@ convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 void
 convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id)
 {
+  if (goal_id == nullptr) {
+    throw std::invalid_argument("goal_id is nullptr");
+  }
   for (size_t i = 0; i < UUID_SIZE; ++i) {
     (*goal_id)[i] = info.goal_id.uuid[i];
   }

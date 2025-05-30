@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <thread>
@@ -64,9 +65,8 @@ TestWaitable::take_data()
 }
 
 std::shared_ptr<void>
-TestWaitable::take_data_by_entity_id(size_t id)
+TestWaitable::take_data_by_entity_id([[maybe_unused]] size_t id)
 {
-  (void) id;
   return nullptr;
 }
 

@@ -3,6 +3,32 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.6.0 (2025-04-25)
+-------------------
+
+29.5.0 (2025-04-18)
+-------------------
+
+29.4.0 (2025-04-04)
+-------------------
+* should pull valid transition before trying to change the state. (`#2774 <https://github.com/ros2/rclcpp/issues/2774>`_)
+* use maybe_unused attribute for the portability. (`#2758 <https://github.com/ros2/rclcpp/issues/2758>`_)
+* Collect log messages from rcl, and reset. (`#2720 <https://github.com/ros2/rclcpp/issues/2720>`_)
+* Contributors: Tomoya Fujita
+
+29.3.0 (2024-12-20)
+-------------------
+* Update docstring for `rclcpp::Node::now()` (`#2696 <https://github.com/ros2/rclcpp/issues/2696>`_)
+* Contributors: Patrick Roncagliolo
+
+29.2.0 (2024-11-25)
+-------------------
+
+29.1.0 (2024-11-20)
+-------------------
+* Fix error message in rclcpp_lifecycle::State::reset() (`#2647 <https://github.com/ros2/rclcpp/issues/2647>`_)
+* Contributors: Christophe Bedard
+
 29.0.0 (2024-10-03)
 -------------------
 * Shutdown the context before context's destructor is invoked in tests (`#2633 <https://github.com/ros2/rclcpp/issues/2633>`_)

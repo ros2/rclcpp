@@ -99,14 +99,6 @@ TYPED_TEST(TestExecutorsWarmup, spin_all_doesnt_require_warmup_with_cbgroup)
 {
   using ExecutorType = TypeParam;
 
-  // TODO(alsora): Enable when https://github.com/ros2/rclcpp/pull/2595 gets merged
-  if (
-    std::is_same<ExecutorType, rclcpp::executors::SingleThreadedExecutor>() ||
-    std::is_same<ExecutorType, rclcpp::executors::MultiThreadedExecutor>())
-  {
-    GTEST_SKIP();
-  }
-
   ExecutorType executor;
 
   // Enable intra-process to guarantee deterministic and synchronous delivery of the message / event

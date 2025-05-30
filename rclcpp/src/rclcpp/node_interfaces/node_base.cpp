@@ -132,6 +132,7 @@ NodeBase::NodeBase(
             RCUTILS_LOG_ERROR_NAMED(
               "rclcpp",
               "Error in destruction of rosout publisher: %s", rcl_get_error_string().str);
+            rcl_reset_error();
           }
         }
       }
@@ -139,6 +140,7 @@ NodeBase::NodeBase(
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Error in destruction of rcl node handle: %s", rcl_get_error_string().str);
+        rcl_reset_error();
       }
       delete node;
     });
@@ -271,16 +273,6 @@ std::atomic_bool &
 NodeBase::get_associated_with_executor_atomic()
 {
   return associated_with_executor_;
-}
-
-rclcpp::GuardCondition &
-NodeBase::get_notify_guard_condition()
-{
-  std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
-  if (!notify_guard_condition_is_valid_) {
-    throw std::runtime_error("failed to get notify guard condition because it is invalid");
-  }
-  return *notify_guard_condition_;
 }
 
 rclcpp::GuardCondition::SharedPtr

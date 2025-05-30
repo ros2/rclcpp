@@ -184,7 +184,7 @@ TEST(TestQoS, DerivedTypes) {
   EXPECT_EQ(rmw_qos_profile_parameter_events, parameter_events_qos.get_rmw_qos_profile());
 
   rclcpp::RosoutQoS rosout_qos;
-  EXPECT_EQ(rcl_qos_profile_rosout_default, rosout_qos.get_rmw_qos_profile());
+  EXPECT_EQ(rmw_qos_profile_rosout_default, rosout_qos.get_rmw_qos_profile());
 
   rclcpp::SystemDefaultsQoS system_default_qos;
   const rclcpp::KeepLast expected_initialization(RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT);
@@ -271,4 +271,16 @@ TEST(TestQoS, qos_check_compatible)
       EXPECT_FALSE(ret.reason.empty());
     }
   }
+}
+
+TEST(TestQoS, from_rmw_validity)
+{
+  rmw_qos_profile_t invalid_qos;
+  memset(&invalid_qos, 0, sizeof(invalid_qos));
+  unsigned int n = 999;
+  memcpy(&invalid_qos.history, &n, sizeof(n));
+
+  EXPECT_THROW({
+    rclcpp::QoSInitialization::from_rmw(invalid_qos);
+  }, std::invalid_argument);
 }

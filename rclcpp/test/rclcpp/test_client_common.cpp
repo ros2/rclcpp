@@ -184,9 +184,8 @@ class ClientTypeNames
 {
 public:
   template<typename T>
-  static std::string GetName(int idx)
+  static std::string GetName([[maybe_unused]] int idx)
   {
-    (void)idx;
     if (std::is_same_v<T, rclcpp::Client<test_msgs::srv::Empty>>) {
       return "Client";
     }
@@ -431,7 +430,7 @@ TYPED_TEST(TestAllClientTypesWithServer, client_qos)
 
   rclcpp::ServicesQoS qos_profile;
   qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
-  rclcpp::Duration duration(std::chrono::nanoseconds(1));
+  rclcpp::Duration duration(std::chrono::milliseconds(1));
   qos_profile.deadline(duration);
   qos_profile.lifespan(duration);
   qos_profile.liveliness_lease_duration(duration);

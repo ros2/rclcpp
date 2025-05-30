@@ -20,6 +20,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
@@ -221,6 +222,13 @@ public:
     }
   }
 
+  RCLCPP_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override
+  {
+    return {};
+  }
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -278,15 +286,15 @@ public:
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "Couldn't take event info: %s", rcl_get_error_string().str);
+      rcl_reset_error();
       return nullptr;
     }
     return std::static_pointer_cast<void>(std::make_shared<EventCallbackInfoT>(callback_info));
   }
 
   std::shared_ptr<void>
-  take_data_by_entity_id(size_t id) override
+  take_data_by_entity_id([[maybe_unused]] size_t id) override
   {
-    (void)id;
     return take_data();
   }
 

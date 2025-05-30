@@ -147,11 +147,13 @@ public:
       auto qos_profile = get_actual_qos();
       if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
         throw std::invalid_argument(
-                "intraprocess communication allowed only with keep last history qos policy");
+                "intraprocess communication on topic '" + topic_name +
+                "' allowed only with keep last history qos policy");
       }
       if (qos_profile.depth() == 0) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with 0 depth qos policy");
+                "intraprocess communication on topic '" + topic_name +
+                "' is not allowed with 0 depth qos policy");
       }
 
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
@@ -207,13 +209,11 @@ public:
   /// Called after construction to continue setup that requires shared_from_this().
   void
   post_init_setup(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    const rclcpp::QoS & qos,
-    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+    [[maybe_unused]] rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    [[maybe_unused]] const rclcpp::QoS & qos,
+    [[maybe_unused]] const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   {
-    (void)node_base;
-    (void)qos;
-    (void)options;
+    // This function is intentionally left empty.
   }
 
   /// Take the next message from the inter-process subscription.
@@ -420,20 +420,17 @@ public:
 
   void
   return_dynamic_message(
-    rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override
+    [[maybe_unused]] rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override
   {
-    (void) message;
     throw rclcpp::exceptions::UnimplementedError(
             "return_dynamic_message is not implemented for Subscription");
   }
 
   void
   handle_dynamic_message(
-    const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
-    const rclcpp::MessageInfo & message_info) override
+    [[maybe_unused]] const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+    [[maybe_unused]] const rclcpp::MessageInfo & message_info) override
   {
-    (void) message;
-    (void) message_info;
     throw rclcpp::exceptions::UnimplementedError(
             "handle_dynamic_message is not implemented for Subscription");
   }

@@ -1430,7 +1430,7 @@ public:
   rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
-  /// Returns current time from the time source specified by clock_type.
+  /// Returns current time from the node clock.
   /**
    * \sa rclcpp::Clock::now
    */
@@ -1559,6 +1559,10 @@ public:
    * which has been created using an existing instance of this class, but which
    * has an additional sub-namespace (short for subordinate namespace)
    * associated with it.
+   * A subordinate node and an instance of this class share all the node interfaces
+   * such as `rclcpp::node_interfaces::NodeParametersInterface`.
+   * Subordinate nodes are primarily used to organize namespaces and provide a
+   * hierarchical structure, but they are not meant to be completely independent nodes.
    * The sub-namespace will extend the node's namespace for the purpose of
    * creating additional entities, such as Publishers, Subscriptions, Service
    * Clients and Servers, and so on.

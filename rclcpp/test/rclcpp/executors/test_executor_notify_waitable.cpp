@@ -76,8 +76,7 @@ TEST_F(TestExecutorNotifyWaitable, wait) {
     std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(on_execute_callback);
 
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-  auto notify_guard_condition =
-    node->get_node_base_interface()->get_shared_notify_guard_condition();
+  auto notify_guard_condition = std::make_shared<rclcpp::GuardCondition>();
   EXPECT_NO_THROW(waitable->add_guard_condition(notify_guard_condition));
 
   auto default_cbg = node->get_node_base_interface()->get_default_callback_group();
@@ -86,12 +85,15 @@ TEST_F(TestExecutorNotifyWaitable, wait) {
   auto waitables = node->get_node_waitables_interface();
   waitables->add_waitable(std::static_pointer_cast<rclcpp::Waitable>(waitable), default_cbg);
 
+  // notify the guard condition, this should trigger the on_execute_callback
+  notify_guard_condition->trigger();
+
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);
   executor.spin_all(std::chrono::seconds(1));
   EXPECT_EQ(1u, on_execute_calls);
 
-  // on_execute_callback doesn't change if the topology doesn't change
+  // no further trigger, therefore no further callback
   executor.spin_all(std::chrono::seconds(1));
   EXPECT_EQ(1u, on_execute_calls);
 }

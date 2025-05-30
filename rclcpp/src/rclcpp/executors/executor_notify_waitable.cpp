@@ -20,8 +20,11 @@ namespace rclcpp
 namespace executors
 {
 
-ExecutorNotifyWaitable::ExecutorNotifyWaitable(std::function<void(void)> on_execute_callback)
-: execute_callback_(on_execute_callback)
+ExecutorNotifyWaitable::ExecutorNotifyWaitable(
+  std::function<void(void)> on_execute_callback,
+  const rclcpp::Context::SharedPtr & context)
+: execute_callback_(on_execute_callback),
+  guard_condition_(std::make_shared<rclcpp::GuardCondition>(context))
 {
 }
 
@@ -30,6 +33,9 @@ ExecutorNotifyWaitable::ExecutorNotifyWaitable(ExecutorNotifyWaitable & other)
   std::lock_guard<std::mutex> lock(other.guard_condition_mutex_);
   this->execute_callback_ = other.execute_callback_;
   this->notify_guard_conditions_ = other.notify_guard_conditions_;
+  this->guard_condition_ = other.guard_condition_;
+  this->idxs_of_added_guard_condition_ = other.idxs_of_added_guard_condition_;
+  this->needs_processing = other.needs_processing;
 }
 
 ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(ExecutorNotifyWaitable & other)
@@ -38,6 +44,9 @@ ExecutorNotifyWaitable & ExecutorNotifyWaitable::operator=(ExecutorNotifyWaitabl
     std::lock_guard<std::mutex> lock(other.guard_condition_mutex_);
     this->execute_callback_ = other.execute_callback_;
     this->notify_guard_conditions_ = other.notify_guard_conditions_;
+    this->guard_condition_ = other.guard_condition_;
+    this->idxs_of_added_guard_condition_ = other.idxs_of_added_guard_condition_;
+    this->needs_processing = other.needs_processing;
   }
   return *this;
 }
@@ -47,21 +56,42 @@ ExecutorNotifyWaitable::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
-  // Note: no guard conditions need to be re-triggered, since the guard
-  // conditions in this class are not tracking a stateful condition, but instead
-  // only serve to interrupt the wait set when new information is available to
-  // consider.
-  for (auto weak_guard_condition : this->notify_guard_conditions_) {
-    auto guard_condition = weak_guard_condition.lock();
-    if (!guard_condition) {continue;}
+  idxs_of_added_guard_condition_.clear();
+  idxs_of_added_guard_condition_.reserve(notify_guard_conditions_.size());
 
-    rcl_guard_condition_t * cond = &guard_condition->get_rcl_guard_condition();
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(&wait_set, cond, NULL);
+  if(needs_processing) {
+    rcl_guard_condition_t * cond = &guard_condition_->get_rcl_guard_condition();
+    size_t rcl_index;
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(&wait_set, cond, &rcl_index);
 
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "failed to add guard condition to wait set");
     }
+
+    idxs_of_added_guard_condition_.push_back(rcl_index);
+
+    // we want to directly wake up any way, not need to add the other guard conditions
+    guard_condition_->trigger();
+
+    return;
+  }
+
+  // Note: no guard conditions need to be re-triggered, since the guard
+  // conditions in this class are not tracking a stateful condition, but instead
+  // only serve to interrupt the wait set when new information is available to
+  // consider.
+  for (const auto & guard_condition : this->notify_guard_conditions_) {
+    rcl_guard_condition_t * cond = &guard_condition->get_rcl_guard_condition();
+    size_t rcl_index;
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(&wait_set, cond, &rcl_index);
+
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "failed to add guard condition to wait set");
+    }
+
+    idxs_of_added_guard_condition_.push_back(rcl_index);
   }
 }
 
@@ -71,20 +101,23 @@ ExecutorNotifyWaitable::is_ready(const rcl_wait_set_t & wait_set)
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
   bool any_ready = false;
-  for (size_t ii = 0; ii < wait_set.size_of_guard_conditions; ++ii) {
-    const auto * rcl_guard_condition = wait_set.guard_conditions[ii];
+  for (size_t rcl_index : idxs_of_added_guard_condition_) {
+    if(rcl_index >= wait_set.size_of_guard_conditions) {
+      throw std::runtime_error(
+            "ExecutorNotifyWaitable::is_ready: Internal error, got index out of range");
+    }
+
+    const auto * rcl_guard_condition = wait_set.guard_conditions[rcl_index];
 
     if (nullptr == rcl_guard_condition) {
       continue;
     }
-    for (const auto & weak_guard_condition : this->notify_guard_conditions_) {
-      auto guard_condition = weak_guard_condition.lock();
-      if (guard_condition && &guard_condition->get_rcl_guard_condition() == rcl_guard_condition) {
-        any_ready = true;
-        break;
-      }
-    }
+
+    any_ready = true;
+    needs_processing = true;
+    break;
   }
+
   return any_ready;
 }
 
@@ -92,6 +125,9 @@ void
 ExecutorNotifyWaitable::execute(const std::shared_ptr<void> & /*data*/)
 {
   std::lock_guard<std::mutex> lock(execute_mutex_);
+
+  needs_processing = false;
+
   this->execute_callback_();
 }
 
@@ -102,9 +138,8 @@ ExecutorNotifyWaitable::take_data()
 }
 
 std::shared_ptr<void>
-ExecutorNotifyWaitable::take_data_by_entity_id(size_t id)
+ExecutorNotifyWaitable::take_data_by_entity_id([[maybe_unused]] size_t id)
 {
-  (void) id;
   return nullptr;
 }
 
@@ -122,11 +157,7 @@ ExecutorNotifyWaitable::set_on_ready_callback(std::function<void(size_t, int)> c
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
   on_ready_callback_ = gc_callback;
-  for (auto weak_gc : notify_guard_conditions_) {
-    auto gc = weak_gc.lock();
-    if (!gc) {
-      continue;
-    }
+  for (const auto & gc : notify_guard_conditions_) {
     gc->set_on_trigger_callback(on_ready_callback_);
   }
 }
@@ -138,11 +169,7 @@ ExecutorNotifyWaitable::clear_on_ready_callback()
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
 
   on_ready_callback_ = nullptr;
-  for (auto weak_gc : notify_guard_conditions_) {
-    auto gc = weak_gc.lock();
-    if (!gc) {
-      continue;
-    }
+  for (const auto & gc : notify_guard_conditions_) {
     gc->set_on_trigger_callback(nullptr);
   }
 }
@@ -159,9 +186,9 @@ void
 ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  auto guard_condition = weak_guard_condition.lock();
-  if (guard_condition && notify_guard_conditions_.count(weak_guard_condition) == 0) {
-    notify_guard_conditions_.insert(weak_guard_condition);
+  const auto & guard_condition = weak_guard_condition.lock();
+  if (guard_condition && notify_guard_conditions_.count(guard_condition) == 0) {
+    notify_guard_conditions_.insert(guard_condition);
     if (on_ready_callback_) {
       guard_condition->set_on_trigger_callback(on_ready_callback_);
     }
@@ -172,11 +199,17 @@ void
 ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
-  if (notify_guard_conditions_.count(weak_guard_condition) != 0) {
-    notify_guard_conditions_.erase(weak_guard_condition);
-    auto guard_condition = weak_guard_condition.lock();
+  const auto & guard_condition = weak_guard_condition.lock();
+  if (!guard_condition) {
+    // If the lock did not work, the guard condition can't be
+    // saved in the sets, therefore we don't need to remove it
+    return;
+  }
+  auto it = notify_guard_conditions_.find(guard_condition);
+  if (it != notify_guard_conditions_.end()) {
+    notify_guard_conditions_.erase(it);
     // If this notify waitable doesn't have an on_ready_callback, then there's nothing to unset
-    if (guard_condition && on_ready_callback_) {
+    if (on_ready_callback_) {
       guard_condition->set_on_trigger_callback(nullptr);
     }
   }
@@ -188,6 +221,13 @@ ExecutorNotifyWaitable::get_number_of_ready_guard_conditions()
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
   return notify_guard_conditions_.size();
 }
+
+std::vector<std::shared_ptr<rclcpp::TimerBase>>
+ExecutorNotifyWaitable::get_timers() const
+{
+  return {};
+}
+
 
 }  // namespace executors
 }  // namespace rclcpp

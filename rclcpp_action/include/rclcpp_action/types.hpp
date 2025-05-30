@@ -39,12 +39,22 @@ RCLCPP_ACTION_PUBLIC
 std::string
 to_string(const GoalUUID & goal_id);
 
-// Convert C++ GoalID to rcl_action_goal_info_t
+/// Convert C++ GoalID to rcl_action_goal_info_t
+/**
+ * \param[in] goal_id C++ GoalUUID reference to be converted.
+ * \param[inout] info rcl_action_goal_info_t structure to be filled.
+ * \throws std::runtime_error if info is null.
+ */
 RCLCPP_ACTION_PUBLIC
 void
 convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info);
 
-// Convert rcl_action_goal_info_t to C++ GoalID
+/// Convert rcl_action_goal_info_t to C++ GoalID
+/**
+ * \param[in] info rcl_action_goal_info_t reference to be converted.
+ * \param[inout] goal_id C++ GoalUUID structure to be filled.
+ * \throws std::runtime_error if goal_id is null.
+ */
 RCLCPP_ACTION_PUBLIC
 void
 convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id);

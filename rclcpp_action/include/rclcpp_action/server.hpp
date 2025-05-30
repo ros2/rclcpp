@@ -21,15 +21,18 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "action_msgs/srv/cancel_goal.hpp"
 #include "rcl/event_callback.h"
 #include "rcl_action/action_server.h"
 #include "rosidl_runtime_c/action_type_support_struct.h"
 #include "rosidl_typesupport_cpp/action_type_support.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
@@ -178,8 +181,29 @@ public:
   void
   clear_on_ready_callback() override;
 
+  /// Returns all timers used by this waitable
+  RCLCPP_ACTION_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override;
+
   // End Waitables API
   // -----------------
+
+  /// Configure action server introspection
+  /**
+   * \param[in] clock clock to use to generate introspection timestamps
+   * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
+   * \param[in] introspection_state the state to set introspection to
+   *
+   * \throw std::invalid_argument if clock is nullptr
+   * \throw rclcpp::exceptions::throw_from_rcl_error if rcl error occurs.
+   */
+  RCLCPP_ACTION_PUBLIC
+  void
+  configure_introspection(
+    rclcpp::Clock::SharedPtr clock,
+    const rclcpp::QoS & qos_service_event_pub,
+    rcl_service_introspection_state_t introspection_state);
 
 protected:
   RCLCPP_ACTION_PUBLIC
@@ -495,13 +519,12 @@ protected:
       };
 
     std::function<void(const GoalUUID &)> on_executing =
-      [weak_this](const GoalUUID & goal_uuid)
+      [weak_this]([[maybe_unused]] const GoalUUID & goal_uuid)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
-        (void)goal_uuid;
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
       };

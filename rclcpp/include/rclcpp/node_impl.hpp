@@ -323,11 +323,9 @@ template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & parameter) const
 {
-  std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
-
   rclcpp::Parameter parameter_variant;
 
-  bool result = get_parameter(sub_name, parameter_variant);
+  bool result = get_parameter(name, parameter_variant);
   if (result) {
     parameter = static_cast<ParameterT>(parameter_variant.get_value<ParameterT>());
   }
@@ -342,9 +340,7 @@ Node::get_parameter_or(
   ParameterT & parameter,
   const ParameterT & alternative_value) const
 {
-  std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
-
-  bool got_parameter = get_parameter(sub_name, parameter);
+  bool got_parameter = get_parameter(name, parameter);
   if (!got_parameter) {
     parameter = alternative_value;
   }

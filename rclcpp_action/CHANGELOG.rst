@@ -3,6 +3,37 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.6.0 (2025-04-25)
+-------------------
+
+29.5.0 (2025-04-18)
+-------------------
+* Use std::recursive_mutex for action requests. (`#2798 <https://github.com/ros2/rclcpp/issues/2798>`_)
+* Contributors: Tomoya Fujita
+
+29.4.0 (2025-04-04)
+-------------------
+* Remove warning (`#2790 <https://github.com/ros2/rclcpp/issues/2790>`_)
+* Harden rclcpp_action::convert(). (`#2786 <https://github.com/ros2/rclcpp/issues/2786>`_)
+* Add new interfaces to enable introspection for action (`#2743 <https://github.com/ros2/rclcpp/issues/2743>`_)
+* use maybe_unused attribute for the portability. (`#2758 <https://github.com/ros2/rclcpp/issues/2758>`_)
+* fix: Expose timers used by rclcpp::Waitables (`#2699 <https://github.com/ros2/rclcpp/issues/2699>`_)
+* Collect log messages from rcl, and reset. (`#2720 <https://github.com/ros2/rclcpp/issues/2720>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Janosch Machowinski, Tomoya Fujita
+
+29.3.0 (2024-12-20)
+-------------------
+* Make ament_cmake a buildtool dependency (`#2689 <https://github.com/ros2/rclcpp/issues/2689>`_)
+* Contributors: Nathan Wiebe Neufeldt
+
+29.2.0 (2024-11-25)
+-------------------
+
+29.1.0 (2024-11-20)
+-------------------
+* Fix documentation typo in server_goal_handle.hpp (`#2669 <https://github.com/ros2/rclcpp/issues/2669>`_)
+* Contributors: YR
+
 29.0.0 (2024-10-03)
 -------------------
 * Increase the timeout for the cppcheck on rclcpp_action. (`#2640 <https://github.com/ros2/rclcpp/issues/2640>`_)

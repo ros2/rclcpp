@@ -146,10 +146,18 @@ public:
   QoS(size_t history_depth);  // NOLINT(runtime/explicit): conversion constructor
 
   /// Return the rmw qos profile.
+  /**
+   * The profile consists of various QoS policies such as history, reliability, and durability.
+   * Use the corresponding getter functions to retrieve individual policies.
+   */
   rmw_qos_profile_t &
   get_rmw_qos_profile();
 
   /// Return the rmw qos profile.
+  /**
+   * The profile consists of various QoS policies such as history, reliability, and durability.
+   * Use the corresponding getter functions to retrieve individual policies.
+   */
   const rmw_qos_profile_t &
   get_rmw_qos_profile() const;
 
@@ -475,7 +483,7 @@ public:
   explicit
   RosoutQoS(
     const QoSInitialization & rosout_qos_initialization = (
-      QoSInitialization::from_rmw(rcl_qos_profile_rosout_default)
+      QoSInitialization::from_rmw(rmw_qos_profile_rosout_default)
   ));
 };
 

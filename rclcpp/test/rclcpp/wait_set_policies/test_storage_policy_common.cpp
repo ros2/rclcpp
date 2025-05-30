@@ -72,6 +72,11 @@ public:
 
   std::shared_ptr<void> take_data_by_entity_id(size_t) override {return nullptr;}
 
+  std::vector<std::shared_ptr<rclcpp::TimerBase>> get_timers() const override
+  {
+    return {};
+  }
+
 private:
   bool is_ready_;
   bool add_to_wait_set_;

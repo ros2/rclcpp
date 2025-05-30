@@ -216,6 +216,11 @@ public:
       shared_waitables_
     );
 
+    if (this->needs_pruning_) {
+      this->storage_prune_deleted_entities();
+      this->needs_pruning_ = false;
+    }
+
     this->storage_release_ownerships();
   }
 
@@ -455,59 +460,60 @@ public:
 
   size_t size_of_subscriptions() const
   {
-    return shared_subscriptions_.size();
+    return subscriptions_.size();
   }
 
   size_t size_of_timers() const
   {
-    return shared_timers_.size();
+    return timers_.size();
   }
 
   size_t size_of_clients() const
   {
-    return shared_clients_.size();
+    return clients_.size();
   }
 
   size_t size_of_services() const
   {
-    return shared_services_.size();
+    return services_.size();
   }
 
   size_t size_of_waitables() const
   {
-    return shared_waitables_.size();
+    return waitables_.size();
   }
 
   std::shared_ptr<rclcpp::SubscriptionBase>
   subscriptions(size_t ii) const
   {
-    return shared_subscriptions_[ii].subscription;
+    return subscriptions_[ii].lock();
   }
 
   std::shared_ptr<rclcpp::TimerBase>
   timers(size_t ii) const
   {
-    return shared_timers_[ii];
+    return timers_[ii].lock();
   }
 
   std::shared_ptr<rclcpp::ClientBase>
   clients(size_t ii) const
   {
-    return shared_clients_[ii];
+    return clients_[ii].lock();
   }
 
   std::shared_ptr<rclcpp::ServiceBase>
   services(size_t ii) const
   {
-    return shared_services_[ii];
+    return services_[ii].lock();
   }
 
   std::shared_ptr<rclcpp::Waitable>
   waitables(size_t ii) const
   {
-    return shared_waitables_[ii].waitable;
+    return waitables_[ii].lock();
   }
 
+private:
   size_t ownership_reference_counter_ = 0;
 
   SequenceOfWeakSubscriptions subscriptions_;

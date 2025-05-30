@@ -318,10 +318,8 @@ EventsExecutor::execute_event(const ExecutorEvent & event)
 }
 
 void
-EventsExecutor::handle_updated_entities(bool notify)
+EventsExecutor::handle_updated_entities([[maybe_unused]] bool notify)
 {
-  (void)notify;
-
   // Do not rebuild if we don't need to.
   // A rebuild event could be generated, but then
   // this function could end up being called from somewhere else
@@ -408,8 +406,16 @@ EventsExecutor::refresh_current_collection(
     [this](auto waitable) {
       waitable->set_on_ready_callback(
         this->create_waitable_callback(waitable.get()));
+      for (const auto & t : waitable->get_timers()) {
+        timers_manager_->add_timer(t);
+      }
     },
-    [](auto waitable) {waitable->clear_on_ready_callback();});
+    [this](auto waitable) {
+      waitable->clear_on_ready_callback();
+      for (const auto & t : waitable->get_timers()) {
+        timers_manager_->remove_timer(t);
+      }
+    });
 }
 
 std::function<void(size_t)>

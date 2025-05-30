@@ -18,6 +18,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <vector>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -26,6 +27,8 @@
 
 namespace rclcpp
 {
+
+class TimerBase;
 
 class Waitable
 {
@@ -257,6 +260,17 @@ public:
   virtual
   void
   clear_on_ready_callback() = 0;
+
+  /// Returns all timers used by this waitable
+  /**
+   * Must return all timers used within the waitable.
+   * Note, it is not supported, that timers are added
+   * or removed over the lifetime of the waitable.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const = 0;
 
 private:
   std::atomic<bool> in_use_by_wait_set_{false};

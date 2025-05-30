@@ -72,6 +72,13 @@ protected:
 /*
    Testing filters.
  */
+TEST_F(TestParameterEventFilter, invalide_arguments) {
+  EXPECT_THROW(
+    rclcpp::ParameterEventsFilter(nullptr, {"new"}, {nt}),
+    std::invalid_argument
+  );
+}
+
 TEST_F(TestParameterEventFilter, full_by_type) {
   auto res = rclcpp::ParameterEventsFilter(
     full,

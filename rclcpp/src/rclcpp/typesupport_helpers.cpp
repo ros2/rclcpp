@@ -139,14 +139,6 @@ get_typesupport_library(const std::string & type, const std::string & typesuppor
   return std::make_shared<rcpputils::SharedLibrary>(library_path);
 }
 
-const rosidl_message_type_support_t * get_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library)
-{
-  return get_message_typesupport_handle(type, typesupport_identifier, library);
-}
-
 const rosidl_message_type_support_t * get_message_typesupport_handle(
   const std::string & type,
   const std::string & typesupport_identifier,
@@ -172,6 +164,21 @@ const rosidl_service_type_support_t * get_service_typesupport_handle(
   static const std::string middle_module_additional = "srv";
 
   return static_cast<const rosidl_service_type_support_t *>(get_typesupport_handle_impl(
+           type, typesupport_identifier, typesupport_name, symbol_part_name,
+           middle_module_additional, library
+  ));
+}
+
+const rosidl_action_type_support_t * get_action_typesupport_handle(
+  const std::string & type,
+  const std::string & typesupport_identifier,
+  rcpputils::SharedLibrary & library)
+{
+  static const std::string typesupport_name = "action";
+  static const std::string symbol_part_name = "__get_action_type_support_handle__";
+  static const std::string middle_module_additional = "action";
+
+  return static_cast<const rosidl_action_type_support_t *>(get_typesupport_handle_impl(
            type, typesupport_identifier, typesupport_name, symbol_part_name,
            middle_module_additional, library
   ));
