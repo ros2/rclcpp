@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rclcpp/executors.hpp"
+#include "rcpputils/compile_warnings.hpp"
 
 void
 rclcpp::spin_all(
@@ -51,29 +52,18 @@ rclcpp::spin(rclcpp::Node::SharedPtr node_ptr)
   rclcpp::spin(node_ptr->get_node_base_interface());
 }
 
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-
 void
 rclcpp::spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration)
 {
+  RCPPUTILS_DEPRECATION_WARNING_OFF_START
   rclcpp::spin_all(node_ptr->get_node_base_interface(), max_duration);
+  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
 
 void
 rclcpp::spin_some(rclcpp::Node::SharedPtr node_ptr)
 {
+  RCPPUTILS_DEPRECATION_WARNING_OFF_START
   rclcpp::spin_some(node_ptr->get_node_base_interface());
+  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
-
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
