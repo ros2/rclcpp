@@ -146,27 +146,6 @@ set(Python3_FIND_UNVERSIONED_NAMES FIRST)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-# "watch" template for changes
-configure_file(
-  "resource/logging.hpp.em"
-  "logging.hpp.em.watch"
-  COPYONLY
-)
-# generate header with logging macros
-set(python_code_logging
-  "import em"
-  "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
-string(REPLACE ";" "$<SEMICOLON>" python_code_logging "${python_code_logging}")
-add_custom_command(OUTPUT include/rclcpp/logging.hpp
-  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
-  COMMAND Python3::Interpreter ARGS -c "${python_code_logging}"
-  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
-  COMMENT "Expanding logging.hpp.em"
-  VERBATIM
-)
-list(APPEND ${PROJECT_NAME}_SRCS
-  include/rclcpp/logging.hpp)
-
 file(GLOB interface_files "include/rclcpp/node_interfaces/node_*_interface.hpp")
 foreach(interface_file ${interface_files})
   get_filename_component(interface_name ${interface_file} NAME_WE)

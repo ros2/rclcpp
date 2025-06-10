@@ -17,6 +17,7 @@
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
   <buildtool_depend>python3</buildtool_depend>
+  <buildtool_depend>python3-empy</buildtool_depend>
 
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>builtin_interfaces</build_depend>
