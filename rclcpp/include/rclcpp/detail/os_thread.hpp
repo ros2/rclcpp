@@ -29,10 +29,13 @@ namespace detail
 /**
  * \param[in] name the name to set for the current thread. May be truncated depending on platform.
  */
-RCLCPP_PUBLIC
-void
-set_thread_name(
-  const std::string & name);
+RCLCPP_PUBLIC void set_thread_name(const std::string & name);
+
+/// Get the current thread name
+/**
+ * \return the name of the current thread.
+ */
+RCLCPP_PUBLIC std::string get_thread_name();
 
 }  // namespace detail
 }  // namespace rclcpp

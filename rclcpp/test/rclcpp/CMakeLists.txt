@@ -159,6 +159,11 @@ if(TARGET test_node)
   target_link_libraries(test_node ${PROJECT_NAME} mimick rcpputils::rcpputils rmw::rmw ${test_msgs_TARGETS})
 endif()
 
+ament_add_gtest(test_os_thread test_os_thread.cpp)
+if(TARGET test_os_thread)
+  target_link_libraries(test_os_thread ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_node_interfaces__get_node_interfaces
   node_interfaces/test_get_node_interfaces.cpp)
 if(TARGET test_node_interfaces__get_node_interfaces)

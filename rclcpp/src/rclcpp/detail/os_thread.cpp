@@ -14,6 +14,8 @@
 
 #include "rclcpp/detail/os_thread.hpp"
 
+#include <sstream>
+
 #if defined(_WIN32)
 #include <windows.h>
 #else  // posix and apple
@@ -27,18 +29,27 @@ namespace rclcpp
 namespace detail
 {
 
+// This includes the null terminator
+#if defined(__APPLE__)
+  #define MAXTHREADNAMESIZE 64
+#else  // posix
+  #define MAXTHREADNAMESIZE 16
+#endif
+
 void set_thread_name(const std::string & name)
 {
   int rc;
 #if defined(_WIN32)
-    // This will only work on Windows 10 and above.
+  // This will only work on Windows 10 and above.
   auto result = SetThreadDescription(GetCurrentThread(), name.c_str());
   rc = FAILED(result) ? -1 : 0;
 #elif defined(__APPLE__)
+  // Apple's pthread_setname_np implementation does the truncation automatically
   rc = pthread_setname_np(name.c_str());
 #else  // posix
-    // Truncate name to 16 characters as that's the maximum length supported by pthread_setname_np
-  std::string truncated_name = name.substr(0, 15);
+  // Truncate name to maximum length supported by pthread_setname_np, leaving one character for the null terminator
+  // otherwise pthread_setname_np will return an ERANGE error
+  std::string truncated_name = name.substr(0, MAXTHREADNAMESIZE - 1);
   rc = pthread_setname_np(pthread_self(), truncated_name.c_str());
 #endif
   if (rc != 0) {
@@ -46,5 +57,32 @@ void set_thread_name(const std::string & name)
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set thread name: %s", name.c_str());
   }
 }
+
+std::string get_thread_name()
+{
+  std::string name;
+#if defined(_WIN32)
+  // This will only work on Windows 10 and above.
+  PWSTR thread_description;
+  auto result = GetThreadDescription(GetCurrentThread(), &thread_description);
+  if (FAILED(result)) {
+    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get thread name");
+    return name;
+  }
+  std::wstringstream wss;
+  wss << thread_description;
+  name = wss.str();
+#else  // posix and apple
+  char thread_name[MAXTHREADNAMESIZE]; // This includes the null terminator
+  int rc = pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
+  if (rc != 0) {
+    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get thread name");
+    return name;
+  }
+  name = std::string(thread_name);
+#endif
+  return name;
+}
+
 }
 }
