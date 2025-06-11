@@ -46,7 +46,8 @@ void set_thread_name(const std::string & name)
   // Apple's pthread_setname_np implementation does the truncation automatically
   rc = pthread_setname_np(name.c_str());
 #else  // posix
-  // Truncate name to maximum length supported by pthread_setname_np, leaving one character for the null terminator
+  // Truncate name to maximum length supported by pthread_setname_np
+  // leaving one character for the null terminator
   // otherwise pthread_setname_np will return an ERANGE error
   std::string truncated_name = name.substr(0, MAXTHREADNAMESIZE - 1);
   rc = pthread_setname_np(pthread_self(), truncated_name.c_str());
@@ -72,7 +73,7 @@ std::string get_thread_name()
   wss << thread_description;
   name = wss.str();
 #else  // posix and apple
-  char thread_name[MAXTHREADNAMESIZE]; // This includes the null terminator
+  char thread_name[MAXTHREADNAMESIZE];  // This includes the null terminator
   int rc = pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
   if (rc != 0) {
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get thread name");
@@ -83,5 +84,5 @@ std::string get_thread_name()
   return name;
 }
 
-}
-}
+}  // namespace detail
+}  // namespace rclcpp

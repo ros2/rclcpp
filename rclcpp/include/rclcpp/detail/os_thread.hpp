@@ -15,9 +15,9 @@
 #ifndef RCLCPP__DETAIL__OS_THREAD_HPP_
 #define RCLCPP__DETAIL__OS_THREAD_HPP_
 
-#include "rclcpp/visibility_control.hpp"
-
 #include <string>
+
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
