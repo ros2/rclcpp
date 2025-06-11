@@ -14,10 +14,9 @@
 
 #include "rclcpp/detail/os_thread.hpp"
 
-#include <sstream>
-
 #if defined(_WIN32)
 #include <windows.h>
+#include <sstream>
 #else  // posix and apple
 #include <pthread.h>
 #endif

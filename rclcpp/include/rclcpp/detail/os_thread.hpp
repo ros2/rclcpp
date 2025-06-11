@@ -17,7 +17,6 @@
 
 #include "rclcpp/visibility_control.hpp"
 
-#include <thread>
 #include <string>
 
 namespace rclcpp
