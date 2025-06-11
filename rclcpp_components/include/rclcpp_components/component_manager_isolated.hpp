@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 #include "rclcpp_components/component_manager.hpp"
-
+#include "rclcpp/detail/os_thread.hpp"
 
 namespace rclcpp_components
 {
@@ -77,8 +77,11 @@ protected:
     DedicatedExecutorWrapper & wrapper = result.first->second;
     wrapper.executor = exec;
     auto & thread_initialized = wrapper.thread_initialized;
+    auto name = node_wrappers_[node_id].get_node_base_interface()->get_name();
+    // Copy name so that it doesn't deallocate before the thread is started
     wrapper.thread = std::thread(
-      [exec, &thread_initialized]() {
+      [exec, &thread_initialized, name]() {
+        rclcpp::detail::set_thread_name(name);
         thread_initialized = true;
         exec->spin();
       });
