@@ -20,7 +20,6 @@
 #include <thread>
 #include <string>
 
-
 namespace rclcpp
 {
 namespace detail
