@@ -81,7 +81,12 @@ protected:
     // Copy name so that it doesn't deallocate before the thread is started
     wrapper.thread = std::thread(
       [exec, &thread_initialized, name]() {
-        rclcpp::detail::set_thread_name(name);
+        try {
+          rclcpp::detail::set_thread_name(name);
+        } catch (const std::system_error & e) {
+          RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set thread name: %s (%s)", e.what(),
+            e.code().message().c_str());
+        }
         thread_initialized = true;
         exec->spin();
       });

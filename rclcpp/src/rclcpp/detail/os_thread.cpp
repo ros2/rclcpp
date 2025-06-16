@@ -17,9 +17,12 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <sstream>
+#include <vector>
 #else  // posix and apple
 #include <pthread.h>
-#endif
+#endif  // defined(_WIN32)
+
+#include <system_error>
 
 #include "rclcpp/logging.hpp"
 
@@ -28,34 +31,74 @@ namespace rclcpp
 namespace detail
 {
 
+#if defined(_WIN32)
+void set_thread_name_windows(const std::string & name)
+{
+  int wchars_num = MultiByteToWideChar(CP_UTF8, 0, thread_name, -1, nullptr, 0);
+  if (wchars_num == 0) {
+    DWORD error_code = GetLastError();
+    std::error_code error_code_obj(error_code, std::system_category());
+    throw std::system_error(error_code_obj, "Failed to convert thread name to wide characters");
+  }
+  std::vector<wchar_t> wstr(wchars_num);
+  if (!MultiByteToWideChar(CP_UTF8, 0, thread_name, -1, wstr.data(), wchars_num)) {
+    DWORD error_code = GetLastError();
+    std::error_code error_code_obj(error_code, std::system_category());
+    throw std::system_error(error_code_obj, "Failed to convert thread name to wide characters");
+  }
+  // This will only work on Windows 10 and above.
+  auto result = SetThreadDescription(GetCurrentThread(), wstr.data());
+  if (FAILED(result)) {
+    std::error_code error_code(result, std::system_category());
+    throw std::system_error(error_code, "Failed to set thread description");
+  }
+}
+#else
+
 // This includes the null terminator
 #if defined(__APPLE__)
-  #define MAXTHREADNAMESIZE 64
+constexpr size_t MAXTHREADNAMESIZE = 64;
 #else  // posix
-  #define MAXTHREADNAMESIZE 16
-#endif
+constexpr size_t MAXTHREADNAMESIZE = 16;
+#endif  // defined(__APPLE__)
 
-void set_thread_name(const std::string & name)
+void set_thread_name_posix(const std::string & name)
 {
-  int rc;
-#if defined(_WIN32)
-  // This will only work on Windows 10 and above.
-  auto result = SetThreadDescription(GetCurrentThread(), name.c_str());
-  rc = FAILED(result) ? -1 : 0;
-#elif defined(__APPLE__)
-  // Apple's pthread_setname_np implementation does the truncation automatically
-  rc = pthread_setname_np(name.c_str());
-#else  // posix
+  const char * thread_name;
   // Truncate name to maximum length supported by pthread_setname_np
   // leaving one character for the null terminator
   // otherwise pthread_setname_np will return an ERANGE error
-  std::string truncated_name = name.substr(0, MAXTHREADNAMESIZE - 1);
-  rc = pthread_setname_np(pthread_self(), truncated_name.c_str());
-#endif
-  if (rc != 0) {
-    // Don't throw since this is not critical
-    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set thread name: %s", name.c_str());
+  if (name.size() > MAXTHREADNAMESIZE - 1) {
+    std::string truncated_name = name.substr(0, MAXTHREADNAMESIZE - 1);
+    thread_name = truncated_name.c_str();
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Truncating thread name to %lu characters: %s",
+      MAXTHREADNAMESIZE - 1,
+      thread_name);
+  } else {
+    thread_name = name.c_str();
   }
+#if defined(__APPLE__)
+  int rc = pthread_setname_np(thread_name);
+#else  // posix
+  int rc = pthread_setname_np(pthread_self(), thread_name);
+#endif  // defined(__APPLE__)
+  if (rc != 0) {
+    std::error_code error_code(rc, std::system_category());
+    throw std::system_error(error_code, "Failed to set thread name");
+  }
+}
+
+#endif  // defined(_WIN32)
+
+void set_thread_name(const std::string & name)
+{
+#if defined(_WIN32)
+  set_thread_name_windows(name);
+#else
+  set_thread_name_posix(name);
+#endif  // defined(_WIN32)
 }
 
 std::string get_thread_name()
@@ -66,18 +109,19 @@ std::string get_thread_name()
   PWSTR thread_description;
   auto result = GetThreadDescription(GetCurrentThread(), &thread_description);
   if (FAILED(result)) {
-    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get thread name");
-    return name;
+    std::error_code error_code(result, std::system_category());
+    throw std::system_error(error_code, "Failed to get thread name");
   }
   std::wstringstream wss;
   wss << thread_description;
   name = wss.str();
+  LocalFree(thread_description);
 #else  // posix and apple
   char thread_name[MAXTHREADNAMESIZE];  // This includes the null terminator
   int rc = pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
   if (rc != 0) {
-    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get thread name");
-    return name;
+    std::error_code error_code(rc, std::system_category());
+    throw std::system_error(error_code, "Failed to get thread name");
   }
   name = std::string(thread_name);
 #endif

@@ -27,12 +27,14 @@ namespace detail
 /// Set the current thread name
 /**
  * \param[in] name the name to set for the current thread. May be truncated depending on platform.
+ * \throws std::system_error if the thread name cannot be set.
  */
 RCLCPP_PUBLIC void set_thread_name(const std::string & name);
 
 /// Get the current thread name
 /**
  * \return the name of the current thread.
+ * \throws std::system_error if the thread name cannot be retrieved.
  */
 RCLCPP_PUBLIC std::string get_thread_name();
 
