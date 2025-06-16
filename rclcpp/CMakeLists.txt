@@ -47,7 +47,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/contexts/default_context.cpp
   src/rclcpp/create_generic_client.cpp
   src/rclcpp/detail/add_guard_condition_to_rcl_wait_set.cpp
-  src/rclcpp/detail/os_thread.cpp
   src/rclcpp/detail/resolve_intra_process_buffer_type.cpp
   src/rclcpp/detail/resolve_parameter_overrides.cpp
   src/rclcpp/detail/rmw_implementation_specific_payload.cpp

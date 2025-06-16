@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 #include "rclcpp_components/component_manager.hpp"
-#include "rclcpp/detail/os_thread.hpp"
+#include "rcpputils/thread_name.hpp"
 
 namespace rclcpp_components
 {
@@ -82,7 +82,7 @@ protected:
     wrapper.thread = std::thread(
       [exec, &thread_initialized, name]() {
         try {
-          rclcpp::detail::set_thread_name(name);
+          rcpputils::set_thread_name(name);
         } catch (const std::system_error & e) {
           RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set thread name: %s (%s)", e.what(),
             e.code().message().c_str());
