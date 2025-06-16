@@ -53,7 +53,7 @@ void set_thread_name(const std::string & name)
   rc = pthread_setname_np(pthread_self(), truncated_name.c_str());
 #endif
   if (rc != 0) {
-        // Don't throw since this is not critical
+    // Don't throw since this is not critical
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set thread name: %s", name.c_str());
   }
 }
