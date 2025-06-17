@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <system_error>
 
 #include "rclcpp_components/component_manager.hpp"
 #include "rcpputils/thread_name.hpp"
