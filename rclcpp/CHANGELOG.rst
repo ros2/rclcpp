@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.1 (2025-06-23)
+-------------------
+* Removed warning test_qos (`#2859 <https://github.com/ros2/rclcpp/issues/2859>`_) (`#2873 <https://github.com/ros2/rclcpp/issues/2873>`_)
+* Fix for memory leaks in rclcpp::SerializedMessage (`#2861 <https://github.com/ros2/rclcpp/issues/2861>`_) (`#2863 <https://github.com/ros2/rclcpp/issues/2863>`_)
+* get_all_data_impl() does not handle null pointers properly, causing segmentation fault (backport `#2840 <https://github.com/ros2/rclcpp/issues/2840>`_) (`#2850 <https://github.com/ros2/rclcpp/issues/2850>`_)
+* Added missing chrono includes (`#2854 <https://github.com/ros2/rclcpp/issues/2854>`_) (`#2855 <https://github.com/ros2/rclcpp/issues/2855>`_)
+* QoSInitialization::from_rmw does not validate invalid history policy values, leading to silent failures (`#2841 <https://github.com/ros2/rclcpp/issues/2841>`_) (`#2846 <https://github.com/ros2/rclcpp/issues/2846>`_)
+* Add missing 's' to 'NodeParametersInterface' in doc/comment (`#2831 <https://github.com/ros2/rclcpp/issues/2831>`_) (`#2833 <https://github.com/ros2/rclcpp/issues/2833>`_)
+* subordinate node consistent behavior and update docstring. (`#2822 <https://github.com/ros2/rclcpp/issues/2822>`_) (`#2830 <https://github.com/ros2/rclcpp/issues/2830>`_)
+* throws std::invalid_argument if ParameterEvent is NULL. (`#2814 <https://github.com/ros2/rclcpp/issues/2814>`_)
+* Removed clang warnings (`#2823 <https://github.com/ros2/rclcpp/issues/2823>`_)
+* Contributors: Alejandro Hernández Cordero, Tomoya Fujita, mergify[bot]
+
 29.5.0 (2025-04-18)
 -------------------
 * Fix a race condition (`#2819 <https://github.com/ros2/rclcpp/issues/2819>`_)
