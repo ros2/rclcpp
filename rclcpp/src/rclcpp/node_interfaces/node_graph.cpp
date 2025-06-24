@@ -446,7 +446,7 @@ NodeGraph::get_node_names_and_namespaces() const
     throw std::runtime_error(error);
   }
 
-  RCUTILS_LOG_ERROR_NAMED("rclcpp", error_msg);
+  RCUTILS_LOG_ERROR_NAMED("rclcpp", error);
 
   return node_names;
 }
