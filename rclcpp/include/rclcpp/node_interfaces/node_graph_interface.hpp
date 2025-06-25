@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <string>
 #include <tuple>

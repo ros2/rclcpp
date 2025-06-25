@@ -15,6 +15,7 @@
 #include "rclcpp/node_interfaces/node_graph.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <string>
 #include <tuple>
