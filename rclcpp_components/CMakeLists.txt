@@ -56,7 +56,7 @@ add_executable(
 )
 target_link_libraries(component_container component_manager rclcpp::rclcpp)
 
-add_executable(Add commentMore actions
+add_executable(
   component_container_event
   src/component_container_event.cpp
 )
