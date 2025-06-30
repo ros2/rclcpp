@@ -2,6 +2,23 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.6.1 (2025-06-23)
+-------------------
+* Fix for memory leaks in rclcpp::SerializedMessage (`#2861 <https://github.com/ros2/rclcpp/issues/2861>`_)
+* Removed warning test_qos (`#2859 <https://github.com/ros2/rclcpp/issues/2859>`_)
+* Added missing chrono includes (`#2854 <https://github.com/ros2/rclcpp/issues/2854>`_)
+* get_all_data_impl() does not handle null pointers properly, causing segmentation fault (`#2840 <https://github.com/ros2/rclcpp/issues/2840>`_)
+* QoSInitialization::from_rmw does not validate invalid history policy values, leading to silent failures (`#2841 <https://github.com/ros2/rclcpp/issues/2841>`_)
+* remove get_notify_guard_condition from NodeBaseInterface. (`#2839 <https://github.com/ros2/rclcpp/issues/2839>`_)
+* Removed deprecated StaticSingleThreadedExecutor (`#2835 <https://github.com/ros2/rclcpp/issues/2835>`_)
+* Removed deprecated rcpputils Path (`#2834 <https://github.com/ros2/rclcpp/issues/2834>`_)
+* Add range constraints for applicable array parameters (`#2828 <https://github.com/ros2/rclcpp/issues/2828>`_)
+* Update RingBufferImplementation to clear internal data. (`#2837 <https://github.com/ros2/rclcpp/issues/2837>`_)
+* Removed deprecated cancel_sleep_or_wait (`#2836 <https://github.com/ros2/rclcpp/issues/2836>`_)
+* Add missing 's' to 'NodeParametersInterface' in doc/comment (`#2831 <https://github.com/ros2/rclcpp/issues/2831>`_)
+* subordinate node consistent behavior and update docstring. (`#2822 <https://github.com/ros2/rclcpp/issues/2822>`_)
+* Contributors: Alejandro Hernández Cordero, Alex Youngs, Christophe Bedard, Michael Carlstrom, Michael Orlov, Tomoya Fujita
+
 29.6.0 (2025-04-25)
 -------------------
 * throws std::invalid_argument if ParameterEvent is NULL. (`#2814 <https://github.com/ros2/rclcpp/issues/2814>`_)

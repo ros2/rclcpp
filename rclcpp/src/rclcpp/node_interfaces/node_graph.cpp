@@ -419,7 +419,7 @@ NodeGraph::get_node_names_and_namespaces() const
         rcl_get_error_string().str;
       rcl_reset_error();
     }
-    // TODO(karsten1987): Append rcutils_error_message once it's in master
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
 
@@ -434,20 +434,15 @@ NodeGraph::get_node_names_and_namespaces() const
   std::string error;
   rcl_ret_t ret_names = rcutils_string_array_fini(&node_names_c);
   if (ret_names != RCUTILS_RET_OK) {
-    // *INDENT-OFF*
-    // TODO(karsten1987): Append rcutils_error_message once it's in master
-    error = "could not destroy node names";
-    // *INDENT-ON*
+    error = std::string("could not destroy node names: ") + rcl_get_error_string().str;
   }
   rcl_ret_t ret_ns = rcutils_string_array_fini(&node_namespaces_c);
   if (ret_ns != RCUTILS_RET_OK) {
-    // *INDENT-OFF*
-    // TODO(karsten1987): Append rcutils_error_message once it's in master
-    error += ", could not destroy node namespaces";
-    // *INDENT-ON*
+    error += std::string(", could not destroy node namespaces: ") + rcl_get_error_string().str;
   }
 
   if (ret_names != RCUTILS_RET_OK || ret_ns != RCUTILS_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", error.c_str());
     throw std::runtime_error(error);
   }
 

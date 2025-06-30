@@ -3,6 +3,12 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.6.1 (2025-06-23)
+-------------------
+* Added missing chrono includes (`#2854 <https://github.com/ros2/rclcpp/issues/2854>`_)
+* introduce rcl_lifecycle_get_transition_label_by_id(). (`#2827 <https://github.com/ros2/rclcpp/issues/2827>`_)
+* Contributors: Alejandro Hernández Cordero, Tomoya Fujita
+
 29.6.0 (2025-04-25)
 -------------------
 
