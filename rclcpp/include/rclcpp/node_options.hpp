@@ -290,6 +290,7 @@ public:
   /// Set the clock QoS.
   /**
    * The QoS settings to be used for the publisher on /clock topic, if enabled.
+   * Note: this parameter gets ignored if a `time_source` is set.
    */
   RCLCPP_PUBLIC
   NodeOptions &
@@ -304,6 +305,7 @@ public:
   /// Set the use_clock_thread flag, return this for parameter idiom.
   /**
    * If true, a dedicated thread will be used to subscribe to "/clock" topic.
+   * Note: this parameter gets ignored if a `time_source` is set.
    */
   RCLCPP_PUBLIC
   NodeOptions &
