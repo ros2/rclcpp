@@ -103,7 +103,9 @@ LifecycleNode::LifecycleNode(
       options.allow_undeclared_parameters(),
       options.automatically_declare_parameters_from_overrides()
     )),
-  node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
+  node_time_source_(
+    options.time_source() ? options.time_source() :
+    std::make_shared<rclcpp::node_interfaces::NodeTimeSource>(
       node_base_,
       node_topics_,
       node_graph_,
@@ -124,6 +126,10 @@ LifecycleNode::LifecycleNode(
   node_options_(options),
   impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_, node_logging_))
 {
+  // Avoid re-insertion if a TimeSource is not specified via NodeOptions
+  if (options.time_source()){
+    node_time_source_->attachClock(node_clock_);
+  }
   impl_->init(enable_communication_interface);
 
   register_on_configure(

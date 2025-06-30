@@ -237,7 +237,10 @@ Node::Node(
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
-  node_time_source_->attachClock(node_clock_);
+  // Avoid re-insertion if a TimeSource is not specified via NodeOptions
+  if (options.time_source()){
+    node_time_source_->attachClock(node_clock_);
+  }
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
   rclcpp::detail::declare_qos_parameters(
