@@ -381,10 +381,10 @@ private:
   std::recursive_mutex sub_contexts_mutex_;
 
   std::vector<std::shared_ptr<OnShutdownCallback>> on_shutdown_callbacks_;
-  mutable std::recursive_mutex on_shutdown_callbacks_mutex_;
+  mutable std::mutex on_shutdown_callbacks_mutex_;
 
   std::vector<std::shared_ptr<PreShutdownCallback>> pre_shutdown_callbacks_;
-  mutable std::recursive_mutex pre_shutdown_callbacks_mutex_;
+  mutable std::mutex pre_shutdown_callbacks_mutex_;
 
   /// Condition variable for timed sleep (see sleep_for).
   std::condition_variable interrupt_condition_variable_;
