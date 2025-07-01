@@ -333,7 +333,7 @@ Context::shutdown(const std::string & reason)
   // call each shutdown callback
   {
     std::lock_guard<std::recursive_mutex> lock(on_shutdown_callbacks_mutex_);
-    // callbacks my delete other callbacks during the execution,
+    // callbacks may delete other callbacks during the execution,
     // therefore we need to save a copy and check before execution
     // if the next callback is still present
     auto cpy = on_shutdown_callbacks_;
