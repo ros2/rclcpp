@@ -14,6 +14,7 @@
 
 #include "rclcpp/context.hpp"
 
+#include <map>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -142,11 +143,52 @@ rclcpp_logging_output_handler(
 }
 }  // extern "C"
 
+/**
+ * Global storage for pre and post shutdown recursive mutexes.
+ * Note, this is a ABI compatibility hack.
+ */
+class MutexLookup
+{
+  std::mutex m;
+
+  struct MutexHolder
+  {
+    std::recursive_mutex on_shutdown_callbacks_mutex_;
+    std::recursive_mutex pre_shutdown_callbacks_mutex_;
+  };
+
+  std::map<const Context *, std::unique_ptr<MutexHolder>> mutexMap;
+
+public:
+  MutexHolder & getMutexes(const Context *forContext)
+  {
+    auto it = mutexMap.find(forContext);
+    if(it == mutexMap.end()) {
+      it = mutexMap.emplace(forContext, std::make_unique<MutexHolder>()).first;
+    }
+
+    return *(it->second);
+  }
+
+  /**
+   * Only supposed to be called on deletion of context
+   */
+  void removeMutexes(const Context *forContext)
+  {
+    mutexMap.erase(forContext);
+  }
+};
+
+MutexLookup mutexStorage;
+
 Context::Context()
 : rcl_context_(nullptr),
   shutdown_reason_(""),
   logging_mutex_(nullptr)
-{}
+{
+  // allocate mutexes
+  mutexStorage.getMutexes(this);
+}
 
 Context::~Context()
 {
@@ -165,6 +207,9 @@ Context::~Context()
   } catch (...) {
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "unhandled exception in ~Context()");
   }
+
+  // delete mutexes
+  mutexStorage.removeMutexes(this);
 }
 
 RCLCPP_LOCAL
@@ -310,9 +355,17 @@ Context::shutdown(const std::string & reason)
 
   // call each pre-shutdown callback
   {
-    std::lock_guard<std::mutex> lock{pre_shutdown_callbacks_mutex_};
-    for (const auto & callback : pre_shutdown_callbacks_) {
-      (*callback)();
+    std::lock_guard<std::recursive_mutex> lock{mutexStorage.getMutexes(
+        this).pre_shutdown_callbacks_mutex_};
+    // callbacks may delete other callbacks during the execution,
+    // therefore we need to save a copy and check before execution
+    // if the next callback is still present
+    auto cpy = pre_shutdown_callbacks_;
+    for (const auto & callback : cpy) {
+      auto it = std::find(pre_shutdown_callbacks_.begin(), pre_shutdown_callbacks_.end(), callback);
+      if(it != pre_shutdown_callbacks_.end()) {
+        (*callback)();
+      }
     }
   }
 
@@ -325,9 +378,17 @@ Context::shutdown(const std::string & reason)
   shutdown_reason_ = reason;
   // call each shutdown callback
   {
-    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
-    for (const auto & callback : on_shutdown_callbacks_) {
-      (*callback)();
+    std::lock_guard<std::recursive_mutex> lock(mutexStorage.getMutexes(
+      this).on_shutdown_callbacks_mutex_);
+    // callbacks may delete other callbacks during the execution,
+    // therefore we need to save a copy and check before execution
+    // if the next callback is still present
+    auto cpy = on_shutdown_callbacks_;
+    for (const auto & callback : cpy) {
+      auto it = std::find(on_shutdown_callbacks_.begin(), on_shutdown_callbacks_.end(), callback);
+      if(it != on_shutdown_callbacks_.end()) {
+        (*callback)();
+      }
     }
   }
 
@@ -398,10 +459,12 @@ Context::add_shutdown_callback(
     shutdown_type == ShutdownType::pre_shutdown || shutdown_type == ShutdownType::on_shutdown);
 
   if constexpr (shutdown_type == ShutdownType::pre_shutdown) {
-    std::lock_guard<std::mutex> lock(pre_shutdown_callbacks_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutexStorage.getMutexes(
+      this).pre_shutdown_callbacks_mutex_);
     pre_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   } else {
-    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutexStorage.getMutexes(
+      this).on_shutdown_callbacks_mutex_);
     on_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   }
 
@@ -421,7 +484,7 @@ Context::remove_shutdown_callback(
   }
 
   const auto remove_callback = [&callback_shared_ptr](auto & mutex, auto & callback_vector) {
-      const std::lock_guard<std::mutex> lock(mutex);
+      const std::lock_guard<std::recursive_mutex> lock(mutex);
       auto iter = callback_vector.begin();
       for (; iter != callback_vector.end(); iter++) {
         if ((*iter).get() == callback_shared_ptr.get()) {
@@ -432,6 +495,7 @@ Context::remove_shutdown_callback(
         return false;
       }
       callback_vector.erase(iter);
+
       return true;
     };
 
@@ -439,9 +503,11 @@ Context::remove_shutdown_callback(
     shutdown_type == ShutdownType::pre_shutdown || shutdown_type == ShutdownType::on_shutdown);
 
   if constexpr (shutdown_type == ShutdownType::pre_shutdown) {
-    return remove_callback(pre_shutdown_callbacks_mutex_, pre_shutdown_callbacks_);
+    return remove_callback(mutexStorage.getMutexes(this).pre_shutdown_callbacks_mutex_,
+      pre_shutdown_callbacks_);
   } else {
-    return remove_callback(on_shutdown_callbacks_mutex_, on_shutdown_callbacks_);
+    return remove_callback(mutexStorage.getMutexes(this).on_shutdown_callbacks_mutex_,
+      on_shutdown_callbacks_);
   }
 }
 
@@ -462,7 +528,7 @@ std::vector<rclcpp::Context::ShutdownCallback>
 Context::get_shutdown_callback() const
 {
   const auto get_callback_vector = [](auto & mutex, auto & callback_set) {
-      const std::lock_guard<std::mutex> lock(mutex);
+      const std::lock_guard<std::recursive_mutex> lock(mutex);
       std::vector<rclcpp::Context::ShutdownCallback> callbacks;
       for (auto & callback : callback_set) {
         callbacks.push_back(*callback);
@@ -474,9 +540,11 @@ Context::get_shutdown_callback() const
     shutdown_type == ShutdownType::pre_shutdown || shutdown_type == ShutdownType::on_shutdown);
 
   if constexpr (shutdown_type == ShutdownType::pre_shutdown) {
-    return get_callback_vector(pre_shutdown_callbacks_mutex_, pre_shutdown_callbacks_);
+    return get_callback_vector(mutexStorage.getMutexes(this).pre_shutdown_callbacks_mutex_,
+      pre_shutdown_callbacks_);
   } else {
-    return get_callback_vector(on_shutdown_callbacks_mutex_, on_shutdown_callbacks_);
+    return get_callback_vector(mutexStorage.getMutexes(this).on_shutdown_callbacks_mutex_,
+      on_shutdown_callbacks_);
   }
 }
 
