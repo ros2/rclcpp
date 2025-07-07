@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.2 (2025-07-07)
+-------------------
+* Shutdown deadlock fix jazzy (`#2887 <https://github.com/ros2/rclcpp/issues/2887>`_) (`#2888 <https://github.com/ros2/rclcpp/issues/2888>`_)
+* Fix test_publisher_with_system_default_qos (`#2881 <https://github.com/ros2/rclcpp/issues/2881>`_) (`#2884 <https://github.com/ros2/rclcpp/issues/2884>`_)
+* Contributors: Tomoya Fujita, Janosch Machowinski
+
 29.5.1 (2025-06-23)
 -------------------
 * Removed warning test_qos (`#2859 <https://github.com/ros2/rclcpp/issues/2859>`_) (`#2873 <https://github.com/ros2/rclcpp/issues/2873>`_)

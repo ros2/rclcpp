@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.5.2 (2025-07-07)
+-------------------
+
 29.5.1 (2025-06-23)
 -------------------
 * Replace std::default_random_engine with std::mt19937 (rolling) (`#2843 <https://github.com/ros2/rclcpp/issues/2843>`_) (`#2866 <https://github.com/ros2/rclcpp/issues/2866>`_)
