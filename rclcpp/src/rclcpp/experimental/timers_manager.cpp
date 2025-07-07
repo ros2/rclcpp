@@ -279,8 +279,7 @@ void TimersManager::run_timers()
       timers_cv_.wait_for(lock, time_to_sleep.value(), [this]() {return timers_updated_;});
     }
 
-    if (timers_updated_)
-    {
+    if (timers_updated_) {
       // Re-heap in case ordering changed due to a cancelled timer
       // re-activating.
       TimersHeap locked_heap = weak_timers_heap_.validate_and_lock();
