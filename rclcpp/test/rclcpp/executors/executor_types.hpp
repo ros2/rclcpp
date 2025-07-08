@@ -52,8 +52,6 @@ public:
   }
 };
 
-// StaticSingleThreadedExecutor is not included in these tests for now, due to:
-// https://github.com/ros2/rclcpp/issues/1219
 using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
