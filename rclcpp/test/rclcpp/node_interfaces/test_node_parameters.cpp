@@ -125,12 +125,30 @@ TEST_F(TestNodeParameters, list_parameters)
     list_result5.names.end());
 }
 
-TEST_F(TestNodeParameters, parameter_overrides)
+TEST_F(TestNodeParameters, parameter_overrides_with_value)
 {
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
   node_options.append_parameter_override("param1", true);
   node_options.append_parameter_override("param2", 42);
+
+  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns", node_options);
+
+  auto * node_parameters_interface =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node2->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters_interface);
+
+  const auto & parameter_overrides = node_parameters_interface->get_parameter_overrides();
+  EXPECT_EQ(2u, parameter_overrides.size());
+}
+
+TEST_F(TestNodeParameters, parameter_overrides_with_parameter)
+{
+  rclcpp::NodeOptions node_options;
+  node_options.automatically_declare_parameters_from_overrides(true);
+  node_options.append_parameter_override(rclcpp::Parameter("param1", true));
+  node_options.append_parameter_override(rclcpp::Parameter("param2", 42));
 
   std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns", node_options);
 
