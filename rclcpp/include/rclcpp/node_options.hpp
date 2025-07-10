@@ -147,7 +147,6 @@ public:
   }
 
   /// Append a single parameter override, parameter idiom style.
-  template<typename ParameterT>
   NodeOptions &
   append_parameter_override(const rclcpp::Parameter & param)
   {

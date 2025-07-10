@@ -258,8 +258,10 @@ TEST(TestNodeOptions, append_parameter_override) {
   auto options = rclcpp::NodeOptions().arguments(expected_args).use_global_arguments(false);
   rclcpp::Parameter parameter("some_parameter", 10);
   options.append_parameter_override("some_parameter", 10);
-  EXPECT_EQ(1u, options.parameter_overrides().size());
+  options.append_parameter_override(parameter);
+  EXPECT_EQ(2u, options.parameter_overrides().size());
   EXPECT_EQ(std::string("some_parameter"), options.parameter_overrides()[0].get_name());
+  EXPECT_EQ(std::string("some_parameter"), options.parameter_overrides()[1].get_name());
 }
 
 TEST(TestNodeOptions, rcl_node_options_fini_error) {
