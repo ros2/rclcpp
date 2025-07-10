@@ -62,18 +62,14 @@ RCLCPP_PUBLIC
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier);
 
-<<<<<<< HEAD
-/// Extract the type support handle from the library.
-/**
- * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
- *
- * \deprecated Use get_message_typesupport_handle() instead
- *
- * \param[in] type The topic type, e.g. "std_msgs/msg/String"
- * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
- * \param[in] library The shared type support library
- * \return A type support handle
- */
+/// \brief Extract the type support handle from the library.
+/// \note The library needs to match the topic type. The shared library must stay loaded for the
+/// lifetime of the result.
+/// \deprecated Use get_message_typesupport_handle() instead
+/// \param[in] type The topic type, e.g. "std_msgs/msg/String"
+/// \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
+/// \param[in] library The shared type support library
+/// \return A type support handle
 [[deprecated("Use `get_message_typesupport_handle` instead")]]
 RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
@@ -82,17 +78,6 @@ get_typesupport_handle(
   const std::string & typesupport_identifier,
   rcpputils::SharedLibrary & library);
 
-/// Extract the message type support handle from the library.
-/**
- * The library needs to match the topic type. The shared library must stay loaded for the lifetime of the result.
- *
- * \param[in] type The topic type, e.g. "std_msgs/msg/String"
- * \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
- * \param[in] library The shared type support library
- * \throws std::runtime_error if the symbol of type not found in the library.
- * \return A message type support handle
- */
-=======
 /// \brief Extracts the message type support handle from the library.
 /// \note The library needs to match the topic type. The shared library must stay loaded for the
 /// lifetime of the result.
@@ -101,7 +86,6 @@ get_typesupport_handle(
 /// \param[in] library The shared type support library
 /// \throws std::runtime_error if the symbol of type not found in the library.
 /// \return A message type support handle
->>>>>>> 448287b (Expose `typesupport_helpers` API needed for the Rosbag2 (#2858))
 RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_message_typesupport_handle(
@@ -124,24 +108,6 @@ get_service_typesupport_handle(
   const std::string & typesupport_identifier,
   rcpputils::SharedLibrary & library);
 
-<<<<<<< HEAD
-=======
-/// \brief Extracts the action type support handle from the library.
-/// \note The library needs to match the action type. The shared library must stay loaded for the
-/// lifetime of the result.
-/// \param[in] type The action type, e.g. "example_interfaces/action/Fibonacci"
-/// \param[in] typesupport_identifier Type support identifier, typically "rosidl_typesupport_cpp"
-/// \param[in] library The shared type support library
-/// \throws std::runtime_error if the symbol of type not found in the library.
-/// \return A action type support handle
-RCLCPP_PUBLIC
-const rosidl_action_type_support_t *
-get_action_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library);
-
->>>>>>> 448287b (Expose `typesupport_helpers` API needed for the Rosbag2 (#2858))
 }  // namespace rclcpp
 
 #endif  // RCLCPP__TYPESUPPORT_HELPERS_HPP_
