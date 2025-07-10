@@ -86,7 +86,7 @@ public:
             "Invalid type '%s' for parameter 'start_type_description_service', should be 'bool'",
         rclcpp::to_string(enable_param.get_type()).c_str());
       std::ostringstream ss;
-	    ss << "Wrong parameter type, parameter {" << enable_param_name << "} is of type {bool}, "
+      ss << "Wrong parameter type, parameter {" << enable_param_name << "} is of type {bool}, "
          << "setting it to {" << to_string(enable_param.get_type()) << "} is not allowed.";
       throw rclcpp::exceptions::InvalidParameterTypeException(enable_param_name, ss.str());
     }
