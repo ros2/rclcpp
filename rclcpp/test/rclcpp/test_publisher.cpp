@@ -184,10 +184,12 @@ TEST_F(TestPublisher, test_publisher_with_system_default_qos) {
   // explicitly enable intra-process comm with publisher option
   auto options = rclcpp::PublisherOptions();
   options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
+  // intraprocess communication allowed only with volatile durability
+  rclcpp::QoS qos = rclcpp::QoS(10).durability_volatile();
   using test_msgs::msg::Empty;
   ASSERT_NO_THROW(
   {
-    auto publisher = node->create_publisher<Empty>("topic", rclcpp::SystemDefaultsQoS(), options);
+    auto publisher = node->create_publisher<Empty>("topic", qos, options);
   });
 }
 
