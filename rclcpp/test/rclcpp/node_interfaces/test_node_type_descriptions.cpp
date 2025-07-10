@@ -56,6 +56,7 @@ TEST_F(TestNodeTypeDescriptions, bad_parameter_type)
   
   ASSERT_THROW(
   {
+    node_options.automatically_declare_parameters_from_overrides(false);
     auto node = std::make_shared<rclcpp::Node>("node", "ns", node_options);
     (void) node;
   }, rclcpp::exceptions::InvalidParameterTypeException);
@@ -65,7 +66,7 @@ TEST_F(TestNodeTypeDescriptions, bad_parameter_type)
     node_options.automatically_declare_parameters_from_overrides(true);
     auto node = std::make_shared<rclcpp::Node>("node", "ns", node_options);
     (void) node;
-  }, std::invalid_argument);
+  }, rclcpp::exceptions::InvalidParameterTypeException);
 }
 
 TEST_F(TestNodeTypeDescriptions, disabled_no_service)
