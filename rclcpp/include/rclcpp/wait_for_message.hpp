@@ -78,11 +78,13 @@ bool wait_for_message(
 /// Wait for the next incoming message.
 /**
  * Wait for the next incoming message to arrive on a specified topic before the specified timeout.
- *
- * \param[out] out is the message to be filled when a new message is arriving.
+ * Specify the QoS settings for the subscription to control how messages are received.
+ * 
+ * \param[out] out is the message to be filled when a new message is arriving
  * \param[in] node the node pointer to initialize the subscription on.
  * \param[in] topic the topic to wait for messages.
  * \param[in] time_to_wait parameter specifying the timeout before returning.
+ * \param[in] qos parameter specifying QoS settings for the subscription.
  * \return true if a message was successfully received, false if message could not
  * be obtained or shutdown was triggered asynchronously on the context.
  */
@@ -91,9 +93,10 @@ bool wait_for_message(
   MsgT & out,
   rclcpp::Node::SharedPtr node,
   const std::string & topic,
-  std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1))
+  std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1),
+  const rclcpp::Qos &qos = rclcpp::Qos(1))
 {
-  auto sub = node->create_subscription<MsgT>(topic, 1, [](const std::shared_ptr<const MsgT>) {});
+  auto sub = node->create_subscription<MsgT>(topic, qos, [](const std::shared_ptr<const MsgT>) {});
   return wait_for_message<MsgT, Rep, Period>(
     out, sub, node->get_node_options().context(), time_to_wait);
 }
