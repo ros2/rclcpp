@@ -95,7 +95,7 @@ bool wait_for_message(
   rclcpp::Node::SharedPtr node,
   const std::string & topic,
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1),
-  const rclcpp::QoS& qos = rclcpp::QoS(1))
+  const rclcpp::QoS& qos = rclcpp::SystemDefaultsQoS(1))
 {
   auto sub = node->create_subscription<MsgT>(topic, qos, [](const std::shared_ptr<const MsgT>) {});
   return wait_for_message<MsgT, Rep, Period>(
