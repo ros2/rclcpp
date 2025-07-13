@@ -110,7 +110,6 @@ TEST(TestUtilities, wait_for_message_twice_one_sub) {
 }
 
 TEST(TestUtilities, wait_for_last_message){
-
   rclcpp::init(0, nullptr);
 
   auto node = std::make_shared<rclcpp::Node>("wait_for_last_message_node");
