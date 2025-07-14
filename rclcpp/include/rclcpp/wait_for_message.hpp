@@ -15,9 +15,10 @@
 #ifndef RCLCPP__WAIT_FOR_MESSAGE_HPP_
 #define RCLCPP__WAIT_FOR_MESSAGE_HPP_
 
+#include <future>
 #include <memory>
 #include <string>
-#include <future>
+
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/node.hpp"
