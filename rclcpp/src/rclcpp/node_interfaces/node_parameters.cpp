@@ -201,12 +201,9 @@ __check_parameter_value_in_range(
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
-    int64_t v = value.get<int64_t>();
-    auto integer_range = descriptor.integer_range.at(0);
-    if (v == integer_range.from_value || v == integer_range.to_value) {
-      return result;
-    }
-    if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
+    const int64_t v = value.get<int64_t>();
+    const auto& integer_range = descriptor.integer_range.at(0);
+    if ((v >= integer_range.from_value) && (v <= integer_range.to_value)) {
       result.successful = false;
       result.reason = format_range_reason(descriptor.name, "integer");
       return result;
@@ -223,12 +220,10 @@ __check_parameter_value_in_range(
   }
 
   if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
-    double v = value.get<double>();
-    auto fp_range = descriptor.floating_point_range.at(0);
-    if (__are_doubles_equal(v, fp_range.from_value) || __are_doubles_equal(v, fp_range.to_value)) {
-      return result;
-    }
-    if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
+    const double v = value.get<double>();
+    const auto& fp_range = descriptor.floating_point_range.at(0);
+    const bool within_range = (v >= fp_range.from_value) && (v <= fp_range.to_value);
+    if (!within_range) {
       result.successful = false;
       result.reason = format_range_reason(descriptor.name, "floating point");
       return result;
@@ -236,7 +231,7 @@ __check_parameter_value_in_range(
     if (fp_range.step == 0.0) {
       return result;
     }
-    double rounded_div = std::round((v - fp_range.from_value) / fp_range.step);
+    const double rounded_div = std::round((v - fp_range.from_value) / fp_range.step);
     if (__are_doubles_equal(v, fp_range.from_value + rounded_div * fp_range.step)) {
       return result;
     }

@@ -200,6 +200,69 @@ TEST_F(TestNodeParameters, set_parameters) {
   EXPECT_TRUE(result[0].successful);
 }
 
+TEST_F(TestNodeParameters, double_parameter_range)
+{
+  rclcpp::NodeOptions node_options;
+  node_options.allow_undeclared_parameters(true);
+
+  rcl_interfaces::msg::ParameterDescriptor double_descriptor;
+  double_descriptor.name = "double_parameter";
+  double_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+  double_descriptor.read_only = false;
+
+  rcl_interfaces::msg::FloatingPointRange range;
+  range.from_value = -1.0;
+  range.to_value = 666.0;
+  double_descriptor.floating_point_range.push_back(range);
+
+  const auto default_value = rclcpp::ParameterValue(0.0);
+
+  const auto loaded_value = node->declare_parameter(
+        double_descriptor.name,
+        default_value,
+        double_descriptor
+      );
+  EXPECT_EQ(loaded_value, default_value);
+
+  {
+    const rclcpp::Parameter new_parameter = rclcpp::Parameter(
+          "double_parameter",
+          std::numeric_limits<double>::infinity()
+        );
+    const auto result = node->set_parameter(new_parameter);
+    EXPECT_FALSE(result.successful);
+    EXPECT_EQ(
+          "Parameter {double_parameter} doesn't comply with floating point range.",
+          result.reason
+        );
+  }
+
+  {
+    const rclcpp::Parameter new_parameter = rclcpp::Parameter(
+          "double_parameter",
+          std::numeric_limits<double>::quiet_NaN()
+        );
+    const auto result = node->set_parameter(new_parameter);
+    EXPECT_FALSE(result.successful);
+    EXPECT_EQ(
+          "Parameter {double_parameter} doesn't comply with floating point range.",
+          result.reason
+        );
+  }
+
+  {
+    const rclcpp::Parameter new_parameter = rclcpp::Parameter("double_parameter", range.to_value);
+    const auto result = node->set_parameter(new_parameter);
+    EXPECT_TRUE(result.successful);
+  }
+
+  {
+    const rclcpp::Parameter new_parameter = rclcpp::Parameter("double_parameter", range.from_value);
+    const auto result = node->set_parameter(new_parameter);
+    EXPECT_TRUE(result.successful);
+  }
+}
+
 TEST_F(TestNodeParameters, add_remove_on_set_parameters_callback) {
   rcl_interfaces::msg::ParameterDescriptor bool_descriptor;
   bool_descriptor.name = "bool_parameter";
