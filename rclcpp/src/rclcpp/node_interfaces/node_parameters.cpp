@@ -203,7 +203,8 @@ __check_parameter_value_in_range(
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
     const int64_t v = value.get<int64_t>();
     const auto& integer_range = descriptor.integer_range.at(0);
-    if ((v >= integer_range.from_value) && (v <= integer_range.to_value)) {
+    const bool within_range = (v >= integer_range.from_value) && (v <= integer_range.to_value);
+    if (!within_range) {
       result.successful = false;
       result.reason = format_range_reason(descriptor.name, "integer");
       return result;
