@@ -17,7 +17,7 @@
 
 #include <memory>
 #include <string>
-
+#include <future>
 #include "rcpputils/scope_exit.hpp"
 
 #include "rclcpp/node.hpp"
@@ -79,7 +79,6 @@ bool wait_for_message(
 /// Wait for the next incoming message.
 /**
  * Wait for the next incoming message to arrive on a specified topic before the specified timeout.
- * Specify the QoS settings for the subscription to control how messages are received.
  *
  * \param[out] out is the message to be filled when a new message is arriving
  * \param[in] node the node pointer to initialize the subscription on.
