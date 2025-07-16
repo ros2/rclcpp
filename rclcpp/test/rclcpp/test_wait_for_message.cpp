@@ -108,3 +108,29 @@ TEST(TestUtilities, wait_for_message_twice_one_sub) {
 
   rclcpp::shutdown();
 }
+
+TEST(TestUtilities, wait_for_last_message) {
+  rclcpp::init(0, nullptr);
+
+  auto node = std::make_shared<rclcpp::Node>("wait_for_last_message_node");
+  auto qos = rclcpp::QoS(1).reliable().transient_local();
+
+  using MsgT = test_msgs::msg::Strings;
+  auto pub = node->create_publisher<MsgT>("wait_for_last_message_topic", qos);
+  pub->publish(*get_messages_strings()[0]);
+
+  MsgT out;
+  auto received = false;
+  auto wait = std::async(
+    [&]() {
+      auto ret = rclcpp::wait_for_message(out, node, "wait_for_last_message_topic", 5s, qos);
+      EXPECT_TRUE(ret);
+      received = true;
+    });
+
+  ASSERT_NO_THROW(wait.get());
+  ASSERT_TRUE(received);
+  EXPECT_EQ(out, *get_messages_strings()[0]);
+
+  rclcpp::shutdown();
+}
