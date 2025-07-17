@@ -190,41 +190,54 @@ TEST_F(TestLoggingMacros, test_throttle) {
     std::this_thread::sleep_for(50ms);
   }
   EXPECT_EQ(4u, g_log_calls);
+  rclcpp::Clock raw_steady_clock(RCL_RAW_STEADY_TIME);
+  for (uint64_t i = 0; i < 3; ++i) {
+    RCLCPP_DEBUG_THROTTLE(g_logger, raw_steady_clock, 10000, "Throttling");
+  }
+  EXPECT_EQ(5u, g_log_calls);
+  RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, raw_steady_clock, 1, "Skip first throttling");
+  EXPECT_EQ(5u, g_log_calls);
+  for (uint64_t i = 0; i < 6; ++i) {
+    RCLCPP_DEBUG_THROTTLE(g_logger, raw_steady_clock, 100, "Throttling");
+    RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, raw_steady_clock, 400, "Throttling");
+    std::this_thread::sleep_for(50ms);
+  }
+  EXPECT_EQ(8u, g_log_calls);
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(ros_clock.get_clock_handle()));
   RCLCPP_DEBUG_THROTTLE(g_logger, ros_clock, 10000, "Throttling");
   rcl_clock_t * clock = ros_clock.get_clock_handle();
   ASSERT_TRUE(clock);
-  EXPECT_EQ(4u, g_log_calls);
+  EXPECT_EQ(8u, g_log_calls);
   EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock, RCUTILS_MS_TO_NS(10)));
   for (uint64_t i = 0; i < 2; ++i) {
     RCLCPP_DEBUG_THROTTLE(g_logger, ros_clock, 10, "Throttling");
     if (i == 0) {
-      EXPECT_EQ(5u, g_log_calls);
+      EXPECT_EQ(9u, g_log_calls);
       rcl_time_point_value_t clock_ns = ros_clock.now().nanoseconds() + RCUTILS_MS_TO_NS(10);
       EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock, clock_ns));
     } else {
-      EXPECT_EQ(6u, g_log_calls);
+      EXPECT_EQ(10u, g_log_calls);
     }
   }
   DummyNode node;
   rcl_clock_t * node_clock = node.get_clock()->get_clock_handle();
   ASSERT_TRUE(node_clock);
   ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(node_clock));
-  EXPECT_EQ(6u, g_log_calls);
+  EXPECT_EQ(10u, g_log_calls);
   EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(node_clock, RCUTILS_MS_TO_NS(10)));
   for (uint64_t i = 0; i < 3; ++i) {
     RCLCPP_DEBUG_THROTTLE(g_logger, *node.get_clock(), 10, "Throttling");
     if (i == 0) {
-      EXPECT_EQ(7u, g_log_calls);
+      EXPECT_EQ(11u, g_log_calls);
       rcl_time_point_value_t clock_ns = node.get_clock()->now().nanoseconds() + RCUTILS_MS_TO_NS(5);
       EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(node_clock, clock_ns));
     } else if (i == 1) {
-      EXPECT_EQ(7u, g_log_calls);
+      EXPECT_EQ(11u, g_log_calls);
       rcl_time_point_value_t clock_ns = node.get_clock()->now().nanoseconds() + RCUTILS_MS_TO_NS(5);
       EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(node_clock, clock_ns));
     } else {
-      EXPECT_EQ(8u, g_log_calls);
+      EXPECT_EQ(12u, g_log_calls);
     }
   }
 }

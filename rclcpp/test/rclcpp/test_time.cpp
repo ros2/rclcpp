@@ -63,6 +63,9 @@ TEST_F(TestTime, clock_type_access) {
 
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
   EXPECT_EQ(RCL_STEADY_TIME, steady_clock.get_clock_type());
+
+  rclcpp::Clock raw_steady_clock(RCL_RAW_STEADY_TIME);
+  EXPECT_EQ(RCL_RAW_STEADY_TIME, raw_steady_clock.get_clock_type());
 }
 
 // Check that the clock may go out of the scope before the jump callback without leading in UB.
@@ -93,6 +96,11 @@ TEST_F(TestTime, time_sources) {
   Time steady_now = steady_clock.now();
   EXPECT_NE(0, steady_now.sec);
   EXPECT_NE(0u, steady_now.nanosec);
+
+  rclcpp::Clock raw_steady_clock(RCL_RAW_STEADY_TIME);
+  Time raw_steady_now = raw_steady_clock.now();
+  EXPECT_NE(0, raw_steady_now.sec);
+  EXPECT_NE(0u, raw_steady_now.nanosec);
 }
 
 static const int64_t HALF_SEC_IN_NS = RCUTILS_MS_TO_NS(500);
@@ -193,30 +201,47 @@ TEST_F(TestTime, operators) {
 
   rclcpp::Time system_time(0, 0, RCL_SYSTEM_TIME);
   rclcpp::Time steady_time(0, 0, RCL_STEADY_TIME);
+  rclcpp::Time raw_steady_time(0, 0, RCL_RAW_STEADY_TIME);
 
   EXPECT_ANY_THROW((void)(system_time == steady_time));
+  EXPECT_ANY_THROW((void)(system_time == raw_steady_time));
   EXPECT_ANY_THROW((void)(system_time != steady_time));
+  EXPECT_ANY_THROW((void)(system_time != raw_steady_time));
   EXPECT_ANY_THROW((void)(system_time <= steady_time));
+  EXPECT_ANY_THROW((void)(system_time <= raw_steady_time));
   EXPECT_ANY_THROW((void)(system_time >= steady_time));
+  EXPECT_ANY_THROW((void)(system_time >= raw_steady_time));
   EXPECT_ANY_THROW((void)(system_time < steady_time));
+  EXPECT_ANY_THROW((void)(system_time < raw_steady_time));
   EXPECT_ANY_THROW((void)(system_time > steady_time));
+  EXPECT_ANY_THROW((void)(system_time > raw_steady_time));
   EXPECT_ANY_THROW((void)(system_time - steady_time));
+  EXPECT_ANY_THROW((void)(system_time - raw_steady_time));
 
   rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+  rclcpp::Clock raw_steady_clock(RCL_RAW_STEADY_TIME);
 
   rclcpp::Time now = system_clock.now();
   rclcpp::Time later = steady_clock.now();
+  rclcpp::Time raw_later = raw_steady_clock.now();
 
   EXPECT_ANY_THROW((void)(now == later));
+  EXPECT_ANY_THROW((void)(now == raw_later));
   EXPECT_ANY_THROW((void)(now != later));
+  EXPECT_ANY_THROW((void)(now != raw_later));
   EXPECT_ANY_THROW((void)(now <= later));
+  EXPECT_ANY_THROW((void)(now <= raw_later));
   EXPECT_ANY_THROW((void)(now >= later));
+  EXPECT_ANY_THROW((void)(now >= raw_later));
   EXPECT_ANY_THROW((void)(now < later));
+  EXPECT_ANY_THROW((void)(now < raw_later));
   EXPECT_ANY_THROW((void)(now > later));
+  EXPECT_ANY_THROW((void)(now > raw_later));
   EXPECT_ANY_THROW((void)(now - later));
+  EXPECT_ANY_THROW((void)(now - raw_later));
 
-  for (auto time_source : {RCL_ROS_TIME, RCL_SYSTEM_TIME, RCL_STEADY_TIME}) {
+  for (auto time_source : {RCL_ROS_TIME, RCL_SYSTEM_TIME, RCL_STEADY_TIME, RCL_RAW_STEADY_TIME}) {
     rclcpp::Time time = rclcpp::Time(0, 0, time_source);
     rclcpp::Time copy_constructor_time(time);
     rclcpp::Time assignment_op_time = rclcpp::Time(1, 0, time_source);
@@ -312,7 +337,7 @@ TEST_F(TestTime, seconds) {
 TEST_F(TestTime, test_max) {
   // Same clock types
   for (rcl_clock_type_t type = RCL_ROS_TIME;
-    type != RCL_STEADY_TIME; type = static_cast<rcl_clock_type_t>(type + 1))
+    type != RCL_RAW_STEADY_TIME; type = static_cast<rcl_clock_type_t>(type + 1))
   {
     const rclcpp::Time time_max = rclcpp::Time::max(type);
     const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999, type);
@@ -323,13 +348,22 @@ TEST_F(TestTime, test_max) {
   {
     const rclcpp::Time time_max = rclcpp::Time::max(RCL_ROS_TIME);
     const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999, RCL_STEADY_TIME);
+    const rclcpp::Time raw_max_time(
+      std::numeric_limits<int32_t>::max(), 999999999, RCL_RAW_STEADY_TIME);
     EXPECT_ANY_THROW((void)(time_max == max_time));
+    EXPECT_ANY_THROW((void)(time_max == raw_max_time));
     EXPECT_ANY_THROW((void)(time_max != max_time));
+    EXPECT_ANY_THROW((void)(time_max != raw_max_time));
     EXPECT_ANY_THROW((void)(time_max <= max_time));
+    EXPECT_ANY_THROW((void)(time_max <= raw_max_time));
     EXPECT_ANY_THROW((void)(time_max >= max_time));
+    EXPECT_ANY_THROW((void)(time_max >= raw_max_time));
     EXPECT_ANY_THROW((void)(time_max < max_time));
+    EXPECT_ANY_THROW((void)(time_max < raw_max_time));
     EXPECT_ANY_THROW((void)(time_max > max_time));
+    EXPECT_ANY_THROW((void)(time_max > raw_max_time));
     EXPECT_ANY_THROW((void)(time_max - max_time));
+    EXPECT_ANY_THROW((void)(time_max - raw_max_time));
   }
 }
 
@@ -433,6 +467,11 @@ TEST_F(TestClockSleep, bad_clock_type) {
   RCLCPP_EXPECT_THROW_EQ(
     clock.sleep_until(ros_until),
     std::runtime_error("until's clock type does not match this clock's type"));
+
+  rclcpp::Time raw_steady_until(54321, 0, RCL_RAW_STEADY_TIME);
+  RCLCPP_EXPECT_THROW_EQ(
+    clock.sleep_until(raw_steady_until),
+    std::runtime_error("until's clock type does not match this clock's type"));
 }
 
 TEST_F(TestClockSleep, sleep_until_invalid_context) {
@@ -493,8 +532,29 @@ TEST_F(TestClockSleep, sleep_until_basic_steady) {
   EXPECT_GE(steady_end - steady_start, std::chrono::milliseconds(milliseconds));
 }
 
+TEST_F(TestClockSleep, sleep_until_basic_raw_steady) {
+  const auto milliseconds = 300;
+  rclcpp::Clock clock(RCL_RAW_STEADY_TIME);
+  auto delay = rclcpp::Duration(0, RCUTILS_MS_TO_NS(milliseconds));
+  auto sleep_until = clock.now() + delay;
+
+  auto steady_start = std::chrono::steady_clock::now();
+  ASSERT_TRUE(clock.sleep_until(sleep_until));
+  auto steady_end = std::chrono::steady_clock::now();
+
+  EXPECT_GE(clock.now(), sleep_until);
+  EXPECT_GE(steady_end - steady_start, std::chrono::milliseconds(milliseconds));
+}
+
 TEST_F(TestClockSleep, sleep_until_steady_past_returns_immediately) {
   rclcpp::Clock clock(RCL_STEADY_TIME);
+  auto until = clock.now() - rclcpp::Duration(1000, 0);
+  // This should return immediately, other possible behavior might be sleep forever and timeout
+  ASSERT_TRUE(clock.sleep_until(until));
+}
+
+TEST_F(TestClockSleep, sleep_until_raw_steady_past_returns_immediately) {
+  rclcpp::Clock clock(RCL_RAW_STEADY_TIME);
   auto until = clock.now() - rclcpp::Duration(1000, 0);
   // This should return immediately, other possible behavior might be sleep forever and timeout
   ASSERT_TRUE(clock.sleep_until(until));
@@ -658,6 +718,25 @@ TEST_F(TestClockSleep, sleep_for_basic_system) {
   auto end = std::chrono::system_clock::now();
 
   EXPECT_GE(end - start, std::chrono::milliseconds(milliseconds));
+}
+
+TEST_F(TestClockSleep, sleep_for_basic_raw_steady) {
+  const auto milliseconds = 300;
+  rclcpp::Clock clock(RCL_RAW_STEADY_TIME);
+  auto rel_time = rclcpp::Duration(0, RCUTILS_MS_TO_NS(milliseconds));
+
+  auto steady_start = std::chrono::steady_clock::now();
+  ASSERT_TRUE(clock.sleep_for(rel_time));
+  auto steady_end = std::chrono::steady_clock::now();
+
+  EXPECT_GE(steady_end - steady_start, std::chrono::milliseconds(milliseconds));
+}
+
+TEST_F(TestClockSleep, sleep_for_raw_steady_past_returns_immediately) {
+  rclcpp::Clock clock(RCL_RAW_STEADY_TIME);
+  auto rel_time = rclcpp::Duration(-1000, 0);
+  // This should return immediately
+  ASSERT_TRUE(clock.sleep_for(rel_time));
 }
 
 TEST_F(TestClockSleep, sleep_for_basic_steady) {

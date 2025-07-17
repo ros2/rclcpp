@@ -299,6 +299,21 @@ TEST(TimeSource, invalid_clock_type_for_sim_time)
   rclcpp::shutdown();
 }
 
+TEST(TimeSource, invalid_raw_steady_clock_type_for_sim_time)
+{
+  rclcpp::init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  options.clock_type(RCL_RAW_STEADY_TIME);
+  auto node = std::make_shared<rclcpp::Node>("my_node", options);
+  EXPECT_FALSE(
+    node->set_parameter(
+      rclcpp::Parameter(
+        "use_sim_time", rclcpp::ParameterValue(
+          true))).successful);
+  rclcpp::shutdown();
+}
+
 TEST_F(TestTimeSource, clock) {
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);

@@ -382,4 +382,6 @@ TEST(TestNodeOptions, clock_type) {
   EXPECT_EQ(RCL_SYSTEM_TIME, options.clock_type());
   options.clock_type(RCL_STEADY_TIME);
   EXPECT_EQ(RCL_STEADY_TIME, options.clock_type());
+  options.clock_type(RCL_RAW_STEADY_TIME);
+  EXPECT_EQ(RCL_RAW_STEADY_TIME, options.clock_type());
 }

@@ -136,7 +136,7 @@ INSTANTIATE_TEST_SUITE_P(
   ClockConditionalVariable,
   TestClockWakeup,
   ::testing::Values(
-    RCL_SYSTEM_TIME, RCL_ROS_TIME, RCL_STEADY_TIME
+    RCL_SYSTEM_TIME, RCL_ROS_TIME, RCL_STEADY_TIME, RCL_RAW_STEADY_TIME
 ));
 
 TEST_P(TestClockWakeup, wakeup_sleep) {

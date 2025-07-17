@@ -338,7 +338,8 @@ public:
   bool
   is_steady() override
   {
-    return clock_->get_clock_type() == RCL_STEADY_TIME;
+    return clock_->get_clock_type() == RCL_STEADY_TIME ||
+           clock_->get_clock_type() == RCL_RAW_STEADY_TIME;
   }
 
 protected:

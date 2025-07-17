@@ -126,6 +126,20 @@ Clock::sleep_until(
       impl_->cv_.wait_until(lock, chrono_until);
     }
     impl_->stop_sleeping_ = false;
+  } else if (this_clock_type == RCL_RAW_STEADY_TIME) {
+    // Synchronize because RCL steady clock epoch might differ from chrono::steady_clock epoch
+    const Time rcl_entry = now();
+    const std::chrono::steady_clock::time_point chrono_entry = std::chrono::steady_clock::now();
+    const Duration delta_t = until - rcl_entry;
+    const std::chrono::steady_clock::time_point chrono_until =
+      chrono_entry + std::chrono::nanoseconds(delta_t.nanoseconds());
+
+    // loop over spurious wakeups but notice shutdown or stop of sleep
+    std::unique_lock lock(impl_->wait_mutex_);
+    while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid()) {
+      impl_->cv_.wait_until(lock, chrono_until);
+    }
+    impl_->stop_sleeping_ = false;
   } else if (this_clock_type == RCL_SYSTEM_TIME) {
     auto system_time = std::chrono::system_clock::time_point(
       // Cast because system clock resolution is too big for nanoseconds on some systems
@@ -469,6 +483,7 @@ public:
         return wait_until_ros_time(lock, abs_time, pred);
         break;
       case RCL_STEADY_TIME:
+      case RCL_RAW_STEADY_TIME:
         return wait_until_steady_time(lock, abs_time, pred);
         break;
       case RCL_SYSTEM_TIME:

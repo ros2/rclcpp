@@ -165,6 +165,29 @@ TEST_F(TestNode, construction_and_destruction) {
         "my_node", "/ns",
         options), std::invalid_argument);
   }
+
+  {
+    rclcpp::NodeOptions options;
+    options.clock_type(RCL_RAW_STEADY_TIME);
+    ASSERT_NO_THROW(
+    {
+      const auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", options);
+      EXPECT_EQ(RCL_RAW_STEADY_TIME, node->get_clock()->get_clock_type());
+    });
+  }
+
+  {
+    rclcpp::NodeOptions options;
+    options.parameter_overrides(
+    {
+      {"use_sim_time", true},
+    });
+    options.clock_type(RCL_RAW_STEADY_TIME);
+    ASSERT_THROW(
+      const auto node = std::make_shared<rclcpp::Node>(
+        "my_node", "/ns",
+        options), std::invalid_argument);
+  }
 }
 
 /*

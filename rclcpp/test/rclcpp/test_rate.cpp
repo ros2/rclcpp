@@ -147,6 +147,10 @@ TEST_F(TestRate, clock_types) {
     EXPECT_EQ(RCL_STEADY_TIME, rate.get_type());
   }
   {
+    rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_RAW_STEADY_TIME));
+    EXPECT_EQ(RCL_RAW_STEADY_TIME, rate.get_type());
+  }
+  {
     rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_ROS_TIME));
     EXPECT_EQ(RCL_ROS_TIME, rate.get_type());
   }
