@@ -15,6 +15,7 @@
 #include <gmock/gmock.h>
 
 #include <chrono>
+#include <cstdint>
 #include <string>
 #include <thread>
 #include <vector>
