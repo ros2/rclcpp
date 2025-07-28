@@ -83,7 +83,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * nod
       const rcl_variant_t * const c_param_value = &(c_params_node->parameter_values[p]);
       ParameterValue value;
       try {
-        value = parameter_value_from(param);
+        value = parameter_value_from(c_param_value);
       } catch (const InvalidParameterValueException & e) {
         throw InvalidParameterValueException(
           std::string("parameter_value_from failed for parameter '") +
