@@ -89,7 +89,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * nod
           std::string("parameter_value_from failed for parameter '") +
           c_param_name + "': " + e.what());
       }
-      parameters.emplace_back(c_param_name, value);
+      params_node.emplace_back(c_param_name, value);
     }
   }
 
