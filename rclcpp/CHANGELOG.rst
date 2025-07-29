@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix: improve exception context for parameter_value_from (`#2917 <https://github.com/ros2/rclcpp/issues/2917>`_)
+* Fix `start_type_description_service` param handling (`#2897 <https://github.com/ros2/rclcpp/issues/2897>`_)
+* Add qos parameter for wait_for_message function (`#2903 <https://github.com/ros2/rclcpp/issues/2903>`_)
+* Fujitatomoya/test append parameter override (`#2896 <https://github.com/ros2/rclcpp/issues/2896>`_)
+* Expose `typesupport_helpers` API needed for the Rosbag2 (`#2858 <https://github.com/ros2/rclcpp/issues/2858>`_)
+* Remove comment about now-removed StaticSingleThreadedExecutor (`#2893 <https://github.com/ros2/rclcpp/issues/2893>`_)
+* Add overload of `append_parameter_override` (`#2891 <https://github.com/ros2/rclcpp/issues/2891>`_)
+* fix: Don't deadlock if removing shutdown callbacks in a shutdown callback (`#2886 <https://github.com/ros2/rclcpp/issues/2886>`_)
+* Contributors: Christophe Bedard, Janosch Machowinski, Michael Orlov, Michiel Leegwater, Patrick Roncagliolo, Sriharsha Ghanta, Tomoya Fujita
+
 30.0.0 (2025-07-01)
 -------------------
 * Hand-code logging.hpp (`#2870 <https://github.com/ros2/rclcpp/issues/2870>`_)
