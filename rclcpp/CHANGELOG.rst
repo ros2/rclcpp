@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+30.1.0 (2025-07-29)
+-------------------
 * Fix: improve exception context for parameter_value_from (`#2917 <https://github.com/ros2/rclcpp/issues/2917>`_)
 * Fix `start_type_description_service` param handling (`#2897 <https://github.com/ros2/rclcpp/issues/2897>`_)
 * Add qos parameter for wait_for_message function (`#2903 <https://github.com/ros2/rclcpp/issues/2903>`_)

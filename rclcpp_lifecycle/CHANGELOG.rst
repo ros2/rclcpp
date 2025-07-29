@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+30.1.0 (2025-07-29)
+-------------------
 * fix cmake deprecation (`#2914 <https://github.com/ros2/rclcpp/issues/2914>`_)
   cmake version < then 3.10 is deprecated
 * Contributors: mosfet80
