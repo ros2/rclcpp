@@ -16,23 +16,32 @@
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
+  <build_export_depend>class_loader</build_export_depend>
+  <build_export_depend>composition_interfaces</build_export_depend>
+  <build_export_depend>rclcpp</build_export_depend>
+  <build_export_depend>rcpputils</build_export_depend>
+  <build_export_depend>rmw</build_export_depend>
+
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>class_loader</build_depend>
   <build_depend>composition_interfaces</build_depend>
   <build_depend>rclcpp</build_depend>
+  <build_depend>rcl_interfaces</build_depend>
   <build_depend>rcpputils</build_depend>
+  <build_depend>rmw</build_depend>
 
   <exec_depend>ament_index_cpp</exec_depend>
   <exec_depend>class_loader</exec_depend>
   <exec_depend>composition_interfaces</exec_depend>
   <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rcl_interfaces</exec_depend>
+  <exec_depend>rcpputils</exec_depend>
+  <exec_depend>rmw</exec_depend>
 
   <test_depend>ament_cmake_google_benchmark</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-  <test_depend>launch_testing</test_depend>
-  <test_depend>std_msgs</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -16,14 +16,20 @@
 #ifndef RCLCPP_COMPONENTS__COMPONENT_MANAGER_ISOLATED_HPP__
 #define RCLCPP_COMPONENTS__COMPONENT_MANAGER_ISOLATED_HPP__
 
+#include <atomic>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
+#include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <unordered_map>
 #include <system_error>
 
+#include "rclcpp/executor.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_components/component_manager.hpp"
 #include "rcpputils/thread_name.hpp"
 

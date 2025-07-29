@@ -18,7 +18,10 @@
 #include <functional>
 #include <memory>
 
+#include "rclcpp/node_options.hpp"
+
 #include "rclcpp_components/node_factory.hpp"
+#include "rclcpp_components/node_instance_wrapper.hpp"
 
 namespace rclcpp_components
 {

@@ -17,14 +17,28 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <stdexcept>
+#include <sstream>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "ament_index_cpp/get_resource.hpp"
+
 #include "class_loader/class_loader.hpp"
-#include "rcpputils/filesystem_helper.hpp"
+
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/qos.hpp"
+
+#include "rclcpp_components/node_factory.hpp"
+
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/integer_range.hpp"
+
 #include "rcpputils/split.hpp"
+
+#include "rmw/types.h"
 
 using namespace std::placeholders;
 
