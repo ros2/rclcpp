@@ -32,7 +32,7 @@
 #define RCLCPP_STATIC_ASSERT_LOGGER(logger) \
   do { \
     static_assert( \
-      ::std::is_convertible_v<decltype(logger), rclcpp::Logger>, \
+      ::std::is_convertible_v<decltype(logger), ::rclcpp::Logger>, \
       "First argument to logging macros must be an rclcpp::Logger"); \
   } while (0)
 
