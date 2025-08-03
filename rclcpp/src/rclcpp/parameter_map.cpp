@@ -72,7 +72,6 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * nod
 
     std::vector<Parameter> & params_node = parameters[node_name];
     params_node.reserve(c_params_node->num_params);
-
     for (size_t p = 0; p < c_params_node->num_params; ++p) {
       const char * const c_param_name = c_params_node->parameter_names[p];
       if (NULL == c_param_name) {
@@ -81,15 +80,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * nod
         throw InvalidParametersException(message);
       }
       const rcl_variant_t * const c_param_value = &(c_params_node->parameter_values[p]);
-      ParameterValue value;
-      try {
-        value = parameter_value_from(c_param_value);
-      } catch (const InvalidParameterValueException & e) {
-        throw InvalidParameterValueException(
-          std::string("parameter_value_from failed for parameter '") +
-          c_param_name + "': " + e.what());
-      }
-      params_node.emplace_back(c_param_name, value);
+      params_node.emplace_back(c_param_name, parameter_value_from(c_param_value));
     }
   }
 
@@ -110,6 +101,8 @@ rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
     return ParameterValue(*(c_param_value->double_value));
   } else if (c_param_value->string_value) {
     return ParameterValue(std::string(c_param_value->string_value));
+  } else if (c_param_value->yaml_value) {
+    return ParameterValue::YamlParameter(std::string(c_param_value->yaml_value));
   } else if (c_param_value->byte_array_value) {
     const rcl_byte_array_t * const byte_array = c_param_value->byte_array_value;
     std::vector<uint8_t> bytes;

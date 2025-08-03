@@ -111,6 +111,12 @@ Parameter::as_string() const
   return get_value<ParameterType::PARAMETER_STRING>();
 }
 
+const YAML::Node
+Parameter::as_yaml() const
+{
+  return get_value<ParameterType::PARAMETER_YAML>();
+}
+
 const std::vector<uint8_t> &
 Parameter::as_byte_array() const
 {

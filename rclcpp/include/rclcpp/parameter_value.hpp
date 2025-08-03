@@ -26,6 +26,7 @@
 #include "rcl_interfaces/msg/parameter_value.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "yaml-cpp/yaml.h"
 
 namespace rclcpp
 {
@@ -37,6 +38,7 @@ enum ParameterType : uint8_t
   PARAMETER_INTEGER = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
   PARAMETER_DOUBLE = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
   PARAMETER_STRING = rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
+  PARAMETER_YAML = rcl_interfaces::msg::ParameterType::PARAMETER_YAML,
   PARAMETER_BYTE_ARRAY = rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
   PARAMETER_BOOL_ARRAY = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
   PARAMETER_INTEGER_ARRAY = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
@@ -99,6 +101,9 @@ public:
   /// Construct a parameter value with type PARAMETER_STRING.
   RCLCPP_PUBLIC
   explicit ParameterValue(const char * string_value);
+  /// Construct a parameter value with type PARAMETER_YAML
+  RCLCPP_PUBLIC
+  explicit ParameterValue(const YAML::Node & yaml_value);
   /// Construct a parameter value with type PARAMETER_BYTE_ARRAY.
   RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<uint8_t> & byte_array_value);
@@ -120,7 +125,14 @@ public:
   /// Construct a parameter value with type PARAMETER_STRING_ARRAY.
   RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<std::string> & string_array_value);
+ 
 
+  /// Generate a parameter value with type PARAMETER_YAML
+  RCLCPP_PUBLIC
+  static ParameterValue YamlParameter(const std::string & yaml_string);
+  RCLCPP_PUBLIC
+  /// Generate a parameter value with type PARAMETER_YAML
+  static ParameterValue YamlParameter(const char * yaml_string);
   /// Return an enum indicating the type of the set value.
   RCLCPP_PUBLIC
   ParameterType
@@ -185,6 +197,17 @@ public:
       throw ParameterTypeException(ParameterType::PARAMETER_STRING, get_type());
     }
     return value_.string_value;
+  }
+
+  template<ParameterType type>
+  constexpr
+  typename std::enable_if<type == ParameterType::PARAMETER_YAML, const YAML::Node >::type
+  get() const
+  {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_YAML) {
+      throw ParameterTypeException(ParameterType::PARAMETER_YAML, get_type());
+    }
+    return YAML::Load(value_.yaml_value);
   }
 
   template<ParameterType type>
@@ -280,6 +303,14 @@ public:
   get() const
   {
     return get<ParameterType::PARAMETER_STRING>();
+  }
+
+  template<typename type>
+  constexpr
+  typename std::enable_if<std::is_same<type, YAML::Node>::value, const YAML::Node >::type
+  get() const
+  {
+    return get<ParameterType::PARAMETER_YAML>();
   }
 
   template<typename type>
