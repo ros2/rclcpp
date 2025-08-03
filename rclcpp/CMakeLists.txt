@@ -23,6 +23,8 @@ find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # TODO(wjwwood): remove this when gtest can build on its own, when using target_compile_features()
 # Default to C++17
@@ -218,6 +220,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   ${statistics_msgs_TARGETS}
   tracetools::tracetools
   ${CMAKE_THREAD_LIBS_INIT}
+  yaml-cpp::yaml-cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -260,6 +263,8 @@ ament_export_dependencies(
   rosidl_typesupport_cpp
   statistics_msgs
   tracetools
+  yaml_cpp_vendor
+  yaml-cpp
 )
 
 if(BUILD_TESTING)
