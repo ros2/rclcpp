@@ -73,6 +73,19 @@ const void * get_typesupport_handle_impl(
   }
 }
 
+std::string string_trim(std::string_view str_v)
+{
+  // Remove leading whitespace
+  while (!str_v.empty() && std::isspace(str_v.front())) {
+    str_v.remove_prefix(1);
+  }
+  // Remove trailing whitespace
+  while (!str_v.empty() && std::isspace(str_v.back())) {
+    str_v.remove_suffix(1);
+  }
+  return std::string(str_v);
+}
+
 }  // anonymous namespace
 
 std::tuple<std::string, std::string, std::string>
@@ -82,6 +95,7 @@ extract_type_identifier(const std::string & full_type)
   auto sep_position_back = full_type.find_last_of(type_separator);
   auto sep_position_front = full_type.find_first_of(type_separator);
   if (sep_position_back == std::string::npos ||
+    sep_position_front == 0 ||
     sep_position_back == 0 ||
     sep_position_back == full_type.length() - 1)
   {
@@ -97,7 +111,8 @@ extract_type_identifier(const std::string & full_type)
   }
   std::string type_name = full_type.substr(sep_position_back + 1);
 
-  return std::make_tuple(package_name, middle_module, type_name);
+  return std::make_tuple(
+    string_trim(package_name), string_trim(middle_module), string_trim(type_name));
 }
 
 std::string get_typesupport_library_path(
