@@ -401,6 +401,7 @@ public:
     constexpr bool publish_update = true;
     State initial_state;
     unsigned int current_state_id;
+    rcl_lifecycle_transition_t const * original_transition{nullptr};
 
     {
       std::lock_guard<std::recursive_mutex> lock(state_machine_mutex_);
@@ -413,6 +414,9 @@ public:
       }
       // keep the initial state to pass to a transition callback
       initial_state = State(state_machine_.current_state);
+
+      original_transition =
+        rcl_lifecycle_get_transition_by_id(state_machine_.current_state, transition_id);
 
       if (
         rcl_lifecycle_trigger_transition_by_id(
@@ -458,12 +462,14 @@ public:
       current_state_id = state_machine_.current_state->id;
     }
 
-    // error handling ?!
+    // error handling
     // TODO(karsten1987): iterate over possible ret value
     if (cb_return_code == node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR) {
-      RCLCPP_WARN(
-        node_logging_interface_->get_logger(),
-        "Error occurred while doing error handling.");
+      if (original_transition) {
+        RCLCPP_WARN(
+          node_logging_interface_->get_logger(),
+          "Callback returned ERROR during the transition: %s", original_transition->label);
+      }
 
       auto error_cb_code = execute_callback(current_state_id, initial_state);
       auto error_cb_label = get_label_for_return_code(error_cb_code);
