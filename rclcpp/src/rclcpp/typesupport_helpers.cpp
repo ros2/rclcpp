@@ -73,17 +73,19 @@ const void * get_typesupport_handle_impl(
   }
 }
 
+// Trim leading and trailing whitespace from the string.
 std::string string_trim(std::string_view str_v)
 {
-  // Remove leading whitespace
-  while (!str_v.empty() && std::isspace(str_v.front())) {
-    str_v.remove_prefix(1);
+  auto begin = std::find_if_not(str_v.begin(), str_v.end(), [](unsigned char ch) {
+        return std::isspace(ch);
+  });
+  auto end = std::find_if_not(str_v.rbegin(), str_v.rend(), [](unsigned char ch) {
+        return std::isspace(ch);
+  }).base();
+  if (begin >= end) {
+    return {};
   }
-  // Remove trailing whitespace
-  while (!str_v.empty() && std::isspace(str_v.back())) {
-    str_v.remove_suffix(1);
-  }
-  return std::string(str_v);
+  return std::string(begin, end);
 }
 
 }  // anonymous namespace
