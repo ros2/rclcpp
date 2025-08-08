@@ -390,7 +390,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::change_state(
   constexpr bool publish_update = true;
   State initial_state;
   unsigned int current_state_id;
-  const rcl_lifecycle_transition_t * original_transition;
+  const rcl_lifecycle_transition_t * original_transition{nullptr};
 
   {
     std::lock_guard<std::recursive_mutex> lock(state_machine_mutex_);
