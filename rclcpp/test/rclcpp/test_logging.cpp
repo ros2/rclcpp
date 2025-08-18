@@ -253,9 +253,19 @@ bool log_function_const_ref(const rclcpp::Logger & logger)
   return true;
 }
 
+class DerivedLogger : public rclcpp::Logger
+{
+public:
+  explicit DerivedLogger(const rclcpp::Logger & logger)
+  : rclcpp::Logger(logger) {}
+};
+
 TEST_F(TestLoggingMacros, test_log_from_node) {
   auto logger = rclcpp::get_logger("test_logging_logger");
   EXPECT_TRUE(log_function(logger));
   EXPECT_TRUE(log_function_const(logger));
   EXPECT_TRUE(log_function_const_ref(logger));
+
+  DerivedLogger derived_logger(logger);
+  RCLCPP_INFO(derived_logger, "successful log from derived logger");
 }
