@@ -30,6 +30,7 @@ int main(int argc, char * argv[])
   // parse arguments
   // valid entries: --executor-type single-threaded, --executor-type multi-threaded, --executor-type events
   std::vector<std::string> args = rclcpp::remove_ros_arguments(argc, argv);
+  rclcpp::Node::SharedPtr node;
 
   std::string executor_type = "single-threaded";  // default
   for (size_t i = 0; i < args.size(); ++i) {
@@ -39,12 +40,13 @@ int main(int argc, char * argv[])
         break;
       }
     } else if (args[i] == "--use_multi_threaded_executor") { // backward compatibility
+      RCLCPP_WARN(node->get_logger(),
+        "--use_multi_threaded_executor is deprecated, use --executor-type multi-threaded instead.");
       executor_type = "multi-threaded";
     }
   }
 
   // create executor and component manager
-  rclcpp::Node::SharedPtr node;
   std::shared_ptr<rclcpp::Executor> exec;
   if (executor_type == "events") {
     using executor = rclcpp::experimental::executors::EventsExecutor;
