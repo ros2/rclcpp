@@ -15,6 +15,7 @@
 
 #include "rclcpp/typesupport_helpers.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <sstream>
