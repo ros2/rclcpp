@@ -468,29 +468,29 @@ TEST_F(TestLifecycleServiceClientRCLErrors, call_services_rcl_errors) {
     lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
   client_executor.spin_some();
   EXPECT_THROW(
-    lifecycle_node_executore.spin_some(), std::runtime_error);
+    lifecycle_node_executor.spin_some(), std::runtime_error);
 
   // on_get_state
   lifecycle_client->get_state();
   client_executor.spin_some();
   EXPECT_THROW(
-    lifecycle_node_executore.spin_some(), std::runtime_error);
+    lifecycle_node_executor.spin_some(), std::runtime_error);
 
   // on_get_avilable_states
   lifecycle_client->get_available_states();
   client_executor.spin_some();
   EXPECT_THROW(
-    lifecycle_node_executore.spin_some(), std::runtime_error);
+    lifecycle_node_executor.spin_some(), std::runtime_error);
 
   // on_get_available_transitions
   lifecycle_client->get_available_transitions();
   client_executor.spin_some();
   EXPECT_THROW(
-    lifecycle_node_executore.spin_some(), std::runtime_error);
+    lifecycle_node_executor.spin_some(), std::runtime_error);
 
   // on_get_transition_graph
   lifecycle_client->get_transition_graph();
   client_executor.spin_some();
   EXPECT_THROW(
-    lifecycle_node_executore.spin_some(), std::runtime_error);
+    lifecycle_node_executor.spin_some(), std::runtime_error);
 }
