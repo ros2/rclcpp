@@ -69,12 +69,12 @@ public:
    * \param[in] execute_timers_separate_thread If true, timers are executed in a separate
    * thread. If false, timers are executed in the same thread as all other entities.
    */
-   RCLCPP_PUBLIC
-   EventsExecutor(
+  RCLCPP_PUBLIC
+  EventsExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions(),
-     rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue = std::make_unique<
-       rclcpp::experimental::executors::SimpleEventsQueue>(),
-     bool execute_timers_separate_thread = false);
+    rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue = std::make_unique<
+      rclcpp::experimental::executors::SimpleEventsQueue>(),
+    bool execute_timers_separate_thread = false);
 
   /// Default destructor.
   RCLCPP_PUBLIC

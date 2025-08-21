@@ -18,6 +18,7 @@
 #include <iterator>
 #include <memory>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -187,8 +188,7 @@ Executor::add_callback_group(
 void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
-  if (node_ptr->get_context() != context_)
-  {
+  if (node_ptr->get_context() != context_) {
     throw std::runtime_error(
       "add_node() called with a node with a different context from this executor");
   }

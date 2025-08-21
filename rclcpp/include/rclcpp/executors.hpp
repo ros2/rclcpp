@@ -84,7 +84,7 @@ spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration
  *     executor.spin_some();
  * If you are using a non-default context, this should be passed to the executor's constructor.
  */
- [[deprecated("use SingleThreadedExecutor::spin_some instead")]]
+[[deprecated("use SingleThreadedExecutor::spin_some instead")]]
 RCLCPP_PUBLIC
 void
 spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
@@ -103,7 +103,7 @@ spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
  *     executor.spin_some();
  * If you are using a non-default context, this should be passed to the executor's constructor.
  */
- [[deprecated("use SingleThreadedExecutor::spin_some instead")]]
+[[deprecated("use SingleThreadedExecutor::spin_some instead")]]
 RCLCPP_PUBLIC
 void
 spin_some(rclcpp::Node::SharedPtr node_ptr);
