@@ -87,6 +87,9 @@ protected:
 
 TEST_F(TestServiceIntrospection, service_introspection_nominal)
 {
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+
   auto request = std::make_shared<BasicTypes::Request>();
   request->set__bool_value(true);
   request->set__int64_value(42);
@@ -106,7 +109,7 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
   auto future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
 
   BasicTypes::Response::SharedPtr response = future.get();
   ASSERT_EQ(response->bool_value, false);
@@ -114,8 +117,6 @@ TEST_F(TestServiceIntrospection, service_introspection_nominal)
 
   // wrap up work to get all the service_event messages
   auto start = std::chrono::steady_clock::now();
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
   while (events.size() < 4 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
   }
@@ -187,7 +188,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   auto future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   auto start = std::chrono::steady_clock::now();
   while ((std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -211,7 +212,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   start = std::chrono::steady_clock::now();
   while (events.size() < 2 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -235,7 +236,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   start = std::chrono::steady_clock::now();
   while (events.size() < 2 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -259,7 +260,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_events)
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   start = std::chrono::steady_clock::now();
   while (events.size() < 4 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -290,7 +291,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   auto future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   auto start = std::chrono::steady_clock::now();
   while (events.size() < 4 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -318,7 +319,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   start = std::chrono::steady_clock::now();
   while (events.size() < 4 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -358,7 +359,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   start = std::chrono::steady_clock::now();
   while (events.size() < 4 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
@@ -398,7 +399,7 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
   future = client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future, timeout));
+    executor.spin_until_future_complete(future, timeout));
   start = std::chrono::steady_clock::now();
   while (events.size() < 4 && (std::chrono::steady_clock::now() - start) < timeout) {
     executor.spin_some();
