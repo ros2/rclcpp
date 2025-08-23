@@ -226,39 +226,28 @@ private:
     rclcpp::init(0, nullptr);
     lifecycle_node_ = std::make_shared<EmptyLifecycleNode>();
     lifecycle_client_ = std::make_shared<LifecycleServiceClient>("client");
-    spinner_ = std::thread(&TestLifecycleServiceClient::spin, this);
+
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    spinner_ = std::thread([this]() {
+          executor_->add_node(lifecycle_node_->get_node_base_interface());
+          executor_->add_node(lifecycle_client_);
+          executor_->spin();
+    });
   }
 
   void TearDown() override
   {
-    {
-      std::lock_guard<std::mutex> guard(shutdown_mutex_);
-      rclcpp::shutdown();
+    while(!executor_->is_spinning()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    executor_->cancel();
     spinner_.join();
-  }
-
-  void spin()
-  {
-    rclcpp::executors::SingleThreadedExecutor executor;
-    executor.add_node(lifecycle_node_->get_node_base_interface());
-    executor.add_node(lifecycle_client_);
-
-    while (true) {
-      {
-        std::lock_guard<std::mutex> guard(shutdown_mutex_);
-        if (!rclcpp::ok()) {
-          break;
-        }
-        executor.spin_some();
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    rclcpp::shutdown();
   }
 
   std::shared_ptr<EmptyLifecycleNode> lifecycle_node_;
   std::shared_ptr<LifecycleServiceClient> lifecycle_client_;
-  std::mutex shutdown_mutex_;
+  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
   std::thread spinner_;
 };
 
