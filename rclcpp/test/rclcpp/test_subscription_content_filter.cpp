@@ -69,11 +69,13 @@ public:
   {
     using clock = std::chrono::system_clock;
     auto start = clock::now();
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node);
     while (!condition()) {
       if ((clock::now() - start) > timeout) {
         return false;
       }
-      rclcpp::spin_some(node);
+      executor.spin_some();
     }
     return true;
   }
