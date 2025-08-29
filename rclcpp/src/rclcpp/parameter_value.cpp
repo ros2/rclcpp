@@ -241,7 +241,6 @@ ParameterValue ParameterValue::YamlParameter(const char * yaml_string)
 }
 
 
-
 ParameterType
 ParameterValue::get_type() const
 {

@@ -125,7 +125,7 @@ public:
   /// Construct a parameter value with type PARAMETER_STRING_ARRAY.
   RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<std::string> & string_array_value);
- 
+
 
   /// Generate a parameter value with type PARAMETER_YAML
   RCLCPP_PUBLIC
@@ -201,7 +201,7 @@ public:
 
   template<ParameterType type>
   constexpr
-  typename std::enable_if<type == ParameterType::PARAMETER_YAML, const YAML::Node >::type
+  typename std::enable_if<type == ParameterType::PARAMETER_YAML, const YAML::Node>::type
   get() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_YAML) {
@@ -307,7 +307,7 @@ public:
 
   template<typename type>
   constexpr
-  typename std::enable_if<std::is_same<type, YAML::Node>::value, const YAML::Node >::type
+  typename std::enable_if<std::is_same<type, YAML::Node>::value, const YAML::Node>::type
   get() const
   {
     return get<ParameterType::PARAMETER_YAML>();
