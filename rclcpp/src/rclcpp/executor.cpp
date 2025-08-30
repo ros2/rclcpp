@@ -18,6 +18,7 @@
 #include <iterator>
 #include <memory>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -52,6 +53,7 @@ class rclcpp::ExecutorImplementation {};
 
 Executor::Executor(const std::shared_ptr<rclcpp::Context> & context)
 : spinning(false),
+  context_(context),
   entities_need_rebuild_(true),
   collector_(nullptr),
   wait_set_({}, {}, {}, {}, {}, {}, context)
@@ -186,6 +188,11 @@ Executor::add_callback_group(
 void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
+  if (node_ptr->get_context() != context_) {
+    throw std::runtime_error(
+      "add_node() called with a node with a different context from this executor");
+  }
+
   this->collector_.add_node(node_ptr);
 
   try {

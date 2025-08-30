@@ -372,16 +372,18 @@ TEST_F(TestGenericService, generic_service_qos_depth) {
   }
 
   auto start = std::chrono::steady_clock::now();
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(server_node);
   while ((server_cb_count_ < server_qos_profile.depth()) &&
     (std::chrono::steady_clock::now() - start) < 1s)
   {
-    rclcpp::spin_some(server_node);
+    executor.spin_some();
     std::this_thread::sleep_for(1ms);
   }
 
   // Spin an extra time to check if server QoS depth has been ignored,
   // so more server responses might be processed than expected.
-  rclcpp::spin_some(server_node);
+  executor.spin_some();
 
   EXPECT_EQ(server_cb_count_, server_qos_profile.depth());
 }

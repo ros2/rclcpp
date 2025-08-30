@@ -371,6 +371,9 @@ public:
    *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
+   * \note This method will check the future and the timeout only when the executor is woken up.
+   *   If this future is unrelated to an executor's entity, this method will not correctly detect
+   *   when it's completed and therefore may wait forever and never time out.
    */
   template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
