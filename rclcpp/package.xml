@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rclcpp</name>
-  <version>30.1.0</version>
+  <version>30.0.0</version>
   <description>The ROS client library in C++.</description>
 
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
@@ -46,6 +46,7 @@
   <depend>rosidl_dynamic_typesupport</depend>
   <depend>statistics_msgs</depend>
   <depend>tracetools</depend>
+  <depend>yaml_cpp_vendor</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_google_benchmark</test_depend>

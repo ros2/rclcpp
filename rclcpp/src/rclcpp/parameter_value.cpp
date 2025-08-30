@@ -34,6 +34,8 @@ rclcpp::to_string(const ParameterType type)
       return "double";
     case ParameterType::PARAMETER_STRING:
       return "string";
+    case ParameterType::PARAMETER_YAML:
+      return "yaml";
     case ParameterType::PARAMETER_BYTE_ARRAY:
       return "byte_array";
     case ParameterType::PARAMETER_BOOL_ARRAY:
@@ -93,6 +95,8 @@ rclcpp::to_string(const ParameterValue & value)
       return std::to_string(value.get<double>());
     case ParameterType::PARAMETER_STRING:
       return value.get<std::string>();
+    case ParameterType::PARAMETER_YAML:
+      return value.get<std::string>();
     case ParameterType::PARAMETER_BYTE_ARRAY:
       return array_to_string<uint8_t, int>(value.get<std::vector<uint8_t>>(), std::ios::hex);
     case ParameterType::PARAMETER_BOOL_ARRAY:
@@ -121,6 +125,7 @@ ParameterValue::ParameterValue(const rcl_interfaces::msg::ParameterValue & value
     case PARAMETER_INTEGER:
     case PARAMETER_DOUBLE:
     case PARAMETER_STRING:
+    case PARAMETER_YAML:
     case PARAMETER_BYTE_ARRAY:
     case PARAMETER_BOOL_ARRAY:
     case PARAMETER_INTEGER_ARRAY:
@@ -169,6 +174,12 @@ ParameterValue::ParameterValue(const std::string & string_value)
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
 }
 
+ParameterValue::ParameterValue(const YAML::Node & yaml_value)
+{
+  value_.yaml_value = YAML::Dump(yaml_value);
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_YAML;
+}
+
 ParameterValue::ParameterValue(const char * string_value)
 : ParameterValue(std::string(string_value))
 {}
@@ -213,6 +224,29 @@ ParameterValue::ParameterValue(const std::vector<std::string> & string_array_val
 {
   value_.string_array_value = string_array_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY;
+}
+
+
+// Create a parameter value with type PARAMETER_YAML
+ParameterValue ParameterValue::YamlParameter(const std::string & yaml_string)
+{
+  ParameterValue param_value;
+  param_value.value_.set__type(rcl_interfaces::msg::ParameterType::PARAMETER_YAML);
+  param_value.value_.set__yaml_value(yaml_string);
+  return param_value;
+}
+
+// Create a parameter value with type PARAMETER_YAML
+ParameterValue ParameterValue::YamlParameter(const char * yaml_string)
+{
+  return ParameterValue::YamlParameter(std::string(yaml_string));
+}
+
+
+// Create a parameter value with type PARAMETER_YAML
+ParameterValue ParameterValue::YamlParameter(const YAML::Node& node)
+{
+  return ParameterValue::YamlParameter(YAML::Dump(node));
 }
 
 ParameterType

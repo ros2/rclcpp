@@ -28,6 +28,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "yaml-cpp/yaml.h"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
@@ -442,6 +443,131 @@ void __call_post_set_parameters_callbacks(
   }
 }
 
+
+RCLCPP_LOCAL
+/// Splits a parameter name into its component namespaces
+std::vector<std::string> __split_parameter_name(const std::string & name)
+{
+  constexpr char delimiter = '.';
+  std::vector<std::string> ret;
+  std::string out;
+  size_t position_found = -1;
+  std::string evaluation_string = name;
+  int counter = 0;
+  // Set an upper limit for the loop
+  // Anyone having more than 100 layers of namespacing should really evaluate their code - Rahul-K-A
+  while(counter++ < 100)
+  {
+    position_found = evaluation_string.find(delimiter);
+    if (std::string::npos == position_found)
+    {
+      break;
+    }
+    ret.push_back( evaluation_string.substr(0, position_found ));
+    evaluation_string = evaluation_string.substr(position_found + 1);
+  }
+  ret.push_back(evaluation_string);
+  return ret;
+}
+
+
+RCLCPP_LOCAL
+/// Pulled from Question 78243576 from Stack Overflow 
+void __traverse_node_and_change_value(YAML::Node & root, const std::vector<std::string>& path, rclcpp::ParameterValue value)
+{
+  YAML::Node traverse = root;
+  bool broken = false;
+  if (path.empty())
+  {
+    return;
+  }
+  // Skip first index because thats the name of the parameter itself and not a key
+  for (size_t i = 1; i < path.size() - 1; i++)
+  {
+    if (traverse[path[i]])
+    {
+      traverse.reset(traverse[path[i]]);
+    }  
+    else
+    {
+      broken = true;
+      break;
+    }
+  }
+
+  if (broken)
+  {
+    return;
+  }
+  // Set the value at the last level of nesting. Fugly switch case because we can't infer type - Rahul-K-A
+  switch (value.get_type()) {
+    case rclcpp::ParameterType::PARAMETER_BOOL:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_BOOL>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_INTEGER:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_INTEGER>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_DOUBLE:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_DOUBLE>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_STRING:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_STRING>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_BYTE_ARRAY:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_BYTE_ARRAY>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_BOOL_ARRAY>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY>();
+      break;
+    case rclcpp::ParameterType::PARAMETER_STRING_ARRAY:
+      traverse[path.back()] = value.get<rclcpp::ParameterType::PARAMETER_STRING_ARRAY>();
+      break;
+    default:
+      throw rclcpp::exceptions::UnimplementedError();
+  }
+}
+
+RCLCPP_LOCAL
+void __handle_changes_inside_yaml_parameters(const std::vector<rclcpp::Parameter>& parameters, std::map<std::string, 
+  rclcpp::node_interfaces::ParameterInfo> & parameter_infos)
+{
+  for (const rclcpp::Parameter& parameter: parameters)
+  {
+    std::vector<std::string> split_name = __split_parameter_name(parameter.get_name());
+
+    if (split_name.size() == 1 && split_name[0] == parameter.get_name())
+    {
+      continue;
+    }
+
+    // Find this yaml_param name inside parameter_infos
+    if (parameter_infos.find(split_name[0]) == parameter_infos.end()) 
+    {
+      continue;
+    }
+
+    if (parameter_infos[split_name[0]].descriptor.type != rclcpp::ParameterType::PARAMETER_YAML)
+    {
+      continue;
+    }
+
+    // Load the value as a yaml
+    YAML::Node node = parameter_infos[split_name[0]].value.get<YAML::Node>();
+
+    // Set the value inside inside the yaml
+    __traverse_node_and_change_value(node, split_name, parameter.get_parameter_value());
+    // Add the modified yaml param to the "parameters" vector so that it gets set
+    parameter_infos[split_name[0]].value = rclcpp::ParameterValue::YamlParameter(node);
+  }
+}
+
+
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
 __set_parameters_atomically_common(
@@ -471,6 +597,9 @@ __set_parameters_atomically_common(
       parameter_infos[name].descriptor.type = parameters[i].get_type();
       parameter_infos[name].value = parameters[i].get_parameter_value();
     }
+    // Handle cases where individual members of a yaml parameter have been changed
+    // We should probably not do this after the existing parameter namespacing feature is removed - Rahul-K-A
+    __handle_changes_inside_yaml_parameters(parameters, parameter_infos);
     // Call the user post set parameter callback
     __call_post_set_parameters_callbacks(parameters, post_set_callback_container);
   }

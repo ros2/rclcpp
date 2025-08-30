@@ -156,6 +156,15 @@ public:
   const std::string &
   as_string() const;
 
+  /// Get value of parameter as a YAML object.
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
+  RCLCPP_PUBLIC
+  const YAML::Node
+  as_yaml() const;
+
+
   /// Get value of parameter as byte array (vector<uint8_t>).
   /**
    * \throws rclcpp::ParameterTypeException if the type doesn't match
