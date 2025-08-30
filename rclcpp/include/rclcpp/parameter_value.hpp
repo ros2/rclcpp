@@ -133,6 +133,9 @@ public:
   RCLCPP_PUBLIC
   /// Generate a parameter value with type PARAMETER_YAML
   static ParameterValue YamlParameter(const char * yaml_string);
+  /// Generate a parameter value with type PARAMETER_YAML
+  RCLCPP_PUBLIC
+  static ParameterValue YamlParameter(const YAML::Node & node);
   /// Return an enum indicating the type of the set value.
   RCLCPP_PUBLIC
   ParameterType

@@ -95,6 +95,8 @@ rclcpp::to_string(const ParameterValue & value)
       return std::to_string(value.get<double>());
     case ParameterType::PARAMETER_STRING:
       return value.get<std::string>();
+    case ParameterType::PARAMETER_YAML:
+      return value.get<std::string>();
     case ParameterType::PARAMETER_BYTE_ARRAY:
       return array_to_string<uint8_t, int>(value.get<std::vector<uint8_t>>(), std::ios::hex);
     case ParameterType::PARAMETER_BOOL_ARRAY:
@@ -240,6 +242,12 @@ ParameterValue ParameterValue::YamlParameter(const char * yaml_string)
   return ParameterValue::YamlParameter(std::string(yaml_string));
 }
 
+
+// Create a parameter value with type PARAMETER_YAML
+ParameterValue ParameterValue::YamlParameter(const YAML::Node& node)
+{
+  return ParameterValue::YamlParameter(YAML::Dump(node));
+}
 
 ParameterType
 ParameterValue::get_type() const
