@@ -419,7 +419,7 @@ NodeGraph::get_node_names_and_namespaces() const
         rcl_get_error_string().str;
       rcl_reset_error();
     }
-    RCUTILS_LOG_ERROR_NAMED("rclcpp", error_msg.c_str());
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", "%s", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
 
@@ -442,7 +442,7 @@ NodeGraph::get_node_names_and_namespaces() const
   }
 
   if (ret_names != RCUTILS_RET_OK || ret_ns != RCUTILS_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED("rclcpp", error.c_str());
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", "%s", error.c_str());
     throw std::runtime_error(error);
   }
 
