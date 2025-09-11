@@ -89,7 +89,7 @@ void
 GraphListener::start_if_not_started()
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
-  if (is_shutdown_.load()) {
+  if (is_shutdown()) {
     throw GraphListenerShutdownError();
   }
   if (!is_started_) {
@@ -126,7 +126,7 @@ GraphListener::run_loop()
 {
   while (true) {
     // If shutdown() was called, exit.
-    if (is_shutdown_.load()) {
+    if (is_shutdown()) {
       return;
     }
     rcl_ret_t ret;
@@ -194,7 +194,7 @@ GraphListener::run_loop()
       if (graph_gc == wait_set_.guard_conditions[graph_gc_indexes[i]]) {
         node_ptr->notify_graph_change();
       }
-      if (is_shutdown_) {
+      if (is_shutdown()) {
         // If shutdown, then notify the node of this as well.
         node_ptr->notify_shutdown();
       }
@@ -261,7 +261,7 @@ GraphListener::add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph
     throw std::invalid_argument("node is nullptr");
   }
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
-  if (is_shutdown_.load()) {
+  if (is_shutdown()) {
     throw GraphListenerShutdownError();
   }
 
