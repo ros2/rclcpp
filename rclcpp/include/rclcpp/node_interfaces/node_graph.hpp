@@ -159,6 +159,13 @@ public:
     const std::string & topic_name,
     bool no_mangle = false) const override;
 
+  RCLCPP_PUBLIC
+  bool
+  wait_for_publishers(
+    const std::string & topic_name,
+    size_t count,
+    const std::chrono::nanoseconds & timeout) const override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeGraph)
 
