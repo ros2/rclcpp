@@ -69,7 +69,7 @@ void GraphListener::init_wait_set()
 }
 
 void
-GraphListener::register_on_shutdown_hooks() 
+GraphListener::register_on_shutdown_hooks()
 {
   auto parent_context = weak_parent_context_.lock();
   if (!is_started_ && parent_context) {
@@ -92,7 +92,7 @@ GraphListener::start_if_not_started()
   if (is_shutdown_.load()) {
     throw GraphListenerShutdownError();
   }
-    if (!is_started_) {
+  if (!is_started_) {
     // Initialize the wait set before starting.
     init_wait_set();
     // Start the listener thread.
