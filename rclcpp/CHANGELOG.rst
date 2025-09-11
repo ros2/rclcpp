@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.1 (2025-09-11)
+-------------------
+* Removed warning (`#2949 <https://github.com/ros2/rclcpp/issues/2949>`_)
+* add note about problems with spin_until_future_complete (`#2849 <https://github.com/ros2/rclcpp/issues/2849>`_)
+* deprecate rclcpp::spin_some and rclcpp::spin_all (`#2848 <https://github.com/ros2/rclcpp/issues/2848>`_)
+* Improve the function extract_type_identifier (`#2923 <https://github.com/ros2/rclcpp/issues/2923>`_)
+* Allow for implicitly convertable loggers as well (`#2922 <https://github.com/ros2/rclcpp/issues/2922>`_)
+* Contributors: Alberto Soragna, Alejandro Hernández Cordero, Barry Xu, Tim Clephas
+
 30.1.0 (2025-07-29)
 -------------------
 * Fix: improve exception context for parameter_value_from (`#2917 <https://github.com/ros2/rclcpp/issues/2917>`_)

@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+30.1.1 (2025-09-11)
+-------------------
+* deprecate rclcpp::spin_some and rclcpp::spin_all (`#2848 <https://github.com/ros2/rclcpp/issues/2848>`_)
+* Contributors: Alberto Soragna
+
 30.1.0 (2025-07-29)
 -------------------
 * fix cmake deprecation (`#2914 <https://github.com/ros2/rclcpp/issues/2914>`_)
