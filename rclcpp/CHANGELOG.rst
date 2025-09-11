@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.3 (2025-09-11)
+-------------------
+* Fix: improve exception context for parameter_value_from (`#2917 <https://github.com/ros2/rclcpp/issues/2917>`_) (`#2919 <https://github.com/ros2/rclcpp/issues/2919>`_)
+* Allow for implicitly convertable loggers as well (`#2922 <https://github.com/ros2/rclcpp/issues/2922>`_) (`#2936 <https://github.com/ros2/rclcpp/issues/2936>`_)
+* Fix `start_type_description_service` param handling (`#2897 <https://github.com/ros2/rclcpp/issues/2897>`_) (`#2908 <https://github.com/ros2/rclcpp/issues/2908>`_)
+* Add qos parameter for wait_for_message function (`#2903 <https://github.com/ros2/rclcpp/issues/2903>`_) (`#2905 <https://github.com/ros2/rclcpp/issues/2905>`_)
+* Expose `typesupport_helpers` API needed for the Rosbag2 (`#2858 <https://github.com/ros2/rclcpp/issues/2858>`_) (`#2901 <https://github.com/ros2/rclcpp/issues/2901>`_)
+* Fujitatomoya/test append parameter override (`#2896 <https://github.com/ros2/rclcpp/issues/2896>`_) (`#2899 <https://github.com/ros2/rclcpp/issues/2899>`_)
+* Add overload of `append_parameter_override` (`#2891 <https://github.com/ros2/rclcpp/issues/2891>`_) (`#2894 <https://github.com/ros2/rclcpp/issues/2894>`_)
+* Contributors: Tim Clephas, mergify[bot]
+
 29.5.2 (2025-07-07)
 -------------------
 * Shutdown deadlock fix jazzy (`#2887 <https://github.com/ros2/rclcpp/issues/2887>`_) (`#2888 <https://github.com/ros2/rclcpp/issues/2888>`_)
