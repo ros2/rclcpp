@@ -69,8 +69,15 @@ void GraphListener::init_wait_set()
 }
 
 void
-GraphListener::register_on_shutdown_hooks()
+GraphListener::start_if_not_started()
 {
+  if (is_shutdown()) {
+    throw GraphListenerShutdownError();
+  }
+
+  // Register an on_shutdown hook to shtudown the graph listener.
+  // This is important to ensure that the wait set is finalized before
+  // destruction of static objects occurs.
   auto parent_context = weak_parent_context_.lock();
   if (!is_started_ && parent_context) {
     std::weak_ptr<GraphListener> weak_this = shared_from_this();
@@ -83,15 +90,7 @@ GraphListener::register_on_shutdown_hooks()
         }
       });
   }
-}
-
-void
-GraphListener::start_if_not_started()
-{
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
-  if (is_shutdown()) {
-    throw GraphListenerShutdownError();
-  }
   if (!is_started_) {
     // Initialize the wait set before starting.
     init_wait_set();

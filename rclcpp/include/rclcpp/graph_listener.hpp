@@ -70,14 +70,6 @@ public:
   virtual ~GraphListener();
 
 
-  /// Register an on_shutdown hook to shutdown the graph listener.
-  /// This is important to ensure that the wait set is finalized before
-  /// destruction of static objects occurs.
-  RCLCPP_PUBLIC
-  virtual
-  void
-  register_on_shutdown_hooks();
-
   /// Start the graph listener's listen thread if it hasn't been started.
   /**
    * This function is thread-safe.

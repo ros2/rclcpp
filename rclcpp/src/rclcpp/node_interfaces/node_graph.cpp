@@ -599,7 +599,6 @@ NodeGraph::get_graph_event()
   // on first call, add node to graph_listener_
   if (should_add_to_graph_listener_.exchange(false)) {
     graph_listener_->add_node(this);
-    graph_listener_->register_on_shutdown_hooks();
     graph_listener_->start_if_not_started();
   }
   return event;
