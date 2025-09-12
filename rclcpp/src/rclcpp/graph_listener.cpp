@@ -75,7 +75,7 @@ GraphListener::start_if_not_started()
     throw GraphListenerShutdownError();
   }
 
-  // Register an on_shutdown hook to shtudown the graph listener.
+  // Register an on_shutdown hook to shutdown the graph listener.
   // This is important to ensure that the wait set is finalized before
   // destruction of static objects occurs.
   auto parent_context = weak_parent_context_.lock();
