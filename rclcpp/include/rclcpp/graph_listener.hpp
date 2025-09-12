@@ -69,7 +69,6 @@ public:
   RCLCPP_PUBLIC
   virtual ~GraphListener();
 
-
   /// Start the graph listener's listen thread if it hasn't been started.
   /**
    * This function is thread-safe.
