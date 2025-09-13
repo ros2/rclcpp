@@ -135,7 +135,7 @@ ServerGoalHandleBase::try_canceling() noexcept
     return RCL_RET_OK == ret;
   }
 
-  return false;
+  return is_cancelable;
 }
 
 bool
@@ -153,6 +153,6 @@ ServerGoalHandleBase::try_aborting() noexcept
     }
   }
 
-  return true;
+  return is_abortable;
 }
 }  // namespace rclcpp_action
