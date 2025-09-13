@@ -137,4 +137,22 @@ ServerGoalHandleBase::try_canceling() noexcept
 
   return false;
 }
+
+bool
+ServerGoalHandleBase::try_aborting() noexcept
+{
+  std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
+  rcl_ret_t ret;
+  // Check if the goal is abortable
+  const bool is_abortable = rcl_action_goal_handle_is_abortable(rcl_handle_.get());
+  if (is_abortable) {
+    // Transition to ABORTED
+    ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_ABORT);
+    if (RCL_RET_OK != ret) {
+      return false;
+    }
+  }
+
+  return true;
+}
 }  // namespace rclcpp_action
