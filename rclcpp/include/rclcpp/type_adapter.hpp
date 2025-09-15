@@ -143,17 +143,6 @@ struct has_overloaded_operator_new<T,
   : std::true_type {};
 
 template <typename T>
-struct has_overloaded_operator_new<T, std::void_t<
-    decltype(T::operator new[](std::size_t()))  
->> : std::true_type {};
-
-/// Aligned array operator new (C++17)
-template<class T>
-struct has_overloaded_operator_new<T,
-    std::void_t<decltype( T::operator new[](std::size_t(), std::align_val_t()) )>>
-  : std::true_type {};
-
-template <typename T>
 inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_new<T>::value;
 
 }  // namespace detail
