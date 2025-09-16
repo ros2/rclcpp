@@ -105,12 +105,14 @@ protected:
   _execute();
 
   /// Transition the goal to canceled state if it never reached a terminal state.
+  /// Returns true if transitioned to canceled, else false.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   bool
   try_canceling() noexcept;
 
   /// Transition the goal to aborted state if it never reached a terminal state.
+  /// Returns true if transitioned to aborted, else false.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   bool

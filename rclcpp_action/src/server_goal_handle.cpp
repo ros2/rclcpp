@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <mutex>
 
 #include "rcl_action/action_server.h"
 #include "rcl_action/goal_handle.h"
