@@ -16,7 +16,7 @@
 #define RCLCPP__TYPE_ADAPTER_HPP_
 
 #include <type_traits>
-#include <new> // For std::align_val_t
+#include <new>
 
 namespace rclcpp
 {
@@ -129,20 +129,20 @@ struct assert_type_pair_is_specialized_type_adapter
     "No type adapter for this custom type/ros message type pair");
 };
 
-template <typename, typename = void>
+template<typename, typename = void>
 struct has_overloaded_operator_new : std::false_type {};
-template <typename T>
+template<typename T>
 struct has_overloaded_operator_new<T, std::void_t<
-    decltype(T::operator new(std::size_t()))  
->> : std::true_type {};
+    decltype(T::operator new(std::size_t()))
+  >>: std::true_type {};
 
 /// Aligned operator new (C++17)
 template<class T>
 struct has_overloaded_operator_new<T,
-    std::void_t<decltype( T::operator new(std::size_t(), std::align_val_t()) )>>
+  std::void_t<decltype( T::operator new(std::size_t(), std::align_val_t()) )>>
   : std::true_type {};
 
-template <typename T>
+template<typename T>
 inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_new<T>::value;
 
 }  // namespace detail
