@@ -67,7 +67,13 @@ Rate::sleep()
   // Calculate the time to sleep
   auto time_to_sleep = next_interval - now;
   // Sleep (will get interrupted by ctrl-c, may not sleep full time)
-  clock_->sleep_for(time_to_sleep);
+  try {
+    // If the context is invalid, an exception will be thrown.
+    clock_->sleep_for(time_to_sleep);
+  } catch (const std::runtime_error & e) {
+    // If it didn't sleep the full time, return false
+    return false;
+  }
   return true;
 }
 
