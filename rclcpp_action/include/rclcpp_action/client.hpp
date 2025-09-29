@@ -350,7 +350,7 @@ public:
         return;
       }
 
-      goal_handle = it->lock();
+      goal_handle = it->second.lock();
     }
 
     if (goal_handle) {
