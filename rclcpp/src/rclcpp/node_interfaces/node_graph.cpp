@@ -36,9 +36,6 @@ using rclcpp::graph_listener::GraphListener;
 
 NodeGraph::NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base),
-  graph_listener_(
-    node_base->get_context()->get_sub_context<GraphListener>(node_base->get_context())
-  ),
   should_add_to_graph_listener_(true),
   graph_users_count_(0)
 {}
@@ -50,7 +47,7 @@ NodeGraph::~NodeGraph()
   // graph listener after checking that it was not here.
   if (!should_add_to_graph_listener_.exchange(false)) {
     // If it was already false, then it needs to now be removed.
-    graph_listener_->remove_node(this);
+    node_base_->get_context()->get_graph_listener()->remove_node(this);
   }
 }
 
@@ -598,8 +595,8 @@ NodeGraph::get_graph_event()
   }
   // on first call, add node to graph_listener_
   if (should_add_to_graph_listener_.exchange(false)) {
-    graph_listener_->add_node(this);
-    graph_listener_->start_if_not_started();
+    node_base_->get_context()->get_graph_listener()->add_node(this);
+    node_base_->get_context()->get_graph_listener()->start_if_not_started();
   }
   return event;
 }

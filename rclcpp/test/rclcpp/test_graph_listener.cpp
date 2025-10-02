@@ -43,9 +43,7 @@ public:
     node_graph_ = node_->get_node_graph_interface();
     ASSERT_NE(nullptr, node_graph_);
 
-    graph_listener_ =
-      std::make_shared<rclcpp::graph_listener::GraphListener>(
-      rclcpp::contexts::get_global_default_context());
+    graph_listener_ = rclcpp::contexts::get_global_default_context()->get_graph_listener();
   }
 
   void TearDown()

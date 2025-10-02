@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
 #include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
@@ -38,8 +37,7 @@ namespace graph_listener
 {
 
 GraphListener::GraphListener(const std::shared_ptr<Context> & parent_context)
-: weak_parent_context_(parent_context),
-  rcl_parent_context_(parent_context->get_rcl_context()),
+: rcl_parent_context_(parent_context->get_rcl_context()),
   is_started_(false),
   is_shutdown_(false),
   interrupt_guard_condition_(parent_context)
@@ -71,27 +69,12 @@ void GraphListener::init_wait_set()
 void
 GraphListener::start_if_not_started()
 {
+  std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
   if (is_shutdown()) {
     throw GraphListenerShutdownError();
   }
 
-  // Register an on_shutdown hook to shutdown the graph listener.
-  // This is important to ensure that the wait set is finalized before
-  // destruction of static objects occurs.
-  auto parent_context = weak_parent_context_.lock();
-  if (!is_started_ && parent_context) {
-    std::weak_ptr<GraphListener> weak_this = shared_from_this();
-    parent_context->on_shutdown(
-      [weak_this]() {
-        auto shared_this = weak_this.lock();
-        if (shared_this) {
-          // should not throw from on_shutdown if it can be avoided
-          shared_this->shutdown(std::nothrow);
-        }
-      });
-  }
-  std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
-  if (!is_started_) {
+  if (!is_started()) {
     // Initialize the wait set before starting.
     init_wait_set();
     // Start the listener thread.
@@ -335,11 +318,11 @@ GraphListener::__shutdown()
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
   if (!is_shutdown_.exchange(true)) {
-    if (is_started_) {
+    if (is_started()) {
       interrupt_(&interrupt_guard_condition_);
       listener_thread_.join();
     }
-    if (is_started_) {
+    if (is_started()) {
       cleanup_wait_set();
     }
   }
@@ -366,6 +349,12 @@ GraphListener::shutdown(const std::nothrow_t &) noexcept
       rclcpp::get_logger("rclcpp"),
       "caught unknown exception when shutting down GraphListener");
   }
+}
+
+bool
+GraphListener::is_started()
+{
+  return is_started_;
 }
 
 bool
