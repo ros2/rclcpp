@@ -262,7 +262,6 @@ Context::init(
           }
     });
     }
-
   } catch (const std::exception & e) {
     ret = rcl_shutdown(rcl_context_.get());
     rcl_context_.reset();
