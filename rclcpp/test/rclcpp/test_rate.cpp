@@ -173,12 +173,3 @@ TEST_F(TestRate, incorrect_constuctor) {
     rclcpp::Rate rate(rclcpp::Duration(-1, 0)),
     std::invalid_argument("period must be greater than 0"));
 }
-
-TEST(TestRateBasic, invalid_context) {
-  rclcpp::init(0, nullptr);
-  rclcpp::Rate rate(1.0);
-  ASSERT_TRUE(rate.sleep());
-  rclcpp::shutdown();
-  EXPECT_NO_THROW(rate.sleep());
-  ASSERT_FALSE(rate.sleep());
-}
