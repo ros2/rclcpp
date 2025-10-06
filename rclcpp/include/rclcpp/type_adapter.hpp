@@ -147,12 +147,18 @@ inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_ne
 
 template<bool cond>
 struct DeprecationEmitterOverloadedOperatorNew {};
-template<> struct DeprecationEmitterOverloadedOperatorNew<false> {};
+
+template<> struct DeprecationEmitterOverloadedOperatorNew<false> {
+  static void warn() {}
+};
+
 template<> struct 
-[[deprecated("When publishing by value (i.e. when calling publish(const T& msg)), the published message"
+DeprecationEmitterOverloadedOperatorNew<true> {
+  [[deprecated("When publishing by value (i.e. when calling publish(const T& msg)), the published message"
         "type must not have an overloaded operator new. In this case, please use the"
         "publish(std::unique_ptr<T> msg) method instead.")]]
-DeprecationEmitterOverloadedOperatorNew<true> {};
+  static void warn() {}
+};
 
 }  // namespace detail
 
