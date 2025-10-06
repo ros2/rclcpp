@@ -137,7 +137,7 @@ struct has_overloaded_operator_new<T, std::void_t<
   >>: std::true_type {};
 
 /// Aligned operator new (C++17)
-template<class T>
+template<typename T>
 struct has_overloaded_operator_new<T,
   std::void_t<decltype( T::operator new(std::size_t(), std::align_val_t()) )>>
   : std::true_type {};
@@ -145,10 +145,14 @@ struct has_overloaded_operator_new<T,
 template<typename T>
 inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_new<T>::value;
 
+template<bool cond>
+struct DeprecationEmitterOverloadedOperatorNew {};
+template<> struct DeprecationEmitterOverloadedOperatorNew<false> {};
+template<> struct 
 [[deprecated("When publishing by value (i.e. when calling publish(const T& msg)), the published message"
         "type must not have an overloaded operator new. In this case, please use the"
         "publish(std::unique_ptr<T> msg) method instead.")]]
-static void warn_for_overloaded_operator_new() {}
+DeprecationEmitterOverloadedOperatorNew<true> {};
 
 }  // namespace detail
 
