@@ -52,7 +52,6 @@
 namespace rclcpp
 {
 
-
 template<typename MessageT, typename AllocatorT>
 class LoanedMessage;
 
@@ -87,7 +86,6 @@ public:
 
   /// MessageT::custom_type if MessageT is a TypeAdapter, otherwise just MessageT.
   using PublishedType = typename rclcpp::TypeAdapter<MessageT>::custom_type;
-
   using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
 
   using PublishedTypeAllocatorTraits = allocator::AllocRebind<PublishedType, AllocatorT>;
