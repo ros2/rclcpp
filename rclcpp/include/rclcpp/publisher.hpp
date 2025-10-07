@@ -87,6 +87,7 @@ public:
 
   /// MessageT::custom_type if MessageT is a TypeAdapter, otherwise just MessageT.
   using PublishedType = typename rclcpp::TypeAdapter<MessageT>::custom_type;
+
   using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
 
   using PublishedTypeAllocatorTraits = allocator::AllocRebind<PublishedType, AllocatorT>;
@@ -577,7 +578,7 @@ protected:
   {
     /// Assert that the published type has no overloaded operator new since this leads to
     /// new/delete mismatch (see https://github.com/ros2/rclcpp/issues/2951)
-    DeprecationEmitterOverloadedOperatorNew<has_overloaded_operator_new_v<
+    detail::DeprecationEmitterOverloadedOperatorNew<detail::has_overloaded_operator_new_v<
         PublishedType>>::warn();
 
     auto ptr = PublishedTypeAllocatorTraits::allocate(published_type_allocator_, 1);
