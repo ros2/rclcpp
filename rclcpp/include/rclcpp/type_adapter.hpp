@@ -147,27 +147,6 @@ template<typename T>
 inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_new<T>::value ||
   has_overloaded_aligned_operator_new<T>::value;
 
-template<bool>
-struct DeprecationEmitterOverloadedOperatorNew
-{
-};
-
-template<>
-struct DeprecationEmitterOverloadedOperatorNew<false>
-{
-  static void warn() {}
-};
-
-template<>
-struct
-DeprecationEmitterOverloadedOperatorNew<true>
-{
-  [[deprecated("When publishing by value (i.e. when calling publish(const T& msg)), the published "
-    "message type must not have an overloaded operator new. In this case, please use the "
-    "publish(std::unique_ptr<T> msg) method instead.")]]
-  static void warn() {}
-};
-
 }  // namespace detail
 
 /// Template metafunction that can make the type being adapted explicit.
