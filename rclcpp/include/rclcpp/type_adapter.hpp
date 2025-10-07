@@ -136,16 +136,18 @@ struct has_overloaded_operator_new<T, std::void_t<
     decltype(T::operator new(std::size_t()))
   >>: std::true_type {};
 
-/// Aligned operator new (C++17)
+template<typename, typename = void>
+struct has_overloaded_aligned_operator_new : std::false_type {};
 template<typename T>
-struct has_overloaded_operator_new<T,
+struct has_overloaded_aligned_operator_new<T,
   std::void_t<decltype( T::operator new(std::size_t(), std::align_val_t()) )>>
   : std::true_type {};
 
 template<typename T>
-inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_new<T>::value;
+inline constexpr bool has_overloaded_operator_new_v = has_overloaded_operator_new<T>::value ||
+  has_overloaded_aligned_operator_new<T>::value;
 
-template<bool cond>
+template<bool>
 struct DeprecationEmitterOverloadedOperatorNew
 {
 };
@@ -160,9 +162,9 @@ template<>
 struct
 DeprecationEmitterOverloadedOperatorNew<true>
 {
-  [[deprecated("When publishing by value (i.e. when calling publish(const T& msg)), the published message"
-        "type must not have an overloaded operator new. In this case, please use the"
-        "publish(std::unique_ptr<T> msg) method instead.")]]
+  [[deprecated("When publishing by value (i.e. when calling publish(const T& msg)), the published "
+    "message type must not have an overloaded operator new. In this case, please use the "
+    "publish(std::unique_ptr<T> msg) method instead.")]]
   static void warn() {}
 };
 

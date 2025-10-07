@@ -52,6 +52,7 @@
 namespace rclcpp
 {
 
+
 template<typename MessageT, typename AllocatorT>
 class LoanedMessage;
 
@@ -576,7 +577,8 @@ protected:
   {
     /// Assert that the published type has no overloaded operator new since this leads to
     /// new/delete mismatch (see https://github.com/ros2/rclcpp/issues/2951)
-    detail::DeprecationEmitterOverloadedOperatorNew<detail::has_overloaded_operator_new_v<PublishedType>>::warn();
+    DeprecationEmitterOverloadedOperatorNew<has_overloaded_operator_new_v<
+        PublishedType>>::warn();
 
     auto ptr = PublishedTypeAllocatorTraits::allocate(published_type_allocator_, 1);
     PublishedTypeAllocatorTraits::construct(published_type_allocator_, ptr, msg);
