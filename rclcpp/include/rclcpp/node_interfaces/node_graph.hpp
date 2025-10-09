@@ -165,8 +165,6 @@ private:
   /// Handle to the NodeBaseInterface given in the constructor.
   rclcpp::node_interfaces::NodeBaseInterface * node_base_;
 
-  /// Graph Listener which waits on graph changes for the node and is shared across nodes.
-  std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
   /// Whether or not this node needs to be added to the graph listener.
   std::atomic_bool should_add_to_graph_listener_;
 
