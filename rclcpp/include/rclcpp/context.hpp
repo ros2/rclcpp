@@ -37,6 +37,10 @@
 
 namespace rclcpp
 {
+namespace graph_listener
+{
+class GraphListener;
+}  // namespace graph_listener
 
 /// Thrown when init is called on an already initialized context.
 class ContextAlreadyInitialized : public std::runtime_error
@@ -309,6 +313,10 @@ public:
   std::shared_ptr<rcl_context_t>
   get_rcl_context();
 
+  RCLCPP_PUBLIC
+  std::shared_ptr<rclcpp::graph_listener::GraphListener>
+  get_graph_listener();
+
   /// Sleep for a given period of time or until shutdown() is called.
   /**
    * This function can be interrupted early if:
@@ -390,6 +398,9 @@ private:
   std::condition_variable interrupt_condition_variable_;
   /// Mutex for protecting the global condition variable.
   std::mutex interrupt_mutex_;
+
+  /// Graph Listener which waits on graph changes for the node and is shared across nodes.
+  std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
 
   /// Keep shared ownership of global vector of weak contexts
   std::shared_ptr<WeakContextsWrapper> weak_contexts_;

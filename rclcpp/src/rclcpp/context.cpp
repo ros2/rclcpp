@@ -28,7 +28,7 @@
 #include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
-
+#include "rclcpp/graph_listener.hpp"
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
 
@@ -145,7 +145,8 @@ rclcpp_logging_output_handler(
 Context::Context()
 : rcl_context_(nullptr),
   shutdown_reason_(""),
-  logging_mutex_(nullptr)
+  logging_mutex_(nullptr),
+  graph_listener_(nullptr)
 {}
 
 Context::~Context()
@@ -243,6 +244,24 @@ Context::init(
 
     weak_contexts_ = get_weak_contexts();
     weak_contexts_->add_context(this->shared_from_this());
+
+
+    std::lock_guard<std::recursive_mutex> lock (on_shutdown_callbacks_mutex_);
+
+    graph_listener_ = std::make_shared<graph_listener::GraphListener>(shared_from_this());
+
+    if (!graph_listener_->is_started()) {
+    // Register an on_shutdown hook to shutdown the graph listener.
+    // This is important to ensure that the wait set is finalized before
+    // destruction of static objects occurs.
+      std::weak_ptr<rclcpp::graph_listener::GraphListener> weak_graph_listener = graph_listener_;
+      on_shutdown ([weak_graph_listener]() {
+          auto shared_graph_listener = weak_graph_listener.lock();
+          if(shared_graph_listener) {
+            shared_graph_listener->shutdown(std::nothrow);
+          }
+    });
+    }
   } catch (const std::exception & e) {
     ret = rcl_shutdown(rcl_context_.get());
     rcl_context_.reset();
@@ -498,6 +517,12 @@ std::shared_ptr<rcl_context_t>
 Context::get_rcl_context()
 {
   return rcl_context_;
+}
+
+std::shared_ptr<rclcpp::graph_listener::GraphListener>
+Context::get_graph_listener()
+{
+  return graph_listener_;
 }
 
 bool
