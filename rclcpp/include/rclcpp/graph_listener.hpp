@@ -154,6 +154,12 @@ public:
   bool
   is_shutdown();
 
+  /// Return true if the graph listener was started.
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  is_started();
+
 protected:
   /// Main function for the listening thread.
   RCLCPP_PUBLIC
@@ -181,7 +187,6 @@ private:
   void
   __shutdown();
 
-  std::weak_ptr<rclcpp::Context> weak_parent_context_;
   std::shared_ptr<rcl_context_t> rcl_parent_context_;
 
   std::thread listener_thread_;
