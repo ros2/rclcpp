@@ -251,9 +251,9 @@ Context::init(
     graph_listener_ = std::make_shared<graph_listener::GraphListener>(shared_from_this());
 
     if (!graph_listener_->is_started()) {
-  // Register an on_shutdown hook to shutdown the graph listener.
-  // This is important to ensure that the wait set is finalized before
-  // destruction of static objects occurs.
+    // Register an on_shutdown hook to shutdown the graph listener.
+    // This is important to ensure that the wait set is finalized before
+    // destruction of static objects occurs.
       std::weak_ptr<rclcpp::graph_listener::GraphListener> weak_graph_listener = graph_listener_;
       on_shutdown ([weak_graph_listener]() {
           auto shared_graph_listener = weak_graph_listener.lock();
