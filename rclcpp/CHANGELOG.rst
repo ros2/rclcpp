@@ -2,6 +2,9 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.4 (2025-10-21)
+-------------------
+
 29.5.3 (2025-09-11)
 -------------------
 * Fix: improve exception context for parameter_value_from (`#2917 <https://github.com/ros2/rclcpp/issues/2917>`_) (`#2919 <https://github.com/ros2/rclcpp/issues/2919>`_)
