@@ -458,6 +458,16 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
+  /// Return the parameter value, or the "alternative_value" if not set.
+  /**
+   * \sa rclcpp::Node::get_parameter_or
+   */
+  template<typename ParameterT>
+  ParameterT
+  get_parameter_or(
+    const std::string & name,
+    const ParameterT & alternative_value) const;
+
   /// Return the parameters by the given parameter names.
   /**
    * \sa rclcpp::Node::get_parameters
