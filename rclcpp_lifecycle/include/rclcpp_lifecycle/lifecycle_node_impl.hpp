@@ -306,5 +306,16 @@ LifecycleNode::get_parameter_or(
   return got_parameter;
 }
 
+template<typename ParameterT>
+ParameterT
+LifecycleNode::get_parameter_or(
+  const std::string & name,
+  const ParameterT & alternative_value) const
+{
+  ParameterT parameter;
+  get_parameter_or(name, parameter, alternative_value);
+  return parameter;
+}
+
 }  // namespace rclcpp_lifecycle
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_
