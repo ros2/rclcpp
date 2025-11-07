@@ -392,6 +392,34 @@ public:
     // automatically with lambda functions in cases where the arguments can be
     // converted to one another, e.g. shared_ptr and unique_ptr.
     using scbth = detail::SubscriptionCallbackTypeHelper<MessageT, CallbackT>;
+    constexpr auto is_invalid_signature =
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<SubscribedType>)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<SubscribedType>, const rclcpp::MessageInfo &)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<ROSMessageType>)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<ROSMessageType>, const rclcpp::MessageInfo &)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &)>
+      >::value;
+    static_assert(!is_invalid_signature,
+      "std::shared_ptr<> callback signature is unsupported "
+      "Use std::shared_ptr<const> or std::unique_ptr<> instead.");
 
     callback_variant_ = static_cast<typename scbth::callback_type>(callback);
 

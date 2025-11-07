@@ -212,7 +212,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<std::string> msg) -> void {
+      std::shared_ptr<const std::string> msg) -> void {
         is_received = true;
         EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
@@ -230,7 +230,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<std::string> msg,
+      std::shared_ptr<const std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
         EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
@@ -422,7 +422,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<std::string> msg) -> void {
+      std::shared_ptr<const std::string> msg) -> void {
         is_received = true;
         EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
       };
@@ -440,7 +440,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<std::string> msg,
+      std::shared_ptr<const std::string> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
         EXPECT_STREQ(message_data.c_str(), (*msg).c_str());
@@ -637,7 +637,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<double> msg) -> void {
+      std::shared_ptr<const double> msg) -> void {
         is_received = true;
         ASSERT_EQ(message_data, *msg);
       };
@@ -656,7 +656,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<double> msg,
+      std::shared_ptr<const double> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
         ASSERT_EQ(message_data, *msg);
@@ -862,7 +862,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<double> msg) -> void {
+      std::shared_ptr<const double> msg) -> void {
         is_received = true;
         ASSERT_EQ(message_data, *msg);
       };
@@ -882,7 +882,7 @@ TEST_F(
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
-      std::shared_ptr<double> msg,
+      std::shared_ptr<const double> msg,
       const rclcpp::MessageInfo & message_info) -> void {
         is_received = true;
         ASSERT_EQ(message_data, *msg);
