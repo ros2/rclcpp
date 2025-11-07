@@ -840,6 +840,26 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
   EXPECT_TRUE(parameter.as_bool());
 }
 
+TEST_F(TestDefaultStateMachine, test_get_parameter_or) {
+  auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+  const std::string param_name = "test_param";
+  int param_int = -999;
+
+  // Parameter does not exist, should return "or" value
+  EXPECT_FALSE(test_node->get_parameter_or(param_name, param_int, 123));
+  EXPECT_EQ(param_int, 123);
+  EXPECT_EQ(test_node->get_parameter_or(param_name, 456), 456);
+
+  // Declare param_int
+  test_node->declare_parameter(param_name, rclcpp::ParameterValue(789));
+
+  // Parameter exists, should return existing value
+  EXPECT_TRUE(test_node->get_parameter_or(param_name, param_int, 123));
+  EXPECT_EQ(param_int, 789);
+  EXPECT_EQ(test_node->get_parameter_or(param_name, 456), 789);
+}
+
 TEST_F(TestDefaultStateMachine, test_getters) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
   auto options = test_node->get_node_options();
