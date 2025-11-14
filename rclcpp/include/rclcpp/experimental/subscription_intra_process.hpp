@@ -154,6 +154,16 @@ public:
     execute_impl<SubscribedType>(data);
   }
 
+  void disable_callbacks() override
+  {
+    any_callback_.disable();
+  }
+
+  void enable_callbacks() override
+  {
+    any_callback_.enable();
+  }
+
 protected:
   template<typename T>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type

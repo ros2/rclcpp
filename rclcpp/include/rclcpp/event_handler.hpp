@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EVENT_HANDLER_HPP_
 #define RCLCPP__EVENT_HANDLER_HPP_
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -109,6 +110,14 @@ public:
 
   RCLCPP_PUBLIC
   virtual ~EventHandlerBase();
+
+  RCLCPP_PUBLIC
+  virtual
+  void enable() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void disable() = 0;
 
   /// Get the number of ready events
   RCLCPP_PUBLIC
@@ -302,6 +311,9 @@ public:
   void
   execute(const std::shared_ptr<void> & data) override
   {
+    if (disabled_.load()) {
+      return;
+    }
     if (!data) {
       throw std::runtime_error("'data' is empty");
     }
@@ -310,12 +322,25 @@ public:
     callback_ptr.reset();
   }
 
+  /// Disable the event callback from being called when execute(..) invoked
+  void disable() override
+  {
+    disabled_.store(true);
+  }
+
+  /// Enable the event callback to be called when execute(..) invoked
+  void enable() override
+  {
+    disabled_.store(false);
+  }
+
 private:
   using EventCallbackInfoT = typename std::remove_reference<typename
       rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
 
   ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
+  std::atomic_bool disabled_{false};
 };
 }  // namespace rclcpp
 

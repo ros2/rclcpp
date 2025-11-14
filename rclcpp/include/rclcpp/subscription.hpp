@@ -279,6 +279,35 @@ public:
     return message_memory_strategy_->borrow_serialized_message();
   }
 
+
+  void
+  disable_callbacks() override
+  {
+    any_callback_.disable();
+    if (subscription_intra_process_) {
+      subscription_intra_process_->disable_callbacks();
+    }
+    for (const auto & [_, event_ptr] : event_handlers_) {
+      if (event_ptr) {
+        event_ptr->disable();
+      }
+    }
+  }
+
+  void
+  enable_callbacks() override
+  {
+    any_callback_.enable();
+    if (subscription_intra_process_) {
+      subscription_intra_process_->enable_callbacks();
+    }
+    for (const auto & [_, event_ptr] : event_handlers_) {
+      if (event_ptr) {
+        event_ptr->enable();
+      }
+    }
+  }
+
   void
   handle_message(
     std::shared_ptr<void> & message,

@@ -212,6 +212,16 @@ public:
   std::shared_ptr<rclcpp::SerializedMessage>
   create_serialized_message() = 0;
 
+  /// Disable callbacks from being called
+  RCLCPP_PUBLIC
+  virtual
+  void disable_callbacks() = 0;
+
+  /// Enable the callbacks to be called
+  RCLCPP_PUBLIC
+  virtual
+  void enable_callbacks() = 0;
+
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.

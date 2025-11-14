@@ -111,6 +111,12 @@ public:
   RCLCPP_PUBLIC
   std::shared_ptr<rclcpp::SerializedMessage> create_serialized_message() override;
 
+  RCLCPP_PUBLIC
+  void disable_callbacks() override;
+
+  RCLCPP_PUBLIC
+  void enable_callbacks() override;
+
   /// Cast the message to a rclcpp::SerializedMessage and call the callback.
   RCLCPP_PUBLIC
   void handle_message(

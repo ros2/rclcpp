@@ -87,6 +87,16 @@ public:
   void
   execute(const std::shared_ptr<void> & data) override = 0;
 
+  /// Disable callbacks from being called
+  RCLCPP_PUBLIC
+  virtual
+  void disable_callbacks() = 0;
+
+  /// Enable the callbacks to be called
+  RCLCPP_PUBLIC
+  virtual
+  void enable_callbacks() = 0;
+
   virtual
   bool
   use_take_shared_method() const = 0;

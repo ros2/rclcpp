@@ -15,6 +15,7 @@
 #ifndef RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
 #define RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -375,7 +376,19 @@ public:
     allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
   }
 
-  AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
+  AnySubscriptionCallback(const AnySubscriptionCallback & other)
+  : callback_variant_(other.callback_variant_),
+    callback_disabled_(other.callback_disabled_.load()),
+    subscribed_type_allocator_(other.subscribed_type_allocator_),
+    subscribed_type_deleter_(other.subscribed_type_deleter_),
+    ros_message_type_allocator_(other.ros_message_type_allocator_),
+    ros_message_type_deleter_(other.ros_message_type_deleter_),
+    serialized_message_allocator_(other.serialized_message_allocator_),
+    serialized_message_deleter_(other.serialized_message_deleter_)
+  {
+    allocator::set_allocator_for_deleter(&subscribed_type_deleter_, &subscribed_type_allocator_);
+    allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
+  }
 
   /// Generic function for setting the callback.
   /**
@@ -397,6 +410,18 @@ public:
 
     // Return copy of self for easier testing, normally will be compiled out.
     return *this;
+  }
+
+  /// Disable the callback from being called during dispatch.
+  void disable()
+  {
+    callback_disabled_.store(true);
+  }
+
+  /// Enable the callback to be called during dispatch.
+  void enable()
+  {
+    callback_disabled_.store(false);
   }
 
   std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>
@@ -470,6 +495,10 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    if (callback_disabled_.load()) {
+      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
+      return;
+    }
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -570,6 +599,10 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
+    if (callback_disabled_.load()) {
+      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
+      return;
+    }
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -649,6 +682,10 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+    if (callback_disabled_.load()) {
+      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
+      return;
+    }
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -779,6 +816,10 @@ public:
     const rclcpp::MessageInfo & message_info)
   {
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
+    if (callback_disabled_.load()) {
+      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
+      return;
+    }
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -972,6 +1013,7 @@ private:
   //   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2162r0.html
   // For now, compose the variant into this class as a private attribute.
   typename HelperT::variant_type callback_variant_;
+  std::atomic_bool callback_disabled_{false};
 
   SubscribedTypeAllocator subscribed_type_allocator_;
   SubscribedTypeDeleter subscribed_type_deleter_;
