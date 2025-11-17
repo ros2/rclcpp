@@ -424,6 +424,7 @@ TEST(TestIntraProcessManager, add_pub_sub) {
 }
 
 /*
+<<<<<<< HEAD
    This tests the minimal usage of the class where there is a single subscription per publisher:
    - Publishes a unique_ptr message with a subscription requesting ownership.
    - The received message is expected to be the same.
@@ -432,6 +433,16 @@ TEST(TestIntraProcessManager, add_pub_sub) {
    - The received message is expected to be the same, the first subscription do not receive it.
    - Publishes a shared_ptr message with a subscription not requesting ownership.
    - The received message is expected to be the same.
+=======
+ * This tests the minimal usage of the class where there is a single subscription per publisher:
+ * - Publishes a unique_ptr message with a subscription requesting ownership.
+ * - The received message is expected to be the same.
+ * - Remove the first subscription from ipm and add a new one.
+ * - Publishes a unique_ptr message with a subscription not requesting ownership.
+ * - The received message is expected to be the same, the first subscription do not receive it.
+ * - Publishes a unique_ptr message with a subscription not requesting ownership.
+ * - The received message is expected to be the same.
+>>>>>>> 354413c (correct test function descriptions (#2970))
  */
 TEST(TestIntraProcessManager, single_subscription) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -477,6 +488,7 @@ TEST(TestIntraProcessManager, single_subscription) {
 }
 
 /*
+<<<<<<< HEAD
    This tests the usage of the class where there are multiple subscriptions of the same type:
    - Publishes a unique_ptr message with 2 subscriptions requesting ownership.
    - One is expected to receive the published message, while the other will receive a copy.
@@ -486,6 +498,17 @@ TEST(TestIntraProcessManager, single_subscription) {
    - Both received messages are expected to be a copy of the published one.
    - Publishes a shared_ptr message with 2 subscriptions not requesting ownership.
    - Both received messages are expected to be the same as the published one.
+=======
+ * This tests the usage of the class where there are multiple subscriptions of the same type:
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership.
+ * - One is expected to receive the published message, while the other will receive a copy.
+ * - Publishes a unique_ptr message with 2 subscriptions not requesting ownership.
+ * - Both received messages are expected to be the same as the published one.
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership.
+ * - Both received messages are expected to be a copy of the published one.
+ * - Publishes a unique_ptr message with 2 subscriptions not requesting ownership.
+ * - Both received messages are expected to be the same as the published one.
+>>>>>>> 354413c (correct test function descriptions (#2970))
  */
 TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
@@ -578,6 +601,7 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
 }
 
 /*
+<<<<<<< HEAD
    This tests the usage of the class where there are multiple subscriptions of different types:
    - Publishes a unique_ptr message with 1 subscription requesting ownership and 1 not.
    - The one requesting ownership is expected to receive the published message,
@@ -592,6 +616,22 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
    - Publishes a shared_ptr message with 1 subscription requesting ownership and 1 not.
    - The subscription requesting ownership is expected to receive a copy of the message, while
      the other is expected to receive the published message
+=======
+ * This tests the usage of the class where there are multiple subscriptions of different types:
+ * - Publishes a unique_ptr message with 1 subscription requesting ownership and 1 not.
+ * - The one requesting ownership is expected to receive the published message,
+ *   while the other is expected to receive a copy.
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 1 not.
+ * - One of the subscriptions requesting ownership is expected to receive the published message,
+ *   while both other subscriptions are expected to receive different copies.
+ * - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 2 not.
+ * - The 2 subscriptions not requesting ownership are expected to both receive the same copy
+ *   of the message, one of the subscription requesting ownership is expected to receive a
+ *   different copy, while the last is expected to receive the published message.
+ * - Publishes a unique_ptr message with 1 subscription requesting ownership and 1 not.
+ * - The subscription requesting ownership is expected to receive the published message, while
+ *   the other is expected to receive a copy of the message
+>>>>>>> 354413c (correct test function descriptions (#2970))
  */
 TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
