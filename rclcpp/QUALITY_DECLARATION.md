@@ -1,10 +1,14 @@
-This document is a declaration of software quality for the `rclcpp` package, based on the guidelines in [REP-2004](https://www.ros.org/reps/rep-2004.html).
+This document is a declaration of software quality for the `rclcpp` package, based on the guidelines in [REP-2004](https://reps.openrobotics.org/rep-2004/).
 
 # rclcpp Quality Declaration
 
 The package `rclcpp` claims to be in the **Quality Level 1** category when it is used with a **Quality Level 1** middleware.
 
+<<<<<<< HEAD
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://www.ros.org/reps/rep-2004.html) of the ROS2 developer guide.
+=======
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 1 in REP-2004](https://reps.openrobotics.org/rep-2004/).
+>>>>>>> ad019b9 (Fix REP url locations (#2987))
 
 ## Version Policy [1]
 
@@ -55,7 +59,7 @@ All pull requests will be peer-reviewed, check [ROS 2 Developer Guide](https://d
 
 ### Continuous Integration [2.iv]
 
-All pull requests must pass CI on all [tier 1 platforms](https://www.ros.org/reps/rep-2000.html#support-tiers)
+All pull requests must pass CI on all [tier 1 platforms](https://reps.openrobotics.org/rep-2000/#support-tiers)
 
 Currently nightly results can be seen here:
 
@@ -213,7 +217,7 @@ It is **Quality Level 1**, see its [Quality Declaration document](https://gitlab
 
 ## Platform Support [6]
 
-`rclcpp` supports all of the tier 1 platforms as described in [REP-2000](https://www.ros.org/reps/rep-2000.html#support-tiers), and tests each change against all of them.
+`rclcpp` supports all of the tier 1 platforms as described in [REP-2000](https://reps.openrobotics.org/rep-2000/#support-tiers), and tests each change against all of them.
 
 Currently nightly build status can be seen here:
 * [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/rclcpp/)
@@ -225,4 +229,4 @@ Currently nightly build status can be seen here:
 
 ### Vulnerability Disclosure Policy [7.i]
 
-This package conforms to the Vulnerability Disclosure Policy in [REP-2006](https://www.ros.org/reps/rep-2006.html).
+This package conforms to the Vulnerability Disclosure Policy in [REP-2006](https://reps.openrobotics.org/rep-2006/).
