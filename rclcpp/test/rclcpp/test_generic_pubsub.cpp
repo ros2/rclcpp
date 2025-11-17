@@ -15,11 +15,13 @@
 
 #include <gmock/gmock.h>
 
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
