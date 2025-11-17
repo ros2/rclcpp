@@ -33,6 +33,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/service_endpoint_info_array.h"
 #include "rmw/topic_endpoint_info_array.h"
 
 namespace rclcpp
@@ -157,6 +158,18 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(
     const std::string & topic_name,
+    bool no_mangle = false) const override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(
+    const std::string & service_name,
+    bool no_mangle = false) const override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(
+    const std::string & service_name,
     bool no_mangle = false) const override;
 
 private:

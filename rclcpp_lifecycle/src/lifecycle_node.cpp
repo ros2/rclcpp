@@ -422,6 +422,18 @@ LifecycleNode::get_subscriptions_info_by_topic(const std::string & topic_name, b
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
 
+std::vector<rclcpp::ServiceEndpointInfo>
+LifecycleNode::get_clients_info_by_service(const std::string & service_name, bool no_mangle) const
+{
+  return node_graph_->get_clients_info_by_service(service_name, no_mangle);
+}
+
+std::vector<rclcpp::ServiceEndpointInfo>
+LifecycleNode::get_servers_info_by_service(const std::string & service_name, bool no_mangle) const
+{
+  return node_graph_->get_servers_info_by_service(service_name, no_mangle);
+}
+
 void
 LifecycleNode::for_each_callback_group(
   const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func)

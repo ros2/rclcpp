@@ -942,6 +942,12 @@ TEST_F(TestDefaultStateMachine, test_graph_services) {
   EXPECT_EQ(1u, test_node->count_services("/testnode/get_available_transitions"));
   EXPECT_EQ(1u, test_node->count_services("/testnode/get_state"));
   EXPECT_EQ(1u, test_node->count_services("/testnode/get_transition_graph"));
+
+  auto clients_info =
+    test_node->get_clients_info_by_service("/testnode/change_state");
+  EXPECT_EQ(0u, clients_info.size());
+  auto servers_info = test_node->get_servers_info_by_service("/testnode/change_state");
+  EXPECT_EQ(1u, servers_info.size());
 }
 
 TEST_F(TestDefaultStateMachine, test_graph_services_by_node) {

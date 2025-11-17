@@ -15,6 +15,7 @@
 #include "rclcpp/node_interfaces/node_graph.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <string>
 #include <tuple>
@@ -753,6 +754,122 @@ NodeGraph::get_subscriptions_info_by_topic(
     rcl_get_subscriptions_info_by_topic);
 }
 
+static
+std::vector<rclcpp::ServiceEndpointInfo>
+convert_to_service_info_list(const rcl_service_endpoint_info_array_t & info_array)
+{
+  std::vector<rclcpp::ServiceEndpointInfo> service_info_list;
+  for (size_t i = 0; i < info_array.size; ++i) {
+    service_info_list.push_back(rclcpp::ServiceEndpointInfo(info_array.info_array[i]));
+  }
+  return service_info_list;
+}
+
+template<const char * EndpointType, typename FunctionT>
+static std::vector<rclcpp::ServiceEndpointInfo>
+get_info_by_service(
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  const std::string & service_name,
+  bool no_mangle,
+  FunctionT rcl_get_info_by_service)
+{
+  std::string fqdn;
+  auto rcl_node_handle = node_base->get_rcl_node_handle();
+
+  if (no_mangle) {
+    fqdn = service_name;
+  } else {
+    fqdn = rclcpp::expand_topic_or_service_name(
+      service_name,
+      rcl_node_get_name(rcl_node_handle),
+      rcl_node_get_namespace(rcl_node_handle),
+      true);
+
+    // Get the node options
+    const rcl_node_options_t * node_options = rcl_node_get_options(rcl_node_handle);
+    if (nullptr == node_options) {
+      throw std::runtime_error("Need valid node options in get_info_by_service()");
+    }
+    const rcl_arguments_t * global_args = nullptr;
+    if (node_options->use_global_arguments) {
+      global_args = &(rcl_node_handle->context->global_arguments);
+    }
+
+    char * remapped_service_name = nullptr;
+    rcl_ret_t ret = rcl_remap_service_name(
+      &(node_options->arguments),
+      global_args,
+      fqdn.c_str(),
+      rcl_node_get_name(rcl_node_handle),
+      rcl_node_get_namespace(rcl_node_handle),
+      node_options->allocator,
+      &remapped_service_name);
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, std::string("Failed to remap service name ") + fqdn);
+    } else if (nullptr != remapped_service_name) {
+      fqdn = remapped_service_name;
+      node_options->allocator.deallocate(remapped_service_name, node_options->allocator.state);
+    }
+  }
+
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcl_service_endpoint_info_array_t info_array =
+    rcl_get_zero_initialized_service_endpoint_info_array();
+  rcl_ret_t ret =
+    rcl_get_info_by_service(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
+  if (RCL_RET_OK != ret) {
+    auto error_msg =
+      std::string("Failed to get information by service for ") + EndpointType + std::string(":");
+    if (RCL_RET_UNSUPPORTED == ret) {
+      error_msg += std::string("function not supported by RMW_IMPLEMENTATION");
+    } else {
+      error_msg += rcl_get_error_string().str;
+    }
+    rcl_reset_error();
+    if (RCL_RET_OK != rcl_service_endpoint_info_array_fini(&info_array, &allocator)) {
+      error_msg += std::string(", failed also to cleanup service info array, leaking memory: ") +
+        rcl_get_error_string().str;
+      rcl_reset_error();
+    }
+    throw_from_rcl_error(ret, error_msg);
+  }
+
+  std::vector<rclcpp::ServiceEndpointInfo> service_info_list =
+    convert_to_service_info_list(info_array);
+  ret = rcl_service_endpoint_info_array_fini(&info_array, &allocator);
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "rcl_service_info_array_fini failed.");
+  }
+
+  return service_info_list;
+}
+
+static constexpr char kClientEndpointTypeName[] = "clients";
+std::vector<rclcpp::ServiceEndpointInfo>
+NodeGraph::get_clients_info_by_service(
+  const std::string & service_name,
+  bool no_mangle) const
+{
+  return get_info_by_service<kClientEndpointTypeName>(
+    node_base_,
+    service_name,
+    no_mangle,
+    rcl_get_clients_info_by_service);
+}
+
+static constexpr char kServerEndpointTypeName[] = "servers";
+std::vector<rclcpp::ServiceEndpointInfo>
+NodeGraph::get_servers_info_by_service(
+  const std::string & service_name,
+  bool no_mangle) const
+{
+  return get_info_by_service<kServerEndpointTypeName>(
+    node_base_,
+    service_name,
+    no_mangle,
+    rcl_get_servers_info_by_service);
+}
+
 std::string &
 rclcpp::TopicEndpointInfo::node_name()
 {
@@ -835,4 +952,100 @@ const rosidl_type_hash_t &
 rclcpp::TopicEndpointInfo::topic_type_hash() const
 {
   return topic_type_hash_;
+}
+
+std::string &
+rclcpp::ServiceEndpointInfo::node_name()
+{
+  return node_name_;
+}
+
+const std::string &
+rclcpp::ServiceEndpointInfo::node_name() const
+{
+  return node_name_;
+}
+
+std::string &
+rclcpp::ServiceEndpointInfo::node_namespace()
+{
+  return node_namespace_;
+}
+
+const std::string &
+rclcpp::ServiceEndpointInfo::node_namespace() const
+{
+  return node_namespace_;
+}
+
+std::string &
+rclcpp::ServiceEndpointInfo::service_type()
+{
+  return service_type_;
+}
+
+const std::string &
+rclcpp::ServiceEndpointInfo::service_type() const
+{
+  return service_type_;
+}
+
+rclcpp::EndpointType &
+rclcpp::ServiceEndpointInfo::endpoint_type()
+{
+  return endpoint_type_;
+}
+
+const rclcpp::EndpointType &
+rclcpp::ServiceEndpointInfo::endpoint_type() const
+{
+  return endpoint_type_;
+}
+
+size_t &
+rclcpp::ServiceEndpointInfo::endpoint_count()
+{
+  return endpoint_count_;
+}
+
+const size_t &
+rclcpp::ServiceEndpointInfo::endpoint_count() const
+{
+  return endpoint_count_;
+}
+
+std::vector<std::array<uint8_t, RMW_GID_STORAGE_SIZE>> &
+rclcpp::ServiceEndpointInfo::endpoint_gids()
+{
+  return endpoint_gids_;
+}
+
+const std::vector<std::array<uint8_t, RMW_GID_STORAGE_SIZE>> &
+rclcpp::ServiceEndpointInfo::endpoint_gids() const
+{
+  return endpoint_gids_;
+}
+
+std::vector<rclcpp::QoS> &
+rclcpp::ServiceEndpointInfo::qos_profiles()
+{
+  return qos_profiles_;
+}
+
+const std::vector<rclcpp::QoS> &
+rclcpp::ServiceEndpointInfo::qos_profiles() const
+{
+  return qos_profiles_;
+}
+
+rosidl_type_hash_t &
+rclcpp::ServiceEndpointInfo::service_type_hash()
+{
+  return service_type_hash_;
+}
+
+const rosidl_type_hash_t &
+rclcpp::ServiceEndpointInfo::service_type_hash() const
+{
+  return service_type_hash_;
 }

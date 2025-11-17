@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <string>
 #include <tuple>
@@ -40,7 +42,9 @@ enum class EndpointType
 {
   Invalid = RMW_ENDPOINT_INVALID,
   Publisher = RMW_ENDPOINT_PUBLISHER,
-  Subscription = RMW_ENDPOINT_SUBSCRIPTION
+  Subscription = RMW_ENDPOINT_SUBSCRIPTION,
+  Client = RMW_ENDPOINT_CLIENT,
+  Server = RMW_ENDPOINT_SERVER
 };
 
 /**
@@ -141,6 +145,125 @@ private:
   std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid_;
   rclcpp::QoS qos_profile_;
   rosidl_type_hash_t topic_type_hash_;
+};
+
+/**
+ * Struct that contains service endpoint information like the associated node name, node namespace,
+ * service type, endpoint type, endpoint count, endpoint GIDs, and its QoS profiles.
+ */
+class ServiceEndpointInfo
+{
+public:
+  /// Construct a ServiceEndpointInfo from a rcl_service_endpoint_info_t.
+  RCLCPP_PUBLIC
+  explicit ServiceEndpointInfo(const rcl_service_endpoint_info_t & info)
+  : node_name_(info.node_name),
+    node_namespace_(info.node_namespace),
+    service_type_(info.service_type),
+    endpoint_type_(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
+    service_type_hash_(info.service_type_hash),
+    endpoint_count_(info.endpoint_count)
+  {
+    for(size_t i = 0; i < endpoint_count_; i++) {
+      std::array<uint8_t, RMW_GID_STORAGE_SIZE> gid;
+      std::copy(info.endpoint_gids[i], info.endpoint_gids[i] + RMW_GID_STORAGE_SIZE, gid.begin());
+      endpoint_gids_.push_back(gid);
+
+      rclcpp::QoS qos(
+        {info.qos_profiles[i].history, info.qos_profiles[i].depth}, info.qos_profiles[i]);
+      qos_profiles_.push_back(qos);
+    }
+  }
+
+  /// Get a mutable reference to the node name.
+  RCLCPP_PUBLIC
+  std::string &
+  node_name();
+
+  /// Get a const reference to the node name.
+  RCLCPP_PUBLIC
+  const std::string &
+  node_name() const;
+
+  /// Get a mutable reference to the node namespace.
+  RCLCPP_PUBLIC
+  std::string &
+  node_namespace();
+
+  /// Get a const reference to the node namespace.
+  RCLCPP_PUBLIC
+  const std::string &
+  node_namespace() const;
+
+  /// Get a mutable reference to the service type string.
+  RCLCPP_PUBLIC
+  std::string &
+  service_type();
+
+  /// Get a const reference to the service type string.
+  RCLCPP_PUBLIC
+  const std::string &
+  service_type() const;
+
+  /// Get a mutable reference to the service endpoint type.
+  RCLCPP_PUBLIC
+  rclcpp::EndpointType &
+  endpoint_type();
+
+  /// Get a const reference to the service endpoint type.
+  RCLCPP_PUBLIC
+  const rclcpp::EndpointType &
+  endpoint_type() const;
+
+  /// Get a mutable reference to the endpoint count.
+  RCLCPP_PUBLIC
+  size_t &
+  endpoint_count();
+
+  /// Get a const reference to the endpoint count.
+  RCLCPP_PUBLIC
+  const size_t &
+  endpoint_count() const;
+
+  /// Get a mutable reference to the GID of the service endpoint.
+  RCLCPP_PUBLIC
+  std::vector<std::array<uint8_t, RMW_GID_STORAGE_SIZE>> &
+  endpoint_gids();
+
+  /// Get a const reference to the GID of the service endpoint.
+  RCLCPP_PUBLIC
+  const std::vector<std::array<uint8_t, RMW_GID_STORAGE_SIZE>> &
+  endpoint_gids() const;
+
+  /// Get a mutable reference to the QoS profile of the service endpoint.
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::QoS> &
+  qos_profiles();
+
+  /// Get a const reference to the QoS profile of the service endpoint.
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::QoS> &
+  qos_profiles() const;
+
+  /// Get a mutable reference to the type hash of the service endpoint.
+  RCLCPP_PUBLIC
+  rosidl_type_hash_t &
+  service_type_hash();
+
+  /// Get a const reference to the type hash of the service endpoint.
+  RCLCPP_PUBLIC
+  const rosidl_type_hash_t &
+  service_type_hash() const;
+
+private:
+  std::string node_name_;
+  std::string node_namespace_;
+  std::string service_type_;
+  rclcpp::EndpointType endpoint_type_;
+  std::vector<std::array<uint8_t, RMW_GID_STORAGE_SIZE>> endpoint_gids_;
+  std::vector<rclcpp::QoS> qos_profiles_;
+  rosidl_type_hash_t service_type_hash_;
+  size_t endpoint_count_;
 };
 
 namespace node_interfaces
@@ -408,6 +531,30 @@ public:
   virtual
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
+
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name.
+   * \sa rclcpp::Node::get_clients_info_by_service
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const = 0;
+
+  /// Return the service endpoint information about servers on a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name.
+   * \sa rclcpp::Node::get_servers_info_by_service
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const = 0;
 };
 
 }  // namespace node_interfaces
