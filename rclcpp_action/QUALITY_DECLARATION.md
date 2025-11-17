@@ -4,11 +4,7 @@ This document is a declaration of software quality for the `rclcpp_action` packa
 
 The package `rclcpp_action` claims to be in the **Quality Level 1** category when it is used with a **Quality Level 1** middleware.
 
-<<<<<<< HEAD
-Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://www.ros.org/reps/rep-2004.html) of the ROS2 developer guide.
-=======
-Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 1 in REP-2004](https://reps.openrobotics.org/rep-2004/).
->>>>>>> ad019b9 (Fix REP url locations (#2987))
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://reps.openrobotics.org/rep-2004/) of the ROS2 developer guide.
 
 ## Version Policy [1]
 
