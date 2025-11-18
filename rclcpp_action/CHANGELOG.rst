@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.5.5 (2025-11-18)
+-------------------
+* Fix REP url locations (`#2987 <https://github.com/ros2/rclcpp/issues/2987>`_) (`#2989 <https://github.com/ros2/rclcpp/issues/2989>`_)
+* Contributors: mergify[bot]
+
 29.5.4 (2025-10-21)
 -------------------
 * it misses the iterator second to lock the weakptr. (`#2958 <https://github.com/ros2/rclcpp/issues/2958>`_) (`#2959 <https://github.com/ros2/rclcpp/issues/2959>`_)

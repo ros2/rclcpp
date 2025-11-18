@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.5 (2025-11-18)
+-------------------
+* Fix REP url locations (`#2987 <https://github.com/ros2/rclcpp/issues/2987>`_) (`#2989 <https://github.com/ros2/rclcpp/issues/2989>`_)
+* Contributors: mergify[bot]
+
 29.5.4 (2025-10-21)
 -------------------
 
