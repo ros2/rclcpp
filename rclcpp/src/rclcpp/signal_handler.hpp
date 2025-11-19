@@ -116,7 +116,7 @@ private:
 
   /// Common signal handler code between sigaction and non-sigaction versions.
   void
-  signal_handler_common();
+  signal_handler_common(int signum);
 
 #if defined(RCLCPP_HAS_SIGACTION)
   /// Signal handler function.
@@ -189,7 +189,13 @@ private:
 
   // Whether or not a signal has been received.
   std::atomic_bool signal_received_ = false;
+<<<<<<< HEAD
   // A thread to which singal handling tasks are deferred.
+=======
+  // The signal number that was received.
+  std::atomic_int signal_number_ = 0;
+  // A thread to which signal handling tasks are deferred.
+>>>>>>> 95cb964 (remove I/O from signal handler. (#2986))
   std::thread signal_handler_thread_;
 
   // A mutex used to synchronize the install() and uninstall() methods.

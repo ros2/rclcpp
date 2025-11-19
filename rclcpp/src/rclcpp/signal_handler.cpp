@@ -68,7 +68,6 @@ void
 SignalHandler::signal_handler(
   int signum, siginfo_t * siginfo, void * context)
 {
-  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
   auto & instance = SignalHandler::get_global_signal_handler();
 
   auto old_signal_handler = instance.get_old_signal_handler(signum);
@@ -85,13 +84,12 @@ SignalHandler::signal_handler(
       old_signal_handler.sa_handler(signum);
     }
   }
-  instance.signal_handler_common();
+  instance.signal_handler_common(signum);
 }
 #else
 void
 SignalHandler::signal_handler(int signum)
 {
-  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
   auto & instance = SignalHandler::get_global_signal_handler();
   auto old_signal_handler = instance.get_old_signal_handler(signum);
   if (
@@ -100,7 +98,7 @@ SignalHandler::signal_handler(int signum)
   {
     old_signal_handler(signum);
   }
-  instance.signal_handler_common();
+  instance.signal_handler_common(signum);
 }
 #endif
 
@@ -245,13 +243,11 @@ SignalHandler::get_old_signal_handler(int signum)
 }
 
 void
-SignalHandler::signal_handler_common()
+SignalHandler::signal_handler_common(int signum)
 {
   auto & instance = SignalHandler::get_global_signal_handler();
+  instance.signal_number_.store(signum);
   instance.signal_received_.store(true);
-  RCLCPP_DEBUG(
-    get_logger(),
-    "signal_handler(): notifying deferred signal handler");
   instance.notify_signal_handler();
 }
 
@@ -260,6 +256,8 @@ SignalHandler::deferred_signal_handler()
 {
   while (true) {
     if (signal_received_.exchange(false)) {
+      int signum = signal_number_.load();
+      RCLCPP_INFO(get_logger(), "signal_handler(signum=%d)", signum);
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
       for (auto context_ptr : rclcpp::get_contexts()) {
         if (context_ptr->get_init_options().shutdown_on_signal) {
