@@ -494,11 +494,10 @@ public:
     std::shared_ptr<ROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     if (callback_disabled_.load()) {
-      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
       return;
     }
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -598,11 +597,10 @@ public:
     std::shared_ptr<const rclcpp::SerializedMessage> serialized_message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     if (callback_disabled_.load()) {
-      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
       return;
     }
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -681,11 +679,10 @@ public:
     std::shared_ptr<const SubscribedType> message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     if (callback_disabled_.load()) {
-      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
       return;
     }
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
@@ -815,11 +812,10 @@ public:
     std::unique_ptr<SubscribedType, SubscribedTypeDeleter> message,
     const rclcpp::MessageInfo & message_info)
   {
-    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     if (callback_disabled_.load()) {
-      TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
       return;
     }
+    TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
       if (std::get<0>(callback_variant_) == nullptr) {
