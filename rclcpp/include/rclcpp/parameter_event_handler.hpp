@@ -234,6 +234,10 @@ public:
   /**
    * If a node_name is not provided, defaults to the current node.
    *
+   * The configure_nodes_filter() function will affect the behavior of this function.
+   * If the node specified in this function isn't included in the nodes specified in
+   * configure_nodes_filter(), the callback will never be called.
+   *
    * Note: if the returned callback handle smart pointer is not captured, the callback
    * is immediately unregistered. A compiler warning should be generated to warn
    * of this.
@@ -253,7 +257,7 @@ public:
 
   /// Configure which node parameter events will be received.
   /**
-   * This function depends on middleware support for content filtering.
+   * This function depends on rmw implementation support for content filtering.
    * If middleware doesn't support contentfilter, return false.
    *
    * If node_names is empty, the configured node filter will be cleared.
@@ -271,6 +275,7 @@ public:
    *
    * \param[in] node_names Node names to filter parameter events from.
    * \returns true if configuring was successfully applied, false otherwise.
+   * \throws rclcpp::exceptions::RCLError if internal error occurred when calling the rcl function.
    */
   RCLCPP_PUBLIC
   bool configure_nodes_filter(const std::vector<std::string> & node_names);

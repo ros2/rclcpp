@@ -80,6 +80,9 @@ ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & n
   if (node_names.empty()) {
     // Clear content filter
     event_subscription_->set_content_filter("");
+    if (event_subscription_->is_cft_enabled()) {
+      return false;
+    }
     return true;
   }
 
