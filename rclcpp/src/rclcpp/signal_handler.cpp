@@ -16,18 +16,10 @@
 
 #include <atomic>
 #include <csignal>
+#include <future>
 #include <mutex>
 #include <string>
 #include <thread>
-
-// includes for semaphore notification code
-#if defined(_WIN32)
-#include <windows.h>
-#elif defined(__APPLE__)
-#include <dispatch/dispatch.h>
-#else  // posix
-#include <semaphore.h>
-#endif
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
@@ -287,22 +279,8 @@ SignalHandler::deferred_signal_handler()
 void
 SignalHandler::setup_wait_for_signal()
 {
-#if defined(_WIN32)
-  signal_handler_sem_ = CreateSemaphore(
-    NULL,  // default security attributes
-    0,  // initial semaphore count
-    1,  // maximum semaphore count
-    NULL);  // unnamed semaphore
-  if (NULL == signal_handler_sem_) {
-    throw std::runtime_error("CreateSemaphore() failed in setup_wait_for_signal()");
-  }
-#elif defined(__APPLE__)
-  signal_handler_sem_ = dispatch_semaphore_create(0);
-#else  // posix
-  if (-1 == sem_init(&signal_handler_sem_, 0, 0)) {
-    throw std::runtime_error(std::string("sem_init() failed: ") + strerror(errno));
-  }
-#endif
+  signal_promise_ = std::make_unique<std::promise<void>>();
+  signal_future_ = std::make_unique<std::future<void>>(signal_promise_->get_future());
   wait_for_signal_is_setup_.store(true);
 }
 
@@ -312,15 +290,8 @@ SignalHandler::teardown_wait_for_signal() noexcept
   if (!wait_for_signal_is_setup_.exchange(false)) {
     return;
   }
-#if defined(_WIN32)
-  CloseHandle(signal_handler_sem_);
-#elif defined(__APPLE__)
-  dispatch_release(signal_handler_sem_);
-#else  // posix
-  if (-1 == sem_destroy(&signal_handler_sem_)) {
-    RCLCPP_ERROR(get_logger(), "invalid semaphore in teardown_wait_for_signal()");
-  }
-#endif
+  signal_promise_.reset();
+  signal_future_.reset();
 }
 
 void
@@ -330,37 +301,13 @@ SignalHandler::wait_for_signal()
     RCLCPP_ERROR(get_logger(), "called wait_for_signal() before setup_wait_for_signal()");
     return;
   }
-#if defined(_WIN32)
-  DWORD dw_wait_result = WaitForSingleObject(signal_handler_sem_, INFINITE);
-  switch (dw_wait_result) {
-    case WAIT_ABANDONED:
-      RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
-        GetLastError());
-      break;
-    case WAIT_OBJECT_0:
-      // successful
-      break;
-    case WAIT_TIMEOUT:
-      RCLCPP_ERROR(get_logger(), "WaitForSingleObject() timedout out in wait_for_signal()");
-      break;
-    case WAIT_FAILED:
-      RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() failed in wait_for_signal(): %s", GetLastError());
-      break;
-    default:
-      RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
-        GetLastError());
+
+  try {
+    // Wait for the future to be signaled
+    signal_future_->wait();
+  } catch (const std::future_error& e) {
+    RCLCPP_ERROR(get_logger(), "future_error in wait_for_signal(): %s", e.what());
   }
-#elif defined(__APPLE__)
-  dispatch_semaphore_wait(signal_handler_sem_, DISPATCH_TIME_FOREVER);
-#else  // posix
-  int s;
-  do {
-    s = sem_wait(&signal_handler_sem_);
-  } while (-1 == s && EINTR == errno);
-#endif
 }
 
 void
@@ -369,18 +316,16 @@ SignalHandler::notify_signal_handler() noexcept
   if (!wait_for_signal_is_setup_.load()) {
     return;
   }
-#if defined(_WIN32)
-  if (!ReleaseSemaphore(signal_handler_sem_, 1, NULL)) {
-    RCLCPP_ERROR(
-      get_logger(), "ReleaseSemaphore() failed in notify_signal_handler(): %s", GetLastError());
+
+  try {
+    // Set the promise value to unblock the waiting future
+    if (signal_promise_) {
+      signal_promise_->set_value();
+    }
+  } catch (const std::future_error&) {
+    // Promise may already be set - this is expected on subsequent signals
+    // No error logging needed as this is normal behavior
   }
-#elif defined(__APPLE__)
-  dispatch_semaphore_signal(signal_handler_sem_);
-#else  // posix
-  if (-1 == sem_post(&signal_handler_sem_)) {
-    RCLCPP_ERROR(get_logger(), "sem_post failed in notify_signal_handler()");
-  }
-#endif
 }
 
 rclcpp::SignalHandlerOptions

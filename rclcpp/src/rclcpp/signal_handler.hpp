@@ -17,20 +17,13 @@
 
 #include <atomic>
 #include <csignal>
+#include <future>
+#include <memory>
 #include <mutex>
 #include <thread>
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
-
-// includes for semaphore notification code
-#if defined(_WIN32)
-#include <windows.h>
-#elif defined(__APPLE__)
-#include <dispatch/dispatch.h>
-#else  // posix
-#include <semaphore.h>
-#endif
 
 // Determine if sigaction is available
 #if __APPLE__ || _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
@@ -199,14 +192,8 @@ private:
 
   // Whether or not the semaphore for wait_for_signal is setup.
   std::atomic_bool wait_for_signal_is_setup_;
-  // Storage for the wait_for_signal semaphore.
-#if defined(_WIN32)
-  HANDLE signal_handler_sem_;
-#elif defined(__APPLE__)
-  dispatch_semaphore_t signal_handler_sem_;
-#else  // posix
-  sem_t signal_handler_sem_;
-#endif
+  std::unique_ptr<std::promise<void>> signal_promise_;
+  std::unique_ptr<std::future<void>> signal_future_;
 };
 
 }  // namespace rclcpp
