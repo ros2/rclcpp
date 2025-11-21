@@ -192,6 +192,7 @@ private:
 
   // Whether or not the semaphore for wait_for_signal is setup.
   std::atomic_bool wait_for_signal_is_setup_;
+  std::mutex signal_mutex_;
   std::unique_ptr<std::promise<void>> signal_promise_;
   std::unique_ptr<std::future<void>> signal_future_;
 };

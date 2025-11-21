@@ -302,9 +302,23 @@ SignalHandler::wait_for_signal()
     return;
   }
 
+  std::shared_future<void> future_to_wait;
+  {
+    std::lock_guard<std::mutex> lock(signal_mutex_);
+    future_to_wait = signal_future_->share();
+  }
+
   try {
     // Wait for the future to be signaled
-    signal_future_->wait();
+    future_to_wait.wait();
+
+    // After being signaled, create a new promise/future pair for the next signal
+    // This allows multiple signals to be handled properly
+    {
+      std::lock_guard<std::mutex> lock(signal_mutex_);
+      signal_promise_ = std::make_unique<std::promise<void>>();
+      signal_future_ = std::make_unique<std::future<void>>(signal_promise_->get_future());
+    }
   } catch (const std::future_error & e) {
     RCLCPP_ERROR(get_logger(), "future_error in wait_for_signal(): %s", e.what());
   }
@@ -318,6 +332,7 @@ SignalHandler::notify_signal_handler() noexcept
   }
 
   try {
+    std::lock_guard<std::mutex> lock(signal_mutex_);
     // Set the promise value to unblock the waiting future
     if (signal_promise_) {
       signal_promise_->set_value();
