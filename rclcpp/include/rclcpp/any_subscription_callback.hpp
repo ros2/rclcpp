@@ -18,6 +18,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -415,12 +416,14 @@ public:
   /// Disable the callback from being called during dispatch.
   void disable()
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     callback_disabled_.store(true);
   }
 
   /// Enable the callback to be called during dispatch.
   void enable()
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     callback_disabled_.store(false);
   }
 
@@ -494,6 +497,7 @@ public:
     std::shared_ptr<ROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     if (callback_disabled_.load()) {
       return;
     }
@@ -597,6 +601,7 @@ public:
     std::shared_ptr<const rclcpp::SerializedMessage> serialized_message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     if (callback_disabled_.load()) {
       return;
     }
@@ -679,6 +684,7 @@ public:
     std::shared_ptr<const SubscribedType> message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     if (callback_disabled_.load()) {
       return;
     }
@@ -812,6 +818,7 @@ public:
     std::unique_ptr<SubscribedType, SubscribedTypeDeleter> message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     if (callback_disabled_.load()) {
       return;
     }
@@ -1009,6 +1016,7 @@ private:
   //   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2162r0.html
   // For now, compose the variant into this class as a private attribute.
   typename HelperT::variant_type callback_variant_;
+  std::mutex callback_mutex_;
   std::atomic_bool callback_disabled_{false};
 
   SubscribedTypeAllocator subscribed_type_allocator_;

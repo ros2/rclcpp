@@ -311,6 +311,7 @@ public:
   void
   execute(const std::shared_ptr<void> & data) override
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     if (disabled_.load()) {
       return;
     }
@@ -325,12 +326,14 @@ public:
   /// Disable the event callback from being called when execute(..) invoked
   void disable() override
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     disabled_.store(true);
   }
 
   /// Enable the event callback to be called when execute(..) invoked
   void enable() override
   {
+    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
     disabled_.store(false);
   }
 
@@ -340,6 +343,7 @@ private:
 
   ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
+  std::mutex callback_mutex_;
   std::atomic_bool disabled_{false};
 };
 }  // namespace rclcpp
