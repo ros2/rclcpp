@@ -346,6 +346,25 @@ SubscriptionBase::can_loan_messages() const
   return retval;
 }
 
+void *
+SubscriptionBase::take_loaned_message(
+  void * loaned_message,
+  rclcpp::MessageInfo & message_info) const
+{
+  rcl_ret_t ret = rcl_take_loaned_message(
+    get_subscription_handle().get(),
+    &loaned_message,
+    &message_info.get_rmw_message_info(),
+    nullptr);
+
+  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+    return nullptr;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  return loaned_message;
+}
+
 rclcpp::Waitable::SharedPtr
 SubscriptionBase::get_intra_process_waitable() const
 {

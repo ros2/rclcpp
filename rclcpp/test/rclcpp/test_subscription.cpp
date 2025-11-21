@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -357,6 +358,19 @@ TEST_F(TestSubscription, handle_loaned_message) {
   test_msgs::msg::Empty msg;
   rclcpp::MessageInfo message_info;
   EXPECT_NO_THROW(sub->handle_loaned_message(&msg, message_info));
+}
+
+TEST_F(TestSubscription, take_loaned_message) {
+  initialize();
+  auto callback = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
+  auto pub = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+  auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  std::allocator<test_msgs::msg::Empty> allocator;
+
+  test_msgs::msg::Empty msg;
+  rclcpp::MessageInfo message_info;
+  auto loaned_message = rclcpp::LoanedMessage<test_msgs::msg::Empty>(*pub.get(), allocator);
+  EXPECT_NO_THROW(sub->take_loaned_message(loaned_message, message_info));
 }
 
 /*
