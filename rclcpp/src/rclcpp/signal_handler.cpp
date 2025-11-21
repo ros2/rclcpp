@@ -305,7 +305,7 @@ SignalHandler::wait_for_signal()
   try {
     // Wait for the future to be signaled
     signal_future_->wait();
-  } catch (const std::future_error& e) {
+  } catch (const std::future_error & e) {
     RCLCPP_ERROR(get_logger(), "future_error in wait_for_signal(): %s", e.what());
   }
 }
@@ -322,7 +322,7 @@ SignalHandler::notify_signal_handler() noexcept
     if (signal_promise_) {
       signal_promise_->set_value();
     }
-  } catch (const std::future_error&) {
+  } catch (const std::future_error &) {
     // Promise may already be set - this is expected on subsequent signals
     // No error logging needed as this is normal behavior
   }
