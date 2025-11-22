@@ -201,7 +201,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_event_callback_mutex_);
 
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
@@ -224,7 +224,7 @@ public:
   void
   clear_on_ready_callback() override
   {
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_event_callback_mutex_);
     if (on_new_event_callback_) {
       set_on_new_event_callback(nullptr, nullptr);
       on_new_event_callback_ = nullptr;
@@ -243,7 +243,7 @@ protected:
   void
   set_on_new_event_callback(rcl_event_callback_t callback, const void * user_data);
 
-  std::recursive_mutex callback_mutex_;
+  std::recursive_mutex on_new_event_callback_mutex_;
   std::function<void(size_t)> on_new_event_callback_{nullptr};
 
   rcl_event_t event_handle_;
@@ -311,7 +311,7 @@ public:
   void
   execute(const std::shared_ptr<void> & data) override
   {
-    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
+    std::unique_lock<std::mutex> event_callback_lock(event_callback_mutex_);
     if (disabled_.load()) {
       return;
     }
@@ -326,14 +326,14 @@ public:
   /// Disable the event callback from being called when execute(..) invoked
   void disable() override
   {
-    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
+    std::lock_guard<std::mutex> event_callback_lock(event_callback_mutex_);
     disabled_.store(true);
   }
 
   /// Enable the event callback to be called when execute(..) invoked
   void enable() override
   {
-    std::unique_lock<std::mutex> callback_lock(callback_mutex_);
+    std::lock_guard<std::mutex> event_callback_lock(event_callback_mutex_);
     disabled_.store(false);
   }
 
@@ -343,7 +343,7 @@ private:
 
   ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
-  std::mutex callback_mutex_;
+  std::mutex event_callback_mutex_;
   std::atomic_bool disabled_{false};
 };
 }  // namespace rclcpp
