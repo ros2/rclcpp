@@ -154,13 +154,26 @@ public:
     execute_impl<SubscribedType>(data);
   }
 
+  /// Disable callbacks from being called
+  /**
+    * This method will block, until any subscription's callbacks currently being executed are
+    * finished.
+    * This method is thread safe, and provides a safe way to atomically disable the callbacks.
+    */
   void disable_callbacks() override
   {
+    SubscriptionIntraProcessBase::disable_callbacks();
     any_callback_.disable();
   }
 
+  /// Enable the callbacks to be called
+  /**
+    * This method is thread safe, and provides a safe way to atomically enable the callbacks
+    * in a multithreaded environment.
+    */
   void enable_callbacks() override
   {
+    SubscriptionIntraProcessBase::enable_callbacks();
     any_callback_.enable();
   }
 

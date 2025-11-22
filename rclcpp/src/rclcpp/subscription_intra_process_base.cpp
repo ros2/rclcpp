@@ -40,3 +40,17 @@ SubscriptionIntraProcessBase::is_durability_transient_local() const
 {
   return qos_profile_.durability() == rclcpp::DurabilityPolicy::TransientLocal;
 }
+
+void
+SubscriptionIntraProcessBase::disable_callbacks()
+{
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+  on_new_message_callback_disabled_ = true;
+}
+
+void
+SubscriptionIntraProcessBase::enable_callbacks()
+{
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+  on_new_message_callback_disabled_ = false;
+}

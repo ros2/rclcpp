@@ -324,15 +324,40 @@ public:
   }
 
   /// Disable the event callback from being called when execute(..) invoked
+  /**
+   * This will also temporarily remove the on_new_event_callback from the underlying rmw layer,
+   *  so that it is not called from the middleware while disabled.
+   */
   void disable() override
   {
+    {
+      // Temporary remove the on_new_event_callback_ to prevent it from being called
+      std::lock_guard<std::recursive_mutex> on_new_event_lock(on_new_event_callback_mutex_);
+      if (on_new_event_callback_) {
+        set_on_new_event_callback(nullptr, nullptr);
+      }
+    }
     std::lock_guard<std::mutex> event_callback_lock(event_callback_mutex_);
     disabled_.store(true);
   }
 
   /// Enable the event callback to be called when execute(..) invoked
+  /**
+   * This will also set back the on_new_event_callback to the underlying rmw layer, if it was
+   * previously removed with disable().
+   */
   void enable() override
   {
+    {
+      // Set callback again if it was previously removed in disable()
+      std::lock_guard<std::recursive_mutex> on_new_event_lock(on_new_event_callback_mutex_);
+      if (on_new_event_callback_) {
+        set_on_new_event_callback(
+          rclcpp::detail::cpp_callback_trampoline<
+            decltype(on_new_event_callback_), const void *, size_t>,
+          static_cast<const void *>(&on_new_event_callback_));
+      }
+    }
     std::lock_guard<std::mutex> event_callback_lock(event_callback_mutex_);
     disabled_.store(false);
   }

@@ -577,3 +577,26 @@ SubscriptionBase::take_dynamic_message(
   throw std::runtime_error("Unimplemented");
   return false;
 }
+
+void
+SubscriptionBase::disable_callbacks()
+{
+  // Temporary remove the on_new_message_callback_ to prevent it from being called
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+  if (on_new_message_callback_) {
+    set_on_new_message_callback(nullptr, nullptr);
+  }
+}
+
+void
+SubscriptionBase::enable_callbacks()
+{
+  // Set callback again if it was previously removed in disable_callbacks()
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+  if (on_new_message_callback_) {
+    set_on_new_message_callback(
+      rclcpp::detail::cpp_callback_trampoline<
+        decltype(on_new_message_callback_), const void *, size_t>,
+      static_cast<const void *>(&on_new_message_callback_));
+  }
+}
