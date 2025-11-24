@@ -16,18 +16,11 @@
 
 #include <atomic>
 #include <csignal>
+#include <future>
+#include <optional>
 #include <mutex>
 #include <string>
 #include <thread>
-
-// includes for semaphore notification code
-#if defined(_WIN32)
-#include <windows.h>
-#elif defined(__APPLE__)
-#include <dispatch/dispatch.h>
-#else  // posix
-#include <semaphore.h>
-#endif
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
@@ -102,6 +95,21 @@ SignalHandler::signal_handler(int signum)
 }
 #endif
 
+void rclcpp::SignalHandler::signal_handler_common(int signum) noexcept
+{
+  switch(signum) {
+    case SIGTERM:
+      notify_deferred_handler(Input::SigTerm);
+      break;
+    case SIGINT:
+      notify_deferred_handler(Input::SigInt);
+      break;
+    default:
+      break;
+  }
+}
+
+
 rclcpp::Logger &
 SignalHandler::get_logger()
 {
@@ -119,18 +127,20 @@ bool
 SignalHandler::install(SignalHandlerOptions signal_handler_options)
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
-  bool already_installed = installed_.exchange(true);
-  if (already_installed) {
+  if (installed_) {
     return false;
   }
   if (signal_handler_options == SignalHandlerOptions::None) {
     return true;
   }
+
+  // Reset state in case someone uninstalls and reinstall handlers
+  got_sig_int = false;
+  got_sig_term = false;
+  terminate_handler_ = false;
+
   signal_handlers_options_ = signal_handler_options;
   try {
-    setup_wait_for_signal();
-    signal_received_.store(false);
-
     SignalHandler::signal_handler_type handler_argument;
 #if defined(RCLCPP_HAS_SIGACTION)
     memset(&handler_argument, 0, sizeof(handler_argument));
@@ -156,9 +166,10 @@ SignalHandler::install(SignalHandlerOptions signal_handler_options)
 
     signal_handler_thread_ = std::thread(&SignalHandler::deferred_signal_handler, this);
   } catch (...) {
-    installed_.store(false);
     throw;
   }
+  installed_ = true;
+
   RCLCPP_DEBUG(get_logger(), "signal handler installed");
   return true;
 }
@@ -167,11 +178,18 @@ bool
 SignalHandler::uninstall()
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
-  bool installed = installed_.exchange(false);
-  if (!installed) {
+  if (!installed_) {
     return false;
   }
+
+  RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): shutting down deferred signal handler");
+  notify_deferred_handler(Input::TerminateHandler);
+  if (signal_handler_thread_.joinable()) {
+    signal_handler_thread_.join();
+  }
+
   try {
+    RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): restoring signal handlers");
     // TODO(wjwwood): what happens if someone overrides our signal handler then calls uninstall?
     //   I think we need to assert that we're the current signal handler, and mitigate if not.
     if (
@@ -187,16 +205,10 @@ SignalHandler::uninstall()
       set_signal_handler(SIGTERM, old_sigterm_handler_);
     }
     signal_handlers_options_ = SignalHandlerOptions::None;
-    RCLCPP_DEBUG(get_logger(), "SignalHandler::uninstall(): notifying deferred signal handler");
-    notify_signal_handler();
-    if (signal_handler_thread_.joinable()) {
-      signal_handler_thread_.join();
-    }
-    teardown_wait_for_signal();
   } catch (...) {
-    installed_.exchange(true);
     throw;
   }
+  installed_ = false;
   RCLCPP_DEBUG(get_logger(), "signal handler uninstalled");
   return true;
 }
@@ -204,7 +216,8 @@ SignalHandler::uninstall()
 bool
 SignalHandler::is_installed()
 {
-  return installed_.load();
+  std::lock_guard<std::mutex> lock(install_mutex_);
+  return installed_;
 }
 
 SignalHandler::~SignalHandler()
@@ -243,142 +256,78 @@ SignalHandler::get_old_signal_handler(int signum)
 }
 
 void
-SignalHandler::signal_handler_common(int signum)
-{
-  auto & instance = SignalHandler::get_global_signal_handler();
-  instance.signal_number_.store(signum);
-  instance.signal_received_.store(true);
-  instance.notify_signal_handler();
-}
-
-void
 SignalHandler::deferred_signal_handler()
 {
-  while (true) {
-    if (signal_received_.exchange(false)) {
-      int signum = signal_number_.load();
-      RCLCPP_INFO(get_logger(), "signal_handler(signum=%d)", signum);
-      RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
-      for (auto context_ptr : rclcpp::get_contexts()) {
-        if (context_ptr->get_init_options().shutdown_on_signal) {
-          RCLCPP_DEBUG(
+  bool running = true;
+  while (running) {
+    std::optional<Input> next;
+
+    RCLCPP_DEBUG(
+      get_logger(), "deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall");
+    {
+      std::unique_lock l(signal_mutex_);
+      signal_conditional_.wait(l, [this] () {
+          return terminate_handler_ || got_sig_int || got_sig_term;
+      });
+
+      if(terminate_handler_.exchange(false)) {
+        next = Input::TerminateHandler;
+      }
+      if(got_sig_int.exchange(false)) {
+        RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(SIGINT)");
+        next = Input::SigInt;
+      }
+      if(got_sig_term.exchange(false)) {
+        RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(SIGTERM)");
+        next = Input::SigTerm;
+      }
+    }
+    RCLCPP_DEBUG(
+      get_logger(), "deferred_signal_handler(): woken up due to SIGINT/SIGTERM or uninstall");
+
+    // Note 'next' must always be valid at this point, if not
+    // a throw is the expected behaviour
+    switch(next.value()) {
+      case Input::SigInt:
+        [[fallthrough]];
+      case Input::SigTerm:
+        {
+          RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
+          for (auto context_ptr : rclcpp::get_contexts()) {
+            if (context_ptr->get_init_options().shutdown_on_signal) {
+              RCLCPP_DEBUG(
             get_logger(),
             "deferred_signal_handler(): "
             "shutting down rclcpp::Context @ %p, because it had shutdown_on_signal == true",
             static_cast<void *>(context_ptr.get()));
-          context_ptr->shutdown("signal handler");
+              context_ptr->shutdown("signal handler");
+            }
+          }
+          break;
         }
-      }
+      case Input::TerminateHandler:
+        running = false;
+        break;
     }
-    if (!is_installed()) {
-      RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): signal handling uninstalled");
-      break;
-    }
-    RCLCPP_DEBUG(
-      get_logger(), "deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall");
-    wait_for_signal();
-    RCLCPP_DEBUG(
-      get_logger(), "deferred_signal_handler(): woken up due to SIGINT/SIGTERM or uninstall");
   }
 }
 
 void
-SignalHandler::setup_wait_for_signal()
+SignalHandler::notify_deferred_handler(Input input) noexcept
 {
-#if defined(_WIN32)
-  signal_handler_sem_ = CreateSemaphore(
-    NULL,  // default security attributes
-    0,  // initial semaphore count
-    1,  // maximum semaphore count
-    NULL);  // unnamed semaphore
-  if (NULL == signal_handler_sem_) {
-    throw std::runtime_error("CreateSemaphore() failed in setup_wait_for_signal()");
+  switch(input) {
+    case Input::SigInt:
+      got_sig_int.exchange(true);
+      break;
+    case Input::SigTerm:
+      got_sig_term.exchange(true);
+      break;
+    case Input::TerminateHandler:
+      terminate_handler_.exchange(true);
+      break;
   }
-#elif defined(__APPLE__)
-  signal_handler_sem_ = dispatch_semaphore_create(0);
-#else  // posix
-  if (-1 == sem_init(&signal_handler_sem_, 0, 0)) {
-    throw std::runtime_error(std::string("sem_init() failed: ") + strerror(errno));
-  }
-#endif
-  wait_for_signal_is_setup_.store(true);
-}
 
-void
-SignalHandler::teardown_wait_for_signal() noexcept
-{
-  if (!wait_for_signal_is_setup_.exchange(false)) {
-    return;
-  }
-#if defined(_WIN32)
-  CloseHandle(signal_handler_sem_);
-#elif defined(__APPLE__)
-  dispatch_release(signal_handler_sem_);
-#else  // posix
-  if (-1 == sem_destroy(&signal_handler_sem_)) {
-    RCLCPP_ERROR(get_logger(), "invalid semaphore in teardown_wait_for_signal()");
-  }
-#endif
-}
-
-void
-SignalHandler::wait_for_signal()
-{
-  if (!wait_for_signal_is_setup_.load()) {
-    RCLCPP_ERROR(get_logger(), "called wait_for_signal() before setup_wait_for_signal()");
-    return;
-  }
-#if defined(_WIN32)
-  DWORD dw_wait_result = WaitForSingleObject(signal_handler_sem_, INFINITE);
-  switch (dw_wait_result) {
-    case WAIT_ABANDONED:
-      RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
-        GetLastError());
-      break;
-    case WAIT_OBJECT_0:
-      // successful
-      break;
-    case WAIT_TIMEOUT:
-      RCLCPP_ERROR(get_logger(), "WaitForSingleObject() timedout out in wait_for_signal()");
-      break;
-    case WAIT_FAILED:
-      RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() failed in wait_for_signal(): %s", GetLastError());
-      break;
-    default:
-      RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
-        GetLastError());
-  }
-#elif defined(__APPLE__)
-  dispatch_semaphore_wait(signal_handler_sem_, DISPATCH_TIME_FOREVER);
-#else  // posix
-  int s;
-  do {
-    s = sem_wait(&signal_handler_sem_);
-  } while (-1 == s && EINTR == errno);
-#endif
-}
-
-void
-SignalHandler::notify_signal_handler() noexcept
-{
-  if (!wait_for_signal_is_setup_.load()) {
-    return;
-  }
-#if defined(_WIN32)
-  if (!ReleaseSemaphore(signal_handler_sem_, 1, NULL)) {
-    RCLCPP_ERROR(
-      get_logger(), "ReleaseSemaphore() failed in notify_signal_handler(): %s", GetLastError());
-  }
-#elif defined(__APPLE__)
-  dispatch_semaphore_signal(signal_handler_sem_);
-#else  // posix
-  if (-1 == sem_post(&signal_handler_sem_)) {
-    RCLCPP_ERROR(get_logger(), "sem_post failed in notify_signal_handler()");
-  }
-#endif
+  signal_conditional_.notify_one();
 }
 
 rclcpp::SignalHandlerOptions

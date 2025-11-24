@@ -17,20 +17,12 @@
 
 #include <atomic>
 #include <csignal>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 
 #include "rclcpp/logging.hpp"
 #include "rclcpp/utilities.hpp"
-
-// includes for semaphore notification code
-#if defined(_WIN32)
-#include <windows.h>
-#elif defined(__APPLE__)
-#include <dispatch/dispatch.h>
-#else  // posix
-#include <semaphore.h>
-#endif
 
 // Determine if sigaction is available
 #if __APPLE__ || _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
@@ -114,10 +106,6 @@ private:
   SignalHandler &&
   operator=(SignalHandler &&) = delete;
 
-  /// Common signal handler code between sigaction and non-sigaction versions.
-  void
-  signal_handler_common(int signum);
-
 #if defined(RCLCPP_HAS_SIGACTION)
   /// Signal handler function.
   static
@@ -130,37 +118,21 @@ private:
   signal_handler(int signal_value);
 #endif
 
+  void
+  signal_handler_common(int signum) noexcept;
+
   /// Target of the dedicated signal handling thread.
   void
   deferred_signal_handler();
 
-  /// Setup anything that is necessary for wait_for_signal() or notify_signal_handler().
-  /**
-   * This must be called before wait_for_signal() or notify_signal_handler().
-   * This is not thread-safe.
-   */
-  void
-  setup_wait_for_signal();
+  enum class Input
+  {
+    TerminateHandler,
+    SigInt,
+    SigTerm,
+  };
 
-  /// Undo all setup done in setup_wait_for_signal().
-  /**
-   * Must not call wait_for_signal() or notify_signal_handler() after calling this.
-   *
-   * This is not thread-safe.
-   */
-  void
-  teardown_wait_for_signal() noexcept;
-
-  /// Wait for a notification from notify_signal_handler() in a signal safe way.
-  /**
-   * This static method may throw if posting the semaphore fails.
-   *
-   * This is not thread-safe.
-   */
-  void
-  wait_for_signal();
-
-  /// Notify blocking wait_for_signal() calls in a signal safe way.
+  /// Notify blocking deferred_signal_handler in a signal safe way.
   /**
    * This is used to notify the deferred_signal_handler() thread to start work
    * from the signal handler.
@@ -168,7 +140,7 @@ private:
    * This is thread-safe.
    */
   void
-  notify_signal_handler() noexcept;
+  notify_deferred_handler(Input input) noexcept;
 
   static
   signal_handler_type
@@ -187,28 +159,23 @@ private:
   // logger instance
   rclcpp::Logger logger_ = rclcpp::get_logger("rclcpp");
 
-  // Whether or not a signal has been received.
-  std::atomic_bool signal_received_ = false;
-  // The signal number that was received.
-  std::atomic_int signal_number_ = 0;
   // A thread to which signal handling tasks are deferred.
   std::thread signal_handler_thread_;
 
   // A mutex used to synchronize the install() and uninstall() methods.
   std::mutex install_mutex_;
   // Whether or not the signal handler has been installed.
-  std::atomic_bool installed_ = false;
+  bool installed_ = false;
 
-  // Whether or not the semaphore for wait_for_signal is setup.
-  std::atomic_bool wait_for_signal_is_setup_;
-  // Storage for the wait_for_signal semaphore.
-#if defined(_WIN32)
-  HANDLE signal_handler_sem_;
-#elif defined(__APPLE__)
-  dispatch_semaphore_t signal_handler_sem_;
-#else  // posix
-  sem_t signal_handler_sem_;
-#endif
+  // Set to true, if signals handlers are called
+  std::atomic_bool got_sig_int = false;
+  std::atomic_bool got_sig_term = false;
+  // If set to true, the background thread shall terminate
+  std::atomic_bool terminate_handler_ = false;
+
+  // Mutex and conditional used to signal changes of the above variables
+  std::mutex signal_mutex_;
+  std::condition_variable signal_conditional_;
 };
 
 }  // namespace rclcpp
