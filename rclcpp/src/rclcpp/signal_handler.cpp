@@ -68,7 +68,6 @@ void
 SignalHandler::signal_handler(
   int signum, siginfo_t * siginfo, void * context)
 {
-  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
   auto & instance = SignalHandler::get_global_signal_handler();
 
   auto old_signal_handler = instance.get_old_signal_handler(signum);
@@ -91,7 +90,6 @@ SignalHandler::signal_handler(
 void
 SignalHandler::signal_handler(int signum)
 {
-  RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(signum=%d)", signum);
   auto & instance = SignalHandler::get_global_signal_handler();
   auto old_signal_handler = instance.get_old_signal_handler(signum);
   if (
@@ -249,9 +247,6 @@ SignalHandler::signal_handler_common()
 {
   auto & instance = SignalHandler::get_global_signal_handler();
   instance.signal_received_.store(true);
-  RCLCPP_DEBUG(
-    get_logger(),
-    "signal_handler(): notifying deferred signal handler");
   instance.notify_signal_handler();
 }
 
