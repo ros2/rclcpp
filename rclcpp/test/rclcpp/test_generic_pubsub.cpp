@@ -28,6 +28,7 @@
 
 #include "rcl/graph.h"
 
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -338,12 +339,15 @@ TEST_F(RclcppGenericNodeFixture, disable_enable_subscription_callbacks)
     };
   ASSERT_TRUE(wait_for(connected, 10s));
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
   // Publish and verify callback is called
   publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>("test1"));
 
   auto start = std::chrono::steady_clock::now();
   while (callback_count.load() == 0 && std::chrono::steady_clock::now() - start < 30s) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(1, callback_count.load());
@@ -357,7 +361,7 @@ TEST_F(RclcppGenericNodeFixture, disable_enable_subscription_callbacks)
   start = std::chrono::steady_clock::now();
   auto initial_count = callback_count.load();
   while (std::chrono::steady_clock::now() - start < 500ms) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(initial_count, callback_count.load());  // Should not increase
@@ -370,7 +374,7 @@ TEST_F(RclcppGenericNodeFixture, disable_enable_subscription_callbacks)
 
   start = std::chrono::steady_clock::now();
   while (callback_count.load() == initial_count && std::chrono::steady_clock::now() - start < 30s) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(callback_count.load(), initial_count + 1);

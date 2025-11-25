@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -692,12 +693,15 @@ TEST_F(TestSubscription, disable_enable_callbacks)
   pub_options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
   auto pub = node_->create_publisher<test_msgs::msg::Empty>(topic_name, 10U, pub_options);
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
   // Wait for discovery
   auto start = std::chrono::steady_clock::now();
   while ((pub->get_subscription_count() == 0U || sub->get_publisher_count() == 0U) &&
     std::chrono::steady_clock::now() - start < 10s)
   {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
 
@@ -709,7 +713,7 @@ TEST_F(TestSubscription, disable_enable_callbacks)
 
   start = std::chrono::steady_clock::now();
   while (callback_count.load() == 0 && std::chrono::steady_clock::now() - start < 30s) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(1, callback_count.load());
@@ -726,7 +730,7 @@ TEST_F(TestSubscription, disable_enable_callbacks)
   start = std::chrono::steady_clock::now();
   auto initial_count = callback_count.load();
   while (std::chrono::steady_clock::now() - start < 500ms) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(initial_count, callback_count.load());  // Should not increase
@@ -742,7 +746,7 @@ TEST_F(TestSubscription, disable_enable_callbacks)
 
   start = std::chrono::steady_clock::now();
   while (callback_count.load() == initial_count && std::chrono::steady_clock::now() - start < 30s) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(callback_count.load(), initial_count + 1);
@@ -761,6 +765,9 @@ TEST_F(TestSubscription, disable_enable_callbacks_intra_process)
   auto sub = node_->create_subscription<test_msgs::msg::Empty>(topic_name, 10U, callback);
   auto pub = node_->create_publisher<test_msgs::msg::Empty>(topic_name, 10U);
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
   // Publish and verify callback is called
   {
     test_msgs::msg::Empty msg;
@@ -769,7 +776,7 @@ TEST_F(TestSubscription, disable_enable_callbacks_intra_process)
 
   auto start = std::chrono::steady_clock::now();
   while (callback_count.load() == 0 && std::chrono::steady_clock::now() - start < 30s) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(1, callback_count.load());
@@ -786,7 +793,7 @@ TEST_F(TestSubscription, disable_enable_callbacks_intra_process)
   start = std::chrono::steady_clock::now();
   auto initial_count = callback_count.load();
   while (std::chrono::steady_clock::now() - start < 500ms) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(initial_count, callback_count.load());
@@ -802,7 +809,7 @@ TEST_F(TestSubscription, disable_enable_callbacks_intra_process)
 
   start = std::chrono::steady_clock::now();
   while (callback_count.load() == initial_count && std::chrono::steady_clock::now() - start < 30s) {
-    rclcpp::spin_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(callback_count.load(), initial_count + 1);
