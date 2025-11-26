@@ -417,14 +417,39 @@ public:
       typename scbth::callback_type,
       std::function<void(std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &)>
       >::value;
-    static_assert(!is_invalid_signature,
-      "std::shared_ptr<> callback signature is unsupported "
-      "Use std::shared_ptr<const> or std::unique_ptr<> instead.");
 
-    callback_variant_ = static_cast<typename scbth::callback_type>(callback);
+    // Use the discovered type to force the type of callback when assigning
+    // into the variant.
+    if constexpr (is_invalid_signature) {
+      // If deprecated, call sub-routine that is deprecated.
+      set_deprecated(static_cast<typename scbth::callback_type>(callback));
+    } else {
+      // Otherwise just assign it.
+      callback_variant_ = static_cast<typename scbth::callback_type>(callback);
+    }
 
     // Return copy of self for easier testing, normally will be compiled out.
     return *this;
+  }
+
+  template<typename SetT>
+  /// Function for shared_ptr to non-const MessageT, which is deprecated.
+  [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
+  void
+  set_deprecated(std::function<void(std::shared_ptr<SetT>)> callback)
+  {
+    callback_variant_ = callback;
+  }
+
+  /// Function for shared_ptr to non-const MessageT with MessageInfo, which is deprecated.
+  template<typename SetT>
+  [[deprecated(
+          "use 'void(std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
+  )]]
+  void
+  set_deprecated(std::function<void(std::shared_ptr<SetT>, const rclcpp::MessageInfo &)> callback)
+  {
+    callback_variant_ = callback;
   }
 
   std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>
