@@ -111,6 +111,26 @@ public:
   RCLCPP_PUBLIC
   std::shared_ptr<rclcpp::SerializedMessage> create_serialized_message() override;
 
+  /// Disable callbacks from being called
+  /**
+    * This method will block, until any subscription's callbacks provided during construction
+    * currently being executed are finished.
+    * \note This method also temporary removes the on new message callback and all
+    * on new event callbacks from the rmw layer to prevent them from being called. However, this
+    * method will not block and wait until the currently executing on_new_[message]event callbacks
+    * are finished.
+    */
+  RCLCPP_PUBLIC
+  void disable_callbacks() override;
+
+  /// Enable the callbacks to be called
+  /**
+    * This method is thread safe, and provides a safe way to atomically enable the callbacks
+    * in a multithreaded environment.
+    */
+  RCLCPP_PUBLIC
+  void enable_callbacks() override;
+
   /// Cast the message to a rclcpp::SerializedMessage and call the callback.
   RCLCPP_PUBLIC
   void handle_message(

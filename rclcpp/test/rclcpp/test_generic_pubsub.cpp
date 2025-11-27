@@ -15,17 +15,20 @@
 
 #include <gmock/gmock.h>
 
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
 #include "rcl/graph.h"
 
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -34,6 +37,7 @@
 
 using namespace ::testing;  // NOLINT
 using namespace rclcpp;  // NOLINT
+using namespace std::chrono_literals;  // NOLINT
 
 class RclcppGenericNodeFixture : public Test
 {
@@ -313,4 +317,134 @@ TEST_F(RclcppGenericNodeFixture, generic_subscription_different_callbacks)
     // It normally takes < 20ms, 5s chosen as "a very long time"
     ASSERT_TRUE(wait_for(connected, 5s));
   }
+}
+
+TEST_F(RclcppGenericNodeFixture, disable_enable_subscription_callbacks)
+{
+  const std::string topic_name = "test_disable_topic";
+  const std::string type = "test_msgs/msg/Strings";
+  const auto qos = rclcpp::QoS(10U);
+
+  std::atomic<int> callback_count{0};
+  auto callback = [&callback_count](std::shared_ptr<const rclcpp::SerializedMessage>) {
+      ++callback_count;
+    };
+
+  auto subscription = node_->create_generic_subscription(topic_name, type, qos, callback);
+  auto publisher = node_->create_generic_publisher(topic_name, type, qos);
+
+  // Wait for discovery
+  auto connected = [publisher, subscription]() -> bool {
+      return publisher->get_subscription_count() && subscription->get_publisher_count();
+    };
+  ASSERT_TRUE(wait_for(connected, 10s));
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
+  // Publish and verify callback is called
+  publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>("test1"));
+
+  auto start = std::chrono::steady_clock::now();
+  while (callback_count.load() == 0 && std::chrono::steady_clock::now() - start < 30s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable callbacks
+  EXPECT_NO_THROW(subscription->disable_callbacks());
+
+  // Publish again and verify callback is NOT called
+  publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>("test2"));
+
+  start = std::chrono::steady_clock::now();
+  auto initial_count = callback_count.load();
+  while (std::chrono::steady_clock::now() - start < 500ms) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(initial_count, callback_count.load());  // Should not increase
+
+  // Enable callbacks
+  EXPECT_NO_THROW(subscription->enable_callbacks());
+
+  // Publish again and verify callback IS called
+  publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>("test3"));
+
+  start = std::chrono::steady_clock::now();
+  while (callback_count.load() == initial_count && std::chrono::steady_clock::now() - start < 30s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(callback_count.load(), initial_count + 1);
+}
+
+TEST_F(RclcppGenericNodeFixture, disable_enable_subscription_event_callbacks)
+{
+  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
+    GTEST_SKIP() << "rmw_zenoh doesn't support deadline and liveliness events";
+  }
+  const std::string topic_name = "test_event_callbacks_topic";
+  const std::string type = "test_msgs/msg/Strings";
+  const auto qos = rclcpp::QoS(10U).deadline(100ms);
+
+  std::atomic<int> deadline_callback_count{0};
+  std::atomic<int> liveliness_callback_count{0};
+
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.event_callbacks.deadline_callback =
+    [&deadline_callback_count](rclcpp::QOSDeadlineRequestedInfo &) {
+      ++deadline_callback_count;
+    };
+
+  sub_options.event_callbacks.liveliness_callback =
+    [&liveliness_callback_count](rclcpp::QOSLivelinessChangedInfo &) {
+      ++liveliness_callback_count;
+    };
+
+  auto do_nothing = [](std::shared_ptr<const rclcpp::SerializedMessage>) {};
+
+  auto subscription =
+    node_->create_generic_subscription(topic_name, type, qos, do_nothing, sub_options);
+
+  const auto & event_handlers = subscription->get_event_handlers();
+
+  // Initially, both callbacks counters should be zero
+  EXPECT_EQ(deadline_callback_count, 0);
+  EXPECT_EQ(liveliness_callback_count, 0);
+
+  // Execute events and disable all event handlers
+  for (const auto & [event_type, handler] : event_handlers) {
+    if (handler) {
+      const std::shared_ptr<void> data = handler->take_data();
+      handler->execute(data);
+      EXPECT_NO_THROW(handler->disable());
+    }
+  }
+  // Expect both callbacks to have been called once since they should be enabled by default
+  EXPECT_EQ(deadline_callback_count, 1);
+  EXPECT_EQ(liveliness_callback_count, 1);
+
+  // Execute events one more time and enable all event handlers
+  for (const auto & [event_type, handler] : event_handlers) {
+    if (handler) {
+      const std::shared_ptr<void> data = handler->take_data();
+      handler->execute(data);
+      EXPECT_NO_THROW(handler->enable());
+    }
+  }
+  // Expect no change since they were disabled
+  EXPECT_EQ(deadline_callback_count, 1);
+  EXPECT_EQ(liveliness_callback_count, 1);
+
+  // Execute events one more time
+  for (const auto & [event_type, handler] : event_handlers) {
+    if (handler) {
+      const std::shared_ptr<void> data = handler->take_data();
+      handler->execute(data);
+    }
+  }
+  EXPECT_EQ(deadline_callback_count, 2);
+  EXPECT_EQ(liveliness_callback_count, 2);
 }
