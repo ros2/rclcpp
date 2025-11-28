@@ -67,19 +67,23 @@ struct ParameterEventCallbackHandle
  * The first step is to instantiate a ParameterEventHandler, providing a ROS node to use
  * to create any required subscriptions:
  *
- *   auto param_handler = std::make_shared<rclcpp::ParameterEventHandler>(node);
+ * ```cpp
+ * auto param_handler = std::make_shared<rclcpp::ParameterEventHandler>(node);
+ * ```
  *
  * Next, you can supply a callback to the add_parameter_callback method, as follows:
  *
- *   auto cb1 = [&node](const rclcpp::Parameter & p) {
- *      RCLCPP_INFO(
- *        node->get_logger(),
- *        "cb1: Received an update to parameter \"%s\" of type %s: \"%ld\"",
- *        p.get_name().c_str(),
- *        p.get_type_name().c_str(),
- *        p.as_int());
- *   };
- *   auto handle1 = param_handler->add_parameter_callback("an_int_param", cb1);
+ * ```cpp
+ * auto cb1 = [&node](const rclcpp::Parameter & p) {
+ *    RCLCPP_INFO(
+ *      node->get_logger(),
+ *      "cb1: Received an update to parameter \"%s\" of type %s: \"%ld\"",
+ *      p.get_name().c_str(),
+ *      p.get_type_name().c_str(),
+ *      p.as_int());
+ * };
+ * auto handle1 = param_handler->add_parameter_callback("an_int_param", cb1);
+ * ```
  *
  * In this case, we didn't supply a node name (the third, optional, parameter) so the
  * default will be to monitor for changes to the "an_int_param" parameter associated with
@@ -92,16 +96,18 @@ struct ParameterEventCallbackHandle
  * You may also monitor for changes to parameters in other nodes by supplying the node
  * name to add_parameter_callback:
  *
- *   auto cb2 = [&node](const rclcpp::Parameter & p) {
- *       RCLCPP_INFO(
- *         node->get_logger(),
- *         "cb2: Received an update to parameter \"%s\" of type: %s: \"%s\"",
- *         p.get_name().c_str(),
- *         p.get_type_name().c_str(),
- *         p.as_string().c_str());
- *     };
- *   auto handle2 = param_handler->add_parameter_callback(
- *     "some_remote_param_name", cb2, "some_remote_node_name");
+ * ```cpp
+ * auto cb2 = [&node](const rclcpp::Parameter & p) {
+ *     RCLCPP_INFO(
+ *       node->get_logger(),
+ *       "cb2: Received an update to parameter \"%s\" of type: %s: \"%s\"",
+ *       p.get_name().c_str(),
+ *       p.get_type_name().c_str(),
+ *       p.as_string().c_str());
+ *   };
+ * auto handle2 = param_handler->add_parameter_callback(
+ *   "some_remote_param_name", cb2, "some_remote_node_name");
+ * ```
  *
  * In this case, the callback will be invoked whenever "some_remote_param_name" changes
  * on remote node "some_remote_node_name".
@@ -109,7 +115,9 @@ struct ParameterEventCallbackHandle
  * To remove a parameter callback, reset the callback handle smart pointer or call
  * remove_parameter_callback, passing the handle returned from add_parameter_callback:
  *
- *   param_handler->remove_parameter_callback(handle2);
+ * ```cpp
+ * param_handler->remove_parameter_callback(handle2);
+ * ```
  *
  * You can also monitor for *all* parameter changes, using add_parameter_event_callback.
  * In this case, the callback will be invoked whenever any parameter changes in the system.
@@ -117,40 +125,42 @@ struct ParameterEventCallbackHandle
  * is convenient to use a regular expression on the node names or namespaces of interest.
  * For example:
  *
- *   auto cb3 =
- *     [fqn, remote_param_name, &node](const rcl_interfaces::msg::ParameterEvent & event) {
- *       // Look for any updates to parameters in "/a_namespace" as well as any parameter changes
- *       // to our own node ("this_node")
- *       std::regex re("(/a_namespace/.*)|(/this_node)");
- *       if (regex_match(event.node, re)) {
- *         // Now that we know the event matches the regular expression we scanned for, we can
- *         // use 'get_parameter_from_event' to get a specific parameter name that we're looking for
- *         rclcpp::Parameter p;
- *         if (rclcpp::ParameterEventsSubscriber::get_parameter_from_event(
- *             event, p, remote_param_name, fqn))
- *         {
- *           RCLCPP_INFO(
- *             node->get_logger(),
- *             "cb3: Received an update to parameter \"%s\" of type: %s: \"%s\"",
- *             p.get_name().c_str(),
- *             p.get_type_name().c_str(),
- *             p.as_string().c_str());
- *         }
- *
- *         // You can also use 'get_parameter*s*_from_event' to enumerate all changes that came
- *         // in on this event
- *         auto params = rclcpp::ParameterEventsSubscriber::get_parameters_from_event(event);
- *         for (auto & p : params) {
- *           RCLCPP_INFO(
- *             node->get_logger(),
- *             "cb3: Received an update to parameter \"%s\" of type: %s: \"%s\"",
- *             p.get_name().c_str(),
- *             p.get_type_name().c_str(),
- *             p.value_to_string().c_str());
- *         }
+ * ```cpp
+ * auto cb3 =
+ *   [fqn, remote_param_name, &node](const rcl_interfaces::msg::ParameterEvent & event) {
+ *     // Look for any updates to parameters in "/a_namespace" as well as any parameter changes
+ *     // to our own node ("this_node")
+ *     std::regex re("(/a_namespace/.*)|(/this_node)");
+ *     if (regex_match(event.node, re)) {
+ *       // Now that we know the event matches the regular expression we scanned for, we can
+ *       // use 'get_parameter_from_event' to get a specific parameter name that we're looking for
+ *       rclcpp::Parameter p;
+ *       if (rclcpp::ParameterEventHandler::get_parameter_from_event(
+ *           event, p, remote_param_name, fqn))
+ *       {
+ *         RCLCPP_INFO(
+ *           node->get_logger(),
+ *           "cb3: Received an update to parameter \"%s\" of type: %s: \"%s\"",
+ *           p.get_name().c_str(),
+ *           p.get_type_name().c_str(),
+ *           p.as_string().c_str());
  *       }
- *     };
- *   auto handle3 = param_handler->add_parameter_event_callback(cb3);
+ *
+ *       // You can also use 'get_parameter*s*_from_event' to enumerate all changes that came
+ *       // in on this event
+ *       auto params = rclcpp::ParameterEventHandler::get_parameters_from_event(event);
+ *       for (auto & p : params) {
+ *         RCLCPP_INFO(
+ *           node->get_logger(),
+ *           "cb3: Received an update to parameter \"%s\" of type: %s: \"%s\"",
+ *           p.get_name().c_str(),
+ *           p.get_type_name().c_str(),
+ *           p.value_to_string().c_str());
+ *       }
+ *     }
+ *   };
+ * auto handle3 = param_handler->add_parameter_event_callback(cb3);
+ * ```
  *
  * For both parameter callbacks and parameter event callbacks, when multiple callbacks are added,
  * the callbacks are invoked last-in, first-called order (LIFO).
@@ -160,7 +170,9 @@ struct ParameterEventCallbackHandle
  *
  * To remove a parameter event callback, reset the callback smart pointer or use:
  *
- *   param_handler->remove_event_parameter_callback(handle3);
+ * ```cpp
+ * param_handler->remove_event_parameter_callback(handle3);
+ * ```
  */
 class ParameterEventHandler
 {

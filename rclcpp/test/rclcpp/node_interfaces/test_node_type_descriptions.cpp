@@ -37,6 +37,38 @@ TEST_F(TestNodeTypeDescriptions, interface_created)
   ASSERT_NE(nullptr, node.get_node_type_descriptions_interface());
 }
 
+TEST_F(TestNodeTypeDescriptions, automatically_declare_parameters_from_overrides)
+{
+  rclcpp::NodeOptions node_options;
+  node_options.automatically_declare_parameters_from_overrides(true);
+  node_options.append_parameter_override("start_type_description_service", false);
+  ASSERT_NO_THROW(
+  {
+    auto node = std::make_shared<rclcpp::Node>("node", "ns", node_options);
+    (void) node;
+  });
+}
+
+TEST_F(TestNodeTypeDescriptions, bad_parameter_type)
+{
+  rclcpp::NodeOptions node_options;
+  node_options.append_parameter_override("start_type_description_service", "unexpected_type");
+
+  ASSERT_THROW(
+  {
+    node_options.automatically_declare_parameters_from_overrides(false);
+    auto node = std::make_shared<rclcpp::Node>("node", "ns", node_options);
+    (void) node;
+  }, rclcpp::exceptions::InvalidParameterTypeException);
+
+  ASSERT_THROW(
+  {
+    node_options.automatically_declare_parameters_from_overrides(true);
+    auto node = std::make_shared<rclcpp::Node>("node", "ns", node_options);
+    (void) node;
+  }, rclcpp::exceptions::InvalidParameterTypeException);
+}
+
 TEST_F(TestNodeTypeDescriptions, disabled_no_service)
 {
   rclcpp::NodeOptions node_options;

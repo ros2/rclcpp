@@ -13,10 +13,12 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <iterator>
 #include <memory>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -49,6 +51,15 @@ static constexpr rclcpp::SubscriptionWaitSetMask kDefaultSubscriptionMask = {tru
 
 class rclcpp::ExecutorImplementation {};
 
+Executor::Executor(const std::shared_ptr<rclcpp::Context> & context)
+: spinning(false),
+  context_(context),
+  entities_need_rebuild_(true),
+  collector_(nullptr),
+  wait_set_({}, {}, {}, {}, {}, {}, context)
+{
+}
+
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
@@ -57,7 +68,7 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
   notify_waitable_(std::make_shared<rclcpp::executors::ExecutorNotifyWaitable>(
       [this]() {
         this->entities_need_rebuild_.store(true);
-      })),
+      }, options.context)),
   entities_need_rebuild_(true),
   collector_(notify_waitable_),
   wait_set_({}, {}, {}, {}, {}, {}, options.context),
@@ -72,13 +83,12 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
       }
     });
 
-  notify_waitable_->set_on_ready_callback(
-    [this](auto, auto) {
-      this->entities_need_rebuild_.store(true);
-    });
-
   notify_waitable_->add_guard_condition(interrupt_guard_condition_);
   notify_waitable_->add_guard_condition(shutdown_guard_condition_);
+
+  // we need to initially rebuild the collection,
+  // so that the notify_waitable_ is added
+  collect_entities();
 }
 
 Executor::~Executor()
@@ -122,6 +132,21 @@ Executor::~Executor()
   }
 }
 
+void
+Executor::handle_updated_entities(bool notify)
+{
+  this->entities_need_rebuild_.store(true);
+
+  if (!spinning.load() && entities_need_rebuild_.exchange(false)) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    this->collect_entities();
+  }
+
+  if (notify) {
+    interrupt_guard_condition_->trigger();
+  }
+}
+
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_all_callback_groups()
 {
@@ -146,46 +171,36 @@ Executor::get_automatically_added_callback_groups_from_nodes()
 void
 Executor::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  [[maybe_unused]] rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
-  (void) node_ptr;
   this->collector_.add_callback_group(group_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on callback group add: ") + ex.what());
-    }
+  try {
+    this->handle_updated_entities(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to handle entities update on callback group add: ") + ex.what());
   }
 }
 
 void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
-  this->collector_.add_node(node_ptr);
-
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
+  if (node_ptr->get_context() != context_) {
+    throw std::runtime_error(
+      "add_node() called with a node with a different context from this executor");
   }
 
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on node add: ") + ex.what());
-    }
+  this->collector_.add_node(node_ptr);
+
+  try {
+    this->handle_updated_entities(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to handle entities update on node add: ") + ex.what());
   }
 }
 
@@ -196,18 +211,12 @@ Executor::remove_callback_group(
 {
   this->collector_.remove_callback_group(group_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on callback group remove: ") + ex.what());
-    }
+  try {
+    this->handle_updated_entities(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to handle entities update on callback group remove: ") + ex.what());
   }
 }
 
@@ -222,19 +231,12 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 {
   this->collector_.remove_node(node_ptr);
 
-  if (!spinning.load()) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    this->collect_entities();
-  }
-
-  if (notify) {
-    try {
-      interrupt_guard_condition_->trigger();
-    } catch (const rclcpp::exceptions::RCLError & ex) {
-      throw std::runtime_error(
-              std::string(
-                "Failed to trigger guard condition on node remove: ") + ex.what());
-    }
+  try {
+    this->handle_updated_entities(notify);
+  } catch (const rclcpp::exceptions::RCLError & ex) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to handle entities update on node remove: ") + ex.what());
   }
 }
 
@@ -253,6 +255,59 @@ Executor::spin_node_once_nanoseconds(
   // non-blocking = true
   spin_once(timeout);
   this->remove_node(node, false);
+}
+
+rclcpp::FutureReturnCode
+Executor::spin_until_future_complete_impl(
+  std::chrono::nanoseconds timeout,
+  const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future)
+{
+  // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
+  // inside a callback executed by an executor.
+
+  // Check the future before entering the while loop.
+  // If the future is already complete, don't try to spin.
+  std::future_status status = wait_for_future(std::chrono::seconds(0));
+  if (status == std::future_status::ready) {
+    return FutureReturnCode::SUCCESS;
+  }
+
+  auto end_time = std::chrono::steady_clock::now();
+  std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    timeout);
+  if (timeout_ns > std::chrono::nanoseconds::zero()) {
+    end_time += timeout_ns;
+  }
+  std::chrono::nanoseconds timeout_left = timeout_ns;
+
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_until_future_complete() called while already spinning");
+  }
+  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
+  while (rclcpp::ok(this->context_) && spinning.load()) {
+    // Do one item of work.
+    spin_once_impl(timeout_left);
+
+    // Check if the future is set, return SUCCESS if it is.
+    status = wait_for_future(std::chrono::seconds(0));
+    if (status == std::future_status::ready) {
+      return FutureReturnCode::SUCCESS;
+    }
+    // If the original timeout is < 0, then this is blocking, never TIMEOUT.
+    if (timeout_ns < std::chrono::nanoseconds::zero()) {
+      continue;
+    }
+    // Otherwise check if we still have time to wait, return TIMEOUT if not.
+    auto now = std::chrono::steady_clock::now();
+    if (now >= end_time) {
+      return FutureReturnCode::TIMEOUT;
+    }
+    // Subtract the elapsed time from the original timeout.
+    timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
+  }
+
+  // The future did not complete before ok() returned false, return INTERRUPTED.
+  return FutureReturnCode::INTERRUPTED;
 }
 
 void
@@ -317,26 +372,69 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
 
+  // clear the wait result and wait for work without blocking to collect the work
+  // for the first time
+  // both spin_some and spin_all wait for work at the beginning
+  wait_result_.reset();
+  wait_for_work(std::chrono::milliseconds(0));
+  bool entity_states_fully_polled = true;
+
+  if (entities_need_rebuild_) {
+    // if the last wait triggered a collection rebuild, we need to call
+    // wait_for_work once more, in order to do a collection rebuild and collect
+    // events from the just added entities
+    entity_states_fully_polled = false;
+  }
+
+  // The logic of this while loop is as follows:
+  //
+  // - while not shutdown, and spinning (not canceled), and not max duration reached...
+  // - try to get an executable item to execute, and execute it if available
+  // - otherwise, reset the wait result, and ...
+  // - if there was no work available just after waiting, break the loop unconditionally
+  //   - this is appropriate for both spin_some and spin_all which use this function
+  // - else if exhaustive = true, then wait for work again
+  //   - this is only used for spin_all and not spin_some
+  // - else break
+  //   - this only occurs with spin_some
+  //
+  // The logic of this loop is subtle and should be carefully changed if at all.
+  // See also:
+  //   https://github.com/ros2/rclcpp/issues/2508
+  //   https://github.com/ros2/rclcpp/pull/2517
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
-    if (!wait_result_.has_value()) {
-      wait_for_work(std::chrono::milliseconds(0));
-    }
-
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
+      // during the execution some entity might got ready therefore we need
+      // to repoll the states of all entities
+      entity_states_fully_polled = false;
     } else {
-      // If nothing is ready, reset the result to signal we are
-      // ready to wait again
+      // if nothing is ready, reset the result to clear it
       wait_result_.reset();
-    }
 
-    if (!wait_result_.has_value() && !exhaustive) {
-      // In the case of spin some, then we can exit
-      // In the case of spin all, then we will allow ourselves to wait again.
-      break;
+      if (entity_states_fully_polled) {
+        // there was no work after just waiting, always exit in this case
+        // before the exhaustive condition can be checked
+        break;
+      }
+
+      if (exhaustive) {
+        // if exhaustive, wait for work again
+        // this only happens for spin_all; spin_some only waits at the start
+        wait_for_work(std::chrono::milliseconds(0));
+        entity_states_fully_polled = true;
+        if (entities_need_rebuild_) {
+          // if the last wait triggered a collection rebuild, we need to call
+          // wait_for_work once more, in order to do a collection rebuild and
+          // collect events from the just added entities
+          entity_states_fully_polled = false;
+        }
+      } else {
+        break;
+      }
     }
   }
 }
@@ -356,7 +454,7 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
   spin_once_impl(timeout);
 }
 
@@ -379,11 +477,15 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     return;
   }
 
+  assert(
+    (void("cannot execute an AnyExecutable without a valid callback group"),
+    any_exec.callback_group));
+
   if (any_exec.timer) {
     TRACETOOLS_TRACEPOINT(
       rclcpp_executor_execute,
       static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
-    execute_timer(any_exec.timer);
+    execute_timer(any_exec.timer, any_exec.data);
   }
   if (any_exec.subscription) {
     TRACETOOLS_TRACEPOINT(
@@ -403,9 +505,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 
   // Reset the callback_group, regardless of type
-  if (any_exec.callback_group) {
-    any_exec.callback_group->can_be_taken_from().store(true);
-  }
+  any_exec.callback_group->can_be_taken_from().store(true);
 }
 
 template<typename Taker, typename Handler>
@@ -491,6 +591,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
                 "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
                 "'%s': %s",
                 subscription->get_topic_name(), rcl_get_error_string().str);
+              rcl_reset_error();
             }
             loaned_msg = nullptr;
           }
@@ -547,9 +648,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 }
 
 void
-Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
+Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr)
 {
-  timer->execute_callback();
+  timer->execute_callback(data_ptr);
 }
 
 void
@@ -642,7 +743,6 @@ Executor::collect_entities()
   // In the case that an entity already has an expired weak pointer
   // before being removed from the waitset, additionally prune the waitset.
   this->wait_set_.prune_deleted_entities();
-  this->entities_need_rebuild_.store(false);
 }
 
 void
@@ -655,15 +755,25 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   {
     std::lock_guard<std::mutex> guard(mutex_);
-    if (current_collection_.empty() || this->entities_need_rebuild_.load()) {
+
+    if (this->entities_need_rebuild_.exchange(false) || current_collection_.empty()) {
       this->collect_entities();
     }
   }
+
   this->wait_result_.emplace(wait_set_.wait(timeout));
+
   if (!this->wait_result_ || this->wait_result_->kind() == WaitResultKind::Empty) {
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
       "empty wait set received in wait(). This should never happen.");
+  } else {
+    if (this->wait_result_->kind() == WaitResultKind::Ready && current_notify_waitable_) {
+      auto & rcl_wait_set = this->wait_result_->get_wait_set().get_rcl_wait_set();
+      if (current_notify_waitable_->is_ready(rcl_wait_set)) {
+        current_notify_waitable_->execute(current_notify_waitable_->take_data());
+      }
+    }
   }
 }
 
@@ -689,7 +799,8 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
       if (entity_iter != current_collection_.timers.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
+          current_timer_index++;
           continue;
         }
         // At this point the timer is either ready for execution or was perhaps
@@ -698,7 +809,9 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         // it from the wait result.
         wait_result_->clear_timer_with_index(current_timer_index);
         // Check that the timer should be called still, i.e. it wasn't canceled.
-        if (!timer->call()) {
+        any_executable.data = timer->call();
+        if (!any_executable.data) {
+          current_timer_index++;
           continue;
         }
         any_executable.timer = timer;
@@ -706,6 +819,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         valid_executable = true;
         break;
       }
+      current_timer_index++;
     }
   }
 
@@ -715,7 +829,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         subscription->get_subscription_handle().get());
       if (entity_iter != current_collection_.subscriptions.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.subscription = subscription;
@@ -731,7 +845,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
       if (entity_iter != current_collection_.services.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.service = service;
@@ -747,7 +861,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
       if (entity_iter != current_collection_.clients.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.client = client;
@@ -763,7 +877,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.waitables.find(waitable.get());
       if (entity_iter != current_collection_.waitables.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (callback_group && !callback_group->can_be_taken_from()) {
+        if (!callback_group || !callback_group->can_be_taken_from()) {
           continue;
         }
         any_executable.waitable = waitable;

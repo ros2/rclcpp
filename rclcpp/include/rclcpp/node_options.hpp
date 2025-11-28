@@ -146,6 +146,14 @@ public:
     return *this;
   }
 
+  /// Append a single parameter override, parameter idiom style.
+  NodeOptions &
+  append_parameter_override(const rclcpp::Parameter & param)
+  {
+    this->parameter_overrides().push_back(param);
+    return *this;
+  }
+
   /// Return the use_global_arguments flag.
   RCLCPP_PUBLIC
   bool

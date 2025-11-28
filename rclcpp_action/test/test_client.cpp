@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
 #include <future>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <thread>
-#include <chrono>
 
 #include "gtest/gtest.h"
 
@@ -545,11 +545,9 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_
   int feedback_count = 0;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.feedback_callback = [&feedback_count](
-    typename ActionGoalHandle::SharedPtr goal_handle,
-    const std::shared_ptr<const ActionFeedback> feedback)
+    [[maybe_unused]] typename ActionGoalHandle::SharedPtr goal_handle,
+    [[maybe_unused]] const std::shared_ptr<const ActionFeedback> feedback)
     {
-      (void)goal_handle;
-      (void)feedback;
       feedback_count++;
     };
   auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
@@ -1036,4 +1034,21 @@ TEST_F(TestClientAgainstServer, execute_rcl_errors)
       dual_spin_until_future_complete(future_cancel_some),
       rclcpp::exceptions::RCLError);
   }
+}
+
+TEST_F(TestClientAgainstServer, test_configure_introspection)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+
+  EXPECT_THROW(
+    action_client->configure_introspection(
+      nullptr, rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS),
+      std::invalid_argument);
+
+  EXPECT_NO_THROW(
+    action_client->configure_introspection(
+      client_node->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS));
+
+  // No method was found to make rcl_action_client_configure_action_introspection return
+  // a value other than RCL_RET_OK. mocking_utils::patch_and_return does not work for this function.
 }

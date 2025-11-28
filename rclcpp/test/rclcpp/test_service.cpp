@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <string>
 #include <memory>
 #include <utility>
@@ -123,7 +124,7 @@ TEST_F(TestServiceSub, construction_and_destruction) {
   {
     ASSERT_THROW(
     {
-      auto service = node->create_service<rcl_interfaces::srv::ListParameters>(
+      auto service = subnode->create_service<rcl_interfaces::srv::ListParameters>(
         "invalid_service?", callback);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
@@ -335,7 +336,7 @@ TEST_F(TestService, rcl_service_request_subscription_get_actual_qos_error) {
 TEST_F(TestService, server_qos) {
   rclcpp::ServicesQoS qos_profile;
   qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
-  rclcpp::Duration duration(std::chrono::nanoseconds(1));
+  rclcpp::Duration duration(std::chrono::milliseconds(1));
   qos_profile.deadline(duration);
   qos_profile.lifespan(duration);
   qos_profile.liveliness_lease_duration(duration);
@@ -385,17 +386,20 @@ TEST_F(TestService, server_qos_depth) {
     std::this_thread::sleep_for(10ms);
   }
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(server_node);
+
   auto start = std::chrono::steady_clock::now();
   while ((server_cb_count_ < server_qos_profile.depth()) &&
     (std::chrono::steady_clock::now() - start) < 1s)
   {
-    rclcpp::spin_some(server_node);
+    executor.spin_some();
     std::this_thread::sleep_for(1ms);
   }
 
   // Spin an extra time to check if server QoS depth has been ignored,
   // so more server responses might be processed than expected.
-  rclcpp::spin_some(server_node);
+  executor.spin_some();
 
   EXPECT_EQ(server_cb_count_, server_qos_profile.depth());
 }

@@ -70,14 +70,6 @@ struct FutureAndRequestId
   /// Allow implicit conversions to `std::future` by reference.
   operator FutureT &() {return this->future;}
 
-  /// Deprecated, use the `future` member variable instead.
-  /**
-   * Allow implicit conversions to `std::future` by value.
-   * \deprecated
-   */
-  [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
-  operator FutureT() {return this->future;}
-
   // delegate future like methods in the std::future impl_
 
   /// See std::future::get().
@@ -436,15 +428,6 @@ public:
   {
     using detail::FutureAndRequestId<std::future<SharedResponse>>::FutureAndRequestId;
 
-    /// Deprecated, use `.future.share()` instead.
-    /**
-     * Allow implicit conversions to `std::shared_future` by value.
-     * \deprecated
-     */
-    [[deprecated(
-      "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
-    operator SharedFuture() {return this->future.share();}
-
     // delegate future like methods in the std::future impl_
 
     /// See std::future::share().
@@ -490,7 +473,7 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] node_graph The node graph interface of the corresponding node.
    * \param[in] service_name Name of the topic to publish to.
-   * \param[in] client_options options for the subscription.
+   * \param[in] client_options options for the client.
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
@@ -806,6 +789,9 @@ public:
    * \param[in] clock clock to use to generate introspection timestamps
    * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
    * \param[in] introspection_state the state to set introspection to
+   *
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw if
+   *   it failed to configure introspection.
    */
   void
   configure_introspection(
@@ -864,7 +850,7 @@ protected:
         "Received invalid sequence number. Ignoring...");
       return std::nullopt;
     }
-    auto value = std::move(it->second.second);
+    std::optional<CallbackInfoVariant> value = std::move(it->second.second);
     this->pending_requests_.erase(request_number);
     return value;
   }

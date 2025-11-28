@@ -31,21 +31,20 @@ namespace rclcpp
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class LoanedMessage
 {
+public:
   using MessageAllocatorTraits = rclcpp::allocator::AllocRebind<MessageT, AllocatorT>;
   using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
-public:
   /// Constructor of the LoanedMessage class.
   /**
    * The constructor of this class allocates memory for a given message type
    * and associates this with a given publisher.
    *
-   * Given the publisher instance, a case differentiation is being performaned
-   * which decides whether the underlying middleware is able to allocate the appropriate
-   * memory for this message type or not.
-   * In the case that the middleware can not loan messages, the passed in allocator instance
-   * is being used to allocate the message within the scope of this class.
-   * Otherwise, the allocator is being ignored and the allocation is solely performaned
+   * The underlying middleware is queried to determine whether it is able to allocate the
+   * appropriate memory for this message type or not.
+   * In the case that the middleware cannot loan messages, the passed in allocator instance
+   * is used to allocate the message within the scope of this class.
+   * Otherwise, the allocator is ignored and the allocation is solely performed
    * in the underlying middleware with its appropriate allocation strategy.
    * The need for this arises as the user code can be written explicitly targeting a middleware
    * capable of loaning messages.
@@ -53,12 +52,12 @@ public:
    * a middleware which doesn't support message loaning in which case the allocator will be used.
    *
    * \param[in] pub rclcpp::Publisher instance to which the memory belongs
-   * \param[in] allocator Allocator instance in case middleware can not allocate messages
+   * \param[in] allocator Allocator instance in case middleware cannot allocate messages
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   LoanedMessage(
     const rclcpp::PublisherBase & pub,
-    std::allocator<MessageT> allocator)
+    MessageAllocator allocator)
   : pub_(pub),
     message_(nullptr),
     message_allocator_(std::move(allocator))
@@ -81,36 +80,6 @@ public:
       new (message_) MessageT();
     }
   }
-
-  /// Constructor of the LoanedMessage class.
-  /**
-   * The constructor of this class allocates memory for a given message type
-   * and associates this with a given publisher.
-   *
-   * Given the publisher instance, a case differentiation is being performaned
-   * which decides whether the underlying middleware is able to allocate the appropriate
-   * memory for this message type or not.
-   * In the case that the middleware can not loan messages, the passed in allocator instance
-   * is being used to allocate the message within the scope of this class.
-   * Otherwise, the allocator is being ignored and the allocation is solely performaned
-   * in the underlying middleware with its appropriate allocation strategy.
-   * The need for this arises as the user code can be written explicitly targeting a middleware
-   * capable of loaning messages.
-   * However, this user code is ought to be usable even when dynamically linked against
-   * a middleware which doesn't support message loaning in which case the allocator will be used.
-   *
-   * \param[in] pub rclcpp::Publisher instance to which the memory belongs
-   * \param[in] allocator Allocator instance in case middleware can not allocate messages
-   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
-   */
-  [[
-    deprecated("used the LoanedMessage constructor that does not use a shared_ptr to the allocator")
-  ]]
-  LoanedMessage(
-    const rclcpp::PublisherBase * pub,
-    std::shared_ptr<std::allocator<MessageT>> allocator)
-  : LoanedMessage(*pub, *allocator)
-  {}
 
   /// Move semantic for RVO
   LoanedMessage(LoanedMessage<MessageT> && other)

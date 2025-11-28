@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
@@ -54,8 +55,8 @@ get_node_logger(const rcl_node_t * node)
   return rclcpp::get_logger(logger_name);
 }
 
-rcpputils::fs::path
-get_logging_directory()
+std::filesystem::path
+get_log_directory()
 {
   char * log_dir = NULL;
   auto allocator = rcutils_get_default_allocator();

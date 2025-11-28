@@ -153,7 +153,7 @@ ready_executables(
         continue;
       }
       auto group_info = group_cache(entity_iter->second.callback_group);
-      if (group_info && !group_info->can_be_taken_from().load()) {
+      if (!group_info || !group_info->can_be_taken_from().load()) {
         continue;
       }
       if (!entity->call()) {
@@ -176,7 +176,7 @@ ready_executables(
         continue;
       }
       auto group_info = group_cache(entity_iter->second.callback_group);
-      if (group_info && !group_info->can_be_taken_from().load()) {
+      if (!group_info || !group_info->can_be_taken_from().load()) {
         continue;
       }
       rclcpp::AnyExecutable exec;
@@ -196,7 +196,7 @@ ready_executables(
         continue;
       }
       auto group_info = group_cache(entity_iter->second.callback_group);
-      if (group_info && !group_info->can_be_taken_from().load()) {
+      if (!group_info || !group_info->can_be_taken_from().load()) {
         continue;
       }
       rclcpp::AnyExecutable exec;
@@ -216,7 +216,7 @@ ready_executables(
         continue;
       }
       auto group_info = group_cache(entity_iter->second.callback_group);
-      if (group_info && !group_info->can_be_taken_from().load()) {
+      if (!group_info || !group_info->can_be_taken_from().load()) {
         continue;
       }
       rclcpp::AnyExecutable exec;
@@ -236,7 +236,7 @@ ready_executables(
       continue;
     }
     auto group_info = group_cache(entry.callback_group);
-    if (group_info && !group_info->can_be_taken_from().load()) {
+    if (!group_info || !group_info->can_be_taken_from().load()) {
       continue;
     }
     rclcpp::AnyExecutable exec;

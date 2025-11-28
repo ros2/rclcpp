@@ -33,12 +33,11 @@ class Time
 public:
   /// Time constructor
   /**
-   * Initializes the time values for seconds and nanoseconds individually.
-   * Large values for nanoseconds are wrapped automatically with the remainder added to seconds.
-   * Both inputs must be integers.
+   * Indicates a specific point in time, relative to a clock's 0 point (its epoch).
+   * The total time since the epoch is given by seconds + nanoseconds.
    *
-   * \param seconds part of the time in seconds since time epoch
-   * \param nanoseconds part of the time in nanoseconds since time epoch
+   * \param seconds the seconds component, valid only if positive
+   * \param nanoseconds the nanoseconds component, to be added to the seconds component
    * \param clock_type clock type
    * \throws std::runtime_error if seconds are negative
    */
@@ -47,8 +46,9 @@ public:
 
   /// Time constructor
   /**
-   * \param nanoseconds since time epoch
+   * \param nanoseconds the total time since the epoch in nanoseconds
    * \param clock_type clock type
+   * \throws std::runtime_error if nanoseconds are negative
    */
   RCLCPP_PUBLIC
   explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
@@ -189,7 +189,7 @@ public:
 
   /// Get the nanoseconds since epoch
   /**
-   * \return the nanoseconds since epoch as a rcl_time_point_value_t structure.
+   * \return the total time since the epoch in nanoseconds, as a rcl_time_point_value_t structure.
    */
   RCLCPP_PUBLIC
   rcl_time_point_value_t
@@ -208,7 +208,7 @@ public:
    * \warning Depending on sizeof(double) there could be significant precision loss.
    * When an exact time is required use nanoseconds() instead.
    *
-   * \return the seconds since epoch as a floating point number.
+   * \return the total time since the epoch in seconds, as a floating point number.
    */
   RCLCPP_PUBLIC
   double

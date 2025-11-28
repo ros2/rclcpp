@@ -178,6 +178,8 @@ public:
   void clear() override
   {
     TRACETOOLS_TRACEPOINT(rclcpp_ring_buffer_clear, static_cast<const void *>(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    clear_();
   }
 
 private:
@@ -227,6 +229,14 @@ private:
     return capacity_ - size_;
   }
 
+  inline void clear_()
+  {
+    ring_buffer_.clear();
+    size_ = 0;
+    read_index_ = 0;
+    write_index_ = capacity_ - 1;
+  }
+
   /// Traits for checking if a type is std::unique_ptr
   template<typename ...>
   struct is_std_unique_ptr final : std::false_type {};
@@ -255,9 +265,13 @@ private:
     std::vector<BufferT> result_vtr;
     result_vtr.reserve(size_);
     for (size_t id = 0; id < size_; ++id) {
-      result_vtr.emplace_back(
-        new typename is_std_unique_ptr<T>::Ptr_type(
-          *(ring_buffer_[(read_index_ + id) % capacity_])));
+      const auto & elem(ring_buffer_[(read_index_ + id) % capacity_]);
+      if (elem != nullptr) {
+        result_vtr.emplace_back(new typename is_std_unique_ptr<T>::Ptr_type(
+          *elem));
+      } else {
+        result_vtr.emplace_back(nullptr);
+      }
     }
     return result_vtr;
   }
@@ -292,7 +306,7 @@ private:
     return {};
   }
 
-  size_t capacity_;
+  const size_t capacity_;
 
   std::vector<BufferT> ring_buffer_;
 

@@ -19,6 +19,7 @@
 #include <memory>
 #include <future>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <utility>
 
@@ -35,8 +36,8 @@ namespace rclcpp
 class GenericClient : public ClientBase
 {
 public:
-  using Request = void *;   // Serialized data pointer of request message
-  using Response = void *;  // Serialized data pointer of response message
+  using Request = void *;   // Deserialized data pointer of request message
+  using Response = void *;  // Deserialized data pointer of response message
 
   using SharedResponse = std::shared_ptr<void>;
 
@@ -45,6 +46,8 @@ public:
 
   using Future = std::future<SharedResponse>;
   using SharedFuture = std::shared_future<SharedResponse>;
+
+  using CallbackType = std::function<void (SharedFuture)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(GenericClient)
 
@@ -74,6 +77,20 @@ public:
     FutureAndRequestId & operator=(const FutureAndRequestId & other) = delete;
     /// Destructor.
     ~FutureAndRequestId() = default;
+  };
+
+  /// A convenient GenericClient::SharedFuture and request id pair.
+  /**
+   * Public members:
+   * - future: a std::shared_future<SharedResponse>.
+   * - request_id: the request id associated with the future.
+   *
+   * All the other methods are equivalent to the ones std::shared_future provides.
+   */
+  struct SharedFutureAndRequestId
+    : detail::FutureAndRequestId<std::shared_future<SharedResponse>>
+  {
+    using detail::FutureAndRequestId<std::shared_future<SharedResponse>>::FutureAndRequestId;
   };
 
   GenericClient(
@@ -106,16 +123,16 @@ public:
    * If the future never completes,
    * e.g. the call to Executor::spin_until_future_complete() times out,
    * GenericClient::remove_pending_request() must be called to clean the client internal state.
-   * Not doing so will make the `Client` instance to use more memory each time a response is not
-   * received from the service server.
+   * Not doing so will make the `GenericClient` instance to use more memory each time a response is
+   * not received from the service server.
    *
    * ```cpp
-   * auto future = client->async_send_request(my_request);
+   * auto future = generic_client->async_send_request(my_request);
    * if (
    *   rclcpp::FutureReturnCode::TIMEOUT ==
    *   executor->spin_until_future_complete(future, timeout))
    * {
-   *   client->remove_pending_request(future);
+   *   generic_client->remove_pending_request(future);
    *   // handle timeout
    * } else {
    *   handle_response(future.get());
@@ -128,6 +145,45 @@ public:
   RCLCPP_PUBLIC
   FutureAndRequestId
   async_send_request(const Request request);
+
+  /// Send a request to the service server and schedule a callback in the executor.
+  /**
+   * Similar to the previous overload, but a callback will automatically be called when a response
+   * is received.
+   *
+   * If the callback is never called, because we never got a reply for the service server,
+   * remove_pending_request() has to be called with the returned request id or
+   * prune_pending_requests().
+   * Not doing so will make the `GenericClient` instance use more memory each time a response is not
+   * received from the service server.
+   * In this case, it's convenient to setup a timer to cleanup the pending requests.
+   *
+   * \param[in] request request to be send.
+   * \param[in] cb callback that will be called when we get a response for this request.
+   * \return the request id representing the request just sent.
+   */
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CallbackType
+      >::value
+    >::type * = nullptr
+  >
+  SharedFutureAndRequestId
+  async_send_request(const Request request, CallbackT && cb)
+  {
+    Promise promise;
+    auto shared_future = promise.get_future().share();
+    auto req_id = async_send_request_impl(
+      request,
+      std::make_tuple(
+        CallbackType{std::forward<CallbackT>(cb)},
+        shared_future,
+        std::move(promise)));
+    return SharedFutureAndRequestId{std::move(shared_future), req_id};
+  }
 
   /// Clean all pending requests older than a time_point.
   /**
@@ -149,14 +205,51 @@ public:
       pruned_requests);
   }
 
+  /// Clean all pending requests.
+  /**
+   * \return number of pending requests that were removed.
+   */
   RCLCPP_PUBLIC
   size_t
   prune_pending_requests();
 
+  /// Cleanup a pending request.
+  /**
+   * This notifies the client that we have waited long enough for a response from the server
+   * to come, we have given up and we are not waiting for a response anymore.
+   *
+   * Not calling this will make the client start using more memory for each request
+   * that never got a reply from the server.
+   *
+   * \param[in] request_id request id returned by async_send_request().
+   * \return true when a pending request was removed, false if not (e.g. a response was received).
+   */
   RCLCPP_PUBLIC
   bool
   remove_pending_request(
     int64_t request_id);
+
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `GenericClient::remove_pending_request(this, future.request_id)`.
+   */
+  RCLCPP_PUBLIC
+  bool
+  remove_pending_request(
+    const FutureAndRequestId & future);
+
+  /// Cleanup a pending request.
+  /**
+   * Convenient overload, same as:
+   *
+   * `GenericClient::remove_pending_request(this, future.request_id)`.
+   */
+  RCLCPP_PUBLIC
+  bool
+  remove_pending_request(
+    const SharedFutureAndRequestId & future);
 
   /// Take the next response for this client.
   /**
@@ -179,9 +272,12 @@ public:
   }
 
 protected:
+  using CallbackTypeValueVariant = std::tuple<CallbackType, SharedFuture, Promise>;
   using CallbackInfoVariant = std::variant<
-    std::promise<SharedResponse>>;  // Use variant for extension
+    std::promise<SharedResponse>,
+    CallbackTypeValueVariant>;  // Use variant for extension
 
+  RCLCPP_PUBLIC
   int64_t
   async_send_request_impl(
     const Request request,

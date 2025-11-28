@@ -189,8 +189,8 @@ public:
     options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
     options.topic_stats_options.publish_period = publish_period;
 
-    auto callback = [](typename MessageT::UniquePtr msg) {
-        (void) msg;
+    auto callback = []([[maybe_unused]] typename MessageT::UniquePtr msg) {
+        // This function is intentionally left empty.
       };
     subscription_ = create_subscription<MessageT,
         std::function<void(typename MessageT::UniquePtr)>>(
@@ -343,7 +343,6 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   uint64_t message_age_count{0};
   uint64_t message_period_count{0};
 
-  std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
     if (msg.metrics_source == kMessageAgeSourceLabel) {
       message_age_count++;

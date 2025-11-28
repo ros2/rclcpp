@@ -17,6 +17,7 @@
 #include <string>
 
 #include "rclcpp/qos.hpp"
+#include "rmw/rmw.h"
 
 #include "rmw/types.h"
 
@@ -183,7 +184,7 @@ TEST(TestQoS, DerivedTypes) {
   EXPECT_EQ(rmw_qos_profile_parameter_events, parameter_events_qos.get_rmw_qos_profile());
 
   rclcpp::RosoutQoS rosout_qos;
-  EXPECT_EQ(rcl_qos_profile_rosout_default, rosout_qos.get_rmw_qos_profile());
+  EXPECT_EQ(rmw_qos_profile_rosout_default, rosout_qos.get_rmw_qos_profile());
 
   rclcpp::SystemDefaultsQoS system_default_qos;
   const rclcpp::KeepLast expected_initialization(RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT);
@@ -241,13 +242,20 @@ TEST(TestQoS, qos_check_compatible)
   // TODO(jacobperron): programmatically check if current RMW is one of the officially
   //                    supported DDS middlewares before running the following tests
 
+  // If the RMW implementation is rmw_zenoh_cpp, we do not expect any QoS incompatibilities.
+  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
   // Incompatible
   {
     rclcpp::QoS pub_qos = rclcpp::QoS(1).best_effort();
     rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
     rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(pub_qos, sub_qos);
-    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Error);
-    EXPECT_FALSE(ret.reason.empty());
+    if (rmw_implementation_str == "rmw_zenoh_cpp") {
+      EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Ok);
+      EXPECT_TRUE(ret.reason.empty());
+    } else {
+      EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Error);
+      EXPECT_FALSE(ret.reason.empty());
+    }
   }
 
   // Warn of possible incompatibility
@@ -255,7 +263,24 @@ TEST(TestQoS, qos_check_compatible)
     rclcpp::SystemDefaultsQoS pub_qos;
     rclcpp::QoS sub_qos = rclcpp::QoS(1).reliable();
     rclcpp::QoSCheckCompatibleResult ret = rclcpp::qos_check_compatible(pub_qos, sub_qos);
-    EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Warning);
-    EXPECT_FALSE(ret.reason.empty());
+    if (rmw_implementation_str == "rmw_zenoh_cpp") {
+      EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Ok);
+      EXPECT_TRUE(ret.reason.empty());
+    } else {
+      EXPECT_EQ(ret.compatibility, rclcpp::QoSCompatibility::Warning);
+      EXPECT_FALSE(ret.reason.empty());
+    }
   }
+}
+
+TEST(TestQoS, from_rmw_validity)
+{
+  rmw_qos_profile_t invalid_qos;
+  memset(&invalid_qos, 0, sizeof(invalid_qos));
+  unsigned int n = 999;
+  memcpy(&invalid_qos.history, &n, sizeof(n));
+
+  EXPECT_THROW({
+    rclcpp::QoSInitialization::from_rmw(invalid_qos);
+  }, std::invalid_argument);
 }

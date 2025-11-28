@@ -86,7 +86,8 @@ public:
   RCLCPP_PUBLIC
   TimersManager(
     std::shared_ptr<rclcpp::Context> context,
-    std::function<void(const rclcpp::TimerBase *)> on_ready_callback = nullptr);
+    std::function<void(const rclcpp::TimerBase *,
+    const std::shared_ptr<void> &)> on_ready_callback = nullptr);
 
   /**
    * @brief Destruct the TimersManager object making sure to stop thread and release memory.
@@ -164,9 +165,10 @@ public:
    * the TimersManager on_ready_callback was passed during construction.
    *
    * @param timer_id the timer ID of the timer to execute
+   * @param data internal data of the timer
    */
   RCLCPP_PUBLIC
-  void execute_ready_timer(const rclcpp::TimerBase * timer_id);
+  void execute_ready_timer(const rclcpp::TimerBase * timer_id, const std::shared_ptr<void> & data);
 
   /**
    * @brief Get the amount of time before the next timer triggers.
@@ -529,7 +531,8 @@ private:
   void execute_ready_timers_unsafe();
 
   // Callback to be called when timer is ready
-  std::function<void(const rclcpp::TimerBase *)> on_ready_callback_;
+  std::function<void(const rclcpp::TimerBase *,
+    const std::shared_ptr<void> &)> on_ready_callback_ = nullptr;
 
   // Thread used to run the timers execution task
   std::thread timers_thread_;

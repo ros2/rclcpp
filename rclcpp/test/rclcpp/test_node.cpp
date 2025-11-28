@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <limits>
 #include <map>
@@ -56,7 +57,7 @@ protected:
     test_resources_path /= "test_node";
   }
 
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /*
@@ -305,6 +306,39 @@ TEST_F(TestNode, subnode_get_name_and_namespace) {
     }, rclcpp::exceptions::NameValidationError);
   }
 }
+
+TEST_F(TestNode, subnode_parameter_operation) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
+  auto subnode = node->create_sub_node("sub_ns");
+
+  auto value = subnode->declare_parameter("param", 5);
+  EXPECT_EQ(value, 5);
+  // node and sub-node shares NodeParametersInterface, so expecting the exception.
+  EXPECT_THROW(
+    node->declare_parameter("param", 0),
+    rclcpp::exceptions::ParameterAlreadyDeclaredException);
+  rclcpp::Parameter param;
+
+  node->get_parameter("param", param);
+  EXPECT_EQ(param.get_value<int>(), 5);
+  subnode->get_parameter("param", param);
+  EXPECT_EQ(param.get_value<int>(), 5);
+
+  int param_int;
+  node->get_parameter("param", param_int);
+  EXPECT_EQ(param_int, 5);
+  subnode->get_parameter("param", param_int);
+  EXPECT_EQ(param_int, 5);
+
+  EXPECT_EQ(node->get_parameter_or("param", 333), 5);
+  EXPECT_EQ(subnode->get_parameter_or("param", 666), 5);
+
+  node->get_parameter_or("param", param_int, 333);
+  EXPECT_EQ(param_int, 5);
+  subnode->get_parameter_or("param", param_int, 666);
+  EXPECT_EQ(param_int, 5);
+}
+
 /*
    Testing node construction and destruction.
  */
@@ -1332,6 +1366,203 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
       rclcpp::exceptions::InvalidParameterValueException);
   }
   {
+    // setting an array parameter with integer range descriptor
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 10;
+    integer_range.to_value = 18;
+    integer_range.step = 2;
+    node->declare_parameter(name, std::vector<int64_t>{10, 12, 14, 16, 18}, descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({10, 12, 14, 16, 18}));
+
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({12, 14, 10}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({12, 14, 10}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({10, 10, 10}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 10, 10}));
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({18}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({15}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({20}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({8}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({12, 8, 18}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+  }
+  {
+    // setting an array parameter with integer range descriptor, from_value > to_value
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 20;
+    integer_range.to_value = 18;
+    integer_range.step = 1;
+    node->declare_parameter(name, std::vector<int64_t>({18, 20}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 20}));
+
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({20, 18}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({18, 19, 20}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({10}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({25}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({20, 18}));
+  }
+  {
+    // setting an array parameter with integer range descriptor, from_value = to_value
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 18;
+    integer_range.to_value = 18;
+    integer_range.step = 1;
+    node->declare_parameter(name, std::vector<int64_t>({18}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({17}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18}));
+  }
+  {
+    // setting an array parameter with integer range descriptor,
+    // step > distance(from_value, to_value)
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 18;
+    integer_range.to_value = 25;
+    integer_range.step = 10;
+    node->declare_parameter(name, std::vector<int64_t>({18, 25}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({17}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({28}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25}));
+  }
+  {
+    // setting an array parameter with integer range descriptor, distance not multiple of the step.
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 18;
+    integer_range.to_value = 28;
+    integer_range.step = 7;
+    node->declare_parameter(name, std::vector<int64_t>({18, 25, 28}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(), std::vector<int64_t>({18, 25, 28}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({17}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25, 28}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25, 28}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({32}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({18, 25, 28}));
+  }
+  {
+    // setting an array parameter with integer range descriptor, step=0
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 10;
+    integer_range.to_value = 18;
+    integer_range.step = 0;
+    node->declare_parameter(name, std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({9}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<int64_t>({19}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<int64_t>>(),
+      std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}));
+  }
+  {
+    // setting an array parameter with integer range descriptor and wrong default value will throw
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 10;
+    integer_range.to_value = 18;
+    integer_range.step = 2;
+    ASSERT_THROW(
+      node->declare_parameter(name, std::vector<int64_t>({10, 11, 12, 13, 14, 15, 16, 17, 18}),
+      descriptor),
+      rclcpp::exceptions::InvalidParameterValueException);
+  }
+  {
     // setting a parameter with floating point range descriptor
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -1500,6 +1731,201 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
     EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 9.999)).successful);
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
+  }
+  {
+    // setting an array parameter with floating point range descriptor
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, negative step
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = -0.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, from_value > to_value
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 11.0;
+    floating_point_range.to_value = 10.0;
+    floating_point_range.step = 0.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 11.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, from_value = to_value
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 10.0;
+    floating_point_range.step = 0.2;
+    node->declare_parameter(name, std::vector<double>({10.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, step > distance
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 2.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 11.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({7.8}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor,
+    // distance not multiple of the step.
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.7;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.7, 11.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 10.7, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, step=0
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.0;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.001}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.999}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
   }
   {
     // setting a parameter with a different type is still possible
@@ -3261,6 +3687,115 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   {
     subscription_list = node->get_subscriptions_info_by_topic("13");
   }, rclcpp::exceptions::InvalidTopicNameError);
+}
+
+// test that calling get_clients_info_by_service and get_servers_info_by_service
+TEST_F(TestNode, get_clients_servers_info_by_service) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  std::string service_name = "test_service_info";
+  std::string fq_service_name = rclcpp::expand_topic_or_service_name(
+    service_name, node->get_name(), node->get_namespace(), true);
+
+  // Lists should be empty
+  EXPECT_TRUE(node->get_clients_info_by_service(fq_service_name).empty());
+  EXPECT_TRUE(node->get_servers_info_by_service(fq_service_name).empty());
+
+  // Add a client
+  rclcpp::QoSInitialization qos_initialization =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10
+  };
+  rmw_qos_profile_t rmw_qos_profile_default =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+    {1, 12345},
+    {20, 9887665},
+    RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC,
+    {5, 23456},
+    false
+  };
+  rclcpp::QoS qos = rclcpp::QoS(qos_initialization, rmw_qos_profile_default);
+  auto client = node->create_client<test_msgs::srv::Empty>(service_name, qos);
+
+  // Wait for the underlying RMW implementation to catch up with graph changes
+  auto client_is_generated =
+    [&]() {return node->get_clients_info_by_service(fq_service_name).size() == 1u;};
+  ASSERT_TRUE(wait_for_event(node, client_is_generated));
+
+  // List should have one item
+  auto clients_info = node->get_clients_info_by_service(fq_service_name);
+  ASSERT_EQ(clients_info.size(), (size_t) 1);
+  // Server list should be empty
+  EXPECT_TRUE(node->get_servers_info_by_service(fq_service_name).empty());
+
+  // Verify client info has the right data.
+  EXPECT_EQ(node->get_name(), clients_info[0].node_name());
+  EXPECT_EQ(node->get_namespace(), clients_info[0].node_namespace());
+  EXPECT_EQ("test_msgs/srv/Empty", clients_info[0].service_type());
+  EXPECT_EQ(rclcpp::EndpointType::Client, clients_info[0].endpoint_type());
+  EXPECT_TRUE(clients_info[0].endpoint_count() == 1 || clients_info[0].endpoint_count() == 2);
+  for(size_t i = 0; i < clients_info[0].endpoint_count(); i++) {
+    auto qos_profile = clients_info[0].qos_profiles()[i].get_rmw_qos_profile();
+    expect_qos_profile_eq(qos.get_rmw_qos_profile(), qos_profile, false);
+  }
+
+  // Add a service server
+  rclcpp::QoSInitialization qos_initialization2 =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    0
+  };
+  rmw_qos_profile_t rmw_qos_profile_default2 =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    0,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_VOLATILE,
+    {15, 1678},
+    {29, 2345},
+    RMW_QOS_POLICY_LIVELINESS_AUTOMATIC,
+    {5, 23456},
+    false
+  };
+  rclcpp::QoS qos2 = rclcpp::QoS(qos_initialization2, rmw_qos_profile_default2);
+  auto callback = [](test_msgs::srv::Empty_Request::ConstSharedPtr req,
+    test_msgs::srv::Empty_Response::ConstSharedPtr resp) {
+      (void)req;
+      (void)resp;
+    };
+  auto server = node->create_service<test_msgs::srv::Empty>(service_name, callback, qos2);
+  // Wait for the underlying RMW implementation to catch up with graph changes
+  auto server_is_generated =
+    [&]() {return node->get_servers_info_by_service(fq_service_name).size() == 1u;};
+  ASSERT_TRUE(wait_for_event(node, server_is_generated));
+
+  // List should have one item
+  auto servers_info = node->get_servers_info_by_service(fq_service_name);
+  ASSERT_EQ(servers_info.size(), (size_t) 1);
+  // Verify server info has the right data.
+  EXPECT_EQ(node->get_name(), servers_info[0].node_name());
+  EXPECT_EQ(node->get_namespace(), servers_info[0].node_namespace());
+  EXPECT_EQ("test_msgs/srv/Empty", servers_info[0].service_type());
+  EXPECT_EQ(rclcpp::EndpointType::Server, servers_info[0].endpoint_type());
+  EXPECT_TRUE(servers_info[0].endpoint_count() == 1 || servers_info[0].endpoint_count() == 2);
+  for(size_t i = 0; i < servers_info[0].endpoint_count(); i++) {
+    auto qos_profile = servers_info[0].qos_profiles()[i].get_rmw_qos_profile();
+    expect_qos_profile_eq(qos2.get_rmw_qos_profile(), qos_profile, false);
+  }
+
+  // Error cases
+  EXPECT_THROW(
+  {
+    clients_info = node->get_clients_info_by_service("13");
+  }, rclcpp::exceptions::InvalidServiceNameError);
+  EXPECT_THROW(
+  {
+    servers_info = node->get_servers_info_by_service("13");
+  }, rclcpp::exceptions::InvalidServiceNameError);
 }
 
 TEST_F(TestNode, callback_groups) {

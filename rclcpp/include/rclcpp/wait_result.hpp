@@ -176,7 +176,9 @@ public:
       for (; ii < wait_set.size_of_timers(); ++ii) {
         if (rcl_wait_set.timers[ii] != nullptr) {
           ret = wait_set.timers(ii);
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -217,7 +219,9 @@ public:
         if (rcl_wait_set.subscriptions[ii] != nullptr) {
           ret = wait_set.subscriptions(ii);
           rcl_wait_set.subscriptions[ii] = nullptr;
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -237,7 +241,9 @@ public:
         if (rcl_wait_set.services[ii] != nullptr) {
           ret = wait_set.services(ii);
           rcl_wait_set.services[ii] = nullptr;
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -257,7 +263,9 @@ public:
         if (rcl_wait_set.clients[ii] != nullptr) {
           ret = wait_set.clients(ii);
           rcl_wait_set.clients[ii] = nullptr;
-          break;
+          if (ret) {
+            break;
+          }
         }
       }
     }
@@ -274,7 +282,7 @@ public:
 
     if (this->kind() == WaitResultKind::Ready) {
       auto & wait_set = this->get_wait_set();
-      auto rcl_wait_set = wait_set.get_rcl_wait_set();
+      auto & rcl_wait_set = wait_set.get_rcl_wait_set();
       while (next_waitable_index_ < wait_set.size_of_waitables()) {
         auto cur_waitable = wait_set.waitables(next_waitable_index_++);
         if (cur_waitable != nullptr && cur_waitable->is_ready(rcl_wait_set)) {

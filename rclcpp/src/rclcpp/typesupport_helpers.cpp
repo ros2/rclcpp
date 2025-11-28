@@ -15,6 +15,7 @@
 
 #include "rclcpp/typesupport_helpers.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <sstream>
@@ -34,62 +35,6 @@ namespace rclcpp
 
 namespace
 {
-
-// Look for the library in the ament prefix paths.
-std::string get_typesupport_library_path(
-  const std::string & package_name, const std::string & typesupport_identifier)
-{
-  const char * dynamic_library_folder;
-#ifdef _WIN32
-  dynamic_library_folder = "/bin/";
-#elif __APPLE__
-  dynamic_library_folder = "/lib/";
-#else
-  dynamic_library_folder = "/lib/";
-#endif
-
-  std::string package_prefix;
-  try {
-    package_prefix = ament_index_cpp::get_package_prefix(package_name);
-  } catch (ament_index_cpp::PackageNotFoundError & e) {
-    throw std::runtime_error(e.what());
-  }
-
-  const std::string library_path = rcpputils::path_for_library(
-    package_prefix + dynamic_library_folder,
-    package_name + "__" + typesupport_identifier);
-  if (library_path.empty()) {
-    throw std::runtime_error(
-            "Typesupport library for " + package_name + " does not exist in '" + package_prefix +
-            "'.");
-  }
-  return library_path;
-}
-
-std::tuple<std::string, std::string, std::string>
-extract_type_identifier(const std::string & full_type)
-{
-  char type_separator = '/';
-  auto sep_position_back = full_type.find_last_of(type_separator);
-  auto sep_position_front = full_type.find_first_of(type_separator);
-  if (sep_position_back == std::string::npos ||
-    sep_position_back == 0 ||
-    sep_position_back == full_type.length() - 1)
-  {
-    throw std::runtime_error(
-            "Message type is not of the form package/type and cannot be processed");
-  }
-
-  std::string package_name = full_type.substr(0, sep_position_front);
-  std::string middle_module = "";
-  if (sep_position_back - sep_position_front > 0) {
-    middle_module =
-      full_type.substr(sep_position_front + 1, sep_position_back - sep_position_front - 1);
-  }
-  std::string type_name = full_type.substr(sep_position_back + 1);
-
-  return std::make_tuple(package_name, middle_module, type_name);
-}
 
 const void * get_typesupport_handle_impl(
   const std::string & type,
@@ -129,7 +74,79 @@ const void * get_typesupport_handle_impl(
   }
 }
 
+// Trim leading and trailing whitespace from the string.
+std::string string_trim(std::string_view str_v)
+{
+  auto begin = std::find_if_not(str_v.begin(), str_v.end(), [](unsigned char ch) {
+        return std::isspace(ch);
+  });
+  auto end = std::find_if_not(str_v.rbegin(), str_v.rend(), [](unsigned char ch) {
+        return std::isspace(ch);
+  }).base();
+  if (begin >= end) {
+    return {};
+  }
+  return std::string(begin, end);
+}
+
 }  // anonymous namespace
+
+std::tuple<std::string, std::string, std::string>
+extract_type_identifier(const std::string & full_type)
+{
+  char type_separator = '/';
+  auto sep_position_back = full_type.find_last_of(type_separator);
+  auto sep_position_front = full_type.find_first_of(type_separator);
+  if (sep_position_back == std::string::npos ||
+    sep_position_front == 0 ||
+    sep_position_back == 0 ||
+    sep_position_back == full_type.length() - 1)
+  {
+    throw std::runtime_error(
+      "Message type is not of the form package/type and cannot be processed");
+  }
+
+  std::string package_name = full_type.substr(0, sep_position_front);
+  std::string middle_module = "";
+  if (sep_position_back - sep_position_front > 0) {
+    middle_module =
+      full_type.substr(sep_position_front + 1, sep_position_back - sep_position_front - 1);
+  }
+  std::string type_name = full_type.substr(sep_position_back + 1);
+
+  return std::make_tuple(
+    string_trim(package_name), string_trim(middle_module), string_trim(type_name));
+}
+
+std::string get_typesupport_library_path(
+  const std::string & package_name, const std::string & typesupport_identifier)
+{
+  const char * dynamic_library_folder;
+#ifdef _WIN32
+  dynamic_library_folder = "/bin/";
+#elif __APPLE__
+  dynamic_library_folder = "/lib/";
+#else
+  dynamic_library_folder = "/lib/";
+#endif
+
+  std::string package_prefix;
+  try {
+    package_prefix = ament_index_cpp::get_package_prefix(package_name);
+  } catch (ament_index_cpp::PackageNotFoundError & e) {
+    throw std::runtime_error(e.what());
+  }
+
+  const std::string library_path = rcpputils::path_for_library(
+    package_prefix + dynamic_library_folder,
+    package_name + "__" + typesupport_identifier);
+  if (library_path.empty()) {
+    throw std::runtime_error(
+      "Typesupport library for " + package_name + " does not exist in '" + package_prefix +
+        "'.");
+  }
+  return library_path;
+}
 
 std::shared_ptr<rcpputils::SharedLibrary>
 get_typesupport_library(const std::string & type, const std::string & typesupport_identifier)
@@ -137,14 +154,6 @@ get_typesupport_library(const std::string & type, const std::string & typesuppor
   auto package_name = std::get<0>(extract_type_identifier(type));
   auto library_path = get_typesupport_library_path(package_name, typesupport_identifier);
   return std::make_shared<rcpputils::SharedLibrary>(library_path);
-}
-
-const rosidl_message_type_support_t * get_typesupport_handle(
-  const std::string & type,
-  const std::string & typesupport_identifier,
-  rcpputils::SharedLibrary & library)
-{
-  return get_message_typesupport_handle(type, typesupport_identifier, library);
 }
 
 const rosidl_message_type_support_t * get_message_typesupport_handle(
@@ -172,6 +181,21 @@ const rosidl_service_type_support_t * get_service_typesupport_handle(
   static const std::string middle_module_additional = "srv";
 
   return static_cast<const rosidl_service_type_support_t *>(get_typesupport_handle_impl(
+           type, typesupport_identifier, typesupport_name, symbol_part_name,
+           middle_module_additional, library
+  ));
+}
+
+const rosidl_action_type_support_t * get_action_typesupport_handle(
+  const std::string & type,
+  const std::string & typesupport_identifier,
+  rcpputils::SharedLibrary & library)
+{
+  static const std::string typesupport_name = "action";
+  static const std::string symbol_part_name = "__get_action_type_support_handle__";
+  static const std::string middle_module_additional = "action";
+
+  return static_cast<const rosidl_action_type_support_t *>(get_typesupport_handle_impl(
            type, typesupport_identifier, typesupport_name, symbol_part_name,
            middle_module_additional, library
   ));

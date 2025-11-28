@@ -19,10 +19,15 @@
 #include <stdexcept>
 #include <string>
 
+#include "rcl_interfaces/msg/parameter_event.hpp"
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
+
+#include "test_msgs/msg/empty.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
@@ -138,7 +143,7 @@ TEST_F(TestExecutor, add_callback_group_failed_trigger_guard_condition) {
     "lib:rclcpp", rcl_trigger_guard_condition, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     dummy.add_callback_group(cb_group, node->get_node_base_interface(), true),
-    std::runtime_error("Failed to trigger guard condition on callback group add: error not set"));
+    std::runtime_error("Failed to handle entities update on callback group add: error not set"));
 }
 
 TEST_F(TestExecutor, remove_callback_group_null_node) {
@@ -175,7 +180,7 @@ TEST_F(TestExecutor, remove_callback_group_failed_trigger_guard_condition) {
   RCLCPP_EXPECT_THROW_EQ(
     dummy.remove_callback_group(cb_group, true),
     std::runtime_error(
-      "Failed to trigger guard condition on callback group remove: error not set"));
+      "Failed to handle entities update on callback group remove: error not set"));
 }
 
 TEST_F(TestExecutor, remove_node_not_associated) {
@@ -331,8 +336,17 @@ TEST_F(TestExecutor, spin_all_fail_wait_set_clear) {
     node->create_wall_timer(std::chrono::milliseconds(1), [&]() {});
 
   dummy.add_node(node);
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
+  auto node_topics = node->get_node_topics_interface();
+  subscription =
+    rclcpp::create_subscription<test_msgs::msg::Empty>(
+    node_topics, "test", rclcpp::QoS(10), std::move(callback));
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait_set_clear, RCL_RET_ERROR);
 
+  dummy.spin_all(std::chrono::milliseconds(1));
+  // second spin_all triggers rcl_wait_set_clear that should be called
+  // whenever a waitset gets rebuild and it was not changed in size.
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_all(std::chrono::milliseconds(1)),
     std::runtime_error("Couldn't clear the wait set: error not set"));
@@ -354,8 +368,14 @@ TEST_F(TestExecutor, spin_some_fail_wait_set_resize) {
 TEST_F(TestExecutor, spin_some_fail_add_handles_to_wait_set) {
   DummyExecutor dummy;
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  auto timer =
-    node->create_wall_timer(std::chrono::milliseconds(1), [&]() {});
+
+  // create subscription explicitly, because we do not create subscription
+  // on /parameter_events for 'use_sim_time' parameter anymore.
+  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
+  subscription =
+    node->create_subscription<test_msgs::msg::Empty>(
+    "test", rclcpp::QoS(10), std::move(callback));
 
   dummy.add_node(node);
   auto mock = mocking_utils::patch_and_return(

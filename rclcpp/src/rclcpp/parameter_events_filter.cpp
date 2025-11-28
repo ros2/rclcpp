@@ -28,6 +28,9 @@ ParameterEventsFilter::ParameterEventsFilter(
   const std::vector<EventType> & types)
 : event_(event)
 {
+  if (!event) {
+    throw std::invalid_argument("event cannot be null");
+  }
   if (std::find(types.begin(), types.end(), EventType::NEW) != types.end()) {
     for (auto & new_parameter : event->new_parameters) {
       if (std::find(names.begin(), names.end(), new_parameter.name) != names.end()) {

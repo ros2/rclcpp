@@ -31,22 +31,31 @@ GenericClient::GenericClient(
   rcl_client_options_t & client_options)
 : ClientBase(node_base, node_graph)
 {
-  ts_lib_ = get_typesupport_library(
-    service_type, "rosidl_typesupport_cpp");
+  const rosidl_service_type_support_t * service_ts;
+  try {
+    ts_lib_ = get_typesupport_library(
+      service_type, "rosidl_typesupport_cpp");
 
-  auto service_ts_ = get_service_typesupport_handle(
-    service_type, "rosidl_typesupport_cpp", *ts_lib_);
+    service_ts = get_service_typesupport_handle(
+      service_type, "rosidl_typesupport_cpp", *ts_lib_);
 
-  auto response_type_support_intro = get_message_typesupport_handle(
-    service_ts_->response_typesupport,
-    rosidl_typesupport_introspection_cpp::typesupport_identifier);
-  response_members_ = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
-    response_type_support_intro->data);
+    auto response_type_support_intro = get_message_typesupport_handle(
+      service_ts->response_typesupport,
+      rosidl_typesupport_introspection_cpp::typesupport_identifier);
+    response_members_ = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
+      response_type_support_intro->data);
+  } catch (std::runtime_error & err) {
+    RCLCPP_ERROR(
+      rclcpp::get_node_logger(node_handle_.get()).get_child("rclcpp"),
+      "Invalid service type: %s",
+      err.what());
+    throw rclcpp::exceptions::InvalidServiceTypeError(err.what());
+  }
 
   rcl_ret_t ret = rcl_client_init(
     this->get_client_handle().get(),
     this->get_rcl_node_handle(),
-    service_ts_,
+    service_ts,
     service_name.c_str(),
     &client_options);
   if (ret != RCL_RET_OK) {
@@ -100,6 +109,13 @@ GenericClient::handle_response(
   if (std::holds_alternative<Promise>(value)) {
     auto & promise = std::get<Promise>(value);
     promise.set_value(std::move(response));
+  } else if (std::holds_alternative<CallbackTypeValueVariant>(value)) {
+    auto & inner = std::get<CallbackTypeValueVariant>(value);
+    const auto & callback = std::get<CallbackType>(inner);
+    auto & promise = std::get<Promise>(inner);
+    auto & future = std::get<SharedFuture>(inner);
+    promise.set_value(std::move(response));
+    callback(std::move(future));
   }
 }
 
@@ -117,6 +133,18 @@ GenericClient::remove_pending_request(int64_t request_id)
 {
   std::lock_guard guard(pending_requests_mutex_);
   return pending_requests_.erase(request_id) != 0u;
+}
+
+bool
+GenericClient::remove_pending_request(const FutureAndRequestId & future)
+{
+  return this->remove_pending_request(future.request_id);
+}
+
+bool
+GenericClient::remove_pending_request(const SharedFutureAndRequestId & future)
+{
+  return this->remove_pending_request(future.request_id);
 }
 
 std::optional<GenericClient::CallbackInfoVariant>

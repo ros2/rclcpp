@@ -24,7 +24,6 @@
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/service.hpp"
 #include "test_msgs/srv/empty.hpp"
-#include "test_msgs/srv/empty.h"
 
 class TestAnyServiceCallback : public ::testing::Test
 {

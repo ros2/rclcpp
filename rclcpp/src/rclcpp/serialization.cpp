@@ -36,7 +36,6 @@ SerializationBase::SerializationBase(const rosidl_message_type_support_t * type_
 void SerializationBase::serialize_message(
   const void * ros_message, SerializedMessage * serialized_message) const
 {
-  rcpputils::check_true(nullptr != type_support_, "Typesupport is nullpointer.");
   rcpputils::check_true(nullptr != ros_message, "ROS message is nullpointer.");
   rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
 
@@ -52,7 +51,6 @@ void SerializationBase::serialize_message(
 void SerializationBase::deserialize_message(
   const SerializedMessage * serialized_message, void * ros_message) const
 {
-  rcpputils::check_true(nullptr != type_support_, "Typesupport is nullpointer.");
   rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
   rcpputils::check_true(
     0u != serialized_message->capacity(),

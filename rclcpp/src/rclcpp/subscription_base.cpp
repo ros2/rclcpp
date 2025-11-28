@@ -112,16 +112,28 @@ void
 SubscriptionBase::bind_event_callbacks(
   const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks)
 {
-  if (event_callbacks.deadline_callback) {
-    this->add_event_handler(
-      event_callbacks.deadline_callback,
-      RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+  try {
+    if (event_callbacks.deadline_callback) {
+      this->add_event_handler(
+        event_callbacks.deadline_callback,
+        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for deadline; not supported");
   }
 
-  if (event_callbacks.liveliness_callback) {
-    this->add_event_handler(
-      event_callbacks.liveliness_callback,
-      RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+  try {
+    if (event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        event_callbacks.liveliness_callback,
+        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for liveliness; not supported");
   }
 
   QOSRequestedIncompatibleQoSCallbackType incompatible_qos_cb;
@@ -139,7 +151,9 @@ SubscriptionBase::bind_event_callbacks(
       this->add_event_handler(incompatible_qos_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
     }
   } catch (const UnsupportedEventTypeException & /*exc*/) {
-    // pass
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible qos; not supported");
   }
 
   IncompatibleTypeCallbackType incompatible_type_cb;
@@ -156,18 +170,33 @@ SubscriptionBase::bind_event_callbacks(
       this->add_event_handler(incompatible_type_cb, RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE);
     }
   } catch (UnsupportedEventTypeException & /*exc*/) {
-    // pass
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible type; not supported");
   }
 
-  if (event_callbacks.message_lost_callback) {
-    this->add_event_handler(
-      event_callbacks.message_lost_callback,
-      RCL_SUBSCRIPTION_MESSAGE_LOST);
+  try {
+    if (event_callbacks.message_lost_callback) {
+      this->add_event_handler(
+        event_callbacks.message_lost_callback,
+        RCL_SUBSCRIPTION_MESSAGE_LOST);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for message lost; not supported");
   }
-  if (event_callbacks.matched_callback) {
-    this->add_event_handler(
-      event_callbacks.matched_callback,
-      RCL_SUBSCRIPTION_MATCHED);
+
+  try {
+    if (event_callbacks.matched_callback) {
+      this->add_event_handler(
+        event_callbacks.matched_callback,
+        RCL_SUBSCRIPTION_MATCHED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for matched; not supported");
   }
 }
 
@@ -352,10 +381,8 @@ SubscriptionBase::default_incompatible_qos_callback(
 
 void
 SubscriptionBase::default_incompatible_type_callback(
-  rclcpp::IncompatibleTypeInfo & event) const
+  [[maybe_unused]] rclcpp::IncompatibleTypeInfo & event) const
 {
-  (void)event;
-
   RCLCPP_WARN(
     rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
     "Incompatible type on topic '%s', no messages will be sent to it.", get_topic_name());
@@ -549,4 +576,27 @@ SubscriptionBase::take_dynamic_message(
 {
   throw std::runtime_error("Unimplemented");
   return false;
+}
+
+void
+SubscriptionBase::disable_callbacks()
+{
+  // Temporary remove the on_new_message_callback_ to prevent it from being called
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+  if (on_new_message_callback_) {
+    set_on_new_message_callback(nullptr, nullptr);
+  }
+}
+
+void
+SubscriptionBase::enable_callbacks()
+{
+  // Set callback again if it was previously removed in disable_callbacks()
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+  if (on_new_message_callback_) {
+    set_on_new_message_callback(
+      rclcpp::detail::cpp_callback_trampoline<
+        decltype(on_new_message_callback_), const void *, size_t>,
+      static_cast<const void *>(&on_new_message_callback_));
+  }
 }

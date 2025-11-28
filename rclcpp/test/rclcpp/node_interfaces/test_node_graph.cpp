@@ -47,9 +47,13 @@ constexpr char absolute_namespace[] = "/ns";
 class TestNodeGraph : public ::testing::Test
 {
 public:
-  void SetUp()
+  static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
+  }
+
+  void SetUp()
+  {
     node_ = std::make_shared<rclcpp::Node>(node_name, node_namespace);
 
     // This dynamic cast is not necessary for the unittests, but instead is used to ensure
@@ -59,7 +63,7 @@ public:
     ASSERT_NE(nullptr, node_graph_);
   }
 
-  void TearDown()
+  static void TearDownTestCase()
   {
     rclcpp::shutdown();
   }
@@ -506,7 +510,9 @@ TEST_F(TestNodeGraph, get_node_names_and_namespaces_fini_errors)
     "lib:rclcpp", rcutils_string_array_fini, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_node_names_and_namespaces(),
-    std::runtime_error("could not destroy node names, could not destroy node namespaces"));
+    std::runtime_error(
+    "could not destroy node names: error not set, "
+    "could not destroy node namespaces: error not set"));
 }
 
 TEST_F(TestNodeGraph, get_node_names_with_enclaves_fini_errors)

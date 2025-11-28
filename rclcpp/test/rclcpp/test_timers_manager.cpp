@@ -375,7 +375,7 @@ TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
   // since typical users aren't going to mess around with the timer manager.
   t1 = TimerT::make_shared(
     1ms,
-    [&t1_runs, &t1, cancel_iter]() {
+    [ =, &t1_runs, &t1]() {
       t1_runs++;
       if (t1_runs == cancel_iter) {
         t1->cancel();

@@ -93,7 +93,9 @@ throw_from_rcl_error(
 RCLErrorBase::RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state)
 : ret(ret), message(error_state->message), file(error_state->file), line(error_state->line_number),
   formatted_message(rcl_get_error_string().str)
-{}
+{
+  rcl_reset_error();
+}
 
 RCLError::RCLError(
   rcl_ret_t ret,

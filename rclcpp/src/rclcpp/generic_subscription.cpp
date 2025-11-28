@@ -38,6 +38,30 @@ GenericSubscription::create_serialized_message()
 }
 
 void
+GenericSubscription::disable_callbacks()
+{
+  SubscriptionBase::disable_callbacks();
+  any_callback_.disable();
+  for (const auto & [_, event_ptr] : event_handlers_) {
+    if (event_ptr) {
+      event_ptr->disable();
+    }
+  }
+}
+
+void
+GenericSubscription::enable_callbacks()
+{
+  SubscriptionBase::enable_callbacks();
+  any_callback_.enable();
+  for (const auto & [_, event_ptr] : event_handlers_) {
+    if (event_ptr) {
+      event_ptr->enable();
+    }
+  }
+}
+
+void
 GenericSubscription::handle_message(
   std::shared_ptr<void> &,
   const rclcpp::MessageInfo &)
@@ -56,10 +80,9 @@ GenericSubscription::handle_serialized_message(
 
 void
 GenericSubscription::handle_loaned_message(
-  void * message, const rclcpp::MessageInfo & message_info)
+  [[maybe_unused]] void * message,
+  [[maybe_unused]] const rclcpp::MessageInfo & message_info)
 {
-  (void) message;
-  (void) message_info;
   throw rclcpp::exceptions::UnimplementedError(
           "handle_loaned_message is not implemented for GenericSubscription");
 }
@@ -111,20 +134,17 @@ GenericSubscription::create_dynamic_message()
 
 void
 GenericSubscription::return_dynamic_message(
-  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message)
+  [[maybe_unused]] rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message)
 {
-  (void) message;
   throw rclcpp::exceptions::UnimplementedError(
           "return_dynamic_message is not implemented for GenericSubscription");
 }
 
 void
 GenericSubscription::handle_dynamic_message(
-  const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
-  const rclcpp::MessageInfo & message_info)
+  [[maybe_unused]] const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+  [[maybe_unused]] const rclcpp::MessageInfo & message_info)
 {
-  (void) message;
-  (void) message_info;
   throw rclcpp::exceptions::UnimplementedError(
           "handle_dynamic_message is not implemented for GenericSubscription");
 }

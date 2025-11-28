@@ -23,12 +23,13 @@
 
 #include "rclcpp/node.hpp"
 #include "test_msgs/msg/empty.hpp"
-#include "test_msgs/msg/empty.h"
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include "./executors/executor_types.hpp"
 
 using namespace std::chrono_literals;
 
@@ -49,48 +50,8 @@ public:
 template<typename T>
 class TestAddCallbackGroupsToExecutorStable : public TestAddCallbackGroupsToExecutor<T> {};
 
-using ExecutorTypes =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::executors::StaticSingleThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
-
-class ExecutorTypeNames
-{
-public:
-  template<typename T>
-  static std::string GetName(int idx)
-  {
-    (void)idx;
-    if (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
-      return "SingleThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
-      return "MultiThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
-      return "StaticSingleThreadedExecutor";
-    }
-
-    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
-      return "EventsExecutor";
-    }
-
-    return "";
-  }
-};
-
 TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutor, ExecutorTypes, ExecutorTypeNames);
 
-// StaticSingleThreadedExecutor is not included in these tests for now
-using StandardExecutors =
-  ::testing::Types<
-  rclcpp::executors::SingleThreadedExecutor,
-  rclcpp::executors::MultiThreadedExecutor,
-  rclcpp::experimental::executors::EventsExecutor>;
 TYPED_TEST_SUITE(TestAddCallbackGroupsToExecutorStable, StandardExecutors, ExecutorTypeNames);
 
 /*
@@ -216,7 +177,6 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   std::atomic_size_t timer_count {0};
   auto timer_callback = [&executor, &timer_count]() {
       auto cur_timer_count = timer_count++;
-      printf("in timer_callback(%zu)\n", cur_timer_count);
       if (cur_timer_count > 0) {
         executor.cancel();
       }
@@ -345,32 +305,30 @@ TYPED_TEST(TestAddCallbackGroupsToExecutorStable, subscriber_triggered_to_receiv
       received_message_promise.set_value(true);
     };
 
-  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
-  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
-  // to create a timer with a callback run on another executor
-  rclcpp::TimerBase::SharedPtr timer = nullptr;
   std::promise<void> timer_promise;
+  // create a subscription using the 'cb_grp' callback group
+  rclcpp::QoS qos = rclcpp::QoS(1).reliable();
+  auto options = rclcpp::SubscriptionOptions();
+  options.callback_group = cb_grp;
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription =
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
+  // create a publisher to send data
+  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher =
+    node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
   auto timer_callback =
-    [&subscription, &publisher, &timer, &cb_grp, &node, &sub_callback, &timer_promise]() {
-      if (timer) {
-        timer.reset();
+    [&publisher, &timer_promise]() {
+      if (publisher->get_subscription_count() == 0) {
+        // If discovery hasn't happened yet, get out.
+        return;
       }
-
-      // create a subscription using the `cb_grp` callback group
-      rclcpp::QoS qos = rclcpp::QoS(1).reliable();
-      auto options = rclcpp::SubscriptionOptions();
-      options.callback_group = cb_grp;
-      subscription =
-        node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, sub_callback, options);
-      // create a publisher to send data
-      publisher =
-        node->create_publisher<test_msgs::msg::Empty>("topic_name", qos);
       publisher->publish(test_msgs::msg::Empty());
       timer_promise.set_value();
     };
 
+  // Another executor to run the timer with a callback
   ExecutorType timer_executor;
-  timer = node->create_wall_timer(100ms, timer_callback);
+
+  rclcpp::TimerBase::SharedPtr timer = node->create_wall_timer(100ms, timer_callback);
   timer_executor.add_node(node);
   auto future = timer_promise.get_future();
   timer_executor.spin_until_future_complete(future);

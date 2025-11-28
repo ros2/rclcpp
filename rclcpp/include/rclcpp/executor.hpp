@@ -272,12 +272,12 @@ public:
    * \param[in] node Shared pointer to the node to add.
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_some(std::shared_ptr<rclcpp::Node> node);
 
   /// Collect work once and execute all available work, optionally within a max duration.
@@ -286,6 +286,18 @@ public:
    * The default implementation is suitable for a single-threaded model of execution.
    * Adding subscriptions, timers, services, etc. with blocking or long running
    * callbacks may cause the function exceed the max_duration significantly.
+   *
+   * Work that is ready to be done is collected only once, and when collecting that work
+   * entities which may have multiple pieces of work ready will only be executed at most
+   * one time.
+   * The reason for this is that it is not possible to tell if, for example, a ready
+   * subscription has only one message ready or multiple without checking again.
+   * Because, in order to find out if there are multiple messages, one message must
+   * be taken and executed before checking again if that subscription is still ready.
+   * However, this function only checks for ready entities to work on once,
+   * and so it will never execute a single entity more than once per call to this function.
+   * See spin_all() variants for a function that will repeatedly work on a single entity
+   * in a single call.
    *
    * If there is no work to be done when this called, it will return immediately
    * because the collecting of available work is non-blocking.
@@ -307,14 +319,14 @@ public:
    * \param[in] node Shared pointer to the node to add.
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_all(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds max_duration);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
-  void
+  virtual void
   spin_node_all(std::shared_ptr<rclcpp::Node> node, std::chrono::nanoseconds max_duration);
 
   /// Collect and execute work repeatedly within a duration or until no more work is available.
@@ -359,6 +371,9 @@ public:
    *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
+   * \note This method will check the future and the timeout only when the executor is woken up.
+   *   If this future is unrelated to an executor's entity, this method will not correctly detect
+   *   when it's completed and therefore may wait forever and never time out.
    */
   template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
@@ -366,52 +381,12 @@ public:
     const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
-    // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
-    // inside a callback executed by an executor.
-
-    // Check the future before entering the while loop.
-    // If the future is already complete, don't try to spin.
-    std::future_status status = future.wait_for(std::chrono::seconds(0));
-    if (status == std::future_status::ready) {
-      return FutureReturnCode::SUCCESS;
-    }
-
-    auto end_time = std::chrono::steady_clock::now();
-    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
-    if (timeout_ns > std::chrono::nanoseconds::zero()) {
-      end_time += timeout_ns;
-    }
-    std::chrono::nanoseconds timeout_left = timeout_ns;
-
-    if (spinning.exchange(true)) {
-      throw std::runtime_error("spin_until_future_complete() called while already spinning");
-    }
-    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-    while (rclcpp::ok(this->context_) && spinning.load()) {
-      // Do one item of work.
-      spin_once_impl(timeout_left);
-
-      // Check if the future is set, return SUCCESS if it is.
-      status = future.wait_for(std::chrono::seconds(0));
-      if (status == std::future_status::ready) {
-        return FutureReturnCode::SUCCESS;
+    return spin_until_future_complete_impl(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout),
+      [&future](std::chrono::nanoseconds wait_time) {
+        return future.wait_for(wait_time);
       }
-      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout_ns < std::chrono::nanoseconds::zero()) {
-        continue;
-      }
-      // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto now = std::chrono::steady_clock::now();
-      if (now >= end_time) {
-        return FutureReturnCode::TIMEOUT;
-      }
-      // Subtract the elapsed time from the original timeout.
-      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
-    }
-
-    // The future did not complete before ok() returned false, return INTERRUPTED.
-    return FutureReturnCode::INTERRUPTED;
+    );
   }
 
   /// Cancel any running spin* function, causing it to return.
@@ -420,7 +395,7 @@ public:
    * \throws std::runtime_error if there is an issue triggering the guard condition
    */
   RCLCPP_PUBLIC
-  void
+  virtual void
   cancel();
 
   /// Returns true if the executor is currently spinning.
@@ -433,6 +408,14 @@ public:
   is_spinning();
 
 protected:
+  /// Constructor that will not initialize any non-trivial members.
+  /**
+  * This constructor is intended to be used by any derived executor
+  * that explicitly does not want to use the default implementation provided
+  * by this class.
+  */
+  explicit Executor(const std::shared_ptr<rclcpp::Context> & context);
+
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
    * Implementation of spin_node_once using std::chrono::nanoseconds
@@ -446,6 +429,23 @@ protected:
   spin_node_once_nanoseconds(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds timeout);
+
+  /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
+  /**
+   * \sa spin_until_future_complete()
+   * The only difference with spin_until_future_complete() is that the future's
+   * type is obscured through a std::function which lets you wait on it
+   * reguardless of type.
+   *
+   * \param[in] timeout see spin_until_future_complete() for details
+   * \param[in] wait_for_future function to wait on the future and get the
+   *   status after waiting
+   */
+  RCLCPP_PUBLIC
+  virtual FutureReturnCode
+  spin_until_future_complete_impl(
+    std::chrono::nanoseconds timeout,
+    const std::function<std::future_status(std::chrono::nanoseconds wait_time)> & wait_for_future);
 
   /// Collect work and execute available work, optionally within a duration.
   /**
@@ -487,7 +487,7 @@ protected:
    */
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::TimerBase::SharedPtr timer);
+  execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr);
 
   /// Run service server executable.
   /**
@@ -549,6 +549,16 @@ protected:
   get_next_executable(
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  /// This function triggers a recollect of all entities that are registered to the executor.
+  /**
+   * Calling this function is thread safe.
+   *
+   * \param[in] notify if true will execute a trigger that will wake up a waiting executor
+   */
+  RCLCPP_PUBLIC
+  virtual void
+  handle_updated_entities(bool notify);
 
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;

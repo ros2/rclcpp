@@ -80,7 +80,8 @@ struct SubscriptionOptionsBase
 
     // An optional QoS which can provide topic_statistics with a stable QoS separate from
     // the subscription's current QoS settings which could be unstable.
-    rclcpp::QoS qos = SystemDefaultsQoS();
+    // Explicitly set the enough depth to avoid missing the statistics messages.
+    rclcpp::QoS qos = SystemDefaultsQoS().keep_last(10);
   };
 
   TopicStatisticsOptions topic_stats_options;

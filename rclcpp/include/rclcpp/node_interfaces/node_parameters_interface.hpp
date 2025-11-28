@@ -52,8 +52,6 @@ struct OnSetParametersCallbackHandle
     std::function<
     rcl_interfaces::msg::SetParametersResult(
       const std::vector<rclcpp::Parameter> &)>;
-  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
-    OnSetParametersCallbackType;
 
   OnSetParametersCallbackType callback;
 };
@@ -272,6 +270,26 @@ public:
   virtual
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const = 0;
+
+  /// Enable parameter modification recursively during parameter callbacks.
+  /**
+   * This function is used to enable parameter modification during parameter callbacks.
+   *
+   * There are times when it does not allow parameter modification, such as when the parameter
+   * callbacks are being called and tries to modify the parameters with set_parameter and
+   * declare_parameter to avoid recursive parameter modification.
+   * This is protected by rclcpp::node_interfaces::ParameterMutationRecursionGuard.
+   *
+   * This function is explicitly called to allow the recursive parameter operation during
+   * parameter callbacks by the application.
+   * Once it is enabled, the next parameter operation set/declare/undeclare_parameter are
+   * allowed to execute in the parameter callback. But, no more further recursive operation
+   * is allowed, unless user application calls this API again.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  enable_parameter_modification() = 0;
 };
 
 }  // namespace node_interfaces

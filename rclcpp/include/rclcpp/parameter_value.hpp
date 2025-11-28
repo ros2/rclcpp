@@ -359,7 +359,7 @@ private:
 /// Return the value of a parameter as a string
 RCLCPP_PUBLIC
 std::string
-to_string(const ParameterValue & type);
+to_string(const ParameterValue & value);
 
 }  // namespace rclcpp
 

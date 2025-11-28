@@ -282,19 +282,6 @@ public:
 
   /// Create and return a Client.
   /**
-   * \sa rclcpp::Node::create_client
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Client<ServiceT>::SharedPtr
-  create_client(
-    const std::string & service_name,
-    const rmw_qos_profile_t & qos_profile,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Client.
-  /**
    * \param[in] service_name The name on which the service is accessible.
    * \param[in] qos Quality of service profile for client.
    * \param[in] group Callback group to handle the reply to service calls.
@@ -305,20 +292,6 @@ public:
   create_client(
     const std::string & service_name,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Service.
-  /**
-   * \sa rclcpp::Node::create_service
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT, typename CallbackT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service(
-    const std::string & service_name,
-    CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create and return a Service.
@@ -513,6 +486,16 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
+  /// Return the parameter value, or the "alternative_value" if not set.
+  /**
+   * \sa rclcpp::Node::get_parameter_or
+   */
+  template<typename ParameterT>
+  ParameterT
+  get_parameter_or(
+    const std::string & name,
+    const ParameterT & alternative_value) const;
+
   /// Return the parameters by the given parameter names.
   /**
    * \sa rclcpp::Node::get_parameters
@@ -572,8 +555,6 @@ public:
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnSetParametersCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
-  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
-    OnSetParametersCallbackType;
 
   using PostSetParametersCallbackHandle =
     rclcpp::node_interfaces::PostSetParametersCallbackHandle;
@@ -722,6 +703,22 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
 
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * \sa rclcpp::Node::get_clients_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about server on a given service.
+  /**
+   * \sa rclcpp::Node::get_servers_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the load just let it go
@@ -760,7 +757,7 @@ public:
   rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
-  /// Returns current time from the time source specified by clock_type.
+  /// Returns current time from the node clock.
   /**
    * \sa rclcpp::Clock::now
    */

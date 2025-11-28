@@ -253,7 +253,8 @@ public:
       // So this case is equivalent to all the buffers requiring ownership
 
       // Merge the two vector of ids into a unique one
-      std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
+      std::vector<uint64_t> concatenated_vector(
+        sub_ids.take_shared_subscriptions.begin(), sub_ids.take_shared_subscriptions.end());
       concatenated_vector.insert(
         concatenated_vector.end(),
         sub_ids.take_ownership_subscriptions.begin(),

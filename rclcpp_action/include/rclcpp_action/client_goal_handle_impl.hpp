@@ -75,6 +75,7 @@ ClientGoalHandle<ActionT>::set_result(const WrappedResult & wrapped_result)
   result_promise_.set_value(wrapped_result);
   if (result_callback_) {
     result_callback_(wrapped_result);
+    result_callback_ = ResultCallback();
   }
 }
 
