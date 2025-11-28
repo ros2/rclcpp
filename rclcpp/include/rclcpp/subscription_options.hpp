@@ -77,6 +77,11 @@ struct SubscriptionOptionsBase
     // Topic statistics publication period in ms. Defaults to one second.
     // Only values greater than zero are allowed.
     std::chrono::milliseconds publish_period{std::chrono::seconds(1)};
+
+    // An optional QoS which can provide topic_statistics with a stable QoS separate from
+    // the subscription's current QoS settings which could be unstable.
+    // Explicitly set the enough depth to avoid missing the statistics messages.
+    rclcpp::QoS qos = SystemDefaultsQoS().keep_last(10);
   };
 
   TopicStatisticsOptions topic_stats_options;

@@ -2,7 +2,7 @@
 
 Package containing tools for dynamically loadable components.
 
-Visit the [rclcpp_components API documentation](http://docs.ros2.org/latest/api/rclcpp_components/) for a complete list of its main components and features.
+The link to the latest rclcpp_components API documentation, which includes a complete list of its main components and features, can be found on the [rclcpp_components package info page](https://docs.ros.org/en/rolling/p/rclcpp_components).
 
 ## Quality Declaration
 

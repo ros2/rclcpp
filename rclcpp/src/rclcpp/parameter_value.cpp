@@ -129,8 +129,7 @@ ParameterValue::ParameterValue(const rcl_interfaces::msg::ParameterValue & value
     case PARAMETER_NOT_SET:
       break;
     default:
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Unknown type: " + std::to_string(value.type));
+      throw rclcpp::exceptions::UnknownTypeError(std::to_string(value.type));
   }
 }
 

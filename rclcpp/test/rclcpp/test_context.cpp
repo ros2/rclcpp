@@ -214,3 +214,25 @@ TEST(TestContext, check_on_shutdown_callback_order_after_del) {
 
   EXPECT_TRUE(result[0] == 1 && result[1] == 3 && result[2] == 4 && result[3] == 0);
 }
+
+// This test checks that contexts will be properly destroyed when leaving a scope, after a
+// guard condition has been created.
+TEST(TestContext, check_context_destroyed) {
+  rclcpp::Context::SharedPtr ctx;
+  {
+    ctx = std::make_shared<rclcpp::Context>();
+    ctx->init(0, nullptr);
+
+    auto group = std::make_shared<rclcpp::CallbackGroup>(
+      rclcpp::CallbackGroupType::MutuallyExclusive,
+      ctx->weak_from_this(),
+      false);
+
+    rclcpp::GuardCondition::SharedPtr gc = group->get_notify_guard_condition();
+    ASSERT_NE(gc, nullptr);
+
+    ASSERT_EQ(ctx.use_count(), 1u);
+  }
+
+  ASSERT_EQ(ctx.use_count(), 1u);
+}

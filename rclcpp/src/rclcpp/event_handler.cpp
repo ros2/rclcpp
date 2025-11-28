@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "rcl/error_handling.h"
 #include "rcl/event.h"
 
 #include "rclcpp/event_handler.hpp"
@@ -39,13 +40,6 @@ UnsupportedEventTypeException::UnsupportedEventTypeException(
 
 EventHandlerBase::~EventHandlerBase()
 {
-  // Since the rmw event listener holds a reference to
-  // this callback, we need to clear it on destruction of this class.
-  // This clearing is not needed for other rclcpp entities like pub/subs, since
-  // they do own the underlying rmw entities, which are destroyed
-  // on their rclcpp destructors, thus no risk of dangling pointers.
-  clear_on_ready_callback();
-
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
@@ -63,9 +57,9 @@ EventHandlerBase::get_number_of_ready_events()
 
 /// Add the Waitable to a wait set.
 void
-EventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+EventHandlerBase::add_to_wait_set(rcl_wait_set_t & wait_set)
 {
-  rcl_ret_t ret = rcl_wait_set_add_event(wait_set, &event_handle_, &wait_set_event_index_);
+  rcl_ret_t ret = rcl_wait_set_add_event(&wait_set, &event_handle_, &wait_set_event_index_);
   if (RCL_RET_OK != ret) {
     exceptions::throw_from_rcl_error(ret, "Couldn't add event to wait set");
   }
@@ -73,9 +67,9 @@ EventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 
 /// Check if the Waitable is ready.
 bool
-EventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
+EventHandlerBase::is_ready(const rcl_wait_set_t & wait_set)
 {
-  return wait_set->events[wait_set_event_index_] == &event_handle_;
+  return wait_set.events[wait_set_event_index_] == &event_handle_;
 }
 
 void

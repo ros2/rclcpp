@@ -59,7 +59,7 @@ template<typename ActionT>
 std::shared_future<typename ClientGoalHandle<ActionT>::WrappedResult>
 ClientGoalHandle<ActionT>::async_get_result()
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   if (!is_result_aware_) {
     throw exceptions::UnawareGoalHandleError();
   }
@@ -70,11 +70,12 @@ template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::set_result(const WrappedResult & wrapped_result)
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   status_ = static_cast<int8_t>(wrapped_result.code);
   result_promise_.set_value(wrapped_result);
   if (result_callback_) {
     result_callback_(wrapped_result);
+    result_callback_ = ResultCallback();
   }
 }
 
@@ -82,7 +83,7 @@ template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::set_feedback_callback(FeedbackCallback callback)
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   feedback_callback_ = callback;
 }
 
@@ -90,7 +91,7 @@ template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::set_result_callback(ResultCallback callback)
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   result_callback_ = callback;
 }
 
@@ -98,7 +99,7 @@ template<typename ActionT>
 int8_t
 ClientGoalHandle<ActionT>::get_status()
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   return status_;
 }
 
@@ -106,7 +107,7 @@ template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::set_status(int8_t status)
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   status_ = status;
 }
 
@@ -114,7 +115,7 @@ template<typename ActionT>
 bool
 ClientGoalHandle<ActionT>::is_feedback_aware()
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   return feedback_callback_ != nullptr;
 }
 
@@ -122,7 +123,7 @@ template<typename ActionT>
 bool
 ClientGoalHandle<ActionT>::is_result_aware()
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   return is_result_aware_;
 }
 
@@ -130,7 +131,7 @@ template<typename ActionT>
 bool
 ClientGoalHandle<ActionT>::set_result_awareness(bool awareness)
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   bool previous = is_result_aware_;
   is_result_aware_ = awareness;
   return previous;
@@ -140,7 +141,7 @@ template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::invalidate(const exceptions::UnawareGoalHandleError & ex)
 {
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   // Guard against multiple calls
   if (is_invalidated()) {
     return;
@@ -168,7 +169,7 @@ ClientGoalHandle<ActionT>::call_feedback_callback(
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp_action"), "Sent feedback to wrong goal handle.");
     return;
   }
-  std::lock_guard<std::mutex> guard(handle_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
   if (nullptr == feedback_callback_) {
     // Normal, some feedback messages may arrive after the goal result.
     RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"), "Received feedback but goal ignores it.");

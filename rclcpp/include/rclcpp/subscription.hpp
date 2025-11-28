@@ -90,21 +90,9 @@ public:
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
-  using MessageAllocatorTraits [[deprecated("use ROSMessageTypeAllocatorTraits")]] =
-    ROSMessageTypeAllocatorTraits;
-  using MessageAllocator [[deprecated("use ROSMessageTypeAllocator")]] =
-    ROSMessageTypeAllocator;
-  using MessageDeleter [[deprecated("use ROSMessageTypeDeleter")]] =
-    ROSMessageTypeDeleter;
-
-  using ConstMessageSharedPtr [[deprecated]] = std::shared_ptr<const ROSMessageType>;
-  using MessageUniquePtr
-  [[deprecated("use std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> instead")]] =
-    std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>;
-
 private:
   using SubscriptionTopicStatisticsSharedPtr =
-    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>>;
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
@@ -127,6 +115,7 @@ public:
    *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
    *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
    */
+  // *INDENT-OFF*
   Subscription(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rosidl_message_type_support_t & type_support_handle,
@@ -144,10 +133,11 @@ public:
       // NOTE(methylDragon): Passing these args separately is necessary for event binding
       options.event_callbacks,
       options.use_default_callbacks,
-      callback.is_serialized_message_callback()),
+      callback.is_serialized_message_callback() ? DeliveredMessageKind::SERIALIZED_MESSAGE : DeliveredMessageKind::ROS_MESSAGE),  // NOLINT
     any_callback_(callback),
     options_(options),
     message_memory_strategy_(message_memory_strategy)
+  // *INDENT-ON*
   {
     // Setup intra process publishing if requested.
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
@@ -157,15 +147,13 @@ public:
       auto qos_profile = get_actual_qos();
       if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
         throw std::invalid_argument(
-                "intraprocess communication allowed only with keep last history qos policy");
+                "intraprocess communication on topic '" + topic_name +
+                "' allowed only with keep last history qos policy");
       }
       if (qos_profile.depth() == 0) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with 0 depth qos policy");
-      }
-      if (qos_profile.durability() != rclcpp::DurabilityPolicy::Volatile) {
-        throw std::invalid_argument(
-                "intraprocess communication allowed only with volatile durability");
+                "intraprocess communication on topic '" + topic_name +
+                "' is not allowed with 0 depth qos policy");
       }
 
       using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
@@ -185,7 +173,7 @@ public:
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
         resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
-      TRACEPOINT(
+      TRACETOOLS_TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
         static_cast<const void *>(subscription_intra_process_.get()));
@@ -193,7 +181,8 @@ public:
       // Add it to the intra process manager.
       using rclcpp::experimental::IntraProcessManager;
       auto ipm = context->get_sub_context<IntraProcessManager>();
-      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process_);
+      uint64_t intra_process_subscription_id = ipm->template add_subscription<
+        ROSMessageType, ROSMessageTypeAllocator>(subscription_intra_process_);
       this->setup_intra_process(intra_process_subscription_id, ipm);
     }
 
@@ -201,11 +190,11 @@ public:
       this->subscription_topic_statistics_ = std::move(subscription_topic_statistics);
     }
 
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_init,
       static_cast<const void *>(get_subscription_handle().get()),
       static_cast<const void *>(this));
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_callback_added,
       static_cast<const void *>(this),
       static_cast<const void *>(&any_callback_));
@@ -220,13 +209,11 @@ public:
   /// Called after construction to continue setup that requires shared_from_this().
   void
   post_init_setup(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    const rclcpp::QoS & qos,
-    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+    [[maybe_unused]] rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    [[maybe_unused]] const rclcpp::QoS & qos,
+    [[maybe_unused]] const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   {
-    (void)node_base;
-    (void)qos;
-    (void)options;
+    // This function is intentionally left empty.
   }
 
   /// Take the next message from the inter-process subscription.
@@ -316,7 +303,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 
@@ -325,8 +312,20 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
-    // TODO(wjwwood): enable topic statistics for serialized messages
+    std::chrono::time_point<std::chrono::system_clock> now;
+    if (subscription_topic_statistics_) {
+      // get current time before executing callback to
+      // exclude callback duration from topic statistics result.
+      now = std::chrono::system_clock::now();
+    }
+
     any_callback_.dispatch(serialized_message, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
+    }
   }
 
   void
@@ -357,7 +356,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
     }
   }
 
@@ -386,6 +385,54 @@ public:
   use_take_shared_method() const
   {
     return any_callback_.use_take_shared_method();
+  }
+
+  // DYNAMIC TYPE ==================================================================================
+  // TODO(methylDragon): Reorder later
+  // TODO(methylDragon): Implement later...
+  rclcpp::dynamic_typesupport::DynamicMessageType::SharedPtr
+  get_shared_dynamic_message_type() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "get_shared_dynamic_message_type is not implemented for Subscription");
+  }
+
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  get_shared_dynamic_message() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "get_shared_dynamic_message is not implemented for Subscription");
+  }
+
+  rclcpp::dynamic_typesupport::DynamicSerializationSupport::SharedPtr
+  get_shared_dynamic_serialization_support() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "get_shared_dynamic_serialization_support is not implemented for Subscription");
+  }
+
+  rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr
+  create_dynamic_message() override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "create_dynamic_message is not implemented for Subscription");
+  }
+
+  void
+  return_dynamic_message(
+    [[maybe_unused]] rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message) override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "return_dynamic_message is not implemented for Subscription");
+  }
+
+  void
+  handle_dynamic_message(
+    [[maybe_unused]] const rclcpp::dynamic_typesupport::DynamicMessage::SharedPtr & message,
+    [[maybe_unused]] const rclcpp::MessageInfo & message_info) override
+  {
+    throw rclcpp::exceptions::UnimplementedError(
+            "handle_dynamic_message is not implemented for Subscription");
   }
 
 private:

@@ -23,10 +23,9 @@ namespace detail
 
 void
 RMWImplementationSpecificPublisherPayload::modify_rmw_publisher_options(
-  rmw_publisher_options_t & rmw_publisher_options) const
+  [[maybe_unused]] rmw_publisher_options_t & rmw_publisher_options) const
 {
   // By default, do not mutate the rmw publisher options.
-  (void)rmw_publisher_options;
 }
 
 }  // namespace detail

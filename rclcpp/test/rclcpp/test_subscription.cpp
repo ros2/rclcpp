@@ -17,6 +17,8 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <ostream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -34,114 +36,28 @@ using namespace std::chrono_literals;
 class TestSubscription : public ::testing::Test
 {
 public:
-  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
+  void on_message([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
   {
-    (void)msg;
+    // This function is intentionally left empty.
   }
 
+protected:
   static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
   }
 
-protected:
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
-    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns", node_options);
+    node_ = std::make_shared<rclcpp::Node>("test_subscription", "/ns", node_options);
   }
 
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  rclcpp::Node::SharedPtr node;
-};
-
-struct TestParameters
-{
-  TestParameters(rclcpp::QoS qos, std::string description)
-  : qos(qos), description(description) {}
-  rclcpp::QoS qos;
-  std::string description;
-};
-
-std::ostream & operator<<(std::ostream & out, const TestParameters & params)
-{
-  out << params.description;
-  return out;
-}
-
-class TestSubscriptionInvalidIntraprocessQos
-  : public TestSubscription,
-  public ::testing::WithParamInterface<TestParameters>
-{};
-
-class TestSubscriptionSub : public ::testing::Test
-{
-public:
-  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
-  {
-    (void)msg;
-  }
-
-protected:
-  static void SetUpTestCase()
-  {
-  }
-
-  void SetUp()
-  {
-    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
-    subnode = node->create_sub_node("sub_ns");
-  }
-
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  rclcpp::Node::SharedPtr node;
-  rclcpp::Node::SharedPtr subnode;
-};
-
-class SubscriptionClassNodeInheritance : public rclcpp::Node
-{
-public:
-  SubscriptionClassNodeInheritance()
-  : Node("subscription_class_node_inheritance")
-  {
-  }
-
-  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
-  {
-    (void)msg;
-  }
-
-  void CreateSubscription()
-  {
-    auto callback = std::bind(
-      &SubscriptionClassNodeInheritance::OnMessage, this, std::placeholders::_1);
-    using test_msgs::msg::Empty;
-    auto sub = this->create_subscription<Empty>("topic", 10, callback);
-  }
-};
-
-class SubscriptionClass
-{
-public:
-  void OnMessage(test_msgs::msg::Empty::ConstSharedPtr msg)
-  {
-    (void)msg;
-  }
-
-  void CreateSubscription()
-  {
-    auto node = std::make_shared<rclcpp::Node>("test_subscription_member_callback", "/ns");
-    auto callback = std::bind(&SubscriptionClass::OnMessage, this, std::placeholders::_1);
-    using test_msgs::msg::Empty;
-    auto sub = node->create_subscription<Empty>("topic", 10, callback);
-  }
+  rclcpp::Node::SharedPtr node_;
 };
 
 /*
@@ -150,12 +66,12 @@ public:
 TEST_F(TestSubscription, construction_and_destruction) {
   initialize();
   using test_msgs::msg::Empty;
-  auto callback = [](Empty::ConstSharedPtr msg) {
-      (void)msg;
+  auto callback = []([[maybe_unused]] Empty::ConstSharedPtr msg) {
+    // This function is intentionally left empty.
     };
   {
     constexpr size_t depth = 10u;
-    auto sub = node->create_subscription<Empty>("topic", depth, callback);
+    auto sub = node_->create_subscription<Empty>("topic", depth, callback);
 
     EXPECT_NE(nullptr, sub->get_subscription_handle());
     // Converting to base class was necessary for the compiler to choose the const version of
@@ -172,40 +88,7 @@ TEST_F(TestSubscription, construction_and_destruction) {
   {
     ASSERT_THROW(
     {
-      auto sub = node->create_subscription<Empty>("invalid_topic?", 10, callback);
-    }, rclcpp::exceptions::InvalidTopicNameError);
-  }
-}
-
-/*
-   Testing subscription construction and destruction for subnodes.
- */
-TEST_F(TestSubscriptionSub, construction_and_destruction) {
-  using test_msgs::msg::Empty;
-  auto callback = [](Empty::ConstSharedPtr msg) {
-      (void)msg;
-    };
-  {
-    auto sub = subnode->create_subscription<Empty>("topic", 1, callback);
-    EXPECT_STREQ(sub->get_topic_name(), "/ns/sub_ns/topic");
-  }
-
-  {
-    auto sub = subnode->create_subscription<Empty>("/topic", 1, callback);
-    EXPECT_STREQ(sub->get_topic_name(), "/topic");
-  }
-
-  {
-    auto sub = subnode->create_subscription<Empty>("~/topic", 1, callback);
-    std::string expected_topic_name =
-      std::string(node->get_namespace()) + "/" + node->get_name() + "/topic";
-    EXPECT_STREQ(sub->get_topic_name(), expected_topic_name.c_str());
-  }
-
-  {
-    ASSERT_THROW(
-    {
-      auto sub = node->create_subscription<Empty>("invalid_topic?", 1, callback);
+      auto sub = node_->create_subscription<Empty>("invalid_topic?", 10, callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }
@@ -218,31 +101,31 @@ TEST_F(TestSubscription, various_creation_signatures) {
   using test_msgs::msg::Empty;
   auto cb = [](test_msgs::msg::Empty::ConstSharedPtr) {};
   {
-    auto sub = node->create_subscription<Empty>("topic", 1, cb);
+    auto sub = node_->create_subscription<Empty>("topic", 1, cb);
     (void)sub;
   }
   {
-    auto sub = node->create_subscription<Empty>("topic", rclcpp::QoS(1), cb);
-    (void)sub;
-  }
-  {
-    auto sub =
-      node->create_subscription<Empty>("topic", rclcpp::QoS(rclcpp::KeepLast(1)), cb);
+    auto sub = node_->create_subscription<Empty>("topic", rclcpp::QoS(1), cb);
     (void)sub;
   }
   {
     auto sub =
-      node->create_subscription<Empty>("topic", rclcpp::QoS(rclcpp::KeepAll()), cb);
+      node_->create_subscription<Empty>("topic", rclcpp::QoS(rclcpp::KeepLast(1)), cb);
     (void)sub;
   }
   {
-    auto sub = node->create_subscription<Empty>(
+    auto sub =
+      node_->create_subscription<Empty>("topic", rclcpp::QoS(rclcpp::KeepAll()), cb);
+    (void)sub;
+  }
+  {
+    auto sub = node_->create_subscription<Empty>(
       "topic", 42, cb, rclcpp::SubscriptionOptions());
     (void)sub;
   }
   {
     auto sub = rclcpp::create_subscription<Empty>(
-      node, "topic", 42, cb, rclcpp::SubscriptionOptions());
+      node_, "topic", 42, cb, rclcpp::SubscriptionOptions());
     (void)sub;
   }
   {
@@ -250,40 +133,78 @@ TEST_F(TestSubscription, various_creation_signatures) {
     options.allocator = std::make_shared<std::allocator<void>>();
     EXPECT_NE(nullptr, options.get_allocator());
     auto sub = rclcpp::create_subscription<Empty>(
-      node, "topic", 42, cb, options);
+      node_, "topic", 42, cb, options);
     (void)sub;
   }
   {
     rclcpp::SubscriptionOptionsBase options_base;
     rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options(options_base);
     auto sub = rclcpp::create_subscription<Empty>(
-      node, "topic", 42, cb, options);
+      node_, "topic", 42, cb, options);
     (void)sub;
   }
 }
+
+class SubscriptionClass final
+{
+public:
+  void custom_create_subscription()
+  {
+    auto node = std::make_shared<rclcpp::Node>("test_subscription_member_callback", "/ns");
+    auto callback = std::bind(&SubscriptionClass::on_message, this, std::placeholders::_1);
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  }
+
+private:
+  void on_message([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
+  {
+    // This function is intentionally left empty.
+  }
+};
+
+class SubscriptionClassNodeInheritance final : public rclcpp::Node
+{
+public:
+  SubscriptionClassNodeInheritance()
+  : Node("subscription_class_node_inheritance")
+  {
+  }
+
+  void custom_create_subscription()
+  {
+    auto callback = std::bind(
+      &SubscriptionClassNodeInheritance::on_message, this, std::placeholders::_1);
+    auto sub = this->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  }
+
+private:
+  void on_message([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg)
+  {
+    // This function is intentionally left empty.
+  }
+};
 
 /*
    Testing subscriptions using std::bind.
  */
 TEST_F(TestSubscription, callback_bind) {
   initialize();
-  using test_msgs::msg::Empty;
   {
     // Member callback for plain class
     SubscriptionClass subscription_object;
-    subscription_object.CreateSubscription();
+    subscription_object.custom_create_subscription();
   }
   {
     // Member callback for class inheriting from rclcpp::Node
     SubscriptionClassNodeInheritance subscription_object;
-    subscription_object.CreateSubscription();
+    subscription_object.custom_create_subscription();
   }
   {
     // Member callback for class inheriting from testing::Test
     // Regression test for https://github.com/ros2/rclcpp/issues/479 where the TEST_F GTest macro
     // was interfering with rclcpp's `function_traits`.
-    auto callback = std::bind(&TestSubscription::OnMessage, this, std::placeholders::_1);
-    auto sub = node->create_subscription<Empty>("topic", 1, callback);
+    auto callback = std::bind(&TestSubscription::on_message, this, std::placeholders::_1);
+    auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 1, callback);
   }
 }
 
@@ -292,10 +213,9 @@ TEST_F(TestSubscription, callback_bind) {
  */
 TEST_F(TestSubscription, take) {
   initialize();
-  using test_msgs::msg::Empty;
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
   {
-    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+    auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     test_msgs::msg::Empty msg;
     rclcpp::MessageInfo msg_info;
     EXPECT_FALSE(sub->take(msg, msg_info));
@@ -303,23 +223,23 @@ TEST_F(TestSubscription, take) {
   {
     rclcpp::SubscriptionOptions so;
     so.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
-    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
+    auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
     rclcpp::PublisherOptions po;
     po.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
-    auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
+    auto pub = node_->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
     {
       test_msgs::msg::Empty msg;
       pub->publish(msg);
     }
     test_msgs::msg::Empty msg;
     rclcpp::MessageInfo msg_info;
-    bool message_recieved = false;
+    bool message_received = false;
     auto start = std::chrono::steady_clock::now();
     do {
-      message_recieved = sub->take(msg, msg_info);
+      message_received = sub->take(msg, msg_info);
       std::this_thread::sleep_for(100ms);
-    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-    EXPECT_TRUE(message_recieved);
+    } while (!message_received && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_received);
   }
   // TODO(wjwwood): figure out a good way to test the intra-process exclusion behavior.
 }
@@ -329,10 +249,9 @@ TEST_F(TestSubscription, take) {
  */
 TEST_F(TestSubscription, take_serialized) {
   initialize();
-  using test_msgs::msg::Empty;
   auto do_nothing = [](std::shared_ptr<const rclcpp::SerializedMessage>) {FAIL();};
   {
-    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+    auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
     rclcpp::MessageInfo msg_info;
     EXPECT_FALSE(sub->take_serialized(*msg, msg_info));
@@ -340,23 +259,23 @@ TEST_F(TestSubscription, take_serialized) {
   {
     rclcpp::SubscriptionOptions so;
     so.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
-    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
+    auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
     rclcpp::PublisherOptions po;
     po.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
-    auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
+    auto pub = node_->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
     {
       test_msgs::msg::Empty msg;
       pub->publish(msg);
     }
     std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
     rclcpp::MessageInfo msg_info;
-    bool message_recieved = false;
+    bool message_received = false;
     auto start = std::chrono::steady_clock::now();
     do {
-      message_recieved = sub->take_serialized(*msg, msg_info);
+      message_received = sub->take_serialized(*msg, msg_info);
       std::this_thread::sleep_for(100ms);
-    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
-    EXPECT_TRUE(message_recieved);
+    } while (!message_received && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_received);
   }
 }
 
@@ -368,7 +287,7 @@ TEST_F(TestSubscription, rcl_subscription_init_error) {
 
   // reset() is not needed for triggering exception, just to avoid an unused return value warning
   EXPECT_THROW(
-    node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback).reset(),
+    node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback).reset(),
     rclcpp::exceptions::RCLError);
 }
 
@@ -380,7 +299,7 @@ TEST_F(TestSubscription, rcl_subscription_fini_error) {
 
   // Cleanup just fails, no exception expected
   EXPECT_NO_THROW(
-    node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback).reset());
+    node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback).reset());
 }
 
 TEST_F(TestSubscription, rcl_subscription_get_actual_qos_error) {
@@ -389,7 +308,7 @@ TEST_F(TestSubscription, rcl_subscription_get_actual_qos_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_subscription_get_actual_qos, nullptr);
 
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
   RCLCPP_EXPECT_THROW_EQ(
     sub->get_actual_qos(), std::runtime_error("failed to get qos settings: error not set"));
 }
@@ -400,7 +319,7 @@ TEST_F(TestSubscription, rcl_take_type_erased_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_take, RCL_RET_ERROR);
 
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
   test_msgs::msg::Empty msg;
   rclcpp::MessageInfo message_info;
 
@@ -413,7 +332,7 @@ TEST_F(TestSubscription, rcl_take_serialized_message_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_take_serialized_message, RCL_RET_ERROR);
 
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
   rclcpp::SerializedMessage msg;
   rclcpp::MessageInfo message_info;
 
@@ -426,14 +345,14 @@ TEST_F(TestSubscription, rcl_subscription_get_publisher_count_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_subscription_get_publisher_count, RCL_RET_ERROR);
 
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
   EXPECT_THROW(sub->get_publisher_count(), rclcpp::exceptions::RCLError);
 }
 
 TEST_F(TestSubscription, handle_loaned_message) {
   initialize();
   auto callback = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
 
   test_msgs::msg::Empty msg;
   rclcpp::MessageInfo message_info;
@@ -448,13 +367,13 @@ TEST_F(TestSubscription, on_new_message_callback) {
   using test_msgs::msg::Empty;
 
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
   sub->set_on_new_message_callback(increase_c1_cb);
 
-  auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 3);
+  auto pub = node_->create_publisher<test_msgs::msg::Empty>("~/test_take", 3);
   {
     test_msgs::msg::Empty msg;
     pub->publish(msg);
@@ -518,13 +437,13 @@ TEST_F(TestSubscription, on_new_intra_process_message_callback) {
   using test_msgs::msg::Empty;
 
   auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
-  auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>("~/test_take", 10, do_nothing);
 
   std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_msgs) {c1 += count_msgs;};
   sub->set_on_new_intra_process_message_callback(increase_c1_cb);
 
-  auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1);
+  auto pub = node_->create_publisher<test_msgs::msg::Empty>("~/test_take", 1);
   {
     test_msgs::msg::Empty msg;
     pub->publish(msg);
@@ -580,80 +499,13 @@ TEST_F(TestSubscription, on_new_intra_process_message_callback) {
   EXPECT_THROW(sub->set_on_new_intra_process_message_callback(invalid_cb), std::invalid_argument);
 }
 
-/*
-   Testing subscription with intraprocess enabled and invalid QoS
- */
-TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {
-  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
-  rclcpp::QoS qos = GetParam().qos;
-  using test_msgs::msg::Empty;
-  {
-    auto callback = std::bind(
-      &TestSubscriptionInvalidIntraprocessQos::OnMessage,
-      this,
-      std::placeholders::_1);
-
-    ASSERT_THROW(
-      {auto subscription = node->create_subscription<Empty>(
-          "topic",
-          qos,
-          callback);},
-      std::invalid_argument);
-  }
-}
-
-/*
-   Testing subscription with invalid use_intra_process_comm
- */
-TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws_intraprocess) {
-  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
-  options.use_intra_process_comm = static_cast<rclcpp::IntraProcessSetting>(5);
-
-  initialize();
-  rclcpp::QoS qos = GetParam().qos;
-  auto callback = std::bind(
-    &TestSubscriptionInvalidIntraprocessQos::OnMessage,
-    this,
-    std::placeholders::_1);
-
-  RCLCPP_EXPECT_THROW_EQ(
-    {auto subscription = node->create_subscription<test_msgs::msg::Empty>(
-        "topic",
-        qos,
-        callback,
-        options);},
-    std::runtime_error("Unrecognized IntraProcessSetting value"));
-}
-
-static std::vector<TestParameters> invalid_qos_profiles()
-{
-  std::vector<TestParameters> parameters;
-
-  parameters.reserve(3);
-  parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(),
-      "transient_local_qos"));
-  parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepAll()),
-      "keep_all_qos"));
-
-  return parameters;
-}
-
-INSTANTIATE_TEST_SUITE_P(
-  TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
-  ::testing::ValuesIn(invalid_qos_profiles()),
-  ::testing::PrintToStringParamName());
-
 TEST_F(TestSubscription, get_network_flow_endpoints_errors) {
   initialize();
   const rclcpp::QoS subscription_qos(1);
-  auto subscription_callback = [](test_msgs::msg::Empty::ConstSharedPtr msg) {
-      (void)msg;
+  auto subscription_callback = []([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg) {
+      // This function is intentionally left empty.
     };
-  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
+  auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
     "topic", subscription_qos, subscription_callback);
 
   {
@@ -679,4 +531,140 @@ TEST_F(TestSubscription, get_network_flow_endpoints_errors) {
       "lib:rclcpp", rcl_network_flow_endpoint_array_fini, RCL_RET_OK);
     EXPECT_NO_THROW(subscription->get_network_flow_endpoints());
   }
+}
+
+class TestSubscriptionSub : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
+  void SetUp()
+  {
+    node_ = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
+    subnode_ = node_->create_sub_node("sub_ns");
+  }
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Node::SharedPtr subnode_;
+};
+
+/*
+   Testing subscription construction and destruction for subnodes.
+ */
+TEST_F(TestSubscriptionSub, construction_and_destruction) {
+  auto callback = []([[maybe_unused]] test_msgs::msg::Empty::ConstSharedPtr msg) {
+    // This function is intentionally left empty.
+    };
+  {
+    auto sub = subnode_->create_subscription<test_msgs::msg::Empty>("topic", 1, callback);
+    EXPECT_STREQ(sub->get_topic_name(), "/ns/sub_ns/topic");
+  }
+
+  {
+    auto sub = subnode_->create_subscription<test_msgs::msg::Empty>("/topic", 1, callback);
+    EXPECT_STREQ(sub->get_topic_name(), "/topic");
+  }
+
+  {
+    auto sub = subnode_->create_subscription<test_msgs::msg::Empty>("~/topic", 1, callback);
+    std::string expected_topic_name =
+      std::string(node_->get_namespace()) + "/" + node_->get_name() + "/topic";
+    EXPECT_STREQ(sub->get_topic_name(), expected_topic_name.c_str());
+  }
+
+  {
+    ASSERT_THROW(
+    {
+      auto sub = node_->create_subscription<test_msgs::msg::Empty>("invalid_topic?", 1, callback);
+    }, rclcpp::exceptions::InvalidTopicNameError);
+  }
+}
+
+struct TestParameters final
+{
+  TestParameters(rclcpp::QoS qos, std::string description)
+  : qos(qos), description(description) {}
+  rclcpp::QoS qos;
+  std::string description;
+};
+
+std::ostream & operator<<(std::ostream & out, const TestParameters & params)
+{
+  out << params.description;
+  return out;
+}
+
+class TestSubscriptionInvalidIntraprocessQos
+  : public TestSubscription,
+  public ::testing::WithParamInterface<TestParameters>
+{};
+
+static std::vector<TestParameters> invalid_qos_profiles()
+{
+  std::vector<TestParameters> parameters;
+
+  parameters.reserve(1);
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepAll()),
+      "keep_all_qos"));
+
+  return parameters;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
+  ::testing::ValuesIn(invalid_qos_profiles()),
+  ::testing::PrintToStringParamName());
+
+/*
+   Testing subscription with intraprocess enabled and invalid QoS
+ */
+TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  rclcpp::QoS qos = GetParam().qos;
+  {
+    auto callback = std::bind(
+      &TestSubscriptionInvalidIntraprocessQos::on_message,
+      this,
+      std::placeholders::_1);
+
+    ASSERT_THROW(
+      {auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
+          "topic",
+          qos,
+          callback);},
+      std::invalid_argument);
+  }
+}
+
+/*
+   Testing subscription with invalid use_intra_process_comm
+ */
+TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws_intraprocess) {
+  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>> options;
+  options.use_intra_process_comm = static_cast<rclcpp::IntraProcessSetting>(5);
+
+  initialize();
+  rclcpp::QoS qos = GetParam().qos;
+  auto callback = std::bind(
+    &TestSubscriptionInvalidIntraprocessQos::on_message,
+    this,
+    std::placeholders::_1);
+
+  RCLCPP_EXPECT_THROW_EQ(
+    {auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
+        "topic",
+        qos,
+        callback,
+        options);},
+    std::runtime_error("Unrecognized IntraProcessSetting value"));
 }

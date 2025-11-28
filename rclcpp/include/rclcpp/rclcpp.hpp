@@ -54,6 +54,7 @@
  *   - rclcpp::ParameterValue
  *   - rclcpp::AsyncParametersClient
  *   - rclcpp::SyncParametersClient
+ *   - rclcpp::copy_all_parameter_values()
  *   - rclcpp/parameter.hpp
  *   - rclcpp/parameter_value.hpp
  *   - rclcpp/parameter_client.hpp
@@ -67,8 +68,6 @@
  *
  * - Executors (responsible for execution of callbacks through a blocking spin):
  *   - rclcpp::spin()
- *   - rclcpp::spin_some()
- *   - rclcpp::spin_until_future_complete()
  *   - rclcpp::executors::SingleThreadedExecutor
  *   - rclcpp::executors::SingleThreadedExecutor::add_node()
  *   - rclcpp::executors::SingleThreadedExecutor::spin()
@@ -95,6 +94,9 @@
  * - Get the number of publishers or subscribers on a topic:
  *   - rclcpp::Node::count_publishers()
  *   - rclcpp::Node::count_subscribers()
+ * - Get the number of clients or servers on a service:
+ *   - rclcpp::Node::count_clients()
+ *   - rclcpp::Node::count_services()
  *
  * And components related to logging:
  *
@@ -117,6 +119,18 @@
  * - Allocator related items:
  *   - rclcpp/allocator/allocator_common.hpp
  *   - rclcpp/allocator/allocator_deleter.hpp
+ * - Dynamic typesupport wrappers
+ *   - rclcpp::dynamic_typesupport::DynamicMessage
+ *   - rclcpp::dynamic_typesupport::DynamicMessageType
+ *   - rclcpp::dynamic_typesupport::DynamicMessageTypeBuilder
+ *   - rclcpp::dynamic_typesupport::DynamicSerializationSupport
+ *   - rclcpp/dynamic_typesupport/dynamic_message.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_message_type.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_message_type_builder.hpp
+ *   - rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp
+ * - Dynamic typesupport
+ *   - rclcpp::dynamic_typesupport::DynamicMessageTypeSupport
+ *   - rclcpp/dynamic_typesupport/dynamic_message_type_support.hpp
  * - Generic publisher
  *   - rclcpp::Node::create_generic_publisher()
  *   - rclcpp::GenericPublisher
@@ -152,6 +166,7 @@
 #include <csignal>
 #include <memory>
 
+#include "rclcpp/copy_all_parameter_values.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"

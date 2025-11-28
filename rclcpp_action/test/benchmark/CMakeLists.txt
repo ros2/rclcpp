@@ -9,8 +9,7 @@ add_performance_test(
   benchmark_action_client.cpp
   TIMEOUT 240)
 if(TARGET benchmark_action_client)
-  target_link_libraries(benchmark_action_client ${PROJECT_NAME})
-  ament_target_dependencies(benchmark_action_client rclcpp test_msgs)
+  target_link_libraries(benchmark_action_client ${PROJECT_NAME} rclcpp::rclcpp ${test_msgs_TARGETS})
 endif()
 
 add_performance_test(
@@ -18,6 +17,5 @@ add_performance_test(
   benchmark_action_server.cpp
   TIMEOUT 120)
 if(TARGET benchmark_action_server)
-  target_link_libraries(benchmark_action_server ${PROJECT_NAME})
-  ament_target_dependencies(benchmark_action_server rclcpp test_msgs)
+  target_link_libraries(benchmark_action_server ${PROJECT_NAME} rclcpp::rclcpp ${test_msgs_TARGETS})
 endif()

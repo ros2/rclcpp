@@ -43,6 +43,7 @@
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/parameter_service.hpp"
 #include "rclcpp/qos.hpp"
@@ -76,7 +77,7 @@ LifecycleNode::LifecycleNode(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_)),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
@@ -113,9 +114,15 @@ LifecycleNode::LifecycleNode(
       options.clock_qos(),
       options.use_clock_thread()
     )),
+  node_type_descriptions_(new rclcpp::node_interfaces::NodeTypeDescriptions(
+      node_base_,
+      node_logging_,
+      node_parameters_,
+      node_services_
+    )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
-  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
+  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_, node_logging_))
 {
   impl_->init(enable_communication_interface);
 
@@ -137,12 +144,27 @@ LifecycleNode::LifecycleNode(
       &LifecycleNodeInterface::on_deactivate, this,
       std::placeholders::_1));
   register_on_error(std::bind(&LifecycleNodeInterface::on_error, this, std::placeholders::_1));
+
+  if (options.enable_logger_service()) {
+    node_logging_->create_logger_services(node_services_);
+  }
 }
 
 LifecycleNode::~LifecycleNode()
 {
+  auto current_state = LifecycleNode::get_current_state().id();
+  if (current_state != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED) {
+    // This might be leaving sensors and devices without shutting down unintentionally.
+    // It is user's responsibility to call shutdown to avoid leaving them unknow states.
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp_lifecycle"),
+      "LifecycleNode is not shut down: Node still in state(%u) in destructor",
+      current_state);
+  }
+
   // release sub-interfaces in an order that allows them to consult with node_base during tear-down
   node_waitables_.reset();
+  node_type_descriptions_.reset();
   node_time_source_.reset();
   node_parameters_.reset();
   node_clock_.reset();
@@ -151,6 +173,7 @@ LifecycleNode::~LifecycleNode()
   node_timers_.reset();
   node_logging_.reset();
   node_graph_.reset();
+  node_base_.reset();
 }
 
 const char *
@@ -375,6 +398,18 @@ LifecycleNode::count_subscribers(const std::string & topic_name) const
   return node_graph_->count_subscribers(topic_name);
 }
 
+size_t
+LifecycleNode::count_clients(const std::string & service_name) const
+{
+  return node_graph_->count_clients(service_name);
+}
+
+size_t
+LifecycleNode::count_services(const std::string & service_name) const
+{
+  return node_graph_->count_services(service_name);
+}
+
 std::vector<rclcpp::TopicEndpointInfo>
 LifecycleNode::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
 {
@@ -385,6 +420,18 @@ std::vector<rclcpp::TopicEndpointInfo>
 LifecycleNode::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle) const
 {
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
+}
+
+std::vector<rclcpp::ServiceEndpointInfo>
+LifecycleNode::get_clients_info_by_service(const std::string & service_name, bool no_mangle) const
+{
+  return node_graph_->get_clients_info_by_service(service_name, no_mangle);
+}
+
+std::vector<rclcpp::ServiceEndpointInfo>
+LifecycleNode::get_servers_info_by_service(const std::string & service_name, bool no_mangle) const
+{
+  return node_graph_->get_servers_info_by_service(service_name, no_mangle);
 }
 
 void
@@ -466,6 +513,12 @@ rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 LifecycleNode::get_node_topics_interface()
 {
   return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+LifecycleNode::get_node_type_descriptions_interface()
+{
+  return node_type_descriptions_;
 }
 
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr

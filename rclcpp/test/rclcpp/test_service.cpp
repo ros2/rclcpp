@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <string>
 #include <memory>
 #include <utility>
@@ -88,12 +89,11 @@ protected:
    Testing service construction and destruction.
  */
 TEST_F(TestService, construction_and_destruction) {
-  using rcl_interfaces::srv::ListParameters;
-  auto callback =
-    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
-    };
+  auto callback = [](
+    const rcl_interfaces::srv::ListParameters::Request::SharedPtr,
+    rcl_interfaces::srv::ListParameters::Response::SharedPtr) {};
   {
-    auto service = node->create_service<ListParameters>("service", callback);
+    auto service = node->create_service<rcl_interfaces::srv::ListParameters>("service", callback);
     EXPECT_NE(nullptr, service->get_service_handle());
     const rclcpp::ServiceBase * const_service_base = service.get();
     EXPECT_NE(nullptr, const_service_base->get_service_handle());
@@ -102,7 +102,8 @@ TEST_F(TestService, construction_and_destruction) {
   {
     ASSERT_THROW(
     {
-      auto service = node->create_service<ListParameters>("invalid_service?", callback);
+      auto service = node->create_service<rcl_interfaces::srv::ListParameters>(
+        "invalid_service?", callback);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
 }
@@ -111,27 +112,27 @@ TEST_F(TestService, construction_and_destruction) {
    Testing service construction and destruction for subnodes.
  */
 TEST_F(TestServiceSub, construction_and_destruction) {
-  using rcl_interfaces::srv::ListParameters;
-  auto callback =
-    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
-    };
+  auto callback = [](
+    const rcl_interfaces::srv::ListParameters::Request::SharedPtr,
+    rcl_interfaces::srv::ListParameters::Response::SharedPtr) {};
   {
-    auto service = subnode->create_service<ListParameters>("service", callback);
+    auto service = subnode->create_service<rcl_interfaces::srv::ListParameters>(
+      "service", callback);
     EXPECT_STREQ(service->get_service_name(), "/ns/sub_ns/service");
   }
 
   {
     ASSERT_THROW(
     {
-      auto service = node->create_service<ListParameters>("invalid_service?", callback);
+      auto service = subnode->create_service<rcl_interfaces::srv::ListParameters>(
+        "invalid_service?", callback);
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
 }
 
 TEST_F(TestService, construction_and_destruction_rcl_errors) {
-  auto callback =
-    [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {};
 
   {
     auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_service_init, RCL_RET_ERROR);
@@ -149,11 +150,10 @@ TEST_F(TestService, construction_and_destruction_rcl_errors) {
 
 /* Testing basic getters */
 TEST_F(TestService, basic_public_getters) {
-  using rcl_interfaces::srv::ListParameters;
-  auto callback =
-    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
-    };
-  auto service = node->create_service<ListParameters>("service", callback);
+  auto callback = [](
+    const rcl_interfaces::srv::ListParameters::Request::SharedPtr,
+    rcl_interfaces::srv::ListParameters::Response::SharedPtr) {};
+  auto service = node->create_service<rcl_interfaces::srv::ListParameters>("service", callback);
   EXPECT_STREQ(service->get_service_name(), "/ns/service");
   std::shared_ptr<rcl_service_t> service_handle = service->get_service_handle();
   EXPECT_NE(nullptr, service_handle);
@@ -189,9 +189,8 @@ TEST_F(TestService, basic_public_getters) {
 }
 
 TEST_F(TestService, take_request) {
-  auto callback =
-    [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {};
   auto server = node->create_service<test_msgs::srv::Empty>("service", callback);
   {
     auto request_id = server->create_request_header();
@@ -217,9 +216,8 @@ TEST_F(TestService, take_request) {
 }
 
 TEST_F(TestService, send_response) {
-  auto callback =
-    [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {};
   auto server = node->create_service<test_msgs::srv::Empty>("service", callback);
 
   {
@@ -243,9 +241,9 @@ TEST_F(TestService, send_response) {
    Testing on_new_request callbacks.
  */
 TEST_F(TestService, on_new_request_callback) {
-  auto server_callback =
-    [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {FAIL();};
+  auto server_callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr,
+    test_msgs::srv::Empty::Response::SharedPtr) {FAIL();};
   rclcpp::ServicesQoS service_qos;
   service_qos.keep_last(3);
   auto server = node->create_service<test_msgs::srv::Empty>(
@@ -315,9 +313,8 @@ TEST_F(TestService, on_new_request_callback) {
 TEST_F(TestService, rcl_service_response_publisher_get_actual_qos_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_service_response_publisher_get_actual_qos, nullptr);
-  auto callback =
-    [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {};
   auto server = node->create_service<test_msgs::srv::Empty>("service", callback);
   RCLCPP_EXPECT_THROW_EQ(
     server->get_response_publisher_actual_qos(),
@@ -327,9 +324,8 @@ TEST_F(TestService, rcl_service_response_publisher_get_actual_qos_error) {
 TEST_F(TestService, rcl_service_request_subscription_get_actual_qos_error) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp", rcl_service_request_subscription_get_actual_qos, nullptr);
-  auto callback =
-    [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {};
   auto server = node->create_service<test_msgs::srv::Empty>("service", callback);
   RCLCPP_EXPECT_THROW_EQ(
     server->get_request_subscription_actual_qos(),
@@ -340,16 +336,15 @@ TEST_F(TestService, rcl_service_request_subscription_get_actual_qos_error) {
 TEST_F(TestService, server_qos) {
   rclcpp::ServicesQoS qos_profile;
   qos_profile.liveliness(rclcpp::LivelinessPolicy::Automatic);
-  rclcpp::Duration duration(std::chrono::nanoseconds(1));
+  rclcpp::Duration duration(std::chrono::milliseconds(1));
   qos_profile.deadline(duration);
   qos_profile.lifespan(duration);
   qos_profile.liveliness_lease_duration(duration);
 
-  auto callback = [](const test_msgs::srv::Empty::Request::SharedPtr,
-      test_msgs::srv::Empty::Response::SharedPtr) {};
+  auto callback = [](
+    const test_msgs::srv::Empty::Request::SharedPtr, test_msgs::srv::Empty::Response::SharedPtr) {};
 
-  auto server = node->create_service<test_msgs::srv::Empty>(
-    "service", callback, qos_profile);
+  auto server = node->create_service<test_msgs::srv::Empty>("service", callback, qos_profile);
   auto rs_qos = server->get_request_subscription_actual_qos();
   auto rp_qos = server->get_response_publisher_actual_qos();
 
@@ -360,8 +355,6 @@ TEST_F(TestService, server_qos) {
 }
 
 TEST_F(TestService, server_qos_depth) {
-  using namespace std::literals::chrono_literals;
-
   uint64_t server_cb_count_ = 0;
   auto server_callback = [&](
     const test_msgs::srv::Empty::Request::SharedPtr,
@@ -380,8 +373,8 @@ TEST_F(TestService, server_qos_depth) {
   ::testing::AssertionResult request_result = ::testing::AssertionSuccess();
   auto request = std::make_shared<test_msgs::srv::Empty::Request>();
 
-  using SharedFuture = rclcpp::Client<test_msgs::srv::Empty>::SharedFuture;
-  auto client_callback = [&request_result](SharedFuture future_response) {
+  auto client_callback = [&request_result](
+    rclcpp::Client<test_msgs::srv::Empty>::SharedFuture future_response) {
       if (nullptr == future_response.get()) {
         request_result = ::testing::AssertionFailure() << "Future response was null";
       }
@@ -393,17 +386,20 @@ TEST_F(TestService, server_qos_depth) {
     std::this_thread::sleep_for(10ms);
   }
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(server_node);
+
   auto start = std::chrono::steady_clock::now();
   while ((server_cb_count_ < server_qos_profile.depth()) &&
     (std::chrono::steady_clock::now() - start) < 1s)
   {
-    rclcpp::spin_some(server_node);
+    executor.spin_some();
     std::this_thread::sleep_for(1ms);
   }
 
   // Spin an extra time to check if server QoS depth has been ignored,
   // so more server responses might be processed than expected.
-  rclcpp::spin_some(server_node);
+  executor.spin_some();
 
   EXPECT_EQ(server_cb_count_, server_qos_profile.depth());
 }

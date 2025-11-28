@@ -42,7 +42,9 @@
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
+#include "rclcpp/generic_client.hpp"
 #include "rclcpp/generic_publisher.hpp"
+#include "rclcpp/generic_service.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
@@ -56,6 +58,7 @@
 #include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/parameter.hpp"
@@ -232,13 +235,15 @@ public:
    * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
+   * \param[in] autostart The state of the clock on initialization.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    bool autostart = true);
 
   /// Create a timer that uses the node clock to drive the callback.
   /**
@@ -251,22 +256,6 @@ public:
   create_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Client.
-  /**
-   * \param[in] service_name The topic to service on.
-   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
-   * \param[in] group Callback group to call the service.
-   * \return Shared pointer to the created client.
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Client<ServiceT>::SharedPtr
-  create_client(
-    const std::string & service_name,
-    const rmw_qos_profile_t & qos_profile,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create and return a Client.
@@ -287,24 +276,6 @@ public:
   /**
    * \param[in] service_name The topic to service on.
    * \param[in] callback User-defined callback function.
-   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
-   * \param[in] group Callback group to call the service.
-   * \return Shared pointer to the created service.
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT, typename CallbackT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service(
-    const std::string & service_name,
-    CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Service.
-  /**
-   * \param[in] service_name The topic to service on.
-   * \param[in] callback User-defined callback function.
    * \param[in] qos Quality of service profile for the service.
    * \param[in] group Callback group to call the service.
    * \return Shared pointer to the created service.
@@ -313,6 +284,40 @@ public:
   typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
+    CallbackT && callback,
+    const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a GenericClient.
+  /**
+   * \param[in] service_name The name on which the service is accessible.
+   * \param[in] service_type The name of service type, e.g. "std_srvs/srv/SetBool"
+   * \param[in] qos Quality of service profile for client.
+   * \param[in] group Callback group to handle the reply to service calls.
+   * \return Shared pointer to the created GenericClient.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::GenericClient::SharedPtr
+  create_generic_client(
+    const std::string & service_name,
+    const std::string & service_type,
+    const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create and return a GenericService.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] service_type The name of service type, e.g. "std_srvs/srv/SetBool"
+   * \param[in] callback User-defined callback function.
+   * \param[in] qos Quality of service profile for the service.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created service.
+   */
+  template<typename CallbackT>
+  typename rclcpp::GenericService::SharedPtr
+  create_generic_service(
+    const std::string & service_name,
+    const std::string & service_type,
     CallbackT && callback,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
@@ -355,12 +360,14 @@ public:
  * `%callback_group`.
    * \return Shared pointer to the created generic subscription.
    */
-  template<typename AllocatorT = std::allocator<void>>
+  template<
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>>
   std::shared_ptr<rclcpp::GenericSubscription> create_generic_subscription(
     const std::string & topic_name,
     const std::string & topic_type,
     const rclcpp::QoS & qos,
-    std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
+    CallbackT && callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
     )
@@ -969,7 +976,16 @@ public:
 
   /// Return a list of parameters with any of the given prefixes, up to the given depth.
   /**
-   * \todo: properly document and test this method.
+   * Parameters are separated into a hierarchy using the "." (dot) character.
+   * The "prefixes" argument is a way to select only particular parts of the hierarchy.
+   *
+   * \param[in] prefixes The list of prefixes that should be searched for within the
+   * current parameters. If this vector of prefixes is empty, then list_parameters
+   * will return all parameters.
+   * \param[in] depth An unsigned integer that represents the recursive depth to search.
+   * If this depth = 0, then all parameters that fit the prefixes will be returned.
+   * \returns A ListParametersResult message which contains both an array of unique prefixes
+   * and an array of names that were matched to the prefixes given.
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
@@ -984,8 +1000,6 @@ public:
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnSetParametersCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
-  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
-    OnSetParametersCallbackType;
 
   using PostSetParametersCallbackHandle =
     rclcpp::node_interfaces::PostSetParametersCallbackHandle;
@@ -1302,6 +1316,26 @@ public:
   size_t
   count_subscribers(const std::string & topic_name) const;
 
+  /// Return the number of clients created for a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \return number of clients that have been created for the given service.
+   * \throws std::runtime_error if clients could not be counted
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_clients(const std::string & service_name) const;
+
+  /// Return the number of services created for a given service.
+  /**
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \return number of services that have been created for the given service.
+   * \throws std::runtime_error if services could not be counted
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_services(const std::string & service_name) const;
+
   /// Return the topic endpoint information about publishers on a given topic.
   /**
    * The returned parameter is a list of topic endpoint information, where each item will contain
@@ -1354,6 +1388,66 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
 
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * The returned parameter is a list of service endpoint information, where each item will contain
+   * the node name, node namespace, service type, endpoint type, endpoint count,
+   * service endpoint's GIDs, and its QoS profiles.
+   *
+   * When the `no_mangle` parameter is `true`, the provided `service_name` should be a valid service
+   * name for the middleware (useful when combining ROS with native middleware apps).
+   * When the `no_mangle` parameter is `false`, the provided `service_name` should follow
+   * ROS service name conventions. In DDS-based RMWs, services are implemented as topics with mangled
+   * names (e.g., `rq/my_serviceRequest` and `rp/my_serviceReply`), so `no_mangle = true` is not
+   * supported and will result in an error. Use `get_publishers_info_by_topic` or
+   * `get_subscriptions_info_by_topic` for unmangled topic queries in such cases. Other RMWs
+   * (e.g., Zenoh) may support `no_mangle = true` if they natively handle services without topic-based
+   *
+   * 'service_name` may be a relative, private, or fully qualified service name.
+   * A relative or private service will be expanded using this node's namespace and name.
+   * The queried `service_name` is not remapped.
+   *
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name. Defaults to `false`.
+   * \return a list of SeviceEndpointInfo representing all the clients on this service.
+   * \throws InvalidServiceNameError if the given service_name is invalid.
+   * \throws std::runtime_error if internal error happens.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about servers on a given service.
+  /**
+   * The returned parameter is a list of service endpoint information, where each item will contain
+   * the node name, node namespace, service type, endpoint type, endpoint count,
+   * service endpoint's GIDs, and its QoS profiles.
+   *
+   * When the `no_mangle` parameter is `true`, the provided `service_name` should be a valid service
+   * name for the middleware (useful when combining ROS with native middleware apps).
+   * When the `no_mangle` parameter is `false`, the provided `service_name` should follow
+   * ROS service name conventions. In DDS-based RMWs, services are implemented as topics with mangled
+   * names (e.g., `rq/my_serviceRequest` and `rp/my_serviceReply`), so `no_mangle = true` is not
+   * supported and will result in an error. Use `rcl_get_publishers_info_by_topic` or
+   * `rcl_get_subscriptions_info_by_topic` for unmangled topic queries in such cases. Other RMWs
+   * (e.g., Zenoh) may support `no_mangle = true` if they natively handle services without topic-based
+   *
+   * 'service_name` may be a relative, private, or fully qualified service name.
+   * A relative or private service will be expanded using this node's namespace and name.
+   * The queried `service_name` is not remapped.
+   *
+   * \param[in] service_name the actual service name used; it will not be automatically remapped.
+   * \param[in] no_mangle if `true`, `service_name` needs to be a valid middleware service name,
+   *   otherwise it should be a valid ROS service name. Defaults to `false`.
+   * \return a list of SeviceEndpointInfo representing all the servers on this service.
+   * \throws InvalidServiceNameError if the given service_name is invalid.
+   * \throws std::runtime_error if internal error happens.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the loan just let it go
@@ -1396,7 +1490,7 @@ public:
   rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
-  /// Returns current time from the time source specified by clock_type.
+  /// Returns current time from the node clock.
   /**
    * \sa rclcpp::Clock::now
    */
@@ -1453,6 +1547,11 @@ public:
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
+
+  /// Return the Node's internal NodeTypeDescriptionsInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
@@ -1520,6 +1619,10 @@ public:
    * which has been created using an existing instance of this class, but which
    * has an additional sub-namespace (short for subordinate namespace)
    * associated with it.
+   * A subordinate node and an instance of this class share all the node interfaces
+   * such as `rclcpp::node_interfaces::NodeParametersInterface`.
+   * Subordinate nodes are primarily used to organize namespaces and provide a
+   * hierarchical structure, but they are not meant to be completely independent nodes.
    * The sub-namespace will extend the node's namespace for the purpose of
    * creating additional entities, such as Publishers, Subscriptions, Service
    * Clients and Servers, and so on.
@@ -1586,11 +1689,18 @@ private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr node_type_descriptions_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;
   const std::string effective_namespace_;
+
+  class NodeImpl;
+  // This member is meant to be a place to backport features into stable distributions,
+  // and new features targeting Rolling should not use this.
+  // See the comment in node.cpp for more information.
+  std::shared_ptr<NodeImpl> hidden_impl_{nullptr};
 };
 
 }  // namespace rclcpp

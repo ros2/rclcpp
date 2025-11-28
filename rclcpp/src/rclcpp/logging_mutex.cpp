@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 
 #include "rcutils/macros.h"
 

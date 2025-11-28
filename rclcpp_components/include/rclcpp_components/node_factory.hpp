@@ -15,6 +15,7 @@
 #ifndef RCLCPP_COMPONENTS__NODE_FACTORY_HPP__
 #define RCLCPP_COMPONENTS__NODE_FACTORY_HPP__
 
+#include "rclcpp/node_options.hpp"
 #include "rclcpp_components/node_instance_wrapper.hpp"
 
 namespace rclcpp_components

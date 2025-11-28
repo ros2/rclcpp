@@ -2,7 +2,8 @@
 
 Adds action APIs for C++.
 
-Visit the [rclcpp_action API documentation](http://docs.ros2.org/latest/api/rclcpp_action/) for a complete list of its main components and features. For more information about Actions in ROS 2, see the [design document](http://design.ros2.org/articles/actions.html).
+The link to the latest rclcpp_action API documentation, which includes a complete list of its main components and features, can be found on the [rclcpp_action package info page](https://docs.ros.org/en/rolling/p/rclcpp_action).
+For more information about Actions in ROS 2, see the [design document](http://design.ros2.org/articles/actions.html).
 
 ## Quality Declaration
 

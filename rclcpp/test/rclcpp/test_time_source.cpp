@@ -212,6 +212,9 @@ TEST_F(TestTimeSource, ROS_time_valid_attach_detach) {
   ts.attachNode(node);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
+  ts.attachClock(ros_clock);
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
+
   ts.detachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
@@ -305,7 +308,7 @@ TEST_F(TestTimeSource, clock) {
 
   trigger_clock_changes(node, ros_clock, false);
 
-  // Even now that we've recieved a message, ROS time should still not be active since the
+  // Even now that we've received a message, ROS time should still not be active since the
   // parameter has not been explicitly set.
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 

@@ -19,11 +19,13 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/macros.hpp"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -43,6 +45,7 @@ public:
 
   virtual bool has_data() const = 0;
   virtual bool use_take_shared_method() const = 0;
+  virtual size_t available_capacity() const = 0;
 };
 
 template<
@@ -64,6 +67,9 @@ public:
 
   virtual MessageSharedPtr consume_shared() = 0;
   virtual MessageUniquePtr consume_unique() = 0;
+
+  virtual std::vector<MessageSharedPtr> get_all_data_shared() = 0;
+  virtual std::vector<MessageUniquePtr> get_all_data_unique() = 0;
 };
 
 template<
@@ -94,6 +100,10 @@ public:
 
     buffer_ = std::move(buffer_impl);
 
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_buffer_to_ipb,
+      static_cast<const void *>(buffer_.get()),
+      static_cast<const void *>(this));
     if (!allocator) {
       message_allocator_ = std::make_shared<MessageAlloc>();
     } else {
@@ -123,6 +133,16 @@ public:
     return consume_unique_impl<BufferT>();
   }
 
+  std::vector<MessageSharedPtr> get_all_data_shared() override
+  {
+    return get_all_data_shared_impl();
+  }
+
+  std::vector<MessageUniquePtr> get_all_data_unique() override
+  {
+    return get_all_data_unique_impl();
+  }
+
   bool has_data() const override
   {
     return buffer_->has_data();
@@ -136,6 +156,11 @@ public:
   bool use_take_shared_method() const override
   {
     return std::is_same<BufferT, MessageSharedPtr>::value;
+  }
+
+  size_t available_capacity() const override
+  {
+    return buffer_->available_capacity();
   }
 
 private:
@@ -231,6 +256,71 @@ private:
   consume_unique_impl()
   {
     return buffer_->dequeue();
+  }
+
+  // MessageSharedPtr to MessageSharedPtr
+  template<typename T = BufferT>
+  typename std::enable_if<
+    std::is_same<T, MessageSharedPtr>::value,
+    std::vector<MessageSharedPtr>
+  >::type
+  get_all_data_shared_impl()
+  {
+    return buffer_->get_all_data();
+  }
+
+  // MessageUniquePtr to MessageSharedPtr
+  template<typename T = BufferT>
+  typename std::enable_if<
+    std::is_same<T, MessageUniquePtr>::value,
+    std::vector<MessageSharedPtr>
+  >::type
+  get_all_data_shared_impl()
+  {
+    std::vector<MessageSharedPtr> result;
+    auto uni_ptr_vec = buffer_->get_all_data();
+    result.reserve(uni_ptr_vec.size());
+    for (MessageUniquePtr & uni_ptr : uni_ptr_vec) {
+      result.emplace_back(std::move(uni_ptr));
+    }
+    return result;
+  }
+
+  // MessageSharedPtr to MessageUniquePtr
+  template<typename T = BufferT>
+  typename std::enable_if<
+    std::is_same<T, MessageSharedPtr>::value,
+    std::vector<MessageUniquePtr>
+  >::type
+  get_all_data_unique_impl()
+  {
+    std::vector<MessageUniquePtr> result;
+    auto shared_ptr_vec = buffer_->get_all_data();
+    result.reserve(shared_ptr_vec.size());
+    for (MessageSharedPtr shared_msg : shared_ptr_vec) {
+      MessageUniquePtr unique_msg;
+      MessageDeleter * deleter = std::get_deleter<MessageDeleter, const MessageT>(shared_msg);
+      auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+      MessageAllocTraits::construct(*message_allocator_.get(), ptr, *shared_msg);
+      if (deleter) {
+        unique_msg = MessageUniquePtr(ptr, *deleter);
+      } else {
+        unique_msg = MessageUniquePtr(ptr);
+      }
+      result.push_back(std::move(unique_msg));
+    }
+    return result;
+  }
+
+  // MessageUniquePtr to MessageUniquePtr
+  template<typename T = BufferT>
+  typename std::enable_if<
+    std::is_same<T, MessageUniquePtr>::value,
+    std::vector<MessageUniquePtr>
+  >::type
+  get_all_data_unique_impl()
+  {
+    return buffer_->get_all_data();
   }
 };
 

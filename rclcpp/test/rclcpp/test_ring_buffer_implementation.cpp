@@ -22,7 +22,7 @@
 #include "rclcpp/experimental/buffers/ring_buffer_implementation.hpp"
 
 /*
-   Construtctor
+ * Constructor
  */
 TEST(TestRingBufferImplementation, constructor) {
   // Cannot create a buffer of size zero.
@@ -37,10 +37,11 @@ TEST(TestRingBufferImplementation, constructor) {
 }
 
 /*
-   Basic usage
-   - insert data and check that it has data
-   - extract data
-   - overwrite old data writing over the buffer capacity
+ * Basic usage
+ * - insert data and check that it has data
+ * - get all data
+ * - extract data
+ * - overwrite old data writing over the buffer capacity
  */
 TEST(TestRingBufferImplementation, basic_usage) {
   rclcpp::experimental::buffers::RingBufferImplementation<char> rb(2);
@@ -64,6 +65,12 @@ TEST(TestRingBufferImplementation, basic_usage) {
 
   rb.enqueue('d');
 
+  const auto all_data_vec = rb.get_all_data();
+
+  EXPECT_EQ(2u, all_data_vec.size());
+  EXPECT_EQ('c', all_data_vec[0]);
+  EXPECT_EQ('d', all_data_vec[1]);
+
   EXPECT_EQ(true, rb.has_data());
   EXPECT_EQ(true, rb.is_full());
 
@@ -78,4 +85,94 @@ TEST(TestRingBufferImplementation, basic_usage) {
   EXPECT_EQ('d', v);
   EXPECT_EQ(false, rb.has_data());
   EXPECT_EQ(false, rb.is_full());
+}
+
+/*
+ * Basic usage with unique_ptr
+ * - insert unique_ptr data and check that it has data
+ * - get all data
+ * - extract data
+ * - overwrite old data writing over the buffer capacity
+ */
+TEST(TestRingBufferImplementation, basic_usage_unique_ptr) {
+  rclcpp::experimental::buffers::RingBufferImplementation<std::unique_ptr<char>> rb(2);
+
+  auto a = std::make_unique<char>('a');
+  auto b = std::make_unique<char>('b');
+  auto original_b_pointer = reinterpret_cast<std::uintptr_t>(b.get());
+  auto c = std::make_unique<char>('c');
+  auto original_c_pointer = reinterpret_cast<std::uintptr_t>(c.get());
+
+  rb.enqueue(std::move(a));
+
+  EXPECT_EQ(true, rb.has_data());
+  EXPECT_EQ(false, rb.is_full());
+
+  rb.enqueue(std::move(b));
+  rb.enqueue(std::move(c));
+
+  EXPECT_EQ(true, rb.has_data());
+  EXPECT_EQ(true, rb.is_full());
+
+  const auto all_data_vec = rb.get_all_data();
+
+  EXPECT_EQ(2u, all_data_vec.size());
+  EXPECT_EQ('b', *all_data_vec[0]);
+  EXPECT_EQ('c', *all_data_vec[1]);
+  EXPECT_NE(original_b_pointer, reinterpret_cast<std::uintptr_t>(all_data_vec[0].get()));
+  EXPECT_NE(original_c_pointer, reinterpret_cast<std::uintptr_t>(all_data_vec[1].get()));
+
+  EXPECT_EQ(true, rb.has_data());
+  EXPECT_EQ(true, rb.is_full());
+
+  auto uni_ptr = rb.dequeue();
+
+  EXPECT_EQ('b', *uni_ptr);
+  EXPECT_EQ(original_b_pointer, reinterpret_cast<std::uintptr_t>(uni_ptr.get()));
+  EXPECT_EQ(true, rb.has_data());
+  EXPECT_EQ(false, rb.is_full());
+
+  uni_ptr = rb.dequeue();
+
+  EXPECT_EQ('c', *uni_ptr);
+  EXPECT_EQ(original_c_pointer, reinterpret_cast<std::uintptr_t>(uni_ptr.get()));
+  EXPECT_EQ(false, rb.has_data());
+  EXPECT_EQ(false, rb.is_full());
+}
+
+TEST(TestRingBufferImplementation, test_buffer_clear) {
+  rclcpp::experimental::buffers::RingBufferImplementation<char> rb(2);
+  rb.enqueue('a');
+  rb.enqueue('b');
+
+  EXPECT_EQ(true, rb.has_data());
+  EXPECT_EQ(true, rb.is_full());
+  const auto all_data_vec = rb.get_all_data();
+  EXPECT_EQ(2u, all_data_vec.capacity());
+  EXPECT_EQ(2u, all_data_vec.size());
+  rb.clear();
+  EXPECT_EQ(false, rb.has_data());
+  EXPECT_EQ(false, rb.is_full());
+  const auto all_data_vec_empty = rb.get_all_data();
+  EXPECT_EQ(0u, all_data_vec_empty.capacity());
+  EXPECT_EQ(0u, all_data_vec_empty.size());
+  rb.enqueue('c');
+  rb.enqueue('d');
+  const auto c = rb.dequeue();
+  const auto d = rb.dequeue();
+
+  EXPECT_EQ('c', c);
+  EXPECT_EQ('d', d);
+}
+
+TEST(TestRingBufferImplementation, handle_nullptr_deletion) {
+  rclcpp::experimental::buffers::RingBufferImplementation<std::unique_ptr<int>> rb(3);
+  rb.enqueue(std::make_unique<int>(42));
+  rb.enqueue(nullptr);  // intentionally enqueuing nullptr
+  rb.enqueue(std::make_unique<int>(84));
+  auto all_data = rb.get_all_data();
+  EXPECT_EQ(3u, all_data.size());
+  EXPECT_EQ(42, *(all_data[0]));
+  EXPECT_EQ(nullptr, all_data[1]);
+  EXPECT_EQ(84, *(all_data[2]));
 }

@@ -100,6 +100,15 @@ public:
   {}
 };
 
+class InvalidServiceTypeError : public std::runtime_error
+{
+public:
+  InvalidServiceTypeError()
+  : std::runtime_error("Service type is invalid.") {}
+  explicit InvalidServiceTypeError(const std::string & msg)
+  : std::runtime_error(msg) {}
+};
+
 class UnimplementedError : public std::runtime_error
 {
 public:
@@ -206,6 +215,14 @@ public:
   const std::vector<std::string> unknown_ros_args;
 };
 
+/// Thrown when an unknown type is passed
+class UnknownTypeError : public std::runtime_error
+{
+public:
+  explicit UnknownTypeError(const std::string & type)
+  : std::runtime_error("Unknown type: " + type) {}
+};
+
 /// Thrown when an invalid rclcpp::Event object or SharedPtr is encountered.
 class InvalidEventError : public std::runtime_error
 {
@@ -220,6 +237,14 @@ class EventNotRegisteredError : public std::runtime_error
 public:
   EventNotRegisteredError()
   : std::runtime_error("event already registered") {}
+};
+
+/// Thrown when a callback group is missing from the node, when it wants to utilize the group.
+class MissingGroupNodeException : public std::runtime_error
+{
+public:
+  explicit MissingGroupNodeException(const std::string & obj_type)
+  : std::runtime_error("cannot create: " + obj_type + " , callback group not in node") {}
 };
 
 /// Thrown if passed parameters are inconsistent or invalid

@@ -55,7 +55,7 @@ MultiThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
@@ -79,9 +79,8 @@ MultiThreadedExecutor::get_number_of_threads()
 }
 
 void
-MultiThreadedExecutor::run(size_t this_thread_number)
+MultiThreadedExecutor::run([[maybe_unused]] size_t this_thread_number)
 {
-  (void)this_thread_number;
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::AnyExecutable any_exec;
     {
@@ -98,6 +97,18 @@ MultiThreadedExecutor::run(size_t this_thread_number)
     }
 
     execute_any_executable(any_exec);
+
+    if (any_exec.callback_group &&
+      any_exec.callback_group->type() == CallbackGroupType::MutuallyExclusive)
+    {
+      try {
+        interrupt_guard_condition_->trigger();
+      } catch (const rclcpp::exceptions::RCLError & ex) {
+        throw std::runtime_error(
+                std::string(
+                  "Failed to trigger guard condition on callback group change: ") + ex.what());
+      }
+    }
 
     // Clear the callback_group to prevent the AnyExecutable destructor from
     // resetting the callback group `can_be_taken_from`

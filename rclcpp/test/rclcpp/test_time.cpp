@@ -138,6 +138,8 @@ TEST_F(TestTime, conversions) {
 
     EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
 
+    EXPECT_ANY_THROW(rclcpp::Time(-1));
+
     EXPECT_ANY_THROW(
     {
       rclcpp::Time assignment(1, 2);
@@ -167,48 +169,6 @@ TEST_F(TestTime, conversions) {
     EXPECT_EQ(time_msg.sec, 1);
     EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
     EXPECT_EQ(rclcpp::Time(time_msg).nanoseconds(), ONE_AND_HALF_SEC_IN_NS);
-  }
-
-  {
-    // Can rclcpp::Time be negative or not? The following constructor works:
-    rclcpp::Time time(-HALF_SEC_IN_NS);
-    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
-    EXPECT_EQ(time_msg.sec, -1);
-    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
-
-    // The opposite conversion throws...
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time negative_time(time_msg);
-    });
-  }
-
-  {
-    // Can rclcpp::Time be negative or not? The following constructor works:
-    rclcpp::Time time(-ONE_SEC_IN_NS);
-    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
-    EXPECT_EQ(time_msg.sec, -1);
-    EXPECT_EQ(time_msg.nanosec, 0u);
-
-    // The opposite conversion throws...
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time negative_time(time_msg);
-    });
-  }
-
-  {
-    // Can rclcpp::Time be negative or not? The following constructor works:
-    rclcpp::Time time(-ONE_AND_HALF_SEC_IN_NS);
-    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
-    EXPECT_EQ(time_msg.sec, -2);
-    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
-
-    // The opposite conversion throws...
-    EXPECT_ANY_THROW(
-    {
-      rclcpp::Time negative_time(time_msg);
-    });
   }
 }
 
@@ -326,31 +286,18 @@ TEST_F(TestTime, overflow_detectors) {
 
 TEST_F(TestTime, overflows) {
   rclcpp::Time max_time(std::numeric_limits<rcl_time_point_value_t>::max());
-  rclcpp::Time min_time(std::numeric_limits<rcl_time_point_value_t>::min());
   rclcpp::Duration one(1ns);
   rclcpp::Duration two(2ns);
 
-  // Cross min/max
+  // Cross max
   EXPECT_THROW(max_time + one, std::overflow_error);
-  EXPECT_THROW(min_time - one, std::underflow_error);
-  EXPECT_THROW(max_time - min_time, std::overflow_error);
-  EXPECT_THROW(min_time - max_time, std::underflow_error);
   EXPECT_THROW(rclcpp::Time(max_time) += one, std::overflow_error);
-  EXPECT_THROW(rclcpp::Time(min_time) -= one, std::underflow_error);
   EXPECT_NO_THROW(max_time - max_time);
-  EXPECT_NO_THROW(min_time - min_time);
 
-  // Cross zero in both directions
+  // Cross zero
   rclcpp::Time one_time(1);
-  EXPECT_NO_THROW(one_time - two);
-  EXPECT_NO_THROW(rclcpp::Time(one_time) -= two);
-
-  rclcpp::Time minus_one_time(-1);
-  EXPECT_NO_THROW(minus_one_time + two);
-  EXPECT_NO_THROW(rclcpp::Time(minus_one_time) += two);
-
-  EXPECT_NO_THROW(one_time - minus_one_time);
-  EXPECT_NO_THROW(minus_one_time - one_time);
+  EXPECT_THROW(one_time - two, std::runtime_error);
+  EXPECT_THROW(rclcpp::Time(one_time) -= two, std::runtime_error);
 
   rclcpp::Time two_time(2);
   EXPECT_NO_THROW(one_time - two_time);
@@ -363,10 +310,27 @@ TEST_F(TestTime, seconds) {
 }
 
 TEST_F(TestTime, test_max) {
-  const rclcpp::Time time_max = rclcpp::Time::max();
-  const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999);
-  EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
-  EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
+  // Same clock types
+  for (rcl_clock_type_t type = RCL_ROS_TIME;
+    type != RCL_STEADY_TIME; type = static_cast<rcl_clock_type_t>(type + 1))
+  {
+    const rclcpp::Time time_max = rclcpp::Time::max(type);
+    const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999, type);
+    EXPECT_DOUBLE_EQ(max_time.seconds(), time_max.seconds());
+    EXPECT_EQ(max_time.nanoseconds(), time_max.nanoseconds());
+  }
+  // Different clock types
+  {
+    const rclcpp::Time time_max = rclcpp::Time::max(RCL_ROS_TIME);
+    const rclcpp::Time max_time(std::numeric_limits<int32_t>::max(), 999999999, RCL_STEADY_TIME);
+    EXPECT_ANY_THROW((void)(time_max == max_time));
+    EXPECT_ANY_THROW((void)(time_max != max_time));
+    EXPECT_ANY_THROW((void)(time_max <= max_time));
+    EXPECT_ANY_THROW((void)(time_max >= max_time));
+    EXPECT_ANY_THROW((void)(time_max < max_time));
+    EXPECT_ANY_THROW((void)(time_max > max_time));
+    EXPECT_ANY_THROW((void)(time_max - max_time));
+  }
 }
 
 TEST_F(TestTime, test_constructor_from_rcl_time_point) {
@@ -415,41 +379,24 @@ TEST_F(TestTime, test_overflow_underflow_throws) {
   RCLCPP_EXPECT_THROW_EQ(
     test_time = rclcpp::Time(INT64_MAX) + rclcpp::Duration(1ns),
     std::overflow_error("addition leads to int64_t overflow"));
-  RCLCPP_EXPECT_THROW_EQ(
-    test_time = rclcpp::Time(INT64_MIN) + rclcpp::Duration(-1ns),
-    std::underflow_error("addition leads to int64_t underflow"));
 
   RCLCPP_EXPECT_THROW_EQ(
     test_time = rclcpp::Time(INT64_MAX) - rclcpp::Duration(-1ns),
     std::overflow_error("time subtraction leads to int64_t overflow"));
-  RCLCPP_EXPECT_THROW_EQ(
-    test_time = rclcpp::Time(INT64_MIN) - rclcpp::Duration(1ns),
-    std::underflow_error("time subtraction leads to int64_t underflow"));
 
   test_time = rclcpp::Time(INT64_MAX);
   RCLCPP_EXPECT_THROW_EQ(
     test_time += rclcpp::Duration(1ns),
     std::overflow_error("addition leads to int64_t overflow"));
-  test_time = rclcpp::Time(INT64_MIN);
-  RCLCPP_EXPECT_THROW_EQ(
-    test_time += rclcpp::Duration(-1ns),
-    std::underflow_error("addition leads to int64_t underflow"));
 
   test_time = rclcpp::Time(INT64_MAX);
   RCLCPP_EXPECT_THROW_EQ(
     test_time -= rclcpp::Duration(-1ns),
     std::overflow_error("time subtraction leads to int64_t overflow"));
-  test_time = rclcpp::Time(INT64_MIN);
-  RCLCPP_EXPECT_THROW_EQ(
-    test_time -= rclcpp::Duration(1ns),
-    std::underflow_error("time subtraction leads to int64_t underflow"));
 
   RCLCPP_EXPECT_THROW_EQ(
     test_time = rclcpp::Duration::from_nanoseconds(INT64_MAX) + rclcpp::Time(1),
     std::overflow_error("addition leads to int64_t overflow"));
-  RCLCPP_EXPECT_THROW_EQ(
-    test_time = rclcpp::Duration::from_nanoseconds(INT64_MIN) + rclcpp::Time(-1),
-    std::underflow_error("addition leads to int64_t underflow"));
 }
 
 class TestClockSleep : public ::testing::Test

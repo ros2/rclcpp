@@ -265,15 +265,19 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
+  std::recursive_mutex callback_mutex_;
+  // It is important to declare on_new_request_callback_ before
+  // service_handle_, so on destruction the service is
+  // destroyed first. Otherwise, the rmw service callback
+  // would point briefly to a destroyed function.
+  std::function<void(size_t)> on_new_request_callback_{nullptr};
+  // Declare service_handle_ after callback
   std::shared_ptr<rcl_service_t> service_handle_;
   bool owns_rcl_handle_ = true;
 
   rclcpp::Logger node_logger_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
-
-  std::recursive_mutex callback_mutex_;
-  std::function<void(size_t)> on_new_request_callback_{nullptr};
 };
 
 template<typename ServiceT>
@@ -303,7 +307,7 @@ public:
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] service_name Name of the topic to publish to.
    * \param[in] any_callback User defined callback to call when a client request is received.
-   * \param[in] service_options options for the subscription.
+   * \param[in] service_options options for the service.
    */
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
@@ -348,7 +352,7 @@ public:
 
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service");
     }
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_service_callback_added,
       static_cast<const void *>(get_service_handle().get()),
       static_cast<const void *>(&any_callback_));
@@ -383,7 +387,7 @@ public:
     }
 
     service_handle_ = service_handle;
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_service_callback_added,
       static_cast<const void *>(get_service_handle().get()),
       static_cast<const void *>(&any_callback_));
@@ -420,7 +424,7 @@ public:
     // In this case, rcl owns the service handle memory
     service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
     service_handle_->impl = service_handle->impl;
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_service_callback_added,
       static_cast<const void *>(get_service_handle().get()),
       static_cast<const void *>(&any_callback_));
@@ -482,16 +486,27 @@ public:
   {
     rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, &response);
 
+    if (ret == RCL_RET_TIMEOUT) {
+      RCLCPP_WARN(
+        node_logger_.get_child("rclcpp"),
+        "failed to send response to %s (timeout): %s",
+        this->get_service_name(), rcl_get_error_string().str);
+      rcl_reset_error();
+      return;
+    }
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
   }
 
-  /// Configure client introspection.
+  /// Configure service introspection.
   /**
    * \param[in] clock clock to use to generate introspection timestamps
    * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
    * \param[in] introspection_state the state to set introspection to
+   *
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw if
+   *   it failed to configure introspection.
    */
   void
   configure_introspection(

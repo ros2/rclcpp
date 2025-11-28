@@ -25,303 +25,32 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "rcl/event_callback.h"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/logger.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rosidl_runtime_c/action_type_support_struct.h"
 #include "rosidl_typesupport_cpp/action_type_support.hpp"
 
+#include "rclcpp_action/client_base.hpp"
 #include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
-
 namespace rclcpp_action
 {
-// Forward declaration
-class ClientBaseImpl;
-
-/// Base Action Client implementation
-/// \internal
-/**
- * This class should not be used directly by users wanting to create an aciton client.
- * Instead users should use `rclcpp_action::Client<>`.
- *
- * Internally, this class is responsible for interfacing with the `rcl_action` API.
- */
-class ClientBase : public rclcpp::Waitable
-{
-public:
-  RCLCPP_ACTION_PUBLIC
-  virtual ~ClientBase();
-
-  /// Enum to identify entities belonging to the action client
-  enum class EntityType : std::size_t
-  {
-    GoalClient,
-    ResultClient,
-    CancelClient,
-    FeedbackSubscription,
-    StatusSubscription,
-  };
-
-  /// Return true if there is an action server that is ready to take goal requests.
-  RCLCPP_ACTION_PUBLIC
-  bool
-  action_server_is_ready() const;
-
-  /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
-  template<typename RepT = int64_t, typename RatioT = std::milli>
-  bool
-  wait_for_action_server(
-    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
-  {
-    return wait_for_action_server_nanoseconds(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
-    );
-  }
-
-  // -------------
-  // Waitables API
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_subscriptions() override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_timers() override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_clients() override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_services() override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_guard_conditions() override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  std::shared_ptr<void>
-  take_data() override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  std::shared_ptr<void>
-  take_data_by_entity_id(size_t id) override;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  void
-  execute(std::shared_ptr<void> & data) override;
-
-  /// \internal
-  /// Set a callback to be called when action client entities have an event
-  /**
-   * The callback receives a size_t which is the number of messages received
-   * since the last time this callback was called.
-   * Normally this is 1, but can be > 1 if messages were received before any
-   * callback was set.
-   *
-   * The callback also receives an int identifier argument, which identifies
-   * the action client entity which is ready.
-   * This implies that the provided callback can use the identifier to behave
-   * differently depending on which entity triggered the waitable to become ready.
-   *
-   * Calling it again will clear any previously set callback.
-   *
-   * An exception will be thrown if the callback is not callable.
-   *
-   * This function is thread-safe.
-   *
-   * If you want more information available in the callback, like the subscription
-   * or other information, you may use a lambda with captures or std::bind.
-   *
-   * \param[in] callback functor to be called when a new message is received.
-   */
-  RCLCPP_ACTION_PUBLIC
-  void
-  set_on_ready_callback(std::function<void(size_t, int)> callback) override;
-
-  /// Unset the callback registered for new events, if any.
-  RCLCPP_ACTION_PUBLIC
-  void
-  clear_on_ready_callback() override;
-
-  // End Waitables API
-  // -----------------
-
-protected:
-  RCLCPP_ACTION_PUBLIC
-  ClientBase(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name,
-    const rosidl_action_type_support_t * type_support,
-    const rcl_action_client_options_t & options);
-
-  /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
-  RCLCPP_ACTION_PUBLIC
-  bool
-  wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout);
-
-  // -----------------------------------------------------
-  // API for communication between ClientBase and Client<>
-  using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  rclcpp::Logger get_logger();
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  GoalUUID
-  generate_goal_id();
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  send_goal_request(
-    std::shared_ptr<void> request,
-    ResponseCallback callback);
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  send_result_request(
-    std::shared_ptr<void> request,
-    ResponseCallback callback);
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  send_cancel_request(
-    std::shared_ptr<void> request,
-    ResponseCallback callback);
-
-  /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_goal_response() const = 0;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  handle_goal_response(
-    const rmw_request_id_t & response_header,
-    std::shared_ptr<void> goal_response);
-
-  /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_result_response() const = 0;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  handle_result_response(
-    const rmw_request_id_t & response_header,
-    std::shared_ptr<void> result_response);
-
-  /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_cancel_response() const = 0;
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  handle_cancel_response(
-    const rmw_request_id_t & response_header,
-    std::shared_ptr<void> cancel_response);
-
-  /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_feedback_message() const = 0;
-
-  /// \internal
-  virtual
-  void
-  handle_feedback_message(std::shared_ptr<void> message) = 0;
-
-  /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_status_message() const = 0;
-
-  /// \internal
-  virtual
-  void
-  handle_status_message(std::shared_ptr<void> message) = 0;
-
-  // End API for communication between ClientBase and Client<>
-  // ---------------------------------------------------------
-
-  /// \internal
-  /// Set a callback to be called when the specified entity is ready
-  RCLCPP_ACTION_PUBLIC
-  void
-  set_on_ready_callback(
-    EntityType entity_type,
-    rcl_event_callback_t callback,
-    const void * user_data);
-
-  // Mutex to protect the callbacks storage.
-  std::recursive_mutex listener_mutex_;
-  // Storage for std::function callbacks to keep them in scope
-  std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
-
-private:
-  std::unique_ptr<ClientBaseImpl> pimpl_;
-
-  /// Set a std::function callback to be called when the specified entity is ready
-  RCLCPP_ACTION_PUBLIC
-  void
-  set_callback_to_entity(
-    EntityType entity_type,
-    std::function<void(size_t, int)> callback);
-
-  bool on_ready_callback_set_{false};
-};
-
 /// Action Client
 /**
  * This class creates an action client.
@@ -405,12 +134,22 @@ public:
 
   /// Send an action goal and asynchronously get the result.
   /**
-   * If the goal is accepted by an action server, the returned future is set to a `ClientGoalHandle`.
+   * If the goal is accepted by an action server, the returned future is set to a `GoalHandle::SharedPtr`.
    * If the goal is rejected by an action server, then the future is set to a `nullptr`.
    *
-   * The returned goal handle is used to monitor the status of the goal and get the final result.
-   * It is valid as long as you hold a reference to the shared pointer or until the
-   * rclcpp_action::Client is destroyed at which point the goal status will become UNKNOWN.
+   * The goal handle in the future is used to monitor the status of the goal and get the final result.
+   *
+   * If callbacks were set in @param options, you will receive callbacks, as long as you hold a reference
+   * to the shared pointer contained in the returned future, or rclcpp_action::Client is destroyed. Dropping
+   * the shared pointer to the goal handle will not cancel the goal. In order to cancel it, you must explicitly
+   * call async_cancel_goal.
+   *
+   * WARNING this method has inconsistent behaviour and a memory leak bug.
+   * If you set the result callback in @param options, the handle will be self referencing, and you will receive
+   * callbacks even though you do not hold a reference to the shared pointer. In this case, the self reference will
+   * be deleted if the result callback was received. If there is no result callback, there will be a memory leak.
+   *
+   * To prevent the memory leak, you may call stop_callbacks() explicit. This will delete the self reference.
    *
    * \param[in] goal The goal request.
    * \param[in] options Options for sending the goal request. Contains references to callbacks for
@@ -448,7 +187,7 @@ public:
         std::shared_ptr<GoalHandle> goal_handle(
           new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
         {
-          std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+          std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
           goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         }
         promise->set_value(goal_handle);
@@ -466,7 +205,7 @@ public:
     // To prevent the list from growing out of control, forget about any goals
     // with no more user references
     {
-      std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+      std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
       auto goal_handle_it = goal_handles_.begin();
       while (goal_handle_it != goal_handles_.end()) {
         if (!goal_handle_it->second.lock()) {
@@ -496,7 +235,7 @@ public:
     typename GoalHandle::SharedPtr goal_handle,
     ResultCallback result_callback = nullptr)
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
@@ -531,7 +270,7 @@ public:
     typename GoalHandle::SharedPtr goal_handle,
     CancelCallback cancel_callback = nullptr)
   {
-    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
@@ -562,6 +301,63 @@ public:
     return async_cancel(cancel_request, cancel_callback);
   }
 
+  /// Stops the callbacks for the goal in a thread safe way
+  /**
+   * This will NOT cancel the goal, it will only stop the callbacks.
+   *
+   * After the call to this function, it is guaranteed that there
+   * will be no more callbacks from the goal. This is not guaranteed
+   * if multiple threads are involved, and the goal_handle is just
+   * dropped.
+   *
+   * \param[in] goal_handle The goal were the callbacks shall be stopped
+   */
+  void stop_callbacks(typename GoalHandle::SharedPtr goal_handle)
+  {
+    goal_handle->set_feedback_callback(typename GoalHandle::FeedbackCallback());
+    goal_handle->set_result_callback(typename GoalHandle::ResultCallback());
+
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
+    const GoalUUID & goal_id = goal_handle->get_goal_id();
+    auto it = goal_handles_.find(goal_id);
+    if (goal_handles_.end() == it) {
+      // someone else already deleted the entry
+      // e.g. the result callback
+      RCLCPP_DEBUG(
+        this->get_logger(),
+        "Given goal is unknown. Ignoring...");
+      return;
+    }
+    goal_handles_.erase(it);
+  }
+
+  /// Stops the callbacks for the goal in a thread safe way
+  /**
+   * For futher information see stop_callbacks(typename GoalHandle::SharedPtr goal_handle)
+   */
+  void stop_callbacks(const GoalUUID & goal_id)
+  {
+    typename GoalHandle::SharedPtr goal_handle;
+    {
+      std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
+      auto it = goal_handles_.find(goal_id);
+      if (goal_handles_.end() == it) {
+        // someone else already deleted the entry
+        // e.g. the result callback
+        RCLCPP_DEBUG(
+          this->get_logger(),
+          "Given goal is unknown. Ignoring...");
+        return;
+      }
+
+      goal_handle = it->second.lock();
+    }
+
+    if (goal_handle) {
+      stop_callbacks(goal_handle);
+    }
+  }
+
   /// Asynchronously request all goals at or before a specified time be canceled.
   /**
    * \param[in] stamp The timestamp for the cancel goal request.
@@ -590,7 +386,7 @@ public:
   virtual
   ~Client()
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     auto it = goal_handles_.begin();
     while (it != goal_handles_.end()) {
       typename GoalHandle::SharedPtr goal_handle = it->second.lock();
@@ -637,7 +433,7 @@ private:
   void
   handle_feedback_message(std::shared_ptr<void> message) override
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
     typename FeedbackMessage::SharedPtr feedback_message =
       std::static_pointer_cast<FeedbackMessage>(message);
@@ -674,7 +470,7 @@ private:
   void
   handle_status_message(std::shared_ptr<void> message) override
   {
-    std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
@@ -723,7 +519,7 @@ private:
           wrapped_result.goal_id = goal_handle->get_goal_id();
           wrapped_result.code = static_cast<ResultCode>(result_response->status);
           goal_handle->set_result(wrapped_result);
-          std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+          std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
           goal_handles_.erase(goal_handle->get_goal_id());
         });
     } catch (rclcpp::exceptions::RCLError & ex) {
@@ -755,7 +551,7 @@ private:
   }
 
   std::map<GoalUUID, typename GoalHandle::WeakPtr> goal_handles_;
-  std::mutex goal_handles_mutex_;
+  std::recursive_mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
 

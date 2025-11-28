@@ -24,6 +24,8 @@
 
 #include "action_msgs/msg/goal_status.hpp"
 
+#include "rclcpp/logging.hpp"
+
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/types.hpp"
 
@@ -43,7 +45,7 @@ class ServerGoalHandleBase
 {
 public:
   /// Indicate if client has requested this goal be cancelled.
-  /// \return true if a cancelation request has been accepted for this goal.
+  /// \return true if a cancellation request has been accepted for this goal.
   RCLCPP_ACTION_PUBLIC
   bool
   is_canceling() const;
@@ -103,10 +105,18 @@ protected:
   _execute();
 
   /// Transition the goal to canceled state if it never reached a terminal state.
+  /// Returns true if transitioned to canceled, else false.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   bool
   try_canceling() noexcept;
+
+  /// Transition the goal to aborted state if it never reached a terminal state.
+  /// Returns true if transitioned to aborted, else false.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  bool
+  try_aborting() noexcept;
 
   // End API for communication between ServerGoalHandleBase and ServerGoalHandle<>
   // -----------------------------------------------------------------------------
@@ -128,7 +138,7 @@ class Server;
  * accepted.
  * A `Server` will create an instance and give it to the user in their `handle_accepted` callback.
  *
- * Internally, this class is responsible for coverting between the C++ action type and generic
+ * Internally, this class is responsible for converting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
  */
 template<typename ActionT>
@@ -196,7 +206,7 @@ public:
 
   /// Indicate that a goal has been canceled.
   /**
-   * Only call this if the goal is executing or pending, but has been canceled.
+   * Only call this if the goal is canceling.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    *
@@ -243,11 +253,22 @@ public:
 
   virtual ~ServerGoalHandle()
   {
-    // Cancel goal if handle was allowed to destruct without reaching a terminal state
-    if (try_canceling()) {
-      auto null_result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
-      null_result->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
-      on_terminal_state_(uuid_, null_result);
+    try {
+      // Abort goal if handle was allowed to destruct without reaching a terminal state
+      if (try_aborting()) {
+        auto null_result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+        null_result->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
+        on_terminal_state_(uuid_, null_result);
+      } else if (try_canceling()) {
+        // Cancel goal if handle was allowed to destruct without reaching a terminal state
+        auto null_result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+        null_result->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+        on_terminal_state_(uuid_, null_result);
+      }
+    } catch (const std::exception & ex) {
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("rclcpp_action"),
+        "Failed to abort/cancel goal handler in destructor: %s", ex.what());
     }
   }
 

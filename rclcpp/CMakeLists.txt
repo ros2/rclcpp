@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 
 project(rclcpp)
 
@@ -10,11 +10,14 @@ find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+find_package(rcl_logging_interface REQUIRED)
 find_package(rcl_yaml_param_parser REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(rosidl_dynamic_typesupport REQUIRED)
+find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
@@ -42,25 +45,38 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/clock.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
+  src/rclcpp/create_generic_client.cpp
   src/rclcpp/detail/add_guard_condition_to_rcl_wait_set.cpp
+  src/rclcpp/detail/resolve_intra_process_buffer_type.cpp
   src/rclcpp/detail/resolve_parameter_overrides.cpp
   src/rclcpp/detail/rmw_implementation_specific_payload.cpp
   src/rclcpp/detail/rmw_implementation_specific_publisher_payload.cpp
   src/rclcpp/detail/rmw_implementation_specific_subscription_payload.cpp
   src/rclcpp/detail/utilities.cpp
   src/rclcpp/duration.cpp
+  src/rclcpp/dynamic_typesupport/dynamic_message.cpp
+  src/rclcpp/dynamic_typesupport/dynamic_message_type.cpp
+  src/rclcpp/dynamic_typesupport/dynamic_message_type_builder.cpp
+  src/rclcpp/dynamic_typesupport/dynamic_message_type_support.cpp
+  src/rclcpp/dynamic_typesupport/dynamic_serialization_support.cpp
   src/rclcpp/event.cpp
   src/rclcpp/exceptions/exceptions.cpp
   src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
+  src/rclcpp/executor_options.cpp
   src/rclcpp/executors.cpp
+  src/rclcpp/executors/executor_entities_collection.cpp
+  src/rclcpp/executors/executor_entities_collector.cpp
+  src/rclcpp/executors/executor_notify_waitable.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
-  src/rclcpp/executors/static_executor_entities_collector.cpp
-  src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
+  src/rclcpp/experimental/executors/events_executor/events_executor.cpp
+  src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/future_return_code.cpp
+  src/rclcpp/generic_client.cpp
   src/rclcpp/generic_publisher.cpp
+  src/rclcpp/generic_service.cpp
   src/rclcpp/generic_subscription.cpp
   src/rclcpp/graph_listener.cpp
   src/rclcpp/guard_condition.cpp
@@ -82,6 +98,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_time_source.cpp
   src/rclcpp/node_interfaces/node_timers.cpp
   src/rclcpp/node_interfaces/node_topics.cpp
+  src/rclcpp/node_interfaces/node_type_descriptions.cpp
   src/rclcpp/node_interfaces/node_waitables.cpp
   src/rclcpp/node_options.cpp
   src/rclcpp/parameter.cpp
@@ -95,6 +112,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/qos.cpp
   src/rclcpp/event_handler.cpp
   src/rclcpp/qos_overriding_options.cpp
+  src/rclcpp/rate.cpp
   src/rclcpp/serialization.cpp
   src/rclcpp/serialized_message.cpp
   src/rclcpp/service.cpp
@@ -111,28 +129,22 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/waitable.cpp
 )
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
+# By default, without the settings below, find_package(Python3) will attempt
+# to find the newest python version it can, and additionally will find the
+# most specific version.  For instance, on a system that has
+# /usr/bin/python3.10, /usr/bin/python3.11, and /usr/bin/python3, it will find
+# /usr/bin/python3.11, even if /usr/bin/python3 points to /usr/bin/python3.10.
+# The behavior we want is to prefer the "system" installed version unless the
+# user specifically tells us othewise through the Python3_EXECUTABLE hint.
+# Setting CMP0094 to NEW means that the search will stop after the first
+# python version is found.  Setting Python3_FIND_UNVERSIONED_NAMES means that
+# the search will prefer /usr/bin/python3 over /usr/bin/python3.11.  And that
+# latter functionality is only available in CMake 3.20 or later, so we need
+# at least that version.
+cmake_policy(SET CMP0094 NEW)
+set(Python3_FIND_UNVERSIONED_NAMES FIRST)
 
-# "watch" template for changes
-configure_file(
-  "resource/logging.hpp.em"
-  "logging.hpp.em.watch"
-  COPYONLY
-)
-# generate header with logging macros
-set(python_code_logging
-  "import em"
-  "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
-string(REPLACE ";" "$<SEMICOLON>" python_code_logging "${python_code_logging}")
-add_custom_command(OUTPUT include/rclcpp/logging.hpp
-  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
-  COMMAND Python3::Interpreter ARGS -c "${python_code_logging}"
-  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
-  COMMENT "Expanding logging.hpp.em"
-  VERBATIM
-)
-list(APPEND ${PROJECT_NAME}_SRCS
-  include/rclcpp/logging.hpp)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 file(GLOB interface_files "include/rclcpp/node_interfaces/node_*_interface.hpp")
 foreach(interface_file ${interface_files})
@@ -189,22 +201,28 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
-# specific order: dependents before dependencies
-ament_target_dependencies(${PROJECT_NAME}
-  "ament_index_cpp"
-  "libstatistics_collector"
-  "rcl"
-  "rcl_interfaces"
-  "rcl_yaml_param_parser"
-  "rcpputils"
-  "rcutils"
-  "builtin_interfaces"
-  "rosgraph_msgs"
-  "rosidl_typesupport_cpp"
-  "rosidl_runtime_cpp"
-  "statistics_msgs"
-  "tracetools"
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  ${builtin_interfaces_TARGETS}
+  libstatistics_collector::libstatistics_collector
+  rcl::rcl
+  ${rcl_interfaces_TARGETS}
+  rcl_yaml_param_parser::rcl_yaml_param_parser
+  rcpputils::rcpputils
+  rcutils::rcutils
+  rmw::rmw
+  ${rosgraph_msgs_TARGETS}
+  rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
+  rosidl_runtime_c::rosidl_runtime_c
+  rosidl_runtime_cpp::rosidl_runtime_cpp
+  rosidl_typesupport_cpp::rosidl_typesupport_cpp
+  ${statistics_msgs_TARGETS}
+  tracetools::tracetools
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  ament_index_cpp::ament_index_cpp
+  rcl_logging_interface::rcl_logging_interface
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -226,20 +244,23 @@ ament_export_libraries(${PROJECT_NAME})
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
-# specific order: dependents before dependencies
-ament_export_dependencies(ament_index_cpp)
-ament_export_dependencies(libstatistics_collector)
-ament_export_dependencies(rcl)
-ament_export_dependencies(rcpputils)
-ament_export_dependencies(rcutils)
-ament_export_dependencies(builtin_interfaces)
-ament_export_dependencies(rosgraph_msgs)
-ament_export_dependencies(rosidl_typesupport_cpp)
-ament_export_dependencies(rosidl_typesupport_c)
-ament_export_dependencies(rosidl_runtime_cpp)
-ament_export_dependencies(rcl_yaml_param_parser)
-ament_export_dependencies(statistics_msgs)
-ament_export_dependencies(tracetools)
+ament_export_dependencies(
+  builtin_interfaces
+  libstatistics_collector
+  rcl
+  rcl_interfaces
+  rcl_yaml_param_parser
+  rcpputils
+  rcutils
+  rmw
+  rosgraph_msgs
+  rosidl_dynamic_typesupport
+  rosidl_runtime_c
+  rosidl_runtime_cpp
+  rosidl_typesupport_cpp
+  statistics_msgs
+  tracetools
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -257,7 +278,7 @@ install(
 
 if(TEST cppcheck)
   # must set the property after ament_package()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 500)
+  set_tests_properties(cppcheck PROPERTIES TIMEOUT 1200)
 endif()
 
 if(TEST cpplint)

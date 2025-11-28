@@ -50,8 +50,8 @@ template<
   typename SubscriptionT,
   typename MessageMemoryStrategyT,
   typename NodeParametersT,
-  typename NodeTopicsT,
-  typename ROSMessageType = typename SubscriptionT::ROSMessageType>
+  typename NodeTopicsT
+>
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
   NodeParametersT & node_parameters,
@@ -70,7 +70,7 @@ create_subscription(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics_interface = get_node_topics_interface(node_topics);
 
-  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>>
+  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>
   subscription_topic_stats = nullptr;
 
   if (rclcpp::detail::resolve_enable_topic_statistics(
@@ -80,8 +80,7 @@ create_subscription(
     if (options.topic_stats_options.publish_period <= std::chrono::milliseconds(0)) {
       throw std::invalid_argument(
               "topic_stats_options.publish_period must be greater than 0, specified value of " +
-              std::to_string(options.topic_stats_options.publish_period.count()) +
-              " ms");
+              std::to_string(options.topic_stats_options.publish_period.count()) + " ms");
     }
 
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>>
@@ -89,14 +88,14 @@ create_subscription(
       node_parameters,
       node_topics_interface,
       options.topic_stats_options.publish_topic,
-      qos);
+      options.topic_stats_options.qos);
 
-    subscription_topic_stats = std::make_shared<
-      rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>
-      >(node_topics_interface->get_node_base_interface()->get_name(), publisher);
+    subscription_topic_stats =
+      std::make_shared<rclcpp::topic_statistics::SubscriptionTopicStatistics>(
+      node_topics_interface->get_node_base_interface()->get_name(), publisher);
 
     std::weak_ptr<
-      rclcpp::topic_statistics::SubscriptionTopicStatistics<ROSMessageType>
+      rclcpp::topic_statistics::SubscriptionTopicStatistics
     > weak_subscription_topic_stats(subscription_topic_stats);
     auto sub_call_back = [weak_subscription_topic_stats]() {
         auto subscription_topic_stats = weak_subscription_topic_stats.lock();

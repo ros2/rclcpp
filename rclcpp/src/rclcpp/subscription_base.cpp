@@ -22,6 +22,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
@@ -32,6 +33,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rosidl_dynamic_typesupport/types.h"
+
 using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
@@ -41,7 +44,7 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   const SubscriptionEventCallbacks & event_callbacks,
   bool use_default_callbacks,
-  bool is_serialized)
+  DeliveredMessageKind delivered_message_kind)
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   node_logger_(rclcpp::get_node_logger(node_handle_.get())),
@@ -49,7 +52,7 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  is_serialized_(is_serialized)
+  delivered_message_kind_(delivered_message_kind)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
@@ -109,16 +112,28 @@ void
 SubscriptionBase::bind_event_callbacks(
   const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks)
 {
-  if (event_callbacks.deadline_callback) {
-    this->add_event_handler(
-      event_callbacks.deadline_callback,
-      RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+  try {
+    if (event_callbacks.deadline_callback) {
+      this->add_event_handler(
+        event_callbacks.deadline_callback,
+        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for deadline; not supported");
   }
 
-  if (event_callbacks.liveliness_callback) {
-    this->add_event_handler(
-      event_callbacks.liveliness_callback,
-      RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+  try {
+    if (event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        event_callbacks.liveliness_callback,
+        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for liveliness; not supported");
   }
 
   QOSRequestedIncompatibleQoSCallbackType incompatible_qos_cb;
@@ -136,7 +151,9 @@ SubscriptionBase::bind_event_callbacks(
       this->add_event_handler(incompatible_qos_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
     }
   } catch (const UnsupportedEventTypeException & /*exc*/) {
-    // pass
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible qos; not supported");
   }
 
   IncompatibleTypeCallbackType incompatible_type_cb;
@@ -153,18 +170,33 @@ SubscriptionBase::bind_event_callbacks(
       this->add_event_handler(incompatible_type_cb, RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE);
     }
   } catch (UnsupportedEventTypeException & /*exc*/) {
-    // pass
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible type; not supported");
   }
 
-  if (event_callbacks.message_lost_callback) {
-    this->add_event_handler(
-      event_callbacks.message_lost_callback,
-      RCL_SUBSCRIPTION_MESSAGE_LOST);
+  try {
+    if (event_callbacks.message_lost_callback) {
+      this->add_event_handler(
+        event_callbacks.message_lost_callback,
+        RCL_SUBSCRIPTION_MESSAGE_LOST);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for message lost; not supported");
   }
-  if (event_callbacks.matched_callback) {
-    this->add_event_handler(
-      event_callbacks.matched_callback,
-      RCL_SUBSCRIPTION_MATCHED);
+
+  try {
+    if (event_callbacks.matched_callback) {
+      this->add_event_handler(
+        event_callbacks.matched_callback,
+        RCL_SUBSCRIPTION_MATCHED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for matched; not supported");
   }
 }
 
@@ -215,7 +247,7 @@ SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & mes
     &message_info_out.get_rmw_message_info(),
     nullptr  // rmw_subscription_allocation_t is unused here
   );
-  TRACEPOINT(rclcpp_take, static_cast<const void *>(message_out));
+  TRACETOOLS_TRACEPOINT(rclcpp_take, static_cast<const void *>(message_out));
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
     return false;
   } else if (RCL_RET_OK != ret) {
@@ -241,6 +273,9 @@ SubscriptionBase::take_serialized(
     &message_out.get_rcl_serialized_message(),
     &message_info_out.get_rmw_message_info(),
     nullptr);
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_take,
+    static_cast<const void *>(&message_out.get_rcl_serialized_message()));
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
     return false;
   } else if (RCL_RET_OK != ret) {
@@ -258,7 +293,13 @@ SubscriptionBase::get_message_type_support_handle() const
 bool
 SubscriptionBase::is_serialized() const
 {
-  return is_serialized_;
+  return delivered_message_kind_ == rclcpp::DeliveredMessageKind::SERIALIZED_MESSAGE;
+}
+
+rclcpp::DeliveredMessageKind
+SubscriptionBase::get_delivered_message_kind() const
+{
+  return delivered_message_kind_;
 }
 
 size_t
@@ -289,7 +330,20 @@ SubscriptionBase::setup_intra_process(
 bool
 SubscriptionBase::can_loan_messages() const
 {
-  return rcl_subscription_can_loan_messages(subscription_handle_.get());
+  bool retval = rcl_subscription_can_loan_messages(subscription_handle_.get());
+  if (retval) {
+    // TODO(clalancette): The loaned message interface is currently not safe to use with
+    // shared_ptr callbacks.  If a user takes a copy of the shared_ptr, it can get freed from
+    // underneath them via rcl_return_loaned_message_from_subscription().  The correct solution is
+    // to return the loaned message in a custom deleter, but that needs to be carefully handled
+    // with locking.  Warn the user about this until we fix it.
+    RCLCPP_WARN_ONCE(
+      this->node_logger_,
+      "Loaned messages are only safe with const ref subscription callbacks. "
+      "If you are using any other kind of subscriptions, "
+      "set the ROS_DISABLE_LOANED_MESSAGES environment variable to 1 (the default).");
+  }
+  return retval;
 }
 
 rclcpp::Waitable::SharedPtr
@@ -327,10 +381,8 @@ SubscriptionBase::default_incompatible_qos_callback(
 
 void
 SubscriptionBase::default_incompatible_type_callback(
-  rclcpp::IncompatibleTypeInfo & event) const
+  [[maybe_unused]] rclcpp::IncompatibleTypeInfo & event) const
 {
-  (void)event;
-
   RCLCPP_WARN(
     rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
     "Incompatible type on topic '%s', no messages will be sent to it.", get_topic_name());
@@ -442,8 +494,7 @@ SubscriptionBase::set_content_filter(
   rcl_subscription_content_filter_options_t options =
     rcl_get_zero_initialized_subscription_content_filter_options();
 
-  std::vector<const char *> cstrings =
-    get_c_vector_string(expression_parameters);
+  std::vector<const char *> cstrings = get_c_vector_string(expression_parameters);
   rcl_ret_t ret = rcl_subscription_content_filter_options_init(
     subscription_handle_.get(),
     get_c_string(filter_expression),
@@ -514,4 +565,15 @@ SubscriptionBase::get_content_filter() const
   }
 
   return ret_options;
+}
+
+
+// DYNAMIC TYPE ==================================================================================
+bool
+SubscriptionBase::take_dynamic_message(
+  rclcpp::dynamic_typesupport::DynamicMessage & /*message_out*/,
+  rclcpp::MessageInfo & /*message_info_out*/)
+{
+  throw std::runtime_error("Unimplemented");
+  return false;
 }

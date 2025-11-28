@@ -125,7 +125,6 @@ bool
 ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
 {
   auto start = std::chrono::steady_clock::now();
-  // make an event to reuse, rather than create a new one each time
   auto node_ptr = node_graph_.lock();
   if (!node_ptr) {
     throw InvalidNodeError();
@@ -138,6 +137,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     // check was non-blocking, return immediately
     return false;
   }
+  // make an event to reuse, rather than create a new one each time
   auto event = node_ptr->get_graph_event();
   // update the time even on the first loop to account for time spent in the first call
   // to this->server_is_ready()

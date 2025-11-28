@@ -21,12 +21,15 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
+
+#include "test_msgs/msg/empty.hpp"
 
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
@@ -61,7 +64,7 @@ protected:
   std::shared_ptr<rclcpp::Node> node;
   rclcpp::node_interfaces::NodeParameters * node_parameters;
 
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 TEST_F(TestNodeParameters, construct_destruct_rcl_errors) {
@@ -77,9 +80,9 @@ TEST_F(TestNodeParameters, list_parameters)
   std::vector<std::string> prefixes;
   const auto list_result = node_parameters->list_parameters(prefixes, 1u);
 
-  // Currently the only default parameter is 'use_sim_time', but that may change.
+  // Currently the default parameters are 'use_sim_time' and 'start_type_description_service'
   size_t number_of_parameters = list_result.names.size();
-  EXPECT_GE(1u, number_of_parameters);
+  EXPECT_GE(2u, number_of_parameters);
 
   const std::string parameter_name = "new_parameter";
   const rclcpp::ParameterValue value(true);
@@ -95,15 +98,15 @@ TEST_F(TestNodeParameters, list_parameters)
     std::find(list_result2.names.begin(), list_result2.names.end(), parameter_name),
     list_result2.names.end());
 
-  // Check prefixes
+  // Check prefixes and the depth relative to the given prefixes
   const std::string parameter_name2 = "prefix.new_parameter";
   const rclcpp::ParameterValue value2(true);
   const rcl_interfaces::msg::ParameterDescriptor descriptor2;
   const auto added_parameter_value2 =
     node_parameters->declare_parameter(parameter_name2, value2, descriptor2, false);
-  EXPECT_EQ(value.get<bool>(), added_parameter_value.get<bool>());
+  EXPECT_EQ(value2.get<bool>(), added_parameter_value2.get<bool>());
   prefixes = {"prefix"};
-  auto list_result3 = node_parameters->list_parameters(prefixes, 2u);
+  auto list_result3 = node_parameters->list_parameters(prefixes, 1u);
   EXPECT_EQ(1u, list_result3.names.size());
   EXPECT_NE(
     std::find(list_result3.names.begin(), list_result3.names.end(), parameter_name2),
@@ -116,14 +119,39 @@ TEST_F(TestNodeParameters, list_parameters)
   EXPECT_NE(
     std::find(list_result4.names.begin(), list_result4.names.end(), parameter_name),
     list_result4.names.end());
+
+  // Return all parameters when the depth = 0
+  auto list_result5 = node_parameters->list_parameters(prefixes, 0u);
+  EXPECT_EQ(1u, list_result5.names.size());
+  EXPECT_NE(
+    std::find(list_result5.names.begin(), list_result5.names.end(), parameter_name),
+    list_result5.names.end());
 }
 
-TEST_F(TestNodeParameters, parameter_overrides)
+TEST_F(TestNodeParameters, parameter_overrides_with_value)
 {
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
   node_options.append_parameter_override("param1", true);
   node_options.append_parameter_override("param2", 42);
+
+  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns", node_options);
+
+  auto * node_parameters_interface =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node2->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters_interface);
+
+  const auto & parameter_overrides = node_parameters_interface->get_parameter_overrides();
+  EXPECT_EQ(2u, parameter_overrides.size());
+}
+
+TEST_F(TestNodeParameters, parameter_overrides_with_parameter)
+{
+  rclcpp::NodeOptions node_options;
+  node_options.automatically_declare_parameters_from_overrides(true);
+  node_options.append_parameter_override(rclcpp::Parameter("param1", true));
+  node_options.append_parameter_override(rclcpp::Parameter("param2", 42));
 
   std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns", node_options);
 
@@ -319,6 +347,89 @@ TEST_F(TestNodeParameters, add_remove_post_set_parameters_callback) {
   RCLCPP_EXPECT_THROW_EQ(
     node_parameters->remove_post_set_parameters_callback(handle.get()),
     std::runtime_error("Post set parameter callback doesn't exist"));
+}
+
+TEST_F(TestNodeParameters, set_param_recursive_in_post_set_parameters_callback) {
+  rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription_;
+  rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher_;
+
+  rcl_interfaces::msg::ParameterDescriptor param_descriptor;
+  param_descriptor.name = "create_entities";
+  param_descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+  param_descriptor.read_only = false;
+
+  bool result = node_parameters->declare_parameter(
+    "create_entities", rclcpp::ParameterValue(false), param_descriptor, false).get<bool>();
+  EXPECT_EQ(result, false);
+
+  // Register a callback to create/delete publisher and subscription with
+  // QoS override parameter options. This will call declare_parameter recursively
+  // during this callback.
+  auto sub_callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
+  auto callback = [&](const std::vector<rclcpp::Parameter> & parameters) {
+      for (const auto & parameter : parameters) {
+        if (parameter.get_name() == "create_entities" &&
+          parameter.get_type() == rclcpp::ParameterType::PARAMETER_BOOL)
+        {
+          if (parameter.as_bool()) {
+            ASSERT_EQ(subscription_, nullptr);
+            rclcpp::SubscriptionOptions sub_options;
+            // This will declare the QoS override parameters in this callback.
+            sub_options.qos_overriding_options =
+              rclcpp::QosOverridingOptions::with_default_policies();
+            subscription_ = node->create_subscription<test_msgs::msg::Empty>(
+              "empty",
+              rclcpp::QoS(10),
+              sub_callback,
+              sub_options);
+            ASSERT_NE(subscription_, nullptr);
+            ASSERT_EQ(publisher_, nullptr);
+            rclcpp::PublisherOptions pub_options;
+            // This will declare the QoS override parameters in this callback.
+            pub_options.qos_overriding_options =
+              rclcpp::QosOverridingOptions::with_default_policies();
+            publisher_ = node->create_publisher<test_msgs::msg::Empty>(
+              "empty",
+              rclcpp::QoS(10),
+              pub_options);
+            ASSERT_NE(publisher_, nullptr);
+          } else {
+            ASSERT_NE(subscription_, nullptr);
+            subscription_.reset();
+            ASSERT_EQ(subscription_, nullptr);
+            ASSERT_NE(publisher_, nullptr);
+            publisher_.reset();
+            ASSERT_EQ(publisher_, nullptr);
+          }
+        }
+      }
+    };
+
+  auto handle = node_parameters->add_post_set_parameters_callback(callback);
+  ASSERT_NE(handle, nullptr);
+  EXPECT_TRUE(node_parameters->has_parameter("create_entities"));
+  EXPECT_EQ(node_parameters->get_parameter("create_entities").get_value<bool>(), false);
+
+  // This will call the registered callback, that will create endpoints with
+  // declaring the QoS override parameters recursively.
+  auto results = node_parameters->set_parameters({rclcpp::Parameter("create_entities", true)});
+  EXPECT_TRUE(!results.empty() && results[0].successful);
+
+  EXPECT_TRUE(node_parameters->has_parameter("create_entities"));
+  EXPECT_EQ(node_parameters->get_parameter("create_entities").get_value<bool>(), true);
+
+  // Destroy publisher and subscription endpoints.
+  results = node_parameters->set_parameters({rclcpp::Parameter("create_entities", false)});
+  EXPECT_TRUE(!results.empty() && results[0].successful);
+
+  EXPECT_TRUE(node_parameters->has_parameter("create_entities"));
+  EXPECT_EQ(node_parameters->get_parameter("create_entities").get_value<bool>(), false);
+
+  // Make sure recreation can also work without any exception.
+  results = node_parameters->set_parameters({rclcpp::Parameter("create_entities", true)});
+  EXPECT_TRUE(!results.empty() && results[0].successful);
+
+  EXPECT_NO_THROW(node_parameters->remove_post_set_parameters_callback(handle.get()));
 }
 
 TEST_F(TestNodeParameters, wildcard_with_namespace)

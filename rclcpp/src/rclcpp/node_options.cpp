@@ -80,6 +80,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->clock_type_ = other.clock_type_;
     this->clock_qos_ = other.clock_qos_;
     this->use_clock_thread_ = other.use_clock_thread_;
+    this->enable_logger_service_ = other.enable_logger_service_;
     this->parameter_event_qos_ = other.parameter_event_qos_;
     this->rosout_qos_ = other.rosout_qos_;
     this->parameter_event_publisher_options_ = other.parameter_event_publisher_options_;
@@ -245,6 +246,19 @@ NodeOptions &
 NodeOptions::start_parameter_services(bool start_parameter_services)
 {
   this->start_parameter_services_ = start_parameter_services;
+  return *this;
+}
+
+bool
+NodeOptions::enable_logger_service() const
+{
+  return this->enable_logger_service_;
+}
+
+NodeOptions &
+NodeOptions::enable_logger_service(bool enable_logger_service)
+{
+  this->enable_logger_service_ = enable_logger_service;
   return *this;
 }
 

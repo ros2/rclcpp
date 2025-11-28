@@ -30,6 +30,9 @@
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
+
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -91,12 +94,24 @@ public:
       buffer_type,
       qos_profile,
       std::make_shared<Alloc>(subscribed_type_allocator_));
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_ipb_to_subscription,
+      static_cast<const void *>(buffer_.get()),
+      static_cast<const void *>(this));
+  }
+
+  void
+  add_to_wait_set(rcl_wait_set_t & wait_set) override
+  {
+    if (this->buffer_->has_data()) {
+      this->trigger_guard_condition();
+    }
+    detail::add_guard_condition_to_rcl_wait_set(wait_set, this->gc_);
   }
 
   bool
-  is_ready(rcl_wait_set_t * wait_set) override
+  is_ready([[maybe_unused]] const rcl_wait_set_t & wait_set) override
   {
-    (void) wait_set;
     return buffer_->has_data();
   }
 
@@ -161,6 +176,11 @@ public:
   use_take_shared_method() const override
   {
     return buffer_->use_take_shared_method();
+  }
+
+  size_t available_capacity() const override
+  {
+    return buffer_->available_capacity();
   }
 
 protected:

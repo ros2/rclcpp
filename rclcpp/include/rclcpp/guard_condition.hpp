@@ -48,7 +48,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit GuardCondition(
-    rclcpp::Context::SharedPtr context =
+    const rclcpp::Context::SharedPtr & context =
     rclcpp::contexts::get_global_default_context(),
     rcl_guard_condition_options_t guard_condition_options =
     rcl_guard_condition_get_default_options());
@@ -56,11 +56,6 @@ public:
   RCLCPP_PUBLIC
   virtual
   ~GuardCondition();
-
-  /// Return the context used when creating this guard condition.
-  RCLCPP_PUBLIC
-  rclcpp::Context::SharedPtr
-  get_context() const;
 
   /// Return the underlying rcl guard condition structure.
   RCLCPP_PUBLIC
@@ -105,7 +100,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set);
+  add_to_wait_set(rcl_wait_set_t & wait_set);
 
   /// Set a callback to be called whenever the guard condition is triggered.
   /**
@@ -128,13 +123,14 @@ public:
   set_on_trigger_callback(std::function<void(size_t)> callback);
 
 protected:
-  rclcpp::Context::SharedPtr context_;
   rcl_guard_condition_t rcl_guard_condition_;
   std::atomic<bool> in_use_by_wait_set_{false};
   std::recursive_mutex reentrant_mutex_;
   std::function<void(size_t)> on_trigger_callback_{nullptr};
   size_t unread_count_{0};
-  rcl_wait_set_t * wait_set_{nullptr};
+  // the type of wait_set_ is actually rcl_wait_set_t *, but it's never
+  // dereferenced, only compared to, so make it void * to avoid accidental use
+  void * wait_set_{nullptr};
 };
 
 }  // namespace rclcpp

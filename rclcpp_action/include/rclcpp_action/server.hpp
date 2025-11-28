@@ -21,14 +21,18 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
+#include "action_msgs/srv/cancel_goal.hpp"
 #include "rcl/event_callback.h"
 #include "rcl_action/action_server.h"
 #include "rosidl_runtime_c/action_type_support_struct.h"
 #include "rosidl_typesupport_cpp/action_type_support.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"
@@ -71,12 +75,15 @@ enum class CancelResponse : int8_t
 class ServerBase : public rclcpp::Waitable
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServerBase)
+
   /// Enum to identify entities belonging to the action server
   enum class EntityType : std::size_t
   {
     GoalService,
     ResultService,
     CancelService,
+    Expired,
   };
 
   RCLCPP_ACTION_PUBLIC
@@ -119,13 +126,13 @@ public:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+  add_to_wait_set(rcl_wait_set_t & wait_set) override;
 
   /// Return true if any entity belonging to the action server is ready to be executed.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   bool
-  is_ready(rcl_wait_set_t *) override;
+  is_ready(const rcl_wait_set_t & wait_set) override;
 
   RCLCPP_ACTION_PUBLIC
   std::shared_ptr<void>
@@ -139,7 +146,7 @@ public:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute(std::shared_ptr<void> & data) override;
+  execute(const std::shared_ptr<void> & data) override;
 
   /// \internal
   /// Set a callback to be called when action server entities have an event
@@ -174,8 +181,29 @@ public:
   void
   clear_on_ready_callback() override;
 
+  /// Returns all timers used by this waitable
+  RCLCPP_ACTION_PUBLIC
+  std::vector<std::shared_ptr<rclcpp::TimerBase>>
+  get_timers() const override;
+
   // End Waitables API
   // -----------------
+
+  /// Configure action server introspection
+  /**
+   * \param[in] clock clock to use to generate introspection timestamps
+   * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
+   * \param[in] introspection_state the state to set introspection to
+   *
+   * \throw std::invalid_argument if clock is nullptr
+   * \throw rclcpp::exceptions::throw_from_rcl_error if rcl error occurs.
+   */
+  RCLCPP_ACTION_PUBLIC
+  void
+  configure_introspection(
+    rclcpp::Clock::SharedPtr clock,
+    const rclcpp::QoS & qos_service_event_pub,
+    rcl_service_introspection_state_t introspection_state);
 
 protected:
   RCLCPP_ACTION_PUBLIC
@@ -279,19 +307,29 @@ private:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_goal_request_received(std::shared_ptr<void> & data);
+  execute_goal_request_received(
+    rcl_ret_t ret,
+    rcl_action_goal_info_t goal_info,
+    rmw_request_id_t request_header,
+    std::shared_ptr<void> message);
 
   /// Handle a request to cancel goals on the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_cancel_request_received(std::shared_ptr<void> & data);
+  execute_cancel_request_received(
+    rcl_ret_t ret,
+    std::shared_ptr<action_msgs::srv::CancelGoal::Request> request,
+    rmw_request_id_t request_header);
 
   /// Handle a request to get the result of an action
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  execute_result_request_received(std::shared_ptr<void> & data);
+  execute_result_request_received(
+    rcl_ret_t ret,
+    std::shared_ptr<void> result_request,
+    rmw_request_id_t request_header);
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
@@ -345,7 +383,8 @@ public:
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
+        const GoalUUID &,
+        std::shared_ptr<const typename ActionT::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
@@ -455,7 +494,8 @@ protected:
   void
   call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    GoalUUID uuid, std::shared_ptr<void> goal_request_message) override
+    GoalUUID uuid,
+    std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
@@ -479,13 +519,12 @@ protected:
       };
 
     std::function<void(const GoalUUID &)> on_executing =
-      [weak_this](const GoalUUID & goal_uuid)
+      [weak_this]([[maybe_unused]] const GoalUUID & goal_uuid)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
-        (void)goal_uuid;
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
       };

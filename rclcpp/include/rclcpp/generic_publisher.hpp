@@ -77,7 +77,7 @@ public:
   : rclcpp::PublisherBase(
       node_base,
       topic_name,
-      *rclcpp::get_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
+      *rclcpp::get_message_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
       options.template to_rcl_publisher_options<rclcpp::SerializedMessage>(qos),
       // NOTE(methylDragon): Passing these args separately is necessary for event binding
       options.event_callbacks,

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 
 project(rclcpp_components)
 
@@ -19,9 +19,11 @@ find_package(ament_index_cpp REQUIRED)
 find_package(class_loader REQUIRED)
 find_package(composition_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rcpputils REQUIRED)
+find_package(rmw REQUIRED)
 
-# Add an interface library that can be dependend upon by libraries who register components
+# Add an interface library that can be depended upon by libraries who register components
 add_library(component INTERFACE)
 target_include_directories(component INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -38,12 +40,16 @@ add_library(
 target_include_directories(component_manager PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-ament_target_dependencies(component_manager
-  "ament_index_cpp"
-  "class_loader"
-  "composition_interfaces"
-  "rclcpp"
-  "rcpputils"
+target_link_libraries(component_manager PUBLIC
+  class_loader::class_loader
+  ${composition_interfaces_TARGETS}
+  rclcpp::rclcpp
+  rmw::rmw
+)
+target_link_libraries(component_manager PRIVATE
+  ament_index_cpp::ament_index_cpp
+  rcpputils::rcpputils
+  ${rcl_interfaces_TARGETS}
 )
 target_compile_definitions(component_manager
   PRIVATE "RCLCPP_COMPONENTS_BUILDING_LIBRARY")
@@ -52,10 +58,13 @@ add_executable(
   component_container
   src/component_container.cpp
 )
-target_link_libraries(component_container component_manager)
-ament_target_dependencies(component_container
-  "rclcpp"
+target_link_libraries(component_container PRIVATE component_manager rclcpp::rclcpp)
+
+add_executable(
+  component_container_event
+  src/component_container_event.cpp
 )
+target_link_libraries(component_container_event PRIVATE component_manager rclcpp::rclcpp)
 
 set(node_main_template_install_dir "share/${PROJECT_NAME}")
 install(FILES
@@ -66,26 +75,13 @@ add_executable(
   component_container_mt
   src/component_container_mt.cpp
 )
-target_link_libraries(component_container_mt component_manager)
-ament_target_dependencies(component_container_mt
-  "rclcpp"
-)
+target_link_libraries(component_container_mt PRIVATE component_manager rclcpp::rclcpp)
 
 add_executable(
   component_container_isolated
   src/component_container_isolated.cpp
 )
-target_link_libraries(component_container_isolated component_manager)
-ament_target_dependencies(component_container_isolated
-  "rclcpp"
-)
-
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_libraries(component_container "stdc++fs")
-  target_link_libraries(component_container_mt "stdc++fs")
-  target_link_libraries(component_container_isolated "stdc++fs")
-endif()
+target_link_libraries(component_container_isolated PRIVATE component_manager rclcpp::rclcpp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -153,7 +149,7 @@ install(
 
 # Install executables
 install(
-  TARGETS component_container component_container_mt component_container_isolated
+  TARGETS component_container component_container_mt component_container_isolated component_container_event
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -176,9 +172,5 @@ ament_export_libraries(component_manager)
 # Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME})
 
-# specific order: dependents before dependencies
-ament_export_dependencies(ament_index_cpp)
-ament_export_dependencies(class_loader)
-ament_export_dependencies(composition_interfaces)
-ament_export_dependencies(rclcpp)
+ament_export_dependencies(class_loader composition_interfaces rclcpp rcpputils rmw)
 ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake.in)

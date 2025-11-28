@@ -56,18 +56,28 @@ TEST_F(TestMessagePoolMemoryStrategy, borrow_too_many) {
   // Size is 1, borrowing second time should fail
   RCLCPP_EXPECT_THROW_EQ(
     message_memory_strategy_->borrow_message(),
-    std::runtime_error("Tried to access message that was still in use! Abort."));
+    std::runtime_error("No more free slots in the pool"));
   EXPECT_NO_THROW(message_memory_strategy_->return_message(message));
 }
 
-TEST_F(TestMessagePoolMemoryStrategy, return_unrecognized) {
-  auto message = message_memory_strategy_->borrow_message();
-  ASSERT_NE(nullptr, message);
+TEST_F(TestMessagePoolMemoryStrategy, borrow_hold_reference) {
+  {
+    auto message = message_memory_strategy_->borrow_message();
+    ASSERT_NE(nullptr, message);
 
-  auto unrecognized = std::make_shared<test_msgs::msg::Empty>();
-  // Unrecognized does not belong to pool
-  RCLCPP_EXPECT_THROW_EQ(
-    message_memory_strategy_->return_message(unrecognized),
-    std::runtime_error("Unrecognized message ptr in return_message."));
-  EXPECT_NO_THROW(message_memory_strategy_->return_message(message));
+    // Return it.
+    EXPECT_NO_THROW(message_memory_strategy_->return_message(message));
+
+    // But we are still holding the reference, so we expect that there is still no room in the pool.
+    RCLCPP_EXPECT_THROW_EQ(
+      message_memory_strategy_->borrow_message(),
+      std::runtime_error("No more free slots in the pool"));
+  }
+
+  // Now that we've dropped the reference (left the scope), we expect to be able to borrow again.
+
+  auto message2 = message_memory_strategy_->borrow_message();
+  ASSERT_NE(nullptr, message2);
+
+  EXPECT_NO_THROW(message_memory_strategy_->return_message(message2));
 }

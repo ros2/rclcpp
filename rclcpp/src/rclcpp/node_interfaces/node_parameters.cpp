@@ -194,6 +194,65 @@ format_range_reason(const std::string & name, const char * range_type)
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
+__check_integer_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  const int64_t value)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  auto integer_range = descriptor.integer_range.at(0);
+  if (value == integer_range.from_value || value == integer_range.to_value) {
+    return result;
+  }
+  if ((value < integer_range.from_value) || (value > integer_range.to_value)) {
+    result.successful = false;
+    result.reason = format_range_reason(descriptor.name, "integer");
+    return result;
+  }
+  if (integer_range.step == 0) {
+    return result;
+  }
+  if (((value - integer_range.from_value) % integer_range.step) == 0) {
+    return result;
+  }
+  result.successful = false;
+  result.reason = format_range_reason(descriptor.name, "integer");
+  return result;
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__check_double_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  const double value)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  auto fp_range = descriptor.floating_point_range.at(0);
+  if (__are_doubles_equal(value, fp_range.from_value) || __are_doubles_equal(value,
+    fp_range.to_value))
+  {
+    return result;
+  }
+  if ((value < fp_range.from_value) || (value > fp_range.to_value)) {
+    result.successful = false;
+    result.reason = format_range_reason(descriptor.name, "floating point");
+    return result;
+  }
+  if (fp_range.step == 0.0) {
+    return result;
+  }
+  double rounded_div = std::round((value - fp_range.from_value) / fp_range.step);
+  if (__are_doubles_equal(value, fp_range.from_value + rounded_div * fp_range.step)) {
+    return result;
+  }
+  result.successful = false;
+  result.reason = format_range_reason(descriptor.name, "floating point");
+  return result;
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
 __check_parameter_value_in_range(
   const rcl_interfaces::msg::ParameterDescriptor & descriptor,
   const rclcpp::ParameterValue & value)
@@ -201,49 +260,39 @@ __check_parameter_value_in_range(
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
-    int64_t v = value.get<int64_t>();
-    auto integer_range = descriptor.integer_range.at(0);
-    if (v == integer_range.from_value || v == integer_range.to_value) {
-      return result;
+    result = __check_integer_range(descriptor, value.get<int64_t>());
+    return result;
+  }
+
+  if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER_ARRAY) {
+    std::vector<int64_t> val_array = value.get<std::vector<int64_t>>();
+    for (const int64_t & val : val_array) {
+      result = __check_integer_range(descriptor, val);
+      if (!result.successful) {
+        return result;
+      }
     }
-    if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
-      result.successful = false;
-      result.reason = format_range_reason(descriptor.name, "integer");
-      return result;
-    }
-    if (integer_range.step == 0) {
-      return result;
-    }
-    if (((v - integer_range.from_value) % integer_range.step) == 0) {
-      return result;
-    }
-    result.successful = false;
-    result.reason = format_range_reason(descriptor.name, "integer");
     return result;
   }
 
   if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
-    double v = value.get<double>();
-    auto fp_range = descriptor.floating_point_range.at(0);
-    if (__are_doubles_equal(v, fp_range.from_value) || __are_doubles_equal(v, fp_range.to_value)) {
-      return result;
-    }
-    if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
-      result.successful = false;
-      result.reason = format_range_reason(descriptor.name, "floating point");
-      return result;
-    }
-    if (fp_range.step == 0.0) {
-      return result;
-    }
-    double rounded_div = std::round((v - fp_range.from_value) / fp_range.step);
-    if (__are_doubles_equal(v, fp_range.from_value + rounded_div * fp_range.step)) {
-      return result;
-    }
-    result.successful = false;
-    result.reason = format_range_reason(descriptor.name, "floating point");
+    result = __check_double_range(descriptor, value.get<double>());
     return result;
   }
+
+  if (!descriptor.floating_point_range.empty() &&
+    value.get_type() == rclcpp::PARAMETER_DOUBLE_ARRAY)
+  {
+    std::vector<double> val_array = value.get<std::vector<double>>();
+    for (const double & val : val_array) {
+      result = __check_double_range(descriptor, val);
+      if (!result.successful) {
+        return result;
+      }
+    }
+    return result;
+  }
+
   return result;
 }
 
@@ -1038,35 +1087,48 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   // TODO(mikaelarguedas) define parameter separator different from "/" to avoid ambiguity
   // using "." for now
   const char * separator = ".";
-  for (auto & kv : parameters_) {
-    bool get_all = (prefixes.size() == 0) &&
-      ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), *separator)) < depth));
-    bool prefix_matches = std::any_of(
-      prefixes.cbegin(), prefixes.cend(),
-      [&kv, &depth, &separator](const std::string & prefix) {
-        if (kv.first == prefix) {
-          return true;
-        } else if (kv.first.find(prefix + separator) == 0) {
-          size_t length = prefix.length();
-          std::string substr = kv.first.substr(length);
-          // Cast as unsigned integer to avoid warning
-          return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-          (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), *separator)) < depth);
+
+  auto separators_less_than_depth = [&depth, &separator](const std::string & str) -> bool {
+      return static_cast<uint64_t>(std::count(str.begin(), str.end(), *separator)) < depth;
+    };
+
+  bool recursive = (prefixes.size() == 0) &&
+    (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE);
+
+  for (const std::pair<const std::string, ParameterInfo> & kv : parameters_) {
+    if (!recursive) {
+      bool get_all = (prefixes.size() == 0) && separators_less_than_depth(kv.first);
+      if (!get_all) {
+        bool prefix_matches = std::any_of(
+          prefixes.cbegin(), prefixes.cend(),
+          [&kv, &depth, &separator, &separators_less_than_depth](const std::string & prefix) {
+            if (kv.first == prefix) {
+              return true;
+            } else if (kv.first.find(prefix + separator) == 0) {
+              if (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) {
+                return true;
+              }
+              std::string substr = kv.first.substr(prefix.length() + 1);
+              return separators_less_than_depth(substr);
+            }
+            return false;
+          });
+
+        if (!prefix_matches) {
+          continue;
         }
-        return false;
-      });
-    if (get_all || prefix_matches) {
-      result.names.push_back(kv.first);
-      size_t last_separator = kv.first.find_last_of(separator);
-      if (std::string::npos != last_separator) {
-        std::string prefix = kv.first.substr(0, last_separator);
-        if (
-          std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
-          result.prefixes.cend())
-        {
-          result.prefixes.push_back(prefix);
-        }
+      }
+    }
+
+    result.names.push_back(kv.first);
+    size_t last_separator = kv.first.find_last_of(separator);
+    if (std::string::npos != last_separator) {
+      std::string prefix = kv.first.substr(0, last_separator);
+      if (
+        std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
+        result.prefixes.cend())
+      {
+        result.prefixes.push_back(prefix);
       }
     }
   }
@@ -1177,4 +1239,11 @@ const std::map<std::string, rclcpp::ParameterValue> &
 NodeParameters::get_parameter_overrides() const
 {
   return parameter_overrides_;
+}
+
+void
+NodeParameters::enable_parameter_modification()
+{
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  parameter_modification_enabled_ = true;
 }

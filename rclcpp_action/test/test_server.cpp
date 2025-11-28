@@ -164,7 +164,7 @@ TEST_F(TestServer, construction_and_destruction_callback_group)
 TEST_F(TestServer, construction_and_destruction_server_init_error)
 {
   auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp_action", rcl_action_server_init, RCL_RET_ERROR);
+    "lib:rclcpp_action", rcl_action_server_init2, RCL_RET_ERROR);
   auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
 
   EXPECT_THROW(
@@ -518,9 +518,11 @@ TEST_F(TestServer, publish_status_accepted)
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
   for (size_t retry = 0; retry < max_tries && received_msgs.size() != 1u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    rclcpp::spin_some(node);
+    executor.spin_some();
   }
 
   ASSERT_LT(0u, received_msgs.size());
@@ -582,9 +584,11 @@ TEST_F(TestServer, publish_status_canceling)
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
   for (size_t retry = 0; retry < max_tries && received_msgs.size() < 2u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    rclcpp::spin_some(node);
+    executor.spin_some();
   }
 
   ASSERT_LT(0u, received_msgs.size());
@@ -640,10 +644,12 @@ TEST_F(TestServer, publish_status_canceled)
   received_handle->canceled(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
   const size_t max_tries = 10 * 1000 / 100;
   for (size_t retry = 0; retry < max_tries && received_msgs.size() < 3u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    rclcpp::spin_some(node);
+    executor.spin_some();
   }
 
   ASSERT_LT(0u, received_msgs.size());
@@ -697,10 +703,12 @@ TEST_F(TestServer, publish_status_succeeded)
   received_handle->succeed(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
   const size_t max_tries = 10 * 1000 / 100;
   for (size_t retry = 0; retry < max_tries && received_msgs.size() < 2u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    rclcpp::spin_some(node);
+    executor.spin_some();
   }
 
   ASSERT_LT(0u, received_msgs.size());
@@ -754,10 +762,12 @@ TEST_F(TestServer, publish_status_aborted)
   received_handle->abort(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
   const size_t max_tries = 10 * 1000 / 100;
   for (size_t retry = 0; retry < max_tries && received_msgs.size() < 2u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    rclcpp::spin_some(node);
+    executor.spin_some();
   }
 
   ASSERT_LT(0u, received_msgs.size());
@@ -814,10 +824,12 @@ TEST_F(TestServer, publish_feedback)
   received_handle->publish_feedback(sent_message);
 
   // 10 seconds
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
   const size_t max_tries = 10 * 1000 / 100;
   for (size_t retry = 0; retry < max_tries && received_msgs.size() < 1u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    rclcpp::spin_some(node);
+    executor.spin_some();
   }
 
   ASSERT_EQ(1u, received_msgs.size());
@@ -878,10 +890,13 @@ TEST_F(TestServer, get_result)
   result->sequence = {5, 8, 13, 21};
   received_handle->succeed(result);
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+
   // Wait for the result request to be received
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    executor.spin_until_future_complete(future));
 
   auto response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
@@ -891,13 +906,13 @@ TEST_F(TestServer, get_result)
   rclcpp::sleep_for(2 * result_timeout);
 
   // Allow for expiration to take place
-  rclcpp::spin_some(node);
+  executor.spin_some();
 
   // Send and wait for another result request
   future = result_client->async_send_request(request);
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    executor.spin_until_future_complete(future));
 
   response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_UNKNOWN, response->status);
@@ -946,9 +961,12 @@ TEST_F(TestServer, get_result_deferred)
   request->goal_id.uuid = uuid;
   auto future = result_client->async_send_request(request);
 
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+
   // Process request first
   rclcpp::sleep_for(std::chrono::milliseconds(10));  // Give a chance for the request to be served
-  rclcpp::spin_some(node);
+  executor.spin_some();
 
   // Send a result
   auto result = std::make_shared<Fibonacci::Result>();
@@ -958,7 +976,7 @@ TEST_F(TestServer, get_result_deferred)
   // Wait for the result request to be received
   ASSERT_EQ(
     rclcpp::FutureReturnCode::SUCCESS,
-    rclcpp::spin_until_future_complete(node, future));
+    executor.spin_until_future_complete(future));
 
   auto response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
@@ -1042,10 +1060,13 @@ public:
     result->sequence = {5, 8, 13, 21};
     goal_handle_->succeed(result);
 
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node_);
+
     // Wait for the result request to be received
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
-      rclcpp::spin_until_future_complete(node_, future));
+      executor.spin_until_future_complete(future));
 
     auto response = future.get();
     EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
@@ -1055,13 +1076,13 @@ public:
     rclcpp::sleep_for(std::chrono::milliseconds(100));
 
     // Allow for expiration to take place
-    rclcpp::spin_some(node_);
+    executor.spin_some();
 
     // Send and wait for another result request
     future = result_client->async_send_request(request);
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
-      rclcpp::spin_until_future_complete(node_, future));
+      executor.spin_until_future_complete(future));
   }
 
 protected:
@@ -1072,6 +1093,21 @@ protected:
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
   std::shared_ptr<GoalHandle> goal_handle_;
 };
+
+TEST_F(TestBasicServer, test_configure_introspection)
+{
+  EXPECT_THROW(
+    action_server_->configure_introspection(
+      nullptr, rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS),
+      std::invalid_argument);
+
+  EXPECT_NO_THROW(
+    action_server_->configure_introspection(
+      node_->get_clock(), rclcpp::SystemDefaultsQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS));
+
+  // No method was found to make rcl_action_server_configure_action_introspection return
+  // a value other than RCL_RET_OK. mocking_utils::patch_and_return does not work for this function.
+}
 
 class TestGoalRequestServer : public TestBasicServer {};
 
@@ -1107,12 +1143,15 @@ TEST_F(TestGoalRequestServer, is_ready_rcl_error) {
   {
     EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
   });
-  EXPECT_NO_THROW(action_server_->add_to_wait_set(&wait_set));
+  EXPECT_NO_THROW(action_server_->add_to_wait_set(wait_set));
 
-  EXPECT_TRUE(action_server_->is_ready(&wait_set));
+  EXPECT_TRUE(action_server_->is_ready(wait_set));
+
+  EXPECT_NO_THROW(action_server_->take_data());
+
   auto mock = mocking_utils::patch_and_return(
     "lib:rclcpp_action", rcl_action_server_wait_set_get_entities_ready, RCL_RET_ERROR);
-  EXPECT_THROW(action_server_->is_ready(&wait_set), rclcpp::exceptions::RCLError);
+  EXPECT_THROW(action_server_->is_ready(wait_set), rclcpp::exceptions::RCLError);
 }
 
 TEST_F(TestGoalRequestServer, execute_goal_request_received_take_goal_request_errors)

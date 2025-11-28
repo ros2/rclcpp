@@ -87,7 +87,7 @@ public:
       buffer_type),
     any_callback_(callback)
   {
-    TRACEPOINT(
+    TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_callback_added,
       static_cast<const void *>(this),
       static_cast<const void *>(&any_callback_));
@@ -100,6 +100,23 @@ public:
   }
 
   virtual ~SubscriptionIntraProcess() = default;
+
+  void
+  add_to_wait_set(rcl_wait_set_t & wait_set) override
+  {
+    // This block is necessary when the guard condition wakes the wait set, but
+    // the intra process waitable was not handled before the wait set is waited
+    // on again.
+    // Basically we're keeping the guard condition triggered so long as there is
+    // data in the buffer.
+    if (this->buffer_->has_data()) {
+      // If there is data still to be processed, indicate to the
+      // executor or waitset by triggering the guard condition.
+      this->trigger_guard_condition();
+    }
+    // Let the parent classes handle the rest of the work:
+    return SubscriptionIntraProcessBufferT::add_to_wait_set(wait_set);
+  }
 
   std::shared_ptr<void>
   take_data() override
@@ -118,6 +135,13 @@ public:
         return nullptr;
       }
     }
+
+    if (this->buffer_->has_data()) {
+      // If there is data still to be processed, indicate to the
+      // executor or waitset by triggering the guard condition.
+      this->trigger_guard_condition();
+    }
+
     return std::static_pointer_cast<void>(
       std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
         std::pair<ConstMessageSharedPtr, MessageUniquePtr>(
@@ -125,7 +149,7 @@ public:
     );
   }
 
-  void execute(std::shared_ptr<void> & data) override
+  void execute(const std::shared_ptr<void> & data) override
   {
     execute_impl<SubscribedType>(data);
   }
@@ -133,17 +157,16 @@ public:
 protected:
   template<typename T>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
-  execute_impl(std::shared_ptr<void> & data)
+  execute_impl(const std::shared_ptr<void> &)
   {
-    (void)data;
     throw std::runtime_error("Subscription intra-process can't handle serialized messages");
   }
 
   template<class T>
   typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value, void>::type
-  execute_impl(std::shared_ptr<void> & data)
+  execute_impl(const std::shared_ptr<void> & data)
   {
-    if (!data) {
+    if (nullptr == data) {
       return;
     }
 

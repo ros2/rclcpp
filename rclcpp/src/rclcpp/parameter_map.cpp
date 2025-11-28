@@ -81,7 +81,15 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params, const char * nod
         throw InvalidParametersException(message);
       }
       const rcl_variant_t * const c_param_value = &(c_params_node->parameter_values[p]);
-      params_node.emplace_back(c_param_name, parameter_value_from(c_param_value));
+      ParameterValue value;
+      try {
+        value = parameter_value_from(c_param_value);
+      } catch (const InvalidParameterValueException & e) {
+        throw InvalidParameterValueException(
+          std::string("parameter_value_from failed for parameter '") +
+          c_param_name + "': " + e.what());
+      }
+      params_node.emplace_back(c_param_name, value);
     }
   }
 

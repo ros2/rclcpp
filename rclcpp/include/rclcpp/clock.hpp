@@ -60,6 +60,13 @@ public:
   /**
    * Initializes the clock instance with the given clock_type.
    *
+   * WARNING Don't instantiate a clock using RCL_ROS_TIME directly,
+   * unless you really know what you are doing. By default no TimeSource
+   * is attached to a new clock. This will lead to the unexpected behavior,
+   * that your RCL_ROS_TIME will run always on system time. If you want
+   * a RCL_ROS_TIME use Node::get_clock(), or make sure to attach a
+   * TimeSource yourself.
+   *
    * \param clock_type type of the clock.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
@@ -207,13 +214,13 @@ public:
   std::mutex &
   get_clock_mutex() noexcept;
 
-  // Add a callback to invoke if the jump threshold is exceeded.
+  /// Add a callback to invoke if the jump threshold is exceeded.
   /**
    * These callback functions must remain valid as long as the
    * returned shared pointer is valid.
    *
    * Function will register callbacks to the callback queue. On time jump all
-   * callbacks will be executed whose threshold is greater then the time jump;
+   * callbacks will be executed whose threshold is greater than the time jump;
    * The logic will first call selected pre_callbacks and then all selected
    * post_callbacks.
    *
@@ -222,7 +229,7 @@ public:
    * \param pre_callback Must be non-throwing
    * \param post_callback Must be non-throwing.
    * \param threshold Callbacks will be triggered if the time jump is greater
-   * then the threshold.
+   * than the threshold.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    * \throws std::bad_alloc if the allocation of the JumpHandler fails.
    * \warning the instance of the clock must remain valid as long as any created
@@ -249,6 +256,117 @@ private:
 
   std::shared_ptr<Impl> impl_;
 };
+
+/**
+ * A synchronization primitive, equal to std::conditional_variable,
+ * that works with the rclcpp::Clock.
+ *
+ * For more information on the API see https://en.cppreference.com/w/cpp/thread/condition_variable.
+ *
+ * Note, this class does not handle shutdowns, if you want to
+ * haven them handles as well, use ClockConditionalVariable.
+ */
+class ClockWaiter
+{
+private:
+  class ClockWaiterImpl;
+  std::unique_ptr<ClockWaiterImpl> impl_;
+
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(ClockWaiter)
+
+  RCLCPP_PUBLIC
+  explicit ClockWaiter(const rclcpp::Clock::SharedPtr & clock);
+
+  RCLCPP_PUBLIC
+  ~ClockWaiter();
+
+  /**
+   * Calling this function will block the current thread, until abs_time is reached,
+   * or pred returns true.
+   * @param lock A locked lock. The lock must be locked at call time, or this method will throw.
+   *             The lock will be atomically released and this thread will blocked.
+   * @param abs_time The time until which this thread shall be blocked.
+   * @param pred may be called in cased of spurious wakeups, but must be called every time
+   *             notify_one() was called. During the call to pred, the given lock will be locked.
+   *             This method will return, if pred returns true.
+   */
+  RCLCPP_PUBLIC
+  bool
+  wait_until(
+    std::unique_lock<std::mutex> & lock,
+    const rclcpp::Time & abs_time, const std::function<bool ()> & pred);
+
+  /**
+   * Notify the blocked thread, that it should reevaluate the wakeup condition.
+   * The given pred function in wait_until will be reevaluated and wait_until
+   * will return if it evaluates to true.
+   */
+  RCLCPP_PUBLIC
+  void
+  notify_one();
+};
+
+
+/**
+ * A synchronization primitive, similar to std::conditional_variable,
+ * that works with the rclcpp::Clock.
+ *
+ * For more information on the API see https://en.cppreference.com/w/cpp/thread/condition_variable.
+ *
+ * This primitive will wake up if the context was shut down.
+ */
+class ClockConditionalVariable
+{
+  class Impl;
+  std::unique_ptr<Impl> impl_;
+
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(ClockConditionalVariable)
+
+  RCLCPP_PUBLIC
+  ClockConditionalVariable(
+    const rclcpp::Clock::SharedPtr & clock,
+    rclcpp::Context::SharedPtr context = rclcpp::contexts::get_global_default_context());
+  RCLCPP_PUBLIC
+  ~ClockConditionalVariable();
+
+  /**
+   * Calling this function will block the current thread, until abs_time is reached,
+   * or pred returns true.
+   * @param lock A locked lock. The lock must be locked at call time, or this method will throw.
+   *             The lock will be atomically released and this thread will blocked.
+   *             The given lock must be created using the mutex returned my mutex().
+   * @param abs_time The time until which this thread shall be blocked.
+   * @param pred may be called in cased of spurious wakeups, but must be called every time
+   *             notify_one() was called. During the call to pred, the given lock will be locked.
+   *             This method will return, if pred returns true.
+   *
+   * @return true if until was reached.
+   */
+  RCLCPP_PUBLIC
+  bool
+  wait_until(
+    std::unique_lock<std::mutex> & lock, rclcpp::Time until,
+    const std::function<bool ()> & pred);
+
+  /**
+   * Notify the blocked thread, that is should reevaluate the wakeup condition.
+   * E.g. the given pred function in wait_until shall be reevaluated.
+   */
+  RCLCPP_PUBLIC
+  void
+  notify_one();
+
+  /**
+   * Returns the internal mutex. In order to be race free with the context shutdown,
+   * this mutex must be used for the wait_until call.
+   */
+  RCLCPP_PUBLIC
+  std::mutex &
+  mutex();
+};
+
 
 }  // namespace rclcpp
 

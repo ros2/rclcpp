@@ -163,7 +163,7 @@ private:
   ResultCallback result_callback_{nullptr};
   int8_t status_{GoalStatus::STATUS_ACCEPTED};
 
-  std::mutex handle_mutex_;
+  std::recursive_mutex handle_mutex_;
 };
 }  // namespace rclcpp_action
 

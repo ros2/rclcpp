@@ -72,6 +72,7 @@
 #include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_type_descriptions_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
@@ -281,19 +282,6 @@ public:
 
   /// Create and return a Client.
   /**
-   * \sa rclcpp::Node::create_client
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Client<ServiceT>::SharedPtr
-  create_client(
-    const std::string & service_name,
-    const rmw_qos_profile_t & qos_profile,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Client.
-  /**
    * \param[in] service_name The name on which the service is accessible.
    * \param[in] qos Quality of service profile for client.
    * \param[in] group Callback group to handle the reply to service calls.
@@ -304,20 +292,6 @@ public:
   create_client(
     const std::string & service_name,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create and return a Service.
-  /**
-   * \sa rclcpp::Node::create_service
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
-   */
-  template<typename ServiceT, typename CallbackT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service(
-    const std::string & service_name,
-    CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create and return a Service.
@@ -512,6 +486,16 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
+  /// Return the parameter value, or the "alternative_value" if not set.
+  /**
+   * \sa rclcpp::Node::get_parameter_or
+   */
+  template<typename ParameterT>
+  ParameterT
+  get_parameter_or(
+    const std::string & name,
+    const ParameterT & alternative_value) const;
+
   /// Return the parameters by the given parameter names.
   /**
    * \sa rclcpp::Node::get_parameters
@@ -571,8 +555,6 @@ public:
     rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnSetParametersCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType;
-  using OnParametersSetCallbackType [[deprecated("use OnSetParametersCallbackType instead")]] =
-    OnSetParametersCallbackType;
 
   using PostSetParametersCallbackHandle =
     rclcpp::node_interfaces::PostSetParametersCallbackHandle;
@@ -689,6 +671,22 @@ public:
   size_t
   count_subscribers(const std::string & topic_name) const;
 
+  /// Return the number of clients created for a given service.
+  /**
+   * \sa rclcpp::Node::count_clients
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  size_t
+  count_clients(const std::string & service_name) const;
+
+  /// Return the number of services created for a given service.
+  /**
+   * \sa rclcpp::Node::count_services
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  size_t
+  count_services(const std::string & service_name) const;
+
   /// Return the topic endpoint information about publishers on a given topic.
   /**
    * \sa rclcpp::Node::get_publishers_info_by_topic
@@ -704,6 +702,22 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * \sa rclcpp::Node::get_clients_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about server on a given service.
+  /**
+   * \sa rclcpp::Node::get_servers_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
@@ -743,7 +757,7 @@ public:
   rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
-  /// Returns current time from the time source specified by clock_type.
+  /// Returns current time from the node clock.
   /**
    * \sa rclcpp::Clock::now
    */
@@ -822,6 +836,14 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
+
+  /// Return the Node's internal NodeTypeDescriptionsInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_type_descriptions_interface
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
+  get_node_type_descriptions_interface();
 
   /// Return the Node's internal NodeWaitablesInterface implementation.
   /**
@@ -1085,6 +1107,7 @@ private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
+  rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr node_type_descriptions_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   const rclcpp::NodeOptions node_options_;

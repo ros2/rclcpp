@@ -51,16 +51,23 @@ public:
   TestWaitable()
   : is_ready_(false) {}
 
-  void add_to_wait_set(rcl_wait_set_t *) override {}
-
-  bool is_ready(rcl_wait_set_t *) override {return is_ready_;}
+  void add_to_wait_set(rcl_wait_set_t &) override {}
+  bool is_ready(const rcl_wait_set_t &) override {return is_ready_;}
 
   std::shared_ptr<void> take_data() override {return nullptr;}
-
-  void
-  execute(std::shared_ptr<void> & data) override {(void)data;}
+  void execute(const std::shared_ptr<void> &) override {}
 
   void set_is_ready(bool value) {is_ready_ = value;}
+
+  void set_on_ready_callback(std::function<void(size_t, int)>) override {}
+  void clear_on_ready_callback() override {}
+
+  std::shared_ptr<void> take_data_by_entity_id(size_t) override {return nullptr;}
+
+  std::vector<std::shared_ptr<rclcpp::TimerBase>> get_timers() const override
+  {
+    return {};
+  }
 
 private:
   bool is_ready_;

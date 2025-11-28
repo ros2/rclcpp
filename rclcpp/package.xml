@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rclcpp</name>
-  <version>19.3.0</version>
+  <version>30.1.3</version>
   <description>The ROS client library in C++.</description>
 
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
@@ -17,11 +17,13 @@
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
   <buildtool_depend>python3</buildtool_depend>
+  <buildtool_depend>python3-empy</buildtool_depend>
 
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>builtin_interfaces</build_depend>
   <build_depend>rcl_interfaces</build_depend>
   <build_depend>rosgraph_msgs</build_depend>
+  <build_depend>rosidl_runtime_c</build_depend>
   <build_depend>rosidl_runtime_cpp</build_depend>
   <build_depend>rosidl_typesupport_c</build_depend>
   <build_depend>rosidl_typesupport_cpp</build_depend>
@@ -29,16 +31,19 @@
   <build_export_depend>builtin_interfaces</build_export_depend>
   <build_export_depend>rcl_interfaces</build_export_depend>
   <build_export_depend>rosgraph_msgs</build_export_depend>
+  <build_export_depend>rosidl_runtime_c</build_export_depend>
   <build_export_depend>rosidl_runtime_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
 
   <depend>libstatistics_collector</depend>
   <depend>rcl</depend>
+  <depend>rcl_logging_interface</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
   <depend>rcutils</depend>
   <depend>rmw</depend>
+  <depend>rosidl_dynamic_typesupport</depend>
   <depend>statistics_msgs</depend>
   <depend>tracetools</depend>
 

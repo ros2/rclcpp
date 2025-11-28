@@ -20,13 +20,13 @@
 #include <future>
 #include <memory>
 #include <mutex>
-#include <optional>  // NOLINT, cpplint doesn't think this is a cpp std header
+#include <optional>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
-#include <variant>  // NOLINT
+#include <variant>
 #include <vector>
 
 #include "rcl/client.h"
@@ -70,14 +70,6 @@ struct FutureAndRequestId
   /// Allow implicit conversions to `std::future` by reference.
   operator FutureT &() {return this->future;}
 
-  /// Deprecated, use the `future` member variable instead.
-  /**
-   * Allow implicit conversions to `std::future` by value.
-   * \deprecated
-   */
-  [[deprecated("FutureAndRequestId: use .future instead of an implicit conversion")]]
-  operator FutureT() {return this->future;}
-
   // delegate future like methods in the std::future impl_
 
   /// See std::future::get().
@@ -115,6 +107,29 @@ struct FutureAndRequestId
   /// Destructor.
   ~FutureAndRequestId() = default;
 };
+
+template<typename PendingRequestsT, typename AllocatorT = std::allocator<int64_t>>
+size_t
+prune_requests_older_than_impl(
+  PendingRequestsT & pending_requests,
+  std::mutex & pending_requests_mutex,
+  std::chrono::time_point<std::chrono::system_clock> time_point,
+  std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
+{
+  std::lock_guard guard(pending_requests_mutex);
+  auto old_size = pending_requests.size();
+  for (auto it = pending_requests.begin(), last = pending_requests.end(); it != last; ) {
+    if (it->second.first < time_point) {
+      if (pruned_requests) {
+        pruned_requests->push_back(it->first);
+      }
+      it = pending_requests.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  return old_size - pending_requests.size();
+}
 }  // namespace detail
 
 namespace node_interfaces
@@ -363,12 +378,16 @@ protected:
   std::shared_ptr<rclcpp::Context> context_;
   rclcpp::Logger node_logger_;
 
+  std::recursive_mutex callback_mutex_;
+  // It is important to declare on_new_response_callback_ before
+  // client_handle_, so on destruction the client is
+  // destroyed first. Otherwise, the rmw client callback
+  // would point briefly to a destroyed function.
+  std::function<void(size_t)> on_new_response_callback_{nullptr};
+  // Declare client_handle_ after callback
   std::shared_ptr<rcl_client_t> client_handle_;
 
   std::atomic<bool> in_use_by_wait_set_{false};
-
-  std::recursive_mutex callback_mutex_;
-  std::function<void(size_t)> on_new_response_callback_{nullptr};
 };
 
 template<typename ServiceT>
@@ -408,15 +427,6 @@ public:
     : detail::FutureAndRequestId<std::future<SharedResponse>>
   {
     using detail::FutureAndRequestId<std::future<SharedResponse>>::FutureAndRequestId;
-
-    /// Deprecated, use `.future.share()` instead.
-    /**
-     * Allow implicit conversions to `std::shared_future` by value.
-     * \deprecated
-     */
-    [[deprecated(
-      "FutureAndRequestId: use .future.share() instead of an implicit conversion")]]
-    operator SharedFuture() {return this->future.share();}
 
     // delegate future like methods in the std::future impl_
 
@@ -463,7 +473,7 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] node_graph The node graph interface of the corresponding node.
    * \param[in] service_name Name of the topic to publish to.
-   * \param[in] client_options options for the subscription.
+   * \param[in] client_options options for the client.
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
@@ -767,19 +777,11 @@ public:
     std::chrono::time_point<std::chrono::system_clock> time_point,
     std::vector<int64_t, AllocatorT> * pruned_requests = nullptr)
   {
-    std::lock_guard guard(pending_requests_mutex_);
-    auto old_size = pending_requests_.size();
-    for (auto it = pending_requests_.begin(), last = pending_requests_.end(); it != last; ) {
-      if (it->second.first < time_point) {
-        if (pruned_requests) {
-          pruned_requests->push_back(it->first);
-        }
-        it = pending_requests_.erase(it);
-      } else {
-        ++it;
-      }
-    }
-    return old_size - pending_requests_.size();
+    return detail::prune_requests_older_than_impl(
+      pending_requests_,
+      pending_requests_mutex_,
+      time_point,
+      pruned_requests);
   }
 
   /// Configure client introspection.
@@ -787,6 +789,9 @@ public:
    * \param[in] clock clock to use to generate introspection timestamps
    * \param[in] qos_service_event_pub QoS settings to use when creating the introspection publisher
    * \param[in] introspection_state the state to set introspection to
+   *
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw if
+   *   it failed to configure introspection.
    */
   void
   configure_introspection(
@@ -845,7 +850,7 @@ protected:
         "Received invalid sequence number. Ignoring...");
       return std::nullopt;
     }
-    auto value = std::move(it->second.second);
+    std::optional<CallbackInfoVariant> value = std::move(it->second.second);
     this->pending_requests_.erase(request_number);
     return value;
   }

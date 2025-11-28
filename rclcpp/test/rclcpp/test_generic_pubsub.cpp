@@ -15,6 +15,7 @@
 
 #include <gmock/gmock.h>
 
+#include <chrono>
 #include <future>
 #include <memory>
 #include <string>
@@ -69,7 +70,7 @@ public:
     size_t counter = 0;
     auto subscription = node_->create_generic_subscription(
       topic_name, type, rclcpp::QoS(1),
-      [&counter, &messages, this](std::shared_ptr<rclcpp::SerializedMessage> message) {
+      [&counter, &messages, this](const std::shared_ptr<const rclcpp::SerializedMessage> message) {
         T2 deserialized_message;
         rclcpp::Serialization<T2> serializer;
         serializer.deserialize_message(message.get(), &deserialized_message);
@@ -77,8 +78,10 @@ public:
         counter++;
       });
 
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node_);
     while (counter < expected_recv_msg_count) {
-      rclcpp::spin_some(node_);
+      executor.spin_some();
     }
     return messages;
   }
@@ -106,11 +109,13 @@ public:
   {
     using clock = std::chrono::system_clock;
     auto start = clock::now();
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node_);
     while (!condition()) {
       if ((clock::now() - start) > timeout) {
         return false;
       }
-      rclcpp::spin_some(node_);
+      executor.spin_some();
     }
     return true;
   }
@@ -236,7 +241,7 @@ TEST_F(RclcppGenericNodeFixture, generic_subscription_uses_qos)
   auto publisher = node_->create_publisher<test_msgs::msg::Strings>(topic_name, qos);
   auto subscription = node_->create_generic_subscription(
     topic_name, topic_type, qos,
-    [](std::shared_ptr<rclcpp::SerializedMessage>/* message */) {});
+    [](std::shared_ptr<const rclcpp::SerializedMessage>/* message */) {});
   auto connected = [publisher, subscription]() -> bool {
       return publisher->get_subscription_count() && subscription->get_publisher_count();
     };
@@ -262,4 +267,50 @@ TEST_F(RclcppGenericNodeFixture, generic_publisher_uses_qos)
     };
   // It normally takes < 20ms, 5s chosen as "a very long time"
   ASSERT_TRUE(wait_for(connected, 5s));
+}
+
+TEST_F(RclcppGenericNodeFixture, generic_subscription_different_callbacks)
+{
+  using namespace std::chrono_literals;
+  std::string topic_name = "string_topic";
+  std::string topic_type = "test_msgs/msg/Strings";
+  rclcpp::QoS qos = rclcpp::QoS(1);
+
+  auto publisher = node_->create_publisher<test_msgs::msg::Strings>(topic_name, qos);
+
+  // Test shared_ptr for const messages
+  {
+    auto subscription = node_->create_generic_subscription(
+      topic_name, topic_type, qos,
+      [](const std::shared_ptr<const rclcpp::SerializedMessage>/* message */) {});
+    auto connected = [publisher, subscription]() -> bool {
+        return publisher->get_subscription_count() && subscription->get_publisher_count();
+      };
+    // It normally takes < 20ms, 5s chosen as "a very long time"
+    ASSERT_TRUE(wait_for(connected, 5s));
+  }
+
+  // Test unique_ptr
+  {
+    auto subscription = node_->create_generic_subscription(
+      topic_name, topic_type, qos,
+      [](std::unique_ptr<rclcpp::SerializedMessage>/* message */) {});
+    auto connected = [publisher, subscription]() -> bool {
+        return publisher->get_subscription_count() && subscription->get_publisher_count();
+      };
+    // It normally takes < 20ms, 5s chosen as "a very long time"
+    ASSERT_TRUE(wait_for(connected, 5s));
+  }
+
+  // Test message callback
+  {
+    auto subscription = node_->create_generic_subscription(
+      topic_name, topic_type, qos,
+      [](rclcpp::SerializedMessage /* message */) {});
+    auto connected = [publisher, subscription]() -> bool {
+        return publisher->get_subscription_count() && subscription->get_publisher_count();
+      };
+    // It normally takes < 20ms, 5s chosen as "a very long time"
+    ASSERT_TRUE(wait_for(connected, 5s));
+  }
 }

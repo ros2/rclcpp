@@ -160,6 +160,15 @@ public:
       services_,
       waitables_
     );
+
+    if(this->needs_pruning_) {
+      // we need to throw here, as the indexing of the rcl_waitset is broken,
+      // in case of invalid entries
+
+      throw std::runtime_error(
+            "StaticStorage::storage_rebuild_rcl_wait_set(): entity weak_ptr "
+            "unexpectedly expired in static entity storage");
+    }
   }
 
   // storage_add_subscription() explicitly not declared here
@@ -186,6 +195,61 @@ public:
   storage_release_ownerships()
   {
     // Explicitly do nothing.
+  }
+
+  size_t size_of_subscriptions() const
+  {
+    return subscriptions_.size();
+  }
+
+  size_t size_of_timers() const
+  {
+    return timers_.size();
+  }
+
+  size_t size_of_clients() const
+  {
+    return clients_.size();
+  }
+
+  size_t size_of_services() const
+  {
+    return services_.size();
+  }
+
+  size_t size_of_waitables() const
+  {
+    return waitables_.size();
+  }
+
+  typename ArrayOfSubscriptions::value_type
+  subscriptions(size_t ii) const
+  {
+    return subscriptions_[ii];
+  }
+
+  typename ArrayOfTimers::value_type
+  timers(size_t ii) const
+  {
+    return timers_[ii];
+  }
+
+  typename ArrayOfClients::value_type
+  clients(size_t ii) const
+  {
+    return clients_[ii];
+  }
+
+  typename ArrayOfServices::value_type
+  services(size_t ii) const
+  {
+    return services_[ii];
+  }
+
+  typename ArrayOfWaitables::value_type
+  waitables(size_t ii) const
+  {
+    return waitables_[ii];
   }
 
   const ArrayOfSubscriptions subscriptions_;

@@ -14,14 +14,31 @@
 
 #include <gtest/gtest.h>
 
+#include <stdexcept>
 #include <string>
 
 #include "rclcpp/rate.hpp"
 
+#include "../utils/rclcpp_gtest_macros.hpp"
+
+class TestRate : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
 /*
    Basic tests for the Rate and WallRate classes.
  */
-TEST(TestRate, rate_basics) {
+TEST_F(TestRate, rate_basics) {
   auto period = std::chrono::milliseconds(1000);
   auto offset = std::chrono::milliseconds(500);
   auto epsilon = std::chrono::milliseconds(100);
@@ -29,8 +46,8 @@ TEST(TestRate, rate_basics) {
 
   auto start = std::chrono::system_clock::now();
   rclcpp::Rate r(period);
-  EXPECT_EQ(period, r.period());
-  ASSERT_FALSE(r.is_steady());
+  EXPECT_EQ(rclcpp::Duration(period), r.period());
+  ASSERT_EQ(RCL_SYSTEM_TIME, r.get_type());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
   auto delta = one - start;
@@ -61,7 +78,7 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(epsilon > delta);
 }
 
-TEST(TestRate, wall_rate_basics) {
+TEST_F(TestRate, wall_rate_basics) {
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);
@@ -69,8 +86,8 @@ TEST(TestRate, wall_rate_basics) {
 
   auto start = std::chrono::steady_clock::now();
   rclcpp::WallRate r(period);
-  EXPECT_EQ(period, r.period());
-  ASSERT_TRUE(r.is_steady());
+  EXPECT_EQ(rclcpp::Duration(period), r.period());
+  ASSERT_EQ(RCL_STEADY_TIME, r.get_type());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::steady_clock::now();
   auto delta = one - start;
@@ -101,21 +118,67 @@ TEST(TestRate, wall_rate_basics) {
   EXPECT_GT(epsilon, delta);
 }
 
-TEST(TestRate, from_double) {
+TEST_F(TestRate, from_double) {
   {
-    rclcpp::WallRate rate(1.0);
-    EXPECT_EQ(std::chrono::seconds(1), rate.period());
+    rclcpp::Rate rate(1.0);
+    EXPECT_EQ(rclcpp::Duration(std::chrono::seconds(1)), rate.period());
   }
   {
-    rclcpp::WallRate rate(2.0);
-    EXPECT_EQ(std::chrono::milliseconds(500), rate.period());
+    rclcpp::Rate rate(2.0);
+    EXPECT_EQ(rclcpp::Duration(std::chrono::milliseconds(500)), rate.period());
   }
   {
     rclcpp::WallRate rate(0.5);
-    EXPECT_EQ(std::chrono::seconds(2), rate.period());
+    EXPECT_EQ(rclcpp::Duration(std::chrono::seconds(2)), rate.period());
   }
   {
     rclcpp::WallRate rate(4.0);
-    EXPECT_EQ(std::chrono::milliseconds(250), rate.period());
+    EXPECT_EQ(rclcpp::Duration(std::chrono::milliseconds(250)), rate.period());
   }
+}
+
+TEST_F(TestRate, clock_types) {
+  {
+    rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME));
+    EXPECT_EQ(RCL_SYSTEM_TIME, rate.get_type());
+  }
+  {
+    rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME));
+    EXPECT_EQ(RCL_STEADY_TIME, rate.get_type());
+  }
+  {
+    rclcpp::Rate rate(1.0, std::make_shared<rclcpp::Clock>(RCL_ROS_TIME));
+    EXPECT_EQ(RCL_ROS_TIME, rate.get_type());
+  }
+}
+
+TEST_F(TestRate, incorrect_constuctor) {
+  // Constructor with 0-frequency
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::Rate rate(0.0),
+    std::invalid_argument("rate must be greater than 0"));
+
+  // Constructor with negative frequency
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::Rate rate(-1.0),
+    std::invalid_argument("rate must be greater than 0"));
+
+  // Constructor with 0-duration
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::Rate rate(rclcpp::Duration(0, 0)),
+    std::invalid_argument("period must be greater than 0"));
+
+  // Constructor with negative duration
+  RCLCPP_EXPECT_THROW_EQ(
+    rclcpp::Rate rate(rclcpp::Duration(-1, 0)),
+    std::invalid_argument("period must be greater than 0"));
+}
+
+TEST(TestRateBasic, invalid_context) {
+  rclcpp::init(0, nullptr);
+  rclcpp::Rate rate(1.0);
+  ASSERT_TRUE(rate.sleep());
+  rclcpp::shutdown();
+  EXPECT_NO_THROW(rate.sleep());
+  ASSERT_FALSE(rate.sleep());
 }

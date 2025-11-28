@@ -23,10 +23,9 @@ namespace detail
 
 void
 RMWImplementationSpecificSubscriptionPayload::modify_rmw_subscription_options(
-  rmw_subscription_options_t & rmw_subscription_options) const
+  [[maybe_unused]] rmw_subscription_options_t & rmw_subscription_options) const
 {
   // By default, do not mutate the rmw subscription options.
-  (void)rmw_subscription_options;
 }
 
 }  // namespace detail

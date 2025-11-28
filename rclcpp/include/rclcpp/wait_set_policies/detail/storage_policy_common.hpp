@@ -104,7 +104,7 @@ protected:
       // TODO(wjwwood): support custom allocator, maybe restrict to polymorphic allocator
       rcl_get_default_allocator());
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+      rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to create wait set");
     }
 
     // (Re)build the wait set for the first time.
@@ -192,8 +192,7 @@ protected:
       size_t services_from_waitables = 0;
       size_t events_from_waitables = 0;
       for (const auto & waitable_entry : waitables) {
-        auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
-        if (nullptr == waitable_ptr_pair.second) {
+        if (!waitable_entry.waitable) {
           // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
           if (HasStrongOwnership) {
             // This will not happen in fixed sized storage, as it holds
@@ -204,7 +203,7 @@ protected:
           needs_pruning_ = true;
           continue;
         }
-        rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
+        auto & waitable = *waitable_entry.waitable;
         subscriptions_from_waitables += waitable.get_number_of_ready_subscriptions();
         guard_conditions_from_waitables += waitable.get_number_of_ready_guard_conditions();
         timers_from_waitables += waitable.get_number_of_ready_timers();
@@ -222,7 +221,7 @@ protected:
         events_from_waitables
       );
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't resize the wait set");
       }
       was_resized = true;
       // Assumption: the calling code ensures this function is not called
@@ -238,15 +237,13 @@ protected:
     if (!was_resized) {
       rcl_ret_t ret = rcl_wait_set_clear(&rcl_wait_set_);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't clear the wait set");
       }
     }
 
     // Add subscriptions.
     for (const auto & subscription_entry : subscriptions) {
-      auto subscription_ptr_pair =
-        get_raw_pointer_from_smart_pointer(subscription_entry.subscription);
-      if (nullptr == subscription_ptr_pair.second) {
+      if (!subscription_entry.subscription) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
           // This will not happen in fixed sized storage, as it holds
@@ -257,12 +254,13 @@ protected:
         needs_pruning_ = true;
         continue;
       }
+
       rcl_ret_t ret = rcl_wait_set_add_subscription(
         &rcl_wait_set_,
-        subscription_ptr_pair.second->get_subscription_handle().get(),
+        subscription_entry.subscription->get_subscription_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
       }
     }
 
@@ -271,8 +269,7 @@ protected:
       [this](const auto & inner_guard_conditions)
       {
         for (const auto & guard_condition : inner_guard_conditions) {
-          auto guard_condition_ptr_pair = get_raw_pointer_from_smart_pointer(guard_condition);
-          if (nullptr == guard_condition_ptr_pair.second) {
+          if (!guard_condition) {
             // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
             if (HasStrongOwnership) {
               // This will not happen in fixed sized storage, as it holds
@@ -285,10 +282,10 @@ protected:
           }
           rcl_ret_t ret = rcl_wait_set_add_guard_condition(
             &rcl_wait_set_,
-            &guard_condition_ptr_pair.second->get_rcl_guard_condition(),
+            &guard_condition->get_rcl_guard_condition(),
             nullptr);
           if (RCL_RET_OK != ret) {
-            rclcpp::exceptions::throw_from_rcl_error(ret);
+            rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
           }
         }
       };
@@ -301,8 +298,7 @@ protected:
 
     // Add timers.
     for (const auto & timer : timers) {
-      auto timer_ptr_pair = get_raw_pointer_from_smart_pointer(timer);
-      if (nullptr == timer_ptr_pair.second) {
+      if (!timer) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
           // This will not happen in fixed sized storage, as it holds
@@ -315,17 +311,16 @@ protected:
       }
       rcl_ret_t ret = rcl_wait_set_add_timer(
         &rcl_wait_set_,
-        timer_ptr_pair.second->get_timer_handle().get(),
+        timer->get_timer_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
       }
     }
 
     // Add clients.
     for (const auto & client : clients) {
-      auto client_ptr_pair = get_raw_pointer_from_smart_pointer(client);
-      if (nullptr == client_ptr_pair.second) {
+      if (!client) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
           // This will not happen in fixed sized storage, as it holds
@@ -338,7 +333,7 @@ protected:
       }
       rcl_ret_t ret = rcl_wait_set_add_client(
         &rcl_wait_set_,
-        client_ptr_pair.second->get_client_handle().get(),
+        client->get_client_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -347,8 +342,7 @@ protected:
 
     // Add services.
     for (const auto & service : services) {
-      auto service_ptr_pair = get_raw_pointer_from_smart_pointer(service);
-      if (nullptr == service_ptr_pair.second) {
+      if (!service) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
           // This will not happen in fixed sized storage, as it holds
@@ -361,17 +355,16 @@ protected:
       }
       rcl_ret_t ret = rcl_wait_set_add_service(
         &rcl_wait_set_,
-        service_ptr_pair.second->get_service_handle().get(),
+        service->get_service_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't fill wait set");
       }
     }
 
     // Add waitables.
     for (auto & waitable_entry : waitables) {
-      auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
-      if (nullptr == waitable_ptr_pair.second) {
+      if (!waitable_entry.waitable) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
           // This will not happen in fixed sized storage, as it holds
@@ -382,8 +375,7 @@ protected:
         needs_pruning_ = true;
         continue;
       }
-      rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
-      waitable.add_to_wait_set(&rcl_wait_set_);
+      waitable_entry.waitable->add_to_wait_set(rcl_wait_set_);
     }
   }
 
@@ -404,6 +396,32 @@ protected:
   {
     needs_resize_ = true;
   }
+
+  size_t size_of_subscriptions() const {return 0;}
+  size_t size_of_timers() const {return 0;}
+  size_t size_of_clients() const {return 0;}
+  size_t size_of_services() const {return 0;}
+  size_t size_of_waitables() const {return 0;}
+
+  template<class SubscriptionsIterable>
+  typename SubscriptionsIterable::value_type
+  subscriptions(size_t) const {return nullptr;}
+
+  template<class TimersIterable>
+  typename TimersIterable::value_type
+  timers(size_t) const {return nullptr;}
+
+  template<class ClientsIterable>
+  typename ClientsIterable::value_type
+  clients(size_t) const {return nullptr;}
+
+  template<class ServicesIterable>
+  typename ServicesIterable::value_type
+  services(size_t) const {return nullptr;}
+
+  template<class WaitablesIterable>
+  typename WaitablesIterable::value_type
+  waitables(size_t) const {return nullptr;}
 
   rcl_wait_set_t rcl_wait_set_;
   rclcpp::Context::SharedPtr context_;

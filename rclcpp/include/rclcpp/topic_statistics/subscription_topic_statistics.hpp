@@ -48,21 +48,12 @@ using libstatistics_collector::moving_average_statistics::StatisticData;
 /**
  * Class used to collect, measure, and publish topic statistics data. Current statistics
  * supported for subscribers are received message age and received message period.
- *
- * \tparam CallbackMessageT the subscribed message type
- */
-template<typename CallbackMessageT>
+  */
 class SubscriptionTopicStatistics
 {
-  using TopicStatsCollector =
-    libstatistics_collector::topic_statistics_collector::TopicStatisticsCollector<
-    CallbackMessageT>;
-  using ReceivedMessageAge =
-    libstatistics_collector::topic_statistics_collector::ReceivedMessageAgeCollector<
-    CallbackMessageT>;
-  using ReceivedMessagePeriod =
-    libstatistics_collector::topic_statistics_collector::ReceivedMessagePeriodCollector<
-    CallbackMessageT>;
+  using TopicStatsCollector = libstatistics_collector::TopicStatisticsCollector;
+  using ReceivedMessageAge = libstatistics_collector::ReceivedMessageAgeCollector;
+  using ReceivedMessagePeriod = libstatistics_collector::ReceivedMessagePeriodCollector;
 
 public:
   /// Construct a SubscriptionTopicStatistics object.
@@ -101,16 +92,16 @@ public:
   /**
    * This method acquires a lock to prevent race conditions to collectors list.
    *
-   * \param received_message the message received by the subscription
+   * \param message_info the message info corresponding to the received message
    * \param now_nanoseconds current time in nanoseconds
    */
   virtual void handle_message(
-    const CallbackMessageT & received_message,
+    const rmw_message_info_t & message_info,
     const rclcpp::Time now_nanoseconds) const
   {
     std::lock_guard<std::mutex> lock(mutex_);
     for (const auto & collector : subscriber_statistics_collectors_) {
-      collector->OnMessageReceived(received_message, now_nanoseconds.nanoseconds());
+      collector->OnMessageReceived(message_info, now_nanoseconds.nanoseconds());
     }
   }
 
@@ -181,12 +172,11 @@ private:
   {
     auto received_message_age = std::make_unique<ReceivedMessageAge>();
     received_message_age->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
-
     auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
     {
       std::lock_guard<std::mutex> lock(mutex_);
+      subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
       subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
     }
 

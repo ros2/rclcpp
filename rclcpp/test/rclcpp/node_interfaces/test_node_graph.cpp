@@ -28,6 +28,7 @@
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rcutils/strdup.h"
+#include "test_msgs/msg/empty.h"
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"
 
@@ -46,9 +47,13 @@ constexpr char absolute_namespace[] = "/ns";
 class TestNodeGraph : public ::testing::Test
 {
 public:
-  void SetUp()
+  static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
+  }
+
+  void SetUp()
+  {
     node_ = std::make_shared<rclcpp::Node>(node_name, node_namespace);
 
     // This dynamic cast is not necessary for the unittests, but instead is used to ensure
@@ -58,7 +63,7 @@ public:
     ASSERT_NE(nullptr, node_graph_);
   }
 
-  void TearDown()
+  static void TearDownTestCase()
   {
     rclcpp::shutdown();
   }
@@ -128,6 +133,9 @@ TEST_F(TestNodeGraph, construct_from_node)
 
   EXPECT_EQ(0u, node_graph()->count_publishers("not_a_topic"));
   EXPECT_EQ(0u, node_graph()->count_subscribers("not_a_topic"));
+  EXPECT_EQ(0u, node_graph()->count_clients("not_a_service"));
+  EXPECT_EQ(0u, node_graph()->count_services("not_a_service"));
+
   EXPECT_NE(nullptr, node_graph()->get_graph_guard_condition());
 
   // get_graph_event is non-const
@@ -502,7 +510,9 @@ TEST_F(TestNodeGraph, get_node_names_and_namespaces_fini_errors)
     "lib:rclcpp", rcutils_string_array_fini, RCL_RET_ERROR);
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->get_node_names_and_namespaces(),
-    std::runtime_error("could not destroy node names, could not destroy node namespaces"));
+    std::runtime_error(
+    "could not destroy node names: error not set, "
+    "could not destroy node namespaces: error not set"));
 }
 
 TEST_F(TestNodeGraph, get_node_names_with_enclaves_fini_errors)
@@ -531,6 +541,22 @@ TEST_F(TestNodeGraph, count_subscribers_rcl_error)
   RCLCPP_EXPECT_THROW_EQ(
     node_graph()->count_subscribers("topic"),
     std::runtime_error("could not count subscribers: error not set"));
+}
+
+TEST_F(TestNodeGraph, count_clients_rcl_error)
+{
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_count_clients, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->count_clients("service"),
+    std::runtime_error("could not count clients: error not set"));
+}
+
+TEST_F(TestNodeGraph, count_services_rcl_error)
+{
+  auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_count_services, RCL_RET_ERROR);
+  RCLCPP_EXPECT_THROW_EQ(
+    node_graph()->count_services("service"),
+    std::runtime_error("could not count services: error not set"));
 }
 
 TEST_F(TestNodeGraph, notify_shutdown)
@@ -598,6 +624,18 @@ TEST_F(TestNodeGraph, get_info_by_topic)
 
   rclcpp::QoS const_actual_qos = const_publisher_endpoint_info.qos_profile();
   EXPECT_EQ(const_actual_qos.reliability(), rclcpp::ReliabilityPolicy::Reliable);
+
+  const rosidl_type_hash_t expected_type_hash = *test_msgs__msg__Empty__get_type_hash(nullptr);
+  EXPECT_EQ(
+    0, memcmp(
+      &publisher_endpoint_info.topic_type_hash(),
+      &expected_type_hash,
+      sizeof(rosidl_type_hash_t)));
+  EXPECT_EQ(
+    0, memcmp(
+      &const_publisher_endpoint_info.topic_type_hash(),
+      &expected_type_hash,
+      sizeof(rosidl_type_hash_t)));
 
   auto endpoint_gid = publisher_endpoint_info.endpoint_gid();
   auto const_endpoint_gid = const_publisher_endpoint_info.endpoint_gid();

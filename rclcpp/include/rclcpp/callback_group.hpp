@@ -89,6 +89,7 @@ public:
    * added to the executor in either case.
    *
    * \param[in] group_type The type of the callback group.
+   * \param[in] context A weak pointer to the context associated with this callback group.
    * \param[in] automatically_add_to_executor_with_node A boolean that
    *   determines whether a callback group is automatically added to an executor
    *   with the node with which it is associated.
@@ -96,6 +97,7 @@ public:
   RCLCPP_PUBLIC
   explicit CallbackGroup(
     CallbackGroupType group_type,
+    rclcpp::Context::WeakPtr context,
     bool automatically_add_to_executor_with_node = true);
 
   /// Default destructor.
@@ -137,16 +139,46 @@ public:
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
+  /// Get the total number of entities in this callback group.
+  /**
+   * \return the number of entities in the callback group.
+   */
+  RCLCPP_PUBLIC
+  size_t
+  size() const;
+
+  /// Return a reference to the 'can be taken' atomic boolean.
+  /**
+   * The resulting bool will be true in the case that no executor is currently
+   * using an executable entity from this group.
+   * The resulting bool will be false in the case that an executor is currently
+   * using an executable entity from this group, and the group policy doesn't
+   * allow a second take (eg mutual exclusion)
+   * \return a reference to the flag
+   */
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
 
+  /// Get the group type.
+  /**
+   * \return the group type
+   */
   RCLCPP_PUBLIC
   const CallbackGroupType &
   type() const;
 
+  /// Collect all of the entity pointers contained in this callback group.
+  /**
+   * \param[in] sub_func Function to execute for each subscription
+   * \param[in] service_func Function to execute for each service
+   * \param[in] client_func Function to execute for each client
+   * \param[in] timer_func Function to execute for each timer
+   * \param[in] waitable_fuinc Function to execute for each waitable
+   */
   RCLCPP_PUBLIC
-  void collect_all_ptrs(
+  void
+  collect_all_ptrs(
     std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
     std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
     std::function<void(const rclcpp::ClientBase::SharedPtr &)> client_func,
@@ -178,10 +210,13 @@ public:
   bool
   automatically_add_to_executor_with_node() const;
 
-  /// Defer creating the notify guard condition and return it.
+  /// Retrieve the guard condition used to signal changes to this callback group.
+  /**
+   * \return guard condition if it is valid, otherwise nullptr.
+   */
   RCLCPP_PUBLIC
   rclcpp::GuardCondition::SharedPtr
-  get_notify_guard_condition(const rclcpp::Context::SharedPtr context_ptr);
+  get_notify_guard_condition();
 
   /// Trigger the notify guard condition.
   RCLCPP_PUBLIC
@@ -233,6 +268,8 @@ protected:
   // defer the creation of the guard condition
   std::shared_ptr<rclcpp::GuardCondition> notify_guard_condition_ = nullptr;
   std::recursive_mutex notify_guard_condition_mutex_;
+
+  rclcpp::Context::WeakPtr context_;
 
 private:
   template<typename TypeT, typename Function>
