@@ -219,6 +219,18 @@ TEST(TestQoS, policy_name_from_kind) {
   EXPECT_EQ(
     "LIFESPAN_QOS_POLICY",
     rclcpp::qos_policy_name_from_kind(RMW_QOS_POLICY_LIFESPAN));
+
+  EXPECT_EQ(
+    "DEPTH_QOS_POLICY",
+    rclcpp::qos_policy_name_from_kind(RMW_QOS_POLICY_DEPTH));
+
+  EXPECT_EQ(
+    "LIVELINESS_LEASE_DURATION_QOS_POLICY",
+    rclcpp::qos_policy_name_from_kind(RMW_QOS_POLICY_LIVELINESS_LEASE_DURATION));
+
+  EXPECT_EQ(
+    "AVOID_ROS_NAMESPACE_CONVENTIONS_QOS_POLICY",
+    rclcpp::qos_policy_name_from_kind(RMW_QOS_POLICY_AVOID_ROS_NAMESPACE_CONVENTIONS));
 }
 
 TEST(TestQoS, qos_check_compatible)
