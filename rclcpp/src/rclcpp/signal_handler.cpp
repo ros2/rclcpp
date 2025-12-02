@@ -255,6 +255,7 @@ SignalHandler::deferred_signal_handler()
 {
   while (true) {
     if (signal_received_.exchange(false)) {
+      RCLCPP_INFO(SignalHandler::get_logger(), "signal_handler(SIGINT/SIGTERM)");
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
       for (auto context_ptr : rclcpp::get_contexts()) {
         if (context_ptr->get_init_options().shutdown_on_signal) {
