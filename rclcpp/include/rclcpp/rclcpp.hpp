@@ -175,6 +175,7 @@
 #include "rclcpp/parameter_event_handler.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_service.hpp"
+#include "rclcpp/parameter_descriptor_wrapper.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
