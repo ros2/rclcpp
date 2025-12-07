@@ -406,7 +406,9 @@ public:
     // automatically with lambda functions in cases where the arguments can be
     // converted to one another, e.g. shared_ptr and unique_ptr.
     using scbth = detail::SubscriptionCallbackTypeHelper<MessageT, CallbackT>;
-    constexpr auto is_invalid_signature =
+
+    // Determine if the given CallbackT is a deprecated signature or not.
+    constexpr auto is_deprecated =
       rclcpp::function_traits::same_arguments<
       typename scbth::callback_type,
       std::function<void(std::shared_ptr<SubscribedType>)>
@@ -434,7 +436,7 @@ public:
 
     // Use the discovered type to force the type of callback when assigning
     // into the variant.
-    if constexpr (is_invalid_signature) {
+    if constexpr (is_deprecated) {
       // If deprecated, call sub-routine that is deprecated.
       set_deprecated(static_cast<typename scbth::callback_type>(callback));
     } else {
@@ -446,9 +448,12 @@ public:
     return *this;
   }
 
-  template<typename SetT>
   /// Function for shared_ptr to non-const MessageT, which is deprecated.
+  template<typename SetT>
+  #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
+  // suppress deprecation warnings in `test_any_subscription_callback.cpp`
   [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
+  #endif
   void
   set_deprecated(std::function<void(std::shared_ptr<SetT>)> callback)
   {
@@ -457,13 +462,18 @@ public:
 
   /// Function for shared_ptr to non-const MessageT with MessageInfo, which is deprecated.
   template<typename SetT>
+  #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
+  // suppress deprecation warnings in `test_any_subscription_callback.cpp`
   [[deprecated(
           "use 'void(std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
   )]]
+  #endif
   void
   set_deprecated(std::function<void(std::shared_ptr<SetT>, const rclcpp::MessageInfo &)> callback)
   {
     callback_variant_ = callback;
+  }
+
   /// Disable the callback from being called during dispatch.
   void disable()
   {

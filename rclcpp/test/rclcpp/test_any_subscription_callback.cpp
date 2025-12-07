@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#define RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS 1
 #include "rclcpp/any_subscription_callback.hpp"
 #include "test_msgs/msg/empty.hpp"
 
@@ -763,6 +764,82 @@ INSTANTIATE_TEST_SUITE_P(
     BindContext<MyTA, const std::shared_ptr<const test_msgs::msg::Empty> &>("bind_method"),
     BindContext<MyTA, const std::shared_ptr<const test_msgs::msg::Empty> &,
     const rclcpp::MessageInfo &>(
+      "bind_method_with_info")
+  ),
+  format_parameter_with_ta
+);
+
+
+//
+// Versions of `std::shared_ptr<MessageT>`
+//
+void shared_ptr_free_func(std::shared_ptr<test_msgs::msg::Empty>) {}
+void shared_ptr_w_info_free_func(
+  std::shared_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &)
+{}
+
+INSTANTIATE_TEST_SUITE_P(
+  SharedPtrCallbackTests,
+  DispatchTests,
+  ::testing::Values(
+    // lambda
+    InstanceContext{"lambda", rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty>().set(
+        [](std::shared_ptr<test_msgs::msg::Empty>) {})},
+    InstanceContext{"lambda_with_info",
+      rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty>().set(
+        [](std::shared_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &) {})},
+    // free function
+    InstanceContext{"free_function", rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty>().set(
+        shared_ptr_free_func)},
+    InstanceContext{"free_function_with_info",
+      rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty>().set(
+        shared_ptr_w_info_free_func)},
+    // bind function
+    BindContext<test_msgs::msg::Empty, std::shared_ptr<test_msgs::msg::Empty>>("bind_method"),
+    BindContext<test_msgs::msg::Empty, std::shared_ptr<test_msgs::msg::Empty>,
+    const rclcpp::MessageInfo &>(
+      "bind_method_with_info")
+  ),
+  format_parameter
+);
+
+void shared_ptr_ta_free_func(std::shared_ptr<MyEmpty>) {}
+void shared_ptr_ta_w_info_free_func(
+  std::shared_ptr<MyEmpty>, const rclcpp::MessageInfo &)
+{}
+
+INSTANTIATE_TEST_SUITE_P(
+  SharedPtrCallbackTests,
+  DispatchTestsWithTA,
+  ::testing::Values(
+    // lambda
+    InstanceContext<MyTA>{"lambda_ta", rclcpp::AnySubscriptionCallback<MyTA>().set(
+        [](std::shared_ptr<MyEmpty>) {})},
+    InstanceContext<MyTA>{"lambda_ta_with_info",
+      rclcpp::AnySubscriptionCallback<MyTA>().set(
+        [](std::shared_ptr<MyEmpty>, const rclcpp::MessageInfo &) {})},
+    InstanceContext<MyTA>{"lambda", rclcpp::AnySubscriptionCallback<MyTA>().set(
+        [](std::shared_ptr<test_msgs::msg::Empty>) {})},
+    InstanceContext<MyTA>{"lambda_with_info",
+      rclcpp::AnySubscriptionCallback<MyTA>().set(
+        [](std::shared_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &) {})},
+    // free function
+    InstanceContext<MyTA>{"free_function_ta", rclcpp::AnySubscriptionCallback<MyTA>().set(
+        shared_ptr_ta_free_func)},
+    InstanceContext<MyTA>{"free_function_ta_with_info",
+      rclcpp::AnySubscriptionCallback<MyTA>().set(
+        shared_ptr_ta_w_info_free_func)},
+    InstanceContext<MyTA>{"free_function", rclcpp::AnySubscriptionCallback<MyTA>().set(
+        shared_ptr_free_func)},
+    InstanceContext<MyTA>{"free_function_with_info",
+      rclcpp::AnySubscriptionCallback<MyTA>().set(
+        shared_ptr_w_info_free_func)},
+    // bind function
+    BindContext<MyTA, std::shared_ptr<MyEmpty>>("bind_method_ta"),
+    BindContext<MyTA, std::shared_ptr<MyEmpty>, const rclcpp::MessageInfo &>(
+      "bind_method_ta_with_info"),
+    BindContext<MyTA, std::shared_ptr<test_msgs::msg::Empty>>("bind_method"),
+    BindContext<MyTA, std::shared_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &>(
       "bind_method_with_info")
   ),
   format_parameter_with_ta
