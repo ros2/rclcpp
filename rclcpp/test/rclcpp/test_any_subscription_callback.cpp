@@ -769,7 +769,6 @@ INSTANTIATE_TEST_SUITE_P(
   format_parameter_with_ta
 );
 
-
 //
 // Versions of `std::shared_ptr<MessageT>`
 //
