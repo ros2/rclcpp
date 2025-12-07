@@ -120,3 +120,32 @@ TEST_F(TestParameterService, describe_parameters) {
     EXPECT_EQ(0u, parameter_descs.size());
   }
 }
+
+TEST_F(TestParameterService, parameter_descriptor) {
+  {
+    rclcpp::ParameterDescription param_description;
+    rclcpp::ParameterValue param_value(1);
+
+    param_description.set_name("int_parameter");
+    param_description.set_type(2);
+    param_description.set_description_text("description");
+    param_description.set_additional_constraints("constraints");
+    param_description.set_read_only(false);
+    param_description.set_integer_description_range(0, 10, 1);
+
+    auto param = param_description.build();
+    param_description.declare_parameter(param_value, node);
+
+    EXPECT_EQ("int_parameter", param.name);
+    EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, param.type);
+    EXPECT_EQ("description", param.description);
+    EXPECT_EQ("constraints", param.additional_constraints);
+    EXPECT_EQ(0u, param.read_only);
+    EXPECT_EQ(0u, param.dynamic_typing);
+    EXPECT_EQ(0u, param.integer_range.at(0).from_value);
+    EXPECT_EQ(10, param.integer_range.at(0).to_value);
+    EXPECT_EQ(1, param.integer_range.at(0).step);
+
+    ASSERT_EQ(1, client->get_parameter("int_parameter", 0));
+  }
+}

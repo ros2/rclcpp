@@ -212,6 +212,23 @@ public:
   std::shared_ptr<rclcpp::SerializedMessage>
   create_serialized_message() = 0;
 
+  /// Disable callbacks from being called
+  /**
+   * This function temporary removes the on_new_message_callback to prevent it from being called.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void disable_callbacks();
+
+  /// Enable the callbacks to be called
+  /**
+    * This function sets back the on_new_message_callback if it was previously removed in
+    * disable_callbacks().
+    */
+  RCLCPP_PUBLIC
+  virtual
+  void enable_callbacks();
+
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
@@ -383,7 +400,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
 
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
@@ -406,7 +423,7 @@ public:
   void
   clear_on_new_message_callback()
   {
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
 
     if (on_new_message_callback_) {
       set_on_new_message_callback(nullptr, nullptr);
@@ -646,7 +663,7 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  std::recursive_mutex callback_mutex_;
+  std::recursive_mutex on_new_message_callback_mutex_;
   // It is important to declare on_new_message_callback_ before
   // subscription_handle_, so on destruction the subscription is
   // destroyed first. Otherwise, the rmw subscription callback

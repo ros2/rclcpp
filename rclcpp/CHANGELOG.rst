@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.3 (2025-11-18)
+-------------------
+* correct test function descriptions (`#2970 <https://github.com/ros2/rclcpp/issues/2970>`_)
+* add : get clients, servers info (`#2569 <https://github.com/ros2/rclcpp/issues/2569>`_)
+* Fix REP url locations (`#2987 <https://github.com/ros2/rclcpp/issues/2987>`_)
+* Contributors: Minju, Lee, Tim Clephas, Yuchen966
+
 30.1.2 (2025-10-21)
 -------------------
 * clear handles before node destruction in test_memory_strategy. (`#2969 <https://github.com/ros2/rclcpp/issues/2969>`_)

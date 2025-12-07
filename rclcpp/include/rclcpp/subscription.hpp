@@ -279,6 +279,50 @@ public:
     return message_memory_strategy_->borrow_serialized_message();
   }
 
+  /// Disable callbacks from being called
+  /**
+    * This method will block, until any subscription's callbacks provided during construction
+    * currently being executed are finished.
+    * \note This method also temporary removes the on new message callback and all
+    * on new event callbacks from the rmw layer to prevent them from being called. However, this
+    * method will not block and wait until the currently executing on_new_[message]event callbacks
+    * are finished.
+    */
+  void
+  disable_callbacks() override
+  {
+    SubscriptionBase::disable_callbacks();
+    any_callback_.disable();
+    if (subscription_intra_process_) {
+      subscription_intra_process_->disable_callbacks();
+    }
+    for (const auto & [_, event_ptr] : event_handlers_) {
+      if (event_ptr) {
+        event_ptr->disable();
+      }
+    }
+  }
+
+  /// Enable the callbacks to be called
+  /**
+    * This method is thread safe, and provides a safe way to atomically enable the callbacks
+    * in a multithreaded environment.
+    */
+  void
+  enable_callbacks() override
+  {
+    SubscriptionBase::enable_callbacks();
+    any_callback_.enable();
+    if (subscription_intra_process_) {
+      subscription_intra_process_->enable_callbacks();
+    }
+    for (const auto & [_, event_ptr] : event_handlers_) {
+      if (event_ptr) {
+        event_ptr->enable();
+      }
+    }
+  }
+
   void
   handle_message(
     std::shared_ptr<void> & message,

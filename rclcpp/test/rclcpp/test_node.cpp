@@ -3689,6 +3689,115 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   }, rclcpp::exceptions::InvalidTopicNameError);
 }
 
+// test that calling get_clients_info_by_service and get_servers_info_by_service
+TEST_F(TestNode, get_clients_servers_info_by_service) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  std::string service_name = "test_service_info";
+  std::string fq_service_name = rclcpp::expand_topic_or_service_name(
+    service_name, node->get_name(), node->get_namespace(), true);
+
+  // Lists should be empty
+  EXPECT_TRUE(node->get_clients_info_by_service(fq_service_name).empty());
+  EXPECT_TRUE(node->get_servers_info_by_service(fq_service_name).empty());
+
+  // Add a client
+  rclcpp::QoSInitialization qos_initialization =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10
+  };
+  rmw_qos_profile_t rmw_qos_profile_default =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+    {1, 12345},
+    {20, 9887665},
+    RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC,
+    {5, 23456},
+    false
+  };
+  rclcpp::QoS qos = rclcpp::QoS(qos_initialization, rmw_qos_profile_default);
+  auto client = node->create_client<test_msgs::srv::Empty>(service_name, qos);
+
+  // Wait for the underlying RMW implementation to catch up with graph changes
+  auto client_is_generated =
+    [&]() {return node->get_clients_info_by_service(fq_service_name).size() == 1u;};
+  ASSERT_TRUE(wait_for_event(node, client_is_generated));
+
+  // List should have one item
+  auto clients_info = node->get_clients_info_by_service(fq_service_name);
+  ASSERT_EQ(clients_info.size(), (size_t) 1);
+  // Server list should be empty
+  EXPECT_TRUE(node->get_servers_info_by_service(fq_service_name).empty());
+
+  // Verify client info has the right data.
+  EXPECT_EQ(node->get_name(), clients_info[0].node_name());
+  EXPECT_EQ(node->get_namespace(), clients_info[0].node_namespace());
+  EXPECT_EQ("test_msgs/srv/Empty", clients_info[0].service_type());
+  EXPECT_EQ(rclcpp::EndpointType::Client, clients_info[0].endpoint_type());
+  EXPECT_TRUE(clients_info[0].endpoint_count() == 1 || clients_info[0].endpoint_count() == 2);
+  for(size_t i = 0; i < clients_info[0].endpoint_count(); i++) {
+    auto qos_profile = clients_info[0].qos_profiles()[i].get_rmw_qos_profile();
+    expect_qos_profile_eq(qos.get_rmw_qos_profile(), qos_profile, false);
+  }
+
+  // Add a service server
+  rclcpp::QoSInitialization qos_initialization2 =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    0
+  };
+  rmw_qos_profile_t rmw_qos_profile_default2 =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    0,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_VOLATILE,
+    {15, 1678},
+    {29, 2345},
+    RMW_QOS_POLICY_LIVELINESS_AUTOMATIC,
+    {5, 23456},
+    false
+  };
+  rclcpp::QoS qos2 = rclcpp::QoS(qos_initialization2, rmw_qos_profile_default2);
+  auto callback = [](test_msgs::srv::Empty_Request::ConstSharedPtr req,
+    test_msgs::srv::Empty_Response::ConstSharedPtr resp) {
+      (void)req;
+      (void)resp;
+    };
+  auto server = node->create_service<test_msgs::srv::Empty>(service_name, callback, qos2);
+  // Wait for the underlying RMW implementation to catch up with graph changes
+  auto server_is_generated =
+    [&]() {return node->get_servers_info_by_service(fq_service_name).size() == 1u;};
+  ASSERT_TRUE(wait_for_event(node, server_is_generated));
+
+  // List should have one item
+  auto servers_info = node->get_servers_info_by_service(fq_service_name);
+  ASSERT_EQ(servers_info.size(), (size_t) 1);
+  // Verify server info has the right data.
+  EXPECT_EQ(node->get_name(), servers_info[0].node_name());
+  EXPECT_EQ(node->get_namespace(), servers_info[0].node_namespace());
+  EXPECT_EQ("test_msgs/srv/Empty", servers_info[0].service_type());
+  EXPECT_EQ(rclcpp::EndpointType::Server, servers_info[0].endpoint_type());
+  EXPECT_TRUE(servers_info[0].endpoint_count() == 1 || servers_info[0].endpoint_count() == 2);
+  for(size_t i = 0; i < servers_info[0].endpoint_count(); i++) {
+    auto qos_profile = servers_info[0].qos_profiles()[i].get_rmw_qos_profile();
+    expect_qos_profile_eq(qos2.get_rmw_qos_profile(), qos_profile, false);
+  }
+
+  // Error cases
+  EXPECT_THROW(
+  {
+    clients_info = node->get_clients_info_by_service("13");
+  }, rclcpp::exceptions::InvalidServiceNameError);
+  EXPECT_THROW(
+  {
+    servers_info = node->get_servers_info_by_service("13");
+  }, rclcpp::exceptions::InvalidServiceNameError);
+}
+
 TEST_F(TestNode, callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   size_t num_callback_groups_in_basic_node = 0;

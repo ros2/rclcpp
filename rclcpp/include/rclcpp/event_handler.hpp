@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EVENT_HANDLER_HPP_
 #define RCLCPP__EVENT_HANDLER_HPP_
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -110,6 +111,14 @@ public:
   RCLCPP_PUBLIC
   virtual ~EventHandlerBase();
 
+  RCLCPP_PUBLIC
+  virtual
+  void enable() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void disable() = 0;
+
   /// Get the number of ready events
   RCLCPP_PUBLIC
   size_t
@@ -192,7 +201,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_event_callback_mutex_);
 
     // Set it temporarily to the new callback, while we replace the old one.
     // This two-step setting, prevents a gap where the old std::function has
@@ -215,7 +224,7 @@ public:
   void
   clear_on_ready_callback() override
   {
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_event_callback_mutex_);
     if (on_new_event_callback_) {
       set_on_new_event_callback(nullptr, nullptr);
       on_new_event_callback_ = nullptr;
@@ -234,7 +243,7 @@ protected:
   void
   set_on_new_event_callback(rcl_event_callback_t callback, const void * user_data);
 
-  std::recursive_mutex callback_mutex_;
+  std::recursive_mutex on_new_event_callback_mutex_;
   std::function<void(size_t)> on_new_event_callback_{nullptr};
 
   rcl_event_t event_handle_;
@@ -302,6 +311,10 @@ public:
   void
   execute(const std::shared_ptr<void> & data) override
   {
+    std::unique_lock<std::mutex> event_callback_lock(event_callback_mutex_);
+    if (disabled_.load()) {
+      return;
+    }
     if (!data) {
       throw std::runtime_error("'data' is empty");
     }
@@ -310,12 +323,53 @@ public:
     callback_ptr.reset();
   }
 
+  /// Disable the event callback from being called when execute(..) invoked
+  /**
+   * This will also temporarily remove the on_new_event_callback from the underlying rmw layer,
+   *  so that it is not called from the middleware while disabled.
+   */
+  void disable() override
+  {
+    {
+      // Temporary remove the on_new_event_callback_ to prevent it from being called
+      std::lock_guard<std::recursive_mutex> on_new_event_lock(on_new_event_callback_mutex_);
+      if (on_new_event_callback_) {
+        set_on_new_event_callback(nullptr, nullptr);
+      }
+    }
+    std::lock_guard<std::mutex> event_callback_lock(event_callback_mutex_);
+    disabled_.store(true);
+  }
+
+  /// Enable the event callback to be called when execute(..) invoked
+  /**
+   * This will also set back the on_new_event_callback to the underlying rmw layer, if it was
+   * previously removed with disable().
+   */
+  void enable() override
+  {
+    {
+      // Set callback again if it was previously removed in disable()
+      std::lock_guard<std::recursive_mutex> on_new_event_lock(on_new_event_callback_mutex_);
+      if (on_new_event_callback_) {
+        set_on_new_event_callback(
+          rclcpp::detail::cpp_callback_trampoline<
+            decltype(on_new_event_callback_), const void *, size_t>,
+          static_cast<const void *>(&on_new_event_callback_));
+      }
+    }
+    std::lock_guard<std::mutex> event_callback_lock(event_callback_mutex_);
+    disabled_.store(false);
+  }
+
 private:
   using EventCallbackInfoT = typename std::remove_reference<typename
       rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
 
   ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
+  std::mutex event_callback_mutex_;
+  std::atomic_bool disabled_{false};
 };
 }  // namespace rclcpp
 
