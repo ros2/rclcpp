@@ -199,6 +199,12 @@ init_tuple(NodeT & n)
     { \
       return StorageClassT::template get<NodeInterfaceType>(); \
     } \
+ \
+    std::shared_ptr<const NodeInterfaceType> \
+    get_node_ ## NodeInterfaceName ## _interface() const \
+    { \
+      return StorageClassT::template get<NodeInterfaceType>(); \
+    } \
   }; \
   }  // namespace rclcpp::node_interfaces::detail
 // *INDENT-ON*
