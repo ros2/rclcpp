@@ -192,7 +192,7 @@ TEST_F(TestNodeInterfaces, ni_init) {
 /*
    Testing macro'ed getters.
  */
-TEST_F(TestNodeInterfaces, ni_all_init) {
+TEST_F(TestNodeInterfaces, ni_all_init_non_const) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
 
   using rclcpp::node_interfaces::NodeInterfaces;
@@ -208,6 +208,67 @@ TEST_F(TestNodeInterfaces, ni_all_init) {
   using rclcpp::node_interfaces::NodeTimeSourceInterface;
 
   auto ni = rclcpp::node_interfaces::NodeInterfaces<ALL_RCLCPP_NODE_INTERFACES>(*node);
+
+  {
+    auto base = ni.get<NodeBaseInterface>();
+    base = ni.get_node_base_interface();
+    EXPECT_STREQ(base->get_name(), "my_node");  // Test for functionality
+  }
+  {
+    auto clock = ni.get<NodeClockInterface>();
+    clock = ni.get_node_clock_interface();
+    clock->get_clock();
+  }
+  {
+    auto graph = ni.get<NodeGraphInterface>();
+    graph = ni.get_node_graph_interface();
+  }
+  {
+    auto logging = ni.get<NodeLoggingInterface>();
+    logging = ni.get_node_logging_interface();
+  }
+  {
+    auto timers = ni.get<NodeTimersInterface>();
+    timers = ni.get_node_timers_interface();
+  }
+  {
+    auto topics = ni.get<NodeTopicsInterface>();
+    topics = ni.get_node_topics_interface();
+  }
+  {
+    auto services = ni.get<NodeServicesInterface>();
+    services = ni.get_node_services_interface();
+  }
+  {
+    auto waitables = ni.get<NodeWaitablesInterface>();
+    waitables = ni.get_node_waitables_interface();
+  }
+  {
+    auto parameters = ni.get<NodeParametersInterface>();
+    parameters = ni.get_node_parameters_interface();
+  }
+  {
+    auto time_source = ni.get<NodeTimeSourceInterface>();
+    time_source = ni.get_node_time_source_interface();
+  }
+}
+
+TEST_F(TestNodeInterfaces, ni_all_init_const) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+
+  using rclcpp::node_interfaces::NodeInterfaces;
+  using rclcpp::node_interfaces::NodeBaseInterface;
+  using rclcpp::node_interfaces::NodeClockInterface;
+  using rclcpp::node_interfaces::NodeGraphInterface;
+  using rclcpp::node_interfaces::NodeLoggingInterface;
+  using rclcpp::node_interfaces::NodeTimersInterface;
+  using rclcpp::node_interfaces::NodeTopicsInterface;
+  using rclcpp::node_interfaces::NodeServicesInterface;
+  using rclcpp::node_interfaces::NodeWaitablesInterface;
+  using rclcpp::node_interfaces::NodeParametersInterface;
+  using rclcpp::node_interfaces::NodeTimeSourceInterface;
+
+  const auto ni = rclcpp::node_interfaces::NodeInterfaces<ALL_RCLCPP_NODE_INTERFACES>(*node);
 
   {
     auto base = ni.get<NodeBaseInterface>();
