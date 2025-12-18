@@ -123,27 +123,27 @@ std::string get_typesupport_library_path(
 {
   const char * dynamic_library_folder;
 #ifdef _WIN32
-  dynamic_library_folder = "/bin/";
+  dynamic_library_folder = "bin";
 #elif __APPLE__
-  dynamic_library_folder = "/lib/";
+  dynamic_library_folder = "lib";
 #else
-  dynamic_library_folder = "/lib/";
+  dynamic_library_folder = "lib";
 #endif
 
-  std::string package_prefix;
+  std::filesystem::path package_prefix;
   try {
-    package_prefix = ament_index_cpp::get_package_prefix(package_name);
+    ament_index_cpp::get_package_prefix(package_name, package_prefix);
   } catch (ament_index_cpp::PackageNotFoundError & e) {
     throw std::runtime_error(e.what());
   }
 
   const std::string library_path = rcpputils::path_for_library(
-    package_prefix + dynamic_library_folder,
+    (package_prefix / dynamic_library_folder).string(),
     package_name + "__" + typesupport_identifier);
   if (library_path.empty()) {
     throw std::runtime_error(
-      "Typesupport library for " + package_name + " does not exist in '" + package_prefix +
-        "'.");
+      "Typesupport library for " + package_name + " does not exist in '" +
+        package_prefix.string() + "'.");
   }
   return library_path;
 }
