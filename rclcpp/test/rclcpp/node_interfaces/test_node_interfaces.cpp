@@ -259,7 +259,7 @@ TEST_F(TestNodeInterfaces, ni_all_init_const) {
   using rclcpp::node_interfaces::NodeParametersInterface;
   using rclcpp::node_interfaces::NodeTimeSourceInterface;
 
-  const auto ni = rclcpp::node_interfaces::NodeInterfaces<ALL_RCLCPP_NODE_INTERFACES>(*node);
+  const auto ni = rclcpp::node_interfaces::NodeInterfaces<ALL_RCLCPP_NODE_INTERFACES>(node);
 
   {
     auto base = ni.get<NodeBaseInterface>();
