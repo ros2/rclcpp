@@ -450,10 +450,12 @@ public:
 
   /// Function for shared_ptr to non-const MessageT, which is deprecated.
   template<typename SetT>
+  // *INDENT-OFF*
   #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
   // suppress deprecation warnings in `test_any_subscription_callback.cpp`
   [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
   #endif
+  // *INDENT-ON*
   void
   set_deprecated(std::function<void(std::shared_ptr<SetT>)> callback)
   {
@@ -462,12 +464,14 @@ public:
 
   /// Function for shared_ptr to non-const MessageT with MessageInfo, which is deprecated.
   template<typename SetT>
+  // *INDENT-OFF*
   #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
   // suppress deprecation warnings in `test_any_subscription_callback.cpp`
   [[deprecated(
           "use 'void(std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
   )]]
   #endif
+  // *INDENT-ON*
   void
   set_deprecated(std::function<void(std::shared_ptr<SetT>, const rclcpp::MessageInfo &)> callback)
   {
