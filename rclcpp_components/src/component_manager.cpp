@@ -93,17 +93,13 @@ std::vector<ComponentManager::ComponentResource>
 ComponentManager::get_component_resources(
   const std::string & package_name, const std::string & resource_index) const
 {
-  std::string content;
-  std::string base_path;
-  if (
-    !ament_index_cpp::get_resource(
-      resource_index, package_name, content, &base_path))
-  {
+  auto result = ament_index_cpp::get_resource(resource_index, package_name);
+  if (result.resourcePath == std::nullopt) {
     throw ComponentManagerException("Could not find requested resource in ament index");
   }
 
   std::vector<ComponentResource> resources;
-  std::vector<std::string> lines = rcpputils::split(content, '\n', true);
+  std::vector<std::string> lines = rcpputils::split(result.contents, '\n', true);
   for (const auto & line : lines) {
     std::vector<std::string> parts = rcpputils::split(line, ';');
     if (parts.size() != 2) {
@@ -112,7 +108,7 @@ ComponentManager::get_component_resources(
 
     std::filesystem::path library_path = parts[1];
     if (!library_path.is_absolute()) {
-      library_path = (base_path / library_path);
+      library_path = (result.resourcePath.value() / library_path);
     }
     resources.push_back({parts[0], library_path.string()});
   }
