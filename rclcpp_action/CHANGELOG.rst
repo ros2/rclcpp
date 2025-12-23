@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+30.1.4 (2025-12-23)
+-------------------
+
 30.1.3 (2025-11-18)
 -------------------
 * Fix REP url locations (`#2987 <https://github.com/ros2/rclcpp/issues/2987>`_)

@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.4 (2025-12-23)
+-------------------
+* Updated deprecated ament_index_cpp API (`#3011 <https://github.com/ros2/rclcpp/issues/3011>`_)
+* Unified Node Interfaces: Add const version of get_node_x_interface() (`#3006 <https://github.com/ros2/rclcpp/issues/3006>`_)
+* Parameter Descriptor Simplification  (`#2179 <https://github.com/ros2/rclcpp/issues/2179>`_)
+* ParameterEventHandler support ContentFiltering (`#2971 <https://github.com/ros2/rclcpp/issues/2971>`_)
+* update policy_name_from_kind && test_qos (`#2156 <https://github.com/ros2/rclcpp/issues/2156>`_)
+* Add ability to disable and enable subscription's callbacks (`#2985 <https://github.com/ros2/rclcpp/issues/2985>`_)
+* Switch to isolated testing via rmw_test_fixture (`#2929 <https://github.com/ros2/rclcpp/issues/2929>`_)
+* remove I/O from signal handler. (`#2986 <https://github.com/ros2/rclcpp/issues/2986>`_)
+* Contributors: Alejandro Hernández Cordero, Andrianov Roman, Barry Xu, Lucas Wendland, Michael Orlov, Tomoya Fujita, fabianhirmann, yadunund
+
 30.1.3 (2025-11-18)
 -------------------
 * correct test function descriptions (`#2970 <https://github.com/ros2/rclcpp/issues/2970>`_)
