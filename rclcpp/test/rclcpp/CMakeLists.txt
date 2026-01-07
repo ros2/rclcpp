@@ -57,11 +57,6 @@ ament_add_test_label(test_client mimick)
 if(TARGET test_client)
   target_link_libraries(test_client ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
 endif()
-ament_add_gtest(test_clock test_clock.cpp)
-ament_add_test_label(test_clock mimick)
-if(TARGET test_clock)
-  target_link_libraries(test_clock ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
-endif()
 ament_add_gtest(test_clock_conditional test_clock_conditional.cpp)
 ament_add_test_label(test_clock_conditional mimick)
 if(TARGET test_clock_conditional)
@@ -534,13 +529,6 @@ if(TARGET test_executors_warmup)
   target_link_libraries(test_executors_warmup ${PROJECT_NAME} ${test_msgs_TARGETS})
 endif()
 
-ament_add_gtest(test_static_single_threaded_executor executors/test_static_single_threaded_executor.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
-ament_add_test_label(test_static_single_threaded_executor mimick)
-if(TARGET test_static_single_threaded_executor)
-  target_link_libraries(test_static_single_threaded_executor ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
-endif()
-
 ament_add_gtest(test_multi_threaded_executor executors/test_multi_threaded_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_multi_threaded_executor)
@@ -674,32 +662,24 @@ endif()
 function(test_on_all_rmws)
   set(rmw_implementation_env_var RMW_IMPLEMENTATION=${rmw_implementation})
 
-  # If the rmw_implementation is rmw_zenoh_cpp, run the tests with multicast discovery enabled.
-  # Note: This is a temporary change that will be reverted before we branch into Kilted.
-  if(rmw_implementation STREQUAL "rmw_zenoh_cpp")
-    list(APPEND rmw_implementation_env_var
-      ZENOH_CONFIG_OVERRIDE=scouting/multicast/enabled=true
-    )
-  endif()
-
-  ament_add_gmock_test(test_qos_event
+  ament_add_ros_isolated_gmock_test(test_qos_event
     TEST_NAME test_qos_event${target_suffix}
     ENV ${rmw_implementation_env_var}
   )
   ament_add_test_label(test_qos_event${target_suffix} mimick)
 
-  ament_add_gmock_test(test_generic_pubsub
+  ament_add_ros_isolated_gmock_test(test_generic_pubsub
     TEST_NAME test_generic_pubsub${target_suffix}
     ENV ${rmw_implementation_env_var}
   )
 
-  ament_add_gmock_test(test_add_callback_groups_to_executor
+  ament_add_ros_isolated_gmock_test(test_add_callback_groups_to_executor
     TEST_NAME test_add_callback_groups_to_executor${target_suffix}
     ENV ${rmw_implementation_env_var}
     TIMEOUT 120
   )
 
-  ament_add_gmock_test(test_subscription_content_filter
+  ament_add_ros_isolated_gmock_test(test_subscription_content_filter
     TEST_NAME test_subscription_content_filter${target_suffix}
     ENV ${rmw_implementation_env_var}
     TIMEOUT 120

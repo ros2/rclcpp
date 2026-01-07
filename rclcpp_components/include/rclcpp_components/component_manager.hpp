@@ -43,9 +43,12 @@
 
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "class_loader/class_loader.hpp"
 
 #include "composition_interfaces/srv/load_node.hpp"
 #include "composition_interfaces/srv/unload_node.hpp"
@@ -56,12 +59,10 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "rclcpp_components/node_factory.hpp"
+#include "rclcpp_components/node_instance_wrapper.hpp"
 #include "rclcpp_components/visibility_control.hpp"
 
-namespace class_loader
-{
-class ClassLoader;
-}  // namespace class_loader
+#include "rmw/types.h"
 
 namespace rclcpp_components
 {

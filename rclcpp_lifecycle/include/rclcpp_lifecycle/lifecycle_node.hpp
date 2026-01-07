@@ -487,6 +487,16 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
+  /// Return the parameter value, or the "alternative_value" if not set.
+  /**
+   * \sa rclcpp::Node::get_parameter_or
+   */
+  template<typename ParameterT>
+  ParameterT
+  get_parameter_or(
+    const std::string & name,
+    const ParameterT & alternative_value) const;
+
   /// Return the parameters by the given parameter names.
   /**
    * \sa rclcpp::Node::get_parameters
@@ -693,6 +703,22 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about clients on a given service.
+  /**
+   * \sa rclcpp::Node::get_clients_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(const std::string & service_name, bool no_mangle = false) const;
+
+  /// Return the service endpoint information about server on a given service.
+  /**
+   * \sa rclcpp::Node::get_servers_info_by_service
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(const std::string & service_name, bool no_mangle = false) const;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.

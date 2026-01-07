@@ -28,7 +28,7 @@
 #include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
-
+#include "rclcpp/graph_listener.hpp"
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
 
@@ -145,7 +145,8 @@ rclcpp_logging_output_handler(
 Context::Context()
 : rcl_context_(nullptr),
   shutdown_reason_(""),
-  logging_mutex_(nullptr)
+  logging_mutex_(nullptr),
+  graph_listener_(nullptr)
 {}
 
 Context::~Context()
@@ -243,6 +244,24 @@ Context::init(
 
     weak_contexts_ = get_weak_contexts();
     weak_contexts_->add_context(this->shared_from_this());
+
+
+    std::lock_guard<std::recursive_mutex> lock (on_shutdown_callbacks_mutex_);
+
+    graph_listener_ = std::make_shared<graph_listener::GraphListener>(shared_from_this());
+
+    if (!graph_listener_->is_started()) {
+    // Register an on_shutdown hook to shutdown the graph listener.
+    // This is important to ensure that the wait set is finalized before
+    // destruction of static objects occurs.
+      std::weak_ptr<rclcpp::graph_listener::GraphListener> weak_graph_listener = graph_listener_;
+      on_shutdown ([weak_graph_listener]() {
+          auto shared_graph_listener = weak_graph_listener.lock();
+          if(shared_graph_listener) {
+            shared_graph_listener->shutdown(std::nothrow);
+          }
+    });
+    }
   } catch (const std::exception & e) {
     ret = rcl_shutdown(rcl_context_.get());
     rcl_context_.reset();
@@ -310,9 +329,16 @@ Context::shutdown(const std::string & reason)
 
   // call each pre-shutdown callback
   {
-    std::lock_guard<std::mutex> lock{pre_shutdown_callbacks_mutex_};
-    for (const auto & callback : pre_shutdown_callbacks_) {
-      (*callback)();
+    std::lock_guard<std::recursive_mutex> lock{pre_shutdown_callbacks_mutex_};
+    // callbacks may delete other callbacks during the execution,
+    // therefore we need to save a copy and check before execution
+    // if the next callback is still present
+    auto cpy = pre_shutdown_callbacks_;
+    for (const auto & callback : cpy) {
+      auto it = std::find(pre_shutdown_callbacks_.begin(), pre_shutdown_callbacks_.end(), callback);
+      if(it != pre_shutdown_callbacks_.end()) {
+        (*callback)();
+      }
     }
   }
 
@@ -325,9 +351,16 @@ Context::shutdown(const std::string & reason)
   shutdown_reason_ = reason;
   // call each shutdown callback
   {
-    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
-    for (const auto & callback : on_shutdown_callbacks_) {
-      (*callback)();
+    std::lock_guard<std::recursive_mutex> lock(on_shutdown_callbacks_mutex_);
+    // callbacks may delete other callbacks during the execution,
+    // therefore we need to save a copy and check before execution
+    // if the next callback is still present
+    auto cpy = on_shutdown_callbacks_;
+    for (const auto & callback : cpy) {
+      auto it = std::find(on_shutdown_callbacks_.begin(), on_shutdown_callbacks_.end(), callback);
+      if(it != on_shutdown_callbacks_.end()) {
+        (*callback)();
+      }
     }
   }
 
@@ -398,10 +431,10 @@ Context::add_shutdown_callback(
     shutdown_type == ShutdownType::pre_shutdown || shutdown_type == ShutdownType::on_shutdown);
 
   if constexpr (shutdown_type == ShutdownType::pre_shutdown) {
-    std::lock_guard<std::mutex> lock(pre_shutdown_callbacks_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(pre_shutdown_callbacks_mutex_);
     pre_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   } else {
-    std::lock_guard<std::mutex> lock(on_shutdown_callbacks_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_shutdown_callbacks_mutex_);
     on_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   }
 
@@ -421,7 +454,7 @@ Context::remove_shutdown_callback(
   }
 
   const auto remove_callback = [&callback_shared_ptr](auto & mutex, auto & callback_vector) {
-      const std::lock_guard<std::mutex> lock(mutex);
+      const std::lock_guard<std::recursive_mutex> lock(mutex);
       auto iter = callback_vector.begin();
       for (; iter != callback_vector.end(); iter++) {
         if ((*iter).get() == callback_shared_ptr.get()) {
@@ -462,7 +495,7 @@ std::vector<rclcpp::Context::ShutdownCallback>
 Context::get_shutdown_callback() const
 {
   const auto get_callback_vector = [](auto & mutex, auto & callback_set) {
-      const std::lock_guard<std::mutex> lock(mutex);
+      const std::lock_guard<std::recursive_mutex> lock(mutex);
       std::vector<rclcpp::Context::ShutdownCallback> callbacks;
       for (auto & callback : callback_set) {
         callbacks.push_back(*callback);
@@ -484,6 +517,12 @@ std::shared_ptr<rcl_context_t>
 Context::get_rcl_context()
 {
   return rcl_context_;
+}
+
+std::shared_ptr<rclcpp::graph_listener::GraphListener>
+Context::get_graph_listener()
+{
+  return graph_listener_;
 }
 
 bool

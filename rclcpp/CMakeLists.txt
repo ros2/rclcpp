@@ -70,7 +70,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/executor_notify_waitable.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
-  src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/experimental/executors/events_executor/events_executor.cpp
   src/rclcpp/experimental/timers_manager.cpp
@@ -104,6 +103,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_options.cpp
   src/rclcpp/parameter.cpp
   src/rclcpp/parameter_client.cpp
+  src/rclcpp/parameter_descriptor_wrapper.cpp
   src/rclcpp/parameter_event_handler.cpp
   src/rclcpp/parameter_events_filter.cpp
   src/rclcpp/parameter_map.cpp
@@ -146,27 +146,6 @@ cmake_policy(SET CMP0094 NEW)
 set(Python3_FIND_UNVERSIONED_NAMES FIRST)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-# "watch" template for changes
-configure_file(
-  "resource/logging.hpp.em"
-  "logging.hpp.em.watch"
-  COPYONLY
-)
-# generate header with logging macros
-set(python_code_logging
-  "import em"
-  "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
-string(REPLACE ";" "$<SEMICOLON>" python_code_logging "${python_code_logging}")
-add_custom_command(OUTPUT include/rclcpp/logging.hpp
-  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
-  COMMAND Python3::Interpreter ARGS -c "${python_code_logging}"
-  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
-  COMMENT "Expanding logging.hpp.em"
-  VERBATIM
-)
-list(APPEND ${PROJECT_NAME}_SRCS
-  include/rclcpp/logging.hpp)
 
 file(GLOB interface_files "include/rclcpp/node_interfaces/node_*_interface.hpp")
 foreach(interface_file ${interface_files})

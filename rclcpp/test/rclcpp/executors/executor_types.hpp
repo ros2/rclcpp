@@ -22,40 +22,13 @@
 
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/executors/static_single_threaded_executor.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 
-// suppress deprecated StaticSingleThreadedExecutor warning
-// we define an alias that explicitly indicates that this class is deprecated, while avoiding
-// polluting a lot of files the gcc pragmas
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-using DeprecatedStaticSingleThreadedExecutor = rclcpp::executors::StaticSingleThreadedExecutor;
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
-
-#ifdef __clang__
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
 using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
-  DeprecatedStaticSingleThreadedExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
-#ifdef __clang__
-# pragma clang diagnostic pop
-#endif
 
 class ExecutorTypeNames
 {
@@ -70,16 +43,6 @@ public:
     if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
       return "MultiThreadedExecutor";
     }
-#ifdef __clang__
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
-    if (std::is_same<T, DeprecatedStaticSingleThreadedExecutor>()) {
-      return "StaticSingleThreadedExecutor";
-    }
-#ifdef __clang__
-# pragma clang diagnostic pop
-#endif
 
     if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
       return "EventsExecutor";
@@ -89,8 +52,6 @@ public:
   }
 };
 
-// StaticSingleThreadedExecutor is not included in these tests for now, due to:
-// https://github.com/ros2/rclcpp/issues/1219
 using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,

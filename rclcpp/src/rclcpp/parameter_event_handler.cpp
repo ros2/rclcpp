@@ -74,6 +74,38 @@ ParameterEventHandler::add_parameter_callback(
   return handle;
 }
 
+bool
+ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & node_names)
+{
+  if (node_names.empty()) {
+    // Clear content filter
+    event_subscription_->set_content_filter("");
+    if (event_subscription_->is_cft_enabled()) {
+      return false;
+    }
+    return true;
+  }
+
+  std::string filter_expression;
+  size_t total = node_names.size();
+  for (size_t i = 0; i < total; ++i) {
+    filter_expression += "node = %" + std::to_string(i);
+    if (i < total - 1) {
+      filter_expression += " OR ";
+    }
+  }
+
+  // Enclose each node name in "'".
+  std::vector<std::string> quoted_node_names;
+  for (const auto & name : node_names) {
+    quoted_node_names.push_back("'" + resolve_path(name) + "'");
+  }
+
+  event_subscription_->set_content_filter(filter_expression, quoted_node_names);
+
+  return event_subscription_->is_cft_enabled();
+}
+
 void
 ParameterEventHandler::remove_parameter_callback(
   ParameterCallbackHandle::SharedPtr callback_handle)

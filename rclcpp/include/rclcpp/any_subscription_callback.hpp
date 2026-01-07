@@ -15,8 +15,10 @@
 #ifndef RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
 #define RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
 
+#include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -375,7 +377,19 @@ public:
     allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
   }
 
-  AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
+  AnySubscriptionCallback(const AnySubscriptionCallback & other)
+  : callback_variant_(other.callback_variant_),
+    callback_disabled_(other.callback_disabled_.load()),
+    subscribed_type_allocator_(other.subscribed_type_allocator_),
+    subscribed_type_deleter_(other.subscribed_type_deleter_),
+    ros_message_type_allocator_(other.ros_message_type_allocator_),
+    ros_message_type_deleter_(other.ros_message_type_deleter_),
+    serialized_message_allocator_(other.serialized_message_allocator_),
+    serialized_message_deleter_(other.serialized_message_deleter_)
+  {
+    allocator::set_allocator_for_deleter(&subscribed_type_deleter_, &subscribed_type_allocator_);
+    allocator::set_allocator_for_deleter(&ros_message_type_deleter_, &ros_message_type_allocator_);
+  }
 
   /// Generic function for setting the callback.
   /**
@@ -393,10 +407,89 @@ public:
     // converted to one another, e.g. shared_ptr and unique_ptr.
     using scbth = detail::SubscriptionCallbackTypeHelper<MessageT, CallbackT>;
 
-    callback_variant_ = static_cast<typename scbth::callback_type>(callback);
+    // Determine if the given CallbackT is a deprecated signature or not.
+    constexpr auto is_deprecated =
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<SubscribedType>)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<SubscribedType>, const rclcpp::MessageInfo &)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<ROSMessageType>)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<ROSMessageType>, const rclcpp::MessageInfo &)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)>
+      >::value ||
+      rclcpp::function_traits::same_arguments<
+      typename scbth::callback_type,
+      std::function<void(std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &)>
+      >::value;
+
+    // Use the discovered type to force the type of callback when assigning
+    // into the variant.
+    if constexpr (is_deprecated) {
+      // If deprecated, call sub-routine that is deprecated.
+      set_deprecated(static_cast<typename scbth::callback_type>(callback));
+    } else {
+      // Otherwise just assign it.
+      callback_variant_ = static_cast<typename scbth::callback_type>(callback);
+    }
 
     // Return copy of self for easier testing, normally will be compiled out.
     return *this;
+  }
+
+  /// Function for shared_ptr to non-const MessageT, which is deprecated.
+  template<typename SetT>
+  // *INDENT-OFF*
+  #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
+  // suppress deprecation warnings in `test_any_subscription_callback.cpp`
+  [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
+  #endif
+  // *INDENT-ON*
+  void
+  set_deprecated(std::function<void(std::shared_ptr<SetT>)> callback)
+  {
+    callback_variant_ = callback;
+  }
+
+  /// Function for shared_ptr to non-const MessageT with MessageInfo, which is deprecated.
+  template<typename SetT>
+  // *INDENT-OFF*
+  #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
+  // suppress deprecation warnings in `test_any_subscription_callback.cpp`
+  [[deprecated(
+          "use 'void(std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
+  )]]
+  #endif
+  // *INDENT-ON*
+  void
+  set_deprecated(std::function<void(std::shared_ptr<SetT>, const rclcpp::MessageInfo &)> callback)
+  {
+    callback_variant_ = callback;
+  }
+
+  /// Disable the callback from being called during dispatch.
+  void disable()
+  {
+    std::unique_lock<std::recursive_mutex> callback_lock(callback_mutex_);
+    callback_disabled_.store(true);
+  }
+
+  /// Enable the callback to be called during dispatch.
+  void enable()
+  {
+    std::unique_lock<std::recursive_mutex> callback_lock(callback_mutex_);
+    callback_disabled_.store(false);
   }
 
   std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>
@@ -469,6 +562,10 @@ public:
     std::shared_ptr<ROSMessageType> message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::recursive_mutex> callback_lock(callback_mutex_);
+    if (callback_disabled_.load()) {
+      return;
+    }
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
@@ -569,6 +666,10 @@ public:
     std::shared_ptr<const rclcpp::SerializedMessage> serialized_message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::recursive_mutex> callback_lock(callback_mutex_);
+    if (callback_disabled_.load()) {
+      return;
+    }
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
@@ -648,6 +749,10 @@ public:
     std::shared_ptr<const SubscribedType> message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::recursive_mutex> callback_lock(callback_mutex_);
+    if (callback_disabled_.load()) {
+      return;
+    }
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
@@ -778,6 +883,10 @@ public:
     std::unique_ptr<SubscribedType, SubscribedTypeDeleter> message,
     const rclcpp::MessageInfo & message_info)
   {
+    std::unique_lock<std::recursive_mutex> callback_lock(callback_mutex_);
+    if (callback_disabled_.load()) {
+      return;
+    }
     TRACETOOLS_TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     // Check if the variant is "unset", throw if it is.
     if (callback_variant_.index() == 0) {
@@ -972,6 +1081,8 @@ private:
   //   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2162r0.html
   // For now, compose the variant into this class as a private attribute.
   typename HelperT::variant_type callback_variant_;
+  std::recursive_mutex callback_mutex_;
+  std::atomic_bool callback_disabled_{false};
 
   SubscribedTypeAllocator subscribed_type_allocator_;
   SubscribedTypeDeleter subscribed_type_deleter_;

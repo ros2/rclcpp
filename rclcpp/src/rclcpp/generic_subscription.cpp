@@ -38,6 +38,30 @@ GenericSubscription::create_serialized_message()
 }
 
 void
+GenericSubscription::disable_callbacks()
+{
+  SubscriptionBase::disable_callbacks();
+  any_callback_.disable();
+  for (const auto & [_, event_ptr] : event_handlers_) {
+    if (event_ptr) {
+      event_ptr->disable();
+    }
+  }
+}
+
+void
+GenericSubscription::enable_callbacks()
+{
+  SubscriptionBase::enable_callbacks();
+  any_callback_.enable();
+  for (const auto & [_, event_ptr] : event_handlers_) {
+    if (event_ptr) {
+      event_ptr->enable();
+    }
+  }
+}
+
+void
 GenericSubscription::handle_message(
   std::shared_ptr<void> &,
   const rclcpp::MessageInfo &)

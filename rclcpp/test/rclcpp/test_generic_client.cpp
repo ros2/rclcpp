@@ -221,7 +221,7 @@ TEST_F(TestGenericClient, wait_for_service) {
 TEST_F(TestGenericClientSub, construction_and_destruction) {
   {
     auto client = subnode->create_generic_client("test_service", "test_msgs/srv/Empty");
-    EXPECT_STREQ(client->get_service_name(), "/ns/test_service");
+    EXPECT_STREQ(client->get_service_name(), "/ns/sub_ns/test_service");
   }
 
   {

@@ -2,6 +2,97 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.4 (2025-12-23)
+-------------------
+* Updated deprecated ament_index_cpp API (`#3011 <https://github.com/ros2/rclcpp/issues/3011>`_)
+* Unified Node Interfaces: Add const version of get_node_x_interface() (`#3006 <https://github.com/ros2/rclcpp/issues/3006>`_)
+* Parameter Descriptor Simplification  (`#2179 <https://github.com/ros2/rclcpp/issues/2179>`_)
+* ParameterEventHandler support ContentFiltering (`#2971 <https://github.com/ros2/rclcpp/issues/2971>`_)
+* update policy_name_from_kind && test_qos (`#2156 <https://github.com/ros2/rclcpp/issues/2156>`_)
+* Add ability to disable and enable subscription's callbacks (`#2985 <https://github.com/ros2/rclcpp/issues/2985>`_)
+* Switch to isolated testing via rmw_test_fixture (`#2929 <https://github.com/ros2/rclcpp/issues/2929>`_)
+* remove I/O from signal handler. (`#2986 <https://github.com/ros2/rclcpp/issues/2986>`_)
+* Contributors: Alejandro Hernández Cordero, Andrianov Roman, Barry Xu, Lucas Wendland, Michael Orlov, Tomoya Fujita, fabianhirmann, yadunund
+
+30.1.3 (2025-11-18)
+-------------------
+* correct test function descriptions (`#2970 <https://github.com/ros2/rclcpp/issues/2970>`_)
+* add : get clients, servers info (`#2569 <https://github.com/ros2/rclcpp/issues/2569>`_)
+* Fix REP url locations (`#2987 <https://github.com/ros2/rclcpp/issues/2987>`_)
+* Contributors: Minju, Lee, Tim Clephas, Yuchen966
+
+30.1.2 (2025-10-21)
+-------------------
+* clear handles before node destruction in test_memory_strategy. (`#2969 <https://github.com/ros2/rclcpp/issues/2969>`_)
+* Added static assert asserting custom types have no overloaded operator new (`#2954 <https://github.com/ros2/rclcpp/issues/2954>`_)
+* Store graph listener inside the context instead of the node graph (`#2952 <https://github.com/ros2/rclcpp/issues/2952>`_)
+* Reapply "Catch the exception from rate.sleep() if the context is invalid. (`#2956 <https://github.com/ros2/rclcpp/issues/2956>`_)" (`#2963 <https://github.com/ros2/rclcpp/issues/2963>`_) (`#2964 <https://github.com/ros2/rclcpp/issues/2964>`_)
+* Revert "Catch the exception from rate.sleep() if the context is invalid. (`#2956 <https://github.com/ros2/rclcpp/issues/2956>`_)" (`#2963 <https://github.com/ros2/rclcpp/issues/2963>`_)
+* Catch the exception from rate.sleep() if the context is invalid. (`#2956 <https://github.com/ros2/rclcpp/issues/2956>`_)
+* update Time documentation (`#2955 <https://github.com/ros2/rclcpp/issues/2955>`_)
+* Contributors: Ilario A. Azzollini, Ivo Ivanov, Skyler Medeiros, Tomoya Fujita
+
+30.1.1 (2025-09-11)
+-------------------
+* Removed warning (`#2949 <https://github.com/ros2/rclcpp/issues/2949>`_)
+* add note about problems with spin_until_future_complete (`#2849 <https://github.com/ros2/rclcpp/issues/2849>`_)
+* deprecate rclcpp::spin_some and rclcpp::spin_all (`#2848 <https://github.com/ros2/rclcpp/issues/2848>`_)
+* Improve the function extract_type_identifier (`#2923 <https://github.com/ros2/rclcpp/issues/2923>`_)
+* Allow for implicitly convertable loggers as well (`#2922 <https://github.com/ros2/rclcpp/issues/2922>`_)
+* Contributors: Alberto Soragna, Alejandro Hernández Cordero, Barry Xu, Tim Clephas
+
+30.1.0 (2025-07-29)
+-------------------
+* Fix: improve exception context for parameter_value_from (`#2917 <https://github.com/ros2/rclcpp/issues/2917>`_)
+* Fix `start_type_description_service` param handling (`#2897 <https://github.com/ros2/rclcpp/issues/2897>`_)
+* Add qos parameter for wait_for_message function (`#2903 <https://github.com/ros2/rclcpp/issues/2903>`_)
+* Fujitatomoya/test append parameter override (`#2896 <https://github.com/ros2/rclcpp/issues/2896>`_)
+* Expose `typesupport_helpers` API needed for the Rosbag2 (`#2858 <https://github.com/ros2/rclcpp/issues/2858>`_)
+* Remove comment about now-removed StaticSingleThreadedExecutor (`#2893 <https://github.com/ros2/rclcpp/issues/2893>`_)
+* Add overload of `append_parameter_override` (`#2891 <https://github.com/ros2/rclcpp/issues/2891>`_)
+* fix: Don't deadlock if removing shutdown callbacks in a shutdown callback (`#2886 <https://github.com/ros2/rclcpp/issues/2886>`_)
+* Contributors: Christophe Bedard, Janosch Machowinski, Michael Orlov, Michiel Leegwater, Patrick Roncagliolo, Sriharsha Ghanta, Tomoya Fujita
+
+30.0.0 (2025-07-01)
+-------------------
+* Hand-code logging.hpp (`#2870 <https://github.com/ros2/rclcpp/issues/2870>`_)
+* Adressed TODO in node_graph (`#2877 <https://github.com/ros2/rclcpp/issues/2877>`_)
+* fix test_publisher_with_system_default_qos. (`#2881 <https://github.com/ros2/rclcpp/issues/2881>`_)
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette, Tomoya Fujita
+
+29.6.1 (2025-06-23)
+-------------------
+* Fix for memory leaks in rclcpp::SerializedMessage (`#2861 <https://github.com/ros2/rclcpp/issues/2861>`_)
+* Removed warning test_qos (`#2859 <https://github.com/ros2/rclcpp/issues/2859>`_)
+* Added missing chrono includes (`#2854 <https://github.com/ros2/rclcpp/issues/2854>`_)
+* get_all_data_impl() does not handle null pointers properly, causing segmentation fault (`#2840 <https://github.com/ros2/rclcpp/issues/2840>`_)
+* QoSInitialization::from_rmw does not validate invalid history policy values, leading to silent failures (`#2841 <https://github.com/ros2/rclcpp/issues/2841>`_)
+* remove get_notify_guard_condition from NodeBaseInterface. (`#2839 <https://github.com/ros2/rclcpp/issues/2839>`_)
+* Removed deprecated StaticSingleThreadedExecutor (`#2835 <https://github.com/ros2/rclcpp/issues/2835>`_)
+* Removed deprecated rcpputils Path (`#2834 <https://github.com/ros2/rclcpp/issues/2834>`_)
+* Add range constraints for applicable array parameters (`#2828 <https://github.com/ros2/rclcpp/issues/2828>`_)
+* Update RingBufferImplementation to clear internal data. (`#2837 <https://github.com/ros2/rclcpp/issues/2837>`_)
+* Removed deprecated cancel_sleep_or_wait (`#2836 <https://github.com/ros2/rclcpp/issues/2836>`_)
+* Add missing 's' to 'NodeParametersInterface' in doc/comment (`#2831 <https://github.com/ros2/rclcpp/issues/2831>`_)
+* subordinate node consistent behavior and update docstring. (`#2822 <https://github.com/ros2/rclcpp/issues/2822>`_)
+* Contributors: Alejandro Hernández Cordero, Alex Youngs, Christophe Bedard, Michael Carlstrom, Michael Orlov, Tomoya Fujita
+
+29.6.0 (2025-04-25)
+-------------------
+* throws std::invalid_argument if ParameterEvent is NULL. (`#2814 <https://github.com/ros2/rclcpp/issues/2814>`_)
+* Removed clang warnings (`#2823 <https://github.com/ros2/rclcpp/issues/2823>`_)
+* Contributors: Alejandro Hernández Cordero, Tomoya Fujita
+
+29.5.0 (2025-04-18)
+-------------------
+* Fix a race condition (`#2819 <https://github.com/ros2/rclcpp/issues/2819>`_)
+* Remove redundant typesupport check in serialization module (`#2808 <https://github.com/ros2/rclcpp/issues/2808>`_)
+* Remove get_typesupport_handle implementation. (`#2806 <https://github.com/ros2/rclcpp/issues/2806>`_)
+* Use NodeParameterInterface instead of /parameter_event to update "use_sim_time" (`#2378 <https://github.com/ros2/rclcpp/issues/2378>`_)
+* Remove cancel_clock_executor_promise\_. (`#2797 <https://github.com/ros2/rclcpp/issues/2797>`_)
+* Enable parameter update recursively only when QoS override parameters. (`#2742 <https://github.com/ros2/rclcpp/issues/2742>`_)
+* Contributors: Pedro de Azeredo, Tanishq Chaudhary, Tomoya Fujita
+
 29.4.0 (2025-04-04)
 -------------------
 * Removed trailing whitespace from the codebase. (`#2791 <https://github.com/ros2/rclcpp/issues/2791>`_)

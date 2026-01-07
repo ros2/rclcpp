@@ -40,6 +40,12 @@ std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind)
       return "HISTORY_QOS_POLICY";
     case RMW_QOS_POLICY_LIFESPAN:
       return "LIFESPAN_QOS_POLICY";
+    case RMW_QOS_POLICY_DEPTH:
+      return "DEPTH_QOS_POLICY";
+    case RMW_QOS_POLICY_LIVELINESS_LEASE_DURATION:
+      return "LIVELINESS_LEASE_DURATION_QOS_POLICY";
+    case RMW_QOS_POLICY_AVOID_ROS_NAMESPACE_CONVENTIONS:
+      return "AVOID_ROS_NAMESPACE_CONVENTIONS_QOS_POLICY";
     default:
       return "INVALID_QOS_POLICY";
   }
@@ -69,8 +75,10 @@ QoSInitialization::from_rmw(const rmw_qos_profile_t & rmw_qos)
       return KeepLast(rmw_qos.depth, false);
     case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
     case RMW_QOS_POLICY_HISTORY_UNKNOWN:
-    default:
       return KeepLast(rmw_qos.depth);
+    default:
+      throw std::invalid_argument(
+        "Invalid history policy enum value passed to QoSInitialization::from_rmw");
   }
 }
 

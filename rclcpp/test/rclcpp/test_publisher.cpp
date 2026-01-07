@@ -199,7 +199,7 @@ TEST_F(TestPublisher, test_publisher_with_system_default_qos) {
   using test_msgs::msg::Empty;
   ASSERT_NO_THROW(
   {
-    auto publisher = node->create_publisher<Empty>("topic", rclcpp::SystemDefaultsQoS());
+    auto publisher = node->create_publisher<Empty>("topic", rclcpp::SystemDefaultsQoS(), options);
   });
 }
 

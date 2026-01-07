@@ -234,6 +234,10 @@ public:
   /**
    * If a node_name is not provided, defaults to the current node.
    *
+   * The configure_nodes_filter() function will affect the behavior of this function.
+   * If the node specified in this function isn't included in the nodes specified in
+   * configure_nodes_filter(), the callback will never be called.
+   *
    * Note: if the returned callback handle smart pointer is not captured, the callback
    * is immediately unregistered. A compiler warning should be generated to warn
    * of this.
@@ -250,6 +254,31 @@ public:
     const std::string & parameter_name,
     ParameterCallbackType callback,
     const std::string & node_name = "");
+
+  /// Configure which node parameter events will be received.
+  /**
+   * This function depends on rmw implementation support for content filtering.
+   * If middleware doesn't support contentfilter, return false.
+   *
+   * If node_names is empty, the configured node filter will be cleared.
+   *
+   * If this function return true, only parameter events from the specified node will be received.
+   * It affects the behavior of the following two functions.
+   * - add_parameter_event_callback()
+   *   The callback will only be called for parameter events from the specified nodes which are
+   *   configured in this function.
+   * - add_parameter_callback()
+   *   The callback will only be called for parameter events from the specified nodes which are
+   *   configured in this function and add_parameter_callback().
+   *   If the nodes specified in this function is different from the nodes specified in
+   *   add_parameter_callback(), the callback will never be called.
+   *
+   * \param[in] node_names Node names to filter parameter events from.
+   * \returns true if configuring was successfully applied, false otherwise.
+   * \throws rclcpp::exceptions::RCLError if internal error occurred when calling the rcl function.
+   */
+  RCLCPP_PUBLIC
+  bool configure_nodes_filter(const std::vector<std::string> & node_names);
 
   /// Remove a parameter callback registered with add_parameter_callback.
   /**

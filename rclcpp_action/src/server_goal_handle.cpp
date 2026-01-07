@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <mutex>
 
 #include "rcl_action/action_server.h"
 #include "rcl_action/goal_handle.h"
@@ -135,6 +136,24 @@ ServerGoalHandleBase::try_canceling() noexcept
     return RCL_RET_OK == ret;
   }
 
-  return false;
+  return is_cancelable;
+}
+
+bool
+ServerGoalHandleBase::try_aborting() noexcept
+{
+  std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
+  rcl_ret_t ret;
+  // Check if the goal is abortable
+  const bool is_abortable = rcl_action_goal_handle_is_abortable(rcl_handle_.get());
+  if (is_abortable) {
+    // Transition to ABORTED
+    ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_ABORT);
+    if (RCL_RET_OK != ret) {
+      return false;
+    }
+  }
+
+  return is_abortable;
 }
 }  // namespace rclcpp_action

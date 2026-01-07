@@ -42,7 +42,9 @@ TEST(TestCreateTimer, timer_executes)
       timer->cancel();
     });
 
-  rclcpp::spin_some(node);
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  executor.spin_some();
 
   ASSERT_TRUE(got_callback);
   rclcpp::shutdown();

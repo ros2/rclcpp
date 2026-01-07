@@ -83,16 +83,6 @@ Clock::now() const
   return now;
 }
 
-void
-Clock::cancel_sleep_or_wait()
-{
-  {
-    std::unique_lock lock(impl_->wait_mutex_);
-    impl_->stop_sleeping_ = true;
-  }
-  impl_->cv_.notify_one();
-}
-
 bool
 Clock::sleep_until(
   Time until,

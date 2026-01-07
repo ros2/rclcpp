@@ -55,34 +55,6 @@ get_node_logger(const rcl_node_t * node)
   return rclcpp::get_logger(logger_name);
 }
 
-// TODO(ahcorde): Remove deprecated class on the next release (in Rolling after Kilted).
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-rcpputils::fs::path
-get_logging_directory()
-{
-  char * log_dir = NULL;
-  auto allocator = rcutils_get_default_allocator();
-  rcl_logging_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
-  if (RCL_LOGGING_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  std::string path{log_dir};
-  allocator.deallocate(log_dir, allocator.state);
-  return path;
-}
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
-
 std::filesystem::path
 get_log_directory()
 {

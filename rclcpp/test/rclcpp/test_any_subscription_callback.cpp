@@ -14,11 +14,13 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 
+#define RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS 1
 #include "rclcpp/any_subscription_callback.hpp"
 #include "test_msgs/msg/empty.hpp"
 
@@ -177,7 +179,7 @@ TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
   }
   {
     rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
-    asc.set([](std::shared_ptr<rclcpp::SerializedMessage>) {});
+    asc.set([](std::shared_ptr<const rclcpp::SerializedMessage>) {});
     EXPECT_TRUE(asc.is_serialized_message_callback());
     EXPECT_NO_THROW(
       asc.dispatch(
@@ -186,7 +188,7 @@ TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
   }
   {
     rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
-    asc.set([](std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {});
+    asc.set([](std::shared_ptr<const rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {});
     EXPECT_TRUE(asc.is_serialized_message_callback());
     EXPECT_NO_THROW(
       asc.dispatch(
@@ -205,6 +207,126 @@ TEST_F(TestAnySubscriptionCallback, unset_dispatch_throw) {
   EXPECT_THROW(
     any_subscription_callback_.dispatch_intra_process(get_unique_ptr_msg(), message_info_),
     std::runtime_error);
+}
+
+//
+// Testing disable and enable callbacks
+//
+TEST_F(TestAnySubscriptionCallback, disable_enable_callbacks) {
+  std::atomic<int> callback_count{0};
+
+  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+  asc.set([&callback_count](const test_msgs::msg::Empty &) {
+      ++callback_count;
+  });
+
+  // Callback should work initially
+  asc.dispatch(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable and verify callback is not called
+  asc.disable();
+  asc.dispatch(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(1, callback_count.load());  // Count should not increase
+
+  // Enable and verify callback works again
+  asc.enable();
+  asc.dispatch(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(2, callback_count.load());
+}
+
+TEST_F(TestAnySubscriptionCallback, disable_enable_callbacks_intra_process) {
+  std::atomic<int> callback_count{0};
+
+  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+  asc.set([&callback_count](std::shared_ptr<const test_msgs::msg::Empty>) {
+      ++callback_count;
+  });
+
+  // Callback should work initially
+  asc.dispatch_intra_process(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable and verify callback is not called
+  asc.disable();
+  asc.dispatch_intra_process(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Enable and verify callback works again
+  asc.enable();
+  asc.dispatch_intra_process(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(2, callback_count.load());
+}
+
+TEST_F(TestAnySubscriptionCallback, disable_enable_callbacks_unique_ptr) {
+  std::atomic<int> callback_count{0};
+
+  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+  asc.set([&callback_count](std::unique_ptr<test_msgs::msg::Empty>) {
+      ++callback_count;
+  });
+
+  // Callback should work initially
+  asc.dispatch_intra_process(get_unique_ptr_msg(), message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable and verify callback is not called
+  asc.disable();
+  asc.dispatch_intra_process(get_unique_ptr_msg(), message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Enable and verify callback works again
+  asc.enable();
+  asc.dispatch_intra_process(get_unique_ptr_msg(), message_info_);
+  EXPECT_EQ(2, callback_count.load());
+}
+
+TEST_F(TestAnySubscriptionCallback, disable_enable_serialized_message) {
+  std::atomic<int> callback_count{0};
+
+  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
+  asc.set([&callback_count](const rclcpp::SerializedMessage &) {
+      ++callback_count;
+  });
+
+  auto serialized_msg = std::make_shared<rclcpp::SerializedMessage>();
+
+  // Callback should work initially
+  asc.dispatch(serialized_msg, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable and verify callback is not called
+  asc.disable();
+  asc.dispatch(serialized_msg, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Enable and verify callback works again
+  asc.enable();
+  asc.dispatch(serialized_msg, message_info_);
+  EXPECT_EQ(2, callback_count.load());
+}
+
+TEST_F(TestAnySubscriptionCallbackTA, disable_enable_callbacks_type_adapter) {
+  std::atomic<int> callback_count{0};
+
+  rclcpp::AnySubscriptionCallback<MyTA> asc;
+  asc.set([&callback_count](const MyEmpty &) {
+      ++callback_count;
+  });
+
+  // Callback should work initially
+  asc.dispatch_intra_process(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable and verify callback is not called
+  asc.disable();
+  asc.dispatch_intra_process(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(1, callback_count.load());
+
+  // Enable and verify callback works again
+  asc.enable();
+  asc.dispatch_intra_process(msg_shared_ptr_, message_info_);
+  EXPECT_EQ(2, callback_count.load());
 }
 
 //

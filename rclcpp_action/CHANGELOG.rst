@@ -3,6 +3,47 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+30.1.4 (2025-12-23)
+-------------------
+
+30.1.3 (2025-11-18)
+-------------------
+* Fix REP url locations (`#2987 <https://github.com/ros2/rclcpp/issues/2987>`_)
+* Contributors: Tim Clephas
+
+30.1.2 (2025-10-21)
+-------------------
+* it misses the iterator second to lock the weakptr. (`#2958 <https://github.com/ros2/rclcpp/issues/2958>`_)
+* try aborting before canceling 1st on dtor of ServerGoalHandle. (`#2953 <https://github.com/ros2/rclcpp/issues/2953>`_)
+* Contributors: Tomoya Fujita
+
+30.1.1 (2025-09-11)
+-------------------
+* deprecate rclcpp::spin_some and rclcpp::spin_all (`#2848 <https://github.com/ros2/rclcpp/issues/2848>`_)
+* Contributors: Alberto Soragna
+
+30.1.0 (2025-07-29)
+-------------------
+* fix cmake deprecation (`#2914 <https://github.com/ros2/rclcpp/issues/2914>`_)
+* Contributors: mosfet80
+
+30.0.0 (2025-07-01)
+-------------------
+
+29.6.1 (2025-06-23)
+-------------------
+* Replace std::default_random_engine with std::mt19937 (rolling) (`#2843 <https://github.com/ros2/rclcpp/issues/2843>`_)
+* Added missing chrono includes (`#2854 <https://github.com/ros2/rclcpp/issues/2854>`_)
+* Contributors: Alejandro Hernández Cordero, keeponoiro
+
+29.6.0 (2025-04-25)
+-------------------
+
+29.5.0 (2025-04-18)
+-------------------
+* Use std::recursive_mutex for action requests. (`#2798 <https://github.com/ros2/rclcpp/issues/2798>`_)
+* Contributors: Tomoya Fujita
+
 29.4.0 (2025-04-04)
 -------------------
 * Remove warning (`#2790 <https://github.com/ros2/rclcpp/issues/2790>`_)

@@ -116,7 +116,7 @@ private:
 
   /// Common signal handler code between sigaction and non-sigaction versions.
   void
-  signal_handler_common();
+  signal_handler_common(int signum);
 
 #if defined(RCLCPP_HAS_SIGACTION)
   /// Signal handler function.
@@ -189,6 +189,8 @@ private:
 
   // Whether or not a signal has been received.
   std::atomic_bool signal_received_ = false;
+  // The signal number that was received.
+  std::atomic_int signal_number_ = 0;
   // A thread to which signal handling tasks are deferred.
   std::thread signal_handler_thread_;
 

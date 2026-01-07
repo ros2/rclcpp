@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -24,6 +25,7 @@
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -667,4 +669,213 @@ TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws_intrapro
         callback,
         options);},
     std::runtime_error("Unrecognized IntraProcessSetting value"));
+}
+
+/*
+   Testing disable and enable callbacks on subscriptions
+ */
+TEST_F(TestSubscription, disable_enable_callbacks)
+{
+  const std::string topic_name = "~/test_disable";
+  initialize();
+  std::atomic<int> callback_count{0};
+
+  auto callback = [&callback_count](test_msgs::msg::Empty::ConstSharedPtr) {
+      ++callback_count;
+    };
+
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>(
+    topic_name, 10U, callback, sub_options);
+
+  rclcpp::PublisherOptions pub_options;
+  pub_options.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+  auto pub = node_->create_publisher<test_msgs::msg::Empty>(topic_name, 10U, pub_options);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
+  // Wait for discovery
+  auto start = std::chrono::steady_clock::now();
+  while ((pub->get_subscription_count() == 0U || sub->get_publisher_count() == 0U) &&
+    std::chrono::steady_clock::now() - start < 10s)
+  {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+
+  // Publish and verify callback is called
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  while (callback_count.load() == 0 && std::chrono::steady_clock::now() - start < 30s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable callbacks
+  sub->disable_callbacks();
+
+  // Publish again and verify callback is NOT called
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  auto initial_count = callback_count.load();
+  while (std::chrono::steady_clock::now() - start < 500ms) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(initial_count, callback_count.load());  // Should not increase
+
+  // Enable callbacks
+  sub->enable_callbacks();
+
+  // Publish again and verify callback IS called
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  while (callback_count.load() == initial_count && std::chrono::steady_clock::now() - start < 30s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(callback_count.load(), initial_count + 1);
+}
+
+TEST_F(TestSubscription, disable_enable_callbacks_intra_process)
+{
+  const std::string topic_name = "~/test_disable_ipc";
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  std::atomic<int> callback_count{0};
+
+  auto callback = [&callback_count](test_msgs::msg::Empty::ConstSharedPtr) {
+      ++callback_count;
+    };
+
+  auto sub = node_->create_subscription<test_msgs::msg::Empty>(topic_name, 10U, callback);
+  auto pub = node_->create_publisher<test_msgs::msg::Empty>(topic_name, 10U);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
+  // Publish and verify callback is called
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  auto start = std::chrono::steady_clock::now();
+  while (callback_count.load() == 0 && std::chrono::steady_clock::now() - start < 30s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(1, callback_count.load());
+
+  // Disable callbacks
+  sub->disable_callbacks();
+
+  // Publish again and verify callback is NOT called
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  auto initial_count = callback_count.load();
+  while (std::chrono::steady_clock::now() - start < 500ms) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(initial_count, callback_count.load());
+
+  // Enable callbacks
+  sub->enable_callbacks();
+
+  // Publish again and verify callback IS called
+  {
+    test_msgs::msg::Empty msg;
+    pub->publish(msg);
+  }
+
+  start = std::chrono::steady_clock::now();
+  while (callback_count.load() == initial_count && std::chrono::steady_clock::now() - start < 30s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  EXPECT_EQ(callback_count.load(), initial_count + 1);
+}
+
+TEST_F(TestSubscription, disable_enable_event_callbacks)
+{
+  initialize();
+  std::atomic<int> deadline_callback_count{0};
+  std::atomic<int> liveliness_callback_count{0};
+
+  rclcpp::SubscriptionOptions subscription_options;
+  subscription_options.event_callbacks.deadline_callback =
+    [&deadline_callback_count](rclcpp::QOSDeadlineRequestedInfo &) {
+      ++deadline_callback_count;
+    };
+
+  subscription_options.event_callbacks.liveliness_callback =
+    [&liveliness_callback_count](rclcpp::QOSLivelinessChangedInfo &) {
+      ++liveliness_callback_count;
+    };
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
+
+  const auto qos = rclcpp::QoS(10U).deadline(100ms);
+
+  auto subscription = node_->create_subscription<test_msgs::msg::Empty>(
+    "test_event_callbacks_topic", qos, do_nothing, subscription_options);
+
+  const auto & event_handlers = subscription->get_event_handlers();
+
+  // Initially, both callbacks counters should be zero
+  EXPECT_EQ(deadline_callback_count, 0);
+  EXPECT_EQ(liveliness_callback_count, 0);
+
+  // Execute events and disable all event handlers
+  for (const auto & [event_type, handler] : event_handlers) {
+    if (handler) {
+      const std::shared_ptr<void> data = handler->take_data();
+      handler->execute(data);
+      EXPECT_NO_THROW(handler->disable());
+    }
+  }
+  // Expect both callbacks to have been called once since they should be enabled by default
+  EXPECT_EQ(deadline_callback_count, 1);
+  EXPECT_EQ(liveliness_callback_count, 1);
+
+  // Execute events one more time and enable all event handlers
+  for (const auto & [event_type, handler] : event_handlers) {
+    if (handler) {
+      const std::shared_ptr<void> data = handler->take_data();
+      handler->execute(data);
+      EXPECT_NO_THROW(handler->enable());
+    }
+  }
+  // Expect no change since they were disabled
+  EXPECT_EQ(deadline_callback_count, 1);
+  EXPECT_EQ(liveliness_callback_count, 1);
+
+  // Execute events one more time
+  for (const auto & [event_type, handler] : event_handlers) {
+    if (handler) {
+      const std::shared_ptr<void> data = handler->take_data();
+      handler->execute(data);
+    }
+  }
+  EXPECT_EQ(deadline_callback_count, 2);
+  EXPECT_EQ(liveliness_callback_count, 2);
 }

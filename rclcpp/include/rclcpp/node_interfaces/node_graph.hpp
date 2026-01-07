@@ -33,6 +33,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/service_endpoint_info_array.h"
 #include "rmw/topic_endpoint_info_array.h"
 
 namespace rclcpp
@@ -159,14 +160,24 @@ public:
     const std::string & topic_name,
     bool no_mangle = false) const override;
 
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_clients_info_by_service(
+    const std::string & service_name,
+    bool no_mangle = false) const override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::ServiceEndpointInfo>
+  get_servers_info_by_service(
+    const std::string & service_name,
+    bool no_mangle = false) const override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeGraph)
 
   /// Handle to the NodeBaseInterface given in the constructor.
   rclcpp::node_interfaces::NodeBaseInterface * node_base_;
 
-  /// Graph Listener which waits on graph changes for the node and is shared across nodes.
-  std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
   /// Whether or not this node needs to be added to the graph listener.
   std::atomic_bool should_add_to_graph_listener_;
 

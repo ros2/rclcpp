@@ -87,6 +87,22 @@ public:
   void
   execute(const std::shared_ptr<void> & data) override = 0;
 
+  /// Disable callbacks from being called
+  /**
+   * This function temporary disable on_new_message_callback to prevent it from being called.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void disable_callbacks();
+
+  /// Enable the callbacks to be called
+  /**
+    * This function enable the on_new_message_callback if it was previously set.
+    */
+  RCLCPP_PUBLIC
+  virtual
+  void enable_callbacks();
+
   virtual
   bool
   use_take_shared_method() const = 0;
@@ -158,7 +174,7 @@ public:
         }
       };
 
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
     on_new_message_callback_ = new_callback;
 
     if (unread_count_ > 0) {
@@ -176,7 +192,7 @@ public:
   void
   clear_on_ready_callback() override
   {
-    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
     on_new_message_callback_ = nullptr;
   }
 
@@ -188,8 +204,9 @@ public:
   }
 
 protected:
-  std::recursive_mutex callback_mutex_;
+  std::recursive_mutex on_new_message_callback_mutex_;
   std::function<void(size_t)> on_new_message_callback_ {nullptr};
+  bool on_new_message_callback_disabled_{false};
   size_t unread_count_{0};
   rclcpp::GuardCondition gc_;
 
@@ -199,11 +216,13 @@ protected:
   void
   invoke_on_new_message()
   {
-    std::lock_guard<std::recursive_mutex> lock(this->callback_mutex_);
-    if (this->on_new_message_callback_) {
-      this->on_new_message_callback_(1);
-    } else {
-      this->unread_count_++;
+    std::lock_guard<std::recursive_mutex> lock(this->on_new_message_callback_mutex_);
+    if (!on_new_message_callback_disabled_) {
+      if (this->on_new_message_callback_) {
+        this->on_new_message_callback_(1);
+      } else {
+        this->unread_count_++;
+      }
     }
   }
 
