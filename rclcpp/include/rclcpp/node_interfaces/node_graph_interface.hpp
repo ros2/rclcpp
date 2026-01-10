@@ -53,12 +53,25 @@ public:
   /// Construct a TopicEndpointInfo from a rcl_topic_endpoint_info_t.
   RCLCPP_PUBLIC
   explicit TopicEndpointInfo(const rcl_topic_endpoint_info_t & info)
+<<<<<<< HEAD
   : node_name_(info.node_name),
     node_namespace_(info.node_namespace),
     topic_type_(info.topic_type),
     endpoint_type_(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
     qos_profile_({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile)
+=======
+  : endpoint_type_(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
+    qos_profile_({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile),
+    topic_type_hash_(info.topic_type_hash)
+>>>>>>> 7f783cb (Improve the robustness of the TopicEndpointInfo constructor (#3013))
   {
+    if (!info.node_name || !info.node_namespace || !info.topic_type) {
+      throw std::invalid_argument("Constructor TopicEndpointInfo with invalid topic endpoint info");
+    }
+    node_name_ = info.node_name;
+    node_namespace_ = info.node_namespace;
+    topic_type_ = info.topic_type;
+
     std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid_.begin());
   }
 
