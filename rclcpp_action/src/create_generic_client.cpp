@@ -13,16 +13,60 @@
 // limitations under the License.
 
 #include <memory>
+#include <sstream>
 #include <string>
+#include <tuple>
 
 #include "rclcpp/node.hpp"
 #include "rclcpp/typesupport_helpers.hpp"
+#include "rcpputils/shared_library.hpp"
+#include "rosidl_runtime_c/action_type_support_struct.h"
 
 #include "rclcpp_action/create_generic_client.hpp"
 #include "rclcpp_action/generic_client.hpp"
 
 namespace rclcpp_action
 {
+
+namespace
+{
+// Local implementation of get_action_typesupport_handle for jazzy compatibility.
+// This function is available in rclcpp on rolling but not on jazzy.
+const rosidl_action_type_support_t * get_action_typesupport_handle(
+  const std::string & type,
+  const std::string & typesupport_identifier,
+  rcpputils::SharedLibrary & library)
+{
+  std::string package_name;
+  std::string middle_module;
+  std::string type_name;
+  std::tie(package_name, middle_module, type_name) = rclcpp::extract_type_identifier(type);
+
+  if (middle_module.empty()) {
+    middle_module = "action";
+  }
+
+  auto mk_error = [&package_name, &type_name](auto reason) {
+      std::stringstream rcutils_dynamic_loading_error;
+      rcutils_dynamic_loading_error <<
+        "Something went wrong loading the typesupport library for action type " <<
+        package_name << "/" << type_name << ". " << reason;
+      return rcutils_dynamic_loading_error.str();
+    };
+
+  try {
+    std::string symbol_name = typesupport_identifier + "__get_action_type_support_handle__" +
+      package_name + "__" + middle_module + "__" + type_name;
+    const rosidl_action_type_support_t * (* get_ts)() = nullptr;
+    // This will throw runtime_error if the symbol was not found.
+    get_ts = reinterpret_cast<decltype(get_ts)>(library.get_symbol(symbol_name));
+    return get_ts();
+  } catch (std::runtime_error &) {
+    throw std::runtime_error{mk_error("Library could not be found.")};
+  }
+}
+}  // namespace
+
 typename GenericClient::SharedPtr
 create_generic_client(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
@@ -64,7 +108,7 @@ create_generic_client(
     };
 
   auto typesupport_lib = rclcpp::get_typesupport_library(type, "rosidl_typesupport_cpp");
-  auto action_typesupport_handle = rclcpp::get_action_typesupport_handle(
+  auto action_typesupport_handle = get_action_typesupport_handle(
     type, "rosidl_typesupport_cpp", *typesupport_lib);
 
   std::shared_ptr<GenericClient> action_client(
