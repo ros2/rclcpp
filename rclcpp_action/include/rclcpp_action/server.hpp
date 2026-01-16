@@ -205,6 +205,10 @@ public:
     const rclcpp::QoS & qos_service_event_pub,
     rcl_service_introspection_state_t introspection_state);
 
+  RCLCPP_ACTION_PUBLIC
+  size_t
+  get_number_of_goal_handles();
+
 protected:
   RCLCPP_ACTION_PUBLIC
   ServerBase(
