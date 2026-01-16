@@ -49,6 +49,7 @@ protected:
   std::shared_ptr<Fibonacci::Impl::SendGoalService::Request>
   send_goal_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
+    rclcpp::Executor & executor,
     std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
   {
     auto client = node->create_client<Fibonacci::Impl::SendGoalService>(
@@ -59,7 +60,8 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::SendGoalService::Request>();
     request->goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
-    auto return_code = rclcpp::spin_until_future_complete(node, future, timeout);
+    auto return_code = rclcpp::executors::spin_node_until_future_complete(executor,
+      node->get_node_base_interface(), future, timeout);
     if (rclcpp::FutureReturnCode::SUCCESS == return_code) {
       return request;
     } else if (rclcpp::FutureReturnCode::TIMEOUT == return_code) {
@@ -69,9 +71,19 @@ protected:
     }
   }
 
+  std::shared_ptr<Fibonacci::Impl::SendGoalService::Request>
+  send_goal_request(
+    rclcpp::Node::SharedPtr node, GoalUUID uuid,
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
+  {
+    rclcpp::executors::SingleThreadedExecutor ex;
+    return send_goal_request(node, uuid, ex, timeout);
+  }
+
   CancelResponse::SharedPtr
   send_cancel_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
+    rclcpp::Executor & executor,
     std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
   {
     auto cancel_client = node->create_client<Fibonacci::Impl::CancelGoalService>(
@@ -82,7 +94,8 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::CancelGoalService::Request>();
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
-    auto return_code = rclcpp::spin_until_future_complete(node, future, timeout);
+    auto return_code = rclcpp::executors::spin_node_until_future_complete(executor,
+      node->get_node_base_interface(), future, timeout);
     if (rclcpp::FutureReturnCode::SUCCESS == return_code) {
       return future.get();
     } else if (rclcpp::FutureReturnCode::TIMEOUT == return_code) {
@@ -90,6 +103,15 @@ protected:
     } else {
       throw std::runtime_error("cancel request future didn't complete succesfully");
     }
+  }
+
+  CancelResponse::SharedPtr
+  send_cancel_request(
+    rclcpp::Node::SharedPtr node, GoalUUID uuid,
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
+  {
+    rclcpp::executors::SingleThreadedExecutor ex;
+    return send_cancel_request(node, uuid, ex, timeout);
   }
 };
 
@@ -1021,6 +1043,104 @@ TEST_F(TestServer, deferred_execution)
   received_handle->execute();
   EXPECT_TRUE(received_handle->is_executing());
 }
+
+TEST_F(TestServer, goals_expired_with_events_executor)
+{
+
+  rclcpp::ExecutorOptions opts;
+
+  // Because timer expiration was typically tied to the waitsets for
+  // the SingleThreadedExecutor and MultiThreadedExecutor,
+  // We specifically want to test with the EventsExecutor here
+  // so we can verify the timer based goal expiration works
+  // and expired goals are properly cleared.
+
+  rclcpp::experimental::executors::EventsExecutor executor(opts);
+  auto node = std::make_shared<rclcpp::Node>("expire_goals", "/rclcpp_action/expire_goals");
+  const std::vector<GoalUUID> uuids{
+    {{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}},
+    {{10, 2, 3, 40, 50, 6, 70, 8, 9, 1, 11, 12, 13, 140, 15, 160}},
+    {{12, 23, 34, 45, 50, 6, 70, 8, 9, 100, 11, 120, 13, 140, 15, 170}},
+    {{12, 23, 34, 45, 50, 6, 70, 8, 9, 100, 11, 120, 13, 140, 115, 16}}
+  };
+
+  auto handle_goal = [](
+    const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::ACCEPT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_accepted = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  const std::chrono::milliseconds result_timeout{25};
+
+  rcl_action_server_options_t options = rcl_action_server_get_default_options();
+  options.result_timeout.nanoseconds = RCL_MS_TO_NS(result_timeout.count());
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted,
+    options);
+
+
+  for (const auto & uuid : uuids) {
+    send_goal_request(node, uuid, executor);
+
+    EXPECT_TRUE(received_handle->is_active());
+    EXPECT_TRUE(received_handle->is_executing());
+
+    // Send result request
+    auto result_client = node->create_client<Fibonacci::Impl::GetResultService>(
+      "fibonacci/_action/get_result");
+    if (!result_client->wait_for_service(std::chrono::seconds(20))) {
+      throw std::runtime_error("get result service didn't become available");
+    }
+    auto request = std::make_shared<Fibonacci::Impl::GetResultService::Request>();
+    request->goal_id.uuid = uuid;
+    auto future = result_client->async_send_request(request);
+
+    // Send a result
+    auto result = std::make_shared<Fibonacci::Result>();
+    result->sequence = {5, 8, 13, 21};
+    received_handle->succeed(result);
+
+    // Wait for the result request to be received
+
+    executor.add_node(node);
+
+    ASSERT_EQ(
+      rclcpp::FutureReturnCode::SUCCESS,
+      executor.spin_until_future_complete(future));
+
+    auto response = future.get();
+    EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
+    EXPECT_EQ(result->sequence, response->result.sequence);
+
+    ASSERT_TRUE(as->get_number_of_goal_handles() != 0);
+
+    // Wait for goal expiration
+    rclcpp::sleep_for(2 * result_timeout);
+
+    // Allow for expiration to take place
+    executor.spin_some();
+    executor.remove_node(node);
+  }
+
+  ASSERT_TRUE(as->get_number_of_goal_handles() == 0);
+}
+
 
 class TestBasicServer : public TestServer
 {
