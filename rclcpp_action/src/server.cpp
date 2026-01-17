@@ -159,7 +159,7 @@ ServerBase::ServerBase(
 
   std::function<void()> timer_callback = [this] () {
         try {
-      execute_check_expired_goals();
+          execute_check_expired_goals();
         } 
         catch (const rclcpp::exceptions::RCLError & ex) {
           RCLCPP_ERROR(
@@ -195,6 +195,7 @@ ServerBase::ServerBase(
 
 ServerBase::~ServerBase()
 {
+  pimpl_->expire_timer_->cancel();
 }
 
 size_t
