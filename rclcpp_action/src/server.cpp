@@ -158,7 +158,15 @@ ServerBase::ServerBase(
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
 
   std::function<void()> timer_callback = [this] () {
+        try {
       execute_check_expired_goals();
+        } 
+        catch (const rclcpp::exceptions::RCLError & ex) {
+          RCLCPP_ERROR(
+            rclcpp::get_logger("rclcpp_action"),
+            "Failed to check for expired goals: %s", ex.what()
+          );
+      };
     };
   pimpl_->expire_timer_ = std::make_shared<rclcpp::GenericTimer<decltype (timer_callback)>>(
       node_clock->get_clock(), std::chrono::nanoseconds(options.result_timeout.nanoseconds),
