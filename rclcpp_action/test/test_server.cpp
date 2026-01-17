@@ -50,7 +50,8 @@ protected:
   send_goal_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
     rclcpp::Executor & executor,
-    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1),
+    bool executor_owns_node = false)
   {
     auto client = node->create_client<Fibonacci::Impl::SendGoalService>(
       "fibonacci/_action/send_goal");
@@ -60,7 +61,9 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::SendGoalService::Request>();
     request->goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
-    auto return_code = rclcpp::executors::spin_node_until_future_complete(executor,
+    auto return_code = (executor_owns_node) ?
+      executor.spin_until_future_complete(future, timeout) :
+      rclcpp::executors::spin_node_until_future_complete(executor,
       node->get_node_base_interface(), future, timeout);
     if (rclcpp::FutureReturnCode::SUCCESS == return_code) {
       return request;
@@ -76,15 +79,19 @@ protected:
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
     std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
   {
-    rclcpp::executors::SingleThreadedExecutor ex;
-    return send_goal_request(node, uuid, ex, timeout);
+    rclcpp::ExecutorOptions options;
+    options.context = node->get_node_base_interface()->get_context();
+    rclcpp::executors::SingleThreadedExecutor executor(options);
+    auto ret = send_goal_request(node, uuid, executor, timeout);
+    return ret;
   }
 
   CancelResponse::SharedPtr
   send_cancel_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
     rclcpp::Executor & executor,
-    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
+    std::chrono::milliseconds timeout = std::chrono::milliseconds(-1),
+    bool executor_owns_node = false)
   {
     auto cancel_client = node->create_client<Fibonacci::Impl::CancelGoalService>(
       "fibonacci/_action/cancel_goal");
@@ -94,7 +101,9 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::CancelGoalService::Request>();
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
-    auto return_code = rclcpp::executors::spin_node_until_future_complete(executor,
+    auto return_code = (executor_owns_node) ?
+      executor.spin_until_future_complete(future, timeout) :
+      rclcpp::executors::spin_node_until_future_complete(executor,
       node->get_node_base_interface(), future, timeout);
     if (rclcpp::FutureReturnCode::SUCCESS == return_code) {
       return future.get();
@@ -110,8 +119,11 @@ protected:
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
     std::chrono::milliseconds timeout = std::chrono::milliseconds(-1))
   {
-    rclcpp::executors::SingleThreadedExecutor ex;
-    return send_cancel_request(node, uuid, ex, timeout);
+    rclcpp::ExecutorOptions options;
+    options.context = node->get_node_base_interface()->get_context();
+    rclcpp::executors::SingleThreadedExecutor executor(options);
+    auto ret = send_cancel_request(node, uuid, executor, timeout);
+    return ret;
   }
 };
 
@@ -1028,17 +1040,17 @@ TEST_F(TestServer, deferred_execution)
 
 TEST_F(TestServer, goals_expired_with_events_executor)
 {
-
-  rclcpp::ExecutorOptions opts;
-
   // Because timer expiration was typically tied to the waitsets for
   // the SingleThreadedExecutor and MultiThreadedExecutor,
   // We specifically want to test with the EventsExecutor here
   // so we can verify the timer based goal expiration works
   // and expired goals are properly cleared.
+  auto node = std::make_shared<rclcpp::Node>("expire_goals", "/rclcpp_action/expire_goals");
+  rclcpp::ExecutorOptions opts;
+  opts.context = node->get_node_base_interface()->get_context();
 
   rclcpp::experimental::executors::EventsExecutor executor(opts);
-  auto node = std::make_shared<rclcpp::Node>("expire_goals", "/rclcpp_action/expire_goals");
+  executor.add_node(node);
   const std::vector<GoalUUID> uuids{
     {{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}},
     {{10, 2, 3, 40, 50, 6, 70, 8, 9, 1, 11, 12, 13, 140, 15, 160}},
@@ -1078,7 +1090,8 @@ TEST_F(TestServer, goals_expired_with_events_executor)
 
 
   for (const auto & uuid : uuids) {
-    send_goal_request(node, uuid, executor);
+    constexpr bool owns_node {true};
+    send_goal_request(node, uuid, executor, std::chrono::milliseconds(-1), owns_node);
 
     EXPECT_TRUE(received_handle->is_active());
     EXPECT_TRUE(received_handle->is_executing());
@@ -1099,9 +1112,6 @@ TEST_F(TestServer, goals_expired_with_events_executor)
     received_handle->succeed(result);
 
     // Wait for the result request to be received
-
-    executor.add_node(node);
-
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
       executor.spin_until_future_complete(future));
@@ -1110,17 +1120,17 @@ TEST_F(TestServer, goals_expired_with_events_executor)
     EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
     EXPECT_EQ(result->sequence, response->result.sequence);
 
-    ASSERT_TRUE(as->get_number_of_goal_handles() != 0);
+    ASSERT_NE(as->get_number_of_goal_handles(), 0);
 
     // Wait for goal expiration
     rclcpp::sleep_for(2 * result_timeout);
 
     // Allow for expiration to take place
     executor.spin_some();
-    executor.remove_node(node);
   }
+  executor.remove_node(node);
 
-  ASSERT_TRUE(as->get_number_of_goal_handles() == 0);
+  ASSERT_EQ(as->get_number_of_goal_handles(), 0);
 }
 
 
