@@ -210,7 +210,7 @@ public:
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    *
-   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
+   * \throws rclcpp::exceptions::RCLError If the goal has not been cancelled.
    *
    * \param[in] result_msg the final result to send to clients.
    */
