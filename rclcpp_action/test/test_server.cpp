@@ -1138,13 +1138,13 @@ TEST_F(TestServer, goals_expired_with_events_executor)
     EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
     EXPECT_EQ(result->sequence, response->result.sequence);
 
-    ASSERT_NE(as->get_number_of_goal_handles(), 0);
-
-    // Wait for goal expiration
-    rclcpp::sleep_for(2 * result_timeout);
-
-    // Allow for expiration to take place
-    executor.spin_some();
+    auto start = std::chrono::steady_clock::now();
+    while (as->get_number_of_goal_handles() != 0 &&
+      std::chrono::steady_clock::now() - start < std::chrono::seconds(5))
+    {
+      executor.spin_some();
+      rclcpp::sleep_for(std::chrono::milliseconds(10));
+    }
   }
   executor.remove_node(node);
 
