@@ -56,7 +56,7 @@ bool wait_for_message(
       }
     });
 
-  rclcpp::WaitSet wait_set;
+  rclcpp::WaitSet wait_set({}, {}, {}, {}, {}, {}, context);
   wait_set.add_subscription(subscription);
   RCPPUTILS_SCOPE_EXIT(wait_set.remove_subscription(subscription); );
   wait_set.add_guard_condition(gc);
