@@ -27,7 +27,7 @@
 #include "action_msgs/msg/goal_info.hpp"
 #include "action_msgs/msg/goal_status_array.hpp"
 
-#include "rclcpp_action/client_base.hpp"
+#include "rclcpp_action/client.hpp"
 #include "rclcpp_action/generic_client_goal_handle.hpp"
 #include "rcpputils/shared_library.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
