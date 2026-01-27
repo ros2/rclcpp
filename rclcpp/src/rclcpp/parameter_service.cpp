@@ -47,13 +47,7 @@ ParameterService::ParameterService(
           response->values.push_back(param.get_value_message());
         }
       } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
-<<<<<<< HEAD
-        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
-=======
         RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
-      } catch (const rclcpp::exceptions::ParameterUninitializedException & ex) {
-        RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get parameters: %s", ex.what());
->>>>>>> f8a7ace (print warning message on owner node if the parameter operation fails. (#3037))
       }
     },
     qos_profile, nullptr);
