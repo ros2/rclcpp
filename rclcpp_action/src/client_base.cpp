@@ -191,8 +191,10 @@ ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const std::string & action_name,
   const rosidl_action_type_support_t * type_support,
-  const rcl_action_client_options_t & client_options)
-: pimpl_(new ClientBaseImpl(
+  const rcl_action_client_options_t & client_options,
+  bool enable_feedback_msg_optimization)
+: enable_feedback_msg_optimization_(enable_feedback_msg_optimization),
+  pimpl_(new ClientBaseImpl(
       node_base, node_graph, node_logging, action_name, type_support, client_options))
 {
 }
@@ -827,4 +829,23 @@ ClientBase::configure_introspection(
   }
 }
 
+bool
+ClientBase::configure_feedback_subscription_filter_add_goal_id(
+  const GoalUUID & goal_id)
+{
+  const rcl_ret_t ret = rcl_action_client_configure_feedback_subscription_filter_add_goal_id(
+    pimpl_->client_handle.get(), goal_id.data(), goal_id.size());
+
+  return ret == RCL_RET_OK;
+}
+
+bool
+ClientBase::configure_feedback_subscription_filter_remove_goal_id(
+  const GoalUUID & goal_id)
+{
+  const rcl_ret_t ret = rcl_action_client_configure_feedback_subscription_filter_remove_goal_id(
+    pimpl_->client_handle.get(), goal_id.data(), goal_id.size());
+
+  return ret == RCL_RET_OK;
+}
 }  // namespace rclcpp_action

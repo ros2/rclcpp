@@ -47,7 +47,8 @@ create_generic_client(
   const std::string & name,
   const std::string & type,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  const rcl_action_client_options_t & options = rcl_action_client_get_default_options());
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options(),
+  bool enable_feedback_msg_optimization = false);
 
 /// Create an action generic client.
 /**
@@ -66,7 +67,8 @@ create_generic_client(
   const std::string & name,
   const std::string & type,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  const rcl_action_client_options_t & options = rcl_action_client_get_default_options())
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options(),
+  bool enable_feedback_msg_optimization = false)
 {
   return rclcpp_action::create_generic_client(
     node->get_node_base_interface(),
@@ -76,7 +78,8 @@ create_generic_client(
     name,
     type,
     group,
-    options);
+    options,
+    enable_feedback_msg_optimization);
 }
 }  // namespace rclcpp_action
 

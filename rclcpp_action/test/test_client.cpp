@@ -28,6 +28,7 @@
 
 #include "rcl_action/names.h"
 #include "rcl_action/default_qos.h"
+#include "rcl_action/action_client.h"
 #include "rcl_action/wait.h"
 
 #include "rclcpp/clock.hpp"
@@ -246,6 +247,30 @@ protected:
     client_node.reset();
   }
 
+  class GoalFilteringClient : public rclcpp_action::Client<ActionType>
+  {
+public:
+    using rclcpp_action::Client<ActionType>::Client;
+
+    bool add_goal_id_to_configure_filter(const rclcpp_action::GoalUUID & uuid)
+    {
+      return this->configure_feedback_subscription_filter_add_goal_id(uuid);
+    }
+    bool remove_goal_id_from_configure_filter(const rclcpp_action::GoalUUID & uuid)
+    {
+      return this->configure_feedback_subscription_filter_remove_goal_id(uuid);
+    }
+  };
+
+  std::shared_ptr<GoalFilteringClient> make_goal_filtering_client()
+  {
+    return std::make_shared<GoalFilteringClient>(
+      client_node->get_node_base_interface(),
+      client_node->get_node_graph_interface(),
+      client_node->get_node_logging_interface(),
+      action_name);
+  }
+
   template<typename FutureT>
   void dual_spin_until_future_complete(std::shared_future<FutureT> & future)
   {
@@ -325,7 +350,8 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
       client_node->get_node_waitables_interface(),
       action_name,
       group,
-      options
+      options,
+      false
     ).reset());
 }
 
@@ -387,6 +413,119 @@ TEST_F(TestClient, wait_for_action_server_rcl_errors)
     EXPECT_THROW(action_client->action_server_is_ready(), rclcpp::exceptions::RCLError);
   }
   TearDownServer();
+}
+
+TEST_F(TestClient, check_configure_feedback_subscription_filter_add_goal_id)
+{
+  auto action_client = make_goal_filtering_client();
+  rclcpp_action::GoalUUID uuid;
+  uuid.fill(0u);
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_add_goal_id,
+      RCL_RET_OK);
+
+    EXPECT_TRUE(action_client->add_goal_id_to_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_add_goal_id,
+      RCL_RET_UNSUPPORTED);
+
+    EXPECT_FALSE(action_client->add_goal_id_to_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_add_goal_id,
+      RCL_RET_ERROR);
+
+    EXPECT_FALSE(action_client->add_goal_id_to_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_add_goal_id,
+      RCL_RET_ACTION_CLIENT_INVALID);
+
+    EXPECT_FALSE(action_client->add_goal_id_to_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_add_goal_id,
+      RCL_RET_BAD_ALLOC);
+
+    EXPECT_FALSE(action_client->add_goal_id_to_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_add_goal_id,
+      RCL_RET_INVALID_ARGUMENT);
+
+    EXPECT_FALSE(action_client->add_goal_id_to_configure_filter(uuid));
+  }
+}
+
+TEST_F(TestClient, check_configure_feedback_subscription_filter_remove_goal_id)
+{
+  auto action_client = make_goal_filtering_client();
+  rclcpp_action::GoalUUID uuid;
+  uuid.fill(0u);
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_remove_goal_id,
+      RCL_RET_OK);
+
+    EXPECT_TRUE(action_client->remove_goal_id_from_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_remove_goal_id,
+      RCL_RET_ERROR);
+
+    EXPECT_FALSE(action_client->remove_goal_id_from_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_remove_goal_id,
+      RCL_RET_ACTION_CLIENT_INVALID);
+
+    EXPECT_FALSE(action_client->remove_goal_id_from_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_remove_goal_id,
+      RCL_RET_BAD_ALLOC);
+
+    EXPECT_FALSE(action_client->remove_goal_id_from_configure_filter(uuid));
+  }
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action",
+      rcl_action_client_configure_feedback_subscription_filter_remove_goal_id,
+      RCL_RET_INVALID_ARGUMENT);
+
+    EXPECT_FALSE(action_client->remove_goal_id_from_configure_filter(uuid));
+  }
 }
 
 TEST_F(TestClient, is_ready) {
@@ -1051,4 +1190,38 @@ TEST_F(TestClientAgainstServer, test_configure_introspection)
 
   // No method was found to make rcl_action_client_configure_action_introspection return
   // a value other than RCL_RET_OK. mocking_utils::patch_and_return does not work for this function.
+}
+
+TEST_F(TestClientAgainstServer,
+  enable_feedback_msg_optimization_not_affect_normal_reception_of_feedback)
+{
+  const rcl_action_client_options_t options = rcl_action_client_get_default_options();
+  auto action_client =
+    rclcpp_action::create_client<ActionType>(client_node, action_name, nullptr, options, true);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 4;
+  int feedback_count = 0;
+  auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
+  send_goal_ops.feedback_callback = [&feedback_count](
+    [[maybe_unused]] typename ActionGoalHandle::SharedPtr goal_handle,
+    [[maybe_unused]] const std::shared_ptr<const ActionFeedback> feedback)
+    {
+      feedback_count++;
+    };
+  auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+  dual_spin_until_future_complete(future_goal_handle);
+  auto goal_handle = future_goal_handle.get();
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+  EXPECT_TRUE(goal_handle->is_feedback_aware());
+  EXPECT_FALSE(goal_handle->is_result_aware());
+  auto future_result = action_client->async_get_result(goal_handle);
+  EXPECT_TRUE(goal_handle->is_result_aware());
+  dual_spin_until_future_complete(future_result);
+  auto wrapped_result = future_result.get();
+
+  ASSERT_EQ(5u, wrapped_result.result->sequence.size());
+  EXPECT_EQ(3, wrapped_result.result->sequence.back());
+  EXPECT_EQ(5, feedback_count);
 }

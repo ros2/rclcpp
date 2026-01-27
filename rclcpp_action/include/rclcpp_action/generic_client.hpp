@@ -112,7 +112,8 @@ public:
     const std::string & action_name,
     std::shared_ptr<rcpputils::SharedLibrary> typesupport_lib,
     const rosidl_action_type_support_t * action_typesupport_handle,
-    const rcl_action_client_options_t & client_options = rcl_action_client_get_default_options());
+    const rcl_action_client_options_t & client_options = rcl_action_client_get_default_options(),
+    bool enable_feedback_msg_optimization = false);
 
   /// Send an action goal and asynchronously get the result.
   /**
