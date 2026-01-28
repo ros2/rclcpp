@@ -195,7 +195,8 @@ public:
           if (!configure_feedback_subscription_filter_add_goal_id(goal_request->goal_id.uuid)) {
             RCLCPP_ERROR(
               this->get_logger(),
-              "Failed to add goal id to feedback subscription content filter for action client.");
+              "Failed to add goal id to feedback subscription content filter for action client."
+              " Disable feedback message optimization.");
             enable_feedback_msg_optimization_ = false;
           }
         }
@@ -542,7 +543,7 @@ private:
 
           // If feedback message optimization is enabled, remove goal id from feedback subscription
           // content filter
-          if (this->enable_feedback_msg_optimization_.load()) {
+          if (this->enable_feedback_msg_optimization_) {
             std::lock_guard<std::mutex> lock(
               this->configure_feedback_sub_content_filter_mutex_);
             if (!this->configure_feedback_subscription_filter_remove_goal_id(
@@ -551,8 +552,8 @@ private:
               RCLCPP_ERROR(
                 this->get_logger(),
                 "Failed to remove goal id from feedback subscription content filter for action "
-                "client.");
-              this->enable_feedback_msg_optimization_.store(false);
+                "client. Disable feedback message optimization.");
+              this->enable_feedback_msg_optimization_ = false;
             }
           }
           std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
@@ -581,7 +582,7 @@ private:
 
         // If feedback message optimization is enabled, remove goal id from feedback subscription
         // content filter
-        if (this->enable_feedback_msg_optimization_.load()) {
+        if (this->enable_feedback_msg_optimization_) {
           for (const auto & goal_info : cancel_response->goals_canceling) {
             std::lock_guard<std::mutex> lock(this->configure_feedback_sub_content_filter_mutex_);
             if (!this->configure_feedback_subscription_filter_remove_goal_id(
@@ -590,9 +591,12 @@ private:
               RCLCPP_ERROR(
                 this->get_logger(),
                 "Failed to remove goal id from feedback subscription content filter for action "
-                "client.");
+                "client. Disable feedback message optimization.");
+              this->enable_feedback_msg_optimization_ = false;
+              // When an error occurs, the rcl layer will disable the content filter, so there is
+              // no need to continue removing the goal id.
+              break;
             }
-            this->enable_feedback_msg_optimization_.store(false);
           }
         }
 
