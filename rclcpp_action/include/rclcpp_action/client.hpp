@@ -112,16 +112,17 @@ public:
    * Use `rclcpp_action::create_client()` to both construct and add to a node.
    *
    * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
-   * simultaneously.
+   * simultaneously. If the number of goals exceeds the limit, optimization is automatically
+   * disabled.
    *
    * \param[in] node_base A pointer to the base interface of a node.
    * \param[in] node_graph A pointer to an interface that allows getting graph information about
    *   a node.
    * \param[in] node_logging A pointer to an interface that allows getting a node's logger.
    * \param[in] action_name The action name.
-   * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
-   *   reduce network load.
    * \param[in] client_options Options to pass to the underlying `rcl_action::rcl_action_client_t`.
+   * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+   *   optimize the handling of feedback messages.
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,

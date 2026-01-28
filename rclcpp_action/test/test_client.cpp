@@ -1193,7 +1193,7 @@ TEST_F(TestClientAgainstServer, test_configure_introspection)
 }
 
 TEST_F(TestClientAgainstServer,
-  enable_feedback_msg_optimization_not_affect_normal_reception_of_feedback)
+  enable_feedback_msg_optimization_does_not_affect_normal_feedback_reception)
 {
   const rcl_action_client_options_t options = rcl_action_client_get_default_options();
   auto action_client =

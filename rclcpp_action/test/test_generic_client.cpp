@@ -1167,3 +1167,43 @@ TEST_F(TestGenericClientAgainstServer, execute_rcl_errors)
       rclcpp::exceptions::RCLError);
   }
 }
+
+TEST_F(TestGenericClientAgainstServer,
+  enable_feedback_msg_optimization_does_not_affect_normal_feedback_reception)
+{
+  const rcl_action_client_options_t options = rcl_action_client_get_default_options();
+  auto action_generic_client =
+    rclcpp_action::create_generic_client(
+      client_node,
+      action_name,
+      "test_msgs/action/Fibonacci",
+      nullptr,
+      options,
+      true);
+  ASSERT_TRUE(action_generic_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 4;
+  int feedback_count = 0;
+  auto send_goal_ops = rclcpp_action::GenericClient::SendGoalOptions();
+  send_goal_ops.feedback_callback = [&feedback_count](
+    typename rclcpp_action::GenericClientGoalHandle::SharedPtr, const void *)
+    {
+      feedback_count++;
+    };
+  auto future_goal_handle =
+    action_generic_client->async_send_goal(&goal, sizeof(goal), send_goal_ops);
+  dual_spin_until_future_complete(future_goal_handle);
+  auto goal_handle = future_goal_handle.get();
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+  EXPECT_TRUE(goal_handle->is_feedback_aware());
+  EXPECT_FALSE(goal_handle->is_result_aware());
+  auto future_result = action_generic_client->async_get_result(goal_handle);
+  EXPECT_TRUE(goal_handle->is_result_aware());
+  dual_spin_until_future_complete(future_result);
+  auto wrapped_result = future_result.get();
+  const ActionResult * result = (const ActionResult *)(wrapped_result.result);
+  ASSERT_EQ(5u, result->sequence.size());
+  EXPECT_EQ(3, result->sequence.back());
+  EXPECT_EQ(5, feedback_count);
+}

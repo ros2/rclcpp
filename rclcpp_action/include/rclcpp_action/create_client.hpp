@@ -38,11 +38,11 @@ namespace rclcpp_action
  * \param[in] node_logging_interface The node logging interface of the corresponding node.
  * \param[in] node_waitables_interface The node waitables interface of the corresponding node.
  * \param[in] name The action name.
- * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
- *   reduce network load.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+ *   optimize the handling of feedback messages.
  */
 template<typename ActionT>
 typename Client<ActionT>::SharedPtr
@@ -101,11 +101,17 @@ create_client(
 
 /// Create an action client.
 /**
+ *
+ * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+ * simultaneously. If the number of goals exceeds the limit, optimization is automatically disabled.
+ *
  * \param[in] node The action client will be added to this node.
  * \param[in] name The action name.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+ *   optimize the handling of feedback messages.
  */
 template<typename ActionT, typename NodeT>
 typename Client<ActionT>::SharedPtr
