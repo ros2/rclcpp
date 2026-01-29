@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <chrono>
 #include <future>
 #include <map>
@@ -124,6 +125,10 @@ protected:
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
           client_executor.spin_once();
+          while (pending_handle_goal_) {
+            // wait until allowed to proceed
+            std::this_thread::sleep_for(200ms);
+          }
           ActionFeedbackMessage feedback_message;
           feedback_message.goal_id.uuid = goal_request->goal_id.uuid;
           feedback_message.feedback.sequence.push_back(0);
@@ -247,6 +252,16 @@ protected:
     client_node.reset();
   }
 
+  void enable_pending_handling_goal()
+  {
+    pending_handle_goal_ = true;
+  }
+
+  void disable_pending_handling_goal()
+  {
+    pending_handle_goal_ = false;
+  }
+
   class GoalFilteringClient : public rclcpp_action::Client<ActionType>
   {
 public:
@@ -304,6 +319,7 @@ public:
   typename rclcpp::Service<ActionCancelGoalService>::SharedPtr cancel_service;
   typename rclcpp::Publisher<ActionFeedbackMessage>::SharedPtr feedback_publisher;
   typename rclcpp::Publisher<ActionStatusMessage>::SharedPtr status_publisher;
+  std::atomic_bool pending_handle_goal_{false};
 };
 
 class TestClientAgainstServer : public TestClient
@@ -311,6 +327,7 @@ class TestClientAgainstServer : public TestClient
 protected:
   void SetUp() override
   {
+    disable_pending_handling_goal();
     SetUpServer();
     TestClient::SetUp();
   }
@@ -1195,33 +1212,107 @@ TEST_F(TestClientAgainstServer, test_configure_introspection)
 TEST_F(TestClientAgainstServer,
   enable_feedback_msg_optimization_does_not_affect_normal_feedback_reception)
 {
+  // Test that when the feedback message optimization is enabled, the goal's feedback messages
+  // are received without any issues.
   const rcl_action_client_options_t options = rcl_action_client_get_default_options();
   auto action_client =
     rclcpp_action::create_client<ActionType>(client_node, action_name, nullptr, options, true);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
-  ActionGoal goal;
-  goal.order = 4;
-  int feedback_count = 0;
-  auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
-  send_goal_ops.feedback_callback = [&feedback_count](
-    [[maybe_unused]] typename ActionGoalHandle::SharedPtr goal_handle,
-    [[maybe_unused]] const std::shared_ptr<const ActionFeedback> feedback)
-    {
-      feedback_count++;
-    };
-  auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
-  dual_spin_until_future_complete(future_goal_handle);
-  auto goal_handle = future_goal_handle.get();
-  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
-  EXPECT_TRUE(goal_handle->is_feedback_aware());
-  EXPECT_FALSE(goal_handle->is_result_aware());
-  auto future_result = action_client->async_get_result(goal_handle);
-  EXPECT_TRUE(goal_handle->is_result_aware());
-  dual_spin_until_future_complete(future_result);
-  auto wrapped_result = future_result.get();
+  enable_pending_handling_goal();
 
-  ASSERT_EQ(5u, wrapped_result.result->sequence.size());
-  EXPECT_EQ(3, wrapped_result.result->sequence.back());
-  EXPECT_EQ(5, feedback_count);
+  std::array<int, 2> orders{4, 5};
+  std::array<int, 2> feedback_counts{};
+  std::array<std::shared_future<typename ActionGoalHandle::SharedPtr>, 2> goal_handle_futures{};
+
+  for (size_t i = 0; i < orders.size(); ++i) {
+    ActionGoal goal;
+    goal.order = orders[i];
+    auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
+    send_goal_ops.feedback_callback = [&count = feedback_counts[i]](
+      [[maybe_unused]] typename ActionGoalHandle::SharedPtr goal_handle,
+      [[maybe_unused]] const std::shared_ptr<const ActionFeedback> feedback)
+      {
+        count++;
+      };
+    goal_handle_futures[i] = action_client->async_send_goal(goal, send_goal_ops);
+  }
+
+  server_executor.spin_some(500ms);
+  disable_pending_handling_goal();
+
+  for (auto & future_goal_handle : goal_handle_futures) {
+    dual_spin_until_future_complete(future_goal_handle);
+  }
+
+  for (size_t i = 0; i < orders.size(); ++i) {
+    auto goal_handle = goal_handle_futures[i].get();
+    EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+    EXPECT_TRUE(goal_handle->is_feedback_aware());
+    EXPECT_FALSE(goal_handle->is_result_aware());
+
+    auto future_result = action_client->async_get_result(goal_handle);
+    EXPECT_TRUE(goal_handle->is_result_aware());
+    dual_spin_until_future_complete(future_result);
+    auto wrapped_result = future_result.get();
+
+    EXPECT_EQ(orders[i] + 1, feedback_counts[i]);
+    EXPECT_EQ(orders[i] + 1, wrapped_result.result->sequence.size());
+  }
+}
+
+TEST_F(TestClientAgainstServer,
+  enable_feedback_msg_optimization_handles_multiple_goals)
+{
+  // When testing with more than 6 goals running at the same time, the internal feedback
+  // subscription content filter will automatically turn off, but this does not affect the
+  // reception of feedback messages for all goals.
+  const rcl_action_client_options_t options = rcl_action_client_get_default_options();
+  auto action_client =
+    rclcpp_action::create_client<ActionType>(client_node, action_name, nullptr, options, true);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  enable_pending_handling_goal();
+
+  constexpr size_t goal_count = 7u;
+  std::array<ActionGoal, goal_count> goal_msgs;
+  std::array<int, goal_count> feedback_counts{};
+  std::array<std::shared_future<typename ActionGoalHandle::SharedPtr>, goal_count>
+    goal_handle_futures{};
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    goal_msgs[i].order = static_cast<int32_t>(i + 1);
+    auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
+    send_goal_ops.feedback_callback = [&count = feedback_counts[i]](
+      [[maybe_unused]] typename ActionGoalHandle::SharedPtr goal_handle,
+      [[maybe_unused]] const std::shared_ptr<const ActionFeedback> feedback)
+      {
+        count++;
+      };
+    goal_handle_futures[i] = action_client->async_send_goal(goal_msgs[i], send_goal_ops);
+  }
+
+  server_executor.spin_some(500ms);
+  disable_pending_handling_goal();
+
+  std::array<std::shared_future<typename ActionGoalHandle::WrappedResult>, goal_count>
+    result_futures{};
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    dual_spin_until_future_complete(goal_handle_futures[i]);
+    auto goal_handle = goal_handle_futures[i].get();
+    EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+    EXPECT_TRUE(goal_handle->is_feedback_aware());
+    EXPECT_FALSE(goal_handle->is_result_aware());
+    result_futures[i] = action_client->async_get_result(goal_handle);
+    EXPECT_TRUE(goal_handle->is_result_aware());
+  }
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    dual_spin_until_future_complete(result_futures[i]);
+    auto wrapped_result = result_futures[i].get();
+
+    EXPECT_EQ(goal_msgs[i].order + 1, feedback_counts[i]);
+    EXPECT_EQ(goal_msgs[i].order + 1, wrapped_result.result->sequence.size());
+  }
 }

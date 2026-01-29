@@ -344,7 +344,8 @@ protected:
   // When an error occurs while adding or removing a goal ID from the content filter, it will
   // automatically be set to false.
   std::atomic_bool enable_feedback_msg_optimization_;
-  // Mutex to protect configuration of feedback subscription content filter since
+  // Mutex to protect feedback subscription content filter configuration because the related rcl
+  // function is not thread-safe.
   std::mutex configure_feedback_sub_content_filter_mutex_;
 
 private:

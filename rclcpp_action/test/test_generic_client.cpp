@@ -13,12 +13,14 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <chrono>
 #include <future>
 #include <map>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "gtest/gtest.h"
 
@@ -120,6 +122,10 @@ protected:
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
           client_executor.spin_once();
+          while (pending_handle_goal_) {
+            // wait until allowed to proceed
+            std::this_thread::sleep_for(200ms);
+          }
           ActionFeedbackMessage feedback_message;
           feedback_message.goal_id.uuid = goal_request->goal_id.uuid;
           feedback_message.feedback.sequence.push_back(0);
@@ -254,6 +260,16 @@ protected:
     } while (std::future_status::ready != status);
   }
 
+  void enable_pending_handling_goal()
+  {
+    pending_handle_goal_ = true;
+  }
+
+  void disable_pending_handling_goal()
+  {
+    pending_handle_goal_ = false;
+  }
+
   rclcpp::Clock clock{RCL_ROS_TIME};
   const rclcpp::Time zero_stamp{0, 0, RCL_ROS_TIME};
 
@@ -276,6 +292,7 @@ protected:
   typename rclcpp::Service<ActionCancelGoalService>::SharedPtr cancel_service;
   typename rclcpp::Publisher<ActionFeedbackMessage>::SharedPtr feedback_publisher;
   typename rclcpp::Publisher<ActionStatusMessage>::SharedPtr status_publisher;
+  std::atomic_bool pending_handle_goal_{false};
 };
 
 TEST_F(TestGenericClient, construction_with_free_function) {
@@ -431,6 +448,7 @@ class TestGenericClientAgainstServer : public TestGenericClient
 protected:
   void SetUp() override
   {
+    disable_pending_handling_goal();
     SetUpServer();
     TestGenericClient::SetUp();
   }
@@ -1095,6 +1113,8 @@ TEST_F(TestGenericClientAgainstServer, send_rcl_errors)
 
 TEST_F(TestGenericClientAgainstServer, execute_rcl_errors)
 {
+  // Test that when the feedback message optimization is enabled, the goal's feedback messages
+  // are received without any issues.
   auto action_generic_client = rclcpp_action::create_generic_client(
     client_node,
     action_name,
@@ -1182,28 +1202,133 @@ TEST_F(TestGenericClientAgainstServer,
       true);
   ASSERT_TRUE(action_generic_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
-  ActionGoal goal;
-  goal.order = 4;
-  int feedback_count = 0;
-  auto send_goal_ops = rclcpp_action::GenericClient::SendGoalOptions();
-  send_goal_ops.feedback_callback = [&feedback_count](
-    typename rclcpp_action::GenericClientGoalHandle::SharedPtr, const void *)
-    {
-      feedback_count++;
-    };
-  auto future_goal_handle =
-    action_generic_client->async_send_goal(&goal, sizeof(goal), send_goal_ops);
-  dual_spin_until_future_complete(future_goal_handle);
-  auto goal_handle = future_goal_handle.get();
-  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
-  EXPECT_TRUE(goal_handle->is_feedback_aware());
-  EXPECT_FALSE(goal_handle->is_result_aware());
-  auto future_result = action_generic_client->async_get_result(goal_handle);
-  EXPECT_TRUE(goal_handle->is_result_aware());
-  dual_spin_until_future_complete(future_result);
-  auto wrapped_result = future_result.get();
-  const ActionResult * result = (const ActionResult *)(wrapped_result.result);
-  ASSERT_EQ(5u, result->sequence.size());
-  EXPECT_EQ(3, result->sequence.back());
-  EXPECT_EQ(5, feedback_count);
+  enable_pending_handling_goal();
+
+  constexpr size_t goal_count = 2u;
+  std::array<ActionGoal, goal_count> goal_msgs;
+  std::array<int, goal_count> feedback_counts{};
+
+  using FutureGoalHandle =
+    std::shared_future<typename rclcpp_action::GenericClientGoalHandle::SharedPtr>;
+  std::vector<FutureGoalHandle> goal_handle_futures;
+  goal_handle_futures.reserve(goal_count);
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    goal_msgs[i].order = 4;
+    auto send_goal_ops = rclcpp_action::GenericClient::SendGoalOptions();
+    send_goal_ops.feedback_callback = [&count = feedback_counts[i]](
+      typename rclcpp_action::GenericClientGoalHandle::SharedPtr, const void *)
+      {
+        count++;
+      };
+    goal_handle_futures.emplace_back(
+      action_generic_client->async_send_goal(&goal_msgs[i], sizeof(goal_msgs[i]), send_goal_ops));
+  }
+
+  server_executor.spin_some(500ms);
+  disable_pending_handling_goal();
+
+  std::vector<rclcpp_action::GenericClientGoalHandle::SharedPtr> goal_handles;
+  goal_handles.reserve(goal_count);
+
+  for (auto & future_goal_handle : goal_handle_futures) {
+    dual_spin_until_future_complete(future_goal_handle);
+    auto goal_handle = future_goal_handle.get();
+    EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+    EXPECT_TRUE(goal_handle->is_feedback_aware());
+    EXPECT_FALSE(goal_handle->is_result_aware());
+    goal_handles.push_back(goal_handle);
+  }
+
+  using FutureResult = std::shared_future<rclcpp_action::GenericClient::WrappedResult>;
+  std::vector<FutureResult> result_futures;
+  result_futures.reserve(goal_count);
+
+  for (auto & goal_handle : goal_handles) {
+    result_futures.emplace_back(action_generic_client->async_get_result(goal_handle));
+    EXPECT_TRUE(goal_handle->is_result_aware());
+  }
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    dual_spin_until_future_complete(result_futures[i]);
+    auto wrapped_result = result_futures[i].get();
+    const ActionResult * result = (const ActionResult *)(wrapped_result.result);
+
+    EXPECT_EQ(goal_msgs[i].order + 1, feedback_counts[i]);
+    EXPECT_EQ(goal_msgs[i].order + 1, result->sequence.size());
+  }
+}
+
+TEST_F(TestGenericClientAgainstServer,
+  enable_feedback_msg_optimization_handles_multiple_goals)
+{
+  // When testing with more than 6 goals running at the same time, the internal feedback
+  // subscription content filter will automatically turn off, but this does not affect the
+  // reception of feedback messages for all goals.
+  const rcl_action_client_options_t options = rcl_action_client_get_default_options();
+  auto action_generic_client =
+    rclcpp_action::create_generic_client(
+      client_node,
+      action_name,
+      "test_msgs/action/Fibonacci",
+      nullptr,
+      options,
+      true);
+  ASSERT_TRUE(action_generic_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  enable_pending_handling_goal();
+
+  constexpr size_t goal_count = 7u;
+  std::array<ActionGoal, goal_count> goal_msgs;
+  std::array<int, goal_count> feedback_counts{};
+
+  using FutureGoalHandle =
+    std::shared_future<typename rclcpp_action::GenericClientGoalHandle::SharedPtr>;
+  std::vector<FutureGoalHandle> goal_handle_futures;
+  goal_handle_futures.reserve(goal_count);
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    goal_msgs[i].order = static_cast<int32_t>(i + 1);
+    auto send_goal_ops = rclcpp_action::GenericClient::SendGoalOptions();
+    send_goal_ops.feedback_callback = [&count = feedback_counts[i]](
+      typename rclcpp_action::GenericClientGoalHandle::SharedPtr, const void *)
+      {
+        count++;
+      };
+    goal_handle_futures.emplace_back(
+      action_generic_client->async_send_goal(&goal_msgs[i], sizeof(goal_msgs[i]), send_goal_ops));
+  }
+
+  server_executor.spin_some(500ms);
+  disable_pending_handling_goal();
+
+  std::vector<rclcpp_action::GenericClientGoalHandle::SharedPtr> goal_handles;
+  goal_handles.reserve(goal_count);
+
+  for (auto & future_goal_handle : goal_handle_futures) {
+    dual_spin_until_future_complete(future_goal_handle);
+    auto goal_handle = future_goal_handle.get();
+    EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+    EXPECT_TRUE(goal_handle->is_feedback_aware());
+    EXPECT_FALSE(goal_handle->is_result_aware());
+    goal_handles.push_back(goal_handle);
+  }
+
+  using FutureResult = std::shared_future<rclcpp_action::GenericClient::WrappedResult>;
+  std::vector<FutureResult> result_futures;
+  result_futures.reserve(goal_count);
+
+  for (auto & goal_handle : goal_handles) {
+    result_futures.emplace_back(action_generic_client->async_get_result(goal_handle));
+    EXPECT_TRUE(goal_handle->is_result_aware());
+  }
+
+  for (size_t i = 0; i < goal_count; ++i) {
+    dual_spin_until_future_complete(result_futures[i]);
+    auto wrapped_result = result_futures[i].get();
+    const ActionResult * result = (const ActionResult *)(wrapped_result.result);
+
+    EXPECT_EQ(goal_msgs[i].order + 1, feedback_counts[i]);
+    EXPECT_EQ(goal_msgs[i].order + 1, result->sequence.size());
+  }
 }
