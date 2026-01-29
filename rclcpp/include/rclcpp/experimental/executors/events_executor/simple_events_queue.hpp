@@ -70,13 +70,13 @@ public:
   bool
   dequeue(
     rclcpp::experimental::executors::ExecutorEvent & event,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds::max()) override
+    std::chrono::nanoseconds timeout = (std::chrono::nanoseconds::max)()) override
   {
     std::unique_lock<std::mutex> lock(mutex_);
 
     // Initialize to true because it's only needed if we have a valid timeout
     bool has_data = true;
-    if (timeout != std::chrono::nanoseconds::max()) {
+    if (timeout != (std::chrono::nanoseconds::max)()) {
       has_data =
         events_queue_cv_.wait_for(lock, timeout, [this]() {return !event_queue_.empty();});
     } else {

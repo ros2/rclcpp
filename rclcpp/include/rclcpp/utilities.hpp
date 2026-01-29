@@ -247,7 +247,7 @@ template<typename T>
 bool
 add_will_overflow(const T x, const T y)
 {
-  return (y > 0) && (x > (std::numeric_limits<T>::max() - y));
+  return (y > 0) && (x > ((std::numeric_limits<T>::max)() - y));
 }
 
 /// Safely check if addition will underflow.
@@ -264,7 +264,7 @@ template<typename T>
 bool
 add_will_underflow(const T x, const T y)
 {
-  return (y < 0) && (x < (std::numeric_limits<T>::min() - y));
+  return (y < 0) && (x < ((std::numeric_limits<T>::min)() - y));
 }
 
 /// Safely check if subtraction will overflow.
@@ -281,7 +281,7 @@ template<typename T>
 bool
 sub_will_overflow(const T x, const T y)
 {
-  return (y < 0) && (x > (std::numeric_limits<T>::max() + y));
+  return (y < 0) && (x > ((std::numeric_limits<T>::max)() + y));
 }
 
 /// Safely check if subtraction will underflow.
@@ -298,7 +298,7 @@ template<typename T>
 bool
 sub_will_underflow(const T x, const T y)
 {
-  return (y > 0) && (x < (std::numeric_limits<T>::min() + y));
+  return (y > 0) && (x < ((std::numeric_limits<T>::min)() + y));
 }
 
 /// Return the given string.

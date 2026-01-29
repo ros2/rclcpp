@@ -72,7 +72,7 @@ public:
   bool
   dequeue(
     rclcpp::experimental::executors::ExecutorEvent & event,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds::max()) = 0;
+    std::chrono::nanoseconds timeout = (std::chrono::nanoseconds::max)()) = 0;
 
   /**
    * @brief Test whether queue is empty

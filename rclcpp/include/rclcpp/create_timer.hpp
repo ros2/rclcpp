@@ -53,7 +53,7 @@ safe_cast_to_period_in_ns(std::chrono::duration<DurationRepT, DurationT> period)
   // Casting to a double representation might lose precision and allow the check below to succeed
   // but the actual cast to nanoseconds fail. Using 1 DurationT worth of nanoseconds less than max.
   constexpr auto maximum_safe_cast_ns =
-    std::chrono::nanoseconds::max() - std::chrono::duration<DurationRepT, DurationT>(1);
+    (std::chrono::nanoseconds::max)() - std::chrono::duration<DurationRepT, DurationT>(1);
 
   // If period is greater than nanoseconds::max(), the duration_cast to nanoseconds will overflow
   // a signed integer, which is undefined behavior. Checking whether any std::chrono::duration is
