@@ -30,7 +30,7 @@ template<typename OptionsT, typename NodeBaseT>
 bool
 resolve_use_intra_process(const OptionsT & options, const NodeBaseT & node_base)
 {
-  bool use_intra_process;
+  bool use_intra_process = false;
   switch (options.use_intra_process_comm) {
     case IntraProcessSetting::Enable:
       use_intra_process = true;
@@ -43,7 +43,6 @@ resolve_use_intra_process(const OptionsT & options, const NodeBaseT & node_base)
       break;
     default:
       throw std::runtime_error("Unrecognized IntraProcessSetting value");
-      break;
   }
 
   return use_intra_process;

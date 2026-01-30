@@ -640,7 +640,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         throw std::runtime_error("Unimplemented");
       }
 
-    default:
+    case rclcpp::DeliveredMessageKind::INVALID:
       {
         throw std::runtime_error("Delivered message kind is not supported");
       }

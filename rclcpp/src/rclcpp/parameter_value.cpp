@@ -44,9 +44,9 @@ rclcpp::to_string(const ParameterType type)
       return "double_array";
     case ParameterType::PARAMETER_STRING_ARRAY:
       return "string_array";
-    default:
-      return "unknown type";
   }
+
+  return "unknown type";
 }
 
 std::ostream &
@@ -103,9 +103,9 @@ rclcpp::to_string(const ParameterValue & value)
       return array_to_string(value.get<std::vector<double>>());
     case ParameterType::PARAMETER_STRING_ARRAY:
       return array_to_string(value.get<std::vector<std::string>>());
-    default:
-      return "unknown type";
   }
+
+  return "unknown type";
 }
 
 ParameterValue::ParameterValue()

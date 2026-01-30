@@ -908,9 +908,10 @@ ServerBase::set_on_ready_callback(
         break;
       }
 
-    default:
-      throw std::runtime_error("ServerBase::set_on_ready_callback: Unknown entity type.");
-      break;
+    case EntityType::Expired:
+      {
+        throw std::runtime_error("Expired entity type does not support callbacks");
+      }
   }
 
   if (RCL_RET_OK != ret) {
