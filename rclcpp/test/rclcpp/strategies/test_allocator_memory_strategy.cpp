@@ -808,7 +808,8 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_service_out_of_scope) {
       });
     allocator_memory_strategy()->collect_entities(weak_groups_to_nodes);
   }
-  EXPECT_EQ(1u, allocator_memory_strategy()->number_of_ready_services());
+  // service is out of scope here, so should be cleaned up already.
+  EXPECT_EQ(0u, allocator_memory_strategy()->number_of_ready_services());
 
   rclcpp::AnyExecutable result;
   allocator_memory_strategy()->get_next_service(result, weak_groups_to_nodes);
@@ -843,7 +844,8 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_client_out_of_scope) {
 
     allocator_memory_strategy()->collect_entities(weak_groups_to_nodes);
   }
-  EXPECT_EQ(1u, allocator_memory_strategy()->number_of_ready_clients());
+  // client is out of scope here, so should be cleaned up already.
+  EXPECT_EQ(0u, allocator_memory_strategy()->number_of_ready_clients());
 
   rclcpp::AnyExecutable result;
   allocator_memory_strategy()->get_next_client(result, weak_groups_to_nodes);
@@ -871,7 +873,8 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_timer_out_of_scope) {
       });
     allocator_memory_strategy()->collect_entities(weak_groups_to_nodes);
   }
-  EXPECT_EQ(1u, allocator_memory_strategy()->number_of_ready_timers());
+  // timer is out of scope here, so should be cleaned up already.
+  EXPECT_EQ(0u, allocator_memory_strategy()->number_of_ready_timers());
 
   rclcpp::AnyExecutable result;
   allocator_memory_strategy()->get_next_timer(result, weak_groups_to_nodes);
