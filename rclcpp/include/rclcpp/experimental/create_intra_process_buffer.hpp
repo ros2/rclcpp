@@ -82,10 +82,9 @@ create_intra_process_buffer(
 
         break;
       }
-    default:
+    case IntraProcessBufferType::CallbackDefault:
       {
-        throw std::runtime_error("Unrecognized IntraProcessBufferType value");
-        break;
+        throw std::runtime_error("IntraProcessBufferType::CallbackDefault is not allowed");
       }
   }
 

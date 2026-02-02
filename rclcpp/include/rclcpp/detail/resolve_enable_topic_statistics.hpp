@@ -29,7 +29,7 @@ template<typename OptionsT, typename NodeBaseT>
 bool
 resolve_enable_topic_statistics(const OptionsT & options, const NodeBaseT & node_base)
 {
-  bool topic_stats_enabled;
+  bool topic_stats_enabled = false;
   switch (options.topic_stats_options.state) {
     case TopicStatisticsState::Enable:
       topic_stats_enabled = true;

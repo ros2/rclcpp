@@ -704,10 +704,12 @@ public:
             return WaitResult<WaitSetTemplate>::from_timeout_wait_result_kind();
           case WaitResultKind::Empty:
             return WaitResult<WaitSetTemplate>::from_empty_wait_result_kind();
-          default:
-            auto msg = "unknown WaitResultKind with value: " + std::to_string(wait_result_kind);
+          case WaitResultKind::Invalid:
+            auto msg = "invalid WaitResultKind with value: " + std::to_string(wait_result_kind);
             throw std::runtime_error(msg);
         }
+        // This should never be reached, but is needed to satisfy the compiler
+        throw std::runtime_error("unreachable code in wait result kind switch");
       }
     );
   }

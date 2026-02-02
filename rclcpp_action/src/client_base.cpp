@@ -614,10 +614,6 @@ ClientBase::set_on_ready_callback(
           user_data);
         break;
       }
-
-    default:
-      throw std::runtime_error("ClientBase::set_on_ready_callback: Unknown entity type.");
-      break;
   }
 
   if (RCL_RET_OK != ret) {
