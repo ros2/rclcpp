@@ -15,9 +15,11 @@
 #ifndef RCLCPP__EXCEPTIONS__ERROR_MACROS_HPP_
 #define RCLCPP__EXCEPTIONS__ERROR_MACROS_HPP_
 
+#include <cstdint>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/exceptions/enhanced_exceptions.hpp"
 #include "rclcpp/exceptions/error_codes.hpp"

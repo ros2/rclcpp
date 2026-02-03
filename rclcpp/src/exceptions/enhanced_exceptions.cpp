@@ -1002,7 +1002,10 @@ ParameterTypeMismatchException::ParameterTypeMismatchException(
     ", got " + actual_type,
     ErrorSuggestion(
       "Use the correct type when getting the parameter value",
-      {"Check parameter declaration for the expected type", "Use get_parameter_or() for type-safe access"}
+      {
+        "Check parameter declaration for the expected type",
+        "Use get_parameter_or() for type-safe access"
+      }
     ),
     location)
 {
@@ -1020,7 +1023,10 @@ InvalidParameterValueException::InvalidParameterValueException(
     "Invalid value for parameter '" + parameter_name + "': " + reason,
     ErrorSuggestion(
       "Provide a valid value that meets the parameter's constraints",
-      {"Check parameter description for valid values", "Use describe_parameter() to see constraints"}
+      {
+        "Check parameter description for valid values",
+        "Use describe_parameter() to see constraints"
+      }
     ),
     location)
 {
@@ -1206,7 +1212,10 @@ ParameterTypeMismatchException::ParameterTypeMismatchException(
     ", got " + actual_type,
     ErrorSuggestion(
       "Use the correct type when getting the parameter value",
-      {"Check parameter declaration for the expected type", "Use get_parameter_or() for type-safe access"}
+      {
+        "Check parameter declaration for the expected type",
+        "Use get_parameter_or() for type-safe access"
+      }
     ),
     location)
 {
@@ -1224,7 +1233,10 @@ InvalidParameterValueException::InvalidParameterValueException(
     "Invalid value for parameter '" + parameter_name + "': " + reason,
     ErrorSuggestion(
       "Provide a valid value that meets the parameter's constraints",
-      {"Check parameter description for valid values", "Use describe_parameter() to see constraints"}
+      {
+        "Check parameter description for valid values",
+        "Use describe_parameter() to see constraints"
+      }
     ),
     location)
 {

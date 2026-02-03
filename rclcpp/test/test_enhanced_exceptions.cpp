@@ -23,7 +23,45 @@
 #include "rclcpp/exceptions/error_codes.hpp"
 #include "rclcpp/exceptions/error_macros.hpp"
 
-using namespace rclcpp::exceptions;
+using rclcpp::exceptions::ErrorCategory;
+using rclcpp::exceptions::ErrorCode;
+using rclcpp::exceptions::ErrorContext;
+using rclcpp::exceptions::ErrorSeverity;
+using rclcpp::exceptions::ErrorSuggestion;
+using rclcpp::exceptions::RclcppException;
+using rclcpp::exceptions::NodeException;
+using rclcpp::exceptions::TopicException;
+using rclcpp::exceptions::ServiceException;
+using rclcpp::exceptions::ParameterException;
+using rclcpp::exceptions::ExecutorException;
+using rclcpp::exceptions::QoSException;
+using rclcpp::exceptions::InvalidNodeNameError;
+using rclcpp::exceptions::InvalidNamespaceError;
+using rclcpp::exceptions::NodeInitializationError;
+using rclcpp::exceptions::InvalidTopicNameError;
+using rclcpp::exceptions::InvalidServiceNameError;
+using rclcpp::exceptions::ServiceNotAvailableError;
+using rclcpp::exceptions::ParameterNotDeclaredException;
+using rclcpp::exceptions::ParameterTypeMismatchException;
+using rclcpp::exceptions::InvalidParameterValueException;
+using rclcpp::exceptions::QoSIncompatibleError;
+using rclcpp::exceptions::CallbackGroupError;
+using rclcpp::exceptions::get_error_category;
+using rclcpp::exceptions::get_error_severity;
+using rclcpp::exceptions::get_error_code_name;
+using rclcpp::exceptions::get_error_code_description;
+using rclcpp::exceptions::get_category_name;
+using rclcpp::exceptions::get_severity_name;
+using rclcpp::exceptions::is_error_in_category;
+using rclcpp::exceptions::make_context;
+using rclcpp::exceptions::context_for_node;
+using rclcpp::exceptions::context_for_topic;
+using rclcpp::exceptions::context_for_service;
+using rclcpp::exceptions::context_for_parameter;
+using rclcpp::exceptions::make_suggestion;
+using rclcpp::exceptions::error_code_to_string;
+using rclcpp::exceptions::is_exception_category;
+using rclcpp::exceptions::is_exception_code;
 
 // ============================================================================
 // Error Code Tests
