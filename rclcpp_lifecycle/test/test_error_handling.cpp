@@ -13,12 +13,14 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include <rclcpp_lifecycle/lifecycle_exceptions.hpp>
-#include <lifecycle_msgs/msg/state.hpp>
 
 #include <string>
 
-using namespace rclcpp_lifecycle_enhanced;
+#include "lifecycle_msgs/msg/state.hpp"
+
+#include "rclcpp_lifecycle/lifecycle_exceptions.hpp"
+
+using namespace rclcpp_lifecycle_enhanced;  // NOLINT(build/namespaces)
 
 class ErrorHandlingTest : public ::testing::Test
 {

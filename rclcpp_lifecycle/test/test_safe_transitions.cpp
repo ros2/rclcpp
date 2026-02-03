@@ -13,14 +13,16 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_lifecycle/lifecycle_node_enhanced.hpp>
-#include <lifecycle_msgs/msg/state.hpp>
-#include <lifecycle_msgs/msg/transition.hpp>
 
 #include <memory>
 
-using namespace rclcpp_lifecycle;
+#include "lifecycle_msgs/msg/state.hpp"
+#include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_lifecycle/lifecycle_node_enhanced.hpp"
+
+using namespace rclcpp_lifecycle;  // NOLINT(build/namespaces)
 
 /**
  * @brief Test node that can be configured to fail specific transitions

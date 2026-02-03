@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_LIFECYCLE_ENHANCED__LIFECYCLE_EXCEPTIONS_HPP_
-#define RCLCPP_LIFECYCLE_ENHANCED__LIFECYCLE_EXCEPTIONS_HPP_
+#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_EXCEPTIONS_HPP_
+#define RCLCPP_LIFECYCLE__LIFECYCLE_EXCEPTIONS_HPP_
 
 #include <stdexcept>
 #include <string>
@@ -360,4 +360,4 @@ private:
 
 }  // namespace rclcpp_lifecycle_enhanced
 
-#endif  // RCLCPP_LIFECYCLE_ENHANCED__LIFECYCLE_EXCEPTIONS_HPP_
+#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_EXCEPTIONS_HPP_

@@ -14,8 +14,8 @@
 
 #include "rclcpp_lifecycle/lifecycle_node_enhanced.hpp"
 
-#include <lifecycle_msgs/msg/state.hpp>
-#include <lifecycle_msgs/msg/transition.hpp>
+#include "lifecycle_msgs/msg/state.hpp"
+#include "lifecycle_msgs/msg/transition.hpp"
 
 namespace rclcpp_lifecycle
 {

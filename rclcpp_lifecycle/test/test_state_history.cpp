@@ -13,14 +13,16 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include <rclcpp_lifecycle/state_history.hpp>
-#include <lifecycle_msgs/msg/state.hpp>
 
 #include <chrono>
 #include <thread>
 #include <vector>
 
-using namespace std::chrono_literals;
+#include "lifecycle_msgs/msg/state.hpp"
+
+#include "rclcpp_lifecycle/state_history.hpp"
+
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 using rclcpp_lifecycle::StateHistory;
 using rclcpp_lifecycle::StateHistoryEntry;
 using rclcpp_lifecycle::State;
