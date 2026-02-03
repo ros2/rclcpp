@@ -118,8 +118,10 @@ CancellationTokenSource::~CancellationTokenSource()
 
 CancellationToken CancellationTokenSource::get_token() const
 {
-  return CancellationToken(std::const_pointer_cast<CancellationTokenSource>(
-      std::shared_ptr<const CancellationTokenSource>(this, [](const CancellationTokenSource *) {})));
+  auto non_deleting_ptr = std::shared_ptr<const CancellationTokenSource>(
+    this, [](const CancellationTokenSource *) {});
+  return CancellationToken(
+    std::const_pointer_cast<CancellationTokenSource>(non_deleting_ptr));
 }
 
 void CancellationTokenSource::cancel()
@@ -158,7 +160,8 @@ std::shared_ptr<void> CancellationTokenSource::register_callback(
     return std::shared_ptr<void>();
   }
 
-  auto callback_ptr = std::make_shared<CancellationToken::CancellationCallback>(std::move(callback));
+  auto callback_ptr =
+    std::make_shared<CancellationToken::CancellationCallback>(std::move(callback));
 
   {
     std::lock_guard<std::mutex> lock(impl_->callbacks_mutex);

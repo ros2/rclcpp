@@ -18,6 +18,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <exception>
 #include <functional>
 #include <future>
@@ -739,7 +740,7 @@ std::future<AsyncResult<T>> with_retry(
           if (attempt + 1 < max_attempts) {
             std::this_thread::sleep_for(delay);
             delay = std::chrono::milliseconds(
-              static_cast<long>(delay.count() * backoff_multiplier));
+              static_cast<int64_t>(delay.count() * backoff_multiplier));
           }
         }
       }
