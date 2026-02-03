@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_FIXTURES_HPP_
-#define TEST_FIXTURES_HPP_
+#ifndef RCLCPP_LIFECYCLE__TEST__TEST_FIXTURES_HPP_
+#define RCLCPP_LIFECYCLE__TEST__TEST_FIXTURES_HPP_
 
 #include <gtest/gtest.h>
 
@@ -33,7 +33,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
-using namespace std::chrono_literals;
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 
 namespace lifecycle_test
 {
@@ -543,4 +543,4 @@ private:
 
 }  // namespace lifecycle_test
 
-#endif  // TEST_FIXTURES_HPP_
+#endif  // RCLCPP_LIFECYCLE__TEST__TEST_FIXTURES_HPP_
