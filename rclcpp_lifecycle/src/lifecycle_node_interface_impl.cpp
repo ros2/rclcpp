@@ -31,6 +31,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
@@ -52,10 +53,12 @@ namespace rclcpp_lifecycle
 LifecycleNode::LifecycleNodeInterfaceImpl::LifecycleNodeInterfaceImpl(
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
   std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface,
-  std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface)
+  std::shared_ptr<rclcpp::node_interfaces::NodeLoggingInterface> node_logging_interface,
+  std::shared_ptr<rclcpp::node_interfaces::NodeClockInterface> node_clock_interface)
 : node_base_interface_(node_base_interface),
   node_services_interface_(node_services_interface),
-  node_logging_interface_(node_logging_interface)
+  node_logging_interface_(node_logging_interface),
+  node_clock_interface_(node_clock_interface)
 {
 }
 
@@ -86,6 +89,8 @@ LifecycleNode::LifecycleNodeInterfaceImpl::init(bool enable_communication_interf
   state_machine_options.enable_com_interface = enable_communication_interface;
   state_machine_options.allocator = node_options->allocator;
 
+  rcl_clock_t * clock = node_clock_interface_->get_clock()->get_clock_handle();
+
   // The call to initialize the state machine takes
   // currently five different typesupports for all publishers/services
   // created within the RCL_LIFECYCLE structure.
@@ -97,6 +102,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::init(bool enable_communication_interf
   rcl_ret_t ret = rcl_lifecycle_state_machine_init(
     &state_machine_,
     node_handle,
+    clock,
     ROSIDL_GET_MSG_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
     rosidl_typesupport_cpp::get_service_type_support_handle<ChangeStateSrv>(),
     rosidl_typesupport_cpp::get_service_type_support_handle<GetStateSrv>(),
