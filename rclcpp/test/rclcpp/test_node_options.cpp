@@ -372,7 +372,7 @@ TEST(TestNodeOptions, set_get_allocator) {
   EXPECT_EQ(fake_allocator.state, options.allocator().state);
 
   // Check invalid allocator
-  EXPECT_THROW(options.get_rcl_node_options(), std::bad_alloc);
+  EXPECT_THROW(options.get_rcl_node_options(), rclcpp::exceptions::RCLBadAlloc);
 }
 
 TEST(TestNodeOptions, clock_type) {

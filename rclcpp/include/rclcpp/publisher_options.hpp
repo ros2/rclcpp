@@ -75,13 +75,17 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
     "Publisher allocator value type must be void");
 
   /// Optional custom allocator.
-  std::shared_ptr<Allocator> allocator = nullptr;
+  std::shared_ptr<Allocator> allocator;
+  std::shared_ptr<rcutils_allocator_t> rcl_allocator;
 
-  PublisherOptionsWithAllocator() {}
+  PublisherOptionsWithAllocator()
+  :allocator(std::make_shared<Allocator>())
+  {}
 
   /// Constructor using base class as input.
   explicit PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)
-  : PublisherOptionsBase(publisher_options_base)
+  : PublisherOptionsBase(publisher_options_base),
+    allocator(std::make_shared<Allocator>())
   {
   }
 
@@ -91,7 +95,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result = rcl_publisher_get_default_options();
-    result.allocator = rcl_get_default_allocator();
+    result.allocator = get_rcl_allocator();
     result.qos = qos.get_rmw_qos_profile();
     result.rmw_publisher_options.require_unique_network_flow_endpoints =
       this->require_unique_network_flow_endpoints;
@@ -108,37 +112,20 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   std::shared_ptr<Allocator>
   get_allocator() const
   {
-    if (!this->allocator) {
-      if (!allocator_storage_) {
-        allocator_storage_ = std::make_shared<Allocator>();
-      }
-      return allocator_storage_;
-    }
     return this->allocator;
   }
 
 private:
-  using PlainAllocator =
-    typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
-
   rcl_allocator_t
   get_rcl_allocator() const
   {
-    if (!plain_allocator_storage_) {
-      plain_allocator_storage_ =
-        std::make_shared<PlainAllocator>(*this->get_allocator());
+    if(rcl_allocator) {
+      return *rcl_allocator;
     }
     return rcl_get_default_allocator();
   }
-
-  // This is a temporal workaround, to make sure that get_allocator()
-  // always returns a copy of the same allocator.
-  mutable std::shared_ptr<Allocator> allocator_storage_;
-
-  // This is a temporal workaround, to keep the plain allocator that backs
-  // up the rcl allocator returned in rcl_publisher_options_t alive.
-  mutable std::shared_ptr<PlainAllocator> plain_allocator_storage_;
 };
+
 
 using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;
 

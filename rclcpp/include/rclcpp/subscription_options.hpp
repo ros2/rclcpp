@@ -102,14 +102,18 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     "Subscription allocator value type must be void");
 
   /// Optional custom allocator.
-  std::shared_ptr<Allocator> allocator = nullptr;
+  std::shared_ptr<Allocator> allocator;
+  std::shared_ptr<rcutils_allocator_t> rcl_allocator;
 
-  SubscriptionOptionsWithAllocator() {}
+  SubscriptionOptionsWithAllocator()
+  :allocator(std::make_shared<Allocator>())
+  {}
 
   /// Constructor using base class as input.
   explicit SubscriptionOptionsWithAllocator(
     const SubscriptionOptionsBase & subscription_options_base)
-  : SubscriptionOptionsBase(subscription_options_base)
+  : SubscriptionOptionsBase(subscription_options_base),
+    allocator(std::make_shared<Allocator>())
   {
   }
 
@@ -154,36 +158,18 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   std::shared_ptr<Allocator>
   get_allocator() const
   {
-    if (!this->allocator) {
-      if (!allocator_storage_) {
-        allocator_storage_ = std::make_shared<Allocator>();
-      }
-      return allocator_storage_;
-    }
     return this->allocator;
   }
 
 private:
-  using PlainAllocator =
-    typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
-
   rcl_allocator_t
   get_rcl_allocator() const
   {
-    if (!plain_allocator_storage_) {
-      plain_allocator_storage_ =
-        std::make_shared<PlainAllocator>(*this->get_allocator());
+    if(rcl_allocator) {
+      return *rcl_allocator;
     }
     return rcl_get_default_allocator();
   }
-
-  // This is a temporal workaround, to make sure that get_allocator()
-  // always returns a copy of the same allocator.
-  mutable std::shared_ptr<Allocator> allocator_storage_;
-
-  // This is a temporal workaround, to keep the plain allocator that backs
-  // up the rcl allocator returned in rcl_subscription_options_t alive.
-  mutable std::shared_ptr<PlainAllocator> plain_allocator_storage_;
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
