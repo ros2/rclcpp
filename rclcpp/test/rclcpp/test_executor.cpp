@@ -47,6 +47,11 @@ public:
   {
   }
 
+  std::string get_class_name() const override
+  {
+    return "DummyExecutor";
+  }
+
   void spin_nanoseconds(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
   {
     spin_node_once_nanoseconds(node, std::chrono::milliseconds(100));

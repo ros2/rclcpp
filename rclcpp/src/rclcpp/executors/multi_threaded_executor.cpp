@@ -78,6 +78,12 @@ MultiThreadedExecutor::get_number_of_threads()
   return number_of_threads_;
 }
 
+std::string
+MultiThreadedExecutor::get_class_name() const
+{
+  return "MultiThreadedExecutor";
+}
+
 void
 MultiThreadedExecutor::run([[maybe_unused]] size_t this_thread_number)
 {

@@ -18,6 +18,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rclcpp/executor.hpp"
@@ -125,6 +126,10 @@ public:
   RCLCPP_PUBLIC
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
+
+  RCLCPP_PUBLIC
+  std::string
+  get_class_name() const override;
 
 protected:
   /// Internal implementation of spin_once

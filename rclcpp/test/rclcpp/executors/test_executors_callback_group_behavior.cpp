@@ -42,6 +42,11 @@ public:
 
   void spin() override {}
 
+  std::string get_class_name() const override
+  {
+    return "CustomExecutor";
+  }
+
   void collect()
   {
     this->collect_entities();

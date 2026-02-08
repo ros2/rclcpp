@@ -25,6 +25,12 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto exec = std::make_shared<rclcpp::experimental::executors::EventsExecutor>();
   auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
+
+  RCLCPP_WARN(node->get_logger(),
+      "component_container_event is depracated and will be removed "
+      "in the next version. use 'ros2 run rclcpp_components "
+      "component_container --ros-args -p executor_type:=EventsExecutor'.");
+
   exec->add_node(node);
   exec->spin();
 

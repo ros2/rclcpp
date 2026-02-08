@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rclcpp/executor.hpp"
@@ -64,6 +65,10 @@ public:
   RCLCPP_PUBLIC
   void
   spin() override;
+
+  RCLCPP_PUBLIC
+  std::string
+  get_class_name() const override;
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)

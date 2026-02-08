@@ -43,3 +43,9 @@ SingleThreadedExecutor::spin()
     }
   }
 }
+
+std::string
+SingleThreadedExecutor::get_class_name() const
+{
+  return "SingleThreadedExecutor";
+}

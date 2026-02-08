@@ -34,6 +34,13 @@ int main(int argc, char * argv[])
   } else {
     node->set_executor(exec);
   }
+
+  RCLCPP_WARN(node->get_logger(),
+      "component_container_event is depracated and will be removed "
+      "in the next version. use 'ros2 run rclcpp_components "
+      "component_container --ros-args -p executor_type:="
+      "MultiThreadedExecutor'.");
+
   exec->add_node(node);
   exec->spin();
 

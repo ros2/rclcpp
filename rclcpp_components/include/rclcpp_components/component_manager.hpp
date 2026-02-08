@@ -92,6 +92,20 @@ public:
   /// Default constructor
   /**
    * Initializes the component manager. It creates the services: load node, unload node
+   * and list nodes. Initialize executor after construction using set_executor.
+   *
+   * \param executor the executor which will spin the node.
+   * \param node_name the name of the node that the data originates from.
+   * \param node_options additional options to control creation of the node.
+   */
+  RCLCPP_COMPONENTS_PUBLIC
+  ComponentManager(
+    std::string node_name = "ComponentManager",
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
+
+  /// Constructor with executor
+  /**
+   * Initializes the component manager. It creates the services: load node, unload node
    * and list nodes.
    *
    * \param executor the executor which will spin the node.
@@ -100,12 +114,9 @@ public:
    */
   RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
-    std::weak_ptr<rclcpp::Executor> executor =
-    std::weak_ptr<rclcpp::executors::MultiThreadedExecutor>(),
+    std::weak_ptr<rclcpp::Executor> executor,
     std::string node_name = "ComponentManager",
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
-    .start_parameter_services(false)
-    .start_parameter_event_publisher(false));
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
   RCLCPP_COMPONENTS_PUBLIC
   virtual ~ComponentManager();

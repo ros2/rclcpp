@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <string>
 #include <thread>
 #include <unordered_map>
 
@@ -72,6 +73,10 @@ public:
   RCLCPP_PUBLIC
   size_t
   get_number_of_threads();
+
+  RCLCPP_PUBLIC
+  std::string
+  get_class_name() const override;
 
 protected:
   RCLCPP_PUBLIC

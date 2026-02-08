@@ -407,6 +407,10 @@ public:
   bool
   is_spinning();
 
+  RCLCPP_PUBLIC
+  virtual std::string
+  get_class_name() const = 0;
+
 protected:
   /// Constructor that will not initialize any non-trivial members.
   /**

@@ -46,11 +46,9 @@ namespace rclcpp_components
 {
 
 ComponentManager::ComponentManager(
-  std::weak_ptr<rclcpp::Executor> executor,
   std::string node_name,
   const rclcpp::NodeOptions & node_options)
-: Node(std::move(node_name), node_options),
-  executor_(executor)
+: Node(std::move(node_name), node_options)
 {
   loadNode_srv_ = create_service<LoadNode>(
     "~/_container/load_node",
@@ -75,6 +73,22 @@ ComponentManager::ComponentManager(
     this->declare_parameter(
       "thread_num", static_cast<int64_t>(std::thread::hardware_concurrency()), desc);
   }
+
+  rcl_interfaces::msg::ParameterDescriptor exec_type_desc{};
+  exec_type_desc.description = "Type of executor used for ComponentManager";
+  exec_type_desc.type = rclcpp::PARAMETER_STRING;
+  // The value is changed only within set_executor. It cannot be changed externally.
+  exec_type_desc.read_only = true;
+  this->declare_parameter("executor_type", "No Executor", exec_type_desc);
+}
+
+ComponentManager::ComponentManager(
+  std::weak_ptr<rclcpp::Executor> executor,
+  std::string node_name,
+  const rclcpp::NodeOptions & node_options)
+: ComponentManager::ComponentManager(node_name, node_options)
+{
+  this->set_executor(executor);
 }
 
 ComponentManager::~ComponentManager()
@@ -243,6 +257,10 @@ void
 ComponentManager::set_executor(const std::weak_ptr<rclcpp::Executor> executor)
 {
   executor_ = executor;
+  if (auto exec = executor_.lock()) {
+    rclcpp::Parameter exec_type("executor_type", exec->get_class_name());
+    auto result = this->set_parameter(exec_type);
+  }
 }
 
 void

@@ -23,8 +23,32 @@ int main(int argc, char * argv[])
 {
   /// Component container with a single-threaded executor.
   rclcpp::init(argc, argv);
-  auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
+
+  std::shared_ptr<rclcpp::Executor> exec;
+  auto node = std::make_shared<rclcpp_components::ComponentManager>();
+
+  const auto exec_type = node->get_parameter("executor_type").as_string();
+  if (exec_type == "SingleThreadedExecutor" || exec_type == "No Executor") {
+    // Default executor for ComponentContainer is SingleThreadedExecutor, because of
+    // backward compatibility.
+    exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  } else if (exec_type == "MultiThreadedExecutor") {
+    if (node->has_parameter("thread_num")) {
+      const auto thread_num = node->get_parameter("thread_num").as_int();
+      exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
+          rclcpp::ExecutorOptions{}, thread_num);
+    } else {
+      exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+    }
+  } else if (exec_type == "EventsExecutor") {
+    exec = std::make_shared<rclcpp::experimental::executors::EventsExecutor>();
+  } else {
+    RCLCPP_ERROR(node->get_logger(), "Unknown executor type %s", exec_type.c_str());
+    return 1;
+  }
+
+  node->set_executor(exec);
+
   exec->add_node(node);
   exec->spin();
 

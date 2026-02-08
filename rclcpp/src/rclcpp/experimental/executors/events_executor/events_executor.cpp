@@ -240,6 +240,11 @@ EventsExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
   }
 }
 
+std::string
+EventsExecutor::get_class_name() const
+{
+  return "EventsExecutor";
+}
 
 void
 EventsExecutor::execute_event(const ExecutorEvent & event)
