@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.7 (2026-02-09)
+-------------------
+* include the 1st spin that might throw the exception. (`#3042 <https://github.com/ros2/rclcpp/issues/3042>`_) (`#3044 <https://github.com/ros2/rclcpp/issues/3044>`_)
+* print warning message on owner node if the parameter operation fails. (`#3037 <https://github.com/ros2/rclcpp/issues/3037>`_) (`#3038 <https://github.com/ros2/rclcpp/issues/3038>`_)
+* remove test_static_executor_entities_collector.cpp (`#3041 <https://github.com/ros2/rclcpp/issues/3041>`_) (`#3045 <https://github.com/ros2/rclcpp/issues/3045>`_)
+* fix context in wait for message wait set (`#3030 <https://github.com/ros2/rclcpp/issues/3030>`_) (`#3031 <https://github.com/ros2/rclcpp/issues/3031>`_)
+* Improve the robustness of the TopicEndpointInfo constructor (`#3013 <https://github.com/ros2/rclcpp/issues/3013>`_) (`#3014 <https://github.com/ros2/rclcpp/issues/3014>`_)
+* Contributors: mergify[bot]
+
 29.5.6 (2025-12-23)
 -------------------
 * Unified Node Interfaces: Add const version of get_node_x_interface() (`#3006 <https://github.com/ros2/rclcpp/issues/3006>`_) (`#3008 <https://github.com/ros2/rclcpp/issues/3008>`_)
