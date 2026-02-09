@@ -2,6 +2,11 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.5 (2026-02-09)
+-------------------
+* Compatiblity with 'Populate Transitions' `ros2/rcl#1269 <https://github.com/ros2/rcl/issues/1269>`_ (`#2967 <https://github.com/ros2/rclcpp/issues/2967>`_)
+* Contributors: Jasper van Brakel
+
 30.1.4 (2025-12-23)
 -------------------
 
