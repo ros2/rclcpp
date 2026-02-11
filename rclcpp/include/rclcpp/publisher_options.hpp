@@ -122,10 +122,22 @@ private:
     if(rcl_allocator) {
       return *rcl_allocator;
     }
+
+    RCUTILS_LOG_ERROR_NAMED("rclcpp",
+        "Warning, custom C++ allocator specified, but custom rcl allocator was set. Note, " \
+        "that due to a bug fix rcl allocators are not automatically generated from the C++ " \
+        "allocator any more.");
+
     return rcl_get_default_allocator();
   }
 };
 
+template<>
+inline rcl_allocator_t
+PublisherOptionsWithAllocator<std::allocator<void>>::get_rcl_allocator() const
+{
+  return rcl_get_default_allocator();
+}
 
 using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;
 
