@@ -59,6 +59,7 @@ CallbackGroup::type() const
 size_t
 CallbackGroup::size() const
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return
     subscription_ptrs_.size() +
     service_ptrs_.size() +
