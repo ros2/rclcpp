@@ -85,6 +85,8 @@ template<
   typename T,
   typename Alloc,
   typename std::enable_if<!std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
+[[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
+  "can not be determined. This will be remove in future versions of ros.")]]
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
