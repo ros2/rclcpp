@@ -100,7 +100,7 @@ public:
   /// Set the context, return this for parameter idiom.
   RCLCPP_PUBLIC
   NodeOptions &
-  context(rclcpp::Context::SharedPtr context);
+  context(const rclcpp::Context::SharedPtr & context);
 
   /// Return a reference to the list of arguments for the node.
   RCLCPP_PUBLIC

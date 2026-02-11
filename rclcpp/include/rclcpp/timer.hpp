@@ -183,7 +183,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  set_on_reset_callback(std::function<void(size_t)> callback);
+  set_on_reset_callback(const std::function<void(size_t)> & callback);
 
   /// Unset the callback registered for reset timer
   RCLCPP_PUBLIC

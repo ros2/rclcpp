@@ -184,7 +184,7 @@ public:
    */
   template<typename NodeT>
   explicit ParameterEventHandler(
-    NodeT node,
+    const NodeT & node,
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
   : node_base_(rclcpp::node_interfaces::get_node_base_interface(node))
@@ -217,7 +217,7 @@ public:
   RCUTILS_WARN_UNUSED
   ParameterEventCallbackHandle::SharedPtr
   add_parameter_event_callback(
-    ParameterEventCallbackType callback);
+    const ParameterEventCallbackType & callback);
 
   /// Remove parameter event callback registered with add_parameter_event_callback.
   /**
@@ -226,7 +226,7 @@ public:
   RCLCPP_PUBLIC
   void
   remove_parameter_event_callback(
-    ParameterEventCallbackHandle::SharedPtr callback_handle);
+    const ParameterEventCallbackHandle::SharedPtr & callback_handle);
 
   using ParameterCallbackType = ParameterCallbackHandle::ParameterCallbackType;
 
@@ -252,7 +252,7 @@ public:
   ParameterCallbackHandle::SharedPtr
   add_parameter_callback(
     const std::string & parameter_name,
-    ParameterCallbackType callback,
+    const ParameterCallbackType & callback,
     const std::string & node_name = "");
 
   /// Configure which node parameter events will be received.
@@ -291,7 +291,7 @@ public:
   RCLCPP_PUBLIC
   void
   remove_parameter_callback(
-    ParameterCallbackHandle::SharedPtr callback_handle);
+    const ParameterCallbackHandle::SharedPtr & callback_handle);
 
   /// Get an rclcpp::Parameter from a parameter event.
   /**

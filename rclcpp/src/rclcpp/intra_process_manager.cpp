@@ -33,8 +33,8 @@ IntraProcessManager::~IntraProcessManager()
 
 uint64_t
 IntraProcessManager::add_publisher(
-  rclcpp::PublisherBase::SharedPtr publisher,
-  rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr buffer)
+  const rclcpp::PublisherBase::SharedPtr & publisher,
+  const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -217,8 +217,8 @@ IntraProcessManager::insert_sub_id_for_pub(
 
 bool
 IntraProcessManager::can_communicate(
-  rclcpp::PublisherBase::SharedPtr pub,
-  rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const
+  const rclcpp::PublisherBase::SharedPtr & pub,
+  const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & sub) const
 {
   // publisher and subscription must be on the same topic
   if (strcmp(pub->get_topic_name(), sub->get_topic_name()) != 0) {

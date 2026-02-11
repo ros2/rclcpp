@@ -63,7 +63,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit ExecutorEntitiesCollector(
-    std::shared_ptr<ExecutorNotifyWaitable> notify_waitable);
+    const std::shared_ptr<ExecutorNotifyWaitable> & notify_waitable);
 
   /// Destructor
   RCLCPP_PUBLIC
@@ -82,7 +82,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+  add_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr);
 
   /// Remove a node from the entity collector
   /**
@@ -92,7 +92,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+  remove_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr);
 
   /// Add a callback group to the entity collector
   /**
@@ -101,7 +101,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_callback_group(rclcpp::CallbackGroup::SharedPtr group_ptr);
+  add_callback_group(const rclcpp::CallbackGroup::SharedPtr & group_ptr);
 
   /// Remove a callback group from the entity collector
   /**
@@ -111,7 +111,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_callback_group(rclcpp::CallbackGroup::SharedPtr group_ptr);
+  remove_callback_group(const rclcpp::CallbackGroup::SharedPtr & group_ptr);
 
   /// Get all callback groups known to this entity collector
   /**
@@ -211,7 +211,7 @@ protected:
   RCLCPP_PUBLIC
   void
   add_callback_group_to_collection(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    const rclcpp::CallbackGroup::SharedPtr & group_ptr,
     CallbackGroupCollection & collection)  RCPPUTILS_TSA_REQUIRES(mutex_);
 
   /// Iterate over queued added/remove nodes and callback_groups

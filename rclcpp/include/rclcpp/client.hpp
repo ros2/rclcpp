@@ -145,7 +145,7 @@ public:
   RCLCPP_PUBLIC
   ClientBase(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph);
+    const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr & node_graph);
 
   RCLCPP_PUBLIC
   virtual ~ClientBase() = default;
@@ -221,7 +221,8 @@ public:
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
+    const std::shared_ptr<rmw_request_id_t> & request_header,
+    const std::shared_ptr<void> & response) = 0;
 
   /// Exchange the "in use by wait set" state for this client.
   /**
@@ -296,7 +297,7 @@ public:
    * \param[in] callback functor to be called when a new response is received
    */
   void
-  set_on_new_response_callback(std::function<void(size_t)> callback)
+  set_on_new_response_callback(const std::function<void(size_t)> & callback)
   {
     if (!callback) {
       throw std::invalid_argument(
@@ -477,7 +478,7 @@ public:
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+    const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr & node_graph,
     const std::string & service_name,
     rcl_client_options_t & client_options)
   : ClientBase(node_base, node_graph),
@@ -556,8 +557,8 @@ public:
    */
   void
   handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> response) override
+    const std::shared_ptr<rmw_request_id_t> & request_header,
+    const std::shared_ptr<void> & response) override
   {
     std::optional<CallbackInfoVariant>
     optional_pending_request = this->get_and_erase_pending_request(request_header->sequence_number);
@@ -566,7 +567,7 @@ public:
     }
     auto & value = *optional_pending_request;
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(
-      std::move(response));
+      response);
     if (std::holds_alternative<Promise>(value)) {
       auto & promise = std::get<Promise>(value);
       promise.set_value(std::move(typed_response));
@@ -617,7 +618,7 @@ public:
    * \return a FutureAndRequestId instance.
    */
   FutureAndRequestId
-  async_send_request(SharedRequest request)
+  async_send_request(const SharedRequest & request)
   {
     Promise promise;
     auto future = promise.get_future();
@@ -652,7 +653,7 @@ public:
     >::type * = nullptr
   >
   SharedFutureAndRequestId
-  async_send_request(SharedRequest request, CallbackT && cb)
+  async_send_request(const SharedRequest & request, CallbackT && cb)
   {
     Promise promise;
     auto shared_future = promise.get_future().share();
@@ -683,7 +684,7 @@ public:
     >::type * = nullptr
   >
   SharedFutureWithRequestAndRequestId
-  async_send_request(SharedRequest request, CallbackT && cb)
+  async_send_request(const SharedRequest & request, CallbackT && cb)
   {
     PromiseWithRequest promise;
     auto shared_future = promise.get_future().share();
@@ -795,7 +796,7 @@ public:
    */
   void
   configure_introspection(
-    Clock::SharedPtr clock, const QoS & qos_service_event_pub,
+    const Clock::SharedPtr & clock, const QoS & qos_service_event_pub,
     rcl_service_introspection_state_t introspection_state)
   {
     rcl_publisher_options_t pub_opts = rcl_publisher_get_default_options();

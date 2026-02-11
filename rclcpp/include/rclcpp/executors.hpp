@@ -47,7 +47,7 @@ namespace rclcpp
 RCLCPP_PUBLIC
 void
 spin_all(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
   std::chrono::nanoseconds max_duration);
 
 /**
@@ -68,7 +68,7 @@ spin_all(
 [[deprecated("use SingleThreadedExecutor::spin_all instead")]]
 RCLCPP_PUBLIC
 void
-spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration);
+spin_all(const rclcpp::Node::SharedPtr & node_ptr, std::chrono::nanoseconds max_duration);
 
 /**
  * @brief Create a default single-threaded executor and execute any immediately available work.
@@ -87,7 +87,7 @@ spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration
 [[deprecated("use SingleThreadedExecutor::spin_some instead")]]
 RCLCPP_PUBLIC
 void
-spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+spin_some(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr);
 
 /**
  * @brief Create a default single-threaded executor and execute any immediately available work.
@@ -106,17 +106,17 @@ spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 [[deprecated("use SingleThreadedExecutor::spin_some instead")]]
 RCLCPP_PUBLIC
 void
-spin_some(rclcpp::Node::SharedPtr node_ptr);
+spin_some(const rclcpp::Node::SharedPtr & node_ptr);
 
 /// Create a default single-threaded executor and spin the specified node.
 /** \param[in] node_ptr Shared pointer to the node to spin. */
 RCLCPP_PUBLIC
 void
-spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+spin(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr);
 
 RCLCPP_PUBLIC
 void
-spin(rclcpp::Node::SharedPtr node_ptr);
+spin(const rclcpp::Node::SharedPtr & node_ptr);
 
 namespace executors
 {
@@ -140,7 +140,7 @@ template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::mi
 rclcpp::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::Executor & executor,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
   const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
@@ -157,7 +157,7 @@ template<typename NodeT = rclcpp::Node, typename FutureT, typename TimeRepT = in
 rclcpp::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::Executor & executor,
-  std::shared_ptr<NodeT> node_ptr,
+  const std::shared_ptr<NodeT> & node_ptr,
   const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
@@ -173,7 +173,7 @@ spin_node_until_future_complete(
 template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
 rclcpp::FutureReturnCode
 spin_until_future_complete(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
   const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
@@ -187,7 +187,7 @@ template<typename NodeT = rclcpp::Node, typename FutureT, typename TimeRepT = in
   typename TimeT = std::milli>
 rclcpp::FutureReturnCode
 spin_until_future_complete(
-  std::shared_ptr<NodeT> node_ptr,
+  const std::shared_ptr<NodeT> & node_ptr,
   const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {

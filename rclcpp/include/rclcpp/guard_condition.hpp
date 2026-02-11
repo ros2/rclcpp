@@ -120,7 +120,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  set_on_trigger_callback(std::function<void(size_t)> callback);
+  set_on_trigger_callback(const std::function<void(size_t)> & callback);
 
 protected:
   rcl_guard_condition_t rcl_guard_condition_;

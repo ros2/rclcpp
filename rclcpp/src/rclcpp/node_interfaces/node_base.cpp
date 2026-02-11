@@ -42,13 +42,13 @@ NodeBase::NodeBase(
   bool use_intra_process_default,
   bool enable_topic_statistics_default,
   rclcpp::CallbackGroup::SharedPtr default_callback_group)
-: context_(context),
+: context_(std::move(context)),
   use_intra_process_default_(use_intra_process_default),
   enable_topic_statistics_default_(enable_topic_statistics_default),
   node_handle_(nullptr),
-  default_callback_group_(default_callback_group),
+  default_callback_group_(std::move(default_callback_group)),
   associated_with_executor_(false),
-  notify_guard_condition_(std::make_shared<rclcpp::GuardCondition>(context)),
+  notify_guard_condition_(std::make_shared<rclcpp::GuardCondition>(context_)),
   notify_guard_condition_is_valid_(false)
 {
   // Create the rcl node and store it in a shared_ptr with a custom destructor.

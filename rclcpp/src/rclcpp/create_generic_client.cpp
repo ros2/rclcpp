@@ -19,13 +19,13 @@ namespace rclcpp
 {
 rclcpp::GenericClient::SharedPtr
 create_generic_client(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
-  std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+  const std::shared_ptr<node_interfaces::NodeBaseInterface> & node_base,
+  const std::shared_ptr<node_interfaces::NodeGraphInterface> & node_graph,
+  const std::shared_ptr<node_interfaces::NodeServicesInterface> & node_services,
   const std::string & service_name,
   const std::string & service_type,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos.get_rmw_qos_profile();

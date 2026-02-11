@@ -26,11 +26,11 @@ NodeClock::NodeClock(
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   rcl_clock_type_t clock_type)
-: node_base_(node_base),
-  node_topics_(node_topics),
-  node_graph_(node_graph),
-  node_services_(node_services),
-  node_logging_(node_logging),
+: node_base_(std::move(node_base)),
+  node_topics_(std::move(node_topics)),
+  node_graph_(std::move(node_graph)),
+  node_services_(std::move(node_services)),
+  node_logging_(std::move(node_logging)),
   clock_(std::make_shared<rclcpp::Clock>(clock_type))
 {}
 

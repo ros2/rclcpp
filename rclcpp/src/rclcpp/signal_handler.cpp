@@ -259,7 +259,7 @@ SignalHandler::deferred_signal_handler()
       int signum = signal_number_.load();
       RCLCPP_INFO(get_logger(), "signal_handler(signum=%d)", signum);
       RCLCPP_DEBUG(get_logger(), "deferred_signal_handler(): shutting down");
-      for (auto context_ptr : rclcpp::get_contexts()) {
+      for (const auto & context_ptr : rclcpp::get_contexts()) {
         if (context_ptr->get_init_options().shutdown_on_signal) {
           RCLCPP_DEBUG(
             get_logger(),

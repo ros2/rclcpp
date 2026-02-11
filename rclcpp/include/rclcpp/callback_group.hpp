@@ -97,7 +97,7 @@ public:
   RCLCPP_PUBLIC
   explicit CallbackGroup(
     CallbackGroupType group_type,
-    rclcpp::Context::WeakPtr context,
+    const rclcpp::Context::WeakPtr & context,
     bool automatically_add_to_executor_with_node = true);
 
   /// Default destructor.
@@ -106,35 +106,35 @@ public:
 
   template<typename Function>
   rclcpp::SubscriptionBase::SharedPtr
-  find_subscription_ptrs_if(Function func) const
+  find_subscription_ptrs_if(const Function & func) const
   {
     return _find_ptrs_if_impl<rclcpp::SubscriptionBase, Function>(func, subscription_ptrs_);
   }
 
   template<typename Function>
   rclcpp::TimerBase::SharedPtr
-  find_timer_ptrs_if(Function func) const
+  find_timer_ptrs_if(const Function & func) const
   {
     return _find_ptrs_if_impl<rclcpp::TimerBase, Function>(func, timer_ptrs_);
   }
 
   template<typename Function>
   rclcpp::ServiceBase::SharedPtr
-  find_service_ptrs_if(Function func) const
+  find_service_ptrs_if(const Function & func) const
   {
     return _find_ptrs_if_impl<rclcpp::ServiceBase, Function>(func, service_ptrs_);
   }
 
   template<typename Function>
   rclcpp::ClientBase::SharedPtr
-  find_client_ptrs_if(Function func) const
+  find_client_ptrs_if(const Function & func) const
   {
     return _find_ptrs_if_impl<rclcpp::ClientBase, Function>(func, client_ptrs_);
   }
 
   template<typename Function>
   rclcpp::Waitable::SharedPtr
-  find_waitable_ptrs_if(Function func) const
+  find_waitable_ptrs_if(const Function & func) const
   {
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
@@ -179,11 +179,11 @@ public:
   RCLCPP_PUBLIC
   void
   collect_all_ptrs(
-    std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> sub_func,
-    std::function<void(const rclcpp::ServiceBase::SharedPtr &)> service_func,
-    std::function<void(const rclcpp::ClientBase::SharedPtr &)> client_func,
-    std::function<void(const rclcpp::TimerBase::SharedPtr &)> timer_func,
-    std::function<void(const rclcpp::Waitable::SharedPtr &)> waitable_func) const;
+    const std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> & sub_func,
+    const std::function<void(const rclcpp::ServiceBase::SharedPtr &)> & service_func,
+    const std::function<void(const rclcpp::ClientBase::SharedPtr &)> & client_func,
+    const std::function<void(const rclcpp::TimerBase::SharedPtr &)> & timer_func,
+    const std::function<void(const rclcpp::Waitable::SharedPtr &)> & waitable_func) const;
 
   /// Return a reference to the 'associated with executor' atomic boolean.
   /**
@@ -228,31 +228,31 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_publisher(const rclcpp::PublisherBase::SharedPtr publisher_ptr);
+  add_publisher(const rclcpp::PublisherBase::SharedPtr & publisher_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr);
+  add_subscription(const rclcpp::SubscriptionBase::SharedPtr & subscription_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr);
+  add_timer(const rclcpp::TimerBase::SharedPtr & timer_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_service(const rclcpp::ServiceBase::SharedPtr service_ptr);
+  add_service(const rclcpp::ServiceBase::SharedPtr & service_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
+  add_client(const rclcpp::ClientBase::SharedPtr & client_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr);
+  add_waitable(const rclcpp::Waitable::SharedPtr & waitable_ptr);
 
   RCLCPP_PUBLIC
   void
-  remove_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr) noexcept;
+  remove_waitable(const rclcpp::Waitable::SharedPtr & waitable_ptr) noexcept;
 
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
@@ -274,7 +274,7 @@ protected:
 private:
   template<typename TypeT, typename Function>
   typename TypeT::SharedPtr _find_ptrs_if_impl(
-    Function func, const std::vector<typename TypeT::WeakPtr> & vect_ptrs) const
+    const Function & func, const std::vector<typename TypeT::WeakPtr> & vect_ptrs) const
   {
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto & weak_ptr : vect_ptrs) {

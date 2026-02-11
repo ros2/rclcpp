@@ -159,10 +159,10 @@ public:
     if (std::holds_alternative<SharedPtrCallback>(callback_)) {
       (void)request_header;
       const auto & cb = std::get<SharedPtrCallback>(callback_);
-      cb(std::move(request), std::move(response));
+      cb(std::move(request), response);
     } else if (std::holds_alternative<SharedPtrWithRequestHeaderCallback>(callback_)) {
       const auto & cb = std::get<SharedPtrWithRequestHeaderCallback>(callback_);
-      cb(request_header, std::move(request), std::move(response));
+      cb(request_header, std::move(request), response);
     }
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
     return response;
@@ -245,7 +245,7 @@ public:
    */
   RCLCPP_PUBLIC
   GenericService(
-    std::shared_ptr<rcl_node_t> node_handle,
+    const std::shared_ptr<rcl_node_t> & node_handle,
     const std::string & service_name,
     const std::string & service_type,
     GenericServiceCallback any_callback,
@@ -270,7 +270,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  take_request(SharedRequest request_out, rmw_request_id_t & request_id_out);
+  take_request(SharedRequest & request_out, rmw_request_id_t & request_id_out);
 
   RCLCPP_PUBLIC
   std::shared_ptr<void>
@@ -287,8 +287,8 @@ public:
   RCLCPP_PUBLIC
   void
   handle_request(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> request) override;
+    const std::shared_ptr<rmw_request_id_t> & request_header,
+    const std::shared_ptr<void> & request) override;
 
   RCLCPP_PUBLIC
   void
