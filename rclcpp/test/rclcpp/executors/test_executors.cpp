@@ -81,7 +81,7 @@ public:
   rclcpp::Node::SharedPtr node;
   rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr publisher;
   rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr subscription;
-  int callback_count;
+  std::atomic<int> callback_count;
 };
 
 // spin_all and spin_some are not implemented correctly in StaticSingleThreadedExecutor, see:
@@ -179,7 +179,7 @@ TYPED_TEST(TestExecutors, spinWithTimer) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
 
-  bool timer_completed = false;
+  std::atomic<bool> timer_completed = false;
   auto timer = this->node->create_wall_timer(1ms, [&]() {timer_completed = true;});
   executor.add_node(this->node);
 
@@ -283,7 +283,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
       }
     });
 
-  bool spin_exited = false;
+  std::atomic<bool> spin_exited = false;
 
   // Timeout set to negative for no timeout.
   std::thread spinner([&]() {
@@ -319,7 +319,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
   ExecutorType executor;
   executor.add_node(this->node);
 
-  bool spin_exited = false;
+  std::atomic<bool> spin_exited = false;
 
   // Needs to run longer than spin_until_future_complete's timeout.
   std::future<void> future = std::async(
@@ -413,7 +413,7 @@ TYPED_TEST(TestExecutors, spinAll) {
 
   // Long timeout, but should not block test if spin_all works as expected as we cancel the
   // executor.
-  bool spin_exited = false;
+  std::atomic<bool> spin_exited = false;
   std::thread spinner([&spin_exited, &executor, this]() {
       executor.spin_all(1s);
       executor.remove_node(this->node, true);
@@ -519,7 +519,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
   ExecutorType executor;
   executor.add_node(this->node);
 
-  bool spin_exited = false;
+  std::atomic<bool> spin_exited = false;
 
   // This needs to block longer than it takes to get to the shutdown call below and for
   // spin_until_future_complete to return
