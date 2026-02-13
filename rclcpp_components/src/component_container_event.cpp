@@ -19,6 +19,10 @@
 
 #include "rclcpp_components/component_manager.hpp"
 
+[[deprecated("component_container_event is deprecated and will be removed "
+             "in the next version. Use 'ros2 run rclcpp_components "
+             "component_container --ros-args -p executor_type:=EventsExecutor' "
+             "instead.")]]
 int main(int argc, char * argv[])
 {
   /// Component container with an events executor.

@@ -19,6 +19,11 @@
 
 #include "rclcpp_components/component_manager.hpp"
 
+[[deprecated("component_container_event is depracated and will be removed "
+      "in the next version. use 'ros2 run rclcpp_components "
+      "component_container --ros-args -p executor_type:="
+      "MultiThreadedExecutor'."
+)]]
 int main(int argc, char * argv[])
 {
   /// Component container with a multi-threaded executor.
