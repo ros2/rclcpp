@@ -65,8 +65,12 @@ public:
     if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
       rcutils_allocator_ = rcl_get_default_allocator();
     } else {
-      rcutils_allocator_ = allocator::get_rcl_allocator<char,
-          BufferAlloc>(*buffer_allocator_.get());
+      if constexpr (rclcpp::allocator::has_get_rcl_allocator_v<Alloc>) {
+        rcutils_allocator_ = message_allocator_->get_rcl_allocator();
+      } else {
+        rcutils_allocator_ = allocator::get_rcl_allocator<char,
+            BufferAlloc>(*buffer_allocator_.get());
+      }
     }
   }
 
@@ -78,8 +82,12 @@ public:
     if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
       rcutils_allocator_ = rcl_get_default_allocator();
     } else {
-      rcutils_allocator_ = allocator::get_rcl_allocator<char,
-          BufferAlloc>(*buffer_allocator_.get());
+      if constexpr (rclcpp::allocator::has_get_rcl_allocator_v<Alloc>) {
+        rcutils_allocator_ = allocator->get_rcl_allocator();
+      } else {
+        rcutils_allocator_ = allocator::get_rcl_allocator<char,
+            BufferAlloc>(*buffer_allocator_.get());
+      }
     }
   }
 

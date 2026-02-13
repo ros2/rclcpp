@@ -125,13 +125,18 @@ private:
   {
     if constexpr (std::is_same_v<Allocator, std::allocator<void>>) {
       return rcl_get_default_allocator();
-    }
+    } else {
+      if constexpr (rclcpp::allocator::has_get_rcl_allocator_v<Allocator>) {
+        return get_allocator()->get_rcl_allocator();
+      } else {
+        if (!plain_allocator_storage_) {
+          plain_allocator_storage_ =
+            std::make_shared<PlainAllocator>(*this->get_allocator());
+        }
 
-    if (!plain_allocator_storage_) {
-      plain_allocator_storage_ =
-        std::make_shared<PlainAllocator>(*this->get_allocator());
+        return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
+      }
     }
-    return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
   }
 
   // This is a temporal workaround, to make sure that get_allocator()
@@ -142,13 +147,6 @@ private:
   // up the rcl allocator returned in rcl_publisher_options_t alive.
   mutable std::shared_ptr<PlainAllocator> plain_allocator_storage_;
 };
-
-template<>
-inline rcl_allocator_t
-PublisherOptionsWithAllocator<std::allocator<void>>::get_rcl_allocator() const
-{
-  return rcl_get_default_allocator();
-}
 
 using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;
 
