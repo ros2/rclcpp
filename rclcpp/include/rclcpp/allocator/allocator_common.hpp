@@ -27,10 +27,39 @@ namespace rclcpp
 namespace allocator
 {
 
+template<typename T>
+using clean_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
+// Primary template: false
+template<typename, typename = std::void_t<>>
+struct has_get_rcl_allocator : std::false_type {};
+
+// Specialization: true if expression is valid
+template<typename T>
+struct has_get_rcl_allocator<T,
+  std::void_t<
+    decltype(std::declval<clean_t<T> &>().get_rcl_allocator())
+  >
+>
+  : std::bool_constant<
+    std::is_same_v<
+      decltype(std::declval<clean_t<T> &>().get_rcl_allocator()),
+      rcl_allocator_t
+    >
+  >
+{};
+
+// Helper variable template
+template<typename T>
+inline constexpr bool has_get_rcl_allocator_v =
+  has_get_rcl_allocator<T>::value;
+
 template<typename T, typename Alloc>
 using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
 
 template<typename Alloc>
+[[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
+  "can not be determined. This will be remove in future versions of ros.")]]
 void * retyped_allocate(size_t size, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -41,6 +70,8 @@ void * retyped_allocate(size_t size, void * untyped_allocator)
 }
 
 template<typename Alloc>
+[[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
+  "can not be determined. This will be remove in future versions of ros.")]]
 void * retyped_zero_allocate(size_t number_of_elem, size_t size_of_elem, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -57,6 +88,8 @@ void * retyped_zero_allocate(size_t number_of_elem, size_t size_of_elem, void * 
 }
 
 template<typename T, typename Alloc>
+[[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
+  "can not be determined. This will be remove in future versions of ros.")]]
 void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -68,6 +101,8 @@ void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
 }
 
 template<typename T, typename Alloc>
+[[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
+  "can not be determined. This will be remove in future versions of ros.")]]
 void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -85,6 +120,9 @@ template<
   typename T,
   typename Alloc,
   typename std::enable_if<!std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
+[[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
+  "can not be determined. This will be remove in future versions of ros. To suppress this warning"
+  "define the method 'rcl_allocator_t get_rcl_allocator()' on your allocator")]]
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
