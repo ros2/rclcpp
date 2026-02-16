@@ -13,6 +13,9 @@
 # limitations under the License.
 
 # register node plugins
+# The internal data is stored in a project directory scoped properties to allow
+# registering the components from nested scopes in CMake, where variables
+# would not propagate out.
 get_property(_rclcpp_components_package_resource_indices
   DIRECTORY "${PROJECT_SOURCE_DIR}"
   PROPERTY _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES
