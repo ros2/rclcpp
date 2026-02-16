@@ -16,11 +16,17 @@
 
 #include <memory>
 
-#include "rclcpp/allocator/allocator_common.hpp"
+#include "rcpputils/compile_warnings.hpp"
 
-TEST(TestAllocatorCommon, retyped_allocate) {
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
+#include "rclcpp/allocator/allocator_common.hpp"
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
+
+TEST(TestAllocatorCommon, retyped_allocate)
+{
   std::allocator<int> allocator;
   void * untyped_allocator = &allocator;
+  RCPPUTILS_DEPRECATION_WARNING_OFF_START
   void * allocated_mem =
     rclcpp::allocator::retyped_allocate<std::allocator<char>>(1u, untyped_allocator);
   // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
@@ -49,9 +55,12 @@ TEST(TestAllocatorCommon, retyped_allocate) {
         reallocated_mem, untyped_allocator);
     };
   EXPECT_NO_THROW(code2());
+
+  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
 
 TEST(TestAllocatorCommon, retyped_zero_allocate_basic) {
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
   std::allocator<int> allocator;
   void * untyped_allocator = &allocator;
   void * allocated_mem =
@@ -63,9 +72,11 @@ TEST(TestAllocatorCommon, retyped_zero_allocate_basic) {
         allocated_mem, untyped_allocator);
     };
   EXPECT_NO_THROW(code());
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
 
 TEST(TestAllocatorCommon, retyped_zero_allocate) {
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
   std::allocator<int> allocator;
   void * untyped_allocator = &allocator;
   void * allocated_mem =
@@ -96,9 +107,11 @@ TEST(TestAllocatorCommon, retyped_zero_allocate) {
         reallocated_mem, untyped_allocator);
     };
   EXPECT_NO_THROW(code2());
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
 
 TEST(TestAllocatorCommon, get_rcl_allocator) {
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
   std::allocator<int> allocator;
   auto rcl_allocator = rclcpp::allocator::get_rcl_allocator<int>(allocator);
   EXPECT_NE(nullptr, rcl_allocator.allocate);
@@ -106,9 +119,12 @@ TEST(TestAllocatorCommon, get_rcl_allocator) {
   EXPECT_NE(nullptr, rcl_allocator.reallocate);
   EXPECT_NE(nullptr, rcl_allocator.zero_allocate);
   // Not testing state as that may or may not be null depending on platform
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
 
 TEST(TestAllocatorCommon, get_void_rcl_allocator) {
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
+
   std::allocator<void> allocator;
   auto rcl_allocator =
     rclcpp::allocator::get_rcl_allocator<void, std::allocator<void>>(allocator);
@@ -117,4 +133,5 @@ TEST(TestAllocatorCommon, get_void_rcl_allocator) {
   EXPECT_NE(nullptr, rcl_allocator.reallocate);
   EXPECT_NE(nullptr, rcl_allocator.zero_allocate);
   // Not testing state as that may or may not be null depending on platform
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
