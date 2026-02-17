@@ -386,6 +386,40 @@ private:
     std::vector<uint64_t> take_ownership_subscriptions;
   };
 
+  /// Hash function for rmw_gid_t to enable use in unordered_map
+  struct rmw_gid_hash
+  {
+    std::size_t operator()(const rmw_gid_t & gid) const noexcept
+    {
+      // Using the FNV-1a hash algorithm on the gid data
+      constexpr std::size_t FNV_prime = 1099511628211u;
+      std::size_t result = 14695981039346656037u;
+
+      for (std::size_t i = 0; i < RMW_GID_STORAGE_SIZE; ++i) {
+        result ^= gid.data[i];
+        result *= FNV_prime;
+      }
+      return result;
+    }
+  };
+
+  /// Equality comparison for rmw_gid_t to enable use in unordered_map
+  struct rmw_gid_equal
+  {
+    bool operator()(const rmw_gid_t & lhs, const rmw_gid_t & rhs) const noexcept
+    {
+      // Compare implementation identifier first for fast rejection
+      if (lhs.implementation_identifier != rhs.implementation_identifier) {
+        return false;
+      }
+      // Compare the data bytes
+      return std::equal(
+        std::begin(lhs.data),
+        std::end(lhs.data),
+        std::begin(rhs.data));
+    }
+  };
+
   using SubscriptionMap =
     std::unordered_map<uint64_t, rclcpp::experimental::SubscriptionIntraProcessBase::WeakPtr>;
 
@@ -397,6 +431,9 @@ private:
 
   using PublisherToSubscriptionIdsMap =
     std::unordered_map<uint64_t, SplittedSubscriptions>;
+
+  using GidToPublisherIdMap =
+    std::unordered_map<rmw_gid_t, uint64_t, rmw_gid_hash, rmw_gid_equal>;
 
   RCLCPP_PUBLIC
   static
@@ -640,6 +677,7 @@ private:
   SubscriptionMap subscriptions_;
   PublisherMap publishers_;
   PublisherBufferMap publisher_buffers_;
+  GidToPublisherIdMap gid_to_pub_id_;
 
   mutable std::shared_timed_mutex mutex_;
 };

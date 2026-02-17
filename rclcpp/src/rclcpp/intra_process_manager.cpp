@@ -51,6 +51,9 @@ IntraProcessManager::add_publisher(
     }
   }
 
+  // Add GID to publisher ID mapping for fast lookups
+  gid_to_pub_id_[publisher->get_gid()] = pub_id;
+
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[pub_id] = SplittedSubscriptions();
 
@@ -98,6 +101,15 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
+  // Remove GID to publisher ID mapping
+  auto pub_it = publishers_.find(intra_process_publisher_id);
+  if (pub_it != publishers_.end()) {
+    auto publisher = pub_it->second.lock();
+    if (publisher) {
+      gid_to_pub_id_.erase(publisher->get_gid());
+    }
+  }
+
   publishers_.erase(intra_process_publisher_id);
   publisher_buffers_.erase(intra_process_publisher_id);
   pub_to_subs_.erase(intra_process_publisher_id);
@@ -108,16 +120,20 @@ IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
 {
   std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
-  for (auto & publisher_pair : publishers_) {
-    auto publisher = publisher_pair.second.lock();
-    if (!publisher) {
-      continue;
-    }
-    if (*publisher.get() == id) {
-      return true;
-    }
+  // Use O(1) hash map lookup instead of O(n) iteration
+  auto it = gid_to_pub_id_.find(*id);
+  if (it == gid_to_pub_id_.end()) {
+    return false;
   }
-  return false;
+
+  // Verify the publisher still exists
+  auto pub_it = publishers_.find(it->second);
+  if (pub_it == publishers_.end()) {
+    return false;
+  }
+
+  auto publisher = pub_it->second.lock();
+  return publisher != nullptr;
 }
 
 size_t
