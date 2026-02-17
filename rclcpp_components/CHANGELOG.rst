@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.5 (2026-02-09)
+-------------------
+* Add library dependency to node executable in rclcpp_components_register_node (`#3047 <https://github.com/ros2/rclcpp/issues/3047>`_)
+* Contributors: YuJin Hong
+
 30.1.4 (2025-12-23)
 -------------------
 * Updated deprecated ament_index_cpp API (`#3011 <https://github.com/ros2/rclcpp/issues/3011>`_)

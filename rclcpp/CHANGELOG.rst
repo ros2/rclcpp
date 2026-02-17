@@ -2,6 +2,20 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+30.1.5 (2026-02-09)
+-------------------
+* remove default: so that compiler can detect the missing case. (`#3048 <https://github.com/ros2/rclcpp/issues/3048>`_)
+* use weak_ptr for rcl entities in the memory strategy. (`#2988 <https://github.com/ros2/rclcpp/issues/2988>`_)
+* remove test_static_executor_entities_collector.cpp (`#3041 <https://github.com/ros2/rclcpp/issues/3041>`_)
+* include the 1st spin that might throw the exception. (`#3042 <https://github.com/ros2/rclcpp/issues/3042>`_)
+* print warning message on owner node if the parameter operation fails. (`#3037 <https://github.com/ros2/rclcpp/issues/3037>`_)
+* fix context in wait for message wait set (`#3030 <https://github.com/ros2/rclcpp/issues/3030>`_)
+* Revert "construct wait set with passed in context (`#3021 <https://github.com/ros2/rclcpp/issues/3021>`_)" (`#3028 <https://github.com/ros2/rclcpp/issues/3028>`_)
+* construct wait set with passed in context (`#3021 <https://github.com/ros2/rclcpp/issues/3021>`_)
+* Improve the robustness of the TopicEndpointInfo constructor (`#3013 <https://github.com/ros2/rclcpp/issues/3013>`_)
+* Deprecate the shared_ptr<MessageT> subscription callback signatures (`#2975 <https://github.com/ros2/rclcpp/issues/2975>`_)
+* Contributors: Barry Xu, Maurice Alexander Purnawan, Michael Carroll, Rahat Dhande, Tomoya Fujita
+
 30.1.4 (2025-12-23)
 -------------------
 * Updated deprecated ament_index_cpp API (`#3011 <https://github.com/ros2/rclcpp/issues/3011>`_)

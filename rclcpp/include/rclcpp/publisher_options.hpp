@@ -123,11 +123,20 @@ private:
   rcl_allocator_t
   get_rcl_allocator() const
   {
-    if (!plain_allocator_storage_) {
-      plain_allocator_storage_ =
-        std::make_shared<PlainAllocator>(*this->get_allocator());
+    if constexpr (std::is_same_v<Allocator, std::allocator<void>>) {
+      return rcl_get_default_allocator();
+    } else {
+      if constexpr (rclcpp::allocator::has_get_rcl_allocator_v<Allocator>) {
+        return get_allocator()->get_rcl_allocator();
+      } else {
+        if (!plain_allocator_storage_) {
+          plain_allocator_storage_ =
+            std::make_shared<PlainAllocator>(*this->get_allocator());
+        }
+
+        return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
+      }
     }
-    return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
   }
 
   // This is a temporal workaround, to make sure that get_allocator()

@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+30.1.5 (2026-02-09)
+-------------------
+* remove default: so that compiler can detect the missing case. (`#3048 <https://github.com/ros2/rclcpp/issues/3048>`_)
+* Update exception documentation for goal cancellation in ServerGoalHandle (`#3019 <https://github.com/ros2/rclcpp/issues/3019>`_)
+* Contributors: Andrei Costinescu, Tomoya Fujita
+
 30.1.4 (2025-12-23)
 -------------------
 
