@@ -432,8 +432,15 @@ private:
   using PublisherToSubscriptionIdsMap =
     std::unordered_map<uint64_t, SplittedSubscriptions>;
 
-  using GidToPublisherIdMap =
-    std::unordered_map<rmw_gid_t, uint64_t, rmw_gid_hash, rmw_gid_equal>;
+  /// Structure to store publisher information in GID lookup map
+  struct PublisherInfo
+  {
+    uint64_t pub_id;
+    rclcpp::PublisherBase::WeakPtr publisher;
+  };
+
+  using GidToPublisherInfoMap =
+    std::unordered_map<rmw_gid_t, PublisherInfo, rmw_gid_hash, rmw_gid_equal>;
 
   RCLCPP_PUBLIC
   static
@@ -677,7 +684,7 @@ private:
   SubscriptionMap subscriptions_;
   PublisherMap publishers_;
   PublisherBufferMap publisher_buffers_;
-  GidToPublisherIdMap gid_to_pub_id_;
+  GidToPublisherInfoMap gid_to_publisher_info_;
 
   mutable std::shared_timed_mutex mutex_;
 };
