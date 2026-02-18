@@ -424,7 +424,11 @@ public:
 
   rcl_allocator_t get_allocator() override
   {
-    return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
+    if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
+      return rcl_get_default_allocator();
+    } else {
+      return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
+    }
   }
 
   size_t number_of_ready_subscriptions() const override

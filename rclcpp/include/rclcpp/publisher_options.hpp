@@ -119,6 +119,10 @@ private:
   rcl_allocator_t
   get_rcl_allocator() const
   {
+    if constexpr (std::is_same_v<Allocator, std::allocator<void>>) {
+      return rcl_get_default_allocator();
+    }
+
     if (!plain_allocator_storage_) {
       plain_allocator_storage_ =
         std::make_shared<PlainAllocator>(*this->get_allocator());
