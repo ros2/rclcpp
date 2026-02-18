@@ -18,6 +18,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "rcl/allocator.h"
 #include "rcl/types.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
@@ -61,7 +62,12 @@ public:
     message_allocator_ = std::make_shared<MessageAlloc>();
     serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>();
     buffer_allocator_ = std::make_shared<BufferAlloc>();
-    rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
+    if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
+      rcutils_allocator_ = rcl_get_default_allocator();
+    } else {
+      rcutils_allocator_ = allocator::get_rcl_allocator<char,
+          BufferAlloc>(*buffer_allocator_.get());
+    }
   }
 
   explicit MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
@@ -69,7 +75,12 @@ public:
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
     serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>(*allocator.get());
     buffer_allocator_ = std::make_shared<BufferAlloc>(*allocator.get());
-    rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
+    if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
+      rcutils_allocator_ = rcl_get_default_allocator();
+    } else {
+      rcutils_allocator_ = allocator::get_rcl_allocator<char,
+          BufferAlloc>(*buffer_allocator_.get());
+    }
   }
 
   virtual ~MessageMemoryStrategy() = default;
