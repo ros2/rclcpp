@@ -95,6 +95,13 @@ if(TARGET test_generic_service)
     ${test_msgs_TARGETS}
   )
 endif()
+ament_add_gtest(test_create_custom_subscription test_create_custom_subscription.cpp)
+if(TARGET test_create_custom_subscription)
+  target_link_libraries(test_create_custom_subscription ${PROJECT_NAME})
+  ament_target_dependencies(test_create_custom_subscription
+    "test_msgs"
+  )
+endif()
 ament_add_gtest(test_client_common test_client_common.cpp)
 ament_add_test_label(test_client_common mimick)
 if(TARGET test_client_common)
