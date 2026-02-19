@@ -47,7 +47,6 @@ macro(rclcpp_components_register_nodes target)
   endif()
 
   if(${ARGC} GREATER 0)
-    _rclcpp_components_register_package_hook()
     set(_unique_names)
     foreach(_arg ${ARGS_UNPARSED_ARGUMENTS})
       if(_arg IN_LIST _unique_names)
@@ -63,9 +62,14 @@ macro(rclcpp_components_register_nodes target)
       else()
         set(_path "lib")
       endif()
-      set(_RCLCPP_COMPONENTS_${resource_index}__NODES
-        "${_RCLCPP_COMPONENTS_${resource_index}__NODES}${_arg};${_path}/$<TARGET_FILE_NAME:${target}>\n")
-      list(APPEND _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES ${resource_index})
+      set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        APPEND_STRING PROPERTY _RCLCPP_COMPONENTS_${resource_index}__NODES
+        "${_arg};${_path}/$<TARGET_FILE_NAME:${target}>\n")
+      set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        APPEND PROPERTY _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES
+        ${resource_index})
     endforeach()
   endif()
 endmacro()
