@@ -19,6 +19,7 @@
 
 #include <shared_mutex>
 
+#include <cstring>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -408,8 +409,12 @@ private:
   {
     bool operator()(const rmw_gid_t & lhs, const rmw_gid_t & rhs) const noexcept
     {
-      // Compare implementation identifier first for fast rejection
-      if (lhs.implementation_identifier != rhs.implementation_identifier) {
+      // Compare implementation identifier string content first for fast rejection
+      if (lhs.implementation_identifier == nullptr || rhs.implementation_identifier == nullptr) {
+        return lhs.implementation_identifier == rhs.implementation_identifier &&
+               std::equal(std::begin(lhs.data), std::end(lhs.data), std::begin(rhs.data));
+      }
+      if (std::strcmp(lhs.implementation_identifier, rhs.implementation_identifier) != 0) {
         return false;
       }
       // Compare the data bytes
