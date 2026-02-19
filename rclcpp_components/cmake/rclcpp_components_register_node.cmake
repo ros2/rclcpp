@@ -64,15 +64,19 @@ macro(rclcpp_components_register_node target)
   endif()
   set(component ${ARGS_PLUGIN})
   set(node ${ARGS_EXECUTABLE})
-  _rclcpp_components_register_package_hook()
   set(_path "lib")
   set(library_name "$<TARGET_FILE_NAME:${target}>")
   if(WIN32)
     set(_path "bin")
   endif()
-  set(_RCLCPP_COMPONENTS_${resource_index}__NODES
-    "${_RCLCPP_COMPONENTS_${resource_index}__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
-  list(APPEND _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES ${resource_index})
+  set_property(
+    DIRECTORY "${PROJECT_SOURCE_DIR}"
+    APPEND_STRING PROPERTY _RCLCPP_COMPONENTS_${resource_index}__NODES
+    "${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
+  set_property(
+    DIRECTORY "${PROJECT_SOURCE_DIR}"
+    APPEND PROPERTY _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES
+    ${resource_index})
 
   if(ARGS_NO_UNDEFINED_SYMBOLS AND WIN32)
     message(WARNING "NO_UNDEFINED_SYMBOLS is enabled for target \"${target}\", but this is unsupported on windows.")
