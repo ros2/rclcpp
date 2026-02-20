@@ -37,7 +37,12 @@ namespace rclcpp_components
 {
 /// ComponentManagerIsolated uses dedicated single-threaded executors for each components.
 template<typename ExecutorT = rclcpp::executors::SingleThreadedExecutor>
-class ComponentManagerIsolated : public rclcpp_components::ComponentManager
+class
+[[deprecated(
+  "ComponentManagerIsolated is deprecated. Use ComponentManager, and specify the type of executor "
+  "you want to use for each node with the 'executor_type' parameter of "
+  "load_node.")]]
+ComponentManagerIsolated : public rclcpp_components::ComponentManager
 {
   using rclcpp_components::ComponentManager::ComponentManager;
 

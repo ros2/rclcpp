@@ -78,6 +78,21 @@ public:
 /// ComponentManager handles the services to load, unload, and get the list of loaded components.
 class ComponentManager : public rclcpp::Node
 {
+  struct DedicatedExecutorWrapper
+  {
+    std::shared_ptr<rclcpp::Executor> executor;
+    std::thread thread;
+    std::atomic_bool thread_initialized;
+
+    /// Constructor for the wrapper.
+    /// This is necessary as atomic variables don't have copy/move operators
+    /// implemented so this structure is not copyable/movable by default
+    explicit DedicatedExecutorWrapper(std::shared_ptr<rclcpp::Executor> exec)
+    : executor(exec), thread_initialized(false)
+    {
+    }
+  };
+
 public:
   using LoadNode = composition_interfaces::srv::LoadNode;
   using UnloadNode = composition_interfaces::srv::UnloadNode;
@@ -225,6 +240,16 @@ protected:
   rclcpp::Service<LoadNode>::SharedPtr loadNode_srv_;
   rclcpp::Service<UnloadNode>::SharedPtr unloadNode_srv_;
   rclcpp::Service<ListNodes>::SharedPtr listNodes_srv_;
+
+private:
+  /// Stops a spinning executor avoiding race conditions.
+  /**
+   * @param executor_wrapper executor to stop and its associated thread
+   */
+  void
+  cancel_executor(DedicatedExecutorWrapper & executor_wrapper);
+
+  std::unordered_map<uint64_t, DedicatedExecutorWrapper> dedicated_executor_wrappers_;
 };
 
 }  // namespace rclcpp_components

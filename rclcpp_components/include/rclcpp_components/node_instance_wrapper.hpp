@@ -22,6 +22,14 @@
 
 namespace rclcpp_components
 {
+
+enum class ExecutorType
+{
+  Shared,
+  SingleThreaded,
+  MultiThreaded,
+};
+
 /// The NodeInstanceWrapper encapsulates the node instance.
 class NodeInstanceWrapper
 {
@@ -35,9 +43,15 @@ public:
 
   NodeInstanceWrapper(
     std::shared_ptr<void> node_instance,
-    NodeBaseInterfaceGetter node_base_interface_getter)
-  : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter)
-  {}
+    NodeBaseInterfaceGetter node_base_interface_getter,
+    ExecutorType executor_type = ExecutorType::Shared,
+    int thread_num = 0)
+  : executor_type_(executor_type),
+    thread_num_(thread_num),
+    node_instance_(node_instance),
+    node_base_interface_getter_(node_base_interface_getter)
+  {
+  }
 
   /// Get a type-erased pointer to the original Node instance
   /**
@@ -62,7 +76,33 @@ public:
     return node_base_interface_getter_(node_instance_);
   }
 
+  ExecutorType
+  get_executor_type()
+  {
+    return executor_type_;
+  }
+
+  int
+  get_thread_num()
+  {
+    return thread_num_;
+  }
+
+  void
+  set_executor_type(ExecutorType executor_type)
+  {
+    executor_type_ = executor_type;
+  }
+
+  void
+  set_thread_num(int thread_num)
+  {
+    thread_num_ = thread_num;
+  }
+
 private:
+  ExecutorType executor_type_;
+  int thread_num_;
   std::shared_ptr<void> node_instance_;
   NodeBaseInterfaceGetter node_base_interface_getter_;
 };

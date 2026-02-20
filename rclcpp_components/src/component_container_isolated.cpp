@@ -21,8 +21,11 @@
 #include "rclcpp/utilities.hpp"
 
 #include "rclcpp_components/component_manager_isolated.hpp"
-
-int main(int argc, char * argv[])
+[[deprecated(
+  "component_container_isolated is deprecated. Use component_container, and specify the type of "
+  "executor you want to use for each node with the 'executor_type' parameter of load_node.")]]
+int
+main(int argc, char * argv[])
 {
   /// Component container with dedicated single-threaded executors for each components.
   rclcpp::init(argc, argv);
@@ -46,6 +49,11 @@ int main(int argc, char * argv[])
       rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>;
     node = std::make_shared<ComponentManagerIsolated>(exec);
   }
+
+  RCLCPP_WARN(node->get_logger(),
+    "component_container_isolated is deprecated. Use component_container, and specify the type of "
+    "executor you want to use for each node with the 'executor_type' parameter of load_node.");
+
   exec->add_node(node);
   exec->spin();
 

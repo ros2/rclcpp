@@ -37,6 +37,7 @@
 #include "rcl_interfaces/msg/integer_range.hpp"
 
 #include "rcpputils/split.hpp"
+#include "rcpputils/thread_name.hpp"
 
 #include "rmw/types.h"
 
@@ -83,9 +84,19 @@ ComponentManager::~ComponentManager()
     RCLCPP_DEBUG(get_logger(), "Removing components from executor");
     if (auto exec = executor_.lock()) {
       for (auto & wrapper : node_wrappers_) {
-        exec->remove_node(wrapper.second.get_node_base_interface());
+        if (wrapper.second.get_executor_type() == ExecutorType::Shared) {
+          RCLCPP_DEBUG(get_logger(), "Removing node %lu from shared executor.", wrapper.first);
+          exec->remove_node(wrapper.second.get_node_base_interface());
+        }
       }
     }
+
+    for (auto & executor_wrapper : dedicated_executor_wrappers_) {
+      RCLCPP_DEBUG(get_logger(), "Removing node %lu's executor.", executor_wrapper.first);
+      cancel_executor(executor_wrapper.second);
+    }
+
+    node_wrappers_.clear();
   }
 }
 
@@ -248,16 +259,63 @@ ComponentManager::set_executor(const std::weak_ptr<rclcpp::Executor> executor)
 void
 ComponentManager::add_node_to_executor(uint64_t node_id)
 {
-  if (auto exec = executor_.lock()) {
-    exec->add_node(node_wrappers_[node_id].get_node_base_interface(), true);
+  if (node_wrappers_[node_id].get_executor_type() == ExecutorType::Shared) {
+    if (auto exec = executor_.lock()) {
+      exec->add_node(node_wrappers_[node_id].get_node_base_interface(), true);
+    }
+    return;
   }
+
+  std::shared_ptr<rclcpp::Executor> exec;
+  switch (node_wrappers_[node_id].get_executor_type()) {
+    case ExecutorType::Shared:
+      break;  // Unreachable
+    case ExecutorType::SingleThreaded:
+      exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+      break;
+    case ExecutorType::MultiThreaded:
+      exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
+        rclcpp::ExecutorOptions(), node_wrappers_[node_id].get_thread_num());
+      break;
+  }
+
+  exec->add_node(node_wrappers_[node_id].get_node_base_interface());
+
+  // Emplace rather than std::move since move operations are deleted for atomics
+  auto result = dedicated_executor_wrappers_.emplace(std::make_pair(node_id, exec));
+  DedicatedExecutorWrapper & wrapper = result.first->second;
+  wrapper.executor = exec;
+  auto & thread_initialized = wrapper.thread_initialized;
+  auto name = node_wrappers_[node_id].get_node_base_interface()->get_name();
+  // Copy name so that it doesn't deallocate before the thread is started
+  wrapper.thread = std::thread([exec, &thread_initialized, name]() {
+        try {
+          rcpputils::set_thread_name(name);
+        } catch (const std::system_error & e) {
+          RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
+        "Failed to set thread name: %s (%s)",
+        e.what(),
+        e.code().message().c_str());
+        }
+        thread_initialized = true;
+        exec->spin();
+  });
 }
 
 void
 ComponentManager::remove_node_from_executor(uint64_t node_id)
 {
-  if (auto exec = executor_.lock()) {
-    exec->remove_node(node_wrappers_[node_id].get_node_base_interface());
+  if (node_wrappers_[node_id].get_executor_type() == ExecutorType::Shared) {
+    if (auto exec = executor_.lock()) {
+      exec->remove_node(node_wrappers_[node_id].get_node_base_interface());
+    }
+    return;
+  }
+
+  auto executor_wrapper = dedicated_executor_wrappers_.find(node_id);
+  if (executor_wrapper != dedicated_executor_wrappers_.end()) {
+    cancel_executor(executor_wrapper->second);
+    dedicated_executor_wrappers_.erase(executor_wrapper);
   }
 }
 
@@ -305,6 +363,18 @@ ComponentManager::on_load_node(
         // In the case that the component constructor throws an exception,
         // rethrow into the following catch block.
         throw ComponentManagerException("Component constructor threw an exception");
+      }
+
+      if (request->executor_type == "") {
+        node_wrappers_[node_id].set_executor_type(ExecutorType::Shared);
+      } else if (request->executor_type == "SingleThreadedExecutor") {
+        node_wrappers_[node_id].set_executor_type(ExecutorType::SingleThreaded);
+      } else if (request->executor_type == "MultiThreadedExecutor") {
+        node_wrappers_[node_id].set_executor_type(ExecutorType::MultiThreaded);
+        node_wrappers_[node_id].set_thread_num(request->thread_num);
+      } else {
+        node_wrappers_.erase(node_id);
+        throw ComponentManagerException("Invalid executor_type: " + request->executor_type);
       }
 
       add_node_to_executor(node_id);
@@ -360,6 +430,33 @@ ComponentManager::on_list_nodes(
     response->full_node_names.push_back(
       wrapper.second.get_node_base_interface()->get_fully_qualified_name());
   }
+}
+
+void
+ComponentManager::cancel_executor(DedicatedExecutorWrapper & executor_wrapper)
+{
+  // Verify that the executor thread has begun spinning.
+  // If it has not, then wait until the thread starts to ensure
+  // that cancel() will fully stop the execution
+  //
+  // This prevents a previous race condition that occurs between the
+  // creation of the executor spin thread and cancelling an executor
+
+  if (!executor_wrapper.thread_initialized) {
+    auto context = this->get_node_base_interface()->get_context();
+
+    // Guarantee that either the executor is spinning or we are shutting down.
+    while (!executor_wrapper.executor->is_spinning() && rclcpp::ok(context)) {
+      // This is an arbitrarily small delay to avoid busy looping
+      rclcpp::sleep_for(std::chrono::milliseconds(1));
+    }
+  }
+
+  // After the while loop we are sure that the executor is now spinning, so
+  // the call to cancel() will work.
+  executor_wrapper.executor->cancel();
+  // Wait for the thread task to return
+  executor_wrapper.thread.join();
 }
 
 }  // namespace rclcpp_components
