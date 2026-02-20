@@ -51,9 +51,6 @@ IntraProcessManager::add_publisher(
     }
   }
 
-  // Add GID to publisher info mapping for fast lookups (stores both ID and weak_ptr)
-  gid_to_publisher_info_[publisher->get_gid()] = {pub_id, publisher};
-
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[pub_id] = SplittedSubscriptions();
 
@@ -101,15 +98,6 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
-  // Remove GID to publisher info mapping
-  auto pub_it = publishers_.find(intra_process_publisher_id);
-  if (pub_it != publishers_.end()) {
-    auto publisher = pub_it->second.lock();
-    if (publisher) {
-      gid_to_publisher_info_.erase(publisher->get_gid());
-    }
-  }
-
   publishers_.erase(intra_process_publisher_id);
   publisher_buffers_.erase(intra_process_publisher_id);
   pub_to_subs_.erase(intra_process_publisher_id);
@@ -120,15 +108,16 @@ IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
 {
   std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
-  // Single O(1) hash map lookup - struct contains both ID and weak_ptr
-  auto it = gid_to_publisher_info_.find(*id);
-  if (it == gid_to_publisher_info_.end()) {
-    return false;
+  for (auto & publisher_pair : publishers_) {
+    auto publisher = publisher_pair.second.lock();
+    if (!publisher) {
+      continue;
+    }
+    if (*publisher.get() == id) {
+      return true;
+    }
   }
-
-  // Verify the publisher still exists by checking the weak_ptr
-  auto publisher = it->second.publisher.lock();
-  return publisher != nullptr;
+  return false;
 }
 
 size_t

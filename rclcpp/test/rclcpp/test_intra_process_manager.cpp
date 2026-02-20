@@ -162,14 +162,7 @@ public:
   explicit PublisherBase(const std::string & topic, const rclcpp::QoS & qos)
   : topic_name(topic),
     qos_profile(qos)
-  {
-    // Initialize a mock GID with unique data based on this pointer
-    gid_.implementation_identifier = "mock_rmw";
-    auto ptr_value = reinterpret_cast<std::uintptr_t>(this);
-    for (size_t i = 0; i < RMW_GID_STORAGE_SIZE; ++i) {
-      gid_.data[i] = static_cast<uint8_t>((ptr_value >> (i * 8)) & 0xFF);
-    }
-  }
+  {}
 
   virtual ~PublisherBase()
   {}
@@ -199,12 +192,6 @@ public:
     return qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal;
   }
 
-  const rmw_gid_t &
-  get_gid() const
-  {
-    return gid_;
-  }
-
   bool
   operator==([[maybe_unused]] const rmw_gid_t & gid) const
   {
@@ -223,7 +210,6 @@ public:
 private:
   std::string topic_name;
   rclcpp::QoS qos_profile;
-  rmw_gid_t gid_;
 };
 
 template<typename T, typename Alloc = std::allocator<void>>
