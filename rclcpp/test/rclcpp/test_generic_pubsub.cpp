@@ -44,10 +44,12 @@ class RclcppGenericNodeFixture : public Test
 public:
   RclcppGenericNodeFixture()
   {
-    node_ = std::make_shared<rclcpp::Node>("pubsub");
+    node_ = std::make_shared<rclcpp::Node>(
+      "pubsub",
+      rclcpp::NodeOptions().start_parameter_event_publisher(false).use_intra_process_comms(true));
     publisher_node_ = std::make_shared<rclcpp::Node>(
       "publisher_node",
-      rclcpp::NodeOptions().start_parameter_event_publisher(false));
+      rclcpp::NodeOptions().start_parameter_event_publisher(false).use_intra_process_comms(true));
   }
 
   static void SetUpTestCase()
@@ -181,6 +183,82 @@ TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_work)
 
   for (const auto & message : test_messages) {
     publisher->publish(serialize_message<std::string, test_msgs::msg::Strings>(message));
+  }
+
+  auto subscribed_messages = subscriber_future_.get();
+  EXPECT_THAT(subscribed_messages, SizeIs(Not(0)));
+  EXPECT_THAT(subscribed_messages[0], StrEq("Hello World"));
+}
+
+TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_intra_unique)
+{
+  // We currently publish more messages because they can get lost
+  std::vector<std::string> test_messages = {"Hello World", "Hello World"};
+  std::string topic_name = "/string_topic_intra";
+  std::string type = "test_msgs/msg/Strings";
+
+  auto publisher = node_->create_publisher<test_msgs::msg::Strings>(topic_name, rclcpp::QoS(1));
+
+  auto subscriber_future_ = std::async(
+    std::launch::async, [this, topic_name, type] {
+      return subscribe_raw_messages<std::string, test_msgs::msg::Strings>(1, topic_name, type);
+    });
+
+  // TODO(karsten1987): Port 'wait_for_sub' to rclcpp
+  auto allocator = node_->get_node_options().allocator();
+  auto success = false;
+  auto ret = rcl_wait_for_subscribers(
+    node_->get_node_base_interface()->get_rcl_node_handle(),
+    &allocator,
+    topic_name.c_str(),
+    1u,
+    static_cast<rcutils_duration_value_t>(1e9),  // timeout in ns
+    &success);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ASSERT_TRUE(success);
+
+  for (const auto & message : test_messages) {
+    auto msg1 = std::make_unique<test_msgs::msg::Strings>();
+    msg1->string_value = message;
+    publisher->publish(std::move(msg1));
+  }
+
+  auto subscribed_messages = subscriber_future_.get();
+  EXPECT_THAT(subscribed_messages, SizeIs(Not(0)));
+  EXPECT_THAT(subscribed_messages[0], StrEq("Hello World"));
+}
+
+TEST_F(RclcppGenericNodeFixture, publisher_and_subscriber_intra_shared)
+{
+  // We currently publish more messages because they can get lost
+  std::vector<std::string> test_messages = {"Hello World", "Hello World"};
+  std::string topic_name = "/string_topic_intra";
+  std::string type = "test_msgs/msg/Strings";
+
+  auto publisher = node_->create_publisher<test_msgs::msg::Strings>(topic_name, rclcpp::QoS(1));
+
+  auto subscriber_future_ = std::async(
+    std::launch::async, [this, topic_name, type] {
+      return subscribe_raw_messages<std::string, test_msgs::msg::Strings>(1, topic_name, type);
+    });
+
+  // TODO(karsten1987): Port 'wait_for_sub' to rclcpp
+  auto allocator = node_->get_node_options().allocator();
+  auto success = false;
+  auto ret = rcl_wait_for_subscribers(
+    node_->get_node_base_interface()->get_rcl_node_handle(),
+    &allocator,
+    topic_name.c_str(),
+    1u,
+    static_cast<rcutils_duration_value_t>(1e9),  // timeout in ns
+    &success);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ASSERT_TRUE(success);
+
+  for (const auto & message : test_messages) {
+    test_msgs::msg::Strings msg2;
+    msg2.string_value = message;
+    publisher->publish(msg2);
   }
 
   auto subscribed_messages = subscriber_future_.get();

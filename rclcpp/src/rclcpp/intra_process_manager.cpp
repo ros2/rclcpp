@@ -53,6 +53,7 @@ IntraProcessManager::add_publisher(
 
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[pub_id] = SplittedSubscriptions();
+  pub_to_generic_subs_[pub_id] = SplittedSubscriptions();
 
   // create an entry for the publisher id and populate with already existing subscriptions
   for (auto & pair : subscriptions_) {
@@ -66,6 +67,19 @@ IntraProcessManager::add_publisher(
     }
   }
 
+  // create an entry for the publisher id and populate with already existing subscriptions
+  for (auto & pair : generic_subscriptions_) {
+    auto subscription = pair.second.lock();
+    if (!subscription) {
+      continue;
+    }
+    if (can_communicate(publisher, subscription)) {
+      uint64_t sub_id = pair.first;
+      insert_generic_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
+    }
+  }
+
+
   return pub_id;
 }
 
@@ -75,8 +89,25 @@ IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
   subscriptions_.erase(intra_process_subscription_id);
+  generic_subscriptions_.erase(intra_process_subscription_id);
 
   for (auto & pair : pub_to_subs_) {
+    pair.second.take_shared_subscriptions.erase(
+      std::remove(
+        pair.second.take_shared_subscriptions.begin(),
+        pair.second.take_shared_subscriptions.end(),
+        intra_process_subscription_id),
+      pair.second.take_shared_subscriptions.end());
+
+    pair.second.take_ownership_subscriptions.erase(
+      std::remove(
+        pair.second.take_ownership_subscriptions.begin(),
+        pair.second.take_ownership_subscriptions.end(),
+        intra_process_subscription_id),
+      pair.second.take_ownership_subscriptions.end());
+  }
+
+  for (auto & pair : pub_to_generic_subs_) {
     pair.second.take_shared_subscriptions.erase(
       std::remove(
         pair.second.take_shared_subscriptions.begin(),
@@ -101,6 +132,7 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
   publishers_.erase(intra_process_publisher_id);
   publisher_buffers_.erase(intra_process_publisher_id);
   pub_to_subs_.erase(intra_process_publisher_id);
+  pub_to_generic_subs_.erase(intra_process_publisher_id);
 }
 
 bool
@@ -113,6 +145,7 @@ IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
     if (!publisher) {
       continue;
     }
+    // publisher is of type "rclcpp::PublisherBase::WeakPtr"
     if (*publisher.get() == id) {
       return true;
     }
@@ -125,8 +158,11 @@ IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id)
 {
   std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
+  size_t count = 0;
+
   auto publisher_it = pub_to_subs_.find(intra_process_publisher_id);
-  if (publisher_it == pub_to_subs_.end()) {
+  auto publisher_g_it = pub_to_generic_subs_.find(intra_process_publisher_id);
+  if (publisher_it == pub_to_subs_.end() && publisher_g_it == pub_to_generic_subs_.end() ) {
     // Publisher is either invalid or no longer exists.
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
@@ -134,10 +170,15 @@ IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id)
     return 0;
   }
 
-  auto count =
-    publisher_it->second.take_shared_subscriptions.size() +
-    publisher_it->second.take_ownership_subscriptions.size();
+  if (publisher_it != pub_to_subs_.end()) {
+    count += publisher_it->second.take_shared_subscriptions.size();
+    count += publisher_it->second.take_ownership_subscriptions.size();
+  }
 
+  if (publisher_g_it != pub_to_generic_subs_.end()) {
+    count += publisher_g_it->second.take_shared_subscriptions.size();
+    count += publisher_g_it->second.take_ownership_subscriptions.size();
+  }
   return count;
 }
 
@@ -147,9 +188,14 @@ IntraProcessManager::get_subscription_intra_process(uint64_t intra_process_subsc
   std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
   auto subscription_it = subscriptions_.find(intra_process_subscription_id);
-  if (subscription_it == subscriptions_.end()) {
+  auto subscription_g_it = generic_subscriptions_.find(intra_process_subscription_id);
+  if (subscription_it == subscriptions_.end() &&
+    subscription_g_it == generic_subscriptions_.end())
+  {
     return nullptr;
-  } else {
+  }
+
+  if (subscription_it != subscriptions_.end()) {
     auto subscription = subscription_it->second.lock();
     if (subscription) {
       return subscription;
@@ -158,6 +204,18 @@ IntraProcessManager::get_subscription_intra_process(uint64_t intra_process_subsc
       return nullptr;
     }
   }
+
+  if (subscription_g_it != generic_subscriptions_.end()) {
+    auto subscription = subscription_g_it->second.lock();
+    if (subscription) {
+      return subscription;
+    } else {
+      generic_subscriptions_.erase(subscription_g_it);
+      return nullptr;
+    }
+  }
+
+  return nullptr;
 }
 
 uint64_t
@@ -195,6 +253,19 @@ IntraProcessManager::insert_sub_id_for_pub(
   }
 }
 
+void
+IntraProcessManager::insert_generic_sub_id_for_pub(
+  uint64_t sub_id,
+  uint64_t pub_id,
+  bool use_take_shared_method)
+{
+  if (use_take_shared_method) {
+    pub_to_generic_subs_[pub_id].take_shared_subscriptions.push_back(sub_id);
+  } else {
+    pub_to_generic_subs_[pub_id].take_ownership_subscriptions.push_back(sub_id);
+  }
+}
+
 bool
 IntraProcessManager::can_communicate(
   rclcpp::PublisherBase::SharedPtr pub,
@@ -219,7 +290,8 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
   size_t capacity = std::numeric_limits<size_t>::max();
 
   auto publisher_it = pub_to_subs_.find(intra_process_publisher_id);
-  if (publisher_it == pub_to_subs_.end()) {
+  auto publisher_g_it = pub_to_generic_subs_.find(intra_process_publisher_id);
+  if (publisher_it == pub_to_subs_.end() && publisher_g_it == pub_to_generic_subs_.end()) {
     // Publisher is either invalid or no longer exists.
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
@@ -227,9 +299,19 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     return 0u;
   }
 
-  if (publisher_it->second.take_shared_subscriptions.empty() &&
-    publisher_it->second.take_ownership_subscriptions.empty())
-  {
+  bool a = false;
+  bool b = false;
+  if (publisher_it != pub_to_subs_.end()) {
+    a = publisher_it->second.take_shared_subscriptions.empty() &&
+      publisher_it->second.take_ownership_subscriptions.empty();
+  }
+
+  if (publisher_g_it != pub_to_generic_subs_.end()) {
+    b = publisher_g_it->second.take_shared_subscriptions.empty() &&
+      publisher_g_it->second.take_ownership_subscriptions.empty();
+  }
+
+  if (!(a || b)) {
     // no subscriptions available
     return 0u;
   }
@@ -250,12 +332,42 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
       }
     };
 
-  for (const auto sub_id : publisher_it->second.take_shared_subscriptions) {
-    available_capacity(sub_id);
+  auto available_g_capacity = [this, &capacity](const uint64_t intra_process_subscription_id)
+    {
+      auto subscription_it = generic_subscriptions_.find(intra_process_subscription_id);
+      if (subscription_it != generic_subscriptions_.end()) {
+        auto subscription = subscription_it->second.lock();
+        if (subscription) {
+          capacity = std::min(capacity, subscription->available_capacity());
+        }
+      } else {
+        // Subscription is either invalid or no longer exists.
+        RCLCPP_WARN(
+          rclcpp::get_logger("rclcpp"),
+          "Calling available_capacity for invalid or no longer existing subscription id");
+      }
+    };
+
+
+  if (publisher_it != pub_to_subs_.end()) {
+    for (const auto sub_id : publisher_it->second.take_shared_subscriptions) {
+      available_capacity(sub_id);
+    }
+
+    for (const auto sub_id : publisher_it->second.take_ownership_subscriptions) {
+      available_capacity(sub_id);
+    }
   }
 
-  for (const auto sub_id : publisher_it->second.take_ownership_subscriptions) {
-    available_capacity(sub_id);
+  if (publisher_g_it != pub_to_generic_subs_.end()) {
+
+    for (const auto sub_id : publisher_g_it->second.take_shared_subscriptions) {
+      available_g_capacity(sub_id);
+    }
+
+    for (const auto sub_id : publisher_g_it->second.take_ownership_subscriptions) {
+      available_g_capacity(sub_id);
+    }
   }
 
   return capacity;

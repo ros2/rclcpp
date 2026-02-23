@@ -75,6 +75,12 @@ GenericSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo & message_info)
 {
+  if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
+    // In this case, the message will be delivered via intra process and
+    // we should ignore this copy of the message.
+    return;
+  }
+
   any_callback_.dispatch(message, message_info);
 }
 
