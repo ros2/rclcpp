@@ -43,6 +43,7 @@ struct ExecutorOptions
   RCLCPP_PUBLIC
   ExecutorOptions & operator=(const ExecutorOptions &);
 
+  [[deprecated("MemoryStrategy is deprecated.")]]
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
   rclcpp::Context::SharedPtr context;
   size_t max_conditions;

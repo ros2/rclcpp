@@ -21,7 +21,6 @@
 
 #include "rcl/allocator.h"
 #include "rcl/wait.h"
-
 #include "rclcpp/any_executable.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -39,112 +38,133 @@ namespace memory_strategy
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
  */
-class RCLCPP_PUBLIC MemoryStrategy
+
+class RCLCPP_PUBLIC [[deprecated("Changes to the executor leave this Class deprecated.")]]
+MemoryStrategy
 {
 public:
+#if !defined(_WIN32)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy)
-  using WeakCallbackGroupsToNodesMap = std::map<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
+  using WeakCallbackGroupsToNodesMap = std::map<
+    rclcpp::CallbackGroup::WeakPtr, rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
 
   virtual ~MemoryStrategy() = default;
 
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual bool collect_entities(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) = 0;
 
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_ready_subscriptions() const = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_ready_services() const = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_ready_clients() const = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_ready_events() const = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_ready_timers() const = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_guard_conditions() const = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual size_t number_of_waitables() const = 0;
 
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable) = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual void clear_handles() = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
   virtual void remove_null_handles(rcl_wait_set_t * wait_set) = 0;
 
-  virtual void
-  add_guard_condition(const rclcpp::GuardCondition & guard_condition) = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void add_guard_condition(const rclcpp::GuardCondition & guard_condition) = 0;
 
-  virtual void
-  remove_guard_condition(const rclcpp::GuardCondition * guard_condition) = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void remove_guard_condition(const rclcpp::GuardCondition * guard_condition) = 0;
 
-  virtual void
-  get_next_subscription(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void get_next_subscription(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) = 0;
 
-  virtual void
-  get_next_service(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void get_next_service(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) = 0;
 
-  virtual void
-  get_next_client(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void get_next_client(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) = 0;
 
-  virtual void
-  get_next_timer(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void get_next_timer(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) = 0;
 
-  virtual void
-  get_next_waitable(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual void get_next_waitable(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) = 0;
 
-  virtual rcl_allocator_t
-  get_allocator() = 0;
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  virtual rcl_allocator_t get_allocator() = 0;
 
-  static rclcpp::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::SubscriptionBase::SharedPtr get_subscription_by_handle(
     const std::shared_ptr<const rcl_subscription_t> & subscriber_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::ServiceBase::SharedPtr
-  get_service_by_handle(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::ServiceBase::SharedPtr get_service_by_handle(
     const std::shared_ptr<const rcl_service_t> & service_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::ClientBase::SharedPtr
-  get_client_by_handle(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::ClientBase::SharedPtr get_client_by_handle(
     const std::shared_ptr<const rcl_client_t> & client_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::TimerBase::SharedPtr
-  get_timer_by_handle(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::TimerBase::SharedPtr get_timer_by_handle(
     const std::shared_ptr<const rcl_timer_t> & timer_handle,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_by_group(
     const rclcpp::CallbackGroup::SharedPtr & group,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::CallbackGroup::SharedPtr
-  get_group_by_subscription(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::CallbackGroup::SharedPtr get_group_by_subscription(
     const rclcpp::SubscriptionBase::SharedPtr & subscription,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::CallbackGroup::SharedPtr
-  get_group_by_service(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::CallbackGroup::SharedPtr get_group_by_service(
     const rclcpp::ServiceBase::SharedPtr & service,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::CallbackGroup::SharedPtr
-  get_group_by_client(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::CallbackGroup::SharedPtr get_group_by_client(
     const rclcpp::ClientBase::SharedPtr & client,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::CallbackGroup::SharedPtr
-  get_group_by_timer(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::CallbackGroup::SharedPtr get_group_by_timer(
     const rclcpp::TimerBase::SharedPtr & timer,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
-  static rclcpp::CallbackGroup::SharedPtr
-  get_group_by_waitable(
+  [[deprecated("MemoryStrategy is deprecated.")]]
+  static rclcpp::CallbackGroup::SharedPtr get_group_by_waitable(
     const rclcpp::Waitable::SharedPtr & waitable,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 };
