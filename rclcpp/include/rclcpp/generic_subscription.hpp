@@ -87,6 +87,57 @@ public:
     any_callback_(callback),
     ts_lib_(ts_lib)
   {
+        // Setup intra process publishing if requested.
+    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
+      using rclcpp::detail::resolve_intra_process_buffer_type;
+
+      // Check if the QoS is compatible with intra-process.
+      auto qos_profile = get_actual_qos();
+      if (qos_profile.history() != rclcpp::HistoryPolicy::KeepLast) {
+        throw std::invalid_argument(
+                "intraprocess communication on topic '" + topic_name +
+                "' allowed only with keep last history qos policy");
+      }
+      if (qos_profile.depth() == 0) {
+        throw std::invalid_argument(
+                "intraprocess communication on topic '" + topic_name +
+                "' is not allowed with 0 depth qos policy");
+      }
+      using MessageT = rclcpp::SerializedMessage;
+      using SubscribedTypeAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
+      using SubscribedTypeAllocator = typename SubscribedTypeAllocatorTraits::allocator_type;
+      using SubscribedTypeDeleter = allocator::Deleter<SubscribedTypeAllocator, MessageT>;
+
+      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
+        MessageT,
+        MessageT,
+        SubscribedTypeAllocator,
+        SubscribedTypeDeleter,
+        MessageT,
+        AllocatorT>;
+
+      // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
+      auto context = node_base->get_context();
+      subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
+        callback,
+        options.get_allocator(),
+        context,
+        this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
+        qos_profile,
+        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback));
+      TRACETOOLS_TRACEPOINT(
+        rclcpp_subscription_init,
+        static_cast<const void *>(get_subscription_handle().get()),
+        static_cast<const void *>(subscription_intra_process_.get()));
+
+      // Add it to the intra process manager.
+      using rclcpp::experimental::IntraProcessManager;
+      auto ipm = context->get_sub_context<IntraProcessManager>();
+      uint64_t intra_process_subscription_id = ipm->template add_generic_subscription<
+        MessageT, SubscribedTypeAllocator>(subscription_intra_process_);
+      this->setup_intra_process(intra_process_subscription_id, ipm);
+    }
+
     TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_init,
       static_cast<const void *>(get_subscription_handle().get()),
