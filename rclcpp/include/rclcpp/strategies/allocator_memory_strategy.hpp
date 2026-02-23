@@ -19,15 +19,12 @@
 #include <vector>
 
 #include "rcl/allocator.h"
-
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/visibility_control.hpp"
-
 #include "rcutils/logging_macros.h"
-
 #include "rmw/types.h"
 
 namespace rclcpp
@@ -43,25 +40,36 @@ namespace allocator_memory_strategy
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
  */
-template<typename Alloc = std::allocator<void>>
-class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
+template <typename Alloc = std::allocator<void>>
+class [[deprecated("Changes executor leave this Class deprecated.")]] AllocatorMemoryStrategy
+: public memory_strategy::MemoryStrategy
 {
 public:
+#if !defined(_WIN32)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>)
 
   using VoidAllocTraits = typename allocator::AllocRebind<void *, Alloc>;
   using VoidAlloc = typename VoidAllocTraits::allocator_type;
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   explicit AllocatorMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
     allocator_ = std::make_shared<VoidAlloc>(*allocator.get());
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   AllocatorMemoryStrategy()
   {
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   void add_guard_condition(const rclcpp::GuardCondition & guard_condition) override
   {
     for (const auto & existing_guard_condition : guard_conditions_) {
@@ -72,6 +80,7 @@ public:
     guard_conditions_.push_back(&guard_condition);
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   void remove_guard_condition(const rclcpp::GuardCondition * guard_condition) override
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
@@ -82,6 +91,7 @@ public:
     }
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   void clear_handles() override
   {
     subscription_handles_.clear();
@@ -91,6 +101,7 @@ public:
     waitable_handles_.clear();
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   void remove_null_handles(rcl_wait_set_t * wait_set) override
   {
     // TODO(jacobperron): Check if wait set sizes are what we expect them to be?
@@ -103,9 +114,9 @@ public:
     // Mark corresponding weak_ptr as expired for entities that are null in the wait set
     size_t valid_subscription_count = 0;
     for (size_t i = 0; i < subscription_handles_.size(); ++i) {
-      if (valid_subscription_count < wait_set->size_of_subscriptions &&
-        !wait_set->subscriptions[valid_subscription_count])
-      {
+      if (
+        valid_subscription_count < wait_set->size_of_subscriptions &&
+        !wait_set->subscriptions[valid_subscription_count]) {
         subscription_handles_[i] = std::weak_ptr<const rcl_subscription_t>{};
       }
       if (subscription_handles_[i].lock()) {
@@ -115,9 +126,9 @@ public:
 
     size_t valid_service_count = 0;
     for (size_t i = 0; i < service_handles_.size(); ++i) {
-      if (valid_service_count < wait_set->size_of_services &&
-        !wait_set->services[valid_service_count])
-      {
+      if (
+        valid_service_count < wait_set->size_of_services &&
+        !wait_set->services[valid_service_count]) {
         service_handles_[i] = std::weak_ptr<const rcl_service_t>{};
       }
       if (service_handles_[i].lock()) {
@@ -127,9 +138,8 @@ public:
 
     size_t valid_client_count = 0;
     for (size_t i = 0; i < client_handles_.size(); ++i) {
-      if (valid_client_count < wait_set->size_of_clients &&
-        !wait_set->clients[valid_client_count])
-      {
+      if (
+        valid_client_count < wait_set->size_of_clients && !wait_set->clients[valid_client_count]) {
         client_handles_[i] = std::weak_ptr<const rcl_client_t>{};
       }
       if (client_handles_[i].lock()) {
@@ -139,9 +149,7 @@ public:
 
     size_t valid_timer_count = 0;
     for (size_t i = 0; i < timer_handles_.size(); ++i) {
-      if (valid_timer_count < wait_set->size_of_timers &&
-        !wait_set->timers[valid_timer_count])
-      {
+      if (valid_timer_count < wait_set->size_of_timers && !wait_set->timers[valid_timer_count]) {
         timer_handles_[i] = std::weak_ptr<const rcl_timer_t>{};
       }
       if (timer_handles_[i].lock()) {
@@ -157,43 +165,37 @@ public:
 
     // Remove expired weak_ptr instances
     subscription_handles_.erase(
-      std::remove_if(subscription_handles_.begin(), subscription_handles_.end(),
-      [](const std::weak_ptr<const rcl_subscription_t> & weak_ptr) {
-        return weak_ptr.expired();
+      std::remove_if(
+        subscription_handles_.begin(), subscription_handles_.end(),
+        [](const std::weak_ptr<const rcl_subscription_t> & weak_ptr) {
+          return weak_ptr.expired();
         }),
-      subscription_handles_.end()
-    );
+      subscription_handles_.end());
 
     service_handles_.erase(
-      std::remove_if(service_handles_.begin(), service_handles_.end(),
-      [](const std::weak_ptr<const rcl_service_t> & weak_ptr) {
-        return weak_ptr.expired();
-        }),
-      service_handles_.end()
-    );
+      std::remove_if(
+        service_handles_.begin(), service_handles_.end(),
+        [](const std::weak_ptr<const rcl_service_t> & weak_ptr) { return weak_ptr.expired(); }),
+      service_handles_.end());
 
     client_handles_.erase(
-      std::remove_if(client_handles_.begin(), client_handles_.end(),
-      [](const std::weak_ptr<const rcl_client_t> & weak_ptr) {
-        return weak_ptr.expired();
-        }),
-      client_handles_.end()
-    );
+      std::remove_if(
+        client_handles_.begin(), client_handles_.end(),
+        [](const std::weak_ptr<const rcl_client_t> & weak_ptr) { return weak_ptr.expired(); }),
+      client_handles_.end());
 
     timer_handles_.erase(
-      std::remove_if(timer_handles_.begin(), timer_handles_.end(),
-      [](const std::weak_ptr<const rcl_timer_t> & weak_ptr) {
-        return weak_ptr.expired();
-        }),
-      timer_handles_.end()
-    );
+      std::remove_if(
+        timer_handles_.begin(), timer_handles_.end(),
+        [](const std::weak_ptr<const rcl_timer_t> & weak_ptr) { return weak_ptr.expired(); }),
+      timer_handles_.end());
 
     waitable_handles_.erase(
       std::remove(waitable_handles_.begin(), waitable_handles_.end(), nullptr),
-      waitable_handles_.end()
-    );
+      waitable_handles_.end());
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   bool collect_entities(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     bool has_invalid_weak_groups_or_nodes = false;
@@ -229,6 +231,7 @@ public:
     return has_invalid_weak_groups_or_nodes;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable) override
   {
     if (nullptr == waitable) {
@@ -237,19 +240,18 @@ public:
     waitable_handles_.push_back(waitable);
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     for (const std::weak_ptr<const rcl_subscription_t> & weak_subscription :
-      subscription_handles_)
-    {
+         subscription_handles_) {
       auto subscription = weak_subscription.lock();
       if (!subscription) {
         continue;  // Skip expired handles
       }
       if (rcl_wait_set_add_subscription(wait_set, subscription.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
         rcl_reset_error();
         return false;
       }
@@ -262,8 +264,7 @@ public:
       }
       if (rcl_wait_set_add_client(wait_set, client.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add client to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add client to wait set: %s", rcl_get_error_string().str);
         rcl_reset_error();
         return false;
       }
@@ -276,8 +277,7 @@ public:
       }
       if (rcl_wait_set_add_service(wait_set, service.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add service to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add service to wait set: %s", rcl_get_error_string().str);
         rcl_reset_error();
         return false;
       }
@@ -290,8 +290,7 @@ public:
       }
       if (rcl_wait_set_add_timer(wait_set, timer.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add timer to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add timer to wait set: %s", rcl_get_error_string().str);
         rcl_reset_error();
         return false;
       }
@@ -307,8 +306,8 @@ public:
     return true;
   }
 
-  void
-  get_next_subscription(
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
+  void get_next_subscription(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
@@ -348,8 +347,8 @@ public:
     }
   }
 
-  void
-  get_next_service(
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
+  void get_next_service(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
@@ -389,8 +388,8 @@ public:
     }
   }
 
-  void
-  get_next_client(
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
+  void get_next_client(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
@@ -430,8 +429,8 @@ public:
     }
   }
 
-  void
-  get_next_timer(
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
+  void get_next_timer(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
@@ -478,8 +477,8 @@ public:
     }
   }
 
-  void
-  get_next_waitable(
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
+  void get_next_waitable(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
@@ -513,6 +512,7 @@ public:
     }
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   rcl_allocator_t get_allocator() override
   {
     if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
@@ -522,6 +522,7 @@ public:
     }
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_ready_subscriptions() const override
   {
     size_t number_of_subscriptions = 0;
@@ -537,6 +538,7 @@ public:
     return number_of_subscriptions;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_ready_services() const override
   {
     size_t number_of_services = 0;
@@ -552,6 +554,7 @@ public:
     return number_of_services;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_ready_events() const override
   {
     size_t number_of_events = 0;
@@ -561,6 +564,7 @@ public:
     return number_of_events;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_ready_clients() const override
   {
     size_t number_of_clients = 0;
@@ -576,6 +580,7 @@ public:
     return number_of_clients;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_guard_conditions() const override
   {
     size_t number_of_guard_conditions = guard_conditions_.size();
@@ -585,6 +590,7 @@ public:
     return number_of_guard_conditions;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_ready_timers() const override
   {
     size_t number_of_timers = 0;
@@ -600,13 +606,14 @@ public:
     return number_of_timers;
   }
 
+  [[deprecated("AllocatorMemoryStrategy is deprecated.")]]
   size_t number_of_waitables() const override
   {
     return waitable_handles_.size();
   }
 
 private:
-  template<typename T>
+  template <typename T>
   using VectorRebind =
     std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
