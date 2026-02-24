@@ -366,6 +366,33 @@ INSTANTIATE_TEST_SUITE_P(
   }
 );
 
+TEST_P(TestTimer, test_timer_triggered_once) {
+  std::atomic<int> callback_counter{0};
+
+  rclcpp::TimerBase::SharedPtr timer_called_twice;
+  timer_called_twice = test_node->create_wall_timer(
+    0ms,
+    [&callback_counter]() {
+      callback_counter += 1;
+    }, nullptr, true, 1);
+
+  executor->spin();
+  ASSERT_EQ(1, callback_counter);
+
+  executor->spin();
+  ASSERT_EQ(1, callback_counter);
+  ASSERT_TRUE(timer_called_twice->is_canceled());
+
+  timer_called_twice->reset();
+
+  executor->spin();
+  ASSERT_EQ(2, callback_counter);
+
+  executor->spin();
+  ASSERT_EQ(2, callback_counter);
+  ASSERT_TRUE(timer_called_twice->is_canceled());
+}
+
 /// Simple test of a timer without autostart
 TEST_P(TestTimer, test_timer_without_autostart)
 {
