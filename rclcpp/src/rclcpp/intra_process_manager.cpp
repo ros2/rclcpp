@@ -101,12 +101,21 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
-  // Remove GID to publisher info mapping
+  // Remove GID to publisher info mapping.
+  // First try via the publisher's own GID (fast path).
   auto pub_it = publishers_.find(intra_process_publisher_id);
   if (pub_it != publishers_.end()) {
     auto publisher = pub_it->second.lock();
     if (publisher) {
       gid_to_publisher_info_.erase(publisher->get_gid());
+    } else {
+      // Publisher weak_ptr already expired, fall back to linear scan by pub_id.
+      for (auto git = gid_to_publisher_info_.begin(); git != gid_to_publisher_info_.end(); ++git) {
+        if (git->second.pub_id == intra_process_publisher_id) {
+          gid_to_publisher_info_.erase(git);
+          break;
+        }
+      }
     }
   }
 

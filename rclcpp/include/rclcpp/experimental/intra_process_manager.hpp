@@ -408,11 +408,10 @@ private:
   {
     bool operator()(const rmw_gid_t & lhs, const rmw_gid_t & rhs) const noexcept
     {
-      // Compare implementation identifier first for fast rejection
-      if (lhs.implementation_identifier != rhs.implementation_identifier) {
-        return false;
-      }
-      // Compare the data bytes
+      // Compare the data bytes only.
+      // implementation_identifier pointer comparison is not used here because
+      // intra-process communication is always within the same process and RMW,
+      // and pointer comparison is fragile across dynamically loaded components.
       return std::equal(
         std::begin(lhs.data),
         std::end(lhs.data),
@@ -684,9 +683,10 @@ private:
   SubscriptionMap subscriptions_;
   PublisherMap publishers_;
   PublisherBufferMap publisher_buffers_;
-  GidToPublisherInfoMap gid_to_publisher_info_;
 
   mutable std::shared_timed_mutex mutex_;
+
+  GidToPublisherInfoMap gid_to_publisher_info_;
 };
 
 }  // namespace experimental
