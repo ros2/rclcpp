@@ -19,6 +19,7 @@
 
 #include <shared_mutex>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
