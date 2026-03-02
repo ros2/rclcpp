@@ -53,6 +53,15 @@ protected:
   LifecycleNodeInterface() {}
 
 public:
+/// Return values for lifecycle transition callbacks.
+  ///
+  /// SUCCESS: The callback completed successfully and the transition can proceed.
+  ///
+  /// FAILURE: The callback did not succeed, and the transition will not proceed.
+  /// The node remains in its current state.
+  ///
+  /// ERROR: An error occurred during the callback execution.
+  /// The node may transition to an error handling state.
   enum class CallbackReturn : uint8_t
   {
     SUCCESS = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS,
