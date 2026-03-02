@@ -498,7 +498,7 @@ TEST_F(TestNode, ConfigureNodesFilterAndCheckAddParameterEventCallback)
           changed_parameter.name == remote_node1_param_name)
         {
           received_from_remote_node1 = true;
-        } else if (parm.node == "/" + remote_node_name2 &&
+        } else if (parm.node == "/" + remote_node_name2 &&  // NOLINT(readability/braces)
           changed_parameter.name == remote_node2_param_name)
         {
           received_from_remote_node2 = true;
