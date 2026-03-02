@@ -591,40 +591,33 @@ TEST_F(TestNode, ConfigureNodesFilterAndCheckAddParameterCallback)
   remote_node1->declare_parameter(remote_node1_param_name, 10);
   remote_node2->declare_parameter(remote_node2_param_name, "Default");
 
+  // The ParameterEventHandler creates its /parameter_events subscription (with no
+  // content filter) at construction time. When declare_parameter is later called on
+  // remote nodes, it internally triggers set_parameter which publishes a ParameterEvent
+  // with the parameter in the new_parameters field. That event arrives on the
+  // already-existing, unfiltered subscription and is stored in its queue.
+  // Recreate the param_handler so its new subscription starts with an empty queue,
+  // avoiding interference from queued declare_parameter events.
+  param_handler.reset();
+  param_handler = std::make_shared<TestParameterEventHandler>(node);
+
   std::atomic_bool received_from_remote_node1{false};
   std::atomic_bool received_from_remote_node2{false};
 
-  // Only track changed_parameters to ignore queued declare_parameter events.
-  auto cb_changed_event =
-    [&remote_node_name1, &remote_node_name2,
-      &remote_node1_param_name, &remote_node2_param_name,
-      &received_from_remote_node1, &received_from_remote_node2]
-    (const rcl_interfaces::msg::ParameterEvent & event) {
-      for (const auto & changed_parameter : event.changed_parameters) {
-        if (event.node == "/" + remote_node_name1 &&
-          changed_parameter.name == remote_node1_param_name)
-        {
-          received_from_remote_node1 = true;
-        } else if (event.node == "/" + remote_node_name2 &&
-          changed_parameter.name == remote_node2_param_name)
-        {
-          received_from_remote_node2 = true;
-        }
-      }
+  auto cb1 = [&received_from_remote_node1](const rclcpp::Parameter &) {
+      received_from_remote_node1 = true;
+    };
+  auto cb2 = [&received_from_remote_node2](const rclcpp::Parameter &) {
+      received_from_remote_node2 = true;
     };
 
   // Configure to only receive parameter events from remote_node_name2
   ASSERT_TRUE(param_handler->configure_nodes_filter({remote_node_name2}));
 
-  // Note: add_parameter_callback internally uses get_parameter_from_event, which
-  // searches both new_parameters and changed_parameters. This means a queued
-  // declare_parameter event (new_parameters) could trigger the parameter callback
-  // before the content filter takes effect — bypassing the filter on RMW
-  // implementations that don't retroactively purge queued messages.
-  // To make this test deterministic, we use an event-level callback that only
-  // inspects changed_parameters for the assertion flags, rather than relying on
-  // parameter-level callbacks which cannot distinguish new vs changed.
-  auto event_handler = param_handler->add_parameter_event_callback(cb_changed_event);
+  auto h1 = param_handler->add_parameter_callback(
+    remote_node1_param_name, cb1, "/" + remote_node_name1);
+  auto h2 = param_handler->add_parameter_callback(
+    remote_node2_param_name, cb2, "/" + remote_node_name2);
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);
