@@ -192,7 +192,7 @@ on_shutdown(const std::function<void()> & callback, const Context::SharedPtr & c
 bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds, const Context::SharedPtr & context)
 {
-  if(!context) {
+  if (!context) {
     return sleep_for(nanoseconds, rclcpp::contexts::get_global_default_context());
   }
   return context->sleep_for(nanoseconds);
