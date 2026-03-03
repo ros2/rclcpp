@@ -63,7 +63,7 @@ enum class CallbackReturn : uint8_t
   FAILURE = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE,
 
   /// An error occurred during the callback execution.
-  /// The node may transition to an error handling state.
+  /// The node transitions to an error handling state.
   ERROR = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR,
 };
   RCLCPP_LIFECYCLE_PUBLIC
