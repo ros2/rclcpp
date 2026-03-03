@@ -59,7 +59,7 @@ public:
       std::remove_if(
         weak_contexts_.begin(),
         weak_contexts_.end(),
-        [context](const Context::WeakPtr weak_context) {
+        [context](const Context::WeakPtr & weak_context) {
           auto locked_context = weak_context.lock();
           if (!locked_context) {
             // take advantage and removed expired contexts
@@ -388,14 +388,14 @@ Context::shutdown(const std::string & reason)
 }
 
 rclcpp::Context::OnShutdownCallback
-Context::on_shutdown(OnShutdownCallback callback)
+Context::on_shutdown(const OnShutdownCallback & callback)
 {
   add_on_shutdown_callback(callback);
   return callback;
 }
 
 rclcpp::OnShutdownCallbackHandle
-Context::add_on_shutdown_callback(OnShutdownCallback callback)
+Context::add_on_shutdown_callback(const OnShutdownCallback & callback)
 {
   return add_shutdown_callback<ShutdownType::on_shutdown>(callback);
 }
@@ -407,7 +407,7 @@ Context::remove_on_shutdown_callback(const OnShutdownCallbackHandle & callback_h
 }
 
 rclcpp::PreShutdownCallbackHandle
-Context::add_pre_shutdown_callback(PreShutdownCallback callback)
+Context::add_pre_shutdown_callback(const PreShutdownCallback & callback)
 {
   return add_shutdown_callback<ShutdownType::pre_shutdown>(callback);
 }
@@ -422,7 +422,7 @@ Context::remove_pre_shutdown_callback(
 template<Context::ShutdownType shutdown_type>
 rclcpp::ShutdownCallbackHandle
 Context::add_shutdown_callback(
-  ShutdownCallback callback)
+  const ShutdownCallback & callback)
 {
   auto callback_shared_ptr =
     std::make_shared<ShutdownCallbackHandle::ShutdownCallbackType>(callback);
@@ -497,8 +497,9 @@ Context::get_shutdown_callback() const
   const auto get_callback_vector = [](auto & mutex, auto & callback_set) {
       const std::lock_guard<std::recursive_mutex> lock(mutex);
       std::vector<rclcpp::Context::ShutdownCallback> callbacks;
+      callbacks.reserve(callback_set.size());
       for (auto & callback : callback_set) {
-        callbacks.push_back(*callback);
+        callbacks.emplace_back(*callback);
       }
       return callbacks;
     };

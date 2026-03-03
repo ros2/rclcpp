@@ -229,7 +229,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   OnShutdownCallback
-  on_shutdown(OnShutdownCallback callback);
+  on_shutdown(const OnShutdownCallback & callback);
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
@@ -253,7 +253,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   OnShutdownCallbackHandle
-  add_on_shutdown_callback(OnShutdownCallback callback);
+  add_on_shutdown_callback(const OnShutdownCallback & callback);
 
   /// Remove an registered on_shutdown callbacks.
   /**
@@ -280,7 +280,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   PreShutdownCallbackHandle
-  add_pre_shutdown_callback(PreShutdownCallback callback);
+  add_pre_shutdown_callback(const PreShutdownCallback & callback);
 
   /// Remove an registered pre_shutdown callback.
   /**
@@ -417,7 +417,7 @@ private:
   RCLCPP_LOCAL
   ShutdownCallbackHandle
   add_shutdown_callback(
-    ShutdownCallback callback);
+    const ShutdownCallback & callback);
 
   template<ShutdownType shutdown_type>
   RCLCPP_LOCAL

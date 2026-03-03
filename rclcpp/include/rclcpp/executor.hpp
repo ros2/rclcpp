@@ -102,8 +102,8 @@ public:
   RCLCPP_PUBLIC
   virtual void
   add_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    const rclcpp::CallbackGroup::SharedPtr & group_ptr,
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
     bool notify = true);
 
   /// Get callback groups that belong to executor.
@@ -173,7 +173,7 @@ public:
   RCLCPP_PUBLIC
   virtual void
   remove_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    const rclcpp::CallbackGroup::SharedPtr & group_ptr,
     bool notify = true);
 
   /// Add a node to the executor.
@@ -197,7 +197,9 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+  add_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
+    bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   /**
@@ -205,7 +207,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
+  add_node(const std::shared_ptr<rclcpp::Node> & node_ptr, bool notify = true);
 
   /// Remove a node from the executor.
   /**
@@ -225,7 +227,9 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+  remove_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
+    bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   /**
@@ -233,7 +237,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
+  remove_node(const std::shared_ptr<rclcpp::Node> & node_ptr, bool notify = true);
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
@@ -245,7 +249,7 @@ public:
   template<typename RepT = int64_t, typename T = std::milli>
   void
   spin_node_once(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
     std::chrono::duration<RepT, T> timeout = std::chrono::duration<RepT, T>(-1))
   {
     return spin_node_once_nanoseconds(
@@ -258,7 +262,7 @@ public:
   template<typename NodeT = rclcpp::Node, typename RepT = int64_t, typename T = std::milli>
   void
   spin_node_once(
-    std::shared_ptr<NodeT> node,
+    const std::shared_ptr<NodeT> & node,
     std::chrono::duration<RepT, T> timeout = std::chrono::duration<RepT, T>(-1))
   {
     return spin_node_once_nanoseconds(
@@ -273,12 +277,12 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
+  spin_node_some(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
   virtual void
-  spin_node_some(std::shared_ptr<rclcpp::Node> node);
+  spin_node_some(const std::shared_ptr<rclcpp::Node> & node);
 
   /// Collect work once and execute all available work, optionally within a max duration.
   /**
@@ -321,13 +325,13 @@ public:
   RCLCPP_PUBLIC
   virtual void
   spin_node_all(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
     std::chrono::nanoseconds max_duration);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
   virtual void
-  spin_node_all(std::shared_ptr<rclcpp::Node> node, std::chrono::nanoseconds max_duration);
+  spin_node_all(const std::shared_ptr<rclcpp::Node> & node, std::chrono::nanoseconds max_duration);
 
   /// Collect and execute work repeatedly within a duration or until no more work is available.
   /**
@@ -427,7 +431,7 @@ protected:
   RCLCPP_PUBLIC
   void
   spin_node_once_nanoseconds(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
     std::chrono::nanoseconds timeout);
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
@@ -478,7 +482,7 @@ protected:
   RCLCPP_PUBLIC
   static void
   execute_subscription(
-    rclcpp::SubscriptionBase::SharedPtr subscription);
+    const rclcpp::SubscriptionBase::SharedPtr & subscription);
 
   /// Run timer executable.
   /**
@@ -487,7 +491,7 @@ protected:
    */
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr);
+  execute_timer(const rclcpp::TimerBase::SharedPtr & timer, const std::shared_ptr<void> & data_ptr);
 
   /// Run service server executable.
   /**
@@ -496,7 +500,7 @@ protected:
    */
   RCLCPP_PUBLIC
   static void
-  execute_service(rclcpp::ServiceBase::SharedPtr service);
+  execute_service(const rclcpp::ServiceBase::SharedPtr & service);
 
   /// Run service client executable.
   /**
@@ -505,7 +509,7 @@ protected:
    */
   RCLCPP_PUBLIC
   static void
-  execute_client(rclcpp::ClientBase::SharedPtr client);
+  execute_client(const rclcpp::ClientBase::SharedPtr & client);
 
   /// Gather all of the waitable entities from associated nodes and callback groups.
   RCLCPP_PUBLIC

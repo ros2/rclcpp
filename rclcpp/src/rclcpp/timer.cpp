@@ -150,7 +150,7 @@ TimerBase::exchange_in_use_by_wait_set_state(bool in_use_state)
 }
 
 void
-TimerBase::set_on_reset_callback(std::function<void(size_t)> callback)
+TimerBase::set_on_reset_callback(const std::function<void(size_t)> & callback)
 {
   if (!callback) {
     throw std::invalid_argument(

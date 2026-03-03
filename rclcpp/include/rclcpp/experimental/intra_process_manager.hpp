@@ -119,7 +119,8 @@ public:
     typename Alloc = std::allocator<ROSMessageType>
   >
   uint64_t
-  add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
+  add_subscription(
+    const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription)
   {
     std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -176,8 +177,8 @@ public:
   RCLCPP_PUBLIC
   uint64_t
   add_publisher(
-    rclcpp::PublisherBase::SharedPtr publisher,
-    rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr buffer =
+    const rclcpp::PublisherBase::SharedPtr & publisher,
+    const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer =
     rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr());
 
   /// Unregister a publisher using the publisher's unique id.
@@ -454,8 +455,8 @@ private:
   RCLCPP_PUBLIC
   bool
   can_communicate(
-    rclcpp::PublisherBase::SharedPtr pub,
-    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const;
+    const rclcpp::PublisherBase::SharedPtr & pub,
+    const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & sub) const;
 
   template<
     typename ROSMessageType,

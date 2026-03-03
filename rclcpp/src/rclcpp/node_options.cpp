@@ -143,7 +143,7 @@ NodeOptions::context() const
 }
 
 NodeOptions &
-NodeOptions::context(rclcpp::Context::SharedPtr context)
+NodeOptions::context(const rclcpp::Context::SharedPtr & context)
 {
   this->context_ = context;
   return *this;

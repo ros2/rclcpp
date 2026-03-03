@@ -645,8 +645,9 @@ std::vector<rclcpp::TopicEndpointInfo>
 convert_to_topic_info_list(const rcl_topic_endpoint_info_array_t & info_array)
 {
   std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
+  topic_info_list.reserve(info_array.size);
   for (size_t i = 0; i < info_array.size; ++i) {
-    topic_info_list.push_back(rclcpp::TopicEndpointInfo(info_array.info_array[i]));
+    topic_info_list.emplace_back(info_array.info_array[i]);
   }
   return topic_info_list;
 }
@@ -759,8 +760,9 @@ std::vector<rclcpp::ServiceEndpointInfo>
 convert_to_service_info_list(const rcl_service_endpoint_info_array_t & info_array)
 {
   std::vector<rclcpp::ServiceEndpointInfo> service_info_list;
+  service_info_list.reserve(info_array.size);
   for (size_t i = 0; i < info_array.size; ++i) {
-    service_info_list.push_back(rclcpp::ServiceEndpointInfo(info_array.info_array[i]));
+    service_info_list.emplace_back(info_array.info_array[i]);
   }
   return service_info_list;
 }

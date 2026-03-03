@@ -99,29 +99,29 @@ Executor::~Executor()
   notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
   current_collection_.timers.update(
     {}, {},
-    [this](auto timer) {wait_set_.remove_timer(timer);});
+    [this](auto timer) {wait_set_.remove_timer(std::move(timer));});
 
   current_collection_.subscriptions.update(
     {}, {},
     [this](auto subscription) {
-      wait_set_.remove_subscription(subscription, kDefaultSubscriptionMask);
+      wait_set_.remove_subscription(std::move(subscription), kDefaultSubscriptionMask);
     });
 
   current_collection_.clients.update(
     {}, {},
-    [this](auto client) {wait_set_.remove_client(client);});
+    [this](auto client) {wait_set_.remove_client(std::move(client));});
 
   current_collection_.services.update(
     {}, {},
-    [this](auto service) {wait_set_.remove_service(service);});
+    [this](auto service) {wait_set_.remove_service(std::move(service));});
 
   current_collection_.guard_conditions.update(
     {}, {},
-    [this](auto guard_condition) {wait_set_.remove_guard_condition(guard_condition);});
+    [this](auto guard_condition) {wait_set_.remove_guard_condition(std::move(guard_condition));});
 
   current_collection_.waitables.update(
     {}, {},
-    [this](auto waitable) {wait_set_.remove_waitable(waitable);});
+    [this](auto waitable) {wait_set_.remove_waitable(std::move(waitable));});
 
   // Remove shutdown callback handle registered to Context
   if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
@@ -170,8 +170,8 @@ Executor::get_automatically_added_callback_groups_from_nodes()
 
 void
 Executor::add_callback_group(
-  rclcpp::CallbackGroup::SharedPtr group_ptr,
-  [[maybe_unused]] rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr,
+  [[maybe_unused]] const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
   bool notify)
 {
   this->collector_.add_callback_group(group_ptr);
@@ -186,7 +186,9 @@ Executor::add_callback_group(
 }
 
 void
-Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
+Executor::add_node(
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
+  bool notify)
 {
   if (node_ptr->get_context() != context_) {
     throw std::runtime_error(
@@ -206,7 +208,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 
 void
 Executor::remove_callback_group(
-  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr,
   bool notify)
 {
   this->collector_.remove_callback_group(group_ptr);
@@ -221,13 +223,15 @@ Executor::remove_callback_group(
 }
 
 void
-Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
+Executor::add_node(const std::shared_ptr<rclcpp::Node> & node_ptr, bool notify)
 {
   this->add_node(node_ptr->get_node_base_interface(), notify);
 }
 
 void
-Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
+Executor::remove_node(
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
+  bool notify)
 {
   this->collector_.remove_node(node_ptr);
 
@@ -241,14 +245,14 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 }
 
 void
-Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
+Executor::remove_node(const std::shared_ptr<rclcpp::Node> & node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
 }
 
 void
 Executor::spin_node_once_nanoseconds(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
   std::chrono::nanoseconds timeout)
 {
   this->add_node(node, false);
@@ -311,7 +315,7 @@ Executor::spin_until_future_complete_impl(
 }
 
 void
-Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
+Executor::spin_node_some(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node)
 {
   this->add_node(node, false);
   spin_some();
@@ -319,7 +323,7 @@ Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr n
 }
 
 void
-Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
+Executor::spin_node_some(const std::shared_ptr<rclcpp::Node> & node)
 {
   this->spin_node_some(node->get_node_base_interface());
 }
@@ -331,7 +335,7 @@ void Executor::spin_some(std::chrono::nanoseconds max_duration)
 
 void
 Executor::spin_node_all(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node,
   std::chrono::nanoseconds max_duration)
 {
   this->add_node(node, false);
@@ -340,7 +344,9 @@ Executor::spin_node_all(
 }
 
 void
-Executor::spin_node_all(std::shared_ptr<rclcpp::Node> node, std::chrono::nanoseconds max_duration)
+Executor::spin_node_all(
+  const std::shared_ptr<rclcpp::Node> & node,
+  std::chrono::nanoseconds max_duration)
 {
   this->spin_node_all(node->get_node_base_interface(), max_duration);
 }
@@ -546,7 +552,7 @@ take_and_do_error_handling(
 }
 
 void
-Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
+Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subscription)
 {
   using rclcpp::dynamic_typesupport::DynamicMessage;
 
@@ -648,13 +654,15 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 }
 
 void
-Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer, const std::shared_ptr<void> & data_ptr)
+Executor::execute_timer(
+  const rclcpp::TimerBase::SharedPtr & timer,
+  const std::shared_ptr<void> & data_ptr)
 {
   timer->execute_callback(data_ptr);
 }
 
 void
-Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
+Executor::execute_service(const rclcpp::ServiceBase::SharedPtr & service)
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
@@ -666,7 +674,7 @@ Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 }
 
 void
-Executor::execute_client(rclcpp::ClientBase::SharedPtr client)
+Executor::execute_client(const rclcpp::ClientBase::SharedPtr & client)
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
@@ -708,37 +716,37 @@ Executor::collect_entities()
   // from the wait set as necessary.
   current_collection_.timers.update(
     collection.timers,
-    [this](auto timer) {wait_set_.add_timer(timer);},
-    [this](auto timer) {wait_set_.remove_timer(timer);});
+    [this](auto timer) {wait_set_.add_timer(std::move(timer));},
+    [this](auto timer) {wait_set_.remove_timer(std::move(timer));});
 
   current_collection_.subscriptions.update(
     collection.subscriptions,
     [this](auto subscription) {
-      wait_set_.add_subscription(subscription, kDefaultSubscriptionMask);
+      wait_set_.add_subscription(std::move(subscription), kDefaultSubscriptionMask);
     },
     [this](auto subscription) {
-      wait_set_.remove_subscription(subscription, kDefaultSubscriptionMask);
+      wait_set_.remove_subscription(std::move(subscription), kDefaultSubscriptionMask);
     });
 
   current_collection_.clients.update(
     collection.clients,
-    [this](auto client) {wait_set_.add_client(client);},
-    [this](auto client) {wait_set_.remove_client(client);});
+    [this](auto client) {wait_set_.add_client(std::move(client));},
+    [this](auto client) {wait_set_.remove_client(std::move(client));});
 
   current_collection_.services.update(
     collection.services,
-    [this](auto service) {wait_set_.add_service(service);},
-    [this](auto service) {wait_set_.remove_service(service);});
+    [this](auto service) {wait_set_.add_service(std::move(service));},
+    [this](auto service) {wait_set_.remove_service(std::move(service));});
 
   current_collection_.guard_conditions.update(
     collection.guard_conditions,
-    [this](auto guard_condition) {wait_set_.add_guard_condition(guard_condition);},
-    [this](auto guard_condition) {wait_set_.remove_guard_condition(guard_condition);});
+    [this](auto guard_condition) {wait_set_.add_guard_condition(std::move(guard_condition));},
+    [this](auto guard_condition) {wait_set_.remove_guard_condition(std::move(guard_condition));});
 
   current_collection_.waitables.update(
     collection.waitables,
-    [this](auto waitable) {wait_set_.add_waitable(waitable);},
-    [this](auto waitable) {wait_set_.remove_waitable(waitable);});
+    [this](auto waitable) {wait_set_.add_waitable(std::move(waitable));},
+    [this](auto waitable) {wait_set_.remove_waitable(std::move(waitable));});
 
   // In the case that an entity already has an expired weak pointer
   // before being removed from the waitset, additionally prune the waitset.

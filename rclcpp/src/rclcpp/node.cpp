@@ -574,7 +574,7 @@ Node::get_graph_event()
 
 void
 Node::wait_for_graph_change(
-  rclcpp::Event::SharedPtr event,
+  const rclcpp::Event::SharedPtr & event,
   std::chrono::nanoseconds timeout)
 {
   node_graph_->wait_for_graph_change(event, timeout);
@@ -695,7 +695,7 @@ Node::create_generic_client(
   const std::string & service_name,
   const std::string & service_type,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   return rclcpp::create_generic_client(
     node_base_,

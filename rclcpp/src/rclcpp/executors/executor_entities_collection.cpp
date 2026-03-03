@@ -70,7 +70,7 @@ build_entities_collection(
 {
   collection.clear();
 
-  for (auto weak_group_ptr : callback_groups) {
+  for (const auto & weak_group_ptr : callback_groups) {
     auto group_ptr = weak_group_ptr.lock();
     if (!group_ptr) {
       continue;

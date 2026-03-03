@@ -34,7 +34,9 @@ public:
 
   std::shared_ptr<void> create_request() override {return nullptr;}
   std::shared_ptr<rmw_request_id_t> create_request_header() override {return nullptr;}
-  void handle_request(std::shared_ptr<rmw_request_id_t>, std::shared_ptr<void>) override {}
+  void handle_request(
+    const std::shared_ptr<rmw_request_id_t> &,
+    const std::shared_ptr<void> &) override {}
 };
 
 class TestClient : public rclcpp::ClientBase
@@ -46,7 +48,7 @@ public:
   std::shared_ptr<void> create_response() override {return nullptr;}
   std::shared_ptr<rmw_request_id_t> create_request_header() override {return nullptr;}
   void handle_response(
-    std::shared_ptr<rmw_request_id_t>, std::shared_ptr<void>) override {}
+    const std::shared_ptr<rmw_request_id_t> &, const std::shared_ptr<void> &) override {}
 };
 
 class TestNodeService : public ::testing::Test

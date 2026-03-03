@@ -323,7 +323,7 @@ SubscriptionBase::setup_intra_process(
   IntraProcessManagerWeakPtr weak_ipm)
 {
   intra_process_subscription_id_ = intra_process_subscription_id;
-  weak_ipm_ = weak_ipm;
+  weak_ipm_ = std::move(weak_ipm);
   use_intra_process_ = true;
 }
 
@@ -449,11 +449,11 @@ SubscriptionBase::get_network_flow_endpoints() const
   }
 
   std::vector<rclcpp::NetworkFlowEndpoint> network_flow_endpoint_vector;
+  network_flow_endpoint_vector.reserve(network_flow_endpoint_array.size);
   for (size_t i = 0; i < network_flow_endpoint_array.size; ++i) {
-    network_flow_endpoint_vector.push_back(
-      rclcpp::NetworkFlowEndpoint(
+    network_flow_endpoint_vector.emplace_back(
         network_flow_endpoint_array.
-        network_flow_endpoint[i]));
+      network_flow_endpoint[i]);
   }
 
   ret = rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array);

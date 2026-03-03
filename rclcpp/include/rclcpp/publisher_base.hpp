@@ -210,7 +210,7 @@ public:
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
-    IntraProcessManagerSharedPtr ipm);
+    const IntraProcessManagerSharedPtr & ipm);
 
   /// Get network flow endpoints
   /**
@@ -300,7 +300,7 @@ public:
    */
   void
   set_on_new_qos_event_callback(
-    std::function<void(size_t)> callback,
+    const std::function<void(size_t)> & callback,
     rcl_publisher_event_type_t event_type)
   {
     if (event_handlers_.count(event_type) == 0) {
@@ -319,7 +319,7 @@ public:
     // The on_ready_callback signature has an extra `int` argument used to disambiguate between
     // possible different entities within a generic waitable.
     // We hide that detail to users of this method.
-    std::function<void(size_t, int)> new_callback = std::bind(callback, std::placeholders::_1);
+    std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
     event_handlers_[event_type]->set_on_ready_callback(new_callback);
   }
 

@@ -117,8 +117,8 @@ public:
   RCLCPP_PUBLIC
   bool
   sleep_until(
-    Time until,
-    Context::SharedPtr context = contexts::get_global_default_context());
+    const Time & until,
+    const Context::SharedPtr & context = contexts::get_global_default_context());
 
   /**
    * Sleep for a specified Duration.
@@ -141,8 +141,8 @@ public:
   RCLCPP_PUBLIC
   bool
   sleep_for(
-    Duration rel_time,
-    Context::SharedPtr context = contexts::get_global_default_context());
+    const Duration & rel_time,
+    const Context::SharedPtr & context = contexts::get_global_default_context());
 
   /**
    * Check if the clock is started.
@@ -168,7 +168,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  wait_until_started(Context::SharedPtr context = contexts::get_global_default_context());
+  wait_until_started(const Context::SharedPtr & context = contexts::get_global_default_context());
 
   /**
    * Wait for clock to start, with timeout.
@@ -186,7 +186,7 @@ public:
   bool
   wait_until_started(
     const rclcpp::Duration & timeout,
-    Context::SharedPtr context = contexts::get_global_default_context(),
+    const Context::SharedPtr & context = contexts::get_global_default_context(),
     const rclcpp::Duration & wait_tick_ns = rclcpp::Duration(0, static_cast<uint32_t>(1e7)));
 
   /**
@@ -238,8 +238,8 @@ public:
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr
   create_jump_callback(
-    JumpHandler::pre_callback_t pre_callback,
-    JumpHandler::post_callback_t post_callback,
+    const JumpHandler::pre_callback_t & pre_callback,
+    const JumpHandler::post_callback_t & post_callback,
     const rcl_jump_threshold_t & threshold);
 
 private:
@@ -327,7 +327,7 @@ public:
   RCLCPP_PUBLIC
   ClockConditionalVariable(
     const rclcpp::Clock::SharedPtr & clock,
-    rclcpp::Context::SharedPtr context = rclcpp::contexts::get_global_default_context());
+    const rclcpp::Context::SharedPtr & context = rclcpp::contexts::get_global_default_context());
   RCLCPP_PUBLIC
   ~ClockConditionalVariable();
 
@@ -347,7 +347,7 @@ public:
   RCLCPP_PUBLIC
   bool
   wait_until(
-    std::unique_lock<std::mutex> & lock, rclcpp::Time until,
+    std::unique_lock<std::mutex> & lock, const rclcpp::Time & until,
     const std::function<bool ()> & pred);
 
   /**
