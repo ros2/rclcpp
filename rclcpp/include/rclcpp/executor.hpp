@@ -220,12 +220,18 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
+   * \param[in] wait_until_removed If true and the executor is spinning, the method will block until
+   * all entities from the node have been removed from the executor. Note, if the remove_node call
+   * was triggered from a callback of an entity of the node itself, and this value is true, this is
+   * likely to result in a deadlock.
    * \throw std::runtime_error if the node is not associated with an executor.
    * \throw std::runtime_error if the node is not associated with this executor.
    */
   RCLCPP_PUBLIC
   virtual void
-  remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+  remove_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true,
+    bool wait_until_removed = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   /**
@@ -233,7 +239,9 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
+  remove_node(
+    std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true,
+    bool wait_until_removed = true);
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
