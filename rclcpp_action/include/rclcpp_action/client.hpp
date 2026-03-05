@@ -111,6 +111,13 @@ public:
    * This constructs an action client, but it will not work until it has been added to a node.
    * Use `rclcpp_action::create_client()` to both construct and add to a node.
    *
+   * When multiple action clients connect to the same action server, the subscription for receiving
+   * feedback messages inside each action client will first receive all feedback messages, and then
+   * determine which feedback belongs to itself based on goal ID. When
+   * enable_feedback_msg_optimization is set to true, the content filter is used to configure
+   * the goal ID for the subscription, which helps avoid the reception of irrelevant feedback
+   * messages internally for each action client.
+   *
    * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
    * simultaneously. If the number of goals exceeds the limit, optimization is automatically
    * disabled.
