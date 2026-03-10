@@ -551,6 +551,15 @@ public:
     event_handlers_[event_type]->clear_on_ready_callback();
   }
 
+  /// Check if content filtered topic feature of the subscription instance is supported.
+  /**
+   * \return boolean flag indicating if the content filtered topic of this subscription is
+   *   supported.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_cft_supported() const;
+
   /// Check if content filtered topic feature of the subscription instance is enabled.
   /**
    * \return boolean flag indicating if the content filtered topic of this subscription is enabled.

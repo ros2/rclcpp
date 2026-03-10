@@ -77,6 +77,10 @@ ParameterEventHandler::add_parameter_callback(
 bool
 ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & node_names)
 {
+  if (!event_subscription_->is_cft_supported()) {
+    return false;
+  }
+
   if (node_names.empty()) {
     // Clear content filter
     event_subscription_->set_content_filter("");
