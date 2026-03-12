@@ -287,6 +287,7 @@ class Service
   public std::enable_shared_from_this<Service<ServiceT>>
 {
 public:
+  using ServiceType = ServiceT;
   using CallbackType = std::function<
     void (
       const std::shared_ptr<typename ServiceT::Request>,
