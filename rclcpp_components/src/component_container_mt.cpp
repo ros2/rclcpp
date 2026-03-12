@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
   /// Component container with a multi-threaded executor.
   rclcpp::init(argc, argv);
 
-  rclcpp::executors::MultiThreadedExecutor::SharedPtr exec;
+  rclcpp::executors::MultiThreadedExecutor::SharedPtr exec = nullptr;
   const auto node = std::make_shared<rclcpp_components::ComponentManager>();
   if (node->has_parameter("thread_num")) {
     const auto thread_num = node->get_parameter("thread_num").as_int();
