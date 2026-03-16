@@ -80,7 +80,7 @@ public:
       node_base,
       *rclcpp::get_message_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
       topic_name,
-      options.to_rcl_subscription_options(qos),
+      force_cpu_buffer_backend_(options).to_rcl_subscription_options(qos),
       options.event_callbacks,
       options.use_default_callbacks,
       DeliveredMessageKind::SERIALIZED_MESSAGE),
@@ -182,6 +182,17 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)
+
+  template<typename AllocatorT>
+  static rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>
+  force_cpu_buffer_backend_(
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+  {
+    auto opts = options;
+    opts.acceptable_buffer_backends = "cpu";
+    return opts;
+  }
+
   AnySubscriptionCallback<rclcpp::SerializedMessage, std::allocator<void>> any_callback_;
   // The type support library should stay loaded, so it is stored in the GenericSubscription
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
