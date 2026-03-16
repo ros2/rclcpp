@@ -160,7 +160,7 @@ ServerBase::ServerBase(
   // This timer callback will be exchanged at the RCL layer
   // with a _timer_ callback that will call the _event_ callback
   // passed in by set_on_ready_callback.
-  std::function<void()> timer_callback = [&] () {};
+  std::function<void()> timer_callback = [] () {};
   pimpl_->expire_timer_ = std::make_shared<rclcpp::GenericTimer<decltype (timer_callback)>>(
       node_clock->get_clock(), std::chrono::nanoseconds(options.result_timeout.nanoseconds),
       std::move(timer_callback), node_base->get_context(), false);
