@@ -120,7 +120,8 @@ public:
    *
    * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
    * simultaneously. If the number of goals exceeds the limit, optimization is automatically
-   * disabled.
+   * disabled. If feedback subscription doesn't support content filter, optimization is also
+   * automatically disabled.
    *
    * \param[in] node_base A pointer to the base interface of a node.
    * \param[in] node_graph A pointer to an interface that allows getting graph information about
