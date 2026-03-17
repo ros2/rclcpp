@@ -481,6 +481,12 @@ SubscriptionBase::set_on_new_message_callback(
 }
 
 bool
+SubscriptionBase::is_cft_supported() const
+{
+  return rcl_subscription_is_cft_supported(subscription_handle_.get());
+}
+
+bool
 SubscriptionBase::is_cft_enabled() const
 {
   return rcl_subscription_is_cft_enabled(subscription_handle_.get());
