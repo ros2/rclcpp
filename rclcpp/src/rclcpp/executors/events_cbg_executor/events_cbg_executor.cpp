@@ -25,7 +25,7 @@
 #include "first_in_first_out_scheduler.hpp"
 #include "timer_manager.hpp"
 #include "registered_entity_cache.hpp"
-#include "rclcpp/experimental/executors/events_cbg_executor/events_cbg_executor.hpp"
+#include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 
 
 namespace rclcpp::executors

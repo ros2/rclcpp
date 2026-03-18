@@ -60,6 +60,9 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executor.cpp
   src/rclcpp/executor_options.cpp
   src/rclcpp/executors.cpp
+  src/rclcpp/executors/events_cbg_executor/events_cbg_executor.cpp
+  src/rclcpp/executors/events_cbg_executor/first_in_first_out_scheduler.cpp
+  src/rclcpp/executors/events_cbg_executor/global_event_id_provider.cpp
   src/rclcpp/executors/executor_entities_collection.cpp
   src/rclcpp/executors/executor_entities_collector.cpp
   src/rclcpp/executors/executor_notify_waitable.cpp
@@ -67,9 +70,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/experimental/executors/events_executor/events_executor.cpp
-  src/rclcpp/experimental/executors/events_cbg_executor/events_cbg_executor.cpp
-  src/rclcpp/experimental/executors/events_cbg_executor/first_in_first_out_scheduler.cpp
-  src/rclcpp/experimental/executors/events_cbg_executor/global_event_id_provider.cpp
   src/rclcpp/experimental/timers_manager.cpp
   src/rclcpp/future_return_code.cpp
   src/rclcpp/generic_client.cpp
