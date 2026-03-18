@@ -29,10 +29,13 @@ namespace rclcpp
 namespace executors
 {
 
+namespace cbg_executor
+{
 class TimerManager;
 struct RegisteredEntityCache;
 class CBGScheduler;
 struct GlobalWeakExecutableCache;
+}
 
 class EventsCBGExecutor : public rclcpp::Executor
 {
@@ -106,7 +109,6 @@ public:
   void
   remove_node(const std::shared_ptr<rclcpp::Node> & node_ptr, bool notify = true) override;
 
-
   // add a callback group to the executor, not bound to any node
   void add_callback_group_only(const rclcpp::CallbackGroup::SharedPtr & group_ptr);
 
@@ -146,7 +148,6 @@ public:
 
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
-
 
   /// Cancel any running spin* function, causing it to return.
   /**
@@ -230,7 +231,7 @@ public:
 protected:
   RCLCPP_PUBLIC
   void
-  run(size_t this_thread_number, bool blockInitially);
+  run(size_t this_thread_number, bool block_initially);
 
   void
   run(
@@ -243,7 +244,7 @@ protected:
    */
   void shutdown();
 
-  std::unique_ptr<CBGScheduler> scheduler;
+  std::unique_ptr<cbg_executor::CBGScheduler> scheduler;
 
   std::thread rcl_polling_thread;
 
@@ -251,7 +252,7 @@ protected:
   {
     CallbackGroup::WeakPtr callback_group;
 
-    std::unique_ptr<RegisteredEntityCache> registered_entities;
+    std::unique_ptr<cbg_executor::RegisteredEntityCache> registered_entities;
   };
 
   void set_callbacks(CallbackGroupData & cgd);
@@ -306,14 +307,14 @@ private:
   /// The context associated with this executor.
   std::shared_ptr<rclcpp::Context> context_;
 
-  std::unique_ptr<TimerManager> timer_manager;
+  std::unique_ptr<cbg_executor::TimerManager> timer_manager;
 
   /// Stores the executables for the internal guard conditions
   /// e.g. interrupt_guard_condition_ and shutdown_guard_condition_
-  std::unique_ptr<GlobalWeakExecutableCache> global_executable_cache;
+  std::unique_ptr<cbg_executor::GlobalWeakExecutableCache> global_executable_cache;
 
   /// Stores the executables for guard conditions of the nodes
-  std::unique_ptr<GlobalWeakExecutableCache> nodes_executable_cache;
+  std::unique_ptr<cbg_executor::GlobalWeakExecutableCache> nodes_executable_cache;
 };
 
 }  // namespace executors

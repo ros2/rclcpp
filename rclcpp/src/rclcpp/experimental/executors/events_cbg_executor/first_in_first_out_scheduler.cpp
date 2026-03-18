@@ -18,7 +18,8 @@ namespace rclcpp
 {
 namespace executors
 {
-
+namespace cbg_executor
+{
 std::function<void(size_t)> FirstInFirstOutCallbackGroupHandle::get_ready_callback_for_entity(
   const rclcpp::SubscriptionBase::WeakPtr & entity)
 {
@@ -194,5 +195,6 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
   return CBGScheduler::ExecutableEntityWithInfo{.entitiy = std::nullopt,
     .moreEntitiesReady = false};
 }
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp

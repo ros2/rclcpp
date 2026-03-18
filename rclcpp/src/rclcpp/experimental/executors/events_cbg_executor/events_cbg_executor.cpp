@@ -30,10 +30,11 @@
 
 namespace rclcpp::executors
 {
-
+namespace cbg_executor
+{
 struct GlobalWeakExecutableCache
 {
-  std::vector<GuardConditionWithFunction> guard_conditions;
+  std::vector<cbg_executor::GuardConditionWithFunction> guard_conditions;
 
   GlobalWeakExecutableCache() = default;
   GlobalWeakExecutableCache(const GlobalWeakExecutableCache &) = default;
@@ -72,20 +73,21 @@ struct GlobalWeakExecutableCache
     guard_conditions.clear();
   }
 };
+}  // namespace cbg_executor
 
 EventsCBGExecutor::EventsCBGExecutor(
   const rclcpp::ExecutorOptions & options,
   size_t number_of_threads,
   std::chrono::nanoseconds next_exec_timeout)
-: scheduler(std::make_unique<FirstInFirstOutScheduler>()),
+: scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>()),
   next_exec_timeout_(next_exec_timeout),
   spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context) ),
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context) ),
   context_(options.context),
-  timer_manager(std::make_unique<TimerManager>(context_)),
-  global_executable_cache(std::make_unique<GlobalWeakExecutableCache>() ),
-  nodes_executable_cache(std::make_unique<GlobalWeakExecutableCache>() )
+  timer_manager(std::make_unique<cbg_executor::TimerManager>(context_)),
+  global_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() ),
+  nodes_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() )
 {
   global_executable_cache->add_guard_condition_event (
         interrupt_guard_condition_,
@@ -187,7 +189,7 @@ bool EventsCBGExecutor::execute_previous_ready_executables_until(
 {
   bool found_work = false;
 
-  const uint64_t last_ready_id = GlobalEventIdProvider::get_last_id();
+  const uint64_t last_ready_id = cbg_executor::GlobalEventIdProvider::get_last_id();
 
   while(true) {
     auto ready_entity = scheduler->get_next_ready_entity(last_ready_id);
@@ -261,7 +263,8 @@ void EventsCBGExecutor::sync_callback_groups()
 
 
       CallbackGroupData new_entry;
-      new_entry.registered_entities = std::make_unique<RegisteredEntityCache>(*scheduler,
+      new_entry.registered_entities =
+        std::make_unique<cbg_executor::RegisteredEntityCache>(*scheduler,
         *timer_manager, cbg);
       new_entry.callback_group = cbg;
       new_entry.registered_entities->regenerate_events();
@@ -320,13 +323,13 @@ void EventsCBGExecutor::sync_callback_groups()
 }
 
 void
-EventsCBGExecutor::run(size_t this_thread_number, bool blockInitially)
+EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
 {
   (void) this_thread_number;
 
   while (rclcpp::ok(this->context_) && spinning.load() ) {
-    if(blockInitially) {
-      blockInitially = false;
+    if(block_initially) {
+      block_initially = false;
       scheduler->block_worker_thread();
     }
 

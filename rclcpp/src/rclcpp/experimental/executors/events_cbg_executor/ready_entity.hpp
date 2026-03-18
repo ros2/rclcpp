@@ -24,7 +24,8 @@ namespace rclcpp
 {
 namespace executors
 {
-
+namespace cbg_executor
+{
 struct ReadyEntity
 {
   struct ReadyTimerWithExecutedCallback
@@ -129,5 +130,6 @@ struct ReadyEntity
     return std::visit([](const auto & entity) {return entity.expired();}, entity);
   }
 };
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp

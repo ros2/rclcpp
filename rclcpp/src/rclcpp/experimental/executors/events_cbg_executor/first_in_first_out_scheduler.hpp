@@ -27,6 +27,8 @@ namespace rclcpp
 {
 namespace executors
 {
+namespace cbg_executor
+{
 struct FirstInFirstOutCallbackGroupHandle final : public CBGScheduler::CallbackGroupHandle
 {
 public:
@@ -72,6 +74,6 @@ private:
 
   std::vector<std::unique_ptr<FirstInFirstOutCallbackGroupHandle>> callback_group_handles;
 };
-
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp

@@ -21,6 +21,8 @@ namespace rclcpp
 {
 namespace executors
 {
+namespace cbg_executor
+{
 class GlobalEventIdProvider
 {
   static std::atomic<uint64_t> last_event_id;
@@ -40,5 +42,6 @@ public:
     return  ++last_event_id;
   }
 };
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp

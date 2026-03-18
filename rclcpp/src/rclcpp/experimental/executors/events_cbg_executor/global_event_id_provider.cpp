@@ -18,6 +18,9 @@ namespace rclcpp
 {
 namespace executors
 {
+namespace cbg_executor
+{
 std::atomic<uint64_t> GlobalEventIdProvider::last_event_id = 1;
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp

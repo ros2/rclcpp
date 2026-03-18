@@ -26,6 +26,8 @@ namespace rclcpp
 {
 namespace executors
 {
+namespace cbg_executor
+{
 class CallbackGroupSchedulerEv;
 struct WeakExecutableCache;
 struct AnyExecutableCbgEv;
@@ -307,5 +309,6 @@ protected:
 
   std::list<std::unique_ptr<CallbackGroupHandle>> callback_groups;
 };
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp

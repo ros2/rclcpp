@@ -25,7 +25,7 @@
 
 #include <rclcpp/timer.hpp>
 
-namespace rclcpp::executors
+namespace rclcpp::executors::cbg_executor
 {
 
 /**
@@ -533,4 +533,4 @@ public:
     }
   }
 };
-}  // namespace rclcpp::executors
+}  // namespace rclcpp::executors::cbg

@@ -27,6 +27,8 @@ namespace rclcpp
 {
 namespace executors
 {
+namespace cbg_executor
+{
 template<class EntityType_T>
 struct WeakEntityPtrWithRemoveFunction
 {
@@ -286,5 +288,6 @@ struct RegisteredEntityCache
     }
   }
 };
+}  // namespace cbg_executor
 }  // namespace executors
 }  // namespace rclcpp
