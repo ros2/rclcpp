@@ -580,6 +580,7 @@ Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subsc
                 &loaned_msg,
                 &message_info.get_rmw_message_info(),
                 nullptr);
+              TRACETOOLS_TRACEPOINT(rclcpp_take, static_cast<const void *>(loaned_msg));
               if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
                 return false;
               } else if (RCL_RET_OK != ret) {
