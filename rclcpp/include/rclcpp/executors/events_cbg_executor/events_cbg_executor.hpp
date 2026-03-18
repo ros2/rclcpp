@@ -285,7 +285,6 @@ private:
 
   std::vector<CallbackGroupData> callback_groups;
 
-//   std::mutex wait_mutex_;
   size_t number_of_threads_;
 
   std::chrono::nanoseconds next_exec_timeout_;

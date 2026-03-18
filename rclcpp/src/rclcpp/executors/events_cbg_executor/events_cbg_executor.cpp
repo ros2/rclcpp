@@ -237,7 +237,6 @@ void EventsCBGExecutor::sync_callback_groups()
     }
   }
 
-//     std::scoped_lock<std::mutex> lk ( callback_groups_mutex );
   std::vector<CallbackGroupData> next_group_data;
 
   std::set<CallbackGroup *> added_cbgs;
