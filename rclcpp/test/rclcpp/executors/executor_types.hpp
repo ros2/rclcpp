@@ -20,6 +20,7 @@
 #include <string>
 #include <type_traits>
 
+#include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
@@ -28,6 +29,7 @@ using ExecutorTypes =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::EventsCBGExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
 
 class ExecutorTypeNames
@@ -36,15 +38,19 @@ public:
   template<typename T>
   static std::string GetName([[maybe_unused]] int idx)
   {
-    if (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
+    if constexpr (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
       return "SingleThreadedExecutor";
     }
 
-    if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
+    if constexpr(std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
       return "MultiThreadedExecutor";
     }
 
-    if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
+    if constexpr(std::is_same<T, rclcpp::executors::EventsCBGExecutor>()) {
+      return "EventsCBGExecutor";
+    }
+
+    if constexpr(std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
       return "EventsExecutor";
     }
 
@@ -56,6 +62,7 @@ using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::EventsCBGExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
 
 #endif  // RCLCPP__EXECUTORS__EXECUTOR_TYPES_HPP_

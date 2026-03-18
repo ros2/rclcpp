@@ -433,8 +433,6 @@ void EventsCBGExecutor::spin_all(std::chrono::nanoseconds max_duration)
   }
 
   collect_and_execute_ready_events(max_duration, true);
-
-  RCUTILS_LOG_ERROR_NAMED("EventsCBGExecutor", "spin_all done");
 }
 
 bool EventsCBGExecutor::collect_and_execute_ready_events(
