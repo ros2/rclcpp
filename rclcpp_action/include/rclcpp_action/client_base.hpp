@@ -306,9 +306,9 @@ protected:
 
   /// \internal
   /// \return true if goal id was removed from feedback subscription content filter successfully or
-  ///   goal id was not found in feedback subscription content filter or
+  ///   goal id was not found in feedback subscription content filter
+  /// \return false if an error occurred during calling rcl function or
   ///   if the used rmw middleware doesn't support Content Filtering feature.
-  /// \return false if an error occurred during calling rcl function.
   bool
   configure_feedback_subscription_filter_remove_goal_id(const GoalUUID & goal_id);
 
