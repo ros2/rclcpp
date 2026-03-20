@@ -457,6 +457,20 @@
 #define RCLCPP_DEBUG_STREAM_THROTTLE(...)
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_DEBUG_STREAM_SKIPFIRST_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT_ONCE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT_EXPRESSION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT_FUNCTION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT_SKIPFIRST(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_DEBUG_FMT_SKIPFIRST_THROTTLE(...)
 
 #else
 /**
@@ -557,6 +571,54 @@
   RCLCPP_LOG_STREAM_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_DEBUG, logger, clock, duration, \
     stream_arg)
 
+/**
+ * \def RCLCPP_DEBUG_FMT
+ * \copydoc RCLCPP_LOG_FMT
+ */
+#define RCLCPP_DEBUG_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_DEBUG, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_DEBUG_FMT_ONCE
+ * \copydoc RCLCPP_LOG_FMT_ONCE
+ */
+#define RCLCPP_DEBUG_FMT_ONCE(logger, ...) \
+  RCLCPP_LOG_FMT_ONCE(RCUTILS_LOG_SEVERITY_DEBUG, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_DEBUG_FMT_EXPRESSION
+ * \copydoc RCLCPP_LOG_FMT_EXPRESSION
+ */
+#define RCLCPP_DEBUG_FMT_EXPRESSION(logger, expression, ...) \
+  RCLCPP_LOG_FMT_EXPRESSION(RCUTILS_LOG_SEVERITY_DEBUG, logger, expression, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_DEBUG_FMT_FUNCTION
+ * \copydoc RCLCPP_LOG_FMT_FUNCTION
+ */
+#define RCLCPP_DEBUG_FMT_FUNCTION(logger, function, ...) \
+  RCLCPP_LOG_FMT_FUNCTION(RCUTILS_LOG_SEVERITY_DEBUG, logger, function, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_DEBUG_FMT_SKIPFIRST
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST
+ */
+#define RCLCPP_DEBUG_FMT_SKIPFIRST(logger, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST(RCUTILS_LOG_SEVERITY_DEBUG, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_DEBUG_FMT_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_THROTTLE
+ */
+#define RCLCPP_DEBUG_FMT_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_THROTTLE(RCUTILS_LOG_SEVERITY_DEBUG, logger, clock, duration, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_DEBUG_FMT_SKIPFIRST_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
+ */
+#define RCLCPP_DEBUG_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_DEBUG, logger, clock, duration, __VA_ARGS__)
+
 #endif
 
 /** @name Logging macros for severity INFO.
@@ -591,6 +653,20 @@
 #define RCLCPP_INFO_STREAM_THROTTLE(...)
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_INFO_STREAM_SKIPFIRST_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT_ONCE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT_EXPRESSION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT_FUNCTION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT_SKIPFIRST(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_INFO_FMT_SKIPFIRST_THROTTLE(...)
 
 #else
 /**
@@ -691,6 +767,54 @@
   RCLCPP_LOG_STREAM_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_INFO, logger, clock, duration, \
     stream_arg)
 
+/**
+ * \def RCLCPP_INFO_FMT
+ * \copydoc RCLCPP_LOG_FMT
+ */
+#define RCLCPP_INFO_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_INFO, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_INFO_FMT_ONCE
+ * \copydoc RCLCPP_LOG_FMT_ONCE
+ */
+#define RCLCPP_INFO_FMT_ONCE(logger, ...) \
+  RCLCPP_LOG_FMT_ONCE(RCUTILS_LOG_SEVERITY_INFO, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_INFO_FMT_EXPRESSION
+ * \copydoc RCLCPP_LOG_FMT_EXPRESSION
+ */
+#define RCLCPP_INFO_FMT_EXPRESSION(logger, expression, ...) \
+  RCLCPP_LOG_FMT_EXPRESSION(RCUTILS_LOG_SEVERITY_INFO, logger, expression, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_INFO_FMT_FUNCTION
+ * \copydoc RCLCPP_LOG_FMT_FUNCTION
+ */
+#define RCLCPP_INFO_FMT_FUNCTION(logger, function, ...) \
+  RCLCPP_LOG_FMT_FUNCTION(RCUTILS_LOG_SEVERITY_INFO, logger, function, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_INFO_FMT_SKIPFIRST
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST
+ */
+#define RCLCPP_INFO_FMT_SKIPFIRST(logger, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST(RCUTILS_LOG_SEVERITY_INFO, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_INFO_FMT_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_THROTTLE
+ */
+#define RCLCPP_INFO_FMT_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_THROTTLE(RCUTILS_LOG_SEVERITY_INFO, logger, clock, duration, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_INFO_FMT_SKIPFIRST_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
+ */
+#define RCLCPP_INFO_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_INFO, logger, clock, duration, __VA_ARGS__)
+
 #endif
 
 /** @name Logging macros for severity WARN.
@@ -725,6 +849,20 @@
 #define RCLCPP_WARN_STREAM_THROTTLE(...)
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_WARN_STREAM_SKIPFIRST_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT_ONCE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT_EXPRESSION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT_FUNCTION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT_SKIPFIRST(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_WARN_FMT_SKIPFIRST_THROTTLE(...)
 
 #else
 /**
@@ -825,6 +963,54 @@
   RCLCPP_LOG_STREAM_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_WARN, logger, clock, duration, \
     stream_arg)
 
+/**
+ * \def RCLCPP_WARN_FMT
+ * \copydoc RCLCPP_LOG_FMT
+ */
+#define RCLCPP_WARN_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_WARN, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_WARN_FMT_ONCE
+ * \copydoc RCLCPP_LOG_FMT_ONCE
+ */
+#define RCLCPP_WARN_FMT_ONCE(logger, ...) \
+  RCLCPP_LOG_FMT_ONCE(RCUTILS_LOG_SEVERITY_WARN, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_WARN_FMT_EXPRESSION
+ * \copydoc RCLCPP_LOG_FMT_EXPRESSION
+ */
+#define RCLCPP_WARN_FMT_EXPRESSION(logger, expression, ...) \
+  RCLCPP_LOG_FMT_EXPRESSION(RCUTILS_LOG_SEVERITY_WARN, logger, expression, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_WARN_FMT_FUNCTION
+ * \copydoc RCLCPP_LOG_FMT_FUNCTION
+ */
+#define RCLCPP_WARN_FMT_FUNCTION(logger, function, ...) \
+  RCLCPP_LOG_FMT_FUNCTION(RCUTILS_LOG_SEVERITY_WARN, logger, function, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_WARN_FMT_SKIPFIRST
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST
+ */
+#define RCLCPP_WARN_FMT_SKIPFIRST(logger, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST(RCUTILS_LOG_SEVERITY_WARN, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_WARN_FMT_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_THROTTLE
+ */
+#define RCLCPP_WARN_FMT_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_THROTTLE(RCUTILS_LOG_SEVERITY_WARN, logger, clock, duration, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_WARN_FMT_SKIPFIRST_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
+ */
+#define RCLCPP_WARN_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_WARN, logger, clock, duration, __VA_ARGS__)
+
 #endif
 
 /** @name Logging macros for severity ERROR.
@@ -859,6 +1045,20 @@
 #define RCLCPP_ERROR_STREAM_THROTTLE(...)
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_ERROR_STREAM_SKIPFIRST_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT_ONCE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT_EXPRESSION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT_FUNCTION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT_SKIPFIRST(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_ERROR_FMT_SKIPFIRST_THROTTLE(...)
 
 #else
 /**
@@ -959,6 +1159,54 @@
   RCLCPP_LOG_STREAM_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_ERROR, logger, clock, duration, \
     stream_arg)
 
+/**
+ * \def RCLCPP_ERROR_FMT
+ * \copydoc RCLCPP_LOG_FMT
+ */
+#define RCLCPP_ERROR_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_ERROR, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_ERROR_FMT_ONCE
+ * \copydoc RCLCPP_LOG_FMT_ONCE
+ */
+#define RCLCPP_ERROR_FMT_ONCE(logger, ...) \
+  RCLCPP_LOG_FMT_ONCE(RCUTILS_LOG_SEVERITY_ERROR, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_ERROR_FMT_EXPRESSION
+ * \copydoc RCLCPP_LOG_FMT_EXPRESSION
+ */
+#define RCLCPP_ERROR_FMT_EXPRESSION(logger, expression, ...) \
+  RCLCPP_LOG_FMT_EXPRESSION(RCUTILS_LOG_SEVERITY_ERROR, logger, expression, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_ERROR_FMT_FUNCTION
+ * \copydoc RCLCPP_LOG_FMT_FUNCTION
+ */
+#define RCLCPP_ERROR_FMT_FUNCTION(logger, function, ...) \
+  RCLCPP_LOG_FMT_FUNCTION(RCUTILS_LOG_SEVERITY_ERROR, logger, function, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_ERROR_FMT_SKIPFIRST
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST
+ */
+#define RCLCPP_ERROR_FMT_SKIPFIRST(logger, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST(RCUTILS_LOG_SEVERITY_ERROR, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_ERROR_FMT_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_THROTTLE
+ */
+#define RCLCPP_ERROR_FMT_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_THROTTLE(RCUTILS_LOG_SEVERITY_ERROR, logger, clock, duration, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_ERROR_FMT_SKIPFIRST_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
+ */
+#define RCLCPP_ERROR_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_ERROR, logger, clock, duration, __VA_ARGS__)
+
 #endif
 
 /** @name Logging macros for severity FATAL.
@@ -993,6 +1241,20 @@
 #define RCLCPP_FATAL_STREAM_THROTTLE(...)
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_FATAL_STREAM_SKIPFIRST_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT_ONCE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT_EXPRESSION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT_FUNCTION(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT_SKIPFIRST(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT_THROTTLE(...)
+/// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
+#define RCLCPP_FATAL_FMT_SKIPFIRST_THROTTLE(...)
 
 #else
 /**
@@ -1092,6 +1354,54 @@
 #define RCLCPP_FATAL_STREAM_SKIPFIRST_THROTTLE(logger, clock, duration, stream_arg) \
   RCLCPP_LOG_STREAM_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_FATAL, logger, clock, duration, \
     stream_arg)
+
+/**
+ * \def RCLCPP_FATAL_FMT
+ * \copydoc RCLCPP_LOG_FMT
+ */
+#define RCLCPP_FATAL_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_FATAL, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_FATAL_FMT_ONCE
+ * \copydoc RCLCPP_LOG_FMT_ONCE
+ */
+#define RCLCPP_FATAL_FMT_ONCE(logger, ...) \
+  RCLCPP_LOG_FMT_ONCE(RCUTILS_LOG_SEVERITY_FATAL, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_FATAL_FMT_EXPRESSION
+ * \copydoc RCLCPP_LOG_FMT_EXPRESSION
+ */
+#define RCLCPP_FATAL_FMT_EXPRESSION(logger, expression, ...) \
+  RCLCPP_LOG_FMT_EXPRESSION(RCUTILS_LOG_SEVERITY_FATAL, logger, expression, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_FATAL_FMT_FUNCTION
+ * \copydoc RCLCPP_LOG_FMT_FUNCTION
+ */
+#define RCLCPP_FATAL_FMT_FUNCTION(logger, function, ...) \
+  RCLCPP_LOG_FMT_FUNCTION(RCUTILS_LOG_SEVERITY_FATAL, logger, function, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_FATAL_FMT_SKIPFIRST
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST
+ */
+#define RCLCPP_FATAL_FMT_SKIPFIRST(logger, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST(RCUTILS_LOG_SEVERITY_FATAL, logger, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_FATAL_FMT_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_THROTTLE
+ */
+#define RCLCPP_FATAL_FMT_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_THROTTLE(RCUTILS_LOG_SEVERITY_FATAL, logger, clock, duration, __VA_ARGS__)
+
+/**
+ * \def RCLCPP_FATAL_FMT_SKIPFIRST_THROTTLE
+ * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
+ */
+#define RCLCPP_FATAL_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_FATAL, logger, clock, duration, __VA_ARGS__)
 
 #endif
 
