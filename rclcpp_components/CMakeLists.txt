@@ -42,14 +42,14 @@ target_include_directories(component_manager PUBLIC
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(component_manager PUBLIC
   class_loader::class_loader
-  ${composition_interfaces_TARGETS}
+  composition_interfaces::composition_interfaces
   rclcpp::rclcpp
   rmw::rmw
 )
 target_link_libraries(component_manager PRIVATE
   ament_index_cpp::ament_index_cpp
   rcpputils::rcpputils
-  ${rcl_interfaces_TARGETS}
+  rcl_interfaces::rcl_interfaces
 )
 target_compile_definitions(component_manager
   PRIVATE "RCLCPP_COMPONENTS_BUILDING_LIBRARY")

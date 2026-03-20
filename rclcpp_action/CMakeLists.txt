@@ -37,7 +37,7 @@ target_include_directories(${PROJECT_NAME}
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(${PROJECT_NAME} PUBLIC
-  ${action_msgs_TARGETS}
+  action_msgs::action_msgs
   rcl::rcl
   rcl_action::rcl_action
   rclcpp::rclcpp
@@ -92,7 +92,7 @@ if(BUILD_TESTING)
       rcl_action::rcl_action
       rclcpp::rclcpp
       rcutils::rcutils
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
     )
   endif()
 
@@ -106,7 +106,7 @@ if(BUILD_TESTING)
       rcl_action::rcl_action
       rclcpp::rclcpp
       rcutils::rcutils
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
     )
   endif()
 
@@ -118,7 +118,7 @@ if(BUILD_TESTING)
       mimick
       rcl_action::rcl_action
       rclcpp::rclcpp
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
     )
   endif()
 
@@ -127,10 +127,10 @@ if(BUILD_TESTING)
   if(TARGET test_server_goal_handle)
     target_link_libraries(test_server_goal_handle
       ${PROJECT_NAME}
-      ${action_msgs_TARGETS}
+      action_msgs::action_msgs
       mimick
       rclcpp::rclcpp
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
     )
   endif()
 
@@ -138,7 +138,7 @@ if(BUILD_TESTING)
   if(TARGET test_traits)
     target_link_libraries(test_traits
       ${PROJECT_NAME}
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
     )
   endif()
 
@@ -146,7 +146,7 @@ if(BUILD_TESTING)
   if(TARGET test_types)
     target_link_libraries(test_types
       ${PROJECT_NAME}
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
     )
   endif()
 endif()

@@ -34,10 +34,10 @@ target_include_directories(${PROJECT_NAME}
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(${PROJECT_NAME}
-  ${lifecycle_msgs_TARGETS}
+  lifecycle_msgs::lifecycle_msgs
   rcl::rcl
   rclcpp::rclcpp
-  ${rcl_interfaces_TARGETS}
+  rcl_interfaces::rcl_interfaces
   rcl_lifecycle::rcl_lifecycle
   rcutils::rcutils
   rosidl_typesupport_cpp::rosidl_typesupport_cpp
@@ -108,7 +108,7 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_lifecycle_publisher test/test_lifecycle_publisher.cpp)
   if(TARGET test_lifecycle_publisher)
-    target_link_libraries(test_lifecycle_publisher ${PROJECT_NAME} rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp ${test_msgs_TARGETS})
+    target_link_libraries(test_lifecycle_publisher ${PROJECT_NAME} rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp test_msgs::test_msgs)
   endif()
   ament_add_gtest(test_lifecycle_service_client test/test_lifecycle_service_client.cpp TIMEOUT 120)
   ament_add_test_label(test_lifecycle_service_client mimick)
@@ -127,7 +127,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_client
       ${PROJECT_NAME}
       mimick
-      ${rcl_interfaces_TARGETS}
+      rcl_interfaces::rcl_interfaces
       rclcpp::rclcpp)
   endif()
   ament_add_gtest(test_service test/test_service.cpp TIMEOUT 120)
@@ -136,7 +136,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_service
       ${PROJECT_NAME}
       mimick
-      ${test_msgs_TARGETS}
+      test_msgs::test_msgs
       rclcpp::rclcpp)
   endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)

@@ -203,20 +203,20 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(${PROJECT_NAME} PUBLIC
-  ${builtin_interfaces_TARGETS}
+  builtin_interfaces::builtin_interfaces
   libstatistics_collector::libstatistics_collector
   rcl::rcl
-  ${rcl_interfaces_TARGETS}
+  rcl_interfaces::rcl_interfaces
   rcl_yaml_param_parser::rcl_yaml_param_parser
   rcpputils::rcpputils
   rcutils::rcutils
   rmw::rmw
-  ${rosgraph_msgs_TARGETS}
+  rosgraph_msgs::rosgraph_msgs
   rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
   rosidl_runtime_c::rosidl_runtime_c
   rosidl_runtime_cpp::rosidl_runtime_cpp
   rosidl_typesupport_cpp::rosidl_typesupport_cpp
-  ${statistics_msgs_TARGETS}
+  statistics_msgs::statistics_msgs
   tracetools::tracetools
   ${CMAKE_THREAD_LIBS_INIT}
 )

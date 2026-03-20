@@ -7,12 +7,12 @@ find_package(performance_test_fixture REQUIRED)
 
 add_performance_test(benchmark_client benchmark_client.cpp)
 if(TARGET benchmark_client)
-  target_link_libraries(benchmark_client ${PROJECT_NAME} ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+  target_link_libraries(benchmark_client ${PROJECT_NAME} rcl_interfaces::rcl_interfaces test_msgs::test_msgs)
 endif()
 
 add_performance_test(benchmark_executor benchmark_executor.cpp)
 if(TARGET benchmark_executor)
-  target_link_libraries(benchmark_executor ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(benchmark_executor ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 add_performance_test(benchmark_init_shutdown benchmark_init_shutdown.cpp)
@@ -37,5 +37,5 @@ endif()
 
 add_performance_test(benchmark_service benchmark_service.cpp)
 if(TARGET benchmark_service)
-  target_link_libraries(benchmark_service ${PROJECT_NAME} ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+  target_link_libraries(benchmark_service ${PROJECT_NAME} rcl_interfaces::rcl_interfaces test_msgs::test_msgs)
 endif()
