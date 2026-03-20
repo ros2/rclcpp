@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+31.0.0 (2026-03-20)
+-------------------
 * Fix expiration of action goals when EventsExecutors are used (`#3018 <https://github.com/ros2/rclcpp/issues/3018>`_)
 * perf: Optimized out shared_ptr copies (`#3079 <https://github.com/ros2/rclcpp/issues/3079>`_)
 * Contributors: Janosch Machowinski, Skyler Medeiros

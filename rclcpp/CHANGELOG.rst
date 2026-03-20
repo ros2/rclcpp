@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+31.0.0 (2026-03-20)
+-------------------
 * keep the event alive throught the assertion, preveiting the race. (`#3099 <https://github.com/ros2/rclcpp/issues/3099>`_)
 * Add support check for content filter feature in subscription (`#3089 <https://github.com/ros2/rclcpp/issues/3089>`_)
 * Expose ServiceType in Service public API (`#3088 <https://github.com/ros2/rclcpp/issues/3088>`_)
