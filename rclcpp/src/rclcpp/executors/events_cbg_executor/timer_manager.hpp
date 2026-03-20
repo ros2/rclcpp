@@ -339,6 +339,12 @@ private:
    */
   void add_timer_to_running_map(TimerData * timer_data)
   {
+    bool wasEmpty = running_timers.empty();
+    std::chrono::nanoseconds old_next_call_time(-1);
+    if(!wasEmpty) {
+      old_next_call_time = running_timers.begin()->first;
+    }
+
     // timer can already be in the running list, if
     // e.g. reset was called on a running timer
     if(timer_data->in_running_list) {
@@ -352,23 +358,16 @@ private:
     }
 
     int64_t next_call_time{};
-
     rcl_ret_t ret = rcl_timer_get_next_call_time(timer_data->rcl_ref.get(), &next_call_time);
 
     if (ret != RCL_RET_OK) {
       return;
     }
 
-    bool wasEmpty = running_timers.empty();
-    std::chrono::nanoseconds old_next_call_time(-1);
-    if(!wasEmpty) {
-      old_next_call_time = running_timers.begin()->first;
-    }
-
     running_timers.emplace(next_call_time, timer_data);
     timer_data->in_running_list = true;
 
-    if(wasEmpty || old_next_call_time != running_timers.begin()->first) {
+    if(wasEmpty || running_timers.begin()->first < old_next_call_time) {
       // the next wakeup is now earlier, wake up the timer thread so that it can pick up the timer
       wakeup_timer_thread();
     }
@@ -385,17 +384,18 @@ private:
       }
 
       int64_t time_until_call{};
+      TimerData *timer_data(running_timers.begin()->second);
 
-      const rcl_timer_t * rcl_timer_ref = running_timers.begin()->second->rcl_ref.get();
+      const rcl_timer_t * rcl_timer_ref = timer_data->rcl_ref.get();
       auto ret = rcl_timer_get_time_until_next_call(rcl_timer_ref, &time_until_call);
       if (ret == RCL_RET_TIMER_CANCELED) {
-        running_timers.begin()->second->in_running_list = false;
+        timer_data->in_running_list = false;
         running_timers.erase(running_timers.begin());
         continue;
       }
 
       if (time_until_call <= 0) {
-        auto timer_done_callback = [timer_data = running_timers.begin()->second, this] ()
+        auto timer_done_callback = [timer_data = timer_data, this] ()
           {
             // Note, we have the guarantee, that the shared_ptr to this timer is
             // valid in case this callback is executed, as the executor holds a
@@ -408,14 +408,14 @@ private:
           };
 
         ready_timer_callbacks.push_back([ready_callback =
-          running_timers.begin()->second->timer_ready_callback,
+          timer_data->timer_ready_callback,
           done_callback = std::move(timer_done_callback)] () {
             ready_callback(done_callback);
         });
 
         // remove timer from, running list, until it was executed
         // the scheduler will readd the timer after execution
-        running_timers.begin()->second->in_running_list = false;
+        timer_data->in_running_list = false;
         running_timers.erase(running_timers.begin());
 
         continue;
