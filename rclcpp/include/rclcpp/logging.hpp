@@ -340,7 +340,11 @@
 #define RCLCPP_LOG_FMT_EXPRESSION(severity, logger, expression, ...) \
   do { \
     RCLCPP_STATIC_ASSERT_LOGGER(logger); \
-    RCUTILS_LOG_EXPRESSION_NAMED(severity, expression, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+    RCUTILS_LOG_EXPRESSION_NAMED( \
+      severity, \
+      expression, \
+      (logger).get_name(), \
+      "%s", std::format(__VA_ARGS__).c_str()); \
   } while (0)
 
 /**
@@ -355,7 +359,11 @@
 #define RCLCPP_LOG_FMT_FUNCTION(severity, logger, function, ...) \
   do { \
     RCLCPP_STATIC_ASSERT_LOGGER(logger); \
-    RCUTILS_LOG_FUNCTION_NAMED(severity, function, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+    RCUTILS_LOG_FUNCTION_NAMED( \
+      severity, \
+      function, \
+      (logger).get_name(), \
+      "%s", std::format(__VA_ARGS__).c_str()); \
   } while (0)
 
 /**
@@ -369,7 +377,10 @@
 #define RCLCPP_LOG_FMT_SKIPFIRST(severity, logger, ...) \
   do { \
     RCLCPP_STATIC_ASSERT_LOGGER(logger); \
-    RCUTILS_LOG_SKIPFIRST_NAMED(severity, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+    RCUTILS_LOG_SKIPFIRST_NAMED( \
+      severity, \
+      (logger).get_name(), \
+      "%s", std::format(__VA_ARGS__).c_str()); \
   } while (0)
 
 /**
@@ -575,7 +586,8 @@
  * \def RCLCPP_DEBUG_FMT
  * \copydoc RCLCPP_LOG_FMT
  */
-#define RCLCPP_DEBUG_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_DEBUG, logger, __VA_ARGS__)
+#define RCLCPP_DEBUG_FMT(logger, ...) \
+  RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_DEBUG, logger, __VA_ARGS__)
 
 /**
  * \def RCLCPP_DEBUG_FMT_ONCE
@@ -617,7 +629,8 @@
  * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
  */
 #define RCLCPP_DEBUG_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
-  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_DEBUG, logger, clock, duration, __VA_ARGS__)
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_DEBUG, logger, clock, duration, \
+    __VA_ARGS__)
 
 #endif
 
@@ -1163,7 +1176,8 @@
  * \def RCLCPP_ERROR_FMT
  * \copydoc RCLCPP_LOG_FMT
  */
-#define RCLCPP_ERROR_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_ERROR, logger, __VA_ARGS__)
+#define RCLCPP_ERROR_FMT(logger, ...) \
+  RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_ERROR, logger, __VA_ARGS__)
 
 /**
  * \def RCLCPP_ERROR_FMT_ONCE
@@ -1205,7 +1219,8 @@
  * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
  */
 #define RCLCPP_ERROR_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
-  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_ERROR, logger, clock, duration, __VA_ARGS__)
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_ERROR, logger, clock, duration, \
+    __VA_ARGS__)
 
 #endif
 
@@ -1359,7 +1374,8 @@
  * \def RCLCPP_FATAL_FMT
  * \copydoc RCLCPP_LOG_FMT
  */
-#define RCLCPP_FATAL_FMT(logger, ...) RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_FATAL, logger, __VA_ARGS__)
+#define RCLCPP_FATAL_FMT(logger, ...) \
+  RCLCPP_LOG_FMT(RCUTILS_LOG_SEVERITY_FATAL, logger, __VA_ARGS__)
 
 /**
  * \def RCLCPP_FATAL_FMT_ONCE
@@ -1401,7 +1417,8 @@
  * \copydoc RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
  */
 #define RCLCPP_FATAL_FMT_SKIPFIRST_THROTTLE(logger, clock, duration, ...) \
-  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_FATAL, logger, clock, duration, __VA_ARGS__)
+  RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(RCUTILS_LOG_SEVERITY_FATAL, logger, clock, duration, \
+    __VA_ARGS__)
 
 #endif
 
