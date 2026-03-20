@@ -74,17 +74,18 @@ struct ReadyEntity
                  if (!shr_ptr) {
                    return std::function<void()>();
                  }
-                 auto data = shr_ptr->call();
-                 if (!data) {
-                    // timer was cancelled, skip it.
-                   return std::function<void()>();
-                 }
 
-                 return [shr_ptr = std::move(shr_ptr), data = std::move(data),
+                 return [shr_ptr = std::move(shr_ptr),
                         timer_executed_cb = entity.timer_was_executed]() {
+                          auto data = shr_ptr->call();
+                          if (!data) {
+                              // timer was cancelled, skip it.
+                            return;
+                          }
+
                           rclcpp::executors::EventsCBGExecutor::execute_timer(shr_ptr, data);
 
-                    // readd the timer to the timers manager
+                          // readd the timer to the timers manager
                           timer_executed_cb();
                         };
                } else if constexpr (std::is_same_v<T, rclcpp::ServiceBase::WeakPtr>) {
