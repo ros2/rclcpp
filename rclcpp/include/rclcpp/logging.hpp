@@ -15,6 +15,7 @@
 #ifndef RCLCPP__LOGGING_HPP_
 #define RCLCPP__LOGGING_HPP_
 
+#include <format>
 #include <sstream>
 #include <type_traits>
 
@@ -298,6 +299,120 @@
       duration, \
       (logger).get_name(), \
       "%s", rclcpp_stream_ss_.str().c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT
+ * Log a message with given severity.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT(severity, logger, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_NAMED(severity, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT_ONCE
+ * Log a message with given severity with the following condition:
+ * - All log calls except the first one are ignored.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT_ONCE(severity, logger, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_ONCE_NAMED(severity, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT_EXPRESSION
+ * Log a message with given severity with the following condition:
+ * - Log calls are ignored when the expression evaluates to false.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param expression The expression determining if the message should be logged
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT_EXPRESSION(severity, logger, expression, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_EXPRESSION_NAMED(severity, expression, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT_FUNCTION
+ * Log a message with given severity with the following condition:
+ * - Log calls are ignored when the function returns false.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param function The functions return value determines if the message should be logged
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT_FUNCTION(severity, logger, function, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_FUNCTION_NAMED(severity, function, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT_SKIPFIRST
+ * Log a message with given severity with the following condition:
+ * - The first log call is ignored but all subsequent calls are processed.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT_SKIPFIRST(severity, logger, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_SKIPFIRST_NAMED(severity, (logger).get_name(), "%s", std::format(__VA_ARGS__).c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT_THROTTLE
+ * Log a message with given severity with the following condition:
+ * - Log calls are ignored if the last logged message is not longer ago than the specified duration.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param clock rclcpp::Clock that will be used to get the time point.
+ * \param duration The duration of the throttle interval as an integral value in milliseconds.
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT_THROTTLE(severity, logger, clock, duration, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_THROTTLE_NAMED( \
+      severity, \
+      RCLCPP_LOG_TIME_POINT_FUNC(clock), \
+      duration, \
+      (logger).get_name(), \
+      "%s", std::format(__VA_ARGS__).c_str()); \
+  } while (0)
+
+/**
+ * \def RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE
+ * Log a message with given severity with the following conditions:
+ * - The first log call is ignored but all subsequent calls are processed.
+ * - Log calls are ignored if the last logged message is not longer ago than the specified duration.
+ *
+ * \param logger The `rclcpp::Logger` to use
+ * \param clock rclcpp::Clock that will be used to get the time point.
+ * \param duration The duration of the throttle interval as an integral value in milliseconds.
+ * \param ... The variable arguments passed into std::format
+ */
+#define RCLCPP_LOG_FMT_SKIPFIRST_THROTTLE(severity, logger, clock, duration, ...) \
+  do { \
+    RCLCPP_STATIC_ASSERT_LOGGER(logger); \
+    RCUTILS_LOG_SKIPFIRST_THROTTLE_NAMED( \
+      severity, \
+      RCLCPP_LOG_TIME_POINT_FUNC(clock), \
+      duration, \
+      (logger).get_name(), \
+      "%s", std::format(__VA_ARGS__).c_str()); \
   } while (0)
 
 /**
