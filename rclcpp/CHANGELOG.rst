@@ -2,6 +2,22 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* keep the event alive throught the assertion, preveiting the race. (`#3099 <https://github.com/ros2/rclcpp/issues/3099>`_)
+* Add support check for content filter feature in subscription (`#3089 <https://github.com/ros2/rclcpp/issues/3089>`_)
+* Expose ServiceType in Service public API (`#3088 <https://github.com/ros2/rclcpp/issues/3088>`_)
+* perf: Optimized out shared_ptr copies (`#3079 <https://github.com/ros2/rclcpp/issues/3079>`_)
+* avoid stale parameter events in content filter tests. (`#3085 <https://github.com/ros2/rclcpp/issues/3085>`_)
+* improve lookup time for matches_any_publishers() (`#3084 <https://github.com/ros2/rclcpp/issues/3084>`_)
+* Add tests isolation (`#3081 <https://github.com/ros2/rclcpp/issues/3081>`_)
+* Revert "improve lookup time for matches_any_publishers(). (`#3068 <https://github.com/ros2/rclcpp/issues/3068>`_)" (`#3077 <https://github.com/ros2/rclcpp/issues/3077>`_)
+* improve lookup time for matches_any_publishers(). (`#3068 <https://github.com/ros2/rclcpp/issues/3068>`_)
+* fix: Use default rcl allocator if allocator is std::allocator (`#3058 <https://github.com/ros2/rclcpp/issues/3058>`_)
+* fix: Various data races in test cases (`#3057 <https://github.com/ros2/rclcpp/issues/3057>`_)
+* fix: Fix data race in CallbackGroup::size() (`#3056 <https://github.com/ros2/rclcpp/issues/3056>`_)
+* Contributors: Barry Xu, Danil, Janosch Machowinski, Julien Enoch, Tomoya Fujita
+
 30.1.5 (2026-02-09)
 -------------------
 * remove default: so that compiler can detect the missing case. (`#3048 <https://github.com/ros2/rclcpp/issues/3048>`_)
