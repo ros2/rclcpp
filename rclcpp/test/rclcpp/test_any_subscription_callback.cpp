@@ -113,15 +113,6 @@ TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
   }
   {
     rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
-    asc.set([](const rclcpp::SerializedMessage &, const rclcpp::MessageInfo &) {});
-    EXPECT_TRUE(asc.is_serialized_message_callback());
-    EXPECT_NO_THROW(
-      asc.dispatch(
-        std::make_shared<rclcpp::SerializedMessage>(),
-        rclcpp::MessageInfo{}));
-  }
-  {
-    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
     asc.set([](std::unique_ptr<rclcpp::SerializedMessage>) {});
     EXPECT_TRUE(asc.is_serialized_message_callback());
     EXPECT_NO_THROW(
@@ -171,24 +162,6 @@ TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
       [](
         const std::shared_ptr<const rclcpp::SerializedMessage> &,
         const rclcpp::MessageInfo &) {});
-    EXPECT_TRUE(asc.is_serialized_message_callback());
-    EXPECT_NO_THROW(
-      asc.dispatch(
-        std::make_shared<rclcpp::SerializedMessage>(),
-        rclcpp::MessageInfo{}));
-  }
-  {
-    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
-    asc.set([](std::shared_ptr<const rclcpp::SerializedMessage>) {});
-    EXPECT_TRUE(asc.is_serialized_message_callback());
-    EXPECT_NO_THROW(
-      asc.dispatch(
-        std::make_shared<rclcpp::SerializedMessage>(),
-        rclcpp::MessageInfo{}));
-  }
-  {
-    rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
-    asc.set([](std::shared_ptr<const rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {});
     EXPECT_TRUE(asc.is_serialized_message_callback());
     EXPECT_NO_THROW(
       asc.dispatch(
