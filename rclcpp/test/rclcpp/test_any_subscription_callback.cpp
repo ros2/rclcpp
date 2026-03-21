@@ -167,7 +167,6 @@ TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
         std::make_shared<rclcpp::SerializedMessage>(),
         rclcpp::MessageInfo{}));
   }
-<<<<<<< HEAD
   {
     rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty> asc;
     asc.set([](std::shared_ptr<rclcpp::SerializedMessage>) {});
@@ -186,8 +185,6 @@ TEST_F(TestAnySubscriptionCallback, is_serialized_message_callback) {
         std::make_shared<rclcpp::SerializedMessage>(),
         rclcpp::MessageInfo{}));
   }
-=======
->>>>>>> af78e01 (remove duplicate test cases in TestAnySubscriptionCallback::is_serialized_message_callback (#3104))
 }
 
 TEST_F(TestAnySubscriptionCallback, unset_dispatch_throw) {
