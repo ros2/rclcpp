@@ -438,6 +438,11 @@ ament_add_ros_isolated_gtest(test_time_source test_time_source.cpp
 if(TARGET test_time_source)
   target_link_libraries(test_time_source ${PROJECT_NAME} rcl::rcl)
 endif()
+ament_add_ros_isolated_gtest(test_time_source_deadlock test_time_source_deadlock.cpp
+  TIMEOUT 60)
+if(TARGET test_time_source_deadlock)
+  target_link_libraries(test_time_source_deadlock ${PROJECT_NAME})
+endif()
 
 ament_add_ros_isolated_gtest(test_utilities test_utilities.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
