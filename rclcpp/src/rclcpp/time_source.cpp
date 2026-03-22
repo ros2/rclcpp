@@ -422,13 +422,35 @@ private:
   // Destroy the subscription for the clock topic
   void destroy_clock_sub()
   {
-    std::lock_guard<std::mutex> guard(clock_sub_lock_);
-    if (clock_executor_thread_.joinable()) {
-      clock_executor_->cancel();
-      clock_executor_thread_.join();
-      clock_executor_->remove_callback_group(clock_callback_group_);
+    std::thread thread_to_join;
+    rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_to_clean;
+    rclcpp::CallbackGroup::SharedPtr cbg_to_remove;
+
+    {
+      std::lock_guard<std::mutex> guard(clock_sub_lock_);
+      if (clock_executor_thread_.joinable()) {
+        clock_executor_->cancel();
+        // Move the thread out so we can join without holding clock_sub_lock_.
+        // Holding the lock during join() can deadlock if the executor thread's
+        // shutdown path contends on clock_sub_lock_ (see ros2/rclcpp#2962).
+        // The thread is unconditionally joined below — it is not dangling.
+        thread_to_join = std::move(clock_executor_thread_);
+        executor_to_clean = clock_executor_;
+        cbg_to_remove = clock_callback_group_;
+      }
     }
-    clock_subscription_.reset();
+
+    // Join outside the lock. The subscription is intentionally kept alive
+    // until after join so the executor thread can finish any in-flight callback.
+    if (thread_to_join.joinable()) {
+      thread_to_join.join();
+      executor_to_clean->remove_callback_group(cbg_to_remove);
+    }
+
+    {
+      std::lock_guard<std::mutex> guard(clock_sub_lock_);
+      clock_subscription_.reset();
+    }
   }
 
   // On set Parameters callback handle
