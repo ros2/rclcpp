@@ -182,7 +182,7 @@ TEST_F(TestCallbackGroupEntityCleanup, add_many_timers_is_not_quadratic)
   // With O(N²) the old code took ~429ms for 10K timers.
   // With O(N) we expect < 100ms for 5K timers even on slow CI.
   // Use a generous threshold to avoid flakiness.
-  EXPECT_LT(ms, 5000) << "Adding " << N << " timers took " << ms
+  EXPECT_LT(ms, 5000)  << "Adding " << N << " timers took " << ms
                        << "ms — possible quadratic regression";
 }
 
@@ -215,7 +215,7 @@ TEST_F(TestCallbackGroupEntityCleanup, interleaved_add_remove_cycles)
     [](const rclcpp::SubscriptionBase::SharedPtr &) {},
     [](const rclcpp::ServiceBase::SharedPtr &) {},
     [](const rclcpp::ClientBase::SharedPtr &) {},
-    [&live](const rclcpp::TimerBase::SharedPtr &) { ++live; },
+    [&live](const rclcpp::TimerBase::SharedPtr &) {++live;},
     [](const rclcpp::Waitable::SharedPtr &) {});
 
   EXPECT_EQ(live, timers.size());
