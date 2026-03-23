@@ -258,11 +258,11 @@ protected:
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
   std::atomic_bool associated_with_executor_;
-  std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
-  std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
-  std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
-  std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
-  std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
+  mutable std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
+  mutable std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
+  mutable std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
+  mutable std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
+  mutable std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
   const bool automatically_add_to_executor_with_node_;
   // defer the creation of the guard condition
