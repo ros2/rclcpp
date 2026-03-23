@@ -36,6 +36,10 @@ if(TARGET test_exceptions)
   target_link_libraries(test_exceptions ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_ros_isolated_gtest(test_callback_group_entity_cleanup test_callback_group_entity_cleanup.cpp)
+if(TARGET test_callback_group_entity_cleanup)
+  target_link_libraries(test_callback_group_entity_cleanup ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
 ament_add_ros_isolated_gtest(test_allocator_memory_strategy strategies/test_allocator_memory_strategy.cpp)
 if(TARGET test_allocator_memory_strategy)
   target_link_libraries(test_allocator_memory_strategy ${PROJECT_NAME} rcpputils::rcpputils test_msgs::test_msgs)
@@ -437,6 +441,11 @@ ament_add_ros_isolated_gtest(test_time_source test_time_source.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_time_source)
   target_link_libraries(test_time_source ${PROJECT_NAME} rcl::rcl)
+endif()
+ament_add_ros_isolated_gtest(test_time_source_deadlock test_time_source_deadlock.cpp
+  TIMEOUT 60)
+if(TARGET test_time_source_deadlock)
+  target_link_libraries(test_time_source_deadlock ${PROJECT_NAME})
 endif()
 
 ament_add_ros_isolated_gtest(test_utilities test_utilities.cpp
