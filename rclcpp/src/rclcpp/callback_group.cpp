@@ -67,6 +67,30 @@ CallbackGroup::size() const
     waitable_ptrs_.size();
 }
 
+namespace
+{
+/// Iterate a vector of weak pointers, call func for each live entry,
+/// and compact expired entries out of the vector in a single pass.
+template<typename T, typename Func>
+void collect_and_compact(
+  std::vector<typename T::WeakPtr> & ptrs,
+  const Func & func)
+{
+  size_t write_idx = 0;
+  for (size_t read_idx = 0; read_idx < ptrs.size(); ++read_idx) {
+    auto ref_ptr = ptrs[read_idx].lock();
+    if (ref_ptr) {
+      func(ref_ptr);
+      if (write_idx != read_idx) {
+        ptrs[write_idx] = std::move(ptrs[read_idx]);
+      }
+      ++write_idx;
+    }
+  }
+  ptrs.resize(write_idx);
+}
+}  // namespace
+
 void CallbackGroup::collect_all_ptrs(
   const std::function<void(const rclcpp::SubscriptionBase::SharedPtr &)> & sub_func,
   const std::function<void(const rclcpp::ServiceBase::SharedPtr &)> & service_func,
@@ -76,40 +100,11 @@ void CallbackGroup::collect_all_ptrs(
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  for (const rclcpp::SubscriptionBase::WeakPtr & weak_ptr : subscription_ptrs_) {
-    rclcpp::SubscriptionBase::SharedPtr ref_ptr = weak_ptr.lock();
-    if (ref_ptr) {
-      sub_func(ref_ptr);
-    }
-  }
-
-  for (const rclcpp::ServiceBase::WeakPtr & weak_ptr : service_ptrs_) {
-    rclcpp::ServiceBase::SharedPtr ref_ptr = weak_ptr.lock();
-    if (ref_ptr) {
-      service_func(ref_ptr);
-    }
-  }
-
-  for (const rclcpp::ClientBase::WeakPtr & weak_ptr : client_ptrs_) {
-    rclcpp::ClientBase::SharedPtr ref_ptr = weak_ptr.lock();
-    if (ref_ptr) {
-      client_func(ref_ptr);
-    }
-  }
-
-  for (const rclcpp::TimerBase::WeakPtr & weak_ptr : timer_ptrs_) {
-    rclcpp::TimerBase::SharedPtr ref_ptr = weak_ptr.lock();
-    if (ref_ptr) {
-      timer_func(ref_ptr);
-    }
-  }
-
-  for (const rclcpp::Waitable::WeakPtr & weak_ptr : waitable_ptrs_) {
-    rclcpp::Waitable::SharedPtr ref_ptr = weak_ptr.lock();
-    if (ref_ptr) {
-      waitable_func(ref_ptr);
-    }
-  }
+  collect_and_compact<rclcpp::SubscriptionBase>(subscription_ptrs_, sub_func);
+  collect_and_compact<rclcpp::ServiceBase>(service_ptrs_, service_func);
+  collect_and_compact<rclcpp::ClientBase>(client_ptrs_, client_func);
+  collect_and_compact<rclcpp::TimerBase>(timer_ptrs_, timer_func);
+  collect_and_compact<rclcpp::Waitable>(waitable_ptrs_, waitable_func);
 }
 
 std::atomic_bool &
@@ -153,12 +148,6 @@ CallbackGroup::add_subscription(
 {
   std::lock_guard<std::mutex> lock(mutex_);
   subscription_ptrs_.push_back(subscription_ptr);
-  subscription_ptrs_.erase(
-    std::remove_if(
-      subscription_ptrs_.begin(),
-      subscription_ptrs_.end(),
-      [](const rclcpp::SubscriptionBase::WeakPtr & x) {return x.expired();}),
-    subscription_ptrs_.end());
 }
 
 void
@@ -166,12 +155,6 @@ CallbackGroup::add_timer(const rclcpp::TimerBase::SharedPtr & timer_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   timer_ptrs_.push_back(timer_ptr);
-  timer_ptrs_.erase(
-    std::remove_if(
-      timer_ptrs_.begin(),
-      timer_ptrs_.end(),
-      [](const rclcpp::TimerBase::WeakPtr & x) {return x.expired();}),
-    timer_ptrs_.end());
 }
 
 void
@@ -179,12 +162,6 @@ CallbackGroup::add_service(const rclcpp::ServiceBase::SharedPtr & service_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   service_ptrs_.push_back(service_ptr);
-  service_ptrs_.erase(
-    std::remove_if(
-      service_ptrs_.begin(),
-      service_ptrs_.end(),
-      [](const rclcpp::ServiceBase::WeakPtr & x) {return x.expired();}),
-    service_ptrs_.end());
 }
 
 void
@@ -192,12 +169,6 @@ CallbackGroup::add_client(const rclcpp::ClientBase::SharedPtr & client_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   client_ptrs_.push_back(client_ptr);
-  client_ptrs_.erase(
-    std::remove_if(
-      client_ptrs_.begin(),
-      client_ptrs_.end(),
-      [](const rclcpp::ClientBase::WeakPtr & x) {return x.expired();}),
-    client_ptrs_.end());
 }
 
 void
@@ -205,12 +176,6 @@ CallbackGroup::add_waitable(const rclcpp::Waitable::SharedPtr & waitable_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   waitable_ptrs_.push_back(waitable_ptr);
-  waitable_ptrs_.erase(
-    std::remove_if(
-      waitable_ptrs_.begin(),
-      waitable_ptrs_.end(),
-      [](const rclcpp::Waitable::WeakPtr & x) {return x.expired();}),
-    waitable_ptrs_.end());
 }
 
 void
