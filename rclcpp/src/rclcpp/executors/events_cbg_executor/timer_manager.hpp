@@ -533,4 +533,4 @@ public:
     }
   }
 };
-}  // namespace rclcpp::executors::cbg
+}  // namespace rclcpp::executors::cbg_executor
