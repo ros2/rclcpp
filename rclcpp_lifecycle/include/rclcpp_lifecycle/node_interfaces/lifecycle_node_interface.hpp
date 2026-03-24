@@ -53,13 +53,15 @@ protected:
   LifecycleNodeInterface() {}
 
 public:
+  /// Return values for lifecycle transition callbacks.
+  ///
+  /// See lifecycle_msgs/msg/Transition.msg for detailed semantics.
   enum class CallbackReturn : uint8_t
   {
     SUCCESS = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS,
     FAILURE = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE,
     ERROR = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR
   };
-
   /// Callback function for configure transition
   /*
    * \return SUCCESS by default
