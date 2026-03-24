@@ -155,8 +155,13 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     }
 
     if (!acceptable_buffer_backends.empty()) {
-      result.rmw_subscription_options.acceptable_buffer_backends =
-        acceptable_buffer_backends.c_str();
+      rcl_ret_t ret = rcl_subscription_options_set_acceptable_buffer_backends(
+        acceptable_buffer_backends.c_str(),
+        &result);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "failed to set acceptable_buffer_backends");
+      }
     }
 
     return result;

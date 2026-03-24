@@ -80,7 +80,7 @@ public:
       node_base,
       *rclcpp::get_message_typesupport_handle(topic_type, "rosidl_typesupport_cpp", *ts_lib),
       topic_name,
-      force_cpu_buffer_backend_(options).to_rcl_subscription_options(qos),
+      force_cpu_buffer_backend(options).to_rcl_subscription_options(qos),
       options.event_callbacks,
       options.use_default_callbacks,
       DeliveredMessageKind::SERIALIZED_MESSAGE),
@@ -185,7 +185,7 @@ private:
 
   template<typename AllocatorT>
   static rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>
-  force_cpu_buffer_backend_(
+  force_cpu_buffer_backend(
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   {
     auto opts = options;
