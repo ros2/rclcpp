@@ -79,10 +79,7 @@ TestWaitable::execute(const std::shared_ptr<void> &)
   if (nullptr != on_execute_callback_) {
     on_execute_callback_();
   } else {
-    // TODO(wjwwood): I don't know why this was here, but probably it should
-    //   not be there, or test cases where that is important should use the
-    //   on_execute_callback?
-    std::this_thread::sleep_for(3ms);
+    // Removed unnecessary sleep based on TODO comment; tests should rely on explicit synchronization instead
   }
 }
 
