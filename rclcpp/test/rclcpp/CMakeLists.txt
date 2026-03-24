@@ -38,29 +38,29 @@ endif()
 
 ament_add_ros_isolated_gtest(test_allocator_memory_strategy strategies/test_allocator_memory_strategy.cpp)
 if(TARGET test_allocator_memory_strategy)
-  target_link_libraries(test_allocator_memory_strategy ${PROJECT_NAME} rcpputils::rcpputils ${test_msgs_TARGETS})
+  target_link_libraries(test_allocator_memory_strategy ${PROJECT_NAME} rcpputils::rcpputils test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_message_pool_memory_strategy strategies/test_message_pool_memory_strategy.cpp)
 if(TARGET test_message_pool_memory_strategy)
-  target_link_libraries(test_message_pool_memory_strategy ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_message_pool_memory_strategy ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_any_service_callback test_any_service_callback.cpp)
 if(TARGET test_any_service_callback)
-  target_link_libraries(test_any_service_callback ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_any_service_callback ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_any_subscription_callback test_any_subscription_callback.cpp)
 if(TARGET test_any_subscription_callback)
-  target_link_libraries(test_any_subscription_callback ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_any_subscription_callback ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_client test_client.cpp)
 ament_add_test_label(test_client mimick)
 if(TARGET test_client)
-  target_link_libraries(test_client ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+  target_link_libraries(test_client ${PROJECT_NAME} mimick rcl_interfaces::rcl_interfaces test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_clock_conditional test_clock_conditional.cpp)
 ament_add_test_label(test_clock_conditional mimick)
 if(TARGET test_clock_conditional)
-  target_link_libraries(test_clock_conditional ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+  target_link_libraries(test_clock_conditional ${PROJECT_NAME} mimick rcl_interfaces::rcl_interfaces test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_copy_all_parameter_values test_copy_all_parameter_values.cpp)
 if(TARGET test_copy_all_parameter_values)
@@ -76,11 +76,11 @@ ament_add_test_label(test_generic_client mimick)
 if(TARGET test_generic_client)
   target_link_libraries(test_generic_client ${PROJECT_NAME}
     mimick
-    ${rcl_interfaces_TARGETS}
+    rcl_interfaces::rcl_interfaces
     rmw::rmw
     rosidl_runtime_cpp::rosidl_runtime_cpp
     rosidl_typesupport_cpp::rosidl_typesupport_cpp
-    ${test_msgs_TARGETS}
+    test_msgs::test_msgs
   )
 endif()
 ament_add_ros_isolated_gtest(test_generic_service test_generic_service.cpp)
@@ -88,11 +88,11 @@ ament_add_test_label(test_generic_service mimick)
 if(TARGET test_generic_service)
   target_link_libraries(test_generic_service ${PROJECT_NAME}
     mimick
-    ${rcl_interfaces_TARGETS}
+    rcl_interfaces::rcl_interfaces
     rmw::rmw
     rosidl_runtime_cpp::rosidl_runtime_cpp
     rosidl_typesupport_cpp::rosidl_typesupport_cpp
-    ${test_msgs_TARGETS}
+    test_msgs::test_msgs
   )
 endif()
 ament_add_ros_isolated_gtest(test_client_common test_client_common.cpp)
@@ -100,16 +100,16 @@ ament_add_test_label(test_client_common mimick)
 if(TARGET test_client_common)
   target_link_libraries(test_client_common ${PROJECT_NAME}
     mimick
-    ${rcl_interfaces_TARGETS}
+    rcl_interfaces::rcl_interfaces
     rmw::rmw
     rosidl_runtime_cpp::rosidl_runtime_cpp
     rosidl_typesupport_cpp::rosidl_typesupport_cpp
-    ${test_msgs_TARGETS}
+    test_msgs::test_msgs
   )
 endif()
 ament_add_ros_isolated_gtest(test_create_subscription test_create_subscription.cpp)
 if(TARGET test_create_subscription)
-  target_link_libraries(test_create_subscription ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_create_subscription ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_expand_topic_or_service_name test_expand_topic_or_service_name.cpp)
 ament_add_test_label(test_expand_topic_or_service_name mimick)
@@ -128,11 +128,11 @@ if(TARGET test_future_return_code)
 endif()
 ament_add_ros_isolated_gmock(test_intra_process_manager test_intra_process_manager.cpp)
 if(TARGET test_intra_process_manager)
-  target_link_libraries(test_intra_process_manager ${PROJECT_NAME} ${rcl_interfaces_TARGETS} rmw::rmw)
+  target_link_libraries(test_intra_process_manager ${PROJECT_NAME} rcl_interfaces::rcl_interfaces rmw::rmw)
 endif()
 ament_add_ros_isolated_gmock(test_intra_process_manager_with_allocators test_intra_process_manager_with_allocators.cpp)
 if(TARGET test_intra_process_manager_with_allocators)
-  target_link_libraries(test_intra_process_manager_with_allocators ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_intra_process_manager_with_allocators ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_ring_buffer_implementation test_ring_buffer_implementation.cpp)
 if(TARGET test_ring_buffer_implementation)
@@ -145,18 +145,18 @@ endif()
 
 ament_add_ros_isolated_gtest(test_loaned_message test_loaned_message.cpp)
 ament_add_test_label(test_loaned_message mimick)
-target_link_libraries(test_loaned_message ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+target_link_libraries(test_loaned_message ${PROJECT_NAME} mimick test_msgs::test_msgs)
 
 ament_add_ros_isolated_gtest(test_memory_strategy test_memory_strategy.cpp)
-target_link_libraries(test_memory_strategy ${PROJECT_NAME} ${test_msgs_TARGETS})
+target_link_libraries(test_memory_strategy ${PROJECT_NAME} test_msgs::test_msgs)
 
 ament_add_ros_isolated_gtest(test_message_memory_strategy test_message_memory_strategy.cpp)
-target_link_libraries(test_message_memory_strategy ${PROJECT_NAME} ${test_msgs_TARGETS})
+target_link_libraries(test_message_memory_strategy ${PROJECT_NAME} test_msgs::test_msgs)
 
 ament_add_ros_isolated_gtest(test_node test_node.cpp TIMEOUT 240)
 ament_add_test_label(test_node mimick)
 if(TARGET test_node)
-  target_link_libraries(test_node ${PROJECT_NAME} mimick rcpputils::rcpputils rmw::rmw ${test_msgs_TARGETS})
+  target_link_libraries(test_node ${PROJECT_NAME} mimick rcpputils::rcpputils rmw::rmw test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_node_interfaces__get_node_interfaces
@@ -180,7 +180,7 @@ ament_add_ros_isolated_gtest(test_node_interfaces__node_graph
   TIMEOUT 120)
 ament_add_test_label(test_node_interfaces__node_graph mimick)
 if(TARGET test_node_interfaces__node_graph)
-  target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick rcl::rcl ${test_msgs_TARGETS})
+  target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME} mimick rcl::rcl test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_node_interfaces__node_interfaces
   node_interfaces/test_node_interfaces.cpp)
@@ -191,7 +191,7 @@ ament_add_ros_isolated_gtest(test_node_interfaces__node_parameters
   node_interfaces/test_node_parameters.cpp)
 ament_add_test_label(test_node_interfaces__node_parameters mimick)
 if(TARGET test_node_interfaces__node_parameters)
-  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick rcpputils::rcpputils ${test_msgs_TARGETS})
+  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME} mimick rcpputils::rcpputils test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_node_interfaces__node_services
   node_interfaces/test_node_services.cpp)
@@ -209,7 +209,7 @@ ament_add_ros_isolated_gtest(test_node_interfaces__node_topics
   node_interfaces/test_node_topics.cpp)
 ament_add_test_label(test_node_interfaces__node_topics mimick)
 if(TARGET test_node_interfaces__node_topics)
-  target_link_libraries(test_node_interfaces__node_topics ${PROJECT_NAME} mimick rcl::rcl ${test_msgs_TARGETS})
+  target_link_libraries(test_node_interfaces__node_topics ${PROJECT_NAME} mimick rcl::rcl test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_node_interfaces__node_type_descriptions
   node_interfaces/test_node_type_descriptions.cpp)
@@ -265,7 +265,7 @@ if(TARGET test_init_options)
 endif()
 ament_add_ros_isolated_gmock(test_parameter_client test_parameter_client.cpp)
 if(TARGET test_parameter_client)
-  target_link_libraries(test_parameter_client ${PROJECT_NAME} ${rcl_interfaces_TARGETS})
+  target_link_libraries(test_parameter_client ${PROJECT_NAME} rcl_interfaces::rcl_interfaces)
 endif()
 ament_add_ros_isolated_gtest(test_parameter_service test_parameter_service.cpp)
 if(TARGET test_parameter_service)
@@ -273,7 +273,7 @@ if(TARGET test_parameter_service)
 endif()
 ament_add_ros_isolated_gtest(test_parameter_events_filter test_parameter_events_filter.cpp)
 if(TARGET test_parameter_events_filter)
-  target_link_libraries(test_parameter_events_filter ${PROJECT_NAME} ${rcl_interfaces_TARGETS})
+  target_link_libraries(test_parameter_events_filter ${PROJECT_NAME} rcl_interfaces::rcl_interfaces)
 endif()
 ament_add_ros_isolated_gtest(test_parameter test_parameter.cpp)
 if(TARGET test_parameter)
@@ -290,7 +290,7 @@ endif()
 ament_add_ros_isolated_gtest(test_publisher test_publisher.cpp TIMEOUT 120)
 ament_add_test_label(test_publisher mimick)
 if(TARGET test_publisher)
-  target_link_libraries(test_publisher ${PROJECT_NAME} mimick rcl::rcl rcutils::rcutils ${test_msgs_TARGETS})
+  target_link_libraries(test_publisher ${PROJECT_NAME} mimick rcl::rcl rcutils::rcutils test_msgs::test_msgs)
 endif()
 
 set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
@@ -323,13 +323,13 @@ if(TARGET test_subscription_publisher_with_same_type_adapter)
   target_link_libraries(test_subscription_publisher_with_same_type_adapter
     ${PROJECT_NAME}
     ${cpp_typesupport_target}
-    ${statistics_msgs_TARGETS}
+    statistics_msgs::statistics_msgs
   )
 endif()
 
 ament_add_ros_isolated_gtest(test_publisher_subscription_count_api test_publisher_subscription_count_api.cpp)
 if(TARGET test_publisher_subscription_count_api)
-  target_link_libraries(test_publisher_subscription_count_api ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_publisher_subscription_count_api ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_qos test_qos.cpp)
 if(TARGET test_qos)
@@ -353,39 +353,39 @@ if(TARGET test_rate)
 endif()
 ament_add_ros_isolated_gtest(test_serialized_message_allocator test_serialized_message_allocator.cpp)
 if(TARGET test_serialized_message_allocator)
-  target_link_libraries(test_serialized_message_allocator ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
+  target_link_libraries(test_serialized_message_allocator ${PROJECT_NAME} rcl::rcl test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_serialized_message test_serialized_message.cpp)
 if(TARGET test_serialized_message)
-  target_link_libraries(test_serialized_message ${PROJECT_NAME} rcpputils::rcpputils ${test_msgs_TARGETS})
+  target_link_libraries(test_serialized_message ${PROJECT_NAME} rcpputils::rcpputils test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_service test_service.cpp)
 ament_add_test_label(test_service mimick)
 if(TARGET test_service)
-  target_link_libraries(test_service ${PROJECT_NAME} mimick ${rcl_interfaces_TARGES} ${test_msgs_TARGETS})
+  target_link_libraries(test_service ${PROJECT_NAME} mimick ${rcl_interfaces_TARGES} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gmock(test_service_introspection test_service_introspection.cpp)
 ament_add_test_label(test_service_introspection mimick)
 if(TARGET test_service_introspection)
-  target_link_libraries(test_service_introspection ${PROJECT_NAME} mimick ${service_msgs_TARGETS} ${test_msgs_TARGETS})
+  target_link_libraries(test_service_introspection ${PROJECT_NAME} mimick service_msgs::service_msgs test_msgs::test_msgs)
 endif()
 # Creating and destroying nodes is slow with Connext, so this needs larger timeout.
 ament_add_ros_isolated_gtest(test_subscription test_subscription.cpp TIMEOUT 120)
 ament_add_test_label(test_subscription mimick)
 if(TARGET test_subscription)
-  target_link_libraries(test_subscription ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+  target_link_libraries(test_subscription ${PROJECT_NAME} mimick test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_subscription_publisher_count_api test_subscription_publisher_count_api.cpp)
 if(TARGET test_subscription_publisher_count_api)
-  target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_subscription_traits test_subscription_traits.cpp)
 if(TARGET test_subscription_traits)
-  target_link_libraries(test_subscription_traits ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
+  target_link_libraries(test_subscription_traits ${PROJECT_NAME} rcl::rcl test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gtest(test_type_support test_type_support.cpp)
 if(TARGET test_type_support)
-  target_link_libraries(test_type_support ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_type_support ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 ament_add_ros_isolated_gmock(test_typesupport_helpers test_typesupport_helpers.cpp)
 if(TARGET test_typesupport_helpers)
@@ -397,7 +397,7 @@ if(TARGET test_find_weak_nodes)
 endif()
 
 ament_add_ros_isolated_gtest(test_externally_defined_services test_externally_defined_services.cpp)
-target_link_libraries(test_externally_defined_services ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
+target_link_libraries(test_externally_defined_services ${PROJECT_NAME} rcl::rcl test_msgs::test_msgs)
 
 ament_add_ros_isolated_gtest(test_duration test_duration.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
@@ -448,12 +448,12 @@ endif()
 
 ament_add_ros_isolated_gtest(test_wait_for_message test_wait_for_message.cpp)
 if(TARGET test_wait_for_message)
-  target_link_libraries(test_wait_for_message ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_wait_for_message ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_logger_service test_logger_service.cpp)
 if(TARGET test_logger_service)
-  target_link_libraries(test_logger_service ${PROJECT_NAME} ${rcl_interfaces_TARGETS})
+  target_link_libraries(test_logger_service ${PROJECT_NAME} rcl_interfaces::rcl_interfaces)
 endif()
 
 ament_add_ros_isolated_gtest(test_interface_traits test_interface_traits.cpp
@@ -479,7 +479,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND MSVC)
   target_compile_options(test_executors PRIVATE "/bigobj")
 endif()
 if(TARGET test_executors)
-  target_link_libraries(test_executors ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
+  target_link_libraries(test_executors ${PROJECT_NAME} rcl::rcl test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(
@@ -488,7 +488,7 @@ ament_add_ros_isolated_gtest(
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
 if(TARGET test_executors_timer_cancel_behavior)
-  target_link_libraries(test_executors_timer_cancel_behavior ${PROJECT_NAME} ${rosgraph_msgs_TARGETS})
+  target_link_libraries(test_executors_timer_cancel_behavior ${PROJECT_NAME} rosgraph_msgs::rosgraph_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(
@@ -506,7 +506,7 @@ ament_add_ros_isolated_gtest(
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
 if(TARGET test_executors_intraprocess)
-  target_link_libraries(test_executors_intraprocess ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_executors_intraprocess ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(
@@ -526,7 +526,7 @@ ament_add_ros_isolated_gtest(
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
   TIMEOUT 180)
 if(TARGET test_executors_warmup)
-  target_link_libraries(test_executors_warmup ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_executors_warmup ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_multi_threaded_executor executors/test_multi_threaded_executor.cpp
@@ -550,7 +550,7 @@ endif()
 
 ament_add_ros_isolated_gtest(test_events_executor executors/test_events_executor.cpp TIMEOUT 60)
 if(TARGET test_events_executor)
-  target_link_libraries(test_events_executor ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_events_executor ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_events_queue executors/test_events_queue.cpp
@@ -569,7 +569,7 @@ endif()
 ament_add_ros_isolated_gtest(test_wait_set test_wait_set.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_wait_set)
-  target_link_libraries(test_wait_set ${PROJECT_NAME} ${rcl_interfaces_TARGETS} ${test_msgs_TARGETS})
+  target_link_libraries(test_wait_set ${PROJECT_NAME} rcl_interfaces::rcl_interfaces test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_subscription_topic_statistics topic_statistics/test_subscription_topic_statistics.cpp
@@ -579,8 +579,8 @@ if(TARGET test_subscription_topic_statistics)
   target_link_libraries(test_subscription_topic_statistics
     ${PROJECT_NAME}
     libstatistics_collector::libstatistics_collector
-    ${statistics_msgs_TARGETS}
-    ${test_msgs_TARGETS}
+    statistics_msgs::statistics_msgs
+    test_msgs::test_msgs
   )
 endif()
 
@@ -591,28 +591,28 @@ endif()
 
 ament_add_ros_isolated_gtest(test_dynamic_storage wait_set_policies/test_dynamic_storage.cpp)
 if(TARGET test_dynamic_storage)
-  target_link_libraries(test_dynamic_storage ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_dynamic_storage ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_storage_policy_common wait_set_policies/test_storage_policy_common.cpp)
 ament_add_test_label(test_storage_policy_common mimick)
 if(TARGET test_storage_policy_common)
-  target_link_libraries(test_storage_policy_common ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+  target_link_libraries(test_storage_policy_common ${PROJECT_NAME} mimick test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_static_storage wait_set_policies/test_static_storage.cpp)
 if(TARGET test_static_storage)
-  target_link_libraries(test_static_storage ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_static_storage ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_thread_safe_synchronization wait_set_policies/test_thread_safe_synchronization.cpp)
 if(TARGET test_thread_safe_synchronization)
-  target_link_libraries(test_thread_safe_synchronization ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_thread_safe_synchronization ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_intra_process_waitable waitables/test_intra_process_waitable.cpp)
 if(TARGET test_intra_process_waitable)
-  target_link_libraries(test_intra_process_waitable ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_intra_process_waitable ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_rosout_qos test_rosout_qos.cpp)
@@ -622,7 +622,7 @@ endif()
 
 ament_add_ros_isolated_gtest(test_rosout_subscription test_rosout_subscription.cpp)
 if(TARGET test_rosout_subscription)
-  target_link_libraries(test_rosout_subscription ${PROJECT_NAME} ${rcl_interfaces_TARGETS})
+  target_link_libraries(test_rosout_subscription ${PROJECT_NAME} rcl_interfaces::rcl_interfaces)
 endif()
 
 ament_add_ros_isolated_gtest(test_executor test_executor.cpp
@@ -630,7 +630,7 @@ ament_add_ros_isolated_gtest(test_executor test_executor.cpp
   TIMEOUT 120)
 ament_add_test_label(test_executor mimick)
 if(TARGET test_executor)
-  target_link_libraries(test_executor ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+  target_link_libraries(test_executor ${PROJECT_NAME} mimick test_msgs::test_msgs)
 endif()
 
 ament_add_ros_isolated_gtest(test_graph_listener test_graph_listener.cpp)
@@ -641,22 +641,22 @@ endif()
 
 ament_add_gmock_executable(test_qos_event test_qos_event.cpp)
 if(TARGET test_qos_event)
-  target_link_libraries(test_qos_event ${PROJECT_NAME} mimick rcutils::rcutils rmw::rmw ${test_msgs_TARGETS})
+  target_link_libraries(test_qos_event ${PROJECT_NAME} mimick rcutils::rcutils rmw::rmw test_msgs::test_msgs)
 endif()
 
 ament_add_gmock_executable(test_generic_pubsub test_generic_pubsub.cpp)
 if(TARGET test_generic_pubsub)
-  target_link_libraries(test_generic_pubsub ${PROJECT_NAME} rcl::rcl ${test_msgs_TARGETS})
+  target_link_libraries(test_generic_pubsub ${PROJECT_NAME} rcl::rcl test_msgs::test_msgs)
 endif()
 
 ament_add_gmock_executable(test_add_callback_groups_to_executor test_add_callback_groups_to_executor.cpp)
 if(TARGET test_add_callback_groups_to_executor)
-  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME} ${test_msgs_TARGETS})
+  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME} test_msgs::test_msgs)
 endif()
 
 ament_add_gmock_executable(test_subscription_content_filter test_subscription_content_filter.cpp)
 if(TARGET test_subscription_content_filter)
-  target_link_libraries(test_subscription_content_filter ${PROJECT_NAME} mimick ${test_msgs_TARGETS})
+  target_link_libraries(test_subscription_content_filter ${PROJECT_NAME} mimick test_msgs::test_msgs)
 endif()
 
 function(test_on_all_rmws)
