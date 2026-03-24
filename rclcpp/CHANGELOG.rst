@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+31.0.1 (2026-03-24)
+-------------------
+* Use new ROSIDL aggregate CMake target (`#3105 <https://github.com/ros2/rclcpp/issues/3105>`_)
+* remove duplicate test cases in TestAnySubscriptionCallback::is_serialized_message_callback (`#3104 <https://github.com/ros2/rclcpp/issues/3104>`_)
+* Contributors: Alexis Tsogias, Emerson Knapp
+
 31.0.0 (2026-03-20)
 -------------------
 * keep the event alive throught the assertion, preveiting the race. (`#3099 <https://github.com/ros2/rclcpp/issues/3099>`_)
