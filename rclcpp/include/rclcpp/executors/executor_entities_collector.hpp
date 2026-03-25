@@ -160,12 +160,12 @@ protected:
 
   using WeakNodesToGuardConditionsMap = std::map<
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-    rclcpp::GuardCondition::WeakPtr,
+    rclcpp::GuardCondition::SharedPtr,
     std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>;
 
   using WeakGroupsToGuardConditionsMap = std::map<
     rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::GuardCondition::WeakPtr,
+    rclcpp::GuardCondition::SharedPtr,
     std::owner_less<rclcpp::CallbackGroup::WeakPtr>>;
 
   /// Implementation of removing a node from the collector.
