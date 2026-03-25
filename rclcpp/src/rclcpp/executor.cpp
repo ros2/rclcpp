@@ -107,8 +107,7 @@ Executor::~Executor()
   weak_groups_to_nodes_associated_with_executor_.clear();
   weak_groups_to_nodes_.clear();
   for (const auto & pair : weak_groups_to_guard_conditions_) {
-    auto guard_condition = pair.second;
-    memory_strategy_->remove_guard_condition(guard_condition);
+    memory_strategy_->remove_guard_condition(pair.second.get());
   }
   weak_groups_to_guard_conditions_.clear();
 
@@ -218,7 +217,10 @@ Executor::add_callback_group_to_map(
   if (node_ptr->get_context()->is_valid()) {
     auto callback_group_guard_condition =
       group_ptr->get_notify_guard_condition(node_ptr->get_context());
-    weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition.get();
+    // Store shared_ptr to keep the guard condition alive while registered with the executor.
+    // This prevents the guard condition from being finalized (impl set to NULL) while the
+    // memory strategy still holds a raw pointer to it during wait_for_work().
+    weak_groups_to_guard_conditions_[weak_group_ptr] = callback_group_guard_condition;
     // Add the callback_group's notify condition to the guard condition handles
     memory_strategy_->add_guard_condition(*callback_group_guard_condition);
   }
@@ -304,7 +306,7 @@ Executor::remove_callback_group_from_map(
   {
     auto iter = weak_groups_to_guard_conditions_.find(weak_group_ptr);
     if (iter != weak_groups_to_guard_conditions_.end()) {
-      memory_strategy_->remove_guard_condition(iter->second);
+      memory_strategy_->remove_guard_condition(iter->second.get());
     }
     weak_groups_to_guard_conditions_.erase(weak_group_ptr);
 
@@ -730,7 +732,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
           if (callback_guard_pair != weak_groups_to_guard_conditions_.end()) {
             auto guard_condition = callback_guard_pair->second;
             weak_groups_to_guard_conditions_.erase(group_ptr);
-            memory_strategy_->remove_guard_condition(guard_condition);
+            memory_strategy_->remove_guard_condition(guard_condition.get());
           }
           weak_groups_to_nodes_.erase(group_ptr);
         });

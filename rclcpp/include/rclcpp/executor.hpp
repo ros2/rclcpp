@@ -560,9 +560,9 @@ protected:
   virtual void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
-  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-      const rclcpp::GuardCondition *,
-      std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
+  typedef std::map<
+    rclcpp::CallbackGroup::WeakPtr, rclcpp::GuardCondition::SharedPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>>
     WeakCallbackGroupsToGuardConditionsMap;
 
   /// maps callback groups to guard conditions
