@@ -14,10 +14,13 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
+#include <future>
 #include <map>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -338,6 +341,92 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, subscriber_triggered_to_receive_mess
 
   ASSERT_EQ(rclcpp::FutureReturnCode::SUCCESS, return_code);
   EXPECT_TRUE(received_message_future.get());
+}
+
+/*
+ * Test destroying the last strong callback group reference while the executor is spinning.
+ * This exercises the callback-group lifetime path from https://github.com/ros2/rclcpp/issues/2163.
+ */
+TYPED_TEST(TestAddCallbackGroupsToExecutor, callback_group_destroyed_while_spinning)
+{
+  using ExecutorType = TypeParam;
+
+  ExecutorType executor;
+  auto node = std::make_shared<rclcpp::Node>("callback_group_destroyed_while_spinning", "/ns");
+  executor.add_node(node);
+
+  auto count_live_callback_groups = [&executor]() {
+      size_t count = 0;
+      for (const auto & weak_group : executor.get_all_callback_groups()) {
+        if (weak_group.lock()) {
+          ++count;
+        }
+      }
+      return count;
+    };
+
+  auto wait_for_live_callback_groups =
+    [&count_live_callback_groups](size_t expected_count, std::chrono::milliseconds timeout) {
+      const auto deadline = std::chrono::steady_clock::now() + timeout;
+      while (std::chrono::steady_clock::now() < deadline) {
+        if (count_live_callback_groups() == expected_count) {
+          return true;
+        }
+        std::this_thread::sleep_for(1ms);
+      }
+      return count_live_callback_groups() == expected_count;
+    };
+
+  const auto initial_callback_group_count = count_live_callback_groups();
+
+  std::exception_ptr spin_exception;
+  std::thread spin_thread([&executor, &spin_exception]() {
+    try {
+      executor.spin();
+    } catch (...) {
+      spin_exception = std::current_exception();
+    }
+  });
+
+  auto heartbeat_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, true);
+  auto heartbeat_timer = node->create_wall_timer(1ms, []() {}, heartbeat_group);
+
+  bool callback_groups_tracked =
+    wait_for_live_callback_groups(initial_callback_group_count + 1u, 2s);
+  const auto steady_state_callback_group_count = count_live_callback_groups();
+  bool callback_groups_cleaned_up = callback_groups_tracked;
+
+  for (size_t attempt = 0; attempt < 50 && callback_groups_cleaned_up; ++attempt) {
+    auto transient_group = node->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive, true);
+    auto transient_timer = node->create_wall_timer(1ms, []() {}, transient_group);
+
+    callback_groups_cleaned_up = wait_for_live_callback_groups(
+      steady_state_callback_group_count + 1u, 2s);
+
+    transient_timer.reset();
+    transient_group.reset();
+
+    callback_groups_cleaned_up = callback_groups_cleaned_up &&
+      wait_for_live_callback_groups(steady_state_callback_group_count, 2s);
+  }
+
+  executor.cancel();
+  spin_thread.join();
+
+  EXPECT_TRUE(callback_groups_tracked);
+  EXPECT_TRUE(callback_groups_cleaned_up);
+
+  if (spin_exception) {
+    try {
+      std::rethrow_exception(spin_exception);
+    } catch (const std::exception & exception) {
+      FAIL() << "executor.spin() threw: " << exception.what();
+    } catch (...) {
+      FAIL() << "executor.spin() threw a non-standard exception";
+    }
+  }
 }
 
 /*
