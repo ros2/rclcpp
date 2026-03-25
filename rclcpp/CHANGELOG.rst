@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.8 (2026-03-25)
+-------------------
+* Remove duplicate test cases in TestAnySubscriptionCallback::is_serialized_message_callback (backport `#3104 <https://github.com/ros2/rclcpp/issues/3104>`_) (`#3106 <https://github.com/ros2/rclcpp/issues/3106>`_)
+* keep the event alive throught the assertion, preveiting the race. (`#3099 <https://github.com/ros2/rclcpp/issues/3099>`_) (`#3102 <https://github.com/ros2/rclcpp/issues/3102>`_)
+* fix: Use default rcl allocator if allocator is std::allocator (`#3069 <https://github.com/ros2/rclcpp/issues/3069>`_) (`#3071 <https://github.com/ros2/rclcpp/issues/3071>`_)
+* fix: Various data races in test cases (`#3057 <https://github.com/ros2/rclcpp/issues/3057>`_) (`#3061 <https://github.com/ros2/rclcpp/issues/3061>`_)
+* fix: Fix data race in CallbackGroup::size() (`#3056 <https://github.com/ros2/rclcpp/issues/3056>`_) (`#3059 <https://github.com/ros2/rclcpp/issues/3059>`_)
+* Contributors: mergify[bot]
+
 29.5.7 (2026-02-09)
 -------------------
 * include the 1st spin that might throw the exception. (`#3042 <https://github.com/ros2/rclcpp/issues/3042>`_) (`#3044 <https://github.com/ros2/rclcpp/issues/3044>`_)
