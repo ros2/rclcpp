@@ -1024,7 +1024,9 @@ public:
       std::holds_alternative<SharedConstPtrCallback>(callback_variant_) ||
       std::holds_alternative<SharedConstPtrWithInfoCallback>(callback_variant_) ||
       std::holds_alternative<ConstRefSharedConstPtrCallback>(callback_variant_) ||
-      std::holds_alternative<ConstRefSharedConstPtrWithInfoCallback>(callback_variant_);
+      std::holds_alternative<ConstRefSharedConstPtrWithInfoCallback>(callback_variant_) ||
+      std::holds_alternative<ConstRefCallback>(callback_variant_) ||
+      std::holds_alternative<ConstRefWithInfoCallback>(callback_variant_);
   }
 
   constexpr
