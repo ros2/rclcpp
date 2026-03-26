@@ -81,6 +81,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->clock_qos_ = other.clock_qos_;
     this->use_clock_thread_ = other.use_clock_thread_;
     this->enable_logger_service_ = other.enable_logger_service_;
+    this->log_level_ = other.log_level_;
     this->parameter_event_qos_ = other.parameter_event_qos_;
     this->rosout_qos_ = other.rosout_qos_;
     this->parameter_event_publisher_options_ = other.parameter_event_publisher_options_;
@@ -259,6 +260,19 @@ NodeOptions &
 NodeOptions::enable_logger_service(bool enable_logger_service)
 {
   this->enable_logger_service_ = enable_logger_service;
+  return *this;
+}
+
+rclcpp::Logger::Level
+NodeOptions::log_level() const
+{
+  return this->log_level_;
+}
+
+NodeOptions &
+NodeOptions::log_level(rclcpp::Logger::Level log_level)
+{
+  this->log_level_ = log_level;
   return *this;
 }
 

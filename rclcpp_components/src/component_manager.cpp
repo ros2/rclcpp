@@ -177,6 +177,20 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
     .parameter_overrides(parameters)
     .arguments(remap_rules);
 
+  if (request->log_level != static_cast<uint8_t>(rclcpp::Logger::Level::Unset)) {
+    if (request->log_level != static_cast<uint8_t>(rclcpp::Logger::Level::Debug) &&
+      request->log_level != static_cast<uint8_t>(rclcpp::Logger::Level::Info) &&
+      request->log_level != static_cast<uint8_t>(rclcpp::Logger::Level::Warn) &&
+      request->log_level != static_cast<uint8_t>(rclcpp::Logger::Level::Error) &&
+      request->log_level != static_cast<uint8_t>(rclcpp::Logger::Level::Fatal))
+    {
+      throw ComponentManagerException(
+        "Invalid log_level value: " + std::to_string(request->log_level) +
+        ". Valid values are DEBUG (10), INFO (20), WARN (30), ERROR (40), FATAL (50).");
+    }
+    options.log_level(static_cast<rclcpp::Logger::Level>(request->log_level));
+  }
+
   for (const auto & a : request->extra_arguments) {
     const rclcpp::Parameter extra_argument = rclcpp::Parameter::from_parameter_msg(a);
     if (extra_argument.get_name() == "forward_global_arguments") {
