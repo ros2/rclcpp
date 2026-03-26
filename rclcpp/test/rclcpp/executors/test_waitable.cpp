@@ -78,8 +78,6 @@ TestWaitable::execute(const std::shared_ptr<void> &)
   count_++;
   if (nullptr != on_execute_callback_) {
     on_execute_callback_();
-  } else {
-    // Removed unnecessary sleep based on TODO comment; tests should rely on explicit synchronization instead
   }
 }
 
