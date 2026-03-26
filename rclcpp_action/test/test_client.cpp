@@ -42,6 +42,7 @@
 #include "rclcpp/time.hpp"
 
 #include "test_msgs/action/fibonacci.hpp"
+#include "test_msgs/msg/empty.hpp"
 
 #include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/create_client.hpp"
@@ -230,6 +231,14 @@ protected:
 
     ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock.get_clock_handle()));
     ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(1)));
+
+    // Check if subscription content filter is supported. This affects whether some tests need
+    // to be executed.
+    {
+      auto subscription = client_node->create_subscription<test_msgs::msg::Empty>(
+        "test_topic", 10, [](const test_msgs::msg::Empty::SharedPtr) {});
+      subscription_content_filter_supported_ = subscription->is_cft_supported();
+    }
   }
 
   static void TearDownTestCase()
@@ -320,6 +329,7 @@ public:
   typename rclcpp::Publisher<ActionFeedbackMessage>::SharedPtr feedback_publisher;
   typename rclcpp::Publisher<ActionStatusMessage>::SharedPtr status_publisher;
   std::atomic_bool pending_handle_goal_{false};
+  bool subscription_content_filter_supported_{false};
 };
 
 class TestClientAgainstServer : public TestClient
@@ -1264,6 +1274,21 @@ TEST_F(TestClientAgainstServer,
 TEST_F(TestClientAgainstServer,
   enable_feedback_msg_optimization_handles_multiple_goals)
 {
+  if (!subscription_content_filter_supported_) {
+    GTEST_SKIP() << "The feedback message optimization is only supported when rmw implementation "
+      "supports subscription content filtering.";
+  }
+
+  // Skip the test if the RMW implementation is ConnextDDS.
+  // ConnextDDS has restrictions on the length of content filter expressions. Please refer to
+  // the definition of RMW_CONNEXT_CONTENTFILTER_PROPERTY_MAX_LENGTH. The current default value
+  // is 1024, which cannot support setting 7 goal IDs. So the test will be skipped for ConnextDDS
+  // to avoid failure. If the default value is increased in the future, this test can be enabled
+  // for ConnextDDS as well.
+  if (strcmp(rmw_get_implementation_identifier(), "rmw_connextdds") == 0) {
+    GTEST_SKIP() << "RMW implementation is ConnextDDS.";
+  }
+
   // When testing with more than 6 goals running at the same time, the internal feedback
   // subscription content filter will automatically turn off, but this does not affect the
   // reception of feedback messages for all goals.
