@@ -201,7 +201,8 @@ protected:
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
-    const rcl_action_client_options_t & options);
+    const rcl_action_client_options_t & options,
+    bool enable_feedback_msg_optimization);
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
   RCLCPP_ACTION_PUBLIC
@@ -296,6 +297,24 @@ protected:
   handle_feedback_message(std::shared_ptr<void> message) = 0;
 
   /// \internal
+  /// \return true if goal id was added to feedback subscription content filter successfully
+  /// \return false if an error occurred during calling rcl function or
+  ///   if the used rmw middleware doesn't support Content Filtering feature.
+  RCLCPP_ACTION_PUBLIC
+  bool
+  configure_feedback_subscription_filter_add_goal_id(const GoalUUID & goal_id);
+
+
+  /// \internal
+  /// \return true if goal id was removed from feedback subscription content filter successfully or
+  ///   goal id was not found in feedback subscription content filter
+  /// \return false if an error occurred during calling rcl function or
+  ///   if the used rmw middleware doesn't support Content Filtering feature.
+  RCLCPP_ACTION_PUBLIC
+  bool
+  configure_feedback_subscription_filter_remove_goal_id(const GoalUUID & goal_id);
+
+  /// \internal
   virtual
   std::shared_ptr<void>
   create_status_message() const = 0;
@@ -321,6 +340,15 @@ protected:
   std::recursive_mutex listener_mutex_;
   // Storage for std::function callbacks to keep them in scope
   std::unordered_map<EntityType, std::function<void(size_t)>> entity_type_to_on_ready_callback_;
+
+  // Enable feedback subscription content filter
+  // Initialization is configured by the user.
+  // When an error occurs while adding or removing a goal ID from the content filter, it will
+  // automatically be set to false.
+  std::atomic_bool enable_feedback_msg_optimization_;
+  // Mutex to protect feedback subscription content filter configuration because the related rcl
+  // function is not thread-safe.
+  std::mutex configure_feedback_sub_content_filter_mutex_;
 
 private:
   std::unique_ptr<ClientBaseImpl> pimpl_;

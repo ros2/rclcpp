@@ -32,11 +32,13 @@ GenericClient::GenericClient(
   const std::string & action_name,
   std::shared_ptr<rcpputils::SharedLibrary> typesupport_lib,
   const rosidl_action_type_support_t * action_typesupport_handle,
-  const rcl_action_client_options_t & client_options)
+  const rcl_action_client_options_t & client_options,
+  bool enable_feedback_msg_optimization)
 : ClientBase(
     node_base, node_graph, node_logging, action_name,
     action_typesupport_handle,
-    client_options),
+    client_options,
+    enable_feedback_msg_optimization),
   ts_lib_(std::move(typesupport_lib))
 {
   auto goal_service_request_type_support_intro = get_message_typesupport_handle(
@@ -141,6 +143,19 @@ GenericClient::async_send_goal(
           options.goal_response_callback(nullptr);
         }
         return;
+      }
+
+      // If feedback message optimization is enabled, add goal id to feedback subscription
+      // content filter
+      if (enable_feedback_msg_optimization_) {
+        std::lock_guard<std::mutex> lock(configure_feedback_sub_content_filter_mutex_);
+        if (!configure_feedback_subscription_filter_add_goal_id(uuid)) {
+          RCLCPP_ERROR(
+            this->get_logger(),
+            "Failed to add goal id to feedback subscription content filter for action "
+            "generic client. Disable feedback message optimization.");
+          enable_feedback_msg_optimization_ = false;
+        }
       }
 
       action_msgs::msg::GoalInfo goal_info;
@@ -450,6 +465,22 @@ GenericClient::make_result_aware(typename GenericClientGoalHandle::SharedPtr goa
 
         goal_handle->set_result(wrapped_result);
 
+        // If feedback message optimization is enabled, remove goal id from feedback subscription
+        // content filter
+        if (this->enable_feedback_msg_optimization_) {
+          std::lock_guard<std::mutex> lock(
+            this->configure_feedback_sub_content_filter_mutex_);
+          if (!this->configure_feedback_subscription_filter_remove_goal_id(
+              goal_handle->get_goal_id()))
+          {
+            RCLCPP_ERROR(
+              this->get_logger(),
+              "Failed to remove goal id from feedback subscription content filter for action "
+              "generic client. Disable feedback message optimization.");
+            this->enable_feedback_msg_optimization_ = false;
+          }
+        }
+
         std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());
       });
@@ -469,9 +500,30 @@ GenericClient::async_cancel(
   std::shared_future<typename CancelResponse::SharedPtr> future(promise->get_future());
   this->send_cancel_request(
     std::static_pointer_cast<void>(cancel_request),
-    [cancel_callback, promise](std::shared_ptr<void> response) mutable
+    [this, cancel_callback, promise](std::shared_ptr<void> response) mutable
     {
       auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
+
+      // If feedback message optimization is enabled, remove goal id from feedback subscription
+      // content filter
+      if (this->enable_feedback_msg_optimization_) {
+        for (const auto & goal_info : cancel_response->goals_canceling) {
+          std::lock_guard<std::mutex> lock(this->configure_feedback_sub_content_filter_mutex_);
+          if (!this->configure_feedback_subscription_filter_remove_goal_id(
+              goal_info.goal_id.uuid))
+          {
+            RCLCPP_ERROR(
+              this->get_logger(),
+              "Failed to remove goal id from feedback subscription content filter for action "
+              "generic client. Disable feedback message optimization.");
+            this->enable_feedback_msg_optimization_ = false;
+            // When an error occurs, the rcl layer will disable the content filter, so there is
+            // no need to continue removing the goal id.
+            break;
+          }
+        }
+      }
+
       promise->set_value(cancel_response);
       if (cancel_callback) {
         cancel_callback(cancel_response);

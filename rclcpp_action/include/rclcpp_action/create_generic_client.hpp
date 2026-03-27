@@ -26,6 +26,9 @@ namespace rclcpp_action
  * This function is equivalent to \sa create_generic_client()` however is using the individual
  * node interfaces to create the client.
  *
+ * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+ * simultaneously. If the number of goals exceeds the limit, optimization is automatically disabled.
+ *
  * \param[in] node_base_interface The node base interface of the corresponding node.
  * \param[in] node_graph_interface The node graph interface of the corresponding node.
  * \param[in] node_logging_interface The node logging interface of the corresponding node.
@@ -35,6 +38,8 @@ namespace rclcpp_action
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+ *   optimize the handling of feedback messages.
  * \return newly created generic client.
  */
 RCLCPP_ACTION_PUBLIC
@@ -47,16 +52,23 @@ create_generic_client(
   const std::string & name,
   const std::string & type,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  const rcl_action_client_options_t & options = rcl_action_client_get_default_options());
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options(),
+  bool enable_feedback_msg_optimization = false);
 
 /// Create an action generic client.
 /**
+ *
+ * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+ * simultaneously. If the number of goals exceeds the limit, optimization is automatically disabled.
+ *
  * \param[in] node The action client will be added to this node.
  * \param[in] name The action name.
  * \param[in] type The action type.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+ *   optimize the handling of feedback messages.
  * \return newly created generic client.
  */
 template<typename NodeT>
@@ -66,7 +78,8 @@ create_generic_client(
   const std::string & name,
   const std::string & type,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  const rcl_action_client_options_t & options = rcl_action_client_get_default_options())
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options(),
+  bool enable_feedback_msg_optimization = false)
 {
   return rclcpp_action::create_generic_client(
     node->get_node_base_interface(),
@@ -76,7 +89,8 @@ create_generic_client(
     name,
     type,
     group,
-    options);
+    options,
+    enable_feedback_msg_optimization);
 }
 }  // namespace rclcpp_action
 
