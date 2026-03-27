@@ -208,7 +208,6 @@ TimerBase::clear_on_reset_callback()
     on_reset_callback_ = nullptr;
   }
 }
-
 void
 TimerBase::set_on_reset_callback(rcl_event_callback_t callback, const void * user_data)
 {
@@ -217,4 +216,9 @@ TimerBase::set_on_reset_callback(rcl_event_callback_t callback, const void * use
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to set timer on reset callback");
   }
+}
+
+const rclcpp::Clock::SharedPtr & TimerBase::get_clock() const
+{
+  return clock_;
 }

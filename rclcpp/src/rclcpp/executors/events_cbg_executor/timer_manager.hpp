@@ -128,16 +128,6 @@ class TimerQueue
     std::function<void(const std::function<void()> & executed_cb)> timer_ready_callback;
   };
 
-  class GetClockHelper : public rclcpp::TimerBase
-  {
-public:
-    static rclcpp::Clock::SharedPtr get_clock(const rclcpp::TimerBase & timer)
-    {
-      // SUPER ugly hack, but we need the correct clock
-      return static_cast<const GetClockHelper *>(&timer)->clock_;
-    }
-  };
-
 public:
   TimerQueue(rcl_clock_type_t timer_type, const rclcpp::Context::SharedPtr & context)
   : timer_type(timer_type), clock_waiter(context)
@@ -262,7 +252,7 @@ public:
 
     std::unique_ptr<TimerData> data = std::make_unique<TimerData>(TimerData{std::move(handle),
           timer,
-          GetClockHelper::get_clock(*timer), false, timer_ready_callback});
+          timer->get_clock(), false, timer_ready_callback});
 
     timer->set_on_reset_callback(
       [data_ptr = data.get(), this](size_t) {
