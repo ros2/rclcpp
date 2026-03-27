@@ -126,12 +126,12 @@ void EventsCBGExecutor::shutdown()
   // we need to shut down the timer manager first, as it might access the Schedulers
   timer_manager->stop();
 
-  bool was_spining = spinning;
+  bool was_spinning = spinning;
 
   // signal all processing threads to shut down
   spinning = false;
 
-  if(was_spining) {
+  if(was_spinning) {
     scheduler->release_all_worker_threads();
   }
 
@@ -193,15 +193,15 @@ bool EventsCBGExecutor::execute_previous_ready_executables_until(
 
   while(true) {
     auto ready_entity = scheduler->get_next_ready_entity(last_ready_id);
-    if(!ready_entity.entitiy) {
+    if(!ready_entity.entity) {
       break;
     }
 
     found_work = true;
 
-    ready_entity.entitiy->execute_function();
+    ready_entity.entity->execute_function();
 
-    scheduler->mark_entity_as_executed(*ready_entity.entitiy);
+    scheduler->mark_entity_as_executed(*ready_entity.entity);
 
     if(std::chrono::steady_clock::now() >= stop_time) {
       break;
@@ -335,7 +335,7 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
-    if(!ready_entity.entitiy) {
+    if(!ready_entity.entity) {
       scheduler->block_worker_thread();
       continue;
     }
@@ -344,9 +344,9 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
       scheduler->unblock_one_worker_thread();
     }
 
-    ready_entity.entitiy->execute_function();
+    ready_entity.entity->execute_function();
 
-    scheduler->mark_entity_as_executed(*ready_entity.entitiy);
+    scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
 }
 
@@ -361,18 +361,18 @@ EventsCBGExecutor::run(
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
-    if(!ready_entity.entitiy) {
+    if(!ready_entity.entity) {
       scheduler->block_worker_thread();
       continue;
     }
 
     try {
-      ready_entity.entitiy->execute_function();
+      ready_entity.entity->execute_function();
     } catch (const std::exception & e) {
       exception_handler(e);
     }
 
-    scheduler->mark_entity_as_executed(*ready_entity.entitiy);
+    scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
 }
 
@@ -384,7 +384,7 @@ void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
   }
 
   auto ready_entity = scheduler->get_next_ready_entity();
-  if(!ready_entity.entitiy) {
+  if(!ready_entity.entity) {
     if (timeout < std::chrono::nanoseconds::zero()) {
       // can't use std::chrono::nanoseconds::max, as wait_for
       // internally computes end time by using ::now() + timeout
@@ -396,14 +396,14 @@ void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
 
     ready_entity = scheduler->get_next_ready_entity();
 
-    if (!ready_entity.entitiy) {
+    if (!ready_entity.entity) {
       return;
     }
   }
 
-  ready_entity.entitiy->execute_function();
+  ready_entity.entity->execute_function();
 
-  scheduler->mark_entity_as_executed(*ready_entity.entitiy);
+  scheduler->mark_entity_as_executed(*ready_entity.entity);
 }
 
 void

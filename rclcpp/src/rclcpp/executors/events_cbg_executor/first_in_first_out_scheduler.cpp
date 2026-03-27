@@ -163,12 +163,12 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
     std::optional<FirstInFirstOutScheduler::ExecutableEntity> ret =
       ready_cbg->get_next_ready_entity();
     if(ret) {
-      return CBGScheduler::ExecutableEntityWithInfo{.entitiy = std::move(ret),
+      return CBGScheduler::ExecutableEntityWithInfo{.entity = std::move(ret),
         .moreEntitiesReady = !ready_callback_groups.empty()};
     }
   }
 
-  return CBGScheduler::ExecutableEntityWithInfo{.entitiy = std::nullopt,
+  return CBGScheduler::ExecutableEntityWithInfo{.entity = std::nullopt,
     .moreEntitiesReady = false};
 }
 
@@ -187,12 +187,12 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
       ready_cbg->get_next_ready_entity(max_id);
     if(ret) {
       ready_callback_groups.erase(it);
-      return CBGScheduler::ExecutableEntityWithInfo{.entitiy = std::move(ret),
+      return CBGScheduler::ExecutableEntityWithInfo{.entity = std::move(ret),
         .moreEntitiesReady = !ready_callback_groups.empty()};
     }
   }
 
-  return CBGScheduler::ExecutableEntityWithInfo{.entitiy = std::nullopt,
+  return CBGScheduler::ExecutableEntityWithInfo{.entity = std::nullopt,
     .moreEntitiesReady = false};
 }
 }  // namespace cbg_executor

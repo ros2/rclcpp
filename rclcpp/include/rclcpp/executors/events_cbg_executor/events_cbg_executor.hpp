@@ -222,7 +222,7 @@ public:
     return FutureReturnCode::INTERRUPTED;
   }
 
-  /// We need these fuction to be public, as we use them in the callback_group_scheduler
+  /// We need these function to be public, as we use them in the callback_group_scheduler
   using rclcpp::Executor::execute_subscription;
   using rclcpp::Executor::execute_timer;
   using rclcpp::Executor::execute_service;

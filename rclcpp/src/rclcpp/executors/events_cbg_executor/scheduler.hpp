@@ -230,7 +230,7 @@ private:
 
   struct ExecutableEntityWithInfo
   {
-    std::optional<ExecutableEntity> entitiy;
+    std::optional<ExecutableEntity> entity;
     bool moreEntitiesReady{};
   };
 

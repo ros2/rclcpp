@@ -64,10 +64,10 @@ public:
     rclcpp::shutdown();
   }
 
-  template<class Executer>
+  template<class Executor>
   void executor_spin_some(benchmark::State & st)
   {
-    Executer executor;
+    Executor executor;
     for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
       executor.add_node(nodes[i]);
     }
@@ -106,19 +106,19 @@ public:
     }
   }
 
-  template<class Executer>
+  template<class Executor>
   void benchmark_wait_for_work(benchmark::State & st)
   {
-    class ExecuterDerived : public Executer
+    class ExecutorDerived : public Executor
     {
 public:
       void call_wait_for_work(std::chrono::nanoseconds timeout)
       {
-        Executer::wait_for_work(timeout);
+        Executor::wait_for_work(timeout);
       }
     };
 
-    ExecuterDerived executor;
+    ExecutorDerived executor;
     for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
       executor.add_node(nodes[i]);
     }
@@ -344,7 +344,7 @@ private:
 
 class CascadedPerformanceTestExecutor : public PerformanceTest
 {
-  std::condition_variable cascase_done;
+  std::condition_variable cascade_done;
   std::vector<std::shared_ptr<CallbackWaitable>> waitables;
   std::atomic<bool> last_cb_triggered;
 
@@ -365,7 +365,7 @@ public:
         auto callback = [this, i](test_msgs::msg::Empty::ConstSharedPtr) {
             if (i == kNumberOfNodes - 1) {
               this->callback_count++;
-              cascase_done.notify_all();
+              cascade_done.notify_all();
             } else {
               publishers[i + 1]->publish(empty_msgs);
             }
@@ -387,7 +387,7 @@ public:
         waitables[i]->set_execute_callback_function(
           [this]() {
             last_cb_triggered = true;
-            cascase_done.notify_all();
+            cascade_done.notify_all();
           });
       } else {
         waitables[i]->set_execute_callback_function(
@@ -441,7 +441,7 @@ public:
       // start the cascasde
       waitables[0]->trigger();
 
-      cascase_done.wait_for(lk, 500ms);
+      cascade_done.wait_for(lk, 500ms);
 
       if (!last_cb_triggered) {
         st.SkipWithError("No message was received");
