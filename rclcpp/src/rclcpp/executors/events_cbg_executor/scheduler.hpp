@@ -28,12 +28,6 @@ namespace executors
 {
 namespace cbg_executor
 {
-class CallbackGroupSchedulerEv;
-struct WeakExecutableCache;
-struct AnyExecutableCbgEv;
-class TimerManager;
-struct GloablaWeakExecutableCache;
-
 class CBGScheduler
 {
 public:
@@ -90,7 +84,7 @@ public:
       const CallbackEventType & entity) = 0;
 
       /**
-       * Marks the last removed ready entitiy as executed.
+       * Marks the last removed ready entity as executed.
        */
     void mark_as_executed()
     {
@@ -145,7 +139,7 @@ protected:
       scheduler.callback_group_ready(this, true);
     }
 
-    void mark_as_skiped()
+    void mark_as_skipped()
     {
       if(!has_ready_entities()) {
         idle = true;
@@ -174,7 +168,7 @@ private:
 
   struct ExecutableEntity
   {
-    // if called executes the entitiy
+    // if called executes the entity
     std::function<void()> execute_function;
     // The callback group associated with the entity. Can be nullptr.
     CallbackGroupHandle *callback_handle = nullptr;

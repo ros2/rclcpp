@@ -112,7 +112,7 @@ get_next_ready_entity()
     return CBGScheduler::ExecutableEntity{exec_fun, this};
   }
 
-  mark_as_skiped();
+  mark_as_skipped();
 
   return std::nullopt;
 }
@@ -140,7 +140,7 @@ get_next_ready_entity(GlobalEventIdProvider::MonotonicId max_id)
     return CBGScheduler::ExecutableEntity{exec_fun, this};
   }
 
-  mark_as_skiped();
+  mark_as_skipped();
 
   return std::nullopt;
 }
