@@ -300,6 +300,7 @@ protected:
   /// \return true if goal id was added to feedback subscription content filter successfully
   /// \return false if an error occurred during calling rcl function or
   ///   if the used rmw middleware doesn't support Content Filtering feature.
+  RCLCPP_ACTION_PUBLIC
   bool
   configure_feedback_subscription_filter_add_goal_id(const GoalUUID & goal_id);
 
@@ -309,6 +310,7 @@ protected:
   ///   goal id was not found in feedback subscription content filter
   /// \return false if an error occurred during calling rcl function or
   ///   if the used rmw middleware doesn't support Content Filtering feature.
+  RCLCPP_ACTION_PUBLIC
   bool
   configure_feedback_subscription_filter_remove_goal_id(const GoalUUID & goal_id);
 
