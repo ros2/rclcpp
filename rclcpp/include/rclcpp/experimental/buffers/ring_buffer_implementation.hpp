@@ -231,7 +231,6 @@ private:
 
   inline void clear_()
   {
-    ring_buffer_.clear();
     size_ = 0;
     read_index_ = 0;
     write_index_ = capacity_ - 1;
