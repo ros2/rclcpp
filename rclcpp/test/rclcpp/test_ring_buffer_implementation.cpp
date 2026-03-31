@@ -165,6 +165,38 @@ TEST(TestRingBufferImplementation, test_buffer_clear) {
   EXPECT_EQ('d', d);
 }
 
+namespace detail
+{
+
+struct Tracked {
+  static int destroyed;
+  int value;
+
+  Tracked(int v) : value(v) {}
+  ~Tracked() { destroyed++; }
+};
+}  // detail namespace
+
+TEST(TestRingBufferImplementation, clear_is_non_destructive)
+{
+  detail::Tracked::destroyed = 0;
+
+  rclcpp::experimental::buffers::RingBufferImplementation<detail::Tracked> rb(2);
+
+  rb.enqueue(detail::Tracked(1));
+  rb.enqueue(detail::Tracked(2));
+
+  detail::Tracked::destroyed = 0;
+
+  rb.clear();
+
+  EXPECT_EQ(detail::Tracked::destroyed, 0);
+
+  // Outside buffer should be removed
+  rb.enqueue(detail::Tracked(3));
+  EXPECT_EQ(detail::Tracked::destroyed, 1);
+}
+
 TEST(TestRingBufferImplementation, handle_nullptr_deletion) {
   rclcpp::experimental::buffers::RingBufferImplementation<std::unique_ptr<int>> rb(3);
   rb.enqueue(std::make_unique<int>(42));
