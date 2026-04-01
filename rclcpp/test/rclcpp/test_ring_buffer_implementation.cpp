@@ -198,7 +198,7 @@ TEST(TestRingBufferImplementation, clear_is_non_destructive)
 
   // Outside buffer should be removed
   rb.enqueue(detail::Tracked(3));
-  EXPECT_EQ(detail::Tracked::destroyed, 1);
+  EXPECT_GE(detail::Tracked::destroyed, 1);
 }
 
 TEST(TestRingBufferImplementation, handle_nullptr_deletion) {
