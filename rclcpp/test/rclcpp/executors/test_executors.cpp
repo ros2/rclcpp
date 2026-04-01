@@ -480,10 +480,6 @@ TYPED_TEST(TestExecutors, spinSome)
 
 // The purpose of this test is to check that the ExecutorT.spin_some() method:
 //   - does not continue executing after max_duration has elapsed
-// TODO(wjwwood): The `StaticSingleThreadedExecutor`
-//   do not properly implement max_duration (it seems), so disable this test
-//   for them in the meantime.
-//   see: https://github.com/ros2/rclcpp/issues/2462
 TYPED_TEST(TestExecutorsStable, spinSomeMaxDuration)
 {
   using ExecutorType = TypeParam;
