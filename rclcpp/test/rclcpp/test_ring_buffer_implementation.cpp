@@ -172,6 +172,7 @@ struct Tracked {
   static int destroyed;
   int value;
 
+  Tracked() : value(0) {}
   Tracked(int v) : value(v) {}
   ~Tracked() { destroyed++; }
 };
