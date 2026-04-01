@@ -168,15 +168,18 @@ TEST(TestRingBufferImplementation, test_buffer_clear) {
 namespace detail
 {
 
-struct Tracked {
+struct Tracked
+{
   inline static int destroyed = 0;
   int value;
 
-  Tracked() : value(0) {}
-  Tracked(int v) : value(v) {}
-  ~Tracked() { destroyed++; }
+  Tracked()
+  : value(0) {}
+  explicit Tracked(int v)
+  : value(v) {}
+  ~Tracked() {destroyed++;}
 };
-}  // detail namespace
+}  // namespace detail
 
 TEST(TestRingBufferImplementation, clear_is_non_destructive)
 {
