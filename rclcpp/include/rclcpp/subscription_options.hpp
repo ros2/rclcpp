@@ -89,6 +89,15 @@ struct SubscriptionOptionsBase
   QosOverridingOptions qos_overriding_options;
 
   ContentFilterOptions content_filter_options;
+
+  /// Acceptable buffer backend names for this subscription.
+  /**
+   * Empty string or "cpu" means CPU-only (default for backward compatibility).
+   * "any" means all installed backends are acceptable.
+   * Comma-separated for specific backends, e.g. "cuda,demo".
+   * CPU is always implicitly acceptable regardless of this value.
+   */
+  std::string acceptable_buffer_backends{"cpu"};
 };
 
 /// Structure containing optional configuration for Subscriptions.
@@ -142,6 +151,16 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(
           ret, "failed to set content_filter_options");
+      }
+    }
+
+    if (!acceptable_buffer_backends.empty()) {
+      rcl_ret_t ret = rcl_subscription_options_set_acceptable_buffer_backends(
+        acceptable_buffer_backends.c_str(),
+        &result);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(
+          ret, "failed to set acceptable_buffer_backends");
       }
     }
 
