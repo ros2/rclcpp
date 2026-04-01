@@ -169,7 +169,7 @@ namespace detail
 {
 
 struct Tracked {
-  static int destroyed;
+  inline static int destroyed = 0;
   int value;
 
   Tracked() : value(0) {}
