@@ -52,7 +52,6 @@ public:
    * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found (minimum of 2)
-   * \param yield_before_execute if true std::this_thread::yield() is called
    * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
@@ -245,8 +244,6 @@ protected:
   void shutdown();
 
   std::unique_ptr<cbg_executor::CBGScheduler> scheduler;
-
-  std::thread rcl_polling_thread;
 
   struct CallbackGroupData
   {

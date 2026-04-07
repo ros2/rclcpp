@@ -491,7 +491,8 @@ private:
 
 class TimerManager
 {
-  std::array<TimerQueue, 3> timer_queues;
+  static constexpr size_t NUM_TYPES_OF_TIMERS = 3;
+  std::array<TimerQueue, NUM_TYPES_OF_TIMERS> timer_queues;
 
 public:
   explicit TimerManager(const rclcpp::Context::SharedPtr & context)
