@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+31.0.2 (2026-04-09)
+-------------------
+* publish_feedback should effect only on executing state. (`#3118 <https://github.com/ros2/rclcpp/issues/3118>`_)
+* Support to configure feedback subscription content filter for action client (`#3034 <https://github.com/ros2/rclcpp/issues/3034>`_)
+* Contributors: Barry Xu, Tomoya Fujita
+
 31.0.1 (2026-03-24)
 -------------------
 * Use new ROSIDL aggregate CMake target (`#3105 <https://github.com/ros2/rclcpp/issues/3105>`_)

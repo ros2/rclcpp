@@ -2,6 +2,9 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+31.0.2 (2026-04-09)
+-------------------
+
 31.0.1 (2026-03-24)
 -------------------
 * Use new ROSIDL aggregate CMake target (`#3105 <https://github.com/ros2/rclcpp/issues/3105>`_)

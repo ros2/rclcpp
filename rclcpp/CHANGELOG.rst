@@ -2,6 +2,18 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+31.0.2 (2026-04-09)
+-------------------
+* feat: Add per-node log level support via NodeOptions (`#3092 <https://github.com/ros2/rclcpp/issues/3092>`_)
+* Improve error message when parameter value is missing (`#3093 <https://github.com/ros2/rclcpp/issues/3093>`_)
+* Fix incorrect internal clear inside `RingBufferImplementation` (`#3116 <https://github.com/ros2/rclcpp/issues/3116>`_)
+* Add acceptable_buffer_backends field in SubscriptionOptionsBase (`#3098 <https://github.com/ros2/rclcpp/issues/3098>`_)
+* Remove comment about removed StaticSingleThreadedExecutor (`#3121 <https://github.com/ros2/rclcpp/issues/3121>`_)
+* Added tracepoint (`#3103 <https://github.com/ros2/rclcpp/issues/3103>`_)
+* Add ConstRefCallback in take_shared_method (`#3066 <https://github.com/ros2/rclcpp/issues/3066>`_)
+* Replace mispelled "${rcl_interfaces_TARGES}" by rcl_interfaces::rcl_interfaces (`#3112 <https://github.com/ros2/rclcpp/issues/3112>`_)
+* Contributors: Alexis Tsogias, CY Chen, Maurice Alexander Purnawan, Michael Carlstrom, Oren Bell, Peng Wang, Yadnyeshwar Amol Sakhare
+
 31.0.1 (2026-03-24)
 -------------------
 * Use new ROSIDL aggregate CMake target (`#3105 <https://github.com/ros2/rclcpp/issues/3105>`_)
