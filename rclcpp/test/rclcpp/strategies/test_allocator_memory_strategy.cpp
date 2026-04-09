@@ -577,7 +577,9 @@ TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_guard_condition) {
 
   RclWaitSetSizes insufficient_capacities = SufficientWaitSetCapacities();
   insufficient_capacities.size_of_guard_conditions = 0;
-  EXPECT_THROW(TestAddHandlesToWaitSet(node, insufficient_capacities), std::runtime_error);
+  EXPECT_THROW(
+    (void)TestAddHandlesToWaitSet(node, insufficient_capacities),
+    std::runtime_error);
 }
 
 TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_timer) {
