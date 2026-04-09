@@ -262,7 +262,9 @@ TYPED_TEST(TestAllClientTypesWithServer, async_send_request_rcl_send_request_err
   // Checking rcl_send_request in rclcpp::Client::async_send_request() or
   // rclcpp::GenericClient::async_send_request()
   auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_send_request, RCL_RET_ERROR);
-  EXPECT_THROW(this->template SendEmptyRequestAndWait<ClientType>(), rclcpp::exceptions::RCLError);
+  EXPECT_THROW(
+    (void)this->template SendEmptyRequestAndWait<ClientType>(),
+    rclcpp::exceptions::RCLError);
 }
 
 TYPED_TEST(TestAllClientTypesWithServer, async_send_request_rcl_service_server_is_available_error)
