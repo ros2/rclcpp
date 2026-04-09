@@ -66,6 +66,12 @@ add_executable(
 )
 target_link_libraries(component_container_event PRIVATE component_manager rclcpp::rclcpp)
 
+add_executable(
+  component_container_cbg
+  src/component_container_cbg.cpp
+)
+target_link_libraries(component_container_cbg PRIVATE component_manager rclcpp::rclcpp)
+
 set(node_main_template_install_dir "share/${PROJECT_NAME}")
 install(FILES
   src/node_main.cpp.in
