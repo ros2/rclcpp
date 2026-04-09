@@ -650,7 +650,7 @@ TYPED_TEST(TestExecutors, testRaceConditionAddNode)
           if (should_cancel) {
             break;
           }
-          total += k * (i + 42);
+          total = total + k * (i + 42);
           (void)total;
         }
       });
