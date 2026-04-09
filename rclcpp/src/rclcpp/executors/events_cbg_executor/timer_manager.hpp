@@ -419,7 +419,7 @@ private:
   void timer_thread()
   {
     while (running && rclcpp::ok()) {
-      std::chrono::nanoseconds next_wakeup_time;
+      std::chrono::nanoseconds next_wakeup_time{};
       std::vector<std::function<void()>> ready_timer_callbacks;
       rclcpp::Clock::SharedPtr used_clock;
       {
