@@ -25,6 +25,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "rcl/guard_condition.h"
@@ -375,9 +376,6 @@ public:
    *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
-   * \note This method will check the future and the timeout only when the executor is woken up.
-   *   If this future is unrelated to an executor's entity, this method will not correctly detect
-   *   when it's completed and therefore may wait forever and never time out.
    */
   template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
@@ -385,12 +383,42 @@ public:
     const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
+    // When a future is fulfilled by a non-executor thread, spin_until_future_complete_impl
+    // blocks indefinitely in wait_for_work() because nothing in the wait set becomes ready.
+    // A watcher thread triggers interrupt_guard_condition_ the moment the future is set,
+    // immediately waking the executor. See ros2/rclcpp#1916.
+    std::atomic<bool> stop_watcher{false};
+    // Copy the shared_ptr so the watcher keeps the guard condition alive
+    // even if this executor is destroyed before the watcher exits.
+    std::shared_ptr<rclcpp::GuardCondition> watcher_gc = interrupt_guard_condition_;
+
+    std::thread watcher_thread(
+      [&future, &stop_watcher, watcher_gc]() {
+        // Use wait_for with a short interval rather than wait() so the thread
+        // can observe stop_watcher after spin_until_future_complete returns
+        // (on timeout or cancel), enabling a clean join() without blocking.
+        while (!stop_watcher.load(std::memory_order_relaxed)) {
+          if (future.wait_for(std::chrono::milliseconds(100)) ==
+            std::future_status::ready)
+          {
+            try {
+              watcher_gc->trigger();
+            } catch (const std::exception &) {}
+            return;
+          }
+        }
+      });
+
+    RCPPUTILS_SCOPE_EXIT(
+      stop_watcher.store(true, std::memory_order_relaxed);
+      watcher_thread.join();
+    );
+
     return spin_until_future_complete_impl(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timeout),
       [&future](std::chrono::nanoseconds wait_time) {
         return future.wait_for(wait_time);
-      }
-    );
+      });
   }
 
   /// Cancel any running spin* function, causing it to return.

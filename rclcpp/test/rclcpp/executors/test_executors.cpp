@@ -293,6 +293,32 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout)
   spinner.join();
 }
 
+// Regression test for ros2/rclcpp#1916:
+// spin_until_future_complete must return when a future is fulfilled by a non-executor thread,
+// even if no executor-registered entities (subscriptions, timers, etc.) become ready.
+// Without the watcher thread fix, this test hangs indefinitely.
+TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteExternalThread)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  // No node added: nothing in the wait set becomes ready except the watcher's guard condition.
+
+  std::promise<bool> promise;
+  std::shared_future<bool> future = promise.get_future().share();
+
+  // Fulfill the future from a non-executor thread after a short delay.
+  std::thread setter([&promise]() {
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      promise.set_value(true);
+    });
+
+  // spin_until_future_complete with no timeout — previously blocked forever (ros2/rclcpp#1916).
+  auto ret = executor.spin_until_future_complete(future);
+  EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
+  EXPECT_TRUE(future.get());
+  setter.join();
+}
+
 // Check spin_until_future_complete timeout works as expected
 TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout)
 {
