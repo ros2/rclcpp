@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+31.0.3 (2026-04-14)
+-------------------
+
+* Remove warnings on tests (`#3125 <https://github.com/ros2/rclcpp/issues/3125>`_)
+
+* Contributors: Alejandro Hernández Cordero
+
 31.0.2 (2026-04-09)
 -------------------
 * feat: Add per-node log level support via NodeOptions (`#3092 <https://github.com/ros2/rclcpp/issues/3092>`_)
