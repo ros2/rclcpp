@@ -109,7 +109,7 @@ print_usage()
     "       component_container --help|-h\n"
     "Defaults: single-threaded, non-isolated\n"
     "Examples: component_container --executor-type multi-threaded\n"
-    "          component_container --executor-type single-threaded --isolated\n");
+    "          component_container --executor-type single-threaded --isolated");
 }
 
 int main(int argc, char * argv[])
