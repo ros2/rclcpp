@@ -446,7 +446,7 @@ Context::add_shutdown_callback(
 template<Context::ShutdownType shutdown_type>
 bool
 Context::remove_shutdown_callback(
-  const ShutdownCallbackHandle & callback_handle)
+  const rclcpp::ShutdownCallbackHandle & callback_handle)
 {
   const auto callback_shared_ptr = callback_handle.callback.lock();
   if (callback_shared_ptr == nullptr) {
