@@ -111,24 +111,48 @@ public:
    * This constructs an action client, but it will not work until it has been added to a node.
    * Use `rclcpp_action::create_client()` to both construct and add to a node.
    *
+   * When multiple action clients connect to the same action server, the subscription for receiving
+   * feedback messages inside each action client will first receive all feedback messages, and then
+   * determine which feedback belongs to itself based on goal ID. When
+   * enable_feedback_msg_optimization is set to true, the content filter is used to configure
+   * the goal ID for the subscription, which helps avoid the reception of irrelevant feedback
+   * messages internally for each action client.
+   *
+   * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+   * simultaneously. This optimization takes advantage of the content filter feature. According to
+   * the DDS specification, the maximum number of parameters supported by content filter is 100.
+   * Configuring one goal ID consumes 16 parameters, so at most, 6 goal IDs can be set
+   * simultaneously. If the number of goals exceeds the limit, optimization is automatically
+   * disabled. If rmw implementation doesn't support content filter, optimization is also
+   * automatically disabled.
+   *
+   * Even if the RMW implementation supports the content filter feature, different RMW
+   * implementations may impose restrictions on the content filter expression. For example,
+   * in ConnextDDS, the `contentfilter_property_max_length` setting affects the available length
+   * of content filter expressions. When this limit is reached, the optimization will be
+   * automatically disabled.
+   *
    * \param[in] node_base A pointer to the base interface of a node.
    * \param[in] node_graph A pointer to an interface that allows getting graph information about
    *   a node.
    * \param[in] node_logging A pointer to an interface that allows getting a node's logger.
    * \param[in] action_name The action name.
    * \param[in] client_options Options to pass to the underlying `rcl_action::rcl_action_client_t`.
+   * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+   *   optimize the handling of feedback messages.
    */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
-    const rcl_action_client_options_t & client_options = rcl_action_client_get_default_options()
+    const rcl_action_client_options_t & client_options = rcl_action_client_get_default_options(),
+    bool enable_feedback_msg_optimization = false
   )
   : ClientBase(
       node_base, node_graph, node_logging, action_name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
-      client_options)
+      client_options, enable_feedback_msg_optimization)
   {
   }
 
@@ -180,6 +204,20 @@ public:
           }
           return;
         }
+
+        // If feedback message optimization is enabled, add goal id to feedback subscription
+        // content filter
+        if (enable_feedback_msg_optimization_) {
+          std::lock_guard<std::mutex> lock(configure_feedback_sub_content_filter_mutex_);
+          if (!configure_feedback_subscription_filter_add_goal_id(goal_request->goal_id.uuid)) {
+            RCLCPP_ERROR(
+              this->get_logger(),
+              "Failed to add goal id to feedback subscription content filter for action client."
+              " Disable feedback message optimization.");
+            enable_feedback_msg_optimization_ = false;
+          }
+        }
+
         GoalInfo goal_info;
         goal_info.goal_id.uuid = goal_request->goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
@@ -519,6 +557,22 @@ private:
           wrapped_result.goal_id = goal_handle->get_goal_id();
           wrapped_result.code = static_cast<ResultCode>(result_response->status);
           goal_handle->set_result(wrapped_result);
+
+          // If feedback message optimization is enabled, remove goal id from feedback subscription
+          // content filter
+          if (this->enable_feedback_msg_optimization_) {
+            std::lock_guard<std::mutex> lock(
+              this->configure_feedback_sub_content_filter_mutex_);
+            if (!this->configure_feedback_subscription_filter_remove_goal_id(
+                goal_handle->get_goal_id()))
+            {
+              RCLCPP_ERROR(
+                this->get_logger(),
+                "Failed to remove goal id from feedback subscription content filter for action "
+                "client. Disable feedback message optimization.");
+              this->enable_feedback_msg_optimization_ = false;
+            }
+          }
           std::lock_guard<std::recursive_mutex> lock(goal_handles_mutex_);
           goal_handles_.erase(goal_handle->get_goal_id());
         });
@@ -539,9 +593,30 @@ private:
     std::shared_future<typename CancelResponse::SharedPtr> future(promise->get_future());
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [cancel_callback, promise](std::shared_ptr<void> response) mutable
+      [this, cancel_callback, promise](std::shared_ptr<void> response) mutable
       {
         auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
+
+        // If feedback message optimization is enabled, remove goal id from feedback subscription
+        // content filter
+        if (this->enable_feedback_msg_optimization_) {
+          for (const auto & goal_info : cancel_response->goals_canceling) {
+            std::lock_guard<std::mutex> lock(this->configure_feedback_sub_content_filter_mutex_);
+            if (!this->configure_feedback_subscription_filter_remove_goal_id(
+                goal_info.goal_id.uuid))
+            {
+              RCLCPP_ERROR(
+                this->get_logger(),
+                "Failed to remove goal id from feedback subscription content filter for action "
+                "client. Disable feedback message optimization.");
+              this->enable_feedback_msg_optimization_ = false;
+              // When an error occurs, the rcl layer will disable the content filter, so there is
+              // no need to continue removing the goal id.
+              break;
+            }
+          }
+        }
+
         promise->set_value(cancel_response);
         if (cancel_callback) {
           cancel_callback(cancel_response);

@@ -39,10 +39,10 @@ public:
 
   RCLCPP_PUBLIC
   explicit NodeTypeDescriptions(
-    NodeBaseInterface::SharedPtr node_base,
-    NodeLoggingInterface::SharedPtr node_logging,
-    NodeParametersInterface::SharedPtr node_parameters,
-    NodeServicesInterface::SharedPtr node_services);
+    const NodeBaseInterface::SharedPtr & node_base,
+    const NodeLoggingInterface::SharedPtr & node_logging,
+    const NodeParametersInterface::SharedPtr & node_parameters,
+    const NodeServicesInterface::SharedPtr & node_services);
 
   RCLCPP_PUBLIC
   virtual

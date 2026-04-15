@@ -13,8 +13,19 @@
 # limitations under the License.
 
 # register node plugins
-list(REMOVE_DUPLICATES _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES)
-foreach(resource_index ${_RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES})
+# The internal data is stored in a project directory scoped properties to allow
+# registering the components from nested scopes in CMake, where variables
+# would not propagate out.
+get_property(_rclcpp_components_package_resource_indices
+  DIRECTORY "${PROJECT_SOURCE_DIR}"
+  PROPERTY _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES
+)
+list(REMOVE_DUPLICATES _rclcpp_components_package_resource_indices)
+foreach(resource_index ${_rclcpp_components_package_resource_indices})
+  get_property(_rclcpp_components_nodes
+    DIRECTORY "${PROJECT_SOURCE_DIR}"
+    PROPERTY "_RCLCPP_COMPONENTS_${resource_index}__NODES"
+  )
   ament_index_register_resource(
-    ${resource_index} CONTENT "${_RCLCPP_COMPONENTS_${resource_index}__NODES}")
+    ${resource_index} CONTENT "${_rclcpp_components_nodes}")
 endforeach()

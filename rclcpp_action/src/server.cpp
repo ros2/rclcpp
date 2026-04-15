@@ -157,8 +157,9 @@ ServerBase::ServerBase(
 
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
 
-  // This timer callback will never be called, we are only interested in
-  // weather the timer itself becomes ready or not.
+  // This timer callback will be exchanged at the RCL layer
+  // with a _timer_ callback that will call the _event_ callback
+  // passed in by set_on_ready_callback.
   std::function<void()> timer_callback = [] () {};
   pimpl_->expire_timer_ = std::make_shared<rclcpp::GenericTimer<decltype (timer_callback)>>(
       node_clock->get_clock(), std::chrono::nanoseconds(options.result_timeout.nanoseconds),
@@ -187,6 +188,7 @@ ServerBase::ServerBase(
 
 ServerBase::~ServerBase()
 {
+  pimpl_->expire_timer_->cancel();
 }
 
 size_t
@@ -639,6 +641,13 @@ ServerBase::execute_result_request_received(
   }
 }
 
+size_t
+ServerBase::get_number_of_goal_handles()
+{
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
+  return pimpl_->goal_handles_.size();
+}
+
 void
 ServerBase::execute_check_expired_goals()
 {
@@ -811,6 +820,7 @@ ServerBase::set_on_ready_callback(std::function<void(size_t, int)> callback)
   set_callback_to_entity(EntityType::GoalService, callback);
   set_callback_to_entity(EntityType::ResultService, callback);
   set_callback_to_entity(EntityType::CancelService, callback);
+  set_callback_to_entity(EntityType::Expired, callback);
 }
 
 void
@@ -910,7 +920,11 @@ ServerBase::set_on_ready_callback(
 
     case EntityType::Expired:
       {
-        throw std::runtime_error("Expired entity type does not support callbacks");
+        ret = rcl_action_server_set_expired_event_callback(
+          pimpl_->action_server_.get(),
+          callback,
+          user_data);
+        break;
       }
   }
 
@@ -929,6 +943,7 @@ ServerBase::clear_on_ready_callback()
     set_on_ready_callback(EntityType::GoalService, nullptr, nullptr);
     set_on_ready_callback(EntityType::ResultService, nullptr, nullptr);
     set_on_ready_callback(EntityType::CancelService, nullptr, nullptr);
+    set_on_ready_callback(EntityType::Expired, nullptr, nullptr);
     on_ready_callback_set_ = false;
   }
 

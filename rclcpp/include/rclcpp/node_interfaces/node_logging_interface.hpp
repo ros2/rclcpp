@@ -61,7 +61,7 @@ public:
   virtual
   void
   create_logger_services(
-    node_interfaces::NodeServicesInterface::SharedPtr node_services) = 0;
+    const node_interfaces::NodeServicesInterface::SharedPtr & node_services) = 0;
 };
 
 }  // namespace node_interfaces

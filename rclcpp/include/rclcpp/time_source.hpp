@@ -60,7 +60,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit TimeSource(
-    rclcpp::Node::SharedPtr node,
+    const rclcpp::Node::SharedPtr & node,
     const rclcpp::QoS & qos = rclcpp::ClockQoS(),
     bool use_clock_thread = true);
 
@@ -89,7 +89,7 @@ public:
    * \param node std::shared pointer to a initialized node
    */
   RCLCPP_PUBLIC
-  void attachNode(rclcpp::Node::SharedPtr node);
+  void attachNode(const rclcpp::Node::SharedPtr & node);
 
   /// Attach node to the time source.
   /**
@@ -124,11 +124,11 @@ public:
    * \throws std::invalid_argument the time source must be a RCL_ROS_TIME otherwise throws an exception
    */
   RCLCPP_PUBLIC
-  void attachClock(rclcpp::Clock::SharedPtr clock);
+  void attachClock(const rclcpp::Clock::SharedPtr & clock);
 
   /// Detach a clock from the time source
   RCLCPP_PUBLIC
-  void detachClock(rclcpp::Clock::SharedPtr clock);
+  void detachClock(const rclcpp::Clock::SharedPtr & clock);
 
   /// Get whether a separate clock thread is used or not
   RCLCPP_PUBLIC

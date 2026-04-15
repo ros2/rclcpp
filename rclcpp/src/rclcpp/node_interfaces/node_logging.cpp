@@ -18,7 +18,7 @@
 
 using rclcpp::node_interfaces::NodeLogging;
 
-NodeLogging::NodeLogging(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base)
+NodeLogging::NodeLogging(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_base)
 : node_base_(node_base)
 {
   logger_ = rclcpp::get_logger(NodeLogging::get_logger_name());
@@ -41,7 +41,7 @@ NodeLogging::get_logger_name() const
 }
 
 void NodeLogging::create_logger_services(
-  node_interfaces::NodeServicesInterface::SharedPtr node_services)
+  const node_interfaces::NodeServicesInterface::SharedPtr & node_services)
 {
   rclcpp::ServicesQoS qos_profile;
   const std::string node_name = node_base_->get_name();
@@ -51,8 +51,8 @@ void NodeLogging::create_logger_services(
     node_base_, node_services,
     node_name + "/get_logger_levels",
     [](
-      const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<rcl_interfaces::srv::GetLoggerLevels::Request> request,
+      const std::shared_ptr<rmw_request_id_t> &,
+      const std::shared_ptr<rcl_interfaces::srv::GetLoggerLevels::Request> & request,
       std::shared_ptr<rcl_interfaces::srv::GetLoggerLevels::Response> response)
     {
       for (auto & name : request->names) {
@@ -73,8 +73,8 @@ void NodeLogging::create_logger_services(
     node_base_, node_services,
     node_name + "/set_logger_levels",
     [](
-      const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<rcl_interfaces::srv::SetLoggerLevels::Request> request,
+      const std::shared_ptr<rmw_request_id_t> &,
+      const std::shared_ptr<rcl_interfaces::srv::SetLoggerLevels::Request> & request,
       std::shared_ptr<rcl_interfaces::srv::SetLoggerLevels::Response> response)
     {
       rcl_interfaces::msg::SetLoggerLevelsResult result;

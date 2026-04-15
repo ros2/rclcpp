@@ -3,6 +3,23 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+31.0.2 (2026-04-09)
+-------------------
+* publish_feedback should effect only on executing state. (`#3118 <https://github.com/ros2/rclcpp/issues/3118>`_)
+* Support to configure feedback subscription content filter for action client (`#3034 <https://github.com/ros2/rclcpp/issues/3034>`_)
+* Contributors: Barry Xu, Tomoya Fujita
+
+31.0.1 (2026-03-24)
+-------------------
+* Use new ROSIDL aggregate CMake target (`#3105 <https://github.com/ros2/rclcpp/issues/3105>`_)
+* Contributors: Emerson Knapp
+
+31.0.0 (2026-03-20)
+-------------------
+* Fix expiration of action goals when EventsExecutors are used (`#3018 <https://github.com/ros2/rclcpp/issues/3018>`_)
+* perf: Optimized out shared_ptr copies (`#3079 <https://github.com/ros2/rclcpp/issues/3079>`_)
+* Contributors: Janosch Machowinski, Skyler Medeiros
+
 30.1.5 (2026-02-09)
 -------------------
 * remove default: so that compiler can detect the missing case. (`#3048 <https://github.com/ros2/rclcpp/issues/3048>`_)

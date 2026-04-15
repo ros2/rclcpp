@@ -38,7 +38,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeLoggingInterface)
 
   RCLCPP_PUBLIC
-  explicit NodeLogging(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base);
+  explicit NodeLogging(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_base);
 
   RCLCPP_PUBLIC
   virtual
@@ -55,7 +55,7 @@ public:
   RCLCPP_PUBLIC
   void
   create_logger_services(
-    node_interfaces::NodeServicesInterface::SharedPtr node_services) override;
+    const node_interfaces::NodeServicesInterface::SharedPtr & node_services) override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeLogging)

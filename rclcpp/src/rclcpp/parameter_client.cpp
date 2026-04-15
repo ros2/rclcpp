@@ -30,13 +30,13 @@ using rclcpp::AsyncParametersClient;
 using rclcpp::SyncParametersClient;
 
 AsyncParametersClient::AsyncParametersClient(
-  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
-  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
-  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
-  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_base_interface,
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics_interface,
+  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr & node_graph_interface,
+  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr & node_services_interface,
   const std::string & remote_node_name,
   const rclcpp::QoS & qos_profile,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 : node_topics_interface_(node_topics_interface)
 {
   if (remote_node_name != "") {
@@ -107,9 +107,9 @@ AsyncParametersClient::AsyncParametersClient(
 std::shared_future<std::vector<rclcpp::Parameter>>
 AsyncParametersClient::get_parameters(
   const std::vector<std::string> & names,
-  std::function<
+  const std::function<
     void(std::shared_future<std::vector<rclcpp::Parameter>>)
-  > callback)
+  > & callback)
 {
   auto promise_result =
     std::make_shared<std::promise<std::vector<rclcpp::Parameter>>>();
@@ -147,9 +147,9 @@ AsyncParametersClient::get_parameters(
 std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>
 AsyncParametersClient::describe_parameters(
   const std::vector<std::string> & names,
-  std::function<
+  const std::function<
     void(std::shared_future<std::vector<rcl_interfaces::msg::ParameterDescriptor>>)
-  > callback)
+  > & callback)
 {
   auto promise_result =
     std::make_shared<std::promise<std::vector<rcl_interfaces::msg::ParameterDescriptor>>>();
@@ -176,9 +176,9 @@ AsyncParametersClient::describe_parameters(
 std::shared_future<std::vector<rclcpp::ParameterType>>
 AsyncParametersClient::get_parameter_types(
   const std::vector<std::string> & names,
-  std::function<
+  const std::function<
     void(std::shared_future<std::vector<rclcpp::ParameterType>>)
-  > callback)
+  > & callback)
 {
   auto promise_result =
     std::make_shared<std::promise<std::vector<rclcpp::ParameterType>>>();
@@ -210,9 +210,9 @@ AsyncParametersClient::get_parameter_types(
 std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::set_parameters(
   const std::vector<rclcpp::Parameter> & parameters,
-  std::function<
+  const std::function<
     void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
-  > callback)
+  > & callback)
 {
   auto promise_result =
     std::make_shared<std::promise<std::vector<rcl_interfaces::msg::SetParametersResult>>>();
@@ -243,9 +243,9 @@ AsyncParametersClient::set_parameters(
 std::shared_future<rcl_interfaces::msg::SetParametersResult>
 AsyncParametersClient::set_parameters_atomically(
   const std::vector<rclcpp::Parameter> & parameters,
-  std::function<
+  const std::function<
     void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
-  > callback)
+  > & callback)
 {
   auto promise_result =
     std::make_shared<std::promise<rcl_interfaces::msg::SetParametersResult>>();
@@ -322,9 +322,9 @@ std::shared_future<rcl_interfaces::msg::ListParametersResult>
 AsyncParametersClient::list_parameters(
   const std::vector<std::string> & prefixes,
   uint64_t depth,
-  std::function<
+  const std::function<
     void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)
-  > callback)
+  > & callback)
 {
   auto promise_result =
     std::make_shared<std::promise<rcl_interfaces::msg::ListParametersResult>>();

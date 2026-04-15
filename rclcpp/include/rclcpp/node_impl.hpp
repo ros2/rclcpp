@@ -111,7 +111,7 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::CallbackGroup::SharedPtr group,
+  const rclcpp::CallbackGroup::SharedPtr & group,
   bool autostart)
 {
   return rclcpp::create_wall_timer(
@@ -128,7 +128,7 @@ typename rclcpp::GenericTimer<CallbackT>::SharedPtr
 Node::create_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   return rclcpp::create_timer(
     this->get_clock(),
@@ -144,7 +144,7 @@ typename Client<ServiceT>::SharedPtr
 Node::create_client(
   const std::string & service_name,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   return rclcpp::create_client<ServiceT>(
     node_base_,
@@ -161,7 +161,7 @@ Node::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(
     node_base_,
@@ -179,7 +179,7 @@ Node::create_generic_service(
   const std::string & service_type,
   CallbackT && callback,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   return rclcpp::create_generic_service<CallbackT>(
     node_base_,

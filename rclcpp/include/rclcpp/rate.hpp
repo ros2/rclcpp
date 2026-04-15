@@ -58,12 +58,12 @@ public:
   RCLCPP_PUBLIC
   explicit Rate(
     const double rate,
-    Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
+    const Clock::SharedPtr & clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
 
   RCLCPP_PUBLIC
   explicit Rate(
     const Duration & period,
-    Clock::SharedPtr clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
+    const Clock::SharedPtr & clock = std::make_shared<Clock>(RCL_SYSTEM_TIME));
 
   RCLCPP_PUBLIC
   virtual bool

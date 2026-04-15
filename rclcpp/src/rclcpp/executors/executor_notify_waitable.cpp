@@ -21,7 +21,7 @@ namespace executors
 {
 
 ExecutorNotifyWaitable::ExecutorNotifyWaitable(
-  std::function<void(void)> on_execute_callback,
+  const std::function<void(void)> & on_execute_callback,
   const rclcpp::Context::SharedPtr & context)
 : execute_callback_(on_execute_callback),
   guard_condition_(std::make_shared<rclcpp::GuardCondition>(context))
@@ -144,13 +144,13 @@ ExecutorNotifyWaitable::take_data_by_entity_id([[maybe_unused]] size_t id)
 }
 
 void
-ExecutorNotifyWaitable::set_on_ready_callback(std::function<void(size_t, int)> callback)
+ExecutorNotifyWaitable::set_on_ready_callback(std::function<void(size_t, int)> callback_in)
 {
   // The second argument of the callback could be used to identify which guard condition
   // triggered the event.
   // We could indicate which of the guard conditions was triggered, but the executor
   // is already going to check that.
-  auto gc_callback = [callback](size_t count) {
+  auto gc_callback = [callback = std::move(callback_in)](size_t count) {
       callback(count, 0);
     };
 
@@ -179,11 +179,12 @@ void
 ExecutorNotifyWaitable::set_execute_callback(std::function<void(void)> on_execute_callback)
 {
   std::lock_guard<std::mutex> lock(execute_mutex_);
-  execute_callback_ = on_execute_callback;
+  execute_callback_ = std::move(on_execute_callback);
 }
 
 void
-ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
+ExecutorNotifyWaitable::add_guard_condition(
+  const rclcpp::GuardCondition::WeakPtr & weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
   const auto & guard_condition = weak_guard_condition.lock();
@@ -196,7 +197,8 @@ ExecutorNotifyWaitable::add_guard_condition(rclcpp::GuardCondition::WeakPtr weak
 }
 
 void
-ExecutorNotifyWaitable::remove_guard_condition(rclcpp::GuardCondition::WeakPtr weak_guard_condition)
+ExecutorNotifyWaitable::remove_guard_condition(
+  const rclcpp::GuardCondition::WeakPtr & weak_guard_condition)
 {
   std::lock_guard<std::mutex> lock(guard_condition_mutex_);
   const auto & guard_condition = weak_guard_condition.lock();

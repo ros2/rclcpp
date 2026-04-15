@@ -32,7 +32,8 @@ create_generic_client(
   const std::string & name,
   const std::string & type,
   rclcpp::CallbackGroup::SharedPtr group,
-  const rcl_action_client_options_t & options)
+  const rcl_action_client_options_t & options,
+  bool enable_feedback_msg_optimization)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
     node_waitables_interface;
@@ -75,7 +76,8 @@ create_generic_client(
       name,
       typesupport_lib,
       action_typesupport_handle,
-      options),
+      options,
+      enable_feedback_msg_optimization),
     deleter);
 
   node_waitables_interface->add_waitable(action_client, group);

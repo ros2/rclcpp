@@ -58,10 +58,10 @@ public:
   explicit SerializedMessage(const rcl_serialized_message_t & other);
 
   /// Move Constructor for a SerializedMessage
-  SerializedMessage(SerializedMessage && other);
+  SerializedMessage(SerializedMessage && other) noexcept;
 
   /// Constructor for a SerializedMessage from a moved rcl_serialized_message_t
-  explicit SerializedMessage(rcl_serialized_message_t && other);
+  explicit SerializedMessage(rcl_serialized_message_t && other) noexcept;
 
   /// Copy assignment operator
   SerializedMessage & operator=(const SerializedMessage & other);
@@ -70,10 +70,10 @@ public:
   SerializedMessage & operator=(const rcl_serialized_message_t & other);
 
   /// Move assignment operator
-  SerializedMessage & operator=(SerializedMessage && other);
+  SerializedMessage & operator=(SerializedMessage && other) noexcept;
 
   /// Move assignment operator from a rcl_serialized_message_t
-  SerializedMessage & operator=(rcl_serialized_message_t && other);
+  SerializedMessage & operator=(rcl_serialized_message_t && other) noexcept;
 
   /// Destructor for a SerializedMessage
   virtual ~SerializedMessage();

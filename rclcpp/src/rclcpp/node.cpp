@@ -250,6 +250,9 @@ Node::Node(
     options.parameter_event_qos(),
     rclcpp::detail::PublisherQosParametersTraits{});
 
+  if (options.log_level() != rclcpp::Logger::Level::Unset) {
+    node_logging_->get_logger().set_level(options.log_level());
+  }
   if (options.enable_logger_service()) {
     node_logging_->create_logger_services(node_services_);
   }
@@ -574,7 +577,7 @@ Node::get_graph_event()
 
 void
 Node::wait_for_graph_change(
-  rclcpp::Event::SharedPtr event,
+  const rclcpp::Event::SharedPtr & event,
   std::chrono::nanoseconds timeout)
 {
   node_graph_->wait_for_graph_change(event, timeout);
@@ -695,7 +698,7 @@ Node::create_generic_client(
   const std::string & service_name,
   const std::string & service_type,
   const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::CallbackGroup::SharedPtr & group)
 {
   return rclcpp::create_generic_client(
     node_base_,

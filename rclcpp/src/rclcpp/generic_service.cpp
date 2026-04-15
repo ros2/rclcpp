@@ -17,13 +17,13 @@
 namespace rclcpp
 {
 GenericService::GenericService(
-  std::shared_ptr<rcl_node_t> node_handle,
+  const std::shared_ptr<rcl_node_t> & node_handle,
   const std::string & service_name,
   const std::string & service_type,
   GenericServiceCallback any_callback,
   rcl_service_options_t & service_options)
 : ServiceBase(node_handle),
-  any_callback_(any_callback)
+  any_callback_(std::move(any_callback))
 {
   const rosidl_service_type_support_t * service_ts;
   try {
@@ -98,7 +98,7 @@ GenericService::GenericService(
 
 bool
 GenericService::take_request(
-  SharedRequest request_out,
+  SharedRequest & request_out,
   rmw_request_id_t & request_id_out)
 {
   request_out = create_request();
@@ -141,8 +141,8 @@ GenericService::create_request_header()
 
 void
 GenericService::handle_request(
-  std::shared_ptr<rmw_request_id_t> request_header,
-  std::shared_ptr<void> request)
+  const std::shared_ptr<rmw_request_id_t> & request_header,
+  const std::shared_ptr<void> & request)
 {
   auto response = any_callback_.dispatch(
     this->shared_from_this(), request_header, request, create_response());

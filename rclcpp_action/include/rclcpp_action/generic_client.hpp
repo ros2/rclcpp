@@ -95,6 +95,10 @@ public:
    * node.
    * Use `rclcpp_action::create_generic_client()` to both construct and add to a node.
    *
+   * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+   * simultaneously. If the number of goals exceeds the limit, optimization is automatically
+   * disabled.
+   *
    * \param[in] node_base A pointer to the base interface of a node.
    * \param[in] node_graph A pointer to an interface that allows getting graph information about
    *   a node.
@@ -103,6 +107,8 @@ public:
    * \param[in] typesupport_lib A pointer to type support library for the action type
    * \param[in] action_typesupport_handle the action type support handle
    * \param[in] client_options Options to pass to the underlying `rcl_action::rcl_action_client_t`.
+   * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+   *   optimize the handling of feedback messages.
    */
   RCLCPP_ACTION_PUBLIC
   GenericClient(
@@ -112,7 +118,8 @@ public:
     const std::string & action_name,
     std::shared_ptr<rcpputils::SharedLibrary> typesupport_lib,
     const rosidl_action_type_support_t * action_typesupport_handle,
-    const rcl_action_client_options_t & client_options = rcl_action_client_get_default_options());
+    const rcl_action_client_options_t & client_options = rcl_action_client_get_default_options(),
+    bool enable_feedback_msg_optimization = false);
 
   /// Send an action goal and asynchronously get the result.
   /**

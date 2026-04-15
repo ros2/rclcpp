@@ -37,7 +37,7 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph)
+  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr & node_graph)
 : node_graph_(node_graph),
   node_handle_(node_base->get_shared_rcl_node_handle()),
   context_(node_base->get_context()),

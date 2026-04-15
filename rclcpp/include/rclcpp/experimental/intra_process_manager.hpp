@@ -19,6 +19,7 @@
 
 #include <shared_mutex>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -118,7 +119,8 @@ public:
     typename Alloc = std::allocator<ROSMessageType>
   >
   uint64_t
-  add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
+  add_subscription(
+    const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription)
   {
     std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -175,8 +177,8 @@ public:
   RCLCPP_PUBLIC
   uint64_t
   add_publisher(
-    rclcpp::PublisherBase::SharedPtr publisher,
-    rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr buffer =
+    const rclcpp::PublisherBase::SharedPtr & publisher,
+    const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer =
     rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr());
 
   /// Unregister a publisher using the publisher's unique id.
@@ -386,6 +388,39 @@ private:
     std::vector<uint64_t> take_ownership_subscriptions;
   };
 
+  /// Hash function for rmw_gid_t to enable use in unordered_map
+  struct rmw_gid_hash
+  {
+    std::size_t operator()(const rmw_gid_t & gid) const noexcept
+    {
+      // Using the FNV-1a hash algorithm on the gid data
+      constexpr std::size_t FNV_prime = 1099511628211u;
+      std::size_t result = 14695981039346656037u;
+
+      for (std::size_t i = 0; i < RMW_GID_STORAGE_SIZE; ++i) {
+        result ^= gid.data[i];
+        result *= FNV_prime;
+      }
+      return result;
+    }
+  };
+
+  /// Equality comparison for rmw_gid_t to enable use in unordered_map
+  struct rmw_gid_equal
+  {
+    bool operator()(const rmw_gid_t & lhs, const rmw_gid_t & rhs) const noexcept
+    {
+      // Compare the data bytes only.
+      // implementation_identifier pointer comparison is not used here because
+      // intra-process communication is always within the same process and RMW,
+      // and pointer comparison is fragile across dynamically loaded components.
+      return std::equal(
+        std::begin(lhs.data),
+        std::end(lhs.data),
+        std::begin(rhs.data));
+    }
+  };
+
   using SubscriptionMap =
     std::unordered_map<uint64_t, rclcpp::experimental::SubscriptionIntraProcessBase::WeakPtr>;
 
@@ -397,6 +432,16 @@ private:
 
   using PublisherToSubscriptionIdsMap =
     std::unordered_map<uint64_t, SplittedSubscriptions>;
+
+  /// Structure to store publisher information in GID lookup map
+  struct PublisherInfo
+  {
+    uint64_t pub_id;
+    rclcpp::PublisherBase::WeakPtr publisher;
+  };
+
+  using GidToPublisherInfoMap =
+    std::unordered_map<rmw_gid_t, PublisherInfo, rmw_gid_hash, rmw_gid_equal>;
 
   RCLCPP_PUBLIC
   static
@@ -410,8 +455,8 @@ private:
   RCLCPP_PUBLIC
   bool
   can_communicate(
-    rclcpp::PublisherBase::SharedPtr pub,
-    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const;
+    const rclcpp::PublisherBase::SharedPtr & pub,
+    const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & sub) const;
 
   template<
     typename ROSMessageType,
@@ -642,6 +687,8 @@ private:
   PublisherBufferMap publisher_buffers_;
 
   mutable std::shared_timed_mutex mutex_;
+
+  GidToPublisherInfoMap gid_to_publisher_info_;
 };
 
 }  // namespace experimental

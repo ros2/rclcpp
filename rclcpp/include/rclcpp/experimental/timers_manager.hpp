@@ -103,7 +103,7 @@ public:
    * @throws std::invalid_argument if timer is a nullptr.
    */
   RCLCPP_PUBLIC
-  void add_timer(rclcpp::TimerBase::SharedPtr timer);
+  void add_timer(const rclcpp::TimerBase::SharedPtr & timer);
 
   /**
    * @brief Remove a single timer from the object storage.
@@ -113,7 +113,7 @@ public:
    * @param timer the timer to remove.
    */
   RCLCPP_PUBLIC
-  void remove_timer(rclcpp::TimerBase::SharedPtr timer);
+  void remove_timer(const rclcpp::TimerBase::SharedPtr & timer);
 
   /**
    * @brief Remove all the timers stored in the object.

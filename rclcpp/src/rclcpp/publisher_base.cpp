@@ -344,7 +344,7 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
 void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
-  IntraProcessManagerSharedPtr ipm)
+  const IntraProcessManagerSharedPtr & ipm)
 {
   intra_process_publisher_id_ = intra_process_publisher_id;
   weak_ipm_ = ipm;
@@ -396,10 +396,10 @@ std::vector<rclcpp::NetworkFlowEndpoint> PublisherBase::get_network_flow_endpoin
   }
 
   std::vector<rclcpp::NetworkFlowEndpoint> network_flow_endpoint_vector;
+  network_flow_endpoint_vector.reserve(network_flow_endpoint_array.size);
   for (size_t i = 0; i < network_flow_endpoint_array.size; ++i) {
-    network_flow_endpoint_vector.push_back(
-      rclcpp::NetworkFlowEndpoint(
-        network_flow_endpoint_array.network_flow_endpoint[i]));
+    network_flow_endpoint_vector.emplace_back(
+        network_flow_endpoint_array.network_flow_endpoint[i]);
   }
 
   ret = rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array);

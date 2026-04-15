@@ -60,7 +60,7 @@ QosOverridingOptions::with_default_policies(
   QosCallback validation_callback,
   std::string id)
 {
-  return QosOverridingOptions{kDefaultPolicies, validation_callback, id};
+  return QosOverridingOptions{kDefaultPolicies, std::move(validation_callback), id};
 }
 
 const std::string &

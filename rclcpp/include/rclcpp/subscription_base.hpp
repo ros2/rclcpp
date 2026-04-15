@@ -372,7 +372,7 @@ public:
    * \param[in] callback functor to be called when a new message is received
    */
   void
-  set_on_new_message_callback(std::function<void(size_t)> callback)
+  set_on_new_message_callback(const std::function<void(size_t)> & callback)
   {
     if (!callback) {
       throw std::invalid_argument(
@@ -450,7 +450,7 @@ public:
    * \param[in] callback functor to be called when a new message is received
    */
   void
-  set_on_new_intra_process_message_callback(std::function<void(size_t)> callback)
+  set_on_new_intra_process_message_callback(const std::function<void(size_t)> & callback)
   {
     if (!use_intra_process_) {
       RCLCPP_WARN(
@@ -468,7 +468,7 @@ public:
     // The on_ready_callback signature has an extra `int` argument used to disambiguate between
     // possible different entities within a generic waitable.
     // We hide that detail to users of this method.
-    std::function<void(size_t, int)> new_callback = std::bind(callback, std::placeholders::_1);
+    std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
     subscription_intra_process_->set_on_ready_callback(new_callback);
   }
 
@@ -514,7 +514,7 @@ public:
    */
   void
   set_on_new_qos_event_callback(
-    std::function<void(size_t)> callback,
+    const std::function<void(size_t)> & callback,
     rcl_subscription_event_type_t event_type)
   {
     if (event_handlers_.count(event_type) == 0) {
@@ -533,7 +533,7 @@ public:
     // The on_ready_callback signature has an extra `int` argument used to disambiguate between
     // possible different entities within a generic waitable.
     // We hide that detail to users of this method.
-    std::function<void(size_t, int)> new_callback = std::bind(callback, std::placeholders::_1);
+    std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
     event_handlers_[event_type]->set_on_ready_callback(new_callback);
   }
 
@@ -550,6 +550,15 @@ public:
 
     event_handlers_[event_type]->clear_on_ready_callback();
   }
+
+  /// Check if content filtered topic feature of the subscription instance is supported.
+  /**
+   * \return boolean flag indicating if the content filtered topic of this subscription is
+   *   supported.
+   */
+  RCLCPP_PUBLIC
+  bool
+  is_cft_supported() const;
 
   /// Check if content filtered topic feature of the subscription instance is enabled.
   /**

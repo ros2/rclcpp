@@ -21,7 +21,7 @@ namespace rclcpp
 {
 
 Rate::Rate(
-  const double rate, Clock::SharedPtr clock)
+  const double rate, const Clock::SharedPtr & clock)
 : clock_(clock), period_(0, 0), last_interval_(clock_->now())
 {
   if (rate <= 0.0) {
@@ -31,7 +31,7 @@ Rate::Rate(
 }
 
 Rate::Rate(
-  const Duration & period, Clock::SharedPtr clock)
+  const Duration & period, const Clock::SharedPtr & clock)
 : clock_(clock), period_(period), last_interval_(clock_->now())
 {
   if (period <= Duration(0, 0)) {

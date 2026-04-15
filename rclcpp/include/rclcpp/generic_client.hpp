@@ -95,7 +95,7 @@ public:
 
   GenericClient(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+    const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr & node_graph,
     const std::string & service_name,
     const std::string & service_type,
     rcl_client_options_t & client_options);
@@ -111,8 +111,8 @@ public:
   RCLCPP_PUBLIC
   void
   handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> response) override;
+    const std::shared_ptr<rmw_request_id_t> & request_header,
+    const std::shared_ptr<void> & response) override;
 
   /// Send a request to the service server.
   /**
@@ -144,7 +144,7 @@ public:
    */
   RCLCPP_PUBLIC
   FutureAndRequestId
-  async_send_request(const Request request);
+  async_send_request(const Request & request);
 
   /// Send a request to the service server and schedule a callback in the executor.
   /**
@@ -172,7 +172,7 @@ public:
     >::type * = nullptr
   >
   SharedFutureAndRequestId
-  async_send_request(const Request request, CallbackT && cb)
+  async_send_request(const Request & request, CallbackT && cb)
   {
     Promise promise;
     auto shared_future = promise.get_future().share();
@@ -280,7 +280,7 @@ protected:
   RCLCPP_PUBLIC
   int64_t
   async_send_request_impl(
-    const Request request,
+    const Request & request,
     CallbackInfoVariant value);
 
   std::optional<CallbackInfoVariant>

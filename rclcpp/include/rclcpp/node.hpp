@@ -242,7 +242,7 @@ public:
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr,
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
     bool autostart = true);
 
   /// Create a timer that uses the node clock to drive the callback.
@@ -256,7 +256,7 @@ public:
   create_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
 
   /// Create and return a Client.
   /**
@@ -270,7 +270,7 @@ public:
   create_client(
     const std::string & service_name,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
 
   /// Create and return a Service.
   /**
@@ -286,7 +286,7 @@ public:
     const std::string & service_name,
     CallbackT && callback,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
 
   /// Create and return a GenericClient.
   /**
@@ -302,7 +302,7 @@ public:
     const std::string & service_name,
     const std::string & service_type,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
 
   /// Create and return a GenericService.
   /**
@@ -320,7 +320,7 @@ public:
     const std::string & service_type,
     CallbackT && callback,
     const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
 
   /// Create and return a GenericPublisher.
   /**
@@ -1471,7 +1471,7 @@ public:
   RCLCPP_PUBLIC
   void
   wait_for_graph_change(
-    rclcpp::Event::SharedPtr event,
+    const rclcpp::Event::SharedPtr & event,
     std::chrono::nanoseconds timeout);
 
   /// Get a clock as a non-const shared pointer which is managed by the node.

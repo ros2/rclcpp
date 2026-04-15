@@ -33,8 +33,8 @@ IntraProcessManager::~IntraProcessManager()
 
 uint64_t
 IntraProcessManager::add_publisher(
-  rclcpp::PublisherBase::SharedPtr publisher,
-  rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr buffer)
+  const rclcpp::PublisherBase::SharedPtr & publisher,
+  const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -50,6 +50,9 @@ IntraProcessManager::add_publisher(
               "a valid publisher buffer ptr when calling add_publisher()");
     }
   }
+
+  // Add GID to publisher info mapping for fast lookups (stores both ID and weak_ptr)
+  gid_to_publisher_info_[publisher->get_gid()] = {pub_id, publisher};
 
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[pub_id] = SplittedSubscriptions();
@@ -98,6 +101,24 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
+  // Remove GID to publisher info mapping.
+  // First try via the publisher's own GID (fast path).
+  auto pub_it = publishers_.find(intra_process_publisher_id);
+  if (pub_it != publishers_.end()) {
+    auto publisher = pub_it->second.lock();
+    if (publisher) {
+      gid_to_publisher_info_.erase(publisher->get_gid());
+    } else {
+      // Publisher weak_ptr already expired, fall back to linear scan by pub_id.
+      for (auto git = gid_to_publisher_info_.begin(); git != gid_to_publisher_info_.end(); ++git) {
+        if (git->second.pub_id == intra_process_publisher_id) {
+          gid_to_publisher_info_.erase(git);
+          break;
+        }
+      }
+    }
+  }
+
   publishers_.erase(intra_process_publisher_id);
   publisher_buffers_.erase(intra_process_publisher_id);
   pub_to_subs_.erase(intra_process_publisher_id);
@@ -108,16 +129,15 @@ IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
 {
   std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
-  for (auto & publisher_pair : publishers_) {
-    auto publisher = publisher_pair.second.lock();
-    if (!publisher) {
-      continue;
-    }
-    if (*publisher.get() == id) {
-      return true;
-    }
+  // Single O(1) hash map lookup - struct contains both ID and weak_ptr
+  auto it = gid_to_publisher_info_.find(*id);
+  if (it == gid_to_publisher_info_.end()) {
+    return false;
   }
-  return false;
+
+  // Verify the publisher still exists by checking the weak_ptr
+  auto publisher = it->second.publisher.lock();
+  return publisher != nullptr;
 }
 
 size_t
@@ -197,8 +217,8 @@ IntraProcessManager::insert_sub_id_for_pub(
 
 bool
 IntraProcessManager::can_communicate(
-  rclcpp::PublisherBase::SharedPtr pub,
-  rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr sub) const
+  const rclcpp::PublisherBase::SharedPtr & pub,
+  const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & sub) const
 {
   // publisher and subscription must be on the same topic
   if (strcmp(pub->get_topic_name(), sub->get_topic_name()) != 0) {

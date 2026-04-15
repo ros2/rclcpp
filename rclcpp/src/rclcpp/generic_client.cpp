@@ -25,7 +25,7 @@ namespace rclcpp
 {
 GenericClient::GenericClient(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr & node_graph,
   const std::string & service_name,
   const std::string & service_type,
   rcl_client_options_t & client_options)
@@ -97,8 +97,8 @@ GenericClient::create_request_header()
 
 void
 GenericClient::handle_response(
-  std::shared_ptr<rmw_request_id_t> request_header,
-  std::shared_ptr<void> response)
+  const std::shared_ptr<rmw_request_id_t> & request_header,
+  const std::shared_ptr<void> & response)
 {
   auto optional_pending_request =
     this->get_and_erase_pending_request(request_header->sequence_number);
@@ -108,13 +108,13 @@ GenericClient::handle_response(
   auto & value = *optional_pending_request;
   if (std::holds_alternative<Promise>(value)) {
     auto & promise = std::get<Promise>(value);
-    promise.set_value(std::move(response));
+    promise.set_value(response);
   } else if (std::holds_alternative<CallbackTypeValueVariant>(value)) {
     auto & inner = std::get<CallbackTypeValueVariant>(value);
     const auto & callback = std::get<CallbackType>(inner);
     auto & promise = std::get<Promise>(inner);
     auto & future = std::get<SharedFuture>(inner);
-    promise.set_value(std::move(response));
+    promise.set_value(response);
     callback(std::move(future));
   }
 }
@@ -164,7 +164,7 @@ GenericClient::get_and_erase_pending_request(int64_t request_number)
 }
 
 GenericClient::FutureAndRequestId
-GenericClient::async_send_request(const Request request)
+GenericClient::async_send_request(const Request & request)
 {
   Promise promise;
   auto future = promise.get_future();
@@ -175,7 +175,7 @@ GenericClient::async_send_request(const Request request)
 }
 
 int64_t
-GenericClient::async_send_request_impl(const Request request, CallbackInfoVariant value)
+GenericClient::async_send_request_impl(const Request & request, CallbackInfoVariant value)
 {
   int64_t sequence_number;
   std::lock_guard<std::mutex> lock(pending_requests_mutex_);

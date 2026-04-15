@@ -30,6 +30,9 @@ namespace rclcpp_action
  * This function is equivalent to \sa create_client()` however is using the individual
  * node interfaces to create the client.
  *
+ * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+ * simultaneously. If the number of goals exceeds the limit, optimization is automatically disabled.
+ *
  * \param[in] node_base_interface The node base interface of the corresponding node.
  * \param[in] node_graph_interface The node graph interface of the corresponding node.
  * \param[in] node_logging_interface The node logging interface of the corresponding node.
@@ -38,6 +41,8 @@ namespace rclcpp_action
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+ *   optimize the handling of feedback messages.
  */
 template<typename ActionT>
 typename Client<ActionT>::SharedPtr
@@ -48,7 +53,8 @@ create_client(
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
   const std::string & name,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  const rcl_action_client_options_t & options = rcl_action_client_get_default_options())
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options(),
+  bool enable_feedback_msg_optimization = false)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
     node_waitables_interface;
@@ -85,7 +91,8 @@ create_client(
       node_graph_interface,
       node_logging_interface,
       name,
-      options),
+      options,
+      enable_feedback_msg_optimization),
     deleter);
 
   node_waitables_interface->add_waitable(action_client, group);
@@ -94,11 +101,17 @@ create_client(
 
 /// Create an action client.
 /**
+ *
+ * If enable_feedback_msg_optimization is set to true, an action client can handle up to 6 goals
+ * simultaneously. If the number of goals exceeds the limit, optimization is automatically disabled.
+ *
  * \param[in] node The action client will be added to this node.
  * \param[in] name The action name.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] enable_feedback_msg_optimization Enable feedback subscription content filter to
+ *   optimize the handling of feedback messages.
  */
 template<typename ActionT, typename NodeT>
 typename Client<ActionT>::SharedPtr
@@ -106,7 +119,8 @@ create_client(
   NodeT node,
   const std::string & name,
   rclcpp::CallbackGroup::SharedPtr group = nullptr,
-  const rcl_action_client_options_t & options = rcl_action_client_get_default_options())
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options(),
+  bool enable_feedback_msg_optimization = false)
 {
   return rclcpp_action::create_client<ActionT>(
     node->get_node_base_interface(),
@@ -115,7 +129,8 @@ create_client(
     node->get_node_waitables_interface(),
     name,
     group,
-    options);
+    options,
+    enable_feedback_msg_optimization);
 }
 }  // namespace rclcpp_action
 

@@ -24,7 +24,7 @@ namespace executors
 {
 
 ExecutorEntitiesCollector::ExecutorEntitiesCollector(
-  std::shared_ptr<ExecutorNotifyWaitable> notify_waitable)
+  const std::shared_ptr<ExecutorNotifyWaitable> & notify_waitable)
 : notify_waitable_(notify_waitable)
 {
 }
@@ -47,7 +47,7 @@ ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
     weak_group_it = remove_weak_callback_group(weak_group_it, manually_added_groups_);
   }
 
-  for (auto weak_node_ptr : pending_added_nodes_) {
+  for (const auto & weak_node_ptr : pending_added_nodes_) {
     auto node_ptr = weak_node_ptr.lock();
     if (node_ptr) {
       node_ptr->get_associated_with_executor_atomic().store(false);
@@ -56,7 +56,7 @@ ExecutorEntitiesCollector::~ExecutorEntitiesCollector()
   pending_added_nodes_.clear();
   pending_removed_nodes_.clear();
 
-  for (auto weak_group_ptr : pending_manually_added_groups_) {
+  for (const auto & weak_group_ptr : pending_manually_added_groups_) {
     auto group_ptr = weak_group_ptr.lock();
     if (group_ptr) {
       group_ptr->get_associated_with_executor_atomic().store(false);
@@ -83,7 +83,8 @@ ExecutorEntitiesCollector::has_pending() const
 }
 
 void
-ExecutorEntitiesCollector::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
+ExecutorEntitiesCollector::add_node(
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr)
 {
   // If the node already has an executor
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
@@ -109,7 +110,7 @@ ExecutorEntitiesCollector::add_node(rclcpp::node_interfaces::NodeBaseInterface::
 
 void
 ExecutorEntitiesCollector::remove_node(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr)
 {
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   if (!has_executor.exchange(false)) {
@@ -133,7 +134,7 @@ ExecutorEntitiesCollector::remove_node(
 }
 
 void
-ExecutorEntitiesCollector::add_callback_group(rclcpp::CallbackGroup::SharedPtr group_ptr)
+ExecutorEntitiesCollector::add_callback_group(const rclcpp::CallbackGroup::SharedPtr & group_ptr)
 {
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
   if (has_executor.exchange(true)) {
@@ -158,7 +159,7 @@ ExecutorEntitiesCollector::add_callback_group(rclcpp::CallbackGroup::SharedPtr g
 }
 
 void
-ExecutorEntitiesCollector::remove_callback_group(rclcpp::CallbackGroup::SharedPtr group_ptr)
+ExecutorEntitiesCollector::remove_callback_group(const rclcpp::CallbackGroup::SharedPtr & group_ptr)
 {
   if (!group_ptr->get_associated_with_executor_atomic().load()) {
     throw std::runtime_error("Callback group needs to be associated with an executor.");
@@ -288,7 +289,7 @@ ExecutorEntitiesCollector::remove_weak_callback_group(
 
 void
 ExecutorEntitiesCollector::add_callback_group_to_collection(
-  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr,
   CallbackGroupCollection & collection)
 {
   auto iter = collection.insert(group_ptr);
@@ -305,7 +306,7 @@ ExecutorEntitiesCollector::add_callback_group_to_collection(
 void
 ExecutorEntitiesCollector::process_queues()
 {
-  for (auto weak_node_ptr : pending_added_nodes_) {
+  for (const auto & weak_node_ptr : pending_added_nodes_) {
     auto node_ptr = weak_node_ptr.lock();
     if (!node_ptr) {
       continue;
@@ -320,7 +321,7 @@ ExecutorEntitiesCollector::process_queues()
   }
   pending_added_nodes_.clear();
 
-  for (auto weak_node_ptr : pending_removed_nodes_) {
+  for (const auto & weak_node_ptr : pending_removed_nodes_) {
     auto node_it = weak_nodes_.find(weak_node_ptr);
     if (node_it != weak_nodes_.end()) {
       remove_weak_node(node_it);
@@ -348,7 +349,7 @@ ExecutorEntitiesCollector::process_queues()
   }
   pending_removed_nodes_.clear();
 
-  for (auto weak_group_ptr : pending_manually_added_groups_) {
+  for (const auto & weak_group_ptr : pending_manually_added_groups_) {
     auto group_ptr = weak_group_ptr.lock();
     if (group_ptr) {
       this->add_callback_group_to_collection(group_ptr, manually_added_groups_);
@@ -363,7 +364,7 @@ ExecutorEntitiesCollector::process_queues()
   }
   pending_manually_added_groups_.clear();
 
-  for (auto weak_group_ptr : pending_manually_removed_groups_) {
+  for (const auto & weak_group_ptr : pending_manually_removed_groups_) {
     auto group_ptr = weak_group_ptr.lock();
     if (group_ptr) {
       auto group_it = manually_added_groups_.find(group_ptr);
@@ -386,7 +387,7 @@ ExecutorEntitiesCollector::add_automatically_associated_callback_groups(
     auto node = weak_node.lock();
     if (node) {
       node->for_each_callback_group(
-        [this, node](rclcpp::CallbackGroup::SharedPtr group_ptr)
+        [this, node](const rclcpp::CallbackGroup::SharedPtr & group_ptr)
         {
           if (!group_ptr->get_associated_with_executor_atomic().load() &&
           group_ptr->automatically_add_to_executor_with_node())

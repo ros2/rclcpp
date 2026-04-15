@@ -27,7 +27,7 @@ namespace rclcpp
 
 ParameterEventCallbackHandle::SharedPtr
 ParameterEventHandler::add_parameter_event_callback(
-  ParameterEventCallbackType callback)
+  const ParameterEventCallbackType & callback)
 {
   std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto handle = std::make_shared<ParameterEventCallbackHandle>();
@@ -39,7 +39,7 @@ ParameterEventHandler::add_parameter_event_callback(
 
 void
 ParameterEventHandler::remove_parameter_event_callback(
-  ParameterEventCallbackHandle::SharedPtr callback_handle)
+  const ParameterEventCallbackHandle::SharedPtr & callback_handle)
 {
   std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto it = std::find_if(
@@ -58,7 +58,7 @@ ParameterEventHandler::remove_parameter_event_callback(
 ParameterCallbackHandle::SharedPtr
 ParameterEventHandler::add_parameter_callback(
   const std::string & parameter_name,
-  ParameterCallbackType callback,
+  const ParameterCallbackType & callback,
   const std::string & node_name)
 {
   std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
@@ -77,6 +77,10 @@ ParameterEventHandler::add_parameter_callback(
 bool
 ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & node_names)
 {
+  if (!event_subscription_->is_cft_supported()) {
+    return false;
+  }
+
   if (node_names.empty()) {
     // Clear content filter
     event_subscription_->set_content_filter("");
@@ -108,7 +112,7 @@ ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & n
 
 void
 ParameterEventHandler::remove_parameter_callback(
-  ParameterCallbackHandle::SharedPtr callback_handle)
+  const ParameterCallbackHandle::SharedPtr & callback_handle)
 {
   std::lock_guard<std::recursive_mutex> lock(callbacks_->mutex_);
   auto handle = callback_handle.get();
