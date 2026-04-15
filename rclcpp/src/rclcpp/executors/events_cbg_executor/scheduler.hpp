@@ -59,8 +59,10 @@ public:
 
   struct CallbackGroupHandle
   {
-    explicit CallbackGroupHandle(CBGScheduler & scheduler)
-    : scheduler(scheduler) {}
+    explicit CallbackGroupHandle(CBGScheduler & scheduler, CallbackGroupType type)
+    : scheduler(scheduler), type(type)
+    {
+    }
 
     CallbackGroupHandle(const CallbackGroupHandle &) = delete;
     CallbackGroupHandle(CallbackGroupHandle &&) = delete;
@@ -90,7 +92,9 @@ public:
     {
       {
         std::lock_guard l(ready_mutex);
-        not_ready = false;
+        if (type != CallbackGroupType::Reentrant) {
+          not_ready = false;
+        }
 
         if(!has_ready_entities()) {
           idle = true;
@@ -100,6 +104,8 @@ public:
       // inform scheduler that we have more work
       scheduler.callback_group_ready(this, false);
     }
+
+    CallbackGroupType get_type() {return type;}
 
     bool is_ready();
 
@@ -153,7 +159,9 @@ protected:
      */
     void mark_as_executing()
     {
-      not_ready = true;
+      if (type != CallbackGroupType::Reentrant) {
+        not_ready = true;
+      }
     }
 
     std::mutex ready_mutex;
@@ -164,6 +172,9 @@ private:
 
     // true, if nothing is beeing executed, and there are no pending events
     bool idle = true;
+
+    // type of the underlying callback group
+    CallbackGroupType type;
   };
 
   struct ExecutableEntity
@@ -220,7 +231,25 @@ private:
   {
     {
       std::lock_guard l(ready_callback_groups_mutex);
-      ready_callback_groups.push_back(handle);
+
+      // Reentrant callback groups might not be removed from the queue when one of
+      // their entities starts executing.
+      if (handle->get_type() == CallbackGroupType::Reentrant) {
+        bool already_in_queue = false;
+
+        for (auto it = ready_callback_groups.begin(); it != ready_callback_groups.end(); it++) {
+          if (*it == handle) {
+            already_in_queue = true;
+            break;
+          }
+        }
+
+        if (!already_in_queue) {
+          ready_callback_groups.push_back(handle);
+        }
+      } else {
+        ready_callback_groups.push_back(handle);
+      }
     }
 
     if(callback_group_was_idle) {
