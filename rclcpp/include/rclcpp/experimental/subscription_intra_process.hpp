@@ -17,6 +17,7 @@
 
 #include <rmw/types.h>
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <stdexcept>
