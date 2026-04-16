@@ -203,16 +203,15 @@ protected:
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
 
-    std::chrono::time_point<std::chrono::system_clock> now;
+    const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+      std::chrono::system_clock::now());
     if (stats_handler_) {
       RCLCPP_WARN_ONCE(
         rclcpp::get_logger("rclcpp"),
         "Intra-process communication does not support accurate message age statistics");
-      now = std::chrono::system_clock::now();
       // Set source_timestamp to "now" so that message_age reports 0ms rather than
       // an invalid value taken from an un-initialised timestamp. IPC delivery
       // has little/no transport latency by definition, so near-zero age is expected.
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       msg_info.source_timestamp = nanos.time_since_epoch().count();
     }
 
@@ -229,7 +228,6 @@ protected:
     shared_ptr.reset();
 
     if (stats_handler_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
       stats_handler_(msg_info, rclcpp::Time(nanos.time_since_epoch().count()));
     }
   }
