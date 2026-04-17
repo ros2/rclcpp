@@ -83,7 +83,7 @@ ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & n
 
   if (node_names.empty()) {
     // Clear content filter
-    event_subscription_->set_content_filter("");
+    event_subscription_->set_content_filter(std::string());
     if (event_subscription_->is_cft_enabled()) {
       return false;
     }
@@ -101,8 +101,9 @@ ParameterEventHandler::configure_nodes_filter(const std::vector<std::string> & n
 
   // Enclose each node name in "'".
   std::vector<std::string> quoted_node_names;
+  const std::string delim("'");
   for (const auto & name : node_names) {
-    quoted_node_names.push_back("'" + resolve_path(name) + "'");
+    quoted_node_names.push_back(delim + resolve_path(name) + delim);
   }
 
   event_subscription_->set_content_filter(filter_expression, quoted_node_names);
@@ -229,20 +230,21 @@ ParameterEventHandler::Callbacks::event_callback(const rcl_interfaces::msg::Para
 std::string
 ParameterEventHandler::resolve_path(const std::string & path)
 {
-  std::string full_path;
-
-  if (path == "") {
-    full_path = node_base_->get_fully_qualified_name();
-  } else {
-    full_path = path;
-    if (*path.begin() != '/') {
-      auto ns = node_base_->get_namespace();
-      const std::vector<std::string> paths{ns, path};
-      full_path = (ns == std::string("/")) ? ns + path : rcpputils::join(paths, "/");
-    }
+  if (path.empty()) {
+    return node_base_->get_fully_qualified_name();
   }
 
-  return full_path;
+  if (*path.begin() != '/') {
+    auto ns = node_base_->get_namespace();
+    const std::vector<std::string> paths{ns, path};
+    if(ns == std::string("/")) {
+      return ns + path;
+    }
+
+    return rcpputils::join(paths, "/");
+  }
+
+  return path;
 }
 
 }  // namespace rclcpp

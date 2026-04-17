@@ -5,6 +5,7 @@ project(rclcpp)
 find_package(Threads REQUIRED)
 
 find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
@@ -24,12 +25,6 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
-# TODO(wjwwood): remove this when gtest can build on its own, when using target_compile_features()
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # About -Wno-sign-conversion: With Clang, -Wconversion implies -Wsign-conversion. There are a number of
   # implicit sign conversions in rclcpp and gtest.cc, see https://ci.ros2.org/job/ci_osx/9265/.
@@ -193,7 +188,6 @@ foreach(interface_file ${interface_files})
 endforeach()
 
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # TODO(wjwwood): address all deprecation warnings and then remove this
 if(WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC "_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS")
@@ -219,6 +213,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   statistics_msgs::statistics_msgs
   tracetools::tracetools
   ${CMAKE_THREAD_LIBS_INIT}
+  # Note we link public on purpose, as we want to export
+  # the used C++ version as minimum to all consuming packages
+  ament_cmake_ros_core::ament_ros_defaults
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
