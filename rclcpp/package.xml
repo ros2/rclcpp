@@ -20,7 +20,7 @@
   <buildtool_depend>python3-empy</buildtool_depend>
 
   <build_depend>ament_index_cpp</build_depend>
-  <build_depend>ament_index_cpp_core</build_depend>
+  <build_depend>ament_cmake_ros_core</build_depend>
   <build_depend>builtin_interfaces</build_depend>
   <build_depend>rcl_interfaces</build_depend>
   <build_depend>rosgraph_msgs</build_depend>
