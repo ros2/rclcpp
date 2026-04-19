@@ -64,8 +64,10 @@ private:
 class FirstInFirstOutScheduler : public CBGScheduler
 {
 public:
-  ExecutableEntityWithInfo get_next_ready_entity() final;
-  ExecutableEntityWithInfo get_next_ready_entity(
+  using CBGScheduler::CBGScheduler;
+
+  ExecutableEntityWithInfo get_next_ready_entity_intern() final;
+  ExecutableEntityWithInfo get_next_ready_entity_intern(
     GlobalEventIdProvider::MonotonicId max_id) final;
 
 private:

@@ -151,7 +151,7 @@ get_handle_for_callback_group(const rclcpp::CallbackGroup::SharedPtr &/*callback
   return std::make_unique<FirstInFirstOutCallbackGroupHandle>(*this);
 }
 
-CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_entity()
+CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_entity_intern()
 {
   std::lock_guard l(ready_callback_groups_mutex);
 
@@ -172,7 +172,7 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
     .moreEntitiesReady = false};
 }
 
-CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_entity(
+CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_entity_intern(
   GlobalEventIdProvider::MonotonicId max_id)
 {
   std::lock_guard l(ready_callback_groups_mutex);

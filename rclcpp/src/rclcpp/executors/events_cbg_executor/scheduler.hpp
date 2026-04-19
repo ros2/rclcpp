@@ -174,7 +174,13 @@ private:
     CallbackGroupHandle *callback_handle = nullptr;
   };
 
-  CBGScheduler() = default;
+  /**
+   * @param sync_function A special purpose sync function, that shall be
+   *                      executed with high priority if triggered by
+   *                      trigger_sync();
+   */
+  CBGScheduler(std::function<void ()> sync_function)
+  : sync_function(sync_function) {}
   CBGScheduler(const CBGScheduler &) = delete;
   CBGScheduler(CBGScheduler &&) = delete;
   virtual ~CBGScheduler() = default;
@@ -234,9 +240,63 @@ private:
    * it will be executed, and that the function mark_entity_as_executed
    * will be called afterwards.
    */
-  virtual ExecutableEntityWithInfo get_next_ready_entity() = 0;
-  virtual ExecutableEntityWithInfo get_next_ready_entity(
+  ExecutableEntityWithInfo get_next_ready_entity()
+  {
+    {
+      std::lock_guard l(ready_callback_groups_mutex);
+      if(needs_sync) {
+        needs_sync = false;
+        return ExecutableEntityWithInfo{.entity =
+            ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
+          .moreEntitiesReady = !ready_callback_groups.empty()};
+      }
+    }
+
+    return get_next_ready_entity_intern();
+  }
+
+  ExecutableEntityWithInfo get_next_ready_entity(
+    GlobalEventIdProvider::MonotonicId max_id)
+  {
+    {
+      std::lock_guard l(ready_callback_groups_mutex);
+      if(needs_sync) {
+        needs_sync = false;
+        return ExecutableEntityWithInfo{.entity =
+            ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
+          .moreEntitiesReady = !ready_callback_groups.empty()};
+      }
+    }
+
+    return get_next_ready_entity_intern(max_id);
+  }
+
+  virtual ExecutableEntityWithInfo get_next_ready_entity_intern() = 0;
+  virtual ExecutableEntityWithInfo get_next_ready_entity_intern(
     GlobalEventIdProvider::MonotonicId max_id) = 0;
+
+  /**
+   * If this function was triggered, a worker thread must
+   * be woken up, and the next call to get_next_ready_entity
+   * must return a ExecutableEntityWithInfo with the sync
+   * function in it.Or reworded if this function is triggered
+   * the sync function will be executed as the next exent by
+   * the executor.
+   */
+  void trigger_sync()
+  {
+    bool wake_worker = false;
+    {
+      std::lock_guard l(ready_callback_groups_mutex);
+      if(!needs_sync) {
+        wake_worker = true;
+      }
+      needs_sync = true;
+    }
+    if(wake_worker) {
+      unblock_one_worker_thread();
+    }
+  }
 
   /**
    * Must be called, after a entity was executed. This function will
@@ -292,6 +352,12 @@ private:
 protected:
   virtual std::unique_ptr<CallbackGroupHandle> get_handle_for_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & callback_group) = 0;
+
+  // sync function, will be triggered if the executor needs
+  // resync. E.g. if entities / cbg or nodes were added / removed
+  std::function<void ()> sync_function;
+
+  bool needs_sync = false;
 
   std::mutex ready_callback_groups_mutex;
   std::deque<CallbackGroupHandle *> ready_callback_groups;

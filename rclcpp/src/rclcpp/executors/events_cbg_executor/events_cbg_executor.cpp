@@ -55,7 +55,8 @@ struct GlobalWeakExecutableCache
   {
     guard_conditions.emplace_back(ptr, std::move(fun));
 
-
+    // reset all lambdas in case the guard_conditions vector
+    // was resized and the entry ptrs were moved
     for (auto & entry : guard_conditions) {
       entry.guard_condition->set_on_trigger_callback(
         [ptr = &entry](size_t nr_events) {
@@ -79,7 +80,10 @@ EventsCBGExecutor::EventsCBGExecutor(
   const rclcpp::ExecutorOptions & options,
   size_t number_of_threads,
   std::chrono::nanoseconds next_exec_timeout)
-: scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>()),
+: scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>([this] () {
+      needs_callback_group_resync = true;
+      sync_callback_groups();
+  })),
   next_exec_timeout_(next_exec_timeout),
   spinning(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context) ),
@@ -300,7 +304,7 @@ void EventsCBGExecutor::sync_callback_groups()
         nodes_executable_cache->add_guard_condition_event(
           node_ptr->get_shared_notify_guard_condition(),
           [this]() {
-            needs_callback_group_resync.store(true);
+            scheduler->trigger_sync();
           });
       }
     }
