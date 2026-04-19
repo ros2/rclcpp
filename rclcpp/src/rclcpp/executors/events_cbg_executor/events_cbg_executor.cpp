@@ -460,8 +460,6 @@ bool EventsCBGExecutor::collect_and_execute_ready_events(
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  sync_callback_groups();
-
   const auto start = std::chrono::steady_clock::now();
   const auto end_time = start + max_duration;
   auto cur_time = start;
@@ -469,6 +467,8 @@ bool EventsCBGExecutor::collect_and_execute_ready_events(
   bool had_work = false;
 
   while (rclcpp::ok(this->context_) && spinning && cur_time <= end_time) {
+    sync_callback_groups();
+
     if (!execute_previous_ready_executables_until(end_time) ) {
       return had_work;
     }
