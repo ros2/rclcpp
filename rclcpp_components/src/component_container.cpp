@@ -16,6 +16,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "rcutils/logging_macros.h"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
@@ -41,10 +42,17 @@ parse_executor_type(const std::string & arg)
   return std::nullopt;
 }
 
+inline std::string
+executor_type_to_string(const ExecutorType & type)
+{
+  if (type == ExecutorType::SingleThreaded) {return "single-threaded";}
+  if (type == ExecutorType::MultiThreaded) {return "multi-threaded";}
+  if (type == ExecutorType::EventsCBG) {return "events-cbg";}
+  return "unknown";
+}
 struct ParsedArgs
 {
   ExecutorType executor_type = ExecutorType::SingleThreaded;
-  int64_t num_threads = 0;
   bool isolated = false;
   bool help = false;
   bool invalid = false;
@@ -77,19 +85,6 @@ parse_args(const std::vector<std::string> & args)
         return parsed;
       }
       parsed.executor_type = option.value();
-    } else if (arg == "--num-threads") {
-      if (i + 1 >= args.size()) {
-        parsed.invalid = true;
-        parsed.error_message = "Missing value for --num-threads";
-        return parsed;
-      }
-      try {
-        parsed.num_threads = std::stol(args[++i]);
-      } catch (const std::exception &) {
-        parsed.invalid = true;
-        parsed.error_message = "Invalid value for --num-threads: " + args[i];
-        return parsed;
-      }
     }
   }
 
@@ -118,14 +113,14 @@ print_usage()
   RCUTILS_LOG_INFO_NAMED(
     "component_container",
     "Usage: component_container [--executor-type <single-threaded|multi-threaded|events-cbg>]\n"
-    "                           [--num-threads <N>] [--isolated]\n"
+    "                           [--isolated]\n"
     "       component_container --help|-h\n"
     "Defaults: single-threaded, non-isolated\n"
-    "          if multi-threaded: num_threads<=0 means"
+    "          if multi-threaded: thread_num<=0 means"
     " the executor will run with max available on system\n"
     "Examples: component_container --executor-type single-threaded\n"
-    "          component_container --executor-type multi-threaded --num-threads 4\n"
-    "          component_container --executor-type events-cbg --isolated --num-threads 2");
+    "          component_container --executor-type multi-threaded --ros_args -p thread_num:=4\n"
+    "          component_container --executor-type events-cbg --isolated --ros_args -p thread_num:=4");
 }
 
 int main(int argc, char * argv[])
@@ -147,8 +142,15 @@ int main(int argc, char * argv[])
   }
 
   std::shared_ptr<rclcpp::Executor> exec;
-  std::shared_ptr<rclcpp_components::ComponentManager> node;
+  std::shared_ptr<rclcpp_components::ComponentManager> node = std::make_shared<rclcpp_components::ComponentManager>();
+  const int64_t num_threads = (node->has_parameter("thread_num")) ?
+      node->get_parameter("thread_num").as_int() :
+      std::thread::hardware_concurrency();
+  std::string debug_msg;
 
+  if (args.executor_type == ExecutorType::SingleThreaded && num_threads < std::thread::hardware_concurrency()) {
+    RCUTILS_LOG_WARN_NAMED("component_container", "num_threads is not supported by the SingleThreadedExecutor. Ignoring...");
+  }
   if (args.isolated) {
     // The outer executor runs only the container manager's load/unload services.
     // Each loaded component gets its own dedicated executor of the requested type.
@@ -157,28 +159,35 @@ int main(int argc, char * argv[])
       case ExecutorType::MultiThreaded:
         node = std::make_shared<
           rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>>(
-          rclcpp::ExecutorOptions(), args.num_threads);
+          rclcpp::ExecutorOptions(), num_threads);
         break;
       case ExecutorType::EventsCBG:
         node = std::make_shared<
           rclcpp_components::ComponentManagerIsolated<rclcpp::executors::EventsCBGExecutor>>(
-          rclcpp::ExecutorOptions(), args.num_threads);
+          rclcpp::ExecutorOptions(), num_threads);
         break;
       default:
         node = std::make_shared<
           rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>(
-          rclcpp::ExecutorOptions(), args.num_threads);
+          rclcpp::ExecutorOptions(), num_threads);
         break;
     }
+
+    debug_msg = "Creating isolated component container with the following per-node settings: "
+    "executor_type: " + executor_type_to_string(args.executor_type);
+    if (args.executor_type != ExecutorType::SingleThreaded) {
+    debug_msg += ", num_threads: " + std::to_string(num_threads);
+    }
   } else {
-    node = std::make_shared<rclcpp_components::ComponentManager>();
-    // --num-threads CLI arg takes precedence; fall back to thread_num ROS parameter
-    // for backwards compatibility
-    const int64_t num_threads = (args.num_threads == 0 && node->has_parameter("thread_num")) ?
-      node->get_parameter("thread_num").as_int() :
-      args.num_threads;
     exec = make_executor(args.executor_type, rclcpp::ExecutorOptions(), num_threads);
+
+    debug_msg = "Creating non-isolated component container with executor_type: " + executor_type_to_string(args.executor_type);
+    if (args.executor_type != ExecutorType::SingleThreaded) {
+    debug_msg += ", num_threads: " + std::to_string(num_threads);
+    }
   }
+
+  RCUTILS_LOG_DEBUG_NAMED("component_container", debug_msg.c_str());
 
   node->set_executor(exec);
   exec->add_node(node);
