@@ -768,6 +768,9 @@ EventsCBGExecutor::remove_node(
     }
   );
 
+  node_ptr->get_shared_notify_guard_condition()->set_on_trigger_callback(
+      std::function<void(size_t)>());
+
   trigger_callback_group_sync();
 
   if (notify) {

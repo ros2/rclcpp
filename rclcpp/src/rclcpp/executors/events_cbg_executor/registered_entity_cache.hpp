@@ -119,7 +119,6 @@ struct RegisteredEntityCache
     scheduler_cbg_handle(*scheduler.add_callback_group(callback_group)),
     timer_manager(timer_manager)
   {
-
     auto cbg_gc = callback_group->get_notify_guard_condition();
 
     if(cbg_gc) {
