@@ -153,7 +153,7 @@ int main(int argc, char * argv[])
     num_threads < std::thread::hardware_concurrency())
   {
     RCUTILS_LOG_WARN_NAMED("component_container",
-      "num_threads is not supported by the SingleThreadedExecutor. Ignoring...");
+      "thread_num is not supported by the SingleThreadedExecutor. Ignoring...");
   }
   if (args.isolated) {
     // The outer executor runs only the container manager's load/unload services.
