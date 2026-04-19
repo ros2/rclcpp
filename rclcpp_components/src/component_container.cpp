@@ -144,12 +144,16 @@ int main(int argc, char * argv[])
   std::shared_ptr<rclcpp::Executor> exec;
   std::shared_ptr<rclcpp_components::ComponentManager> node = std::make_shared<rclcpp_components::ComponentManager>();
   const int64_t num_threads = (node->has_parameter("thread_num")) ?
-      node->get_parameter("thread_num").as_int() :
-      std::thread::hardware_concurrency();
+    node->get_parameter("thread_num").as_int() :
+    std::thread::hardware_concurrency();
   std::string debug_msg;
 
-  if (args.executor_type == ExecutorType::SingleThreaded && num_threads < std::thread::hardware_concurrency()) {
-    RCUTILS_LOG_WARN_NAMED("component_container", "num_threads is not supported by the SingleThreadedExecutor. Ignoring...");
+  if (args.executor_type == ExecutorType::SingleThreaded &&
+    num_threads > 0 &&
+    num_threads < std::thread::hardware_concurrency())
+  {
+    RCUTILS_LOG_WARN_NAMED("component_container",
+      "num_threads is not supported by the SingleThreadedExecutor. Ignoring...");
   }
   if (args.isolated) {
     // The outer executor runs only the container manager's load/unload services.
@@ -174,16 +178,17 @@ int main(int argc, char * argv[])
     }
 
     debug_msg = "Creating isolated component container with the following per-node settings: "
-    "executor_type: " + executor_type_to_string(args.executor_type);
+      "executor_type: " + executor_type_to_string(args.executor_type);
     if (args.executor_type != ExecutorType::SingleThreaded) {
-    debug_msg += ", num_threads: " + std::to_string(num_threads);
+      debug_msg += ", num_threads: " + std::to_string(num_threads);
     }
   } else {
     exec = make_executor(args.executor_type, rclcpp::ExecutorOptions(), num_threads);
 
-    debug_msg = "Creating non-isolated component container with executor_type: " + executor_type_to_string(args.executor_type);
+    debug_msg = "Creating non-isolated component container with executor_type: " +
+      executor_type_to_string(args.executor_type);
     if (args.executor_type != ExecutorType::SingleThreaded) {
-    debug_msg += ", num_threads: " + std::to_string(num_threads);
+      debug_msg += ", num_threads: " + std::to_string(num_threads);
     }
   }
 
