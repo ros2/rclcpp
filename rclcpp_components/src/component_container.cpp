@@ -118,11 +118,15 @@ print_usage()
 {
   RCUTILS_LOG_INFO_NAMED(
     "component_container",
-    "Usage: component_container [--executor-type <single-threaded|multi-threaded|events>] [--isolated]\n"
+    "Usage: component_container [--executor-type <single-threaded|multi-threaded|events-cbg>]\n"
+    "                           [--num-threads <N>] [--isolated]\n"
     "       component_container --help|-h\n"
     "Defaults: single-threaded, non-isolated\n"
-    "Examples: component_container --executor-type multi-threaded\n"
-    "          component_container --executor-type single-threaded --isolated");
+    "          if multi-threaded: num_threads<=0 means"
+    " the executor will run with max available on system\n"
+    "Examples: component_container --executor-type single-threaded\n"
+    "          component_container --executor-type multi-threaded --num-threads 4\n"
+    "          component_container --executor-type events-cbg --isolated --num-threads 2");
 }
 
 int main(int argc, char * argv[])
