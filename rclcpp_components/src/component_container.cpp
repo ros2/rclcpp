@@ -129,50 +129,52 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  std::vector<std::string> args = rclcpp::remove_ros_arguments(argc, argv);
-  ParsedArgs parsed = parse_args(args);
+  std::vector<std::string> arg_strs = rclcpp::remove_ros_arguments(argc, argv);
+  auto args = parse_args(arg_strs);
 
-  if (parsed.help) {
+  if (args.help) {
     print_usage();
     return 0;
   }
 
-  if (parsed.invalid) {
-    RCUTILS_LOG_ERROR_NAMED("component_container", "%s", parsed.error_message.c_str());
+  if (args.invalid) {
+    RCUTILS_LOG_ERROR_NAMED("component_container", "%s", args.error_message.c_str());
     print_usage();
     return 1;
   }
 
-  ExecutorType executor_type = parsed.executor_type;
-  bool isolated = parsed.isolated;
+  std::shared_ptr<rclcpp::Executor> exec;
+  std::shared_ptr<rclcpp_components::ComponentManager> node;
 
-  std::shared_ptr<rclcpp::Executor> exec = nullptr;
-  std::shared_ptr<rclcpp_components::ComponentManager> node = nullptr;
-
-  if (executor_type == ExecutorType::MultiThreaded) {
-    if (isolated) {
+  if (args.isolated) {
+    // The outer executor runs only the container manager's load/unload services.
+    // Each loaded component gets its own dedicated executor of the requested type.
       exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-      node = std::make_shared<rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>>();
-    } else {
-      node = std::make_shared<rclcpp_components::ComponentManager>();
-      if (node->has_parameter("thread_num")) {
-        const auto thread_num = node->get_parameter("thread_num").as_int();
-        exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
-          rclcpp::ExecutorOptions(), thread_num);
-      } else {
-        exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-      }
+    switch (args.executor_type) {
+      case ExecutorType::MultiThreaded:
+        node = std::make_shared<
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>>(
+          rclcpp::ExecutorOptions(), args.num_threads);
+        break;
+      case ExecutorType::EventsCBG:
+        node = std::make_shared<
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::EventsCBGExecutor>>(
+          rclcpp::ExecutorOptions(), args.num_threads);
+        break;
+      default:
+        node = std::make_shared<
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>(
+          rclcpp::ExecutorOptions(), args.num_threads);
+        break;
     }
-  } else if (executor_type == ExecutorType::Events) {
-    exec = std::make_shared<rclcpp::experimental::executors::EventsExecutor>();
-    node = std::make_shared<rclcpp_components::ComponentManager>();
   } else {
-    exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    if (isolated) {
-      node = std::make_shared<rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>();
-    } else {
-      node = std::make_shared<rclcpp_components::ComponentManager>();
-    }
+    node = std::make_shared<rclcpp_components::ComponentManager>();
+    // --num-threads CLI arg takes precedence; fall back to thread_num ROS parameter
+    // for backwards compatibility
+    const int64_t num_threads = (args.num_threads == 0 && node->has_parameter("thread_num")) ?
+      node->get_parameter("thread_num").as_int() :
+      args.num_threads;
+    exec = make_executor(args.executor_type, rclcpp::ExecutorOptions(), num_threads);
   }
 
   node->set_executor(exec);
