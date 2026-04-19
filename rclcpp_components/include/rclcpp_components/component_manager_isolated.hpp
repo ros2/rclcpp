@@ -100,11 +100,6 @@ protected:
   {
     std::shared_ptr<ExecutorT> exec;
     if constexpr (std::is_same_v<ExecutorT, rclcpp::executors::SingleThreadedExecutor>) {
-      if (num_threads_ > 0) {
-        RCLCPP_WARN(
-          rclcpp::get_logger("rclcpp"),
-          "num_threads is not supported by SingleThreadedExecutor. Ignoring...");
-      }
       exec = std::make_shared<ExecutorT>(executor_options_);
     } else {
       exec = std::make_shared<ExecutorT>(executor_options_, num_threads_);
