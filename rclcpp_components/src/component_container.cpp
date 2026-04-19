@@ -45,6 +45,7 @@ parse_executor_type(const std::string & arg)
 struct ParsedArgs
 {
   ExecutorType executor_type = ExecutorType::SingleThreaded;
+  int64_t num_threads = 0;
   bool isolated = false;
   bool help = false;
   bool invalid = false;
@@ -77,12 +78,20 @@ parse_args(const std::vector<std::string> & args)
         return parsed;
       }
       parsed.executor_type = option.value();
-      continue;
-    }
-
+    } else if (arg == "--num-threads") {
+      if (i + 1 >= args.size()) {
+        parsed.invalid = true;
+        parsed.error_message = "Missing value for --num-threads";
+        return parsed;
+      }
+      try {
+        parsed.num_threads = std::stol(args[++i]);
+      } catch (const std::exception &) {
     parsed.invalid = true;
-    parsed.error_message = "Unknown argument: " + arg;
+        parsed.error_message = "Invalid value for --num-threads: " + args[i];
     return parsed;
+      }
+    }
   }
 
   return parsed;
