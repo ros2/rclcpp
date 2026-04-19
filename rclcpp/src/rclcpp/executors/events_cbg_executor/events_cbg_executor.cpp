@@ -82,7 +82,6 @@ EventsCBGExecutor::EventsCBGExecutor(
   std::chrono::nanoseconds next_exec_timeout)
 : scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>([this] () {
       needs_callback_group_resync = true;
-      sync_callback_groups();
   })),
   next_exec_timeout_(next_exec_timeout),
   spinning(false),
