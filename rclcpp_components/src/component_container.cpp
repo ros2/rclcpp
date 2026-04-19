@@ -116,11 +116,11 @@ print_usage()
     "                           [--isolated]\n"
     "       component_container --help|-h\n"
     "Defaults: single-threaded, non-isolated\n"
-    "          if multi-threaded: thread_num<=0 means"
+    "          if multi-threaded: omitting thread_num means"
     " the executor will run with max available on system\n"
     "Examples: component_container --executor-type single-threaded\n"
     "          component_container --executor-type multi-threaded --ros_args -p thread_num:=4\n"
-    "          component_container --executor-type events-cbg --isolated --ros_args -p thread_num:=4");
+    "          component_container --executor-type events-cbg --isolated --ros_args -p thread_num:=1");
 }
 
 int main(int argc, char * argv[])
