@@ -172,8 +172,7 @@ int main(int argc, char * argv[])
         break;
       default:
         node = std::make_shared<
-          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>(
-          rclcpp::ExecutorOptions(), num_threads);
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>();
         break;
     }
 
