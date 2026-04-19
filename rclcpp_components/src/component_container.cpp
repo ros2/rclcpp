@@ -15,7 +15,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -87,9 +86,9 @@ parse_args(const std::vector<std::string> & args)
       try {
         parsed.num_threads = std::stol(args[++i]);
       } catch (const std::exception &) {
-    parsed.invalid = true;
+        parsed.invalid = true;
         parsed.error_message = "Invalid value for --num-threads: " + args[i];
-    return parsed;
+        return parsed;
       }
     }
   }
@@ -153,7 +152,7 @@ int main(int argc, char * argv[])
   if (args.isolated) {
     // The outer executor runs only the container manager's load/unload services.
     // Each loaded component gets its own dedicated executor of the requested type.
-      exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     switch (args.executor_type) {
       case ExecutorType::MultiThreaded:
         node = std::make_shared<
