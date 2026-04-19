@@ -158,6 +158,12 @@ int main(int argc, char * argv[])
       "thread_num is not supported by the SingleThreadedExecutor. Ignoring...");
   }
   if (args.isolated) {
+    // we use the ComponentManager node initially to get the `thread_num` parameter,
+    // but temporarily delete it here before re-assigning it
+    // if running with a ComponentManagerIsolated.
+    // This is to avoid a possible race condition
+    // where the 2 nodes may be briefly alive at the same time,
+    node = nullptr;
     // The outer executor runs only the container manager's load/unload services.
     // Each loaded component gets its own dedicated executor of the requested type.
     exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
