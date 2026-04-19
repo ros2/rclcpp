@@ -243,7 +243,7 @@ void EventsCBGExecutor::sync_callback_groups()
 
   auto insert_data =
     [&cur_group_data, &next_group_data, &added_cbgs,
-      this](rclcpp::CallbackGroup::SharedPtr && cbg) {
+      this](rclcpp::CallbackGroup::SharedPtr && cbg, CallbackGroupData::Origin origin) {
       // nodes may share callback groups, therefore we need to make sure we only add them once
       if (added_cbgs.find(cbg.get() ) != added_cbgs.end() ) {
         return;
@@ -260,12 +260,9 @@ void EventsCBGExecutor::sync_callback_groups()
         }
       }
 
-
-      CallbackGroupData new_entry;
-      new_entry.registered_entities =
-        std::make_unique<cbg_executor::RegisteredEntityCache>(*scheduler,
-        *timer_manager, cbg);
-      new_entry.callback_group = cbg;
+      CallbackGroupData new_entry{.callback_group = cbg,
+        .registered_entities = std::make_unique<cbg_executor::RegisteredEntityCache>(*scheduler,
+        *timer_manager, cbg), .origin = origin};
       new_entry.registered_entities->regenerate_events();
       next_group_data.push_back(std::move(new_entry) );
     };
@@ -294,7 +291,7 @@ void EventsCBGExecutor::sync_callback_groups()
         node_ptr->for_each_callback_group(
           [&insert_data](rclcpp::CallbackGroup::SharedPtr cbg) {
             if (cbg->automatically_add_to_executor_with_node() ) {
-              insert_data(std::move(cbg) );
+              insert_data(std::move(cbg), CallbackGroupData::Origin::Node);
             }
           });
 
@@ -311,7 +308,7 @@ void EventsCBGExecutor::sync_callback_groups()
     for (const rclcpp::CallbackGroup::WeakPtr & cbg : added_cbgs_cpy) {
       auto p = cbg.lock();
       if (p) {
-        insert_data(std::move(p) );
+        insert_data(std::move(p), CallbackGroupData::Origin::ManualAdded);
       }
     }
   }
@@ -520,6 +517,11 @@ EventsCBGExecutor::add_callback_group(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & /*node_ptr*/,
   bool notify)
 {
+  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+  if (has_executor.exchange(true)) {
+    throw std::runtime_error("Callback group has already been added to an executor.");
+  }
+
   {
     std::lock_guard lock{added_callback_groups_mutex_};
     added_callback_groups.push_back(group_ptr);
@@ -561,8 +563,50 @@ EventsCBGExecutor::cancel()
 std::vector<rclcpp::CallbackGroup::WeakPtr>
 EventsCBGExecutor::get_all_callback_groups()
 {
-  std::lock_guard lock{added_callback_groups_mutex_};
-  return added_callback_groups;
+  if (!spinning) {
+    sync_callback_groups();
+  }
+  std::lock_guard lock{callback_groups_mutex};
+  std::vector<rclcpp::CallbackGroup::WeakPtr> ret;
+  ret.reserve(callback_groups.size());
+  for( auto & cbg_data : callback_groups) {
+    ret.push_back(cbg_data.callback_group);
+  }
+  return ret;
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+EventsCBGExecutor::get_manually_added_callback_groups()
+{
+  if (!spinning) {
+    sync_callback_groups();
+  }
+  std::lock_guard lock{callback_groups_mutex};
+  std::vector<rclcpp::CallbackGroup::WeakPtr> ret;
+  ret.reserve(callback_groups.size());
+  for( auto & cbg_data : callback_groups) {
+    if(cbg_data.origin == CallbackGroupData::Origin::ManualAdded) {
+      ret.push_back(cbg_data.callback_group);
+    }
+  }
+  return ret;
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+EventsCBGExecutor::get_automatically_added_callback_groups_from_nodes()
+{
+  if (!spinning) {
+    sync_callback_groups();
+  }
+  std::lock_guard lock{callback_groups_mutex};
+  std::vector<rclcpp::CallbackGroup::WeakPtr> ret;
+  ret.reserve(callback_groups.size());
+  for( auto & cbg_data : callback_groups) {
+    if(cbg_data.origin == CallbackGroupData::Origin::Node) {
+      ret.push_back(cbg_data.callback_group);
+    }
+  }
+  return ret;
 }
 
 void EventsCBGExecutor::unregister_event_callbacks(const rclcpp::CallbackGroup::SharedPtr & cbg)
@@ -602,6 +646,9 @@ EventsCBGExecutor::remove_callback_group(
   const rclcpp::CallbackGroup::SharedPtr & group_ptr,
   bool notify)
 {
+  if (!group_ptr->get_associated_with_executor_atomic().load()) {
+    throw std::runtime_error("Callback group needs to be associated with an executor.");
+  }
   bool found = false;
   {
     std::lock_guard lock{added_callback_groups_mutex_};
@@ -620,7 +667,10 @@ EventsCBGExecutor::remove_callback_group(
           }
           return false;
         }), added_callback_groups.end() );
-    added_callback_groups.push_back(group_ptr);
+  }
+
+  if(!found) {
+    throw std::runtime_error("Callback group needs to be associated with this executor.");
   }
 
   // we need to unregister all callbacks
@@ -630,6 +680,8 @@ EventsCBGExecutor::remove_callback_group(
     needs_callback_group_resync = true;
     scheduler->unblock_one_worker_thread();
   }
+
+  group_ptr->get_associated_with_executor_atomic().exchange(false);
 
   if (notify) {
     // Interrupt waiting to handle new node
@@ -664,7 +716,6 @@ EventsCBGExecutor::add_node(
   needs_callback_group_resync = true;
   scheduler->unblock_one_worker_thread();
 
-
   if (!spinning) {
     sync_callback_groups();
   }
@@ -681,6 +732,13 @@ EventsCBGExecutor::remove_node(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
   bool notify)
 {
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+  if (!has_executor.exchange(false)) {
+    throw std::runtime_error(
+            std::string("Node '") + node_ptr->get_fully_qualified_name() +
+            "' needs to be associated with an executor.");
+  }
+
   {
     std::lock_guard lock{added_nodes_mutex_};
     added_nodes.erase(

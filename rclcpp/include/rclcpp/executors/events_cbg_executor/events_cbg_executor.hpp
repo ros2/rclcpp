@@ -75,6 +75,14 @@ public:
   get_all_callback_groups() override;
 
   RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_manually_added_callback_groups() override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_automatically_added_callback_groups_from_nodes() override;
+
+  RCLCPP_PUBLIC
   void
   remove_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & group_ptr,
@@ -247,9 +255,17 @@ protected:
 
   struct CallbackGroupData
   {
+    enum class Origin
+    {
+      Node,
+      ManualAdded,
+    };
+
     CallbackGroup::WeakPtr callback_group;
 
     std::unique_ptr<cbg_executor::RegisteredEntityCache> registered_entities;
+
+    Origin origin;
   };
 
   void set_callbacks(CallbackGroupData & cgd);
