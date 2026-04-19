@@ -88,6 +88,22 @@ parse_args(const std::vector<std::string> & args)
   return parsed;
 }
 
+inline std::shared_ptr<rclcpp::Executor>
+make_executor(
+  ExecutorType type,
+  const rclcpp::ExecutorOptions & opts,
+  int64_t num_threads)
+{
+  switch (type) {
+    case ExecutorType::MultiThreaded:
+      return std::make_shared<rclcpp::executors::MultiThreadedExecutor>(opts, num_threads);
+    case ExecutorType::EventsCBG:
+      return std::make_shared<rclcpp::executors::EventsCBGExecutor>(opts, num_threads);
+    default:
+      return std::make_shared<rclcpp::executors::SingleThreadedExecutor>(opts);
+  }
+}
+
 void
 print_usage()
 {
