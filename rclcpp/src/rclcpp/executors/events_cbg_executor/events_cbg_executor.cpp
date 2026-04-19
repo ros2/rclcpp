@@ -130,6 +130,7 @@ void EventsCBGExecutor::shutdown()
   // we need to shut down the timer manager first, as it might access the Schedulers
   timer_manager->stop();
 
+  in_shutdown = true;
   bool was_spinning = spinning;
 
   // signal all processing threads to shut down
@@ -224,6 +225,10 @@ EventsCBGExecutor::get_number_of_threads() const
 
 void EventsCBGExecutor::trigger_callback_group_sync()
 {
+  if(in_shutdown) {
+    return;
+  }
+
   needs_callback_group_resync = true;
 
   if (!spinning) {

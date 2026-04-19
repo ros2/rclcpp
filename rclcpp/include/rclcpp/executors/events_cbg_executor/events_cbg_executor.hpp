@@ -313,6 +313,9 @@ private:
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
+  /// set if we are shutting down.
+  bool in_shutdown = false;
+
   /// Guard condition for signaling the rmw layer to wake up for special events.
   std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;
 
