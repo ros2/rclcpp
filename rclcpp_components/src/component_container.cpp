@@ -21,7 +21,7 @@
 #include "rcutils/logging_macros.h"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
+#include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 #include "rclcpp/utilities.hpp"
 
 #include "rclcpp_components/component_manager.hpp"
@@ -31,21 +31,14 @@ enum class ExecutorType
 {
   SingleThreaded,
   MultiThreaded,
-  Events
+  EventsCBG
 };
-
-std::optional<ExecutorType>
+inline std::optional<ExecutorType>
 parse_executor_type(const std::string & arg)
 {
-  if (arg == "single-threaded") {
-    return ExecutorType::SingleThreaded;
-  }
-  if (arg == "multi-threaded") {
-    return ExecutorType::MultiThreaded;
-  }
-  if (arg == "events") {
-    return ExecutorType::Events;
-  }
+  if (arg == "single-threaded") {return ExecutorType::SingleThreaded;}
+  if (arg == "multi-threaded") {return ExecutorType::MultiThreaded;}
+  if (arg == "events-cbg") {return ExecutorType::EventsCBG;}
   return std::nullopt;
 }
 
@@ -58,7 +51,7 @@ struct ParsedArgs
   std::string error_message;
 };
 
-ParsedArgs
+inline ParsedArgs
 parse_args(const std::vector<std::string> & args)
 {
   ParsedArgs parsed;
@@ -68,15 +61,10 @@ parse_args(const std::vector<std::string> & args)
 
     if (arg == "--isolated") {
       parsed.isolated = true;
-      continue;
-    }
-
-    if (arg == "--help" || arg == "-h") {
+    } else if (arg == "--help" || arg == "-h") {
       parsed.help = true;
       return parsed;
-    }
-
-    if (arg == "--executor-type") {
+    } else if (arg == "--executor-type") {
       if (i + 1 >= args.size()) {
         parsed.invalid = true;
         parsed.error_message = "Missing value for --executor-type";
