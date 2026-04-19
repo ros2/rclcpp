@@ -148,11 +148,14 @@ struct RegisteredEntityCache
 
   ~RegisteredEntityCache()
   {
+    for (const auto & gc_ref : guard_conditions) {
+      gc_ref.guard_condition->set_on_trigger_callback(nullptr);
+    }
+
     auto cbg_shr_ptr = callback_group_weak_ptr.lock();
     if(!cbg_shr_ptr) {
       return;
     }
-
 
     const auto clear_sub_cb = [](const rclcpp::SubscriptionBase::SharedPtr & s) {
         s->clear_on_new_message_callback();
@@ -176,10 +179,6 @@ struct RegisteredEntityCache
 
     if(cbg_shr_ptr->get_notify_guard_condition()) {
       cbg_shr_ptr->get_notify_guard_condition()->set_on_trigger_callback(nullptr);
-    }
-
-    for (const auto & gc_ref : guard_conditions) {
-      gc_ref.guard_condition->set_on_trigger_callback(nullptr);
     }
   }
 
