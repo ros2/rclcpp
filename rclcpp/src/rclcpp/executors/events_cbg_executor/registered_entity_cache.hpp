@@ -119,14 +119,19 @@ struct RegisteredEntityCache
     scheduler_cbg_handle(*scheduler.add_callback_group(callback_group)),
     timer_manager(timer_manager)
   {
-    // register guard condition for the callback group with the handler
-    // this makes sure, that we pick up new entities in case the guard
-    // condition is triggered
-    add_guard_condition_event(
-      callback_group->get_notify_guard_condition(), [this]() {
-        handle_callback_group_guard_condition();
-      }
-    );
+
+    auto cbg_gc = callback_group->get_notify_guard_condition();
+
+    if(cbg_gc) {
+      // register guard condition for the callback group with the handler
+      // this makes sure, that we pick up new entities in case the guard
+      // condition is triggered
+      add_guard_condition_event(
+        cbg_gc, [&scheduler]() {
+          scheduler.trigger_sync();
+        }
+      );
+    }
   }
 
   EntityCache<rclcpp::TimerBase> timers_cache;
@@ -142,25 +147,38 @@ struct RegisteredEntityCache
 
   TimerManager & timer_manager;
 
-  // This function will be called whenever the guard condition
-  // if the callback group was triggered. In this case, we
-  // query the callback group for added or removed entites
-  void handle_callback_group_guard_condition()
-  {
-    if (!rclcpp::contexts::get_global_default_context()->shutdown_reason().empty()) {
-      return;
-    }
-
-    if (!rclcpp::ok(rclcpp::contexts::get_global_default_context())) {
-      return;
-    }
-
-    regenerate_events();
-  }
-
-
   ~RegisteredEntityCache()
   {
+    auto cbg_shr_ptr = callback_group_weak_ptr.lock();
+    if(!cbg_shr_ptr) {
+      return;
+    }
+
+
+    const auto clear_sub_cb = [](const rclcpp::SubscriptionBase::SharedPtr & s) {
+        s->clear_on_new_message_callback();
+      };
+    const auto clear_timer_cb = [this](const rclcpp::TimerBase::SharedPtr & s) {
+        timer_manager.remove_timer(s);
+      };
+    const auto clear_client_cb = [](const rclcpp::ClientBase::SharedPtr & s) {
+        s->clear_on_new_response_callback();
+      };
+    const auto clear_service_cb = [](const rclcpp::ServiceBase::SharedPtr & s) {
+        s->clear_on_new_request_callback();
+      };
+    const auto clear_waitable_cb = [](const rclcpp::Waitable::SharedPtr & s) {
+        s->clear_on_ready_callback();
+      };
+
+    // populate all vectors
+    cbg_shr_ptr->collect_all_ptrs(clear_sub_cb, clear_service_cb, clear_client_cb, clear_timer_cb,
+            clear_waitable_cb);
+
+    if(cbg_shr_ptr->get_notify_guard_condition()) {
+      cbg_shr_ptr->get_notify_guard_condition()->set_on_trigger_callback(nullptr);
+    }
+
     for (const auto & gc_ref : guard_conditions) {
       gc_ref.guard_condition->set_on_trigger_callback(nullptr);
     }
