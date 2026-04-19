@@ -40,7 +40,6 @@ namespace rclcpp_components
 template<typename ExecutorT = rclcpp::executors::SingleThreadedExecutor>
 class ComponentManagerIsolated : public rclcpp_components::ComponentManager
 {
-
   struct DedicatedExecutorWrapper
   {
     std::shared_ptr<rclcpp::Executor> executor;
