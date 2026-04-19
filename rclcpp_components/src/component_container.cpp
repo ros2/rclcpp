@@ -152,7 +152,7 @@ int main(int argc, char * argv[])
 
   if (args.executor_type == ExecutorType::SingleThreaded &&
     num_threads > 0 &&
-    num_threads < std::thread::hardware_concurrency())
+    num_threads != std::thread::hardware_concurrency())
   {
     RCUTILS_LOG_WARN_NAMED("component_container",
       "thread_num is not supported by the SingleThreadedExecutor. Ignoring...");
