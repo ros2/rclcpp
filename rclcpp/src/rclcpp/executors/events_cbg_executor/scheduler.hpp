@@ -248,7 +248,7 @@ private:
         needs_sync = false;
         return ExecutableEntityWithInfo{.entity =
             ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
-          .moreEntitiesReady = !ready_callback_groups.empty()};
+          .moreEntitiesReady = false};
       }
     }
 
@@ -264,7 +264,7 @@ private:
         needs_sync = false;
         return ExecutableEntityWithInfo{.entity =
             ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
-          .moreEntitiesReady = !ready_callback_groups.empty()};
+          .moreEntitiesReady = false};
       }
     }
 
