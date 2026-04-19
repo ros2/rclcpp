@@ -120,7 +120,8 @@ print_usage()
     " the executor will run with max available on system\n"
     "Examples: component_container --executor-type single-threaded\n"
     "          component_container --executor-type multi-threaded --ros_args -p thread_num:=4\n"
-    "          component_container --executor-type events-cbg --isolated --ros_args -p thread_num:=1");
+    "          component_container --executor-type events-cbg "
+    "--isolated --ros_args -p thread_num:=1");
 }
 
 int main(int argc, char * argv[])
@@ -142,7 +143,8 @@ int main(int argc, char * argv[])
   }
 
   std::shared_ptr<rclcpp::Executor> exec;
-  std::shared_ptr<rclcpp_components::ComponentManager> node = std::make_shared<rclcpp_components::ComponentManager>();
+  std::shared_ptr<rclcpp_components::ComponentManager> node =
+    std::make_shared<rclcpp_components::ComponentManager>();
   const int64_t num_threads = (node->has_parameter("thread_num")) ?
     node->get_parameter("thread_num").as_int() :
     std::thread::hardware_concurrency();
