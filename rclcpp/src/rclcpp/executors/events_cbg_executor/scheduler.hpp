@@ -179,7 +179,7 @@ private:
    *                      executed with high priority if triggered by
    *                      trigger_sync();
    */
-  CBGScheduler(std::function<void ()> sync_function)
+  explicit CBGScheduler(std::function<void ()> sync_function)
   : sync_function(sync_function) {}
   CBGScheduler(const CBGScheduler &) = delete;
   CBGScheduler(CBGScheduler &&) = delete;

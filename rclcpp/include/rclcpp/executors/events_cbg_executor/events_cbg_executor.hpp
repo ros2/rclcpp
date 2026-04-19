@@ -284,6 +284,12 @@ private:
 
   void sync_callback_groups();
 
+  /**
+   * Either triggers a sync, or if not spinning,
+   * syncs directly.
+   */
+  void trigger_callback_group_sync();
+
   void spin_once_internal(std::chrono::nanoseconds timeout);
 
   RCLCPP_DISABLE_COPY(EventsCBGExecutor)

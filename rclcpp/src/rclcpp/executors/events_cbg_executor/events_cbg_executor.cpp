@@ -222,6 +222,17 @@ EventsCBGExecutor::get_number_of_threads() const
   return number_of_threads_;
 }
 
+void EventsCBGExecutor::trigger_callback_group_sync()
+{
+  needs_callback_group_resync = true;
+
+  if (!spinning) {
+    sync_callback_groups();
+  } else {
+    scheduler->unblock_one_worker_thread();
+  }
+}
+
 void EventsCBGExecutor::sync_callback_groups()
 {
   if (!needs_callback_group_resync.exchange(false) ) {
@@ -384,6 +395,8 @@ void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
     return;
   }
 
+  sync_callback_groups();
+
   auto ready_entity = scheduler->get_next_ready_entity();
   if(!ready_entity.entity) {
     if (timeout < std::chrono::nanoseconds::zero()) {
@@ -414,8 +427,6 @@ EventsCBGExecutor::spin_once(std::chrono::nanoseconds timeout)
     throw std::runtime_error("spin_once() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-
-  sync_callback_groups();
 
   spin_once_internal(timeout);
 }
@@ -530,8 +541,7 @@ EventsCBGExecutor::add_callback_group(
     std::lock_guard lock{added_callback_groups_mutex_};
     added_callback_groups.push_back(group_ptr);
   }
-  needs_callback_group_resync = true;
-  scheduler->unblock_one_worker_thread();
+  trigger_callback_group_sync();
 
   if (notify) {
     // Interrupt waiting to handle new node
@@ -681,8 +691,7 @@ EventsCBGExecutor::remove_callback_group(
   unregister_event_callbacks(group_ptr);
 
   if (found) {
-    needs_callback_group_resync = true;
-    scheduler->unblock_one_worker_thread();
+    trigger_callback_group_sync();
   }
 
   group_ptr->get_associated_with_executor_atomic().exchange(false);
@@ -717,12 +726,7 @@ EventsCBGExecutor::add_node(
     added_nodes.push_back(node_ptr);
   }
 
-  needs_callback_group_resync = true;
-  scheduler->unblock_one_worker_thread();
-
-  if (!spinning) {
-    sync_callback_groups();
-  }
+  trigger_callback_group_sync();
 }
 
 void
@@ -760,7 +764,7 @@ EventsCBGExecutor::remove_node(
     }
   );
 
-  needs_callback_group_resync = true;
+  trigger_callback_group_sync();
 
   if (notify) {
     scheduler->unblock_one_worker_thread();
