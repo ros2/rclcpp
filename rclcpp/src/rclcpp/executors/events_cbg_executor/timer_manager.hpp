@@ -297,7 +297,7 @@ private:
    */
   bool remove_if_dropped(const TimerData * timer_data)
   {
-    if (timer_data->rcl_ref.unique()) {
+    if (timer_data->rcl_ref.use_count() == 1) {
       // clear on reset callback
       if(rcl_timer_set_on_reset_callback(timer_data->rcl_ref.get(), nullptr,
           nullptr) != RCL_RET_OK)
