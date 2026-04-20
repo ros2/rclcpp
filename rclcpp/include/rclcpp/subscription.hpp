@@ -164,7 +164,7 @@ public:
         ROSMessageT,
         AllocatorT>;
 
-      // Build a type-erased stats handler to avoid a circular include chain 
+      // Build a type-erased stats handler to avoid a circular include chain
       // via publisher.hpp and callback_group.hpp
       typename SubscriptionIntraProcessT::StatsHandlerFn stats_handler = nullptr;
       if (subscription_topic_statistics) {
