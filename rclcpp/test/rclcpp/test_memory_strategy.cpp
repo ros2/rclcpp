@@ -21,6 +21,7 @@
 
 #include <rcpputils/compile_warnings.hpp>
 
+// can be removed after the lyrical release
 RCPPUTILS_DEPRECATION_WARNING_OFF_START
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 #include "rclcpp/memory_strategy.hpp"
