@@ -21,6 +21,9 @@
 
 int main(int argc, char * argv[])
 {
+  RCUTILS_LOG_WARN_NAMED("component_container_mt",
+    "This executable is deprecated and will be removed in M-turtle.\n"
+    "Use 'component_container --executor-type multi-threaded' instead.");
   /// Component container with a multi-threaded executor.
   rclcpp::init(argc, argv);
 

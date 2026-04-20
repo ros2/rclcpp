@@ -21,11 +21,12 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <system_error>
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
@@ -39,8 +40,6 @@ namespace rclcpp_components
 template<typename ExecutorT = rclcpp::executors::SingleThreadedExecutor>
 class ComponentManagerIsolated : public rclcpp_components::ComponentManager
 {
-  using rclcpp_components::ComponentManager::ComponentManager;
-
   struct DedicatedExecutorWrapper
   {
     std::shared_ptr<rclcpp::Executor> executor;
@@ -58,6 +57,29 @@ class ComponentManagerIsolated : public rclcpp_components::ComponentManager
   };
 
 public:
+  explicit ComponentManagerIsolated(
+    std::weak_ptr<rclcpp::Executor> executor = std::weak_ptr<rclcpp::Executor>(),
+    std::string node_name = "ComponentManager",
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
+    .start_parameter_services(false)
+    .start_parameter_event_publisher(false))
+  : ComponentManager(executor, node_name, node_options)
+  {}
+
+  // Constructor with per-component executor configuration
+  ComponentManagerIsolated(
+    rclcpp::ExecutorOptions executor_options,
+    size_t num_threads,
+    std::weak_ptr<rclcpp::Executor> executor = std::weak_ptr<rclcpp::Executor>(),
+    std::string node_name = "ComponentManager",
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions()
+    .start_parameter_services(false)
+    .start_parameter_event_publisher(false))
+  : ComponentManager(executor, node_name, node_options),
+    executor_options_(executor_options),
+    num_threads_(num_threads)
+  {}
+
   ~ComponentManagerIsolated()
   {
     if (node_wrappers_.size()) {
@@ -76,7 +98,12 @@ protected:
   void
   add_node_to_executor(uint64_t node_id) override
   {
-    auto exec = std::make_shared<ExecutorT>();
+    std::shared_ptr<ExecutorT> exec;
+    if constexpr (std::is_same_v<ExecutorT, rclcpp::executors::SingleThreadedExecutor>) {
+      exec = std::make_shared<ExecutorT>(executor_options_);
+    } else {
+      exec = std::make_shared<ExecutorT>(executor_options_, num_threads_);
+    }
     exec->add_node(node_wrappers_[node_id].get_node_base_interface());
 
     // Emplace rather than std::move since move operations are deleted for atomics
@@ -143,6 +170,8 @@ private:
     executor_wrapper.thread.join();
   }
 
+  rclcpp::ExecutorOptions executor_options_;
+  size_t num_threads_{0};
   std::unordered_map<uint64_t, DedicatedExecutorWrapper> dedicated_executor_wrappers_;
 };
 

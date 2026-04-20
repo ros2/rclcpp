@@ -21,6 +21,10 @@
 
 int main(int argc, char * argv[])
 {
+  RCUTILS_LOG_WARN_NAMED("component_container_event",
+    "This executable is deprecated and will be removed in M-turtle.\n"
+    "Use 'component_container --executor-type events-cbg' instead.");
+
   /// Component container with an events executor.
   rclcpp::init(argc, argv);
   auto exec = std::make_shared<rclcpp::experimental::executors::EventsExecutor>();
