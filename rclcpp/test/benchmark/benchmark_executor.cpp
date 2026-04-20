@@ -205,7 +205,7 @@ public:
   std::vector<rclcpp::Node::SharedPtr> nodes;
   std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
   std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
-  uint callback_count;
+  size_t callback_count;
 };
 
 
@@ -479,7 +479,7 @@ public:
   std::vector<rclcpp::Node::SharedPtr> nodes;
   std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
   std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
-  uint callback_count;
+  size_t callback_count;
 };
 
 
@@ -587,7 +587,7 @@ public:
   std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
   std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
   std::vector<rclcpp::CallbackGroup::SharedPtr> callback_groups;
-  uint callback_count;
+  size_t callback_count;
 };
 
 
