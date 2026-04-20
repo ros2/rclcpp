@@ -44,7 +44,8 @@ namespace allocator_memory_strategy
  * come through.
  */
 template<typename Alloc = std::allocator<void>>
-class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
+class [[deprecated("The excutor does not used this any more")]] AllocatorMemoryStrategy : public
+  memory_strategy::MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>)
