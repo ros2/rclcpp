@@ -164,6 +164,18 @@ public:
         ROSMessageT,
         AllocatorT>;
 
+      // Build a type-erased stats handler to avoid a circular include chain
+      // via publisher.hpp and callback_group.hpp
+      typename SubscriptionIntraProcessT::StatsHandlerFn stats_handler = nullptr;
+      if (subscription_topic_statistics) {
+        stats_handler =
+          [subscription_topic_statistics](
+          const rmw_message_info_t & info, const rclcpp::Time & time)
+          {
+            subscription_topic_statistics->handle_message(info, time);
+          };
+      }
+
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
@@ -172,7 +184,8 @@ public:
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
-        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
+        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback),
+        std::move(stats_handler));
       TRACETOOLS_TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),

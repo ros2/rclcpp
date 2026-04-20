@@ -101,8 +101,9 @@ class PublisherNode : public rclcpp::Node
 public:
   PublisherNode(
     const std::string & name, const std::string & topic,
-    const std::chrono::milliseconds & publish_period = std::chrono::milliseconds{100})
-  : Node(name)
+    const std::chrono::milliseconds & publish_period = std::chrono::milliseconds{100},
+    bool use_intra_process_comms = false)
+  : Node(name, rclcpp::NodeOptions().use_intra_process_comms(use_intra_process_comms))
   {
     publisher_ = create_publisher<MessageT>(topic, 10);
     publish_timer_ = this->create_wall_timer(
@@ -181,8 +182,9 @@ class SubscriberWithTopicStatistics : public rclcpp::Node
 public:
   SubscriberWithTopicStatistics(
     const std::string & name, const std::string & topic,
-    std::chrono::milliseconds publish_period = defaultStatisticsPublishPeriod)
-  : Node(name)
+    std::chrono::milliseconds publish_period = defaultStatisticsPublishPeriod,
+    bool use_intra_process_comms = false)
+  : Node(name, rclcpp::NodeOptions().use_intra_process_comms(use_intra_process_comms))
   {
     // Manually enable topic statistics via options
     auto options = rclcpp::SubscriptionOptions();
@@ -195,7 +197,7 @@ public:
     subscription_ = create_subscription<MessageT,
         std::function<void(typename MessageT::UniquePtr)>>(
       topic,
-      rclcpp::QoS(rclcpp::KeepAll()),
+      use_intra_process_comms ? rclcpp::QoS(10) : rclcpp::QoS(rclcpp::KeepAll()),
       callback,
       options);
   }
@@ -420,4 +422,59 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
         break;
     }
   }
+}
+
+/**
+ * Test topic statistics are collected when use_intra_process_comms is enabled.
+ * This validates a fix for ros2/rclcpp#2911 where IPC subscriptions never called the
+ * stat handler causing all statistics to report NaN values.
+ * Also verifies message_age is non-NaN, validating that source_timestamp is set correctly.
+ */
+TEST_F(TestSubscriptionTopicStatisticsFixture, test_stats_with_intra_process_comms)
+{
+  auto empty_publisher = std::make_shared<PublisherNode<Empty>>(
+    kTestPubNodeName,
+    kTestSubStatsEmptyTopic,
+    std::chrono::milliseconds{100},
+    true);
+
+  auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
+    "test_ipc_stats_listener",
+    "/statistics",
+    kNumExpectedMessages);
+
+  auto empty_subscriber = std::make_shared<SubscriberWithTopicStatistics<Empty>>(
+    kTestSubNodeName,
+    kTestSubStatsEmptyTopic,
+    defaultStatisticsPublishPeriod,
+    true);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(empty_publisher);
+  ex.add_node(statistics_listener);
+  ex.add_node(empty_subscriber);
+
+  ex.spin_until_future_complete(statistics_listener->GetFuture(), kTestTimeout);
+
+  const auto received_messages = statistics_listener->GetReceivedMessages();
+  EXPECT_EQ(kNumExpectedMessages, received_messages.size());
+
+  uint64_t message_age_count{0};
+  uint64_t message_period_count{0};
+
+  for (const auto & msg : received_messages) {
+    if (msg.metrics_source == kMessageAgeSourceLabel) {
+      message_age_count++;
+      // Verify message_age stats are non-NaN to validates source_timestamp fix
+      for (const auto & stats_point : msg.statistics) {
+        EXPECT_FALSE(std::isnan(stats_point.data));
+      }
+    }
+    if (msg.metrics_source == kMessagePeriodSourceLabel) {
+      message_period_count++;
+    }
+  }
+
+  EXPECT_EQ(kNumExpectedMessageAgeMessages, message_age_count);
+  EXPECT_EQ(kNumExpectedMessagePeriodMessages, message_period_count);
 }
