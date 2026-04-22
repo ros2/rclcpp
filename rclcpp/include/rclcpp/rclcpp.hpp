@@ -74,10 +74,14 @@
  *   - rclcpp::executors::MultiThreadedExecutor
  *   - rclcpp::executors::MultiThreadedExecutor::add_node()
  *   - rclcpp::executors::MultiThreadedExecutor::spin()
+ *   - rclcpp::executors::EventsCBGExecutor
+ *   - rclcpp::executors::EventsCBGExecutor::add_node()
+ *   - rclcpp::executors::EventsCBGExecutor::spin()
  *   - rclcpp/executor.hpp
  *   - rclcpp/executors.hpp
  *   - rclcpp/executors/single_threaded_executor.hpp
  *   - rclcpp/executors/multi_threaded_executor.hpp
+ *   - rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp
  * - CallbackGroups (mechanism for enforcing concurrency rules for callbacks):
  *   - rclcpp::Node::create_callback_group()
  *   - rclcpp::CallbackGroup
