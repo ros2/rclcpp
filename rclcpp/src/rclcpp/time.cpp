@@ -14,7 +14,6 @@
 
 #include <limits>
 #include <string>
-#include <utility>
 
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"

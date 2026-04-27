@@ -41,7 +41,7 @@ public:
   on_deactivate() = 0;
 };
 
-/// A simple implementation of `ManagedEntityInterface`, which toogles a flag.
+/// A simple implementation of `ManagedEntityInterface`, which toggles a flag.
 class SimpleManagedEntity : public ManagedEntityInterface
 {
 public:

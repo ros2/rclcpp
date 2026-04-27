@@ -155,7 +155,7 @@ LifecycleNode::~LifecycleNode()
   auto current_state = LifecycleNode::get_current_state().id();
   if (current_state != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED) {
     // This might be leaving sensors and devices without shutting down unintentionally.
-    // It is user's responsibility to call shutdown to avoid leaving them unknow states.
+    // It is user's responsibility to call shutdown to avoid leaving them in unknown states.
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp_lifecycle"),
       "LifecycleNode is not shut down: Node still in state(%u) in destructor",
