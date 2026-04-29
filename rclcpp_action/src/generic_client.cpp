@@ -420,8 +420,8 @@ GenericClient::make_result_aware(typename GenericClientGoalHandle::SharedPtr goa
         WrappedResult wrapped_result;
 
         // Get the offsets for the status and result fields
-        size_t status_offset;
-        size_t result_offset;
+        size_t status_offset{0};
+        size_t result_offset{0};
         for (uint32_t i = 0; i < result_service_response_type_members_->member_count_; i++) {
           if (!std::strcmp(result_service_response_type_members_->members_[i].name_, "result")) {
             result_offset = result_service_response_type_members_->members_[i].offset_;
