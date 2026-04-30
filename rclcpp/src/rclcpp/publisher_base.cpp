@@ -17,7 +17,6 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
-#include <iostream>
 #include <memory>
 #include <mutex>
 #include <sstream>

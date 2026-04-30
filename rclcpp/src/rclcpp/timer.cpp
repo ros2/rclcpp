@@ -17,7 +17,6 @@
 #include <chrono>
 #include <string>
 #include <memory>
-#include <thread>
 
 #include "rmw/impl/cpp/demangle.hpp"
 

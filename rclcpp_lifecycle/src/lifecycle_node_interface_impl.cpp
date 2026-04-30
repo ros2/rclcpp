@@ -229,11 +229,11 @@ LifecycleNode::LifecycleNodeInterfaceImpl::on_change_state(
     // if there's a label attached to the request,
     // we check the transition attached to this label.
     // we further can't compare the id of the looked up transition
-    // because ros2 service call defaults all intergers to zero.
+    // because ros2 service call defaults all integers to zero.
     // that means if we call ros2 service call ... {transition: {label: shutdown}}
     // the id of the request is 0 (zero) whereas the id from the lookup up transition
     // can be different.
-    // the result of this is that the label takes presedence of the id.
+    // the result of this is that the label takes precedence of the id.
     if (req->transition.label.size() != 0) {
       auto rcl_transition = rcl_lifecycle_get_transition_by_label(
         state_machine_.current_state, req->transition.label.c_str());

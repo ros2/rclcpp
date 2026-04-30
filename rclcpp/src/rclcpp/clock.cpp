@@ -16,7 +16,6 @@
 
 #include <condition_variable>
 #include <memory>
-#include <thread>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
