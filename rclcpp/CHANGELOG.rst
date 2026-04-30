@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+32.0.0 (2026-04-30)
+-------------------
 * Include EventsCBGExecutor (`#3137 <https://github.com/ros2/rclcpp/issues/3137>`_)
 * Fix topic statistics for IPC subscriptions (`#3130 <https://github.com/ros2/rclcpp/issues/3130>`_)
 * fix: Fixed MSVC compile errors (`#3135 <https://github.com/ros2/rclcpp/issues/3135>`_)
