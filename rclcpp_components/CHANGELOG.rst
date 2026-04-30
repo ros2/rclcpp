@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Refactor component containers + Add option for CBG Executor (`#3134 <https://github.com/ros2/rclcpp/issues/3134>`_)
+* Contributors: Skyler Medeiros
+
 31.0.2 (2026-04-09)
 -------------------
 * feat: Add per-node log level support via NodeOptions (`#3092 <https://github.com/ros2/rclcpp/issues/3092>`_)

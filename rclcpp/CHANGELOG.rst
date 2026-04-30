@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Include EventsCBGExecutor (`#3137 <https://github.com/ros2/rclcpp/issues/3137>`_)
+* Fix topic statistics for IPC subscriptions (`#3130 <https://github.com/ros2/rclcpp/issues/3130>`_)
+* fix: Fixed MSVC compile errors (`#3135 <https://github.com/ros2/rclcpp/issues/3135>`_)
+* feat: Added callback group events executor (`#3097 <https://github.com/ros2/rclcpp/issues/3097>`_)
+* Fix wrong dependency (`#3133 <https://github.com/ros2/rclcpp/issues/3133>`_)
+* feat: Switch to c++20 and remove resulting compile warnings (`#3124 <https://github.com/ros2/rclcpp/issues/3124>`_)
+* fix: Compile fix for MSVC 2022 (`#3131 <https://github.com/ros2/rclcpp/issues/3131>`_)
+* Contributors: Janosch Machowinski, Maurice Alexander Purnawan, jay
+
 31.0.3 (2026-04-14)
 -------------------
 

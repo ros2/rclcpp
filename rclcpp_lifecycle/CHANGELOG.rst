@@ -2,6 +2,9 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 31.0.2 (2026-04-09)
 -------------------
 
