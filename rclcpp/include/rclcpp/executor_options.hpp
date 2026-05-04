@@ -19,8 +19,6 @@
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
-#include "rclcpp/memory_strategies.hpp"
-#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -43,7 +41,6 @@ struct ExecutorOptions
   RCLCPP_PUBLIC
   ExecutorOptions & operator=(const ExecutorOptions &);
 
-  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
   rclcpp::Context::SharedPtr context;
   size_t max_conditions;
 

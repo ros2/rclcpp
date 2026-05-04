@@ -15,11 +15,17 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include <rcpputils/compile_warnings.hpp>
+
+// can be removed after the lyrical release
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
 class TestFindWeakNodes : public ::testing::Test
 {
 protected:
@@ -89,3 +95,4 @@ TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
   // Prevent memory leak due to the order of destruction
   memory_strategy->clear_handles();
 }
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
