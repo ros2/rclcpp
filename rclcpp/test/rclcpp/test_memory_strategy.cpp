@@ -19,6 +19,10 @@
 #include <memory>
 #include <utility>
 
+#include <rcpputils/compile_warnings.hpp>
+
+// can be removed after the lyrical release
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "test_msgs/msg/empty.hpp"
@@ -562,3 +566,4 @@ TEST_F(TestMemoryStrategy, get_group_by_waitable) {
     nullptr,
     memory_strategy()->get_group_by_waitable(waitable, weak_groups_to_nodes));
 }
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP

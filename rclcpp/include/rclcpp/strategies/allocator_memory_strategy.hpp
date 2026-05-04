@@ -42,9 +42,12 @@ namespace allocator_memory_strategy
  * By default, the memory strategy dynamically allocates memory for structures that come in from
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
+ *
+ * This will be removed after lyrical
  */
 template<typename Alloc = std::allocator<void>>
-class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
+class [[deprecated("The executor does not used this anymore")]] AllocatorMemoryStrategy : public
+  memory_strategy::MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>)

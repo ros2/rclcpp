@@ -25,7 +25,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/allocator/allocator_common.hpp"
-#include "rclcpp/strategies/allocator_memory_strategy.hpp"
 
 // For demonstration purposes only, not necessary for allocator_traits
 static uint32_t num_allocs = 0;
@@ -218,16 +217,11 @@ do_custom_allocator_test(
     msg_mem_strat);
 
   // executor memory strategy
-  using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
   auto shared_memory_strategy_allocator = std::make_shared<MemoryStrategyAllocatorT>(
     memory_strategy_allocator);
-  std::shared_ptr<rclcpp::memory_strategy::MemoryStrategy> memory_strategy =
-    std::make_shared<AllocatorMemoryStrategy<MemoryStrategyAllocatorT>>(
-    shared_memory_strategy_allocator);
 
   // executor
   rclcpp::ExecutorOptions options;
-  options.memory_strategy = memory_strategy;
   options.context = context;
   rclcpp::executors::SingleThreadedExecutor executor(options);
 
