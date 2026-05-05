@@ -39,7 +39,7 @@ namespace memory_strategy
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
  */
-class RCLCPP_PUBLIC MemoryStrategy
+class RCLCPP_PUBLIC [[deprecated("The executor does not used this anymore")]] MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy)
