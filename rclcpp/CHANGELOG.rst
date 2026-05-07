@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+33.0.0 (2026-05-07)
+-------------------
 * Deprecate memory strategy (`#3136 <https://github.com/ros2/rclcpp/issues/3136>`_)
 * Cleanups headers and fix wording (`#3138 <https://github.com/ros2/rclcpp/issues/3138>`_)
 * Contributors: Alejandro Hernández Cordero, Janosch Machowinski
