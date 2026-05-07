@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deprecate memory strategy (`#3136 <https://github.com/ros2/rclcpp/issues/3136>`_)
+* Cleanups headers and fix wording (`#3138 <https://github.com/ros2/rclcpp/issues/3138>`_)
+* Contributors: Alejandro Hernández Cordero, Janosch Machowinski
+
 32.0.0 (2026-04-30)
 -------------------
 * Include EventsCBGExecutor (`#3137 <https://github.com/ros2/rclcpp/issues/3137>`_)
