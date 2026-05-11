@@ -26,6 +26,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/deprecation_control.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
@@ -39,7 +40,7 @@ namespace memory_strategy
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
  */
-class RCLCPP_PUBLIC [[deprecated("The executor does not used this anymore")]] MemoryStrategy
+class RCLCPP_PUBLIC RCLCPP_DEPRECATED_WITH_MSG("The executor does not used this anymore") MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy)
