@@ -171,7 +171,7 @@ void set_use_sim_time_parameter(
     EXPECT_TRUE(result.successful);
   }
 
-  // Same as above - workaround for a little bit of asynchronus behavior.  The sim_time paramater
+  // Same as above - workaround for a little bit of asynchronus behavior.  The sim_time parameter
   // is set synchronously, but the way the ros clock gets notified involves a pub/sub that happens
   // AFTER the synchronous notification that the parameter was set.  This may also get fixed
   // upstream
