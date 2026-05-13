@@ -20,7 +20,6 @@
 #include "rosidl_runtime_c/service_type_support_struct.h"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
-#include "rcutils/allocator.h"
 
 namespace rclcpp
 {
@@ -91,21 +90,7 @@ GenericClient::create_response()
 std::shared_ptr<rmw_request_id_t>
 GenericClient::create_request_header()
 {
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  
-  rmw_request_id_t * request_header =
-    static_cast<rmw_request_id_t *>(allocator.zero_allocate(1, sizeof(rmw_request_id_t), allocator.state));
-
-  if (!request_header) {
-    throw std::bad_alloc();
-  }
-
-  return std::shared_ptr<rmw_request_id_t>(
-    request_header,
-    [allocator](rmw_request_id_t * p) mutable
-    {
-      allocator.deallocate(p, allocator.state);
-    });
+  return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
 }
 
 void
