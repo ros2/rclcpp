@@ -90,8 +90,6 @@ GenericClient::create_response()
 std::shared_ptr<rmw_request_id_t>
 GenericClient::create_request_header()
 {
-  // TODO(wjwwood): This should probably use rmw_request_id's allocator.
-  //                (since it is a C type)
   return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
 }
 
