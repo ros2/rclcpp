@@ -85,8 +85,10 @@ class TestSubscriptionTopicStatistics : public SubscriptionTopicStatistics<Callb
 public:
   TestSubscriptionTopicStatistics(
     const std::string & node_name,
+    const std::string & topic_name,
     rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
-  : SubscriptionTopicStatistics<CallbackMessageT>(node_name, publisher)
+  : SubscriptionTopicStatistics<CallbackMessageT>(
+      node_name, topic_name, publisher)
   {
   }
 
@@ -391,6 +393,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
   // Construct a separate instance
   auto sub_topic_stats = std::make_unique<TestSubscriptionTopicStatistics<Empty>>(
     empty_subscriber->get_name(),
+    "/test_topic",
     topic_stats_publisher);
 
   // Expect no data has been collected / no samples received
@@ -585,4 +588,82 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_include_window
         break;
     }
   }
+}
+/**
+ * Test that multiple subscriptions on the same node produce differentiated
+ * measurement_source_name values in their statistics messages.
+ * Regression test for #2756.
+ */
+TEST_F(TestSubscriptionTopicStatisticsFixture, test_multiple_subscriptions_differentiated)
+{
+  constexpr const char kTopicA[]{"/test_topic_a"};
+  constexpr const char kTopicB[]{"/test_topic_b"};
+  constexpr const uint64_t kNumStatsMessages{4};
+
+  auto pub_a = std::make_shared<EmptyPublisher>("pub_node_a", kTopicA);
+  auto pub_b = std::make_shared<EmptyPublisher>("pub_node_b", kTopicB);
+
+  auto multi_sub_node = std::make_shared<rclcpp::Node>("multi_sub_node");
+
+  auto options = rclcpp::SubscriptionOptions();
+  options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
+  options.topic_stats_options.publish_period = defaultStatisticsPublishPeriod;
+
+  auto cb = [](Empty::UniquePtr msg) {(void) msg;};
+
+  auto sub_a = multi_sub_node->create_subscription<Empty>(
+    kTopicA,
+    rclcpp::QoS(rclcpp::KeepAll()),
+    std::function<void(Empty::UniquePtr)>(cb),
+    options);
+
+  auto sub_b = multi_sub_node->create_subscription<Empty>(
+    kTopicB,
+    rclcpp::QoS(rclcpp::KeepAll()),
+    std::function<void(Empty::UniquePtr)>(cb),
+    options);
+
+  auto stats_listener =
+    std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
+    "multi_sub_stats_listener",
+    "/statistics",
+    kNumStatsMessages);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(pub_a);
+  ex.add_node(pub_b);
+  ex.add_node(multi_sub_node);
+  ex.add_node(stats_listener);
+
+  ex.spin_until_future_complete(stats_listener->GetFuture(), kTestTimeout);
+
+  const auto received_messages = stats_listener->GetReceivedMessages();
+  ASSERT_GE(received_messages.size(), kNumStatsMessages);
+
+  std::set<std::string> source_names;
+  for (const auto & msg : received_messages) {
+    source_names.insert(msg.measurement_source_name);
+  }
+
+  bool found_topic_a = false;
+  bool found_topic_b = false;
+
+  for (const auto & name : source_names) {
+    if (name.find("test_topic_a") != std::string::npos) {
+      found_topic_a = true;
+    }
+
+    if (name.find("test_topic_b") != std::string::npos) {
+      found_topic_b = true;
+    }
+  }
+
+  EXPECT_TRUE(found_topic_a)
+    << "No stats found containing topic_a in source name";
+
+  EXPECT_TRUE(found_topic_b)
+    << "No stats found containing topic_b in source name";
+
+  EXPECT_GT(source_names.size(), 1u)
+    << "Both subscriptions produced the same measurement_source_name";
 }
