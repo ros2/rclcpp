@@ -616,7 +616,8 @@ TEST_F(TestEventsExecutor, waitable_with_timer)
   EXPECT_TRUE(waitable->timerTriggeredWaitable());
 }
 
-// Regression test: EventsExecutor must receive transient-local cached messages
+// Regression test for https://github.com/ros2/rmw_cyclonedds/pull/584
+// EventsExecutor must receive transient-local cached messages
 // when the subscriber uses KEEP_ALL history.
 //
 // Bug: rmw_cyclonedds reports depth=0 for KEEP_ALL, and
