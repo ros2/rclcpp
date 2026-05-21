@@ -30,6 +30,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/event_handler.hpp"
 
+#include "rcl/event.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -106,6 +107,12 @@ SubscriptionBase::~SubscriptionBase()
     return;
   }
   ipm->remove_subscription(intra_process_subscription_id_);
+}
+
+bool
+SubscriptionBase::event_type_is_supported(const rcl_subscription_event_type_t event_type)
+{
+  return rcl_subscription_event_type_is_supported(event_type);
 }
 
 void
