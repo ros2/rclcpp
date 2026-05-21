@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rcl/event.h"
 #include "rcutils/logging_macros.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
@@ -128,6 +129,12 @@ const char *
 PublisherBase::get_topic_name() const
 {
   return rcl_publisher_get_topic_name(publisher_handle_.get());
+}
+
+bool
+PublisherBase::event_type_is_supported(const rcl_publisher_event_type_t event_type)
+{
+  return rcl_publisher_event_type_is_supported(event_type);
 }
 
 void
