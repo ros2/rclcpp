@@ -29,6 +29,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/qos_event.hpp"
 
+#include "rcl/event.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -108,6 +109,107 @@ SubscriptionBase::~SubscriptionBase()
   ipm->remove_subscription(intra_process_subscription_id_);
 }
 
+<<<<<<< HEAD
+=======
+bool
+SubscriptionBase::event_type_is_supported(const rcl_subscription_event_type_t event_type)
+{
+  return rcl_subscription_event_type_is_supported(event_type);
+}
+
+void
+SubscriptionBase::bind_event_callbacks(
+  const SubscriptionEventCallbacks & event_callbacks, bool use_default_callbacks)
+{
+  try {
+    if (event_callbacks.deadline_callback) {
+      this->add_event_handler(
+        event_callbacks.deadline_callback,
+        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for deadline; not supported");
+  }
+
+  try {
+    if (event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        event_callbacks.liveliness_callback,
+        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for liveliness; not supported");
+  }
+
+  QOSRequestedIncompatibleQoSCallbackType incompatible_qos_cb;
+  if (event_callbacks.incompatible_qos_callback) {
+    incompatible_qos_cb = event_callbacks.incompatible_qos_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    incompatible_qos_cb = [this](QOSRequestedIncompatibleQoSInfo & info) {
+        this->default_incompatible_qos_callback(info);
+      };
+  }
+  // Register default callback when not specified
+  try {
+    if (incompatible_qos_cb) {
+      this->add_event_handler(incompatible_qos_cb, RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible qos; not supported");
+  }
+
+  IncompatibleTypeCallbackType incompatible_type_cb;
+  if (event_callbacks.incompatible_type_callback) {
+    incompatible_type_cb = event_callbacks.incompatible_type_callback;
+  } else if (use_default_callbacks) {
+    // Register default callback when not specified
+    incompatible_type_cb = [this](IncompatibleTypeInfo & info) {
+        this->default_incompatible_type_callback(info);
+      };
+  }
+  try {
+    if (incompatible_type_cb) {
+      this->add_event_handler(incompatible_type_cb, RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE);
+    }
+  } catch (UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for incompatible type; not supported");
+  }
+
+  try {
+    if (event_callbacks.message_lost_callback) {
+      this->add_event_handler(
+        event_callbacks.message_lost_callback,
+        RCL_SUBSCRIPTION_MESSAGE_LOST);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for message lost; not supported");
+  }
+
+  try {
+    if (event_callbacks.matched_callback) {
+      this->add_event_handler(
+        event_callbacks.matched_callback,
+        RCL_SUBSCRIPTION_MATCHED);
+    }
+  } catch (const UnsupportedEventTypeException & /*exc*/) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to add event handler for matched; not supported");
+  }
+}
+
+>>>>>>> 703322c (add event_type_is_supported() for Publisher/Subscription. (#3132))
 const char *
 SubscriptionBase::get_topic_name() const
 {
