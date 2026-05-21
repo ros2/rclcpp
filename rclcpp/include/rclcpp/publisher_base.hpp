@@ -85,6 +85,21 @@ public:
   RCLCPP_PUBLIC
   virtual ~PublisherBase();
 
+  /// Check if a publisher event type is supported by the active RMW implementation.
+  /**
+   * This API allows application code to introspect at runtime whether a
+   * particular publisher event type is supported by the currently loaded
+   * RMW implementation, enabling portable code that adapts gracefully
+   * when switching between RMW implementations.
+   *
+   * \param[in] event_type the publisher event type to check
+   * \return `true` if the event type is supported, `false` otherwise
+   */
+  RCLCPP_PUBLIC
+  static
+  bool
+  event_type_is_supported(const rcl_publisher_event_type_t event_type);
+
   /// Add event handlers for passed in event_callbacks.
   RCLCPP_PUBLIC
   void
