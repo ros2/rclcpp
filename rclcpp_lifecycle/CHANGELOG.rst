@@ -2,6 +2,9 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.0.1 (2026-05-22)
+-------------------
+
 33.0.0 (2026-05-07)
 -------------------
 * Cleanups headers and fix wording (`#3138 <https://github.com/ros2/rclcpp/issues/3138>`_)

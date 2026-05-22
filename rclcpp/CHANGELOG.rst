@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.0.1 (2026-05-22)
+-------------------
+* add event_type_is_supported() for Publisher/Subscription. (`#3132 <https://github.com/ros2/rclcpp//issues/3132>`_)
+* chore: remove outdated TODO in GenericClient (`#3146 <https://github.com/ros2/rclcpp//issues/3146>`_)
+* chore: fix typo in test_time_source.cpp (`#3145 <https://github.com/ros2/rclcpp//issues/3145>`_)
+* Contributors: Pietro Gelmini, Tomoya Fujita
+
 33.0.0 (2026-05-07)
 -------------------
 * Deprecate memory strategy (`#3136 <https://github.com/ros2/rclcpp/issues/3136>`_)
