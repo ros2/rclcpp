@@ -180,6 +180,9 @@ RCLCPP_LOCAL
 bool
 __are_doubles_equal(double x, double y, double ulp = 100.0)
 {
+  if (!std::isfinite(x) || !std::isfinite(y)) {
+    return x == y;
+  }
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
 }
 
@@ -234,7 +237,7 @@ __check_double_range(
   {
     return result;
   }
-  if ((value < fp_range.from_value) || (value > fp_range.to_value)) {
+  if (!(value >= fp_range.from_value && value <= fp_range.to_value)) {
     result.successful = false;
     result.reason = format_range_reason(descriptor.name, "floating point");
     return result;
