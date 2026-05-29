@@ -184,8 +184,8 @@ TYPED_TEST(TestBusyWaiting, test_spin)
   {
     std::unique_lock<std::mutex> lk(cv_m);
     // We either wait for the notify, or in case of a race skip
-    // the wait if the callback was allready done. If we missed the
-    // callbackt the count is bigger than 0.
+    // the wait if the callback was already done. If we missed the
+    // callback the count is bigger than 0.
     cv_main.wait_for(lk, 10s, [this] () {return this->waitable->get_count() > 0;});
   }
   EXPECT_GT(this->waitable->get_count(), 0u);
