@@ -57,18 +57,25 @@ public:
   void
   set_up_and_trigger_waitable(std::function<void()> extra_callback = nullptr)
   {
-    this->has_executed = false;
+    {
+      std::scoped_lock l(this->executed_mutex);
+      this->has_executed = false;
+    }
     this->waitable->set_on_execute_callback([this, extra_callback]() {
-        if (!this->has_executed) {
-        // trigger once to see if the second trigger is handled or not
-        // this follow up trigger simulates new entities becoming ready while
-        // the executor is executing something else, e.g. subscription got data
-        // or a timer expired, etc.
-        // spin_some would not handle this second trigger, since it collects
-        // work only once, whereas spin_all should handle it since it
-        // collects work multiple times
-          this->waitable->trigger();
-          this->has_executed = true;
+        {
+          std::scoped_lock l(this->executed_mutex);
+
+          if (!this->has_executed) {
+          // trigger once to see if the second trigger is handled or not
+          // this follow up trigger simulates new entities becoming ready while
+          // the executor is executing something else, e.g. subscription got data
+          // or a timer expired, etc.
+          // spin_some would not handle this second trigger, since it collects
+          // work only once, whereas spin_all should handle it since it
+          // collects work multiple times
+            this->waitable->trigger();
+            this->has_executed = true;
+          }
         }
         if (nullptr != extra_callback) {
           extra_callback();
@@ -105,6 +112,7 @@ public:
   rclcpp::CallbackGroup::SharedPtr callback_group;
   std::shared_ptr<TestWaitable> waitable;
   std::chrono::steady_clock::time_point start_time;
+  std::mutex executed_mutex;
   bool has_executed;
 };
 
@@ -152,16 +160,19 @@ TYPED_TEST(TestBusyWaiting, test_spin)
     this->callback_group,
     this->node->get_node_base_interface());
 
-  std::condition_variable cv;
+  std::condition_variable cv_main;
+  std::condition_variable cv_executor;
   std::mutex cv_m;
   bool first_check_passed = false;
 
-  this->set_up_and_trigger_waitable([&cv, &cv_m, &first_check_passed]() {
-      cv.notify_one();
-      if (!first_check_passed) {
-        std::unique_lock<std::mutex> lk(cv_m);
-        cv.wait_for(lk, 1s, [&]() {return first_check_passed;});
-      }
+  this->set_up_and_trigger_waitable([&cv_main, &cv_executor, &cv_m, &first_check_passed]() {
+      // notify the main thread that we increased count
+      cv_main.notify_one();
+
+      // Explicitly block the executor thread until the first check
+      // has passed
+      std::unique_lock<std::mutex> lk(cv_m);
+      cv_executor.wait_for(lk, 1s, [&]() {return first_check_passed;});
   });
 
   auto start_time = std::chrono::steady_clock::now();
@@ -172,17 +183,23 @@ TYPED_TEST(TestBusyWaiting, test_spin)
   // wait until thread has started (first execute of waitable)
   {
     std::unique_lock<std::mutex> lk(cv_m);
-    cv.wait_for(lk, 10s);
+    // We either wait for the notify, or in case of a race skip
+    // the wait if the callback was already done. If we missed the
+    // callback the count is bigger than 0.
+    cv_main.wait_for(lk, 10s, [this] () {return this->waitable->get_count() > 0;});
   }
   EXPECT_GT(this->waitable->get_count(), 0u);
 
-  first_check_passed = true;
-  cv.notify_one();
+  {
+    std::unique_lock<std::mutex> lk(cv_m);
+    first_check_passed = true;
+  }
+  cv_executor.notify_one();
 
   // wait until the executor has finished (second execute of waitable)
   {
     std::unique_lock<std::mutex> lk(cv_m);
-    cv.wait_for(lk, 10s);
+    cv_main.wait_for(lk, 10s, [this] () {return this->waitable->get_count() > 1;});
   }
   EXPECT_EQ(this->waitable->get_count(), 2u);
 
