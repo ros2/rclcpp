@@ -1049,7 +1049,10 @@ TEST_F(TestServer, goals_expired_with_events_executor)
   rclcpp::ExecutorOptions opts;
   opts.context = node->get_node_base_interface()->get_context();
 
-  rclcpp::experimental::executors::EventsExecutor executor(opts);
+  rclcpp::experimental::executors::EventsQueue::UniquePtr events_queue =
+    std::make_unique<rclcpp::experimental::executors::SimpleEventsQueue>();
+  rclcpp::experimental::executors::EventsExecutor executor
+    (std::move(events_queue), false, opts);
   executor.add_node(node);
   const std::vector<GoalUUID> uuids{
     {{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}},
