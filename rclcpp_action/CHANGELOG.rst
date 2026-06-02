@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 28.1.18 (2026-03-25)
 --------------------
 * Backport: Implement action generic client (`#2759 <https://github.com/ros2/rclcpp/issues/2759>`_) (`#3017 <https://github.com/ros2/rclcpp/issues/3017>`_)

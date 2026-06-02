@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore: fix typo in test_time_source.cpp (`#3145 <https://github.com/ros2/rclcpp/issues/3145>`_) (`#3149 <https://github.com/ros2/rclcpp/issues/3149>`_)
+  (cherry picked from commit a3cfbd7332243dca8672b765051173a251f4e2bf)
+  Co-authored-by: Pietro Gelmini <86184562+Gelminaio@users.noreply.github.com>
+* Contributors: mergify[bot]
+
 28.1.18 (2026-03-25)
 --------------------
 * Remove duplicate test cases in TestAnySubscriptionCallback::is_serialized_message_callback (backport `#3104 <https://github.com/ros2/rclcpp/issues/3104>`_) (`#3107 <https://github.com/ros2/rclcpp/issues/3107>`_)
