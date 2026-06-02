@@ -40,5 +40,7 @@ int main(int argc, char * argv[])
   exec->add_node(node);
   exec->spin();
 
+  rclcpp::shutdown();
+
   return 0;
 }
