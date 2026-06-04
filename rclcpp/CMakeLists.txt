@@ -245,6 +245,7 @@ ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(${PROJECT_NAME})
 
 ament_export_dependencies(
+  ament_cmake_ros_core
   builtin_interfaces
   libstatistics_collector
   rcl
