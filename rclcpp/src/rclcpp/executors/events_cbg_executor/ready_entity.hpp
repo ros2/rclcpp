@@ -15,7 +15,7 @@
 #pragma once
 
 #include <utility>
-
+#include <memory>
 #include "scheduler.hpp"
 #include "global_event_id_provider.hpp"
 #include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
@@ -113,7 +113,7 @@ struct ReadyEntity
                  return [shr_ptr = std::move(shr_ptr_in),
                         event_type = entity.internal_event_type]() {
                           const std::shared_ptr<void> data =
-                            shr_ptr->take_data_by_entity_id(event_type);
+                          shr_ptr->take_data_by_entity_id(event_type);
                           shr_ptr->execute(data);
                         };
                } else if constexpr (std::is_same_v<T, CBGScheduler::CallbackEventType>) {

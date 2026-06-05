@@ -275,7 +275,7 @@ struct RegisteredEntityCache
         // rclcpp::Waitable::get_timers() (PR 2699) and drives them through the timer
         // manager. Jazzy has no such API: its rclcpp_action ServerBase instead expires
         // goals from its own internal expire_thread (ClockConditionalVariable based), and
-        // no built-in jazzy waitable owns timers. 
+        // no built-in jazzy waitable owns timers.
       },
       [] (const rclcpp::Waitable::SharedPtr & s) {
         s->clear_on_ready_callback();
