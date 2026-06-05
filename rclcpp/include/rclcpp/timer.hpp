@@ -190,6 +190,10 @@ public:
   void
   clear_on_reset_callback();
 
+  /// Returns the clock this timer uses
+  RCLCPP_PUBLIC
+  const Clock::SharedPtr & get_clock() const;
+
 protected:
   std::recursive_mutex callback_mutex_;
   // Declare callback before timer_handle_, so on destruction
