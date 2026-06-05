@@ -65,13 +65,17 @@ TEST(TestUtilities, wait_for_message_indefinitely) {
   auto wait = std::async(
     [&]() {
       auto ret = rclcpp::wait_for_message(out, node, "wait_for_message_topic" /*, -1 */);
-      EXPECT_TRUE(ret);
+      EXPECT_FALSE(ret);
       received = true;
     });
 
+  std::this_thread::sleep_for(100ms);
+  ASSERT_FALSE(received);
+
   rclcpp::shutdown();
 
-  ASSERT_FALSE(received);
+  wait.get();
+  ASSERT_TRUE(received);
 }
 
 TEST(TestUtilities, wait_for_message_twice_one_sub) {
