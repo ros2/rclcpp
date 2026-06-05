@@ -271,15 +271,14 @@ struct RegisteredEntityCache
       [this](const rclcpp::Waitable::SharedPtr & s) {
         s->set_on_ready_callback(
           scheduler_cbg_handle.get_ready_callback_for_entity(s));
-        for (const auto & t : s->get_timers()) {
-          timer_manager.add_timer(t, scheduler_cbg_handle.get_ready_callback_for_entity(t));
-        }
+        // Note: kilted onward exposes timers owned by waitables via
+        // rclcpp::Waitable::get_timers() (PR 2699) and drives them through the timer
+        // manager. Jazzy has no such API: its rclcpp_action ServerBase instead expires
+        // goals from its own internal expire_thread (ClockConditionalVariable based), and
+        // no built-in jazzy waitable owns timers. 
       },
-      [this] (const rclcpp::Waitable::SharedPtr & s) {
+      [] (const rclcpp::Waitable::SharedPtr & s) {
         s->clear_on_ready_callback();
-        for (const auto & t : s->get_timers()) {
-          timer_manager.remove_timer(t);
-        }
     });
 
     return true;
