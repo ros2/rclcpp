@@ -956,6 +956,18 @@ rclcpp::TopicEndpointInfo::topic_type_hash() const
   return topic_type_hash_;
 }
 
+std::map<std::string, std::string> &
+rclcpp::TopicEndpointInfo::buffer_backend_metadata()
+{
+  return buffer_backend_metadata_;
+}
+
+const std::map<std::string, std::string> &
+rclcpp::TopicEndpointInfo::buffer_backend_metadata() const
+{
+  return buffer_backend_metadata_;
+}
+
 std::string &
 rclcpp::ServiceEndpointInfo::node_name()
 {

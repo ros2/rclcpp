@@ -69,6 +69,16 @@ public:
     topic_type_ = info.topic_type;
 
     std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid_.begin());
+
+    const char * current_key = rcutils_string_map_get_next_key(
+      &info.buffer_backend_metadata, nullptr);
+    while (current_key) {
+      const char * current_value = rcutils_string_map_get(
+        &info.buffer_backend_metadata, current_key);
+      buffer_backend_metadata_[current_key] = current_value ? current_value : "";
+      current_key = rcutils_string_map_get_next_key(
+        &info.buffer_backend_metadata, current_key);
+    }
   }
 
   /// Get a mutable reference to the node name.
@@ -141,6 +151,16 @@ public:
   const rosidl_type_hash_t &
   topic_type_hash() const;
 
+  /// Get a mutable reference to the buffer backend metadata.
+  RCLCPP_PUBLIC
+  std::map<std::string, std::string> &
+  buffer_backend_metadata();
+
+  /// Get a const reference to the buffer backend metadata.
+  RCLCPP_PUBLIC
+  const std::map<std::string, std::string> &
+  buffer_backend_metadata() const;
+
 private:
   std::string node_name_;
   std::string node_namespace_;
@@ -149,6 +169,7 @@ private:
   std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid_;
   rclcpp::QoS qos_profile_;
   rosidl_type_hash_t topic_type_hash_;
+  std::map<std::string, std::string> buffer_backend_metadata_;
 };
 
 /**
