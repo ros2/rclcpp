@@ -279,9 +279,9 @@ void EventsCBGExecutor::sync_callback_groups()
         }
       }
 
-      CallbackGroupData new_entry{.callback_group = cbg,
-        .registered_entities = std::make_unique<cbg_executor::RegisteredEntityCache>(*scheduler,
-        *timer_manager, cbg), .origin = origin};
+      CallbackGroupData new_entry{cbg,
+        std::make_unique<cbg_executor::RegisteredEntityCache>(*scheduler,
+        *timer_manager, cbg), origin};
       new_entry.registered_entities->regenerate_events();
       next_group_data.push_back(std::move(new_entry) );
     };
