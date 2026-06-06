@@ -92,7 +92,9 @@ create_subscription(
 
     subscription_topic_stats =
       std::make_shared<rclcpp::topic_statistics::SubscriptionTopicStatistics>(
-      node_topics_interface->get_node_base_interface()->get_name(), publisher);
+        node_topics_interface->get_node_base_interface()->get_name(),
+        topic_name,
+        publisher);
 
     std::weak_ptr<
       rclcpp::topic_statistics::SubscriptionTopicStatistics

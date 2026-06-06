@@ -62,16 +62,18 @@ public:
    * measure, and publish topic statistics data. This throws an invalid_argument
    * if the input publisher is null.
    *
-   * \param node_name the name of the node, which created this instance, in order to denote
-   * topic source
+   * \param node_name the name of the node which created this instance
+   * \param topic_name the name of the subscribed topic, used to uniquely
+   * identify statistics sources for multiple subscriptions in the same node
    * \param publisher instance constructed by the node in order to publish statistics data.
    * This class owns the publisher.
    * \throws std::invalid_argument if publisher pointer is nullptr
    */
   SubscriptionTopicStatistics(
     const std::string & node_name,
+    const std::string & topic_name,
     rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
-  : node_name_(node_name),
+  : node_name_(node_name + "/" + topic_name),
     publisher_(std::move(publisher))
   {
     // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
