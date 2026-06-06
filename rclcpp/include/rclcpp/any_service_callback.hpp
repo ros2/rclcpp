@@ -33,21 +33,27 @@ namespace rclcpp
 
 namespace detail
 {
-template<typename T, typename = void>
-struct can_be_nullptr : std::false_type {};
-
-// Some lambdas define a comparison with nullptr,
-// but we see a warning that they can never be null when using it.
-// We also test if `T &` can be assigned to `nullptr` to avoid the issue.
-template<typename T>
-#ifdef __QNXNTO__
-struct can_be_nullptr<T, std::void_t<
-    decltype(std::declval<T>() == nullptr)>>: std::true_type {};
-#else
-struct can_be_nullptr<T, std::void_t<
-    decltype(std::declval<T>() == nullptr), decltype(std::declval<T &>() = nullptr)>>
-  : std::true_type {};
-#endif
+// Returns true if the callback stored in the given variant is empty/null.
+// The stored alternatives are std::function objects, whose operator bool is
+// false only when empty; lambdas and bind expressions are never empty, so this
+// flags only genuine null targets (e.g. a null function pointer). Checking the
+// stored std::function avoids probing the raw callable type with `== nullptr` /
+// `= nullptr`, which is ill-formed for some callables and broke compilation of
+// create_service() with certain callbacks/compilers (see ros2/rclcpp#1742).
+template<typename VariantT>
+bool
+callback_is_null(const VariantT & callback)
+{
+  return std::visit(
+    [](const auto & cb) {
+      if constexpr (std::is_same_v<std::decay_t<decltype(cb)>, std::monostate>) {
+        return true;
+      } else {
+        return !cb;
+      }
+    },
+    callback);
+}
 }  // namespace detail
 
 // Forward declare
@@ -62,9 +68,7 @@ public:
   : callback_(std::monostate{})
   {}
 
-  template<
-    typename CallbackT,
-    typename std::enable_if_t<!detail::can_be_nullptr<CallbackT>::value, int> = 0>
+  template<typename CallbackT>
   void
   set(CallbackT && callback)
   {
@@ -102,50 +106,10 @@ public:
       // of all the above workaround ...
       callback_ = std::forward<CallbackT>(callback);
     }
-  }
 
-  template<
-    typename CallbackT,
-    typename std::enable_if_t<detail::can_be_nullptr<CallbackT>::value, int> = 0>
-  void
-  set(CallbackT && callback)
-  {
-    if (!callback) {
+    // Reject a null target (e.g. a null function pointer or empty std::function).
+    if (detail::callback_is_null(callback_)) {
       throw std::invalid_argument("AnyServiceCallback::set(): callback cannot be nullptr");
-    }
-    // Workaround Windows issue with std::bind
-    if constexpr (
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrCallback
-      >::value)
-    {
-      callback_.template emplace<SharedPtrCallback>(callback);
-    } else if constexpr (  // NOLINT
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrWithRequestHeaderCallback
-      >::value)
-    {
-      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
-    } else if constexpr (  // NOLINT
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrDeferResponseCallback
-      >::value)
-    {
-      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
-    } else if constexpr (  // NOLINT
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrDeferResponseCallbackWithServiceHandle
-      >::value)
-    {
-      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
-    } else {
-      // the else clause is not needed, but anyways we should only be doing this instead
-      // of all the above workaround ...
-      callback_ = std::forward<CallbackT>(callback);
     }
   }
 

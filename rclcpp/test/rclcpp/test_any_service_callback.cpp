@@ -109,3 +109,46 @@ TEST_F(TestAnyServiceCallback, set_and_dispatch_defered_with_service_handle) {
     EXPECT_EQ(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
   EXPECT_EQ(callback_with_header_calls, 1);
 }
+
+namespace
+{
+void free_service_callback(
+  const std::shared_ptr<test_msgs::srv::Empty::Request>,
+  std::shared_ptr<test_msgs::srv::Empty::Response>)
+{}
+}  // namespace
+
+// Regression for ros2/rclcpp#1742: setting the callback with a plain function
+// pointer or std::function must compile and work. The previous can_be_nullptr
+// SFINAE trait was ill-formed for some callables and broke create_service().
+TEST_F(TestAnyServiceCallback, set_and_dispatch_function_pointer) {
+  void (* callback)(
+    const std::shared_ptr<test_msgs::srv::Empty::Request>,
+    std::shared_ptr<test_msgs::srv::Empty::Response>) = &free_service_callback;
+  EXPECT_NO_THROW(any_service_callback_.set(callback));
+  EXPECT_NO_THROW(
+    EXPECT_NE(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
+}
+
+TEST_F(TestAnyServiceCallback, set_and_dispatch_std_function) {
+  std::function<void(
+      const std::shared_ptr<test_msgs::srv::Empty::Request>,
+      std::shared_ptr<test_msgs::srv::Empty::Response>)> callback = free_service_callback;
+  EXPECT_NO_THROW(any_service_callback_.set(callback));
+  EXPECT_NO_THROW(
+    EXPECT_NE(nullptr, any_service_callback_.dispatch(nullptr, request_header_, request_)));
+}
+
+TEST_F(TestAnyServiceCallback, set_null_function_pointer_throws) {
+  void (* callback)(
+    const std::shared_ptr<test_msgs::srv::Empty::Request>,
+    std::shared_ptr<test_msgs::srv::Empty::Response>) = nullptr;
+  EXPECT_THROW(any_service_callback_.set(callback), std::invalid_argument);
+}
+
+TEST_F(TestAnyServiceCallback, set_null_std_function_throws) {
+  std::function<void(
+      const std::shared_ptr<test_msgs::srv::Empty::Request>,
+      std::shared_ptr<test_msgs::srv::Empty::Response>)> callback = nullptr;
+  EXPECT_THROW(any_service_callback_.set(callback), std::invalid_argument);
+}
