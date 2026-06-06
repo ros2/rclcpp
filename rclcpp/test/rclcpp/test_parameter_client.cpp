@@ -445,6 +445,50 @@ TEST_F(TestParameterClient, sync_parameter_get_parameter_types_allow_undeclared)
 /*
   Coverage for sync get_parameters
  */
+// Regression for ros2/rclcpp#200: the get_parameters() overload that reports the wait
+// outcome lets callers distinguish a request that did not complete (TIMEOUT/INTERRUPTED)
+// from a successful response that happens to be empty. The plain overload returns an
+// empty vector for both, conflating the two.
+TEST_F(TestParameterClient, sync_parameter_get_parameters_reports_result) {
+  node->declare_parameter("foo", 4);
+  auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+
+  {
+    // SUCCESS with a value.
+    rclcpp::FutureReturnCode result;
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::Parameter> parameters =
+      synchronous_client->get_parameters(names, 10s, result);
+    EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, result);
+    ASSERT_EQ(1u, parameters.size());
+    EXPECT_EQ(4, parameters[0].as_int());
+  }
+
+  {
+    // SUCCESS but empty: the server responded, the parameter just does not exist.
+    rclcpp::FutureReturnCode result;
+    std::vector<std::string> names{"does_not_exist"};
+    std::vector<rclcpp::Parameter> parameters =
+      synchronous_client->get_parameters(names, 10s, result);
+    EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, result);
+    EXPECT_EQ(0u, parameters.size());
+  }
+
+  {
+    // TIMEOUT: no parameter service exists for this remote node, so the request does
+    // not complete. The returned vector is empty, but result distinguishes it from the
+    // SUCCESS-but-empty case above.
+    auto client_to_missing =
+      std::make_shared<rclcpp::SyncParametersClient>(node, "non_existent_remote_node");
+    rclcpp::FutureReturnCode result;
+    std::vector<std::string> names{"foo"};
+    std::vector<rclcpp::Parameter> parameters =
+      client_to_missing->get_parameters(names, 200ms, result);
+    EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, result);
+    EXPECT_EQ(0u, parameters.size());
+  }
+}
+
 TEST_F(TestParameterClient, sync_parameter_get_parameters) {
   node->declare_parameter("foo", 4);
   node->declare_parameter("bar", "this is bar");
