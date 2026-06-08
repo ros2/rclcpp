@@ -1162,3 +1162,63 @@ TYPED_TEST(TestExecutors, dropSubscriptionDuringCallback)
   // one was deleted during the callback
   ASSERT_TRUE(!sub1_works || !sub2_works);
 }
+
+// Check if services work as expected
+TYPED_TEST(TestExecutors, testService)
+{
+  using ExecutorType = TypeParam;
+
+  ExecutorType executor;
+  executor.add_node(this->node);
+
+  bool spin_exited = false;
+
+  rclcpp::Node::SharedPtr node = this->node;
+
+  const std::string service_name("/test/test_service");
+
+  using Service = test_msgs::srv::Empty;
+
+  std::atomic<bool> gotCallback = false;
+
+  auto service_cb = [&gotCallback](const std::shared_ptr<Service::Request>/*request*/,
+    std::shared_ptr<Service::Response>/*response*/)
+    {
+      gotCallback = true;
+    };
+
+  auto service = node->create_service<Service>(service_name, service_cb, rclcpp::ServicesQoS());
+
+  // Long timeout
+  std::thread spinner([&spin_exited, &executor]() {
+      executor.spin();
+      spin_exited = true;
+    });
+
+  std::this_thread::sleep_for(1ms);
+
+  const std::shared_ptr<Service::Request> req = std::make_shared<Service::Request>();
+
+  auto client = node->create_client<Service>(service_name);
+
+  EXPECT_TRUE(client->wait_for_service(30ms));
+
+  auto handle = client->async_send_request(req);
+
+  auto retCode = handle.wait_for(500ms);
+  EXPECT_EQ(retCode, std::future_status::ready);
+
+  EXPECT_TRUE(gotCallback);
+
+  // Force interruption
+  rclcpp::shutdown();
+
+  // Give it time to exit
+  auto start = std::chrono::steady_clock::now();
+  while (!spin_exited && (std::chrono::steady_clock::now() - start) < 1s) {
+    std::this_thread::sleep_for(1ms);
+  }
+
+  EXPECT_TRUE(spin_exited);
+  spinner.join();
+}
