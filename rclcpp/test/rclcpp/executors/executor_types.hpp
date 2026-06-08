@@ -20,6 +20,7 @@
 #include <string>
 #include <type_traits>
 
+#include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
@@ -30,6 +31,7 @@ using ExecutorTypes =
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
   rclcpp::executors::StaticSingleThreadedExecutor,
+  rclcpp::executors::EventsCBGExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
 
 class ExecutorTypeNames
@@ -51,6 +53,10 @@ public:
       return "StaticSingleThreadedExecutor";
     }
 
+    if (std::is_same<T, rclcpp::executors::EventsCBGExecutor>()) {
+      return "EventsCBGExecutor";
+    }
+
     if (std::is_same<T, rclcpp::experimental::executors::EventsExecutor>()) {
       return "EventsExecutor";
     }
@@ -65,6 +71,7 @@ using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor,
+  rclcpp::executors::EventsCBGExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
 
 #endif  // RCLCPP__EXECUTORS__EXECUTOR_TYPES_HPP_
