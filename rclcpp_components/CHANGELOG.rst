@@ -2,6 +2,21 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add Callback Group Events Executor (Jazzy Backport) (`#3163 <https://github.com/ros2/rclcpp/issues/3163>`_)
+  * initial backport commit
+  * remove C++20 features (designated initializers)
+  * update executor tests
+  * add component_container_events_cbg
+  * change to use shared_ptr by value
+  * explicit type
+  * remove fix non-applicable to jazzy
+  * lint
+  ---------
+  Co-authored-by: Skyler Medeiros <skye@polymathrobotics.com>
+* Contributors: Skyler Medeiros
+
 28.1.19 (2026-06-02)
 --------------------
 
