@@ -2,8 +2,8 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+28.1.20 (2026-06-09)
+--------------------
 * Add Callback Group Events Executor (Jazzy Backport) (`#3163 <https://github.com/ros2/rclcpp/issues/3163>`_)
   * initial backport commit
   * remove C++20 features (designated initializers)
