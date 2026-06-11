@@ -205,7 +205,12 @@ public:
     if (spinning.exchange(true)) {
       throw std::runtime_error("spin_until_future_complete() called while already spinning");
     }
-    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+    RCPPUTILS_SCOPE_EXIT(
+      this->spinning.store(false);
+      this->cancel_requested_.store(false); );
+    if (cancel_requested_.load()) {
+      return FutureReturnCode::INTERRUPTED;
+    }
     while (rclcpp::ok(this->context_) && spinning.load()) {
       // Do one item of work.
       spin_once_internal(timeout_left);

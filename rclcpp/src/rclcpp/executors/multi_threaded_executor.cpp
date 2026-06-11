@@ -55,7 +55,13 @@ MultiThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
+  RCPPUTILS_SCOPE_EXIT(
+    wait_result_.reset();
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {

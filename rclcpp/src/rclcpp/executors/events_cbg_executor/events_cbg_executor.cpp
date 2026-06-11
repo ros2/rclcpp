@@ -430,7 +430,12 @@ EventsCBGExecutor::spin_once(std::chrono::nanoseconds timeout)
   if (spinning.exchange(true) ) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   spin_once_internal(timeout);
 }
@@ -458,7 +463,12 @@ bool EventsCBGExecutor::collect_and_execute_ready_events(
   if (spinning.exchange(true) ) {
     throw std::runtime_error("collect_and_execute_ready_events() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return false;
+  }
 
   const auto start = std::chrono::steady_clock::now();
   const auto end_time = start + max_duration;
@@ -491,7 +501,12 @@ EventsCBGExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   for ( ; thread_id < number_of_threads_ - 1; ++thread_id) {
@@ -513,7 +528,12 @@ void EventsCBGExecutor::spin(
   if (spinning.exchange(true) ) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   for ( ; thread_id < number_of_threads_ - 1; ++thread_id) {
@@ -564,6 +584,11 @@ EventsCBGExecutor::cancel()
 {
   bool was_spinning = spinning;
 
+  // Set the pending-cancel flag BEFORE clearing spinning, so that any spin
+  // variant that is just entering and is about to do `spinning.exchange(true)`
+  // observes the pending cancel and bails out early instead of re-arming
+  // spinning and blocking forever.
+  cancel_requested_.store(true);
   spinning.store(false);
 
   if(was_spinning) {

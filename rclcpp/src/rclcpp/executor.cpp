@@ -53,6 +53,7 @@ class rclcpp::ExecutorImplementation {};
 
 Executor::Executor(const std::shared_ptr<rclcpp::Context> & context)
 : spinning(false),
+  cancel_requested_(false),
   context_(context),
   entities_need_rebuild_(true),
   collector_(nullptr),
@@ -62,6 +63,7 @@ Executor::Executor(const std::shared_ptr<rclcpp::Context> & context)
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
+  cancel_requested_(false),
   interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context)),
   context_(options.context),
@@ -287,7 +289,13 @@ Executor::spin_until_future_complete_impl(
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_until_future_complete() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
+  RCPPUTILS_SCOPE_EXIT(
+    wait_result_.reset();
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return FutureReturnCode::INTERRUPTED;
+  }
   while (rclcpp::ok(this->context_) && spinning.load()) {
     // Do one item of work.
     spin_once_impl(timeout_left);
@@ -378,7 +386,13 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
+  RCPPUTILS_SCOPE_EXIT(
+    wait_result_.reset();
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   // clear the wait result and wait for work without blocking to collect the work
   // for the first time
@@ -460,13 +474,25 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
+  RCPPUTILS_SCOPE_EXIT(
+    wait_result_.reset();
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
   spin_once_impl(timeout);
 }
 
 void
 Executor::cancel()
 {
+  // Set the pending-cancel flag BEFORE clearing the spinning flag.
+  // This ordering ensures that a spin variant which is just entering and is
+  // about to do `spinning.exchange(true)` will observe the pending cancel and
+  // bail out early instead of re-arming spinning and blocking forever in
+  // wait_for_work().
+  cancel_requested_.store(true);
   spinning.store(false);
   try {
     interrupt_guard_condition_->trigger();

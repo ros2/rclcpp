@@ -114,7 +114,12 @@ EventsExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   timers_manager_->start();
   RCPPUTILS_SCOPE_EXIT(timers_manager_->stop(); );
@@ -151,7 +156,12 @@ EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhau
     throw std::runtime_error("spin_some() called while already spinning");
   }
 
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   auto start = std::chrono::steady_clock::now();
 
