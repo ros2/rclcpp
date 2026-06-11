@@ -73,7 +73,7 @@ public:
     const std::string & node_name,
     const std::string & topic_name,
     rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
-  : node_name_(node_name + "/" + topic_name),
+  : measurement_source_name_(node_name + "/" + topic_name),
     publisher_(std::move(publisher))
   {
     // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
@@ -132,7 +132,7 @@ public:
         collector->ClearCurrentMeasurements();
 
         auto message = libstatistics_collector::collector::GenerateStatisticMessage(
-          node_name_,
+          measurement_source_name_,
           collector->GetMetricName(),
           collector->GetMetricUnit(),
           window_start_,
@@ -223,7 +223,7 @@ private:
   /// Collection of statistics collectors
   std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published
-  const std::string node_name_;
+  const std::string measurement_source_name_;
   /// Publisher, created by the node, used to publish topic statistics messages
   rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_;
   /// Timer which fires the publisher

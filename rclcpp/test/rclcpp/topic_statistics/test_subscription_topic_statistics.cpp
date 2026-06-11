@@ -83,7 +83,7 @@ public:
     const std::string & node_name,
     const std::string & topic_name,
     rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
-  : SubscriptionTopicStatistics<CallbackMessageT>(
+  : SubscriptionTopicStatistics(
       node_name, topic_name, publisher)
   {
   }
@@ -492,8 +492,15 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_multiple_subscriptions_diffe
   constexpr const char kTopicB[]{"/test_topic_b"};
   constexpr const uint64_t kNumStatsMessages{4};
 
-  auto pub_a = std::make_shared<EmptyPublisher>("pub_node_a", kTopicA);
-  auto pub_b = std::make_shared<EmptyPublisher>("pub_node_b", kTopicB);
+  auto pub_a = std::make_shared<PublisherNode<Empty>>(
+    "pub_node_a",
+    kTopicA,
+    std::chrono::milliseconds{100});
+
+  auto pub_b = std::make_shared<PublisherNode<Empty>>(
+    "pub_node_b",
+    kTopicB,
+    std::chrono::milliseconds{100});
 
   auto multi_sub_node = std::make_shared<rclcpp::Node>("multi_sub_node");
 
