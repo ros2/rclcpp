@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix: Fixed MSVC compile errors (`#3135 <https://github.com/ros2/rclcpp/issues/3135>`_) (`#3173 <https://github.com/ros2/rclcpp/issues/3173>`_)
+  (cherry picked from commit 45aef033d432e6a66e5c84dd99a391fcbef0d567)
+  Co-authored-by: Janosch Machowinski <jmachowinski@users.noreply.github.com>
+  Co-authored-by: Janosch Machowinski <JMachowinski@cellumation.com>
+* Contributors: Marco A. Gutierrez
+
 28.1.20 (2026-06-09)
 --------------------
 * Add Callback Group Events Executor (Jazzy Backport) (`#3163 <https://github.com/ros2/rclcpp/issues/3163>`_)
