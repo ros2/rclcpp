@@ -17,13 +17,19 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
 #include <string>
 
 #include "rcl/graph.h"
 #include "rcl/node.h"
 #include "rcl/wait.h"
 
+#include "rmw/impl/cpp/demangle.hpp"
+
+#include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
@@ -244,5 +250,63 @@ ClientBase::set_on_new_response_callback(rcl_event_callback_t callback, const vo
 
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "failed to set the on new response callback for client");
+  }
+}
+
+void
+ClientBase::set_on_new_response_callback(const std::function<void(size_t)> & callback)
+{
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_new_response_callback "
+            "is not callable.");
+  }
+
+  auto new_callback =
+    [callback, this](size_t number_of_responses) {
+      try {
+        callback(number_of_responses);
+      } catch (const std::exception & exception) {
+        RCLCPP_ERROR_STREAM(
+          node_logger_,
+          "rclcpp::ClientBase@" << this <<
+            " caught " << rmw::impl::cpp::demangle(exception) <<
+            " exception in user-provided callback for the 'on new response' callback: " <<
+            exception.what());
+      } catch (...) {
+        RCLCPP_ERROR_STREAM(
+          node_logger_,
+          "rclcpp::ClientBase@" << this <<
+            " caught unhandled exception in user-provided callback " <<
+            "for the 'on new response' callback");
+      }
+    };
+
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+
+  // Set it temporarily to the new callback, while we replace the old one.
+  // This two-step setting, prevents a gap where the old std::function has
+  // been replaced but the middleware hasn't been told about the new one yet.
+  set_on_new_response_callback(
+    rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
+    static_cast<const void *>(&new_callback));
+
+  // Store the std::function to keep it in scope, also overwrites the existing one.
+  on_new_response_callback_ = new_callback;
+
+  // Set it again, now using the permanent storage.
+  set_on_new_response_callback(
+    rclcpp::detail::cpp_callback_trampoline<
+      decltype(on_new_response_callback_), const void *, size_t>,
+    static_cast<const void *>(&on_new_response_callback_));
+}
+
+void
+ClientBase::clear_on_new_response_callback()
+{
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+  if (on_new_response_callback_) {
+    set_on_new_response_callback(nullptr, nullptr);
+    on_new_response_callback_ = nullptr;
   }
 }

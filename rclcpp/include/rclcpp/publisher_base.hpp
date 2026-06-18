@@ -313,44 +313,16 @@ public:
    * \param[in] callback functor to be called when a new event occurs
    * \param[in] event_type identifier for the qos event we want to attach the callback to
    */
+  RCLCPP_PUBLIC
   void
   set_on_new_qos_event_callback(
     const std::function<void(size_t)> & callback,
-    rcl_publisher_event_type_t event_type)
-  {
-    if (event_handlers_.count(event_type) == 0) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling set_on_new_qos_event_callback for non registered publisher event_type");
-      return;
-    }
-
-    if (!callback) {
-      throw std::invalid_argument(
-              "The callback passed to set_on_new_qos_event_callback "
-              "is not callable.");
-    }
-
-    // The on_ready_callback signature has an extra `int` argument used to disambiguate between
-    // possible different entities within a generic waitable.
-    // We hide that detail to users of this method.
-    std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
-    event_handlers_[event_type]->set_on_ready_callback(new_callback);
-  }
+    rcl_publisher_event_type_t event_type);
 
   /// Unset the callback registered for new qos events, if any.
+  RCLCPP_PUBLIC
   void
-  clear_on_new_qos_event_callback(rcl_publisher_event_type_t event_type)
-  {
-    if (event_handlers_.count(event_type) == 0) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling clear_on_new_qos_event_callback for non registered event_type");
-      return;
-    }
-
-    event_handlers_[event_type]->clear_on_ready_callback();
-  }
+  clear_on_new_qos_event_callback(rcl_publisher_event_type_t event_type);
 
 protected:
   template<typename EventCallbackT>
