@@ -15,13 +15,16 @@
 #include "rclcpp/subscription_base.hpp"
 
 #include <cstdio>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -32,6 +35,7 @@
 
 #include "rcl/event.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/rmw.h"
 
 #include "rosidl_dynamic_typesupport/types.h"
@@ -612,4 +616,138 @@ SubscriptionBase::enable_callbacks()
         decltype(on_new_message_callback_), const void *, size_t>,
       static_cast<const void *>(&on_new_message_callback_));
   }
+}
+
+void
+SubscriptionBase::set_on_new_message_callback(const std::function<void(size_t)> & callback)
+{
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_new_message_callback "
+            "is not callable.");
+  }
+
+  auto new_callback =
+    [callback, this](size_t number_of_messages) {
+      try {
+        callback(number_of_messages);
+      } catch (const std::exception & exception) {
+        RCLCPP_ERROR_STREAM(
+          node_logger_,
+          "rclcpp::SubscriptionBase@" << this <<
+            " caught " << rmw::impl::cpp::demangle(exception) <<
+            " exception in user-provided callback for the 'on new message' callback: " <<
+            exception.what());
+      } catch (...) {
+        RCLCPP_ERROR_STREAM(
+          node_logger_,
+          "rclcpp::SubscriptionBase@" << this <<
+            " caught unhandled exception in user-provided callback " <<
+            "for the 'on new message' callback");
+      }
+    };
+
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+
+  // Set it temporarily to the new callback, while we replace the old one.
+  // This two-step setting, prevents a gap where the old std::function has
+  // been replaced but the middleware hasn't been told about the new one yet.
+  set_on_new_message_callback(
+    rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
+    static_cast<const void *>(&new_callback));
+
+  // Store the std::function to keep it in scope, also overwrites the existing one.
+  on_new_message_callback_ = new_callback;
+
+  // Set it again, now using the permanent storage.
+  set_on_new_message_callback(
+    rclcpp::detail::cpp_callback_trampoline<
+      decltype(on_new_message_callback_), const void *, size_t>,
+    static_cast<const void *>(&on_new_message_callback_));
+}
+
+void
+SubscriptionBase::clear_on_new_message_callback()
+{
+  std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
+
+  if (on_new_message_callback_) {
+    set_on_new_message_callback(nullptr, nullptr);
+    on_new_message_callback_ = nullptr;
+  }
+}
+
+void
+SubscriptionBase::set_on_new_intra_process_message_callback(
+  const std::function<void(size_t)> & callback)
+{
+  if (!use_intra_process_) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Calling set_on_new_intra_process_message_callback for subscription with IPC disabled");
+    return;
+  }
+
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_new_intra_process_message_callback "
+            "is not callable.");
+  }
+
+  // The on_ready_callback signature has an extra `int` argument used to disambiguate between
+  // possible different entities within a generic waitable.
+  // We hide that detail to users of this method.
+  std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
+  subscription_intra_process_->set_on_ready_callback(new_callback);
+}
+
+void
+SubscriptionBase::clear_on_new_intra_process_message_callback()
+{
+  if (!use_intra_process_) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Calling clear_on_new_intra_process_message_callback for subscription with IPC disabled");
+    return;
+  }
+
+  subscription_intra_process_->clear_on_ready_callback();
+}
+
+void
+SubscriptionBase::set_on_new_qos_event_callback(
+  const std::function<void(size_t)> & callback,
+  rcl_subscription_event_type_t event_type)
+{
+  if (event_handlers_.count(event_type) == 0) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Calling set_on_new_qos_event_callback for non registered subscription event_type");
+    return;
+  }
+
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_new_qos_event_callback "
+            "is not callable.");
+  }
+
+  // The on_ready_callback signature has an extra `int` argument used to disambiguate between
+  // possible different entities within a generic waitable.
+  // We hide that detail to users of this method.
+  std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
+  event_handlers_[event_type]->set_on_ready_callback(new_callback);
+}
+
+void
+SubscriptionBase::clear_on_new_qos_event_callback(rcl_subscription_event_type_t event_type)
+{
+  if (event_handlers_.count(event_type) == 0) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Calling clear_on_new_qos_event_callback for non registered event_type");
+    return;
+  }
+
+  event_handlers_[event_type]->clear_on_ready_callback();
 }
