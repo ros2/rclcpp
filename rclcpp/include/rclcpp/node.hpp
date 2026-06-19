@@ -18,7 +18,6 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
-#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -34,7 +33,6 @@
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
-#include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 #include "rclcpp/callback_group.hpp"

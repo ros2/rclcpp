@@ -24,7 +24,6 @@
 #include <utility>
 #include <variant>
 
-#include "rosidl_runtime_cpp/traits.hpp"
 #include "tracetools/tracetools.h"
 #include "tracetools/utils.hpp"
 

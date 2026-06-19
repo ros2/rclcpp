@@ -34,6 +34,7 @@
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_info.hpp"
 #include "rclcpp/network_flow_endpoint.hpp"

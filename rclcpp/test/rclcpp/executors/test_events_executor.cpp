@@ -19,6 +19,7 @@
 #include <string>
 
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
+#include "rclcpp/node.hpp"
 
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/msg/empty.hpp"

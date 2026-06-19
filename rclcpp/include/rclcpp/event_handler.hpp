@@ -33,7 +33,6 @@
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp

@@ -34,7 +34,6 @@
 #include "rclcpp/network_flow_endpoint.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/event_handler.hpp"
-#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rcpputils/time.hpp"
 

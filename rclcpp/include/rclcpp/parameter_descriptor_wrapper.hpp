@@ -24,7 +24,6 @@
 // Additional ROS libraries needed
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 
-#include "rclcpp/node.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/node_interfaces/get_node_parameters_interface.hpp"
 #include "rclcpp/visibility_control.hpp"

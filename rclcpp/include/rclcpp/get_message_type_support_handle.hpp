@@ -18,7 +18,6 @@
 #include <type_traits>
 
 #include "rosidl_runtime_cpp/traits.hpp"
-#include "rosidl_runtime_cpp/message_type_support_decl.hpp"
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rclcpp/type_adapter.hpp"

@@ -20,7 +20,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {

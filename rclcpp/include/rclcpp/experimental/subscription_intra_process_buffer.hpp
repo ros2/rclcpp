@@ -29,7 +29,6 @@
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 
 #include "tracetools/tracetools.h"

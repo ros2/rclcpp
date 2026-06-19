@@ -25,7 +25,6 @@
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
-#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
 #include "rclcpp/waitable.hpp"

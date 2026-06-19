@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "rclcpp/function_traits.hpp"
-#include "rclcpp/visibility_control.hpp"
 #include "rmw/types.h"
 #include "tracetools/tracetools.h"
 #include "tracetools/utils.hpp"
