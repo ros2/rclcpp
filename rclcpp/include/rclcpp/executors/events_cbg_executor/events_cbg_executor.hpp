@@ -290,6 +290,7 @@ private:
    */
   void trigger_callback_group_sync();
 
+  RCLCPP_PUBLIC
   void spin_once_internal(std::chrono::nanoseconds timeout);
 
   RCLCPP_DISABLE_COPY(EventsCBGExecutor)
