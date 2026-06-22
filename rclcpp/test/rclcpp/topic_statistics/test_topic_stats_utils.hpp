@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "statistics_msgs/msg/metrics_message.hpp"
+#include "rclcpp/node.hpp"
 
 #ifndef RCLCPP__TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
 #define RCLCPP__TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
