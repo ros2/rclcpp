@@ -153,6 +153,7 @@ public:
     std::chrono::nanoseconds max_duration,
     bool recollect_if_no_work_available);
 
+  RCLCPP_PUBLIC
   void
   spin_all(std::chrono::nanoseconds max_duration) override;
 
