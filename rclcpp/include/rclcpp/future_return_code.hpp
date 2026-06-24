@@ -15,7 +15,7 @@
 #ifndef RCLCPP__FUTURE_RETURN_CODE_HPP_
 #define RCLCPP__FUTURE_RETURN_CODE_HPP_
 
-#include <iostream>
+#include <iosfwd>
 #include <string>
 
 #include "rclcpp/visibility_control.hpp"

@@ -22,7 +22,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/service.hpp"
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"

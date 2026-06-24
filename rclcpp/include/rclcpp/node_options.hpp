@@ -23,6 +23,7 @@
 #include "rcl/node_options.h"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"

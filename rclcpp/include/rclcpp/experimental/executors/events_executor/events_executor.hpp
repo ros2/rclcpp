@@ -27,7 +27,6 @@
 #include "rclcpp/experimental/executors/events_executor/events_queue.hpp"
 #include "rclcpp/experimental/executors/events_executor/simple_events_queue.hpp"
 #include "rclcpp/experimental/timers_manager.hpp"
-#include "rclcpp/node.hpp"
 
 namespace rclcpp
 {

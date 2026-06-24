@@ -44,7 +44,6 @@
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 #include "rmw/error_handling.h"

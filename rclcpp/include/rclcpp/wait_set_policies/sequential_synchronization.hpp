@@ -29,7 +29,6 @@
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/wait_result.hpp"
 #include "rclcpp/wait_result_kind.hpp"
 #include "rclcpp/wait_set_policies/detail/synchronization_policy_common.hpp"
 #include "rclcpp/waitable.hpp"

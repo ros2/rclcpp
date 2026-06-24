@@ -18,6 +18,7 @@
 
 #include "rcpputils/find_and_replace.hpp"
 #include "rcpputils/scope_exit.hpp"
+#include "rcl_yaml_param_parser/parser.h"
 #include "rclcpp/parameter_map.hpp"
 
 using rclcpp::exceptions::InvalidParametersException;

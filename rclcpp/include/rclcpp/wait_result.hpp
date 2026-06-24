@@ -15,7 +15,6 @@
 #ifndef RCLCPP__WAIT_RESULT_HPP_
 #define RCLCPP__WAIT_RESULT_HPP_
 
-#include <cassert>
 #include <functional>
 #include <iostream>
 #include <memory>
