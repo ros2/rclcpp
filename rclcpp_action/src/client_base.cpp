@@ -181,7 +181,7 @@ public:
   std::map<int64_t, ResponseCallback> pending_cancel_responses;
   std::recursive_mutex cancel_requests_mutex;
 
-  std::mutex goal_id_rng_mutex;
+  std::recursive_mutex goal_id_rng_mutex;
   std::independent_bits_engine<
     std::mt19937, 8, unsigned int> random_bytes_generator;
 };
