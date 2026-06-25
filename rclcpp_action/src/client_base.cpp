@@ -181,7 +181,7 @@ public:
   std::map<int64_t, ResponseCallback> pending_cancel_responses;
   std::recursive_mutex cancel_requests_mutex;
 
-  std::recursive_mutex goal_id_rng_mutex;
+  std::mutex goal_id_rng_mutex;
   std::independent_bits_engine<
     std::mt19937, 8, unsigned int> random_bytes_generator;
 };
@@ -481,7 +481,7 @@ GoalUUID
 ClientBase::generate_goal_id()
 {
   GoalUUID goal_id;
-  std::lock_guard<std::recursive_mutex> lock(pimpl_->goal_id_rng_mutex);
+  std::lock_guard<std::mutex> lock(pimpl_->goal_id_rng_mutex);
   // TODO(hidmic): Do something better than this for UUID generation.
   // std::generate(
   //   goal_id.uuid.begin(), goal_id.uuid.end(),
