@@ -481,7 +481,7 @@ GoalUUID
 ClientBase::generate_goal_id()
 {
   GoalUUID goal_id;
-  std::lock_guard<std::mutex> lock(pimpl_->goal_id_rng_mutex);
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->goal_id_rng_mutex);
   // TODO(hidmic): Do something better than this for UUID generation.
   // std::generate(
   //   goal_id.uuid.begin(), goal_id.uuid.end(),
