@@ -29,6 +29,8 @@
 #include "rcl/graph.h"
 #include "rcl/guard_condition.h"
 
+#include "rmw/impl/cpp/buffer_backend_metadata.hpp"
+
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
@@ -70,15 +72,8 @@ public:
 
     std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid_.begin());
 
-    const char * current_key = rcutils_string_map_get_next_key(
-      &info.buffer_backend_metadata, nullptr);
-    while (current_key) {
-      const char * current_value = rcutils_string_map_get(
-        &info.buffer_backend_metadata, current_key);
-      buffer_backend_metadata_[current_key] = current_value ? current_value : "";
-      current_key = rcutils_string_map_get_next_key(
-        &info.buffer_backend_metadata, current_key);
-    }
+    buffer_backend_metadata_ =
+      rmw::impl::cpp::parse_buffer_backend_metadata(info.buffer_backend_metadata);
   }
 
   /// Get a mutable reference to the node name.
