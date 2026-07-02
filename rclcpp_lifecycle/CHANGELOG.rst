@@ -2,6 +2,11 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.0.2 (2026-07-02)
+-------------------
+* Optimize header include (`#3179 <https://github.com/ros2/rclcpp/issues/3179>`_)
+* Contributors: Alejandro Hernández Cordero
+
 33.0.1 (2026-05-22)
 -------------------
 

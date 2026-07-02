@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.0.2 (2026-07-02)
+-------------------
+* Optimize header include (`#3179 <https://github.com/ros2/rclcpp/issues/3179>`_)
+* Move implementation from hpp to cpp (`#3177 <https://github.com/ros2/rclcpp/issues/3177>`_)
+* test: add regression test for KEEP_ALL QoS with transient-local caching (`#3152 <https://github.com/ros2/rclcpp/issues/3152>`_)
+* Fixed flaky test busy waiting test (`#3155 <https://github.com/ros2/rclcpp/issues/3155>`_)
+* node_parameters: reject non-finite values in floating-point range check (`#3143 <https://github.com/ros2/rclcpp/issues/3143>`_)
+* Contributors: Alejandro Hernández Cordero, Janosch Machowinski, Tony Najjar, bartalor
+
 33.0.1 (2026-05-22)
 -------------------
 * add event_type_is_supported() for Publisher/Subscription. (`#3132 <https://github.com/ros2/rclcpp//issues/3132>`_)
