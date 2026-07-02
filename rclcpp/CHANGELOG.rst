@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.9 (2026-07-02)
+-------------------
+* Kilted: fixed windows symbol (`#3181 <https://github.com/ros2/rclcpp/issues/3181>`_)
+* Merge pull request `#3180 <https://github.com/ros2/rclcpp/issues/3180>`_ from ros2/ahcorde/kilted/fix_window_symbol
+* Kilted: Fix simbol in windwos
+* Add Callback Group Events Executor (Kilted Backport) (`#3164 <https://github.com/ros2/rclcpp/issues/3164>`_)
+* chore: fix typo in test_time_source.cpp (`#3145 <https://github.com/ros2/rclcpp/issues/3145>`_) (`#3148 <https://github.com/ros2/rclcpp/issues/3148>`_)
+* Contributors: Alejandro Hernandez Cordero, Alejandro Hernández Cordero, Skyler Medeiros, mergify[bot]
+
 29.5.8 (2026-03-25)
 -------------------
 * Remove duplicate test cases in TestAnySubscriptionCallback::is_serialized_message_callback (backport `#3104 <https://github.com/ros2/rclcpp/issues/3104>`_) (`#3106 <https://github.com/ros2/rclcpp/issues/3106>`_)

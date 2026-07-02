@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.9 (2026-07-02)
+-------------------
+* Add Callback Group Events Executor (Kilted Backport) (`#3164 <https://github.com/ros2/rclcpp/issues/3164>`_)
+* Contributors: Skyler Medeiros
+
 29.5.8 (2026-03-25)
 -------------------
 * Avoid unecessary creation of MultiThreadedExecutor (`#3090 <https://github.com/ros2/rclcpp/issues/3090>`_) (`#3094 <https://github.com/ros2/rclcpp/issues/3094>`_)

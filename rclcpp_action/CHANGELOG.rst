@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.5.9 (2026-07-02)
+-------------------
+* Fix expiration of action goals when EventsExecutors are used (Kilted backport) (`#3157 <https://github.com/ros2/rclcpp/issues/3157>`_)
+* Contributors: Skyler Medeiros
+
 29.5.8 (2026-03-25)
 -------------------
 
