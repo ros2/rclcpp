@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.1 (2026-07-02)
+-------------------
+* Call rclcpp::shutdown() in the component containers (`#3158 <https://github.com/ros2/rclcpp/issues/3158>`_) (`#3162 <https://github.com/ros2/rclcpp/issues/3162>`_)
+* Contributors: mergify[bot]
+
 32.0.0 (2026-04-30)
 -------------------
 * Refactor component containers + Add option for CBG Executor (`#3134 <https://github.com/ros2/rclcpp/issues/3134>`_)

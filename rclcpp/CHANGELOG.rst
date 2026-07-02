@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.1 (2026-07-02)
+-------------------
+* node_parameters: reject non-finite values in floating-point range check (`#3143 <https://github.com/ros2/rclcpp/issues/3143>`_) (`#3161 <https://github.com/ros2/rclcpp/issues/3161>`_)
+* chore: fix typo in test_time_source.cpp (`#3145 <https://github.com/ros2/rclcpp/issues/3145>`_) (`#3147 <https://github.com/ros2/rclcpp/issues/3147>`_)
+* Deprecate memory strategy (`#3136 <https://github.com/ros2/rclcpp/issues/3136>`_) (`#3141 <https://github.com/ros2/rclcpp/issues/3141>`_)
+* Contributors: mergify[bot]
+
 32.0.0 (2026-04-30)
 -------------------
 * Include EventsCBGExecutor (`#3137 <https://github.com/ros2/rclcpp/issues/3137>`_)
