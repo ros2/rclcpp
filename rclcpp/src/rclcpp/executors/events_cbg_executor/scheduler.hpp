@@ -92,9 +92,7 @@ public:
     {
       {
         std::lock_guard l(ready_mutex);
-        if (type != CallbackGroupType::Reentrant) {
-          not_ready = false;
-        }
+        not_ready = false;
 
         if(!has_ready_entities()) {
           idle = true;
@@ -108,6 +106,9 @@ public:
     CallbackGroupType get_type() {return type;}
 
     bool is_ready();
+
+    // true if this cbg is inside the scheduler's queue
+    bool in_queue = false;
 
 protected:
     CBGScheduler & scheduler;
@@ -229,27 +230,11 @@ private:
    */
   void callback_group_ready(CallbackGroupHandle *handle, bool callback_group_was_idle)
   {
-    {
+    if (!handle->in_queue) {
       std::lock_guard l(ready_callback_groups_mutex);
 
-      // Reentrant callback groups might not be removed from the queue when one of
-      // their entities starts executing.
-      if (handle->get_type() == CallbackGroupType::Reentrant) {
-        bool already_in_queue = false;
-
-        for (auto it = ready_callback_groups.begin(); it != ready_callback_groups.end(); it++) {
-          if (*it == handle) {
-            already_in_queue = true;
-            break;
-          }
-        }
-
-        if (!already_in_queue) {
-          ready_callback_groups.push_back(handle);
-        }
-      } else {
-        ready_callback_groups.push_back(handle);
-      }
+      ready_callback_groups.push_back(handle);
+      handle->in_queue = true;
     }
 
     if(callback_group_was_idle) {

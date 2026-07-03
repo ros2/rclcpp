@@ -160,12 +160,14 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
     FirstInFirstOutCallbackGroupHandle *ready_cbg =
       static_cast<FirstInFirstOutCallbackGroupHandle *>(ready_callback_groups.front());
     ready_callback_groups.pop_front();
+    ready_cbg->in_queue = false;
 
     std::optional<FirstInFirstOutScheduler::ExecutableEntity> ret =
       ready_cbg->get_next_ready_entity();
 
     if (ready_cbg->get_type() == CallbackGroupType::Reentrant && ready_cbg->has_ready_entities()) {
       ready_callback_groups.push_back(ready_cbg);
+      ready_cbg->in_queue = true;
     }
 
     if(ret) {
@@ -192,11 +194,14 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
     std::optional<FirstInFirstOutScheduler::ExecutableEntity> ret =
       ready_cbg->get_next_ready_entity(max_id);
     if(ret) {
+      ready_callback_groups.erase(it);
+      ready_cbg->in_queue = false;
+
       if (
-        ready_cbg->get_type() == CallbackGroupType::MutuallyExclusive ||
-        !ready_cbg->has_ready_entities())
+        ready_cbg->get_type() == CallbackGroupType::Reentrant && ready_cbg->has_ready_entities())
       {
-        ready_callback_groups.erase(it);
+        ready_callback_groups.push_back(ready_cbg);
+        ready_cbg->in_queue = true;
       }
       return CBGScheduler::ExecutableEntityWithInfo{
         .entity = std::move(ret), .moreEntitiesReady = !ready_callback_groups.empty()};
