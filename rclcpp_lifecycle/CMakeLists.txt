@@ -2,16 +2,12 @@ cmake_minimum_required(VERSION 3.20)
 
 project(rclcpp_lifecycle)
 
-# Default to C++20
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 20)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
 endif()
 
 find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -41,6 +37,9 @@ target_link_libraries(${PROJECT_NAME}
   rcl_lifecycle::rcl_lifecycle
   rcutils::rcutils
   rosidl_typesupport_cpp::rosidl_typesupport_cpp
+  # Note we link public on purpose, as we want to export
+  # the used C++ version as minimum to all consuming packages
+  ament_cmake_ros_core::ament_ros_defaults
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
