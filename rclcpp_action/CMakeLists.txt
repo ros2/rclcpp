@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(rclcpp_action)
 
 find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl REQUIRED)
@@ -10,11 +11,6 @@ find_package(rcl_action REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(
     -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual
@@ -42,6 +38,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   rcl_action::rcl_action
   rclcpp::rclcpp
   rosidl_runtime_c::rosidl_runtime_c
+  # Note we link public on purpose, as we want to export
+  # the used C++ version as minimum to all consuming packages
+  ament_cmake_ros_core::ament_ros_defaults
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
   rcpputils::rcpputils

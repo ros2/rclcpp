@@ -18,6 +18,7 @@
 
   <build_export_depend>rosidl_runtime_c</build_export_depend>
 
+  <build_depend>ament_cmake_ros_core</build_depend>
   <build_depend>rosidl_runtime_c</build_depend>
 
   <depend>action_msgs</depend>

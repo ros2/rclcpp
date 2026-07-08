@@ -22,6 +22,7 @@
   <build_export_depend>rcpputils</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
 
+  <build_depend>ament_cmake_ros_core</build_depend>
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>class_loader</build_depend>
   <build_depend>composition_interfaces</build_depend>
