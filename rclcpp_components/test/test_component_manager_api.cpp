@@ -374,10 +374,29 @@ TEST_F(TestComponentManager, components_api)
   }
 }
 
+// Test fixture for the component manager which exercises node removal like on
+// shutdown. EventsCBGExecutor::shutdown() is protected, so this is to
+// reproduce its effect (dropping every node from the executor while the manager
+// still tracks them in node_wrappers_)
+class DoubleRemoveComponentManager : public rclcpp_components::ComponentManager
+{
+public:
+  using rclcpp_components::ComponentManager::ComponentManager;
+
+  void remove_all_nodes_from_executor()
+  {
+    if (auto exec = executor_.lock()) {
+      for (auto & wrapper : node_wrappers_) {
+        exec->remove_node(wrapper.second.get_node_base_interface());
+      }
+    }
+  }
+};
+
 TEST_F(TestComponentManager, no_throw_remove_node_twice_on_shutdown)
 {
   auto exec = std::make_shared<rclcpp::executors::EventsCBGExecutor>();
-  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto manager = std::make_shared<DoubleRemoveComponentManager>(exec);
   auto client_node = rclcpp::Node::make_shared("test_component_manager_3186");
 
   exec->add_node(manager);
@@ -398,7 +417,7 @@ TEST_F(TestComponentManager, no_throw_remove_node_twice_on_shutdown)
   ASSERT_TRUE(future.get()->success);
 
   // the executor removes all of its nodes on shutdown
-  exec->shutdown();
+  manager->remove_all_nodes_from_executor();
 
   // ComponentManager may remove the same node again
   EXPECT_NO_THROW(manager.reset());
