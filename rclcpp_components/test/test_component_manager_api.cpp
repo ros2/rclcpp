@@ -22,6 +22,7 @@
 #include "composition_interfaces/srv/unload_node.hpp"
 #include "composition_interfaces/srv/list_nodes.hpp"
 
+#include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 #include "rclcpp_components/component_manager.hpp"
 #include "rclcpp_components/component_manager_isolated.hpp"
 
@@ -371,4 +372,34 @@ TEST_F(TestComponentManager, components_api)
     SCOPED_TRACE("ComponentManagerIsolated");
     test_components_api(true);
   }
+}
+
+TEST_F(TestComponentManager, no_throw_remove_node_twice_on_shutdown)
+{
+  auto exec = std::make_shared<rclcpp::executors::EventsCBGExecutor>();
+  auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  auto client_node = rclcpp::Node::make_shared("test_component_manager_3186");
+
+  exec->add_node(manager);
+  exec->add_node(client_node);
+
+  auto composition_client = client_node->create_client<composition_interfaces::srv::LoadNode>(
+    "/ComponentManager/_container/load_node");
+  ASSERT_TRUE(composition_client->wait_for_service(20s)) << "service not available after waiting";
+
+  // Load a component so the manager tracks a node that is associated with the
+  // executor (~ComponentManager only removes nodes when node_wrappers_ is
+  // non-empty).
+  auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
+  request->package_name = "rclcpp_components";
+  request->plugin_name = "test_rclcpp_components::TestComponentFoo";
+  auto future = composition_client->async_send_request(request);
+  ASSERT_EQ(exec->spin_until_future_complete(future, 5s), rclcpp::FutureReturnCode::SUCCESS);
+  ASSERT_TRUE(future.get()->success);
+
+  // the executor removes all of its nodes on shutdown
+  exec->shutdown();
+
+  // ComponentManager may remove the same node again
+  EXPECT_NO_THROW(manager.reset());
 }
