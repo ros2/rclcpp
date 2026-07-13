@@ -21,8 +21,13 @@
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/node.hpp"
 
+#include "rcpputils/compile_warnings.hpp"
+
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/msg/empty.hpp"
+
+// Disable deprecation warnings while maintaining the EventsExecutor
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
 
 using namespace std::chrono_literals;
 
@@ -672,3 +677,5 @@ TEST_F(TestEventsExecutor, keep_all_transient_local_receives_cached_message)
        "rmw_subscription_set_on_new_message_callback where unread_count "
        "is incorrectly clipped to depth=0 for KEEP_ALL history.";
 }
+
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
