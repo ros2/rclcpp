@@ -1067,7 +1067,7 @@ TEST_F(TestServer, goals_expired_with_events_executor)
   rclcpp::ExecutorOptions opts;
   opts.context = node->get_node_base_interface()->get_context();
 
-  rclcpp::experimental::executors::EventsExecutor executor(opts);
+  rclcpp::executors::EventsCBGExecutor executor(opts, 1);
   executor.add_node(node);
   const std::vector<GoalUUID> uuids{
     {{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}},
