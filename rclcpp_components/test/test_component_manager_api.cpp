@@ -418,7 +418,5 @@ TEST_F(TestComponentManager, no_throw_remove_node_twice_on_shutdown)
 
   // the executor removes all of its nodes on shutdown
   manager->remove_all_nodes_from_executor();
-
-  // ComponentManager may remove the same node again
   EXPECT_NO_THROW(manager.reset());
 }
