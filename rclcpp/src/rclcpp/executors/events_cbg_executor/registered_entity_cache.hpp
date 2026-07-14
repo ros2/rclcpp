@@ -300,7 +300,7 @@ struct RegisteredEntityCache
 
     if (new_entry.handle_guard_condition_fun) {
       new_entry.guard_condition->set_on_trigger_callback(
-        scheduler_cbg_handle.get_ready_callback_for_entity(CBGScheduler::CallbackEventType(
+        scheduler_cbg_handle.get_ready_callback_for_entity(ReadyEntity::CallbackEventType(
               new_entry.handle_guard_condition_fun)));
     }
   }

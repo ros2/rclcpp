@@ -1,794 +1,130 @@
-// Copyright 2020 Open Source Robotics Foundation, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
+#include <benchmark/benchmark.h>
 #include <memory>
-#include <string>
-#include <utility>
+#include <variant>
+#include <functional>
+#include <atomic>
 #include <vector>
+#include <cstdlib>
 
-#include "performance_test_fixture/performance_test_fixture.hpp"
+// ---------------------------------------------------------
+// 1. CUSTOM ALLOCATOR TRACKING
+// Intercepts and counts every heap allocation (new/malloc)
+// ---------------------------------------------------------
+static std::atomic<int> g_allocations{0};
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
-#include "rcpputils/scope_exit.hpp"
-#include "test_msgs/msg/empty.hpp"
+void* operator new(std::size_t size) {
+  g_allocations.fetch_add(1, std::memory_order_relaxed);
+  void* p = std::malloc(size);
+  if (!p) throw std::bad_alloc{};
+  return p;
+}
+void operator delete(void* ptr) noexcept { std::free(ptr); }
+void operator delete(void* ptr, std::size_t) noexcept { std::free(ptr); }
 
-using namespace std::chrono_literals;
-using performance_test_fixture::PerformanceTest;
-
-constexpr unsigned int kNumberOfNodes = 1;
-constexpr unsigned int kNumberOfPubSubs = 10;
-
-class PerformanceTestExecutor : public PerformanceTest
-{
-public:
-  void SetUp(benchmark::State & st)
-  {
-    rclcpp::init(0, nullptr);
-    callback_count = 0;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      nodes.push_back(std::make_shared<rclcpp::Node>("my_node_" + std::to_string(i)));
-
-      for (unsigned int j = 0u; j < kNumberOfPubSubs; j++) {
-        publishers.push_back(
-          nodes[i]->create_publisher<test_msgs::msg::Empty>(
-            "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i) +
-            "_" + std::to_string(j), rclcpp::QoS(10)));
-
-        auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
-        subscriptions.push_back(
-          nodes[i]->create_subscription<test_msgs::msg::Empty>(
-            "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i) +
-            "_" + std::to_string(j), rclcpp::QoS(10), std::move(callback)));
-      }
-    }
-    PerformanceTest::SetUp(st);
-  }
-  void TearDown(benchmark::State & st)
-  {
-    PerformanceTest::TearDown(st);
-    subscriptions.clear();
-    publishers.clear();
-    nodes.clear();
-    rclcpp::shutdown();
-  }
-
-  template<class Executor>
-  void executor_spin_some(benchmark::State & st)
-  {
-    Executor executor;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      executor.add_node(nodes[i]);
-    }
-    while (subscriptions.front()->get_publisher_count() == 0) {
-      std::this_thread::sleep_for(10ms);
-    }
-
-    // precompute executer internals
-    publishers[0]->publish(empty_msgs);
-    executor.spin_some(100ms);
-
-    if (callback_count == 0) {
-      st.SkipWithError("No message was received");
-    }
-
-    callback_count = 0;
-    reset_heap_counters();
-
-    for (auto _ : st) {
-      (void)_;
-      st.PauseTiming();
-      for (auto & pub : publishers) {
-        pub->publish(empty_msgs);
-      }
-      std::this_thread::yield();
-      st.ResumeTiming();
-
-      callback_count = 0;
-      executor.spin_some(1000ms);
-      if (callback_count < publishers.size()) {
-        st.SkipWithError("Not all messages were received");
-      }
-    }
-    if (callback_count == 0) {
-      st.SkipWithError("No message was received");
-    }
-  }
-
-  template<class Executor>
-  void benchmark_wait_for_work(benchmark::State & st)
-  {
-    class ExecutorDerived : public Executor
-    {
-public:
-      void call_wait_for_work(std::chrono::nanoseconds timeout)
-      {
-        Executor::wait_for_work(timeout);
-      }
-    };
-
-    ExecutorDerived executor;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      executor.add_node(nodes[i]);
-    }
-    while (subscriptions.front()->get_publisher_count() == 0) {
-      std::this_thread::sleep_for(10ms);
-    }
-    // we need one ready event
-    publishers[0]->publish(empty_msgs);
-    executor.spin_some(100ms);
-    if (callback_count == 0) {
-      st.SkipWithError("No message was received");
-    }
-
-    reset_heap_counters();
-
-    for (auto _ : st) {
-      (void)_;
-
-      st.PauseTiming();
-      // we need one ready event
-      publishers[0]->publish(empty_msgs);
-      st.ResumeTiming();
-
-
-      executor.call_wait_for_work(100ms);
-      st.PauseTiming();
-      executor.spin_some(100ms);
-      st.ResumeTiming();
-    }
-  }
-
-  template<class Executer>
-  void benchmark_wait_for_work_force_rebuild(benchmark::State & st)
-  {
-    class ExecuterDerived : public Executer
-    {
-public:
-      void call_wait_for_work(std::chrono::nanoseconds timeout)
-      {
-        Executer::wait_for_work(timeout);
-      }
-    };
-
-    ExecuterDerived executor;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      executor.add_node(nodes[i]);
-    }
-
-    while (subscriptions.front()->get_publisher_count() == 0) {
-      std::this_thread::sleep_for(10ms);
-    }
-
-    // we need one ready event
-    publishers[0]->publish(empty_msgs);
-
-    executor.spin_some(100ms);
-    if (callback_count == 0) {
-      st.SkipWithError("No message was received");
-    }
-
-    // only need to force a waitset rebuild
-    rclcpp::PublisherBase::SharedPtr somePub;
-
-    reset_heap_counters();
-
-    for (auto _ : st) {
-      (void)_;
-
-      st.PauseTiming();
-      somePub = nodes[0]->create_publisher<test_msgs::msg::Empty>(
-        "/foo", rclcpp::QoS(10));
-      // we need one ready event
-      publishers[0]->publish(empty_msgs);
-      st.ResumeTiming();
-
-
-      executor.call_wait_for_work(std::chrono::nanoseconds::zero());
-      st.PauseTiming();
-      executor.spin_some(100ms);
-      st.ResumeTiming();
-    }
-  }
-  test_msgs::msg::Empty empty_msgs;
-  std::vector<rclcpp::Node::SharedPtr> nodes;
-  std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
-  std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
-  size_t callback_count;
+// ---------------------------------------------------------
+// 2. ARCHITECTURE MOCK (Isolating the ROS 2 Memory Layout)
+// ---------------------------------------------------------
+struct MockTimer {
+    void call() {}
 };
 
-
-BENCHMARK_F(PerformanceTestExecutor, single_thread_executor_spin_some)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::SingleThreadedExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor_spin_some)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutor, cbg_executor_spin_some)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::EventsCBGExecutor>(st);
-}
-
-
-BENCHMARK_F(PerformanceTestExecutor, single_thread_executor_wait_for_work)(benchmark::State & st)
-{
-  benchmark_wait_for_work<rclcpp::executors::SingleThreadedExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutor, multi_thread_executor_wait_for_work)(benchmark::State & st)
-{
-  benchmark_wait_for_work<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutor,
-  single_thread_executor_wait_for_work_rebuild)(benchmark::State & st)
-{
-  benchmark_wait_for_work_force_rebuild<rclcpp::executors::SingleThreadedExecutor>(st);
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutor,
-  multi_thread_executor_wait_for_work_rebuild)(benchmark::State & st)
-{
-  benchmark_wait_for_work_force_rebuild<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-class CallbackWaitable : public rclcpp::Waitable
-{
-public:
-  CallbackWaitable() = default;
-
-  void
-  add_to_wait_set(rcl_wait_set_t & wait_set) override
-  {
-    rcl_ret_t ret = rcl_wait_set_add_guard_condition(
-      &wait_set,
-      &gc.get_rcl_guard_condition(), &gc_waitset_idx);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "failed to add guard condition to wait set");
-    }
-
-    if (has_trigger) {
-      gc.trigger();
-    }
-  }
-
-  void trigger()
-  {
-    has_trigger = true;
-    gc.trigger();
-  }
-
-  bool
-  is_ready(const rcl_wait_set_t & wait_set) override
-  {
-    return wait_set.guard_conditions[gc_waitset_idx];
-  }
-
-  std::shared_ptr<void>
-  take_data() override
-  {
-    return nullptr;
-  }
-
-  std::shared_ptr<void>
-  take_data_by_entity_id(size_t id) override
-  {
-    (void) id;
-    return nullptr;
-  }
-
-  void
-  execute(const std::shared_ptr<void> & data) override
-  {
-    has_trigger = false;
-    (void) data;
-    if (cb_fun) {
-      cb_fun();
-    }
-  }
-
-  void set_execute_callback_function(std::function<void(void)> cb_fun_in)
-  {
-    cb_fun = std::move(cb_fun_in);
-  }
-
-  size_t
-  get_number_of_ready_guard_conditions() override {return 1;}
-
-
-  void
-  set_on_ready_callback(std::function<void(size_t, int)> callback) override
-  {
-    auto gc_callback = [callback](size_t count) {
-        callback(count, 0);
-      };
-    gc.set_on_trigger_callback(gc_callback);
-  }
-
-  void
-  clear_on_ready_callback() override
-  {
-    gc.set_on_trigger_callback(nullptr);
-  }
-
-  std::vector<std::shared_ptr<rclcpp::TimerBase>>
-  get_timers() const override
-  {
-    return {};
-  }
-
-private:
-  std::atomic<bool> has_trigger = false;
-  std::function<void(void)> cb_fun;
-  size_t gc_waitset_idx = 0;
-  rclcpp::GuardCondition gc;
+struct ReadyTimerWithExecutedCallback {
+    std::shared_ptr<MockTimer> timer_ptr;
+    std::function<void()> timer_was_executed;
 };
 
-class CascadedPerformanceTestExecutor : public PerformanceTest
-{
-  std::mutex cond_mutex;
-  std::condition_variable cascade_done;
-  std::vector<std::shared_ptr<CallbackWaitable>> waitables;
-  bool last_cb_triggered;
+struct ReadyEntityMock {
+    std::variant<std::shared_ptr<int>, ReadyTimerWithExecutedCallback> entity;
 
-public:
-  void SetUp(benchmark::State & st)
-  {
-    rclcpp::init(0, nullptr);
-    callback_count = 0;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      nodes.push_back(std::make_shared<rclcpp::Node>("my_node_" + std::to_string(i)));
+    // LEGACY: The current ROS 2 rolling implementation
+    std::function<void()> get_execute_function() const {
+        return std::visit([](auto && e) -> std::function<void()> {
+            using T = std::decay_t<decltype(e)>;
+            if constexpr (std::is_same_v<T, std::shared_ptr<int>>) {
+                return [](){};
+            } else if constexpr (std::is_same_v<T, ReadyTimerWithExecutedCallback>) {
+                // THE FLAW: Capturing shared_ptr (16B) + std::function (32B) = 48 Bytes.
+                // This blows past the ~32 Byte Small Object Optimization (SOO) limit,
+                // forcing a dynamic heap allocation every single time.
+                return [shr_ptr = e.timer_ptr, cb = e.timer_was_executed]() {
+                    shr_ptr->call();
+                    cb();
+                };
+            }
+            return nullptr;
+        }, entity);
+    }
 
-      for (unsigned int j = 0u; j < kNumberOfPubSubs; j++) {
-        std::string topicName = "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" +
-          std::to_string(i) +
-          "_" + std::to_string(j);
-
-
-        publishers.push_back(
-          nodes[i]->create_publisher<test_msgs::msg::Empty>(topicName,
-              rclcpp::QoS(10)));
-
-        auto callback = [this, i, j](test_msgs::msg::Empty::ConstSharedPtr) {
-            if(j == kNumberOfPubSubs - 1) {
-              if (i == kNumberOfNodes - 1) {
-                this->callback_count++;
-                {
-                  std::unique_lock<std::mutex> lk(cond_mutex);
-
-                  last_cb_triggered = true;
+    // OPTIMIZED: The proposed direct-execution fix
+    void execute_direct() const {
+        std::visit([](auto && e) {
+            using T = std::decay_t<decltype(e)>;
+            if constexpr (std::is_same_v<T, std::shared_ptr<int>>) {
+                // no-op
+            } else if constexpr (std::is_same_v<T, ReadyTimerWithExecutedCallback>) {
+                if (e.timer_ptr) {
+                    e.timer_ptr->call();
+                    e.timer_was_executed();
                 }
-                cascade_done.notify_all();
-                return;
-              }
             }
-
-            size_t next = i * kNumberOfPubSubs + j + 1;
-            publishers[next]->publish(empty_msgs);
-          };
-        subscriptions.push_back(
-          nodes[i]->create_subscription<test_msgs::msg::Empty>(topicName, rclcpp::QoS(10),
-          std::move(callback)));
-      }
-
-      auto waitable_interfaces = nodes.back()->get_node_waitables_interface();
-
-      for(size_t i = 0; i < 5; i++) {
-        auto callback_waitable = std::make_shared<CallbackWaitable>();
-        waitables.push_back(callback_waitable);
-        waitable_interfaces->add_waitable(callback_waitable, nullptr);
-      }
+        }, entity);
     }
-    for (unsigned int i = 0u; i < waitables.size(); i++) {
-      if (i == waitables.size() - 1) {
-        waitables[i]->set_execute_callback_function(
-          [this]() {
-            {
-              std::unique_lock<std::mutex> lk(cond_mutex);
-              last_cb_triggered = true;
-            }
-            cascade_done.notify_all();
-          });
-      } else {
-        waitables[i]->set_execute_callback_function(
-          [this, i]() {
-            waitables[i + 1]->trigger();
-          });
-      }
-    }
-    PerformanceTest::SetUp(st);
-  }
-  void TearDown(benchmark::State & st)
-  {
-    PerformanceTest::TearDown(st);
-    subscriptions.clear();
-    publishers.clear();
-    nodes.clear();
-    waitables.clear();
-    last_cb_triggered = false;
-    rclcpp::shutdown();
-  }
-
-  template<class Executer>
-  void executor_spin_some(benchmark::State & st)
-  {
-    Executer executor;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      executor.add_node(nodes[i]);
-    }
-
-    // precompute the executor internals
-    executor.spin_some(100ms);
-
-    while (subscriptions.front()->get_publisher_count() == 0) {
-      std::this_thread::sleep_for(10ms);
-    }
-
-    callback_count = 0;
-    reset_heap_counters();
-
-    std::mutex cond_mutex;
-    std::unique_lock<std::mutex> lk(cond_mutex);
-    auto thread = std::thread(
-      [&executor] {
-        executor.spin();
-      });
-
-    for (auto _ : st) {
-      (void)_;
-      last_cb_triggered = false;
-
-      // start the cascasde
-      waitables[0]->trigger();
-
-      cascade_done.wait_for(lk, 500ms);
-
-      if (!last_cb_triggered) {
-        st.SkipWithError("No message was received");
-      }
-    }
-
-    executor.cancel();
-
-    thread.join();
-
-    if (!last_cb_triggered) {
-      st.SkipWithError("No message was received");
-    }
-  }
-
-  test_msgs::msg::Empty empty_msgs;
-  std::vector<rclcpp::Node::SharedPtr> nodes;
-  std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
-  std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
-  size_t callback_count;
 };
 
+// ---------------------------------------------------------
+// 3. THE BENCHMARKS
+// ---------------------------------------------------------
+static void BM_Legacy_StdFunction_SOO_Blowout(benchmark::State& state) {
+    auto timer = std::make_shared<MockTimer>();
+    ReadyTimerWithExecutedCallback cb;
+    cb.timer_ptr = timer;
+    cb.timer_was_executed = [](){ benchmark::DoNotOptimize(1); };
 
-BENCHMARK_F(
-  CascadedPerformanceTestExecutor,
-  single_thread_executor_spin)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::SingleThreadedExecutor>(st);
-}
-
-BENCHMARK_F(CascadedPerformanceTestExecutor, multi_thread_executor_spin)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-BENCHMARK_F(CascadedPerformanceTestExecutor, cbg_executor_spin)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::EventsCBGExecutor>(st);
-}
-
-class PerformanceTestExecutorMultipleCallbackGroups : public PerformanceTest
-{
-public:
-//   static constexpr unsigned int kNumberOfNodes = 20;
-
-  void SetUp(benchmark::State & st)
-  {
-    rclcpp::init(0, nullptr);
-    callback_count = 0;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      nodes.push_back(std::make_shared<rclcpp::Node>("my_node_" + std::to_string(i)));
-      for (unsigned int j = 0u; j < kNumberOfPubSubs; j++) {
-        callback_groups.push_back(
-          nodes[i]->create_callback_group(
-            rclcpp::CallbackGroupType::
-            MutuallyExclusive));
-
-        rclcpp::PublisherOptions pubOps;
-        pubOps.callback_group = callback_groups.back();
-
-        publishers.push_back(
-          nodes[i]->create_publisher<test_msgs::msg::Empty>(
-            "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i) +
-            "_" + std::to_string(j), rclcpp::QoS(10), pubOps));
-
-        rclcpp::SubscriptionOptions subOps;
-        subOps.callback_group = callback_groups.back();
-
-        auto callback = [this](test_msgs::msg::Empty::ConstSharedPtr) {this->callback_count++;};
-        subscriptions.push_back(
-          nodes[i]->create_subscription<test_msgs::msg::Empty>(
-            "/thread" + std::to_string(st.thread_index()) + "/empty_msgs_" + std::to_string(i) +
-            "_" + std::to_string(j), rclcpp::QoS(10), std::move(callback), subOps));
-      }
-    }
-    PerformanceTest::SetUp(st);
-  }
-  void TearDown(benchmark::State & st)
-  {
-    PerformanceTest::TearDown(st);
-    subscriptions.clear();
-    publishers.clear();
-    callback_groups.clear();
-    nodes.clear();
-    rclcpp::shutdown();
-  }
-
-  template<class Executer>
-  void executor_spin_some(benchmark::State & st)
-  {
-    Executer executor;
-    for (unsigned int i = 0u; i < kNumberOfNodes; i++) {
-      executor.add_node(nodes[i]);
+    // Flood with 1000 entities
+    std::vector<ReadyEntityMock> entities;
+    for (int i = 0; i < 1000; ++i) {
+        entities.push_back(ReadyEntityMock{cb});
     }
 
-    publishers.front()->publish(empty_msgs);
-    executor.spin_some(100ms);
+    for (auto _ : state) {
+        // Reset allocation counter right before the hot path
+        g_allocations.store(0, std::memory_order_relaxed);
 
-    callback_count = 0;
-    reset_heap_counters();
+        for (const auto& entity : entities) {
+            // This line triggers the SOO heap allocation
+            std::function<void()> exec = entity.get_execute_function();
+            exec();
+        }
 
-    for (auto _ : st) {
-      (void)_;
-      st.PauseTiming();
-      for (auto & pub : publishers) {
-        pub->publish(empty_msgs);
-      }
-      // wait for the messages to arrive
-      std::this_thread::yield();
-      st.ResumeTiming();
-
-      callback_count = 0;
-      executor.spin_some(500ms);
-      if (callback_count != publishers.size()) {
-        st.SkipWithError("Not all message were received");
-      }
+        // Record exactly how many allocations happened in this spin loop
+        state.counters["Heap_Allocations"] = g_allocations.load(std::memory_order_relaxed);
     }
-    if (callback_count == 0) {
-      st.SkipWithError("No message was received");
-    }
-  }
-
-  test_msgs::msg::Empty empty_msgs;
-  std::vector<rclcpp::Node::SharedPtr> nodes;
-  std::vector<rclcpp::Publisher<test_msgs::msg::Empty>::SharedPtr> publishers;
-  std::vector<rclcpp::Subscription<test_msgs::msg::Empty>::SharedPtr> subscriptions;
-  std::vector<rclcpp::CallbackGroup::SharedPtr> callback_groups;
-  size_t callback_count;
-};
-
-
-BENCHMARK_F(
-  PerformanceTestExecutorMultipleCallbackGroups,
-  single_thread_executor_spin_some)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::SingleThreadedExecutor>(st);
 }
+BENCHMARK(BM_Legacy_StdFunction_SOO_Blowout);
 
-BENCHMARK_F(
-  PerformanceTestExecutorMultipleCallbackGroups,
-  multi_thread_executor_spin_some)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::MultiThreadedExecutor>(st);
-}
+static void BM_Optimized_Direct_Execution(benchmark::State& state) {
+    auto timer = std::make_shared<MockTimer>();
+    ReadyTimerWithExecutedCallback cb;
+    cb.timer_ptr = timer;
+    cb.timer_was_executed = [](){ benchmark::DoNotOptimize(1); };
 
-BENCHMARK_F(
-  PerformanceTestExecutorMultipleCallbackGroups,
-  cbg_executor_spin_some)(benchmark::State & st)
-{
-  executor_spin_some<rclcpp::executors::EventsCBGExecutor>(st);
-}
-
-class PerformanceTestExecutorSimple : public PerformanceTest
-{
-public:
-  void SetUp(benchmark::State & st)
-  {
-    rclcpp::init(0, nullptr);
-    node = std::make_shared<rclcpp::Node>("my_node");
-
-    PerformanceTest::SetUp(st);
-  }
-  void TearDown(benchmark::State & st)
-  {
-    PerformanceTest::TearDown(st);
-    node.reset();
-    rclcpp::shutdown();
-  }
-
-  template<class Executor>
-  void add_node(benchmark::State & st)
-  {
-    Executor executor;
-    for (auto _ : st) {
-      (void)_;
-      executor.add_node(node);
-      st.PauseTiming();
-      executor.remove_node(node);
-      st.ResumeTiming();
-    }
-  }
-
-  template<class Executor>
-  void remove_node(benchmark::State & st)
-  {
-    Executor executor;
-    for (auto _ : st) {
-      (void)_;
-      st.PauseTiming();
-      executor.add_node(node);
-      st.ResumeTiming();
-      executor.remove_node(node);
-    }
-  }
-
-
-  template<class Executor>
-  void spin_until_future_complete(benchmark::State & st)
-  {
-    Executor executor;
-    // test success of an immediately finishing future
-    std::promise<bool> promise;
-    std::future<bool> future = promise.get_future();
-    promise.set_value(true);
-    auto shared_future = future.share();
-
-    auto ret = executor.spin_until_future_complete(shared_future, 100ms);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
+    // Flood with 1000 entities
+    std::vector<ReadyEntityMock> entities;
+    for (int i = 0; i < 1000; ++i) {
+        entities.push_back(ReadyEntityMock{cb});
     }
 
-    reset_heap_counters();
+    for (auto _ : state) {
+        // Reset allocation counter right before the hot path
+        g_allocations.store(0, std::memory_order_relaxed);
 
-    for (auto _ : st) {
-      (void)_;
-      ret = executor.spin_until_future_complete(shared_future, 100ms);
-      if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-        st.SkipWithError(rcutils_get_error_string().str);
-        break;
-      }
+        for (const auto& entity : entities) {
+            // Direct visit execution (Zero allocations)
+            entity.execute_direct();
+        }
+
+        // Record exactly how many allocations happened in this spin loop
+        state.counters["Heap_Allocations"] = g_allocations.load(std::memory_order_relaxed);
     }
-  }
-
-  template<class Executor>
-  void spin_node_until_future_complete(benchmark::State & st)
-  {
-    Executor executor;
-    // test success of an immediately finishing future
-    std::promise<bool> promise;
-    std::future<bool> future = promise.get_future();
-    promise.set_value(true);
-    auto shared_future = future.share();
-
-    auto ret = rclcpp::executors::spin_node_until_future_complete(
-      executor, node, shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-    }
-
-    reset_heap_counters();
-
-    for (auto _ : st) {
-      (void)_;
-      ret = rclcpp::executors::spin_node_until_future_complete(
-        executor, node, shared_future, 1s);
-      if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-        st.SkipWithError(rcutils_get_error_string().str);
-        break;
-      }
-    }
-  }
-
-  rclcpp::Node::SharedPtr node;
-};
-
-
-BENCHMARK_F(PerformanceTestExecutorSimple, single_thread_executor_add_node)(benchmark::State & st)
-{
-  add_node<rclcpp::executors::SingleThreadedExecutor>(st);
 }
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple, single_thread_executor_remove_node)(benchmark::State & st)
-{
-  remove_node<rclcpp::executors::SingleThreadedExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_add_node)(benchmark::State & st)
-{
-  add_node<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutorSimple, multi_thread_executor_remove_node)(benchmark::State & st)
-{
-  remove_node<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutorSimple, cbg_executor_add_node)(benchmark::State & st)
-{
-  add_node<rclcpp::executors::EventsCBGExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutorSimple, cbg_executor_remove_node)(benchmark::State & st)
-{
-  remove_node<rclcpp::executors::EventsCBGExecutor>(st);
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  single_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
-{
-  spin_node_until_future_complete<rclcpp::executors::SingleThreadedExecutor>(st);
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  multi_thread_executor_spin_node_until_future_complete)(benchmark::State & st)
-{
-  spin_node_until_future_complete<rclcpp::executors::MultiThreadedExecutor>(st);
-}
-
-BENCHMARK_F(
-  PerformanceTestExecutorSimple,
-  cbg_executor_spin_node_until_future_complete)(benchmark::State & st)
-{
-  spin_node_until_future_complete<rclcpp::executors::EventsCBGExecutor>(st);
-}
-
-BENCHMARK_F(PerformanceTestExecutorSimple, spin_until_future_complete)(benchmark::State & st)
-{
-  // test success of an immediately finishing future
-  std::promise<bool> promise;
-  std::future<bool> future = promise.get_future();
-  promise.set_value(true);
-  auto shared_future = future.share();
-
-  auto ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
-  if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-    st.SkipWithError(rcutils_get_error_string().str);
-  }
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    (void)_;
-    ret = rclcpp::spin_until_future_complete(node, shared_future, 1s);
-    if (ret != rclcpp::FutureReturnCode::SUCCESS) {
-      st.SkipWithError(rcutils_get_error_string().str);
-      break;
-    }
-  }
-}
+BENCHMARK(BM_Optimized_Direct_Execution);

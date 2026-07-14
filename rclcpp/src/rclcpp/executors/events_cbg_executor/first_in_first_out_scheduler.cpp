@@ -74,14 +74,14 @@ std::function<void(size_t,
   return [weak_ptr = entity, this](size_t nr_msg, int event_type) {
            add_ready_entity([&] () {
                for (size_t i = 0; i < nr_msg; i++) {
-                 ready_entities.emplace_back(CBGScheduler::WaitableWithEventType({weak_ptr,
+                 ready_entities.emplace_back(ReadyEntity::WaitableWithEventType({weak_ptr,
                    event_type}));
                }
             });
          };
 }
 std::function<void(size_t)> FirstInFirstOutCallbackGroupHandle::get_ready_callback_for_entity(
-  const CBGScheduler::CallbackEventType & entity)
+  const ReadyEntity::CallbackEventType & entity)
 {
   return [weak_ptr = entity, this](size_t nr_msg) {
            add_ready_entity([&] () {

@@ -15,8 +15,9 @@
 #pragma once
 
 #include <utility>
+#include <variant>
 
-#include "scheduler.hpp"
+// Removed #include "scheduler.hpp" to break the circular dependency
 #include "global_event_id_provider.hpp"
 #include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 
@@ -40,9 +41,25 @@ struct ReadyEntity
     }
   };
 
+
+  // Moved from CBGScheduler to sever the dependency loop
+  struct WaitableWithEventType {
+    rclcpp::Waitable::WeakPtr waitable;
+    int internal_event_type;
+    bool expired() const { return waitable.expired(); }
+  };
+
+  // Moved from CBGScheduler to sever the dependency loop
+  struct CallbackEventType {
+    explicit CallbackEventType(std::function<void()> callback) : callback(std::move(callback)) {}
+    std::function<void()> callback;
+    bool expired() const { return false; }
+  };
+
+  
   std::variant<rclcpp::SubscriptionBase::WeakPtr, ReadyTimerWithExecutedCallback,
-    rclcpp::ServiceBase::WeakPtr, rclcpp::ClientBase::WeakPtr, CBGScheduler::WaitableWithEventType,
-    CBGScheduler::CallbackEventType> entity;
+    rclcpp::ServiceBase::WeakPtr, rclcpp::ClientBase::WeakPtr, ReadyEntity::WaitableWithEventType,
+    ReadyEntity::CallbackEventType> entity;
 
   explicit ReadyEntity(const rclcpp::SubscriptionBase::WeakPtr ptr)
   : entity(ptr), id(GlobalEventIdProvider::get_next_id()) {}
@@ -52,9 +69,9 @@ struct ReadyEntity
   : entity(ptr), id(GlobalEventIdProvider::get_next_id()) {}
   explicit ReadyEntity(const rclcpp::ClientBase::WeakPtr ptr)
   : entity(ptr), id(GlobalEventIdProvider::get_next_id()) {}
-  explicit ReadyEntity(const CBGScheduler::WaitableWithEventType & ev)
+  explicit ReadyEntity(const ReadyEntity::WaitableWithEventType & ev)
   : entity(ev), id(GlobalEventIdProvider::get_next_id()) {}
-  explicit ReadyEntity(const CBGScheduler::CallbackEventType & ev)
+  explicit ReadyEntity(const ReadyEntity::CallbackEventType & ev)
   : entity(ev), id(GlobalEventIdProvider::get_next_id()) {}
 
   void execute() const
@@ -86,13 +103,13 @@ struct ReadyEntity
         if (shr_ptr) {
           rclcpp::executors::EventsCBGExecutor::execute_client(shr_ptr);
         }
-      } else if constexpr (std::is_same_v<T, CBGScheduler::WaitableWithEventType>) {
+      } else if constexpr (std::is_same_v<T, ReadyEntity::WaitableWithEventType>) {
         auto shr_ptr_in = entity.waitable.lock();
         if (shr_ptr_in) {
           auto data = shr_ptr_in->take_data_by_entity_id(entity.internal_event_type);
           shr_ptr_in->execute(data);
         }
-      } else if constexpr (std::is_same_v<T, CBGScheduler::CallbackEventType>) {
+      } else if constexpr (std::is_same_v<T, ReadyEntity::CallbackEventType>) {
         if (entity.callback) {
           entity.callback();
         }

@@ -18,9 +18,11 @@
 #include <list>
 #include <memory>
 #include <utility>
+#include <variant>
 
 #include <rclcpp/callback_group.hpp>
 #include "global_event_id_provider.hpp"
+#include "ready_entity.hpp" // Included safely now
 
 namespace rclcpp
 {
