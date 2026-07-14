@@ -203,7 +203,7 @@ bool EventsCBGExecutor::execute_previous_ready_executables_until(
 
     found_work = true;
 
-    ready_entity.entity->execute_function();
+    ready_entity.entity->execute();
 
     scheduler->mark_entity_as_executed(*ready_entity.entity);
 
@@ -360,7 +360,7 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
       scheduler->unblock_one_worker_thread();
     }
 
-    ready_entity.entity->execute_function();
+    ready_entity.entity->execute();
 
     scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
@@ -383,7 +383,7 @@ EventsCBGExecutor::run(
     }
 
     try {
-      ready_entity.entity->execute_function();
+      ready_entity.entity->execute();
     } catch (const std::exception & e) {
       exception_handler(e);
     }
@@ -419,7 +419,7 @@ void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
     }
   }
 
-  ready_entity.entity->execute_function();
+  ready_entity.entity->execute();
 
   scheduler->mark_entity_as_executed(*ready_entity.entity);
 }

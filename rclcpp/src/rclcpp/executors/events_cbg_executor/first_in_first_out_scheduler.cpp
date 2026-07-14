@@ -100,16 +100,18 @@ get_next_ready_entity()
   while(!ready_entities.empty()) {
     auto & first = ready_entities.front();
 
-    std::function<void()> exec_fun = first.get_execute_function();
-    ready_entities.pop_front();
-    if(!exec_fun) {
-      // was deleted, or in case of timer was canceled
+    // Check if the underlying weak pointers are dropped without allocating space
+    if (first.expired()) {
+      ready_entities.pop_front();
       continue;
     }
 
     mark_as_executing();
 
-    return CBGScheduler::ExecutableEntity{exec_fun, this};
+    // Directly move the data variant up into the unified execution wrapper
+    CBGScheduler::ExecutableEntity exec_entity{.entity_data = std::move(first), .callback_handle = this};
+    ready_entities.pop_front();
+    return exec_entity;
   }
 
   mark_as_skipped();
@@ -128,16 +130,18 @@ get_next_ready_entity(GlobalEventIdProvider::MonotonicId max_id)
       return std::nullopt;
     }
 
-    std::function<void()> exec_fun = first.get_execute_function();
-    ready_entities.pop_front();
-    if(!exec_fun) {
-      // was deleted, or in case of timer was canceled
+    // Check if the underlying weak pointers are dropped without allocating space
+    if (first.expired()) {
+      ready_entities.pop_front();
       continue;
     }
 
     mark_as_executing();
 
-    return CBGScheduler::ExecutableEntity{exec_fun, this};
+    // Directly move the data variant up into the unified execution wrapper
+    CBGScheduler::ExecutableEntity exec_entity{.entity_data = std::move(first), .callback_handle = this};
+    ready_entities.pop_front();
+    return exec_entity;
   }
 
   mark_as_skipped();

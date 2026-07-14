@@ -57,68 +57,47 @@ struct ReadyEntity
   explicit ReadyEntity(const CBGScheduler::CallbackEventType & ev)
   : entity(ev), id(GlobalEventIdProvider::get_next_id()) {}
 
-  std::function<void()> get_execute_function() const
+  void execute() const
   {
-    return std::visit([](auto && entity) -> std::function<void()> {
-               using T = std::decay_t<decltype(entity)>;
-               if constexpr (std::is_same_v<T, rclcpp::SubscriptionBase::WeakPtr>) {
-                 rclcpp::SubscriptionBase::SharedPtr shr_ptr = entity.lock();
-                 if (!shr_ptr) {
-                   return std::function<void()>();
-                 }
-                 return [shr_ptr = std::move(shr_ptr)]() {
-                          rclcpp::executors::EventsCBGExecutor::execute_subscription(shr_ptr);
-                        };
-               } else if constexpr (std::is_same_v<T, ReadyTimerWithExecutedCallback>) {
-                 auto shr_ptr = entity.timer_ptr.lock();
-                 if (!shr_ptr) {
-                   return std::function<void()>();
-                 }
-
-                 return [shr_ptr = std::move(shr_ptr),
-                        timer_executed_cb = entity.timer_was_executed]() {
-                          auto data = shr_ptr->call();
-                          if (!data) {
-                              // timer was cancelled, skip it.
-                            return;
-                          }
-
-                          rclcpp::executors::EventsCBGExecutor::execute_timer(shr_ptr, data);
-
-                          // readd the timer to the timers manager
-                          timer_executed_cb();
-                        };
-               } else if constexpr (std::is_same_v<T, rclcpp::ServiceBase::WeakPtr>) {
-                 auto shr_ptr = entity.lock();
-                 if (!shr_ptr) {
-                   return std::function<void()>();
-                 }
-                 return [shr_ptr = std::move(shr_ptr)]() {
-                          rclcpp::executors::EventsCBGExecutor::execute_service(shr_ptr);
-                        };
-               } else if constexpr (std::is_same_v<T, rclcpp::ClientBase::WeakPtr>) {
-                 auto shr_ptr = entity.lock();
-                 if (!shr_ptr) {
-                   return std::function<void()>();
-                 }
-                 return [shr_ptr = std::move(shr_ptr)]() {
-                          rclcpp::executors::EventsCBGExecutor::execute_client(shr_ptr);
-                        };
-               } else if constexpr (std::is_same_v<T, CBGScheduler::WaitableWithEventType>) {
-                 auto shr_ptr_in = entity.waitable.lock();
-                 if (!shr_ptr_in) {
-                   return std::function<void()>();
-                 }
-
-                 return [shr_ptr = std::move(shr_ptr_in),
-                        event_type = entity.internal_event_type]() {
-                          auto data = shr_ptr->take_data_by_entity_id(event_type);
-                          shr_ptr->execute(data);
-                        };
-               } else if constexpr (std::is_same_v<T, CBGScheduler::CallbackEventType>) {
-                 return entity.callback;
-               }
-        }, entity);
+    std::visit([](auto && entity) {
+      using T = std::decay_t<decltype(entity)>;
+      if constexpr (std::is_same_v<T, rclcpp::SubscriptionBase::WeakPtr>) {
+        rclcpp::SubscriptionBase::SharedPtr shr_ptr = entity.lock();
+        if (shr_ptr) {
+          rclcpp::executors::EventsCBGExecutor::execute_subscription(shr_ptr);
+        }
+      } else if constexpr (std::is_same_v<T, ReadyTimerWithExecutedCallback>) {
+        auto shr_ptr = entity.timer_ptr.lock();
+        if (shr_ptr) {
+          auto data = shr_ptr->call();
+          if (!data) {
+            return; // timer was cancelled
+          }
+          rclcpp::executors::EventsCBGExecutor::execute_timer(shr_ptr, data);
+          entity.timer_was_executed();
+        }
+      } else if constexpr (std::is_same_v<T, rclcpp::ServiceBase::WeakPtr>) {
+        auto shr_ptr = entity.lock();
+        if (shr_ptr) {
+          rclcpp::executors::EventsCBGExecutor::execute_service(shr_ptr);
+        }
+      } else if constexpr (std::is_same_v<T, rclcpp::ClientBase::WeakPtr>) {
+        auto shr_ptr = entity.lock();
+        if (shr_ptr) {
+          rclcpp::executors::EventsCBGExecutor::execute_client(shr_ptr);
+        }
+      } else if constexpr (std::is_same_v<T, CBGScheduler::WaitableWithEventType>) {
+        auto shr_ptr_in = entity.waitable.lock();
+        if (shr_ptr_in) {
+          auto data = shr_ptr_in->take_data_by_entity_id(entity.internal_event_type);
+          shr_ptr_in->execute(data);
+        }
+      } else if constexpr (std::is_same_v<T, CBGScheduler::CallbackEventType>) {
+        if (entity.callback) {
+          entity.callback();
+        }
+      }
+    }, entity);
   }
 
   GlobalEventIdProvider::MonotonicId id;

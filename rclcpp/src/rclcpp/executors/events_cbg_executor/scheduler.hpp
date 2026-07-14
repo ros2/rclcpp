@@ -166,13 +166,22 @@ private:
     bool idle = true;
   };
 
-  struct ExecutableEntity
-  {
-    // if called executes the entity
-    std::function<void()> execute_function;
-    // The callback group associated with the entity. Can be nullptr.
-    CallbackGroupHandle *callback_handle = nullptr;
-  };
+  // Replaced struct ExecutableEntity in scheduler.hpp
+ struct ExecutableEntity{
+  // Holds either the background sync control lambda or a direct event capsule
+  std::variant<std::function<void()>, ReadyEntity> entity_data;
+  
+  // The callback group associated with the entity. Can be nullptr.
+  CallbackGroupHandle *callback_handle = nullptr;
+
+  void execute() const {
+    if (std::holds_alternative<std::function<void()>>(entity_data)) {
+      std::get<std::function<void()>>(entity_data)();
+    } else {
+      std::get<ReadyEntity>(entity_data).execute();
+    }
+  }
+ };
 
   /**
    * @param sync_function A special purpose sync function, that shall be
@@ -247,7 +256,7 @@ private:
       if(needs_sync) {
         needs_sync = false;
         return ExecutableEntityWithInfo{.entity =
-            ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
+            ExecutableEntity{.entity_data = sync_function, .callback_handle = nullptr},
           .moreEntitiesReady = false};
       }
     }
@@ -263,7 +272,7 @@ private:
       if(needs_sync) {
         needs_sync = false;
         return ExecutableEntityWithInfo{.entity =
-            ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
+            ExecutableEntity{.entity_data = sync_function, .callback_handle = nullptr},
           .moreEntitiesReady = false};
       }
     }
