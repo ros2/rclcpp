@@ -452,35 +452,35 @@ EventsExecutor::refresh_current_collection(
 
   current_entities_collection_->timers.update(
     new_collection.timers,
-    [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->add_timer(timer);},
-    [this](rclcpp::TimerBase::SharedPtr timer) {timers_manager_->remove_timer(timer);});
+    [this](const rclcpp::TimerBase::SharedPtr & timer) {timers_manager_->add_timer(timer);},
+    [this](const rclcpp::TimerBase::SharedPtr & timer) {timers_manager_->remove_timer(timer);});
 
   current_entities_collection_->subscriptions.update(
     new_collection.subscriptions,
-    [this](auto subscription) {
+    [this](const auto & subscription) {
       subscription->set_on_new_message_callback(
         this->create_entity_callback(
           subscription->get_subscription_handle().get(), ExecutorEventType::SUBSCRIPTION_EVENT));
     },
-    [](auto subscription) {subscription->clear_on_new_message_callback();});
+    [](const auto & subscription) {subscription->clear_on_new_message_callback();});
 
   current_entities_collection_->clients.update(
     new_collection.clients,
-    [this](auto client) {
+    [this](const auto & client) {
       client->set_on_new_response_callback(
         this->create_entity_callback(
           client->get_client_handle().get(), ExecutorEventType::CLIENT_EVENT));
     },
-    [](auto client) {client->clear_on_new_response_callback();});
+    [](const auto & client) {client->clear_on_new_response_callback();});
 
   current_entities_collection_->services.update(
     new_collection.services,
-    [this](auto service) {
+    [this](const auto & service) {
       service->set_on_new_request_callback(
         this->create_entity_callback(
           service->get_service_handle().get(), ExecutorEventType::SERVICE_EVENT));
     },
-    [](auto service) {service->clear_on_new_request_callback();});
+    [](const auto & service) {service->clear_on_new_request_callback();});
 
   // DO WE NEED THIS? WE ARE NOT DOING ANYTHING WITH GUARD CONDITIONS
   /*
@@ -491,11 +491,11 @@ EventsExecutor::refresh_current_collection(
 
   current_entities_collection_->waitables.update(
     new_collection.waitables,
-    [this](auto waitable) {
+    [this](const auto & waitable) {
       waitable->set_on_ready_callback(
         this->create_waitable_callback(waitable.get()));
     },
-    [](auto waitable) {waitable->clear_on_ready_callback();});
+    [](const auto & waitable) {waitable->clear_on_ready_callback();});
 }
 
 std::function<void(size_t)>
