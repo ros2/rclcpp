@@ -1132,7 +1132,7 @@ TEST_F(TestServer, goals_expired_with_events_executor)
     // Wait for the result request to be received
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
-      executor.spin_until_future_complete(future));
+      executor.spin_until_future_complete(future, std::chrono::seconds(20)));
 
     auto response = future.get();
     EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
