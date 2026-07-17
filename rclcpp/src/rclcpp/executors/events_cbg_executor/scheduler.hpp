@@ -13,10 +13,15 @@
 // limitations under the License.
 #pragma once
 
+#include <algorithm>
+#include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <functional>
 #include <list>
 #include <memory>
+#include <mutex>
+#include <optional>
 #include <utility>
 
 #include <rclcpp/callback_group.hpp>

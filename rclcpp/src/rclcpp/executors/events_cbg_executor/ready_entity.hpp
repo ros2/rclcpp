@@ -15,6 +15,7 @@
 #pragma once
 
 #include <utility>
+#include <variant>
 
 #include "scheduler.hpp"
 #include "global_event_id_provider.hpp"

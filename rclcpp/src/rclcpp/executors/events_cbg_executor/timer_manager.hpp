@@ -16,10 +16,15 @@
 
 #include <rcl/timer.h>
 
+#include <array>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <utility>
 #include <vector>
 
