@@ -166,7 +166,7 @@ public:
   }
 
   /**
-   * @brief Removes a new timer from the queue.
+   * @brief Removes a timer from the queue.
    * This function is thread safe.
    *
    * Removes a timer, if it was added to this queue.

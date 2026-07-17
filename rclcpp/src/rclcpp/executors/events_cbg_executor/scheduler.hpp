@@ -171,7 +171,7 @@ private:
     // will be set if cbg is mutual exclusive and something is executing
     bool not_ready = false;
 
-    // true, if nothing is beeing executed, and there are no pending events
+    // true, if nothing is being executed, and there are no pending events
     bool idle = true;
 
     // type of the underlying callback group
@@ -293,8 +293,8 @@ private:
    * If this function was triggered, a worker thread must
    * be woken up, and the next call to get_next_ready_entity
    * must return a ExecutableEntityWithInfo with the sync
-   * function in it.Or reworded if this function is triggered
-   * the sync function will be executed as the next exent by
+   * function in it. Or reworded, if this function is triggered
+   * the sync function will be executed as the next event by
    * the executor.
    */
   void trigger_sync()

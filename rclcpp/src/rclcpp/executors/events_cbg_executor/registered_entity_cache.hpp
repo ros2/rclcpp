@@ -207,7 +207,7 @@ struct RegisteredEntityCache
     std::vector<rclcpp::ServiceBase::SharedPtr> services;
     std::vector<rclcpp::Waitable::SharedPtr> waitables;
 
-    // we reserve to much memory here, but this should be fine
+    // we reserve too much memory here, but this should be fine
     const size_t max_size = callback_group->size();
     timers.reserve(max_size);
     subscribers.reserve(max_size);
