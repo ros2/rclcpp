@@ -208,8 +208,6 @@ protected:
     Origin origin;
   };
 
-  void set_callbacks(CallbackGroupData & cgd);
-
   /**
    * This function will execute all available executables,
    * that were ready, before this function was called.
