@@ -43,12 +43,6 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsCBGExecutor)
 
   /**
-   * For the yield_before_execute option, when true std::this_thread::yield()
-   * will be called after acquiring work (as an AnyExecutable) and
-   * releasing the spinning lock, but before executing the work.
-   * This is useful for reproducing some bugs related to taking work more than
-   * once.
-   *
    * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found (minimum of 2)
