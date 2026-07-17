@@ -56,7 +56,11 @@ namespace executors
  * executor.spin();
  * executor.remove_node(node);
  */
-class EventsExecutor : public rclcpp::Executor
+class
+[[deprecated(
+    "rclcpp::experimental::executors::EventsExecutor is deprecated and will be removed in "
+    "m-turtle. use rclcpp::executors::EventsCBGExecutor in single-threaded mode instead")]]
+EventsExecutor : public rclcpp::Executor
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutor)
