@@ -68,7 +68,10 @@ ComponentManager::~ComponentManager()
     RCLCPP_DEBUG(get_logger(), "Removing components from executor");
     if (auto exec = executor_.lock()) {
       for (auto & wrapper : node_wrappers_) {
-        exec->remove_node(wrapper.second.get_node_base_interface());
+        auto node_interface = wrapper.second.get_node_base_interface();
+        if (node_interface->get_associated_with_executor_atomic().load()) {
+          exec->remove_node(node_interface);
+        }
       }
     }
   }
