@@ -35,11 +35,6 @@ public:
   {
     rclcpp::Waitable::WeakPtr waitable;
     int internal_event_type;
-
-    bool expired() const
-    {
-      return waitable.expired();
-    }
   };
 
   struct CallbackEventType
@@ -50,11 +45,6 @@ public:
     }
 
     std::function<void()> callback;
-
-    bool expired() const
-    {
-      return false;
-    }
   };
 
   struct CallbackGroupHandle
@@ -104,8 +94,6 @@ public:
     }
 
     CallbackGroupType get_type() {return type;}
-
-    bool is_ready();
 
     // true if this cbg is inside the scheduler's queue
     bool in_queue = false;

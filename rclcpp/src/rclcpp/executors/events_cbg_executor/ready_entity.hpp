@@ -33,11 +33,6 @@ struct ReadyEntity
     rclcpp::TimerBase::WeakPtr timer_ptr;
         // must be called by the after executing the timer callback
     std::function<void()> timer_was_executed;
-
-    bool expired() const
-    {
-      return timer_ptr.expired();
-    }
   };
 
   std::variant<rclcpp::SubscriptionBase::WeakPtr, ReadyTimerWithExecutedCallback,
@@ -122,14 +117,6 @@ struct ReadyEntity
   }
 
   GlobalEventIdProvider::MonotonicId id;
-
-    /**
-     * Returns true if the event has expired / does not need to be executed any more
-     */
-  bool expired() const
-  {
-    return std::visit([](const auto & entity) {return entity.expired();}, entity);
-  }
 };
 }  // namespace cbg_executor
 }  // namespace executors
