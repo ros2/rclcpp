@@ -22,19 +22,14 @@
 #include <string>
 #include <utility>
 
-#include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
-
-#include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
+#include "rclcpp/detail/qos_parameters.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
-#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 
-#include "rclcpp/create_publisher.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
-#include "rclcpp/timer.hpp"
-#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
@@ -69,59 +64,11 @@ create_subscription(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics_interface = get_node_topics_interface(node_topics);
 
-  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>
-  subscription_topic_stats = nullptr;
-
-  if (rclcpp::detail::resolve_enable_topic_statistics(
-      options,
-      *node_topics_interface->get_node_base_interface()))
-  {
-    if (options.topic_stats_options.publish_period <= std::chrono::milliseconds(0)) {
-      throw std::invalid_argument(
-              "topic_stats_options.publish_period must be greater than 0, specified value of " +
-              std::to_string(options.topic_stats_options.publish_period.count()) + " ms");
-    }
-
-    std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>>
-    publisher = rclcpp::detail::create_publisher<statistics_msgs::msg::MetricsMessage>(
-      node_parameters,
-      node_topics_interface,
-      options.topic_stats_options.publish_topic,
-      options.topic_stats_options.qos);
-
-    subscription_topic_stats =
-      std::make_shared<rclcpp::topic_statistics::SubscriptionTopicStatistics>(
-      node_topics_interface->get_node_base_interface()->get_name(), publisher);
-
-    std::weak_ptr<
-      rclcpp::topic_statistics::SubscriptionTopicStatistics
-    > weak_subscription_topic_stats(subscription_topic_stats);
-    auto sub_call_back = [weak_subscription_topic_stats]() {
-        auto subscription_topic_stats = weak_subscription_topic_stats.lock();
-        if (subscription_topic_stats) {
-          subscription_topic_stats->publish_message_and_reset_measurements();
-        }
-      };
-
-    auto node_timer_interface = node_topics_interface->get_node_timers_interface();
-
-    auto timer = create_wall_timer(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-        options.topic_stats_options.publish_period),
-      sub_call_back,
-      options.callback_group,
-      node_topics_interface->get_node_base_interface(),
-      node_timer_interface
-    );
-
-    subscription_topic_stats->set_publisher_timer(timer);
-  }
-
   auto factory = rclcpp::create_subscription_factory<MessageT>(
     std::forward<CallbackT>(callback),
     options,
     msg_mem_strat,
-    subscription_topic_stats
+    options.subscription_statistics_monitor
   );
 
   const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?
@@ -161,8 +108,7 @@ create_subscription(
  * \param options
  * \param msg_mem_strat
  * \return the created subscription
- * \throws std::invalid_argument if topic statistics is enabled and the publish period is
- * less than or equal to zero.
+ * \throws std::invalid_argument if the QoS is incompatible with intra-process.
  */
 template<
   typename MessageT,

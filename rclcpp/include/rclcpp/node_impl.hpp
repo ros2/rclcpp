@@ -43,7 +43,6 @@
 #include "rclcpp/create_generic_service.hpp"
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/create_timer.hpp"
-#include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/timer.hpp"
