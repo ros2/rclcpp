@@ -52,13 +52,11 @@ public:
    * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found (minimum of 2)
-   * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
   explicit EventsCBGExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions(),
-    size_t number_of_threads = 0,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+    size_t number_of_threads = 0);
 
   RCLCPP_PUBLIC
   virtual ~EventsCBGExecutor();

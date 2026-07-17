@@ -78,13 +78,11 @@ struct GlobalWeakExecutableCache
 
 EventsCBGExecutor::EventsCBGExecutor(
   const rclcpp::ExecutorOptions & options,
-  size_t number_of_threads,
-  std::chrono::nanoseconds next_exec_timeout)
+  size_t number_of_threads)
 : rclcpp::Executor(options),
   scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>([this] () {
       needs_callback_group_resync = true;
   })),
-  next_exec_timeout_(next_exec_timeout),
   timer_manager(std::make_unique<cbg_executor::TimerManager>(context_)),
   global_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() ),
   nodes_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() )
