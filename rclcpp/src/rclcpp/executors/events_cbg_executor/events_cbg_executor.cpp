@@ -80,14 +80,11 @@ EventsCBGExecutor::EventsCBGExecutor(
   const rclcpp::ExecutorOptions & options,
   size_t number_of_threads,
   std::chrono::nanoseconds next_exec_timeout)
-: scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>([this] () {
+: rclcpp::Executor(options),
+  scheduler(std::make_unique<cbg_executor::FirstInFirstOutScheduler>([this] () {
       needs_callback_group_resync = true;
   })),
   next_exec_timeout_(next_exec_timeout),
-  spinning(false),
-  interrupt_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context) ),
-  shutdown_guard_condition_(std::make_shared<rclcpp::GuardCondition>(options.context) ),
-  context_(options.context),
   timer_manager(std::make_unique<cbg_executor::TimerManager>(context_)),
   global_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() ),
   nodes_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() )
@@ -104,14 +101,6 @@ EventsCBGExecutor::EventsCBGExecutor(
   number_of_threads_ = number_of_threads > 0 ?
     number_of_threads :
     std::max(std::thread::hardware_concurrency(), 2U);
-
-  shutdown_callback_handle_ = context_->add_on_shutdown_callback(
-    [weak_gc = std::weak_ptr<rclcpp::GuardCondition> {shutdown_guard_condition_}]() {
-      auto strong_gc = weak_gc.lock();
-      if (strong_gc) {
-        strong_gc->trigger();
-      }
-    });
 }
 
 EventsCBGExecutor::~EventsCBGExecutor()
@@ -146,13 +135,6 @@ void EventsCBGExecutor::shutdown()
     callback_groups.clear();
   }
 
-  // Remove shutdown callback handle registered to Context
-  if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_) ) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "failed to remove registered on_shutdown callback");
-    rcl_reset_error();
-  }
 
   // now we may release the memory of the timer_manager,
   // as we know no thread is working on it any more
@@ -393,7 +375,7 @@ EventsCBGExecutor::run(
 }
 
 
-void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
+void EventsCBGExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
 {
   if (!rclcpp::ok(this->context_) || !spinning.load() ) {
     return;
@@ -432,7 +414,7 @@ EventsCBGExecutor::spin_once(std::chrono::nanoseconds timeout)
   }
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
-  spin_once_internal(timeout);
+  spin_once_impl(timeout);
 }
 
 
