@@ -171,15 +171,19 @@ public:
   using rclcpp::Executor::execute_client;
 
 protected:
-  RCLCPP_PUBLIC
-  void
-  run(size_t this_thread_number, bool block_initially);
-
+  /// Worker-thread loop shared by both spin() overloads.
+  /**
+   * \param block_initially if true, block once before processing any work, so
+   *   that pool worker threads park until the scheduler hands them an entity.
+   * \param exception_handler if set, exceptions thrown by executed entities are
+   *   routed here instead of propagating; if empty, they propagate as usual.
+   */
   RCLCPP_PUBLIC
   void
   run(
     size_t this_thread_number,
-    const std::function<void(const std::exception &)> & exception_handler);
+    bool block_initially,
+    const std::function<void(const std::exception &)> & exception_handler = {});
 
   /**
    * Te be called in termination case. E.g. destructor of shutdown callback.
@@ -242,8 +246,6 @@ private:
   std::vector<CallbackGroupData> callback_groups;
 
   size_t number_of_threads_;
-
-  std::chrono::nanoseconds next_exec_timeout_;
 
   std::atomic_bool needs_callback_group_resync = false;
 

@@ -318,7 +318,10 @@ void EventsCBGExecutor::sync_callback_groups()
 }
 
 void
-EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
+EventsCBGExecutor::run(
+  size_t this_thread_number,
+  bool block_initially,
+  const std::function<void(const std::exception & e)> & exception_handler)
 {
   (void) this_thread_number;
 
@@ -340,32 +343,14 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
       scheduler->unblock_one_worker_thread();
     }
 
-    ready_entity.entity->execute_function();
-
-    scheduler->mark_entity_as_executed(*ready_entity.entity);
-  }
-}
-
-void
-EventsCBGExecutor::run(
-  size_t this_thread_number,
-  const std::function<void(const std::exception & e)> & exception_handler)
-{
-  (void) this_thread_number;
-
-  while (rclcpp::ok(this->context_) && spinning.load() ) {
-    sync_callback_groups();
-
-    auto ready_entity = scheduler->get_next_ready_entity();
-    if(!ready_entity.entity) {
-      scheduler->block_worker_thread();
-      continue;
-    }
-
-    try {
+    if (exception_handler) {
+      try {
+        ready_entity.entity->execute_function();
+      } catch (const std::exception & e) {
+        exception_handler(e);
+      }
+    } else {
       ready_entity.entity->execute_function();
-    } catch (const std::exception & e) {
-      exception_handler(e);
     }
 
     scheduler->mark_entity_as_executed(*ready_entity.entity);
@@ -499,12 +484,12 @@ void EventsCBGExecutor::spin(
   for ( ; thread_id < number_of_threads_ - 1; ++thread_id) {
     threads.emplace_back([this, thread_id, exception_handler]()
       {
-        run(thread_id, exception_handler);
+        run(thread_id, true, exception_handler);
       }
     );
   }
 
-  run(thread_id, exception_handler);
+  run(thread_id, false, exception_handler);
   for (auto & thread : threads) {
     thread.join();
   }
