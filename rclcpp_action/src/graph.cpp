@@ -168,12 +168,13 @@ std::string
 ActionEndpointInfo::action_type() const
 {
   const std::string & goal_service_type = goal_service_info_.service_type();
-  const std::string suffix = "_SendGoal";
-  if (goal_service_type.size() > suffix.size() &&
+  static constexpr char suffix[] = "_SendGoal";
+  static constexpr size_t suffix_len = sizeof(suffix) - 1;
+  if (goal_service_type.size() > suffix_len &&
     0 == goal_service_type.compare(
-      goal_service_type.size() - suffix.size(), suffix.size(), suffix))
+      goal_service_type.size() - suffix_len, suffix_len, suffix))
   {
-    return goal_service_type.substr(0, goal_service_type.size() - suffix.size());
+    return goal_service_type.substr(0, goal_service_type.size() - suffix_len);
   }
   return goal_service_type;
 }
