@@ -425,7 +425,7 @@ Context::add_shutdown_callback(
   const ShutdownCallback & callback)
 {
   auto callback_shared_ptr =
-    std::make_shared<ShutdownCallbackHandle::ShutdownCallbackType>(callback);
+    std::make_shared<rclcpp::ShutdownCallbackHandle::ShutdownCallbackType>(callback);
 
   static_assert(
     shutdown_type == ShutdownType::pre_shutdown || shutdown_type == ShutdownType::on_shutdown);
@@ -438,7 +438,7 @@ Context::add_shutdown_callback(
     on_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   }
 
-  ShutdownCallbackHandle callback_handle;
+  rclcpp::ShutdownCallbackHandle callback_handle;
   callback_handle.callback = callback_shared_ptr;
   return callback_handle;
 }
