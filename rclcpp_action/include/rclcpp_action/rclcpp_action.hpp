@@ -37,6 +37,7 @@
 #include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/create_client.hpp"
 #include "rclcpp_action/create_server.hpp"
+#include "rclcpp_action/graph.hpp"
 #include "rclcpp_action/server.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
 #include "rclcpp_action/visibility_control.hpp"
