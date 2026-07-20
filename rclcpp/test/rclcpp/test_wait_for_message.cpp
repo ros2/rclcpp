@@ -23,6 +23,7 @@
 #include "rclcpp/wait_for_message.hpp"
 
 #include "test_msgs/msg/strings.hpp"
+#include "test_msgs/msg/unbounded_sequences.hpp"
 #include "test_msgs/message_fixtures.hpp"
 
 using namespace std::chrono_literals;
@@ -131,6 +132,36 @@ TEST(TestUtilities, wait_for_last_message) {
   ASSERT_NO_THROW(wait.get());
   ASSERT_TRUE(received);
   EXPECT_EQ(out, *get_messages_strings()[0]);
+
+  rclcpp::shutdown();
+}
+
+TEST(TestUtilities, wait_for_last_message_with_unbounded_uint8_values) {
+  rclcpp::init(0, nullptr);
+
+  auto node = std::make_shared<rclcpp::Node>("wait_for_unbounded_uint8_message_node");
+  auto qos = rclcpp::QoS(1).reliable().transient_local();
+
+  using MsgT = test_msgs::msg::UnboundedSequences;
+  auto pub = node->create_publisher<MsgT>("wait_for_unbounded_uint8_message_topic", qos);
+  MsgT input;
+  input.uint8_values = {1, 2, 3};
+  input.alignment_check = 42;
+  pub->publish(input);
+
+  MsgT out;
+  auto received = false;
+  auto wait = std::async(
+    [&]() {
+      auto ret = rclcpp::wait_for_message(
+        out, node, "wait_for_unbounded_uint8_message_topic", 5s, qos);
+      EXPECT_TRUE(ret);
+      received = true;
+    });
+
+  ASSERT_NO_THROW(wait.get());
+  ASSERT_TRUE(received);
+  EXPECT_EQ(out, input);
 
   rclcpp::shutdown();
 }
