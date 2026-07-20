@@ -547,6 +547,12 @@ if(TARGET test_multi_threaded_executor)
   target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_events_cbg_executor_reentrant executors/test_events_cbg_executor_reentrant.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_cbg_executor_reentrant)
+  target_link_libraries(test_events_cbg_executor_reentrant ${PROJECT_NAME} ${test_msgs_TARGETS})
+endif()
+
 ament_add_gtest(test_entities_collector executors/test_entities_collector.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
 if(TARGET test_entities_collector)
