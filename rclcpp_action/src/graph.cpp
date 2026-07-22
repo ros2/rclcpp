@@ -51,7 +51,16 @@ convert_to_action_info_list(const rcl_action_endpoint_info_array_t & info_array)
   std::vector<ActionEndpointInfo> action_info_list;
   action_info_list.reserve(info_array.size);
   for (size_t i = 0; i < info_array.size; ++i) {
-    action_info_list.emplace_back(info_array.info_array[i]);
+    const rcl_action_endpoint_info_t & info = info_array.info_array[i];
+    // rcl_action guarantees the goal service info of each entry is populated,
+    // skip malformed entries defensively instead of failing the whole query.
+    if (!info.goal_service_info.node_name ||
+      !info.goal_service_info.node_namespace ||
+      !info.goal_service_info.service_type)
+    {
+      continue;
+    }
+    action_info_list.emplace_back(info);
   }
   return action_info_list;
 }
