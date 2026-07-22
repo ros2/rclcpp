@@ -16,6 +16,7 @@
 #define RCLCPP__NODE_INTERFACES__NODE_INTERFACES_HPP_
 
 #include <memory>
+#include <stdexcept>
 
 #include "rclcpp/detail/template_unique.hpp"
 #include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
