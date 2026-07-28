@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.10 (2026-07-28)
+--------------------
+* add support for reentrant callback groups (`#3204 <https://github.com/ros2/rclcpp/issues/3204>`_)
+* Contributors: Skyler Medeiros
+
 29.5.9 (2026-07-02)
 -------------------
 * Kilted: fixed windows symbol (`#3181 <https://github.com/ros2/rclcpp/issues/3181>`_)

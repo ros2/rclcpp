@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.10 (2026-07-28)
+--------------------
+* Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_) (`#3198 <https://github.com/ros2/rclcpp/issues/3198>`_)
+* Contributors: mergify[bot]
+
 29.5.9 (2026-07-02)
 -------------------
 * Add Callback Group Events Executor (Kilted Backport) (`#3164 <https://github.com/ros2/rclcpp/issues/3164>`_)

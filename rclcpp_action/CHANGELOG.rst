@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+29.5.10 (2026-07-28)
+--------------------
+* Bugfix/rclcpp action UUID rng race condition (`#3183 <https://github.com/ros2/rclcpp/issues/3183>`_) (`#3189 <https://github.com/ros2/rclcpp/issues/3189>`_)
+* Contributors: mergify[bot]
+
 29.5.9 (2026-07-02)
 -------------------
 * Fix expiration of action goals when EventsExecutors are used (Kilted backport) (`#3157 <https://github.com/ros2/rclcpp/issues/3157>`_)
