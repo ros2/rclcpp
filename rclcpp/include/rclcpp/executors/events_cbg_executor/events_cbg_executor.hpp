@@ -43,22 +43,14 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsCBGExecutor)
 
   /**
-   * For the yield_before_execute option, when true std::this_thread::yield()
-   * will be called after acquiring work (as an AnyExecutable) and
-   * releasing the spinning lock, but before executing the work.
-   * This is useful for reproducing some bugs related to taking work more than
-   * once.
-   *
    * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found (minimum of 2)
-   * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
   explicit EventsCBGExecutor(
     const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions(),
-    size_t number_of_threads = 0,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+    size_t number_of_threads = 0);
 
   RCLCPP_PUBLIC
   virtual ~EventsCBGExecutor();
@@ -172,66 +164,6 @@ public:
   size_t
   get_number_of_threads() const;
 
-  bool
-  is_spinning()
-  {
-    return spinning;
-  }
-
-  template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
-  FutureReturnCode
-  spin_until_future_complete(
-    const FutureT & future,
-    std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
-  {
-    // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
-    // inside a callback executed by an executor.
-
-    // Check the future before entering the while loop.
-    // If the future is already complete, don't try to spin.
-    std::future_status status = future.wait_for(std::chrono::seconds(0));
-    if (status == std::future_status::ready) {
-      return FutureReturnCode::SUCCESS;
-    }
-
-    auto end_time = std::chrono::steady_clock::now();
-    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
-    if (timeout_ns > std::chrono::nanoseconds::zero()) {
-      end_time += timeout_ns;
-    }
-    std::chrono::nanoseconds timeout_left = timeout_ns;
-
-    if (spinning.exchange(true)) {
-      throw std::runtime_error("spin_until_future_complete() called while already spinning");
-    }
-    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-    while (rclcpp::ok(this->context_) && spinning.load()) {
-      // Do one item of work.
-      spin_once_internal(timeout_left);
-
-      // Check if the future is set, return SUCCESS if it is.
-      status = future.wait_for(std::chrono::seconds(0));
-      if (status == std::future_status::ready) {
-        return FutureReturnCode::SUCCESS;
-      }
-      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout_ns < std::chrono::nanoseconds::zero()) {
-        continue;
-      }
-      // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto now = std::chrono::steady_clock::now();
-      if (now >= end_time) {
-        return FutureReturnCode::TIMEOUT;
-      }
-      // Subtract the elapsed time from the original timeout.
-      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
-    }
-
-    // The future did not complete before ok() returned false, return INTERRUPTED.
-    return FutureReturnCode::INTERRUPTED;
-  }
-
   /// We need these function to be public, as we use them in the callback_group_scheduler
   using rclcpp::Executor::execute_subscription;
   using rclcpp::Executor::execute_timer;
@@ -239,15 +171,19 @@ public:
   using rclcpp::Executor::execute_client;
 
 protected:
-  RCLCPP_PUBLIC
-  void
-  run(size_t this_thread_number, bool block_initially);
-
+  /// Worker-thread loop shared by both spin() overloads.
+  /**
+   * \param block_initially if true, block once before processing any work, so
+   *   that pool worker threads park until the scheduler hands them an entity.
+   * \param exception_handler if set, exceptions thrown by executed entities are
+   *   routed here instead of propagating; if empty, they propagate as usual.
+   */
   RCLCPP_PUBLIC
   void
   run(
     size_t this_thread_number,
-    const std::function<void(const std::exception &)> & exception_handler);
+    bool block_initially,
+    const std::function<void(const std::exception &)> & exception_handler = {});
 
   /**
    * Te be called in termination case. E.g. destructor of shutdown callback.
@@ -272,8 +208,6 @@ protected:
     Origin origin;
   };
 
-  void set_callbacks(CallbackGroupData & cgd);
-
   /**
    * This function will execute all available executables,
    * that were ready, before this function was called.
@@ -295,7 +229,7 @@ private:
   void trigger_callback_group_sync();
 
   RCLCPP_PUBLIC
-  void spin_once_internal(std::chrono::nanoseconds timeout);
+  void spin_once_impl(std::chrono::nanoseconds timeout) override;
 
   RCLCPP_DISABLE_COPY(EventsCBGExecutor)
 
@@ -311,27 +245,11 @@ private:
 
   size_t number_of_threads_;
 
-  std::chrono::nanoseconds next_exec_timeout_;
-
   std::atomic_bool needs_callback_group_resync = false;
-
-  /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
-  std::atomic_bool spinning;
 
   /// set if we are shutting down.
   bool in_shutdown = false;
 
-  /// Guard condition for signaling the rmw layer to wake up for special events.
-  std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;
-
-  /// Guard condition for signaling the rmw layer to wake up for system shutdown.
-  std::shared_ptr<rclcpp::GuardCondition> shutdown_guard_condition_;
-
-  /// shutdown callback handle registered to Context
-  rclcpp::OnShutdownCallbackHandle shutdown_callback_handle_;
-
-  /// The context associated with this executor.
-  std::shared_ptr<rclcpp::Context> context_;
 
   std::unique_ptr<cbg_executor::TimerManager> timer_manager;
 

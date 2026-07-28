@@ -46,11 +46,10 @@ protected:
     rclcpp::shutdown();
   }
 
-  template<typename ExecutorType>
   std::shared_ptr<Fibonacci::Impl::SendGoalService::Request>
   send_goal_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
-    ExecutorType & executor,
+    rclcpp::Executor & executor,
     std::chrono::milliseconds timeout = std::chrono::milliseconds(-1),
     bool executor_owns_node = false)
   {

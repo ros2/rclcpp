@@ -16,10 +16,15 @@
 
 #include <rcl/timer.h>
 
+#include <array>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -166,7 +171,7 @@ public:
   }
 
   /**
-   * @brief Removes a new timer from the queue.
+   * @brief Removes a timer from the queue.
    * This function is thread safe.
    *
    * Removes a timer, if it was added to this queue.
@@ -465,7 +470,6 @@ private:
         });
       }
     }
-    thread_terminated = true;
   }
 
   rcl_clock_type_t timer_type;
@@ -478,7 +482,6 @@ private:
   std::mutex mutex;
 
   std::atomic_bool running = true;
-  std::atomic_bool thread_terminated = false;
 
   std::vector<std::unique_ptr<TimerData>> all_timers;
 

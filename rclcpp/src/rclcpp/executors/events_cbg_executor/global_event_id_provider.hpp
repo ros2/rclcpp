@@ -30,7 +30,7 @@ class GlobalEventIdProvider
 public:
   using MonotonicId = uint64_t;
 
-  // Returns the last id, returnd by getNextId
+  // Returns the last id, returned by get_next_id
   static uint64_t get_last_id()
   {
     return last_event_id;
@@ -39,7 +39,7 @@ public:
   // increases the Id by one and returns the Id
   static uint64_t get_next_id()
   {
-    return  ++last_event_id;
+    return ++last_event_id;
   }
 };
 }  // namespace cbg_executor

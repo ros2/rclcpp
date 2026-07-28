@@ -17,8 +17,6 @@
 #include <deque>
 #include <memory>
 
-#include <vector>
-
 #include "ready_entity.hpp"
 #include "scheduler.hpp"
 #include "global_event_id_provider.hpp"
@@ -75,8 +73,6 @@ public:
 private:
   std::unique_ptr<CallbackGroupHandle> get_handle_for_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & callback_group) final;
-
-  std::vector<std::unique_ptr<FirstInFirstOutCallbackGroupHandle>> callback_group_handles;
 };
 }  // namespace cbg_executor
 }  // namespace executors

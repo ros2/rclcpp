@@ -13,10 +13,15 @@
 // limitations under the License.
 #pragma once
 
+#include <algorithm>
+#include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <functional>
 #include <list>
 #include <memory>
+#include <mutex>
+#include <optional>
 #include <utility>
 
 #include <rclcpp/callback_group.hpp>
@@ -35,11 +40,6 @@ public:
   {
     rclcpp::Waitable::WeakPtr waitable;
     int internal_event_type;
-
-    bool expired() const
-    {
-      return waitable.expired();
-    }
   };
 
   struct CallbackEventType
@@ -50,11 +50,6 @@ public:
     }
 
     std::function<void()> callback;
-
-    bool expired() const
-    {
-      return false;
-    }
   };
 
   struct CallbackGroupHandle
@@ -104,8 +99,6 @@ public:
     }
 
     CallbackGroupType get_type() {return type;}
-
-    bool is_ready();
 
     // true if this cbg is inside the scheduler's queue
     bool in_queue = false;
@@ -171,7 +164,7 @@ private:
     // will be set if cbg is mutual exclusive and something is executing
     bool not_ready = false;
 
-    // true, if nothing is beeing executed, and there are no pending events
+    // true, if nothing is being executed, and there are no pending events
     bool idle = true;
 
     // type of the underlying callback group
@@ -293,8 +286,8 @@ private:
    * If this function was triggered, a worker thread must
    * be woken up, and the next call to get_next_ready_entity
    * must return a ExecutableEntityWithInfo with the sync
-   * function in it.Or reworded if this function is triggered
-   * the sync function will be executed as the next exent by
+   * function in it. Or reworded, if this function is triggered
+   * the sync function will be executed as the next event by
    * the executor.
    */
   void trigger_sync()
