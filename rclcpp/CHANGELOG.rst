@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.0.3 (2026-07-28)
+-------------------
+* Restore direct cassert include in wait_result.hpp (`#3212 <https://github.com/ros2/rclcpp/issues/3212>`_)
+* Qualify ShutdownCallbackHandle in context.cpp (`#3208 <https://github.com/ros2/rclcpp/issues/3208>`_)
+* Add test for transient-local delivery with unbounded uint8 messages (`#3195 <https://github.com/ros2/rclcpp/issues/3195>`_)
+* Deprecate the experimental EventsExecutor (`#3192 <https://github.com/ros2/rclcpp/issues/3192>`_)
+* add support for reentrant callback group to EventsCBGExecutor (`#3178 <https://github.com/ros2/rclcpp/issues/3178>`_)
+* Contributors: Arman Hosseini, CY Chen, Skyler Medeiros, Tobias Fischer, Tyler Gibbs
+
 33.0.2 (2026-07-02)
 -------------------
 * Optimize header include (`#3179 <https://github.com/ros2/rclcpp/issues/3179>`_)

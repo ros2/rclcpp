@@ -3,6 +3,13 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+33.0.3 (2026-07-28)
+-------------------
+* Deprecate the experimental EventsExecutor (`#3192 <https://github.com/ros2/rclcpp/issues/3192>`_)
+* use C++ 20 in default. (`#3187 <https://github.com/ros2/rclcpp/issues/3187>`_)
+* Bugfix/rclcpp action UUID rng race condition (`#3183 <https://github.com/ros2/rclcpp/issues/3183>`_)
+* Contributors: Ivo Ivanov, Skyler Medeiros, Tomoya Fujita
+
 33.0.2 (2026-07-02)
 -------------------
 

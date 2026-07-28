@@ -2,6 +2,13 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.0.3 (2026-07-28)
+-------------------
+* Deprecate the experimental EventsExecutor (`#3192 <https://github.com/ros2/rclcpp/issues/3192>`_)
+* Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_)
+* use C++ 20 in default. (`#3187 <https://github.com/ros2/rclcpp/issues/3187>`_)
+* Contributors: Skyler Medeiros, Tomoya Fujita
+
 33.0.2 (2026-07-02)
 -------------------
 * Call rclcpp::shutdown() in the component containers (`#3158 <https://github.com/ros2/rclcpp/issues/3158>`_)
