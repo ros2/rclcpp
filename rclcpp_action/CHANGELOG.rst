@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+32.0.2 (2026-07-28)
+-------------------
+* Bugfix/rclcpp action UUID rng race condition (`#3183 <https://github.com/ros2/rclcpp/issues/3183>`_) (`#3188 <https://github.com/ros2/rclcpp/issues/3188>`_)
+* Contributors: mergify[bot]
+
 32.0.1 (2026-07-02)
 -------------------
 

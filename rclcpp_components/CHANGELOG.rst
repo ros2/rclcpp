@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.2 (2026-07-28)
+-------------------
+* Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_) (`#3199 <https://github.com/ros2/rclcpp/issues/3199>`_)
+* Contributors: mergify[bot]
+
 32.0.1 (2026-07-02)
 -------------------
 * Call rclcpp::shutdown() in the component containers (`#3158 <https://github.com/ros2/rclcpp/issues/3158>`_) (`#3162 <https://github.com/ros2/rclcpp/issues/3162>`_)

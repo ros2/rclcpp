@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.2 (2026-07-28)
+-------------------
+* Add test for transient-local delivery with unbounded uint8 messages (`#3195 <https://github.com/ros2/rclcpp/issues/3195>`_) (`#3202 <https://github.com/ros2/rclcpp/issues/3202>`_)
+* add support for reentrant callback group to EventsCBGExecutor (`#3178 <https://github.com/ros2/rclcpp/issues/3178>`_) (`#3200 <https://github.com/ros2/rclcpp/issues/3200>`_)
+* Contributors: mergify[bot]
+
 32.0.1 (2026-07-02)
 -------------------
 * node_parameters: reject non-finite values in floating-point range check (`#3143 <https://github.com/ros2/rclcpp/issues/3143>`_) (`#3161 <https://github.com/ros2/rclcpp/issues/3161>`_)
