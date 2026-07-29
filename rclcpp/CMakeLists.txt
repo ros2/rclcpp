@@ -80,6 +80,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/guard_condition.cpp
   src/rclcpp/init_options.cpp
   src/rclcpp/intra_process_manager.cpp
+  src/rclcpp/log_directory.cpp
   src/rclcpp/logger.cpp
   src/rclcpp/logging_mutex.cpp
   src/rclcpp/memory_strategy.cpp

@@ -20,6 +20,7 @@
 
 #include "rcutils/env.h"
 
+#include "rclcpp/log_directory.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"

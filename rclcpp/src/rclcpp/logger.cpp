@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "rcl_logging_interface/rcl_logging_interface.h"
 #include "rcl/error_handling.h"
 #include "rcl/logging_rosout.h"
 
@@ -53,20 +51,6 @@ get_node_logger(const rcl_node_t * node)
     return logger;
   }
   return rclcpp::get_logger(logger_name);
-}
-
-std::filesystem::path
-get_log_directory()
-{
-  char * log_dir = NULL;
-  auto allocator = rcutils_get_default_allocator();
-  rcl_logging_ret_t ret = rcl_logging_get_logging_directory(allocator, &log_dir);
-  if (RCL_LOGGING_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  std::string path{log_dir};
-  allocator.deallocate(log_dir, allocator.state);
-  return path;
 }
 
 Logger

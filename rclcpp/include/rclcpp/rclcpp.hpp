@@ -115,6 +115,9 @@
  *   - rclcpp::Logger
  *   - rclcpp/logger.hpp
  *   - rclcpp::Node::get_logger()
+ * - Logging directory:
+ *   - rclcpp::get_log_directory()
+ *   - rclcpp/log_directory.hpp
  *
  * Finally, there are many internal API's and utilities:
  *
