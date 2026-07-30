@@ -337,6 +337,48 @@ TYPED_TEST(TestExecutors, cancelBeforeNonBlockingSpinVariantsDoNotHang)
   executor.remove_node(this->node, true);
 }
 
+// cancel() must not clear the spinning state itself; is_spinning() has to
+// stay true until the spin function actually returns, even if the executor
+// is still busy executing a callback when cancel() is issued.
+TYPED_TEST(TestExecutors, isSpinningRemainsTrueUntilSpinReturns)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<void> callback_started;
+  std::promise<void> release_callback;
+  std::future<void> release_future = release_callback.get_future();
+  std::atomic<bool> callback_entered{false};
+  auto timer = this->node->create_wall_timer(
+    1ms,
+    [&]() {
+      if (callback_entered.exchange(true)) {
+        return;
+      }
+      callback_started.set_value();
+      // Block inside the callback until the test releases it.
+      release_future.wait();
+    });
+  executor.add_node(this->node);
+
+  std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+
+  // Wait until the executor is busy inside the timer callback.
+  callback_started.get_future().wait();
+
+  executor.cancel();
+
+  // The spin thread is still blocked inside the callback, so the executor
+  // must still report that it is spinning.
+  EXPECT_TRUE(executor.is_spinning())
+    << "is_spinning() returned false after cancel() while a callback was still running";
+
+  release_callback.set_value();
+  spinner.join();
+  EXPECT_FALSE(executor.is_spinning());
+  executor.remove_node(this->node, true);
+}
+
 TYPED_TEST(TestExecutors, spinWhileAlreadySpinning)
 {
   using ExecutorType = TypeParam;

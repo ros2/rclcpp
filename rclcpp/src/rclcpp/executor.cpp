@@ -296,7 +296,7 @@ Executor::spin_until_future_complete_impl(
   if (cancel_requested_.load()) {
     return FutureReturnCode::INTERRUPTED;
   }
-  while (rclcpp::ok(this->context_) && spinning.load()) {
+  while (rclcpp::ok(this->context_) && !cancel_requested_.load()) {
     // Do one item of work.
     spin_once_impl(timeout_left);
 
@@ -410,7 +410,7 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
 
   // The logic of this while loop is as follows:
   //
-  // - while not shutdown, and spinning (not canceled), and not max duration reached...
+  // - while not shutdown, and not canceled, and not max duration reached...
   // - try to get an executable item to execute, and execute it if available
   // - otherwise, reset the wait result, and ...
   // - if there was no work available just after waiting, break the loop unconditionally
@@ -424,7 +424,7 @@ Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
   // See also:
   //   https://github.com/ros2/rclcpp/issues/2508
   //   https://github.com/ros2/rclcpp/pull/2517
-  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
+  while (rclcpp::ok(context_) && !cancel_requested_.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
@@ -487,13 +487,11 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
 void
 Executor::cancel()
 {
-  // Set the pending-cancel flag BEFORE clearing the spinning flag.
-  // This ordering ensures that a spin variant which is just entering and is
-  // about to do `spinning.exchange(true)` will observe the pending cancel and
-  // bail out early instead of re-arming spinning and blocking forever in
-  // wait_for_work().
+  // Only request the cancellation; the spinning flag is owned by the spin
+  // functions and is cleared when they actually return.  This keeps
+  // is_spinning() true until the executor has really stopped, and a cancel
+  // issued before a spin is "held" until the next spin consumes it.
   cancel_requested_.store(true);
-  spinning.store(false);
   try {
     interrupt_guard_condition_->trigger();
   } catch (const rclcpp::exceptions::RCLError & ex) {
@@ -505,7 +503,7 @@ Executor::cancel()
 void
 Executor::execute_any_executable(AnyExecutable & any_exec)
 {
-  if (!spinning.load()) {
+  if (cancel_requested_.load()) {
     return;
   }
 
@@ -946,7 +944,7 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
   if (!success) {
     // Wait for subscriptions or timers to work on
     wait_for_work(timeout);
-    if (!spinning.load()) {
+    if (cancel_requested_.load()) {
       return false;
     }
     // Try again

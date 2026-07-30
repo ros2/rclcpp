@@ -133,7 +133,7 @@ void EventsCBGExecutor::shutdown()
   bool was_spinning = spinning;
 
   // signal all processing threads to shut down
-  spinning = false;
+  cancel_requested_ = true;
 
   if(was_spinning) {
     scheduler->release_all_worker_threads();
@@ -342,7 +342,7 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
 {
   (void) this_thread_number;
 
-  while (rclcpp::ok(this->context_) && spinning.load() ) {
+  while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
     if(block_initially) {
       block_initially = false;
       scheduler->block_worker_thread();
@@ -373,7 +373,7 @@ EventsCBGExecutor::run(
 {
   (void) this_thread_number;
 
-  while (rclcpp::ok(this->context_) && spinning.load() ) {
+  while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
@@ -395,7 +395,7 @@ EventsCBGExecutor::run(
 
 void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
 {
-  if (!rclcpp::ok(this->context_) || !spinning.load() ) {
+  if (!rclcpp::ok(this->context_) || cancel_requested_.load() ) {
     return;
   }
 
@@ -476,7 +476,7 @@ bool EventsCBGExecutor::collect_and_execute_ready_events(
 
   bool had_work = false;
 
-  while (rclcpp::ok(this->context_) && spinning && cur_time <= end_time) {
+  while (rclcpp::ok(this->context_) && !cancel_requested_.load() && cur_time <= end_time) {
     sync_callback_groups();
 
     if (!execute_previous_ready_executables_until(end_time) ) {
@@ -582,16 +582,13 @@ EventsCBGExecutor::add_callback_group(
 void
 EventsCBGExecutor::cancel()
 {
-  bool was_spinning = spinning;
-
-  // Set the pending-cancel flag BEFORE clearing spinning, so that any spin
-  // variant that is just entering and is about to do `spinning.exchange(true)`
-  // observes the pending cancel and bails out early instead of re-arming
-  // spinning and blocking forever.
+  // Only request the cancellation; the spinning flag is owned by the spin
+  // functions and is cleared when they actually return.  This keeps
+  // is_spinning() true until the executor has really stopped, and a cancel
+  // issued before a spin is "held" until the next spin consumes it.
   cancel_requested_.store(true);
-  spinning.store(false);
 
-  if(was_spinning) {
+  if(spinning) {
     scheduler->release_all_worker_threads();
   }
 
