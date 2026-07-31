@@ -107,7 +107,7 @@ EventsExecutor::setup_notify_waitable()
 
 EventsExecutor::~EventsExecutor()
 {
-  spinning.store(false);
+  cancel_requested_.store(true);
   notify_waitable_->clear_on_ready_callback();
   this->refresh_current_collection({});
 }
@@ -118,12 +118,17 @@ EventsExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   timers_manager_->start();
   RCPPUTILS_SCOPE_EXIT(timers_manager_->stop(); );
 
-  while (rclcpp::ok(context_) && spinning.load()) {
+  while (rclcpp::ok(context_) && !cancel_requested_.load()) {
     // Wait until we get an event
     ExecutorEvent event;
     bool has_event = events_queue_->dequeue(event);
@@ -155,7 +160,12 @@ EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhau
     throw std::runtime_error("spin_some() called while already spinning");
   }
 
-  RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
+  RCPPUTILS_SCOPE_EXIT(
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   auto start = std::chrono::steady_clock::now();
 
@@ -185,7 +195,7 @@ EventsExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhau
   const size_t ready_timers_at_start = timers_manager_->get_number_ready_timers();
   size_t executed_timers = 0;
 
-  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
+  while (rclcpp::ok(context_) && !cancel_requested_.load() && max_duration_not_elapsed()) {
     // Execute first ready event from queue if exists
     if (exhaustive || (executed_events < ready_events_at_start)) {
       bool has_event = !events_queue_->empty();

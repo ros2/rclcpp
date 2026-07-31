@@ -205,8 +205,13 @@ public:
     if (spinning.exchange(true)) {
       throw std::runtime_error("spin_until_future_complete() called while already spinning");
     }
-    RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
-    while (rclcpp::ok(this->context_) && spinning.load()) {
+    RCPPUTILS_SCOPE_EXIT(
+      this->spinning.store(false);
+      this->cancel_requested_.store(false); );
+    if (cancel_requested_.load()) {
+      return FutureReturnCode::INTERRUPTED;
+    }
+    while (rclcpp::ok(this->context_) && !cancel_requested_.load()) {
       // Do one item of work.
       spin_once_internal(timeout_left);
 
@@ -315,7 +320,12 @@ private:
 
   std::atomic_bool needs_callback_group_resync = false;
 
-  /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
+  /// Spinning state, used to prevent multi threaded calls to spin.
+  /**
+   * This flag is only set and cleared by the spin functions themselves, so it
+   * stays true until a spin actually returns, even after cancel() was called.
+   * Cancellation is signaled via cancel_requested_ (inherited from Executor).
+   */
   std::atomic_bool spinning;
 
   /// set if we are shutting down.

@@ -563,8 +563,19 @@ protected:
   virtual void
   handle_updated_entities(bool notify);
 
-  /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
+  /// Spinning state, used to prevent multi threaded calls to spin.
+  /**
+   * This flag is only set and cleared by the spin functions themselves, so it
+   * stays true until a spin actually returns, even after cancel() was called.
+   */
   std::atomic_bool spinning;
+
+  /// Tracks a pending cancel request that has not yet been consumed by a spin.
+  /**
+   * Set by cancel() and cleared when the spin it cancels (or, if none is in
+   * progress, the next spin) returns. The spin loops react to this flag only.
+   */
+  std::atomic_bool cancel_requested_;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;

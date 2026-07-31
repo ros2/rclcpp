@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <future>
 #include <limits>
 #include <memory>
 #include <string>
@@ -167,6 +168,214 @@ TYPED_TEST(TestExecutors, spinWithTimer)
   // Cancel needs to be called before join, so that executor.spin() returns.
   executor.cancel();
   spinner.join();
+  executor.remove_node(this->node, true);
+}
+
+// If cancel() is called *before* spin() begins (e.g. a test fixture's
+// TearDown() races with a background thread that has not yet entered
+// spin()), the executor must not block forever on wait_for_work().
+// Each spin variant must consume the pending cancel and return promptly.
+TYPED_TEST(TestExecutors, cancelBeforeSpinDoesNotHang)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  executor.add_node(this->node);
+
+  // Cancel before any spin has been issued.  The cancel must be "held" until
+  // the next spin consumes it.
+  executor.cancel();
+
+  std::atomic<bool> spin_returned{false};
+  std::thread spinner(
+    [&]() {
+      EXPECT_NO_THROW(executor.spin());
+      spin_returned.store(true);
+    });
+
+  // Without the fix, spin() would block in wait_for_work() forever and the
+  // join below would deadlock. With the fix, spin() returns immediately.
+  auto start = std::chrono::steady_clock::now();
+  while (!spin_returned.load() && (std::chrono::steady_clock::now() - start) < 5s) {
+    std::this_thread::sleep_for(1ms);
+  }
+  EXPECT_TRUE(spin_returned.load())
+    << "spin() did not return after cancel() was called before spin start";
+
+  // If spin did not return, cancel again from the main thread to unblock the
+  // (now broken) test before joining, otherwise the test process hangs.
+  if (!spin_returned.load()) {
+    executor.cancel();
+  }
+  spinner.join();
+  executor.remove_node(this->node, true);
+}
+
+// If cancel() is called while spin() is racing to enter wait_for_work(),
+// the executor must not block forever on wait_for_work().
+TYPED_TEST(TestExecutors, cancelRacingSpinDoesNotHang)
+{
+  using ExecutorType = TypeParam;
+
+  // Repeat the race a few times to increase the chance of hitting the bad
+  // interleaving on machines where the threads tend to schedule the same way.
+  for (int i = 0; i < 10; ++i) {
+    ExecutorType executor;
+    executor.add_node(this->node);
+
+    std::atomic<bool> spin_returned{false};
+    std::thread spinner(
+      [&]() {
+        EXPECT_NO_THROW(executor.spin());
+        spin_returned.store(true);
+      });
+
+    // Issue cancel from the main thread without sleeping; depending on
+    // scheduling, cancel may fire before or after spin() entered its loop.
+    executor.cancel();
+
+    // Spin must return within a short, generous timeout in either case.
+    auto start = std::chrono::steady_clock::now();
+    while (!spin_returned.load() && (std::chrono::steady_clock::now() - start) < 5s) {
+      std::this_thread::sleep_for(1ms);
+    }
+    EXPECT_TRUE(spin_returned.load())
+      << "spin() did not return on iteration " << i
+      << " when cancel() raced with spin()";
+
+    // Defensive cleanup so a failing iteration does not deadlock the suite.
+    if (!spin_returned.load()) {
+      executor.cancel();
+    }
+    spinner.join();
+    executor.remove_node(this->node, true);
+  }
+}
+
+// After cancel() consumed by an early-exit spin(), a subsequent spin() must
+// behave normally (no stale cancel state leaks across spin invocations).
+TYPED_TEST(TestExecutors, spinAfterCancelBeforeSpin)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::atomic<bool> timer_completed{false};
+  auto timer = this->node->create_wall_timer(
+    1ms, [&]() {timer_completed.store(true);});
+  executor.add_node(this->node);
+
+  // First, exercise the cancel-before-spin path: spin() must return promptly.
+  executor.cancel();
+  std::thread first_spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+  first_spinner.join();
+  EXPECT_FALSE(timer_completed.load())
+    << "timer should not have fired during a cancel-before-spin no-op spin";
+
+  // Now spin again; the previous cancel must have been consumed and the
+  // executor should run normally.
+  std::thread second_spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+
+  auto start = std::chrono::steady_clock::now();
+  while (!timer_completed.load() && (std::chrono::steady_clock::now() - start) < 10s) {
+    std::this_thread::sleep_for(1ms);
+  }
+  EXPECT_TRUE(timer_completed.load())
+    << "timer did not fire on the spin that followed a cancel-before-spin";
+
+  executor.cancel();
+  second_spinner.join();
+  executor.remove_node(this->node, true);
+}
+
+// Cancel-before-spin must also be honored by spin_some(), spin_all(),
+// spin_once(), and spin_until_future_complete().
+TYPED_TEST(TestExecutors, cancelBeforeNonBlockingSpinVariantsDoNotHang)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+  executor.add_node(this->node);
+
+  // spin_some()
+  {
+    executor.cancel();
+    auto start = std::chrono::steady_clock::now();
+    EXPECT_NO_THROW(executor.spin_some(10s));
+    EXPECT_LT(std::chrono::steady_clock::now() - start, 1s)
+      << "spin_some() blocked after cancel() was called before it";
+  }
+
+  // spin_all()
+  {
+    executor.cancel();
+    auto start = std::chrono::steady_clock::now();
+    EXPECT_NO_THROW(executor.spin_all(10s));
+    EXPECT_LT(std::chrono::steady_clock::now() - start, 1s)
+      << "spin_all() blocked after cancel() was called before it";
+  }
+
+  // spin_once()
+  {
+    executor.cancel();
+    auto start = std::chrono::steady_clock::now();
+    EXPECT_NO_THROW(executor.spin_once(10s));
+    EXPECT_LT(std::chrono::steady_clock::now() - start, 1s)
+      << "spin_once() blocked after cancel() was called before it";
+  }
+
+  // spin_until_future_complete() must report INTERRUPTED, not block.
+  {
+    std::promise<bool> never_set;
+    auto future = never_set.get_future().share();
+    executor.cancel();
+    auto start = std::chrono::steady_clock::now();
+    rclcpp::FutureReturnCode ret = rclcpp::FutureReturnCode::TIMEOUT;
+    EXPECT_NO_THROW(ret = executor.spin_until_future_complete(future, 10s));
+    EXPECT_LT(std::chrono::steady_clock::now() - start, 1s)
+      << "spin_until_future_complete() blocked after cancel() was called before it";
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::INTERRUPTED);
+  }
+
+  executor.remove_node(this->node, true);
+}
+
+// cancel() must not clear the spinning state itself; is_spinning() has to
+// stay true until the spin function actually returns, even if the executor
+// is still busy executing a callback when cancel() is issued.
+TYPED_TEST(TestExecutors, isSpinningRemainsTrueUntilSpinReturns)
+{
+  using ExecutorType = TypeParam;
+  ExecutorType executor;
+
+  std::promise<void> callback_started;
+  std::promise<void> release_callback;
+  std::future<void> release_future = release_callback.get_future();
+  std::atomic<bool> callback_entered{false};
+  auto timer = this->node->create_wall_timer(
+    1ms,
+    [&]() {
+      if (callback_entered.exchange(true)) {
+        return;
+      }
+      callback_started.set_value();
+      // Block inside the callback until the test releases it.
+      release_future.wait();
+    });
+  executor.add_node(this->node);
+
+  std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
+
+  // Wait until the executor is busy inside the timer callback.
+  callback_started.get_future().wait();
+
+  executor.cancel();
+
+  // The spin thread is still blocked inside the callback, so the executor
+  // must still report that it is spinning.
+  EXPECT_TRUE(executor.is_spinning())
+    << "is_spinning() returned false after cancel() while a callback was still running";
+
+  release_callback.set_value();
+  spinner.join();
+  EXPECT_FALSE(executor.is_spinning());
   executor.remove_node(this->node, true);
 }
 
