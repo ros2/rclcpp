@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "rcl/subscription.h"
+#include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/generic_subscription.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/qos.hpp"

@@ -14,6 +14,7 @@
 
 #include "rclcpp/parameter_value.hpp"
 
+#include <sstream>
 #include <string>
 #include <vector>
 

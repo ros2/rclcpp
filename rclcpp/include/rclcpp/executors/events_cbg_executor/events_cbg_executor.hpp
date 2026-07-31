@@ -22,6 +22,7 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

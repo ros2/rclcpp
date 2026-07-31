@@ -15,11 +15,9 @@
 #ifndef RCLCPP__EXECUTOR_HPP_
 #define RCLCPP__EXECUTOR_HPP_
 
-#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -39,7 +37,6 @@
 #include "rclcpp/executors/executor_entities_collector.hpp"
 #include "rclcpp/future_return_code.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set.hpp"
 

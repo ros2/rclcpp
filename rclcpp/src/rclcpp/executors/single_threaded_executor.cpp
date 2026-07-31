@@ -16,6 +16,7 @@
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/any_executable.hpp"
+#include "rclcpp/utilities.hpp"
 
 using rclcpp::executors::SingleThreadedExecutor;
 

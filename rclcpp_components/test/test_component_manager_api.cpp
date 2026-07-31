@@ -23,6 +23,7 @@
 #include "composition_interfaces/srv/list_nodes.hpp"
 
 #include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_components/component_manager.hpp"
 #include "rclcpp_components/component_manager_isolated.hpp"
 

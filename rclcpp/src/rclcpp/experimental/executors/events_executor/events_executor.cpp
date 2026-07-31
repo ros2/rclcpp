@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include <memory>
 #include <utility>

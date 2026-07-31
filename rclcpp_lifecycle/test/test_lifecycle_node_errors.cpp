@@ -23,6 +23,7 @@
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 #include "./mocking_utils/patch.hpp"
+#include "rclcpp/utilities.hpp"
 
 class TestDefaultStateMachine : public ::testing::Test
 {

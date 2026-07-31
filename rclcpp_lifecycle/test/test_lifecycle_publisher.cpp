@@ -25,6 +25,7 @@
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp/utilities.hpp"
 
 using lifecycle_msgs::msg::State;
 using lifecycle_msgs::msg::Transition;
