@@ -15,7 +15,6 @@
 #ifndef RCLCPP__LOGGER_HPP_
 #define RCLCPP__LOGGER_HPP_
 
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
@@ -76,18 +75,6 @@ get_logger(const std::string & name);
 RCLCPP_PUBLIC
 Logger
 get_node_logger(const rcl_node_t * node);
-
-/// Get the current logging directory.
-/**
- * For more details of how the logging directory is determined,
- * see rcl_logging_get_logging_directory().
- *
- * \returns the logging directory being used.
- * \throws rclcpp::exceptions::RCLError if an unexpected error occurs.
- */
-RCLCPP_PUBLIC
-std::filesystem::path
-get_log_directory();
 
 class Logger
 {
