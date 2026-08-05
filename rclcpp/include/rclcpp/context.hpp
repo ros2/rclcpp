@@ -19,6 +19,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <atomic>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -365,6 +366,7 @@ private:
   std::shared_ptr<rcl_context_t> rcl_context_;
   rclcpp::InitOptions init_options_;
   std::string shutdown_reason_;
+  std::atomic<bool> is_shutting_down_{false};
 
   // Keep shared ownership of the global logging mutex.
   std::shared_ptr<std::recursive_mutex> logging_mutex_;
