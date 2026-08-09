@@ -1753,6 +1753,27 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 50.0);
   }
   {
+    // setting a parameter to non-finite values with floating point range descriptor
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    constexpr double inf = std::numeric_limits<double>::infinity();
+    constexpr double nan = std::numeric_limits<double>::quiet_NaN();
+    floating_point_range.from_value = 0.0;
+    floating_point_range.to_value = inf;
+    floating_point_range.step = 0.0;
+    node->declare_parameter(name, 50.0, descriptor);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 50.0);
+
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, inf)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), inf);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, -inf)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), inf);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, nan)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), inf);
+  }
+  {
     // setting an array parameter with floating point range descriptor
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
