@@ -29,7 +29,8 @@
 #include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
-
+#include "rclcpp/graph_listener.hpp"
+#include "rcpputils/scope_exit.hpp"
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
 
@@ -342,6 +343,23 @@ Context::shutdown_reason() const
   return shutdown_reason_;
 }
 
+/// Contexts that are currently being shutdown by this thread.
+/**
+ * The init_mutex_ is recursive, so it serializes concurrent calls to
+ * shutdown() from different threads, but it cannot prevent the same thread
+ * from reentering shutdown(), e.g. when a pre_shutdown callback calls
+ * shutdown() on the same context again, directly or via rclcpp::shutdown().
+ * Such a reentrant call would run the entire shutdown sequence again,
+ * calling the pre_shutdown callbacks recursively and rcl_shutdown() twice.
+ *
+ * This state is intentionally kept out of the Context class so that the
+ * class layout does not change, keeping this fix ABI compatible.
+ * A thread_local container is sufficient because concurrent calls from
+ * other threads are already serialized by init_mutex_; the second thread
+ * observes is_valid() == false after the first call completes.
+ */
+static thread_local std::unordered_set<const Context *> g_contexts_in_shutdown;
+
 bool
 Context::shutdown(const std::string & reason)
 {
@@ -352,6 +370,12 @@ Context::shutdown(const std::string & reason)
     // if it is not valid, then it cannot be shutdown
     return false;
   }
+  // prevent reentrant calls, e.g. from a pre_shutdown callback
+  if (!g_contexts_in_shutdown.insert(this).second) {
+    // shutdown of this context is already in progress on this thread
+    return false;
+  }
+  RCPPUTILS_SCOPE_EXIT(g_contexts_in_shutdown.erase(this); );
 
   // call each pre-shutdown callback
   {
