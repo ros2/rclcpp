@@ -165,13 +165,13 @@ LifecycleNode::create_generic_publisher(
   );
 }
 
-template<typename AllocatorT>
+template<typename CallbackT, typename AllocatorT>
 std::shared_ptr<rclcpp::GenericSubscription>
 LifecycleNode::create_generic_subscription(
   const std::string & topic_name,
   const std::string & topic_type,
   const rclcpp::QoS & qos,
-  std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)> callback,
+  CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
 {
   return rclcpp::create_generic_subscription(
@@ -181,7 +181,7 @@ LifecycleNode::create_generic_subscription(
     topic_name,
     topic_type,
     qos,
-    std::move(callback),
+    std::forward<CallbackT>(callback),
     options
   );
 }
