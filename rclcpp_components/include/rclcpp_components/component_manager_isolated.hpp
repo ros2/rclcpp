@@ -102,7 +102,12 @@ protected:
     if constexpr (std::is_same_v<ExecutorT, rclcpp::executors::SingleThreadedExecutor>) {
       exec = std::make_shared<ExecutorT>(executor_options_);
     } else {
-      exec = std::make_shared<ExecutorT>(executor_options_, num_threads_);
+      // num_threads_ == 0 means "auto": read the `thread_num` parameter declared by
+      // ComponentManager (defaults to the hardware concurrency).
+      const size_t num_threads = num_threads_ != 0 ?
+        num_threads_ :
+        static_cast<size_t>(this->get_parameter("thread_num").as_int());
+      exec = std::make_shared<ExecutorT>(executor_options_, num_threads);
     }
     exec->add_node(node_wrappers_[node_id].get_node_base_interface());
 
