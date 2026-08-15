@@ -201,7 +201,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  RCUTILS_LOG_DEBUG_NAMED("component_container", debug_msg.c_str());
+  RCUTILS_LOG_DEBUG_NAMED("component_container", "%s", debug_msg.c_str());
 
   node->set_executor(exec);
   exec->add_node(node);
