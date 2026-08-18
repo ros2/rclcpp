@@ -157,9 +157,9 @@ ServerBase::ServerBase(
 
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
 
-  // This timer callback will never be called, we are only interested in
-  // weather the timer itself becomes ready or not.
-  std::function<void()> timer_callback = [] () {};
+  std::function<void()> timer_callback = [this] () {
+      execute_check_expired_goals();
+    };
   pimpl_->expire_timer_ = std::make_shared<rclcpp::GenericTimer<decltype (timer_callback)>>(
       node_clock->get_clock(), std::chrono::nanoseconds(options.result_timeout.nanoseconds),
       std::move(timer_callback), node_base->get_context(), false);
@@ -637,6 +637,13 @@ ServerBase::execute_result_request_received(
       rclcpp::exceptions::throw_from_rcl_error(rcl_ret);
     }
   }
+}
+
+size_t
+ServerBase::get_number_of_goal_handles()
+{
+  std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
+  return pimpl_->goal_handles_.size();
 }
 
 void

@@ -73,10 +73,17 @@ add_executable(
 )
 target_link_libraries(component_container_isolated component_manager rclcpp::rclcpp)
 
+add_executable(
+  component_container_events_cbg
+  src/component_container_events_cbg.cpp
+)
+target_link_libraries(component_container_events_cbg component_manager rclcpp::rclcpp)
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(component_container "stdc++fs")
   target_link_libraries(component_container_mt "stdc++fs")
   target_link_libraries(component_container_isolated "stdc++fs")
+  target_link_libraries(component_container_events_cbg "stdc++fs")
 endif()
 
 if(BUILD_TESTING)
@@ -146,6 +153,7 @@ install(
 # Install executables
 install(
   TARGETS component_container component_container_mt component_container_isolated
+    component_container_events_cbg
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 

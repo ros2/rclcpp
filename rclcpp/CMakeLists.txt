@@ -65,6 +65,9 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executor.cpp
   src/rclcpp/executor_options.cpp
   src/rclcpp/executors.cpp
+  src/rclcpp/executors/events_cbg_executor/events_cbg_executor.cpp
+  src/rclcpp/executors/events_cbg_executor/first_in_first_out_scheduler.cpp
+  src/rclcpp/executors/events_cbg_executor/global_event_id_provider.cpp
   src/rclcpp/executors/executor_entities_collection.cpp
   src/rclcpp/executors/executor_entities_collector.cpp
   src/rclcpp/executors/executor_notify_waitable.cpp
