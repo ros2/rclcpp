@@ -15,8 +15,10 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <future>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "rclcpp/node.hpp"
@@ -28,19 +30,41 @@
 
 using namespace std::chrono_literals;
 
-TEST(TestUtilities, wait_for_message) {
-  rclcpp::init(0, nullptr);
+class TestWaitForMessage : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+    const auto * info = ::testing::UnitTest::GetInstance()->current_test_info();
+    // Unique names avoid cross-talk across tests / RMWs that share a domain.
+    node_name_ = std::string("wait_for_message_") + info->name();
+    topic_name_ = std::string("wait_for_message_topic_") + info->name();
+    node_ = std::make_shared<rclcpp::Node>(node_name_);
+  }
 
-  auto node = std::make_shared<rclcpp::Node>("wait_for_message_node");
+  void TearDown() override
+  {
+    node_.reset();
+    if (rclcpp::ok()) {
+      rclcpp::shutdown();
+    }
+  }
 
+  std::string node_name_;
+  std::string topic_name_;
+  rclcpp::Node::SharedPtr node_;
+};
+
+TEST_F(TestWaitForMessage, wait_for_message) {
   using MsgT = test_msgs::msg::Strings;
-  auto pub = node->create_publisher<MsgT>("wait_for_message_topic", 10);
+  auto pub = node_->create_publisher<MsgT>(topic_name_, 10);
 
   MsgT out;
   auto received = false;
   auto wait = std::async(
     [&]() {
-      auto ret = rclcpp::wait_for_message(out, node, "wait_for_message_topic", 5s);
+      auto ret = rclcpp::wait_for_message(out, node_, topic_name_, 5s);
       EXPECT_TRUE(ret);
       received = true;
     });
@@ -49,50 +73,48 @@ TEST(TestUtilities, wait_for_message) {
     pub->publish(*get_messages_strings()[0]);
     std::this_thread::sleep_for(1s);
   }
+  ASSERT_NO_THROW(wait.get());
   ASSERT_TRUE(received);
   EXPECT_EQ(out, *get_messages_strings()[0]);
-
-  rclcpp::shutdown();
 }
 
-TEST(TestUtilities, wait_for_message_indefinitely) {
-  rclcpp::init(0, nullptr);
-
-  auto node = std::make_shared<rclcpp::Node>("wait_for_message_node2");
-
+TEST_F(TestWaitForMessage, wait_for_message_indefinitely) {
   using MsgT = test_msgs::msg::Strings;
   MsgT out;
   auto received = false;
+  // Create the subscription while the context is still valid. Some RMWs (e.g. zenoh)
+  // throw if wait_for_message tries to create a subscription after shutdown.
+  auto sub = node_->create_subscription<MsgT>(
+    topic_name_, 10, [](const std::shared_ptr<const MsgT>) {});
   auto wait = std::async(
     [&]() {
-      auto ret = rclcpp::wait_for_message(out, node, "wait_for_message_topic" /*, -1 */);
-      EXPECT_TRUE(ret);
-      received = true;
+      auto ret = rclcpp::wait_for_message(out, sub, node_->get_node_options().context());
+      EXPECT_FALSE(ret);
+      received = ret;
     });
 
+  // Let the waiter enter wait_set.wait before interrupting via shutdown.
+  std::this_thread::sleep_for(100ms);
   rclcpp::shutdown();
 
+  ASSERT_NO_THROW(wait.get());
   ASSERT_FALSE(received);
 }
 
-TEST(TestUtilities, wait_for_message_twice_one_sub) {
-  rclcpp::init(0, nullptr);
-
-  auto node = std::make_shared<rclcpp::Node>("wait_for_message_node3");
-
+TEST_F(TestWaitForMessage, wait_for_message_twice_one_sub) {
   using MsgT = test_msgs::msg::Strings;
-  auto pub = node->create_publisher<MsgT>("wait_for_message_topic", 10);
-  auto sub = node->create_subscription<MsgT>(
-    "wait_for_message_topic", 1, [](const std::shared_ptr<const MsgT>) {});
+  auto pub = node_->create_publisher<MsgT>(topic_name_, 10);
+  auto sub = node_->create_subscription<MsgT>(
+    topic_name_, 1, [](const std::shared_ptr<const MsgT>) {});
 
   MsgT out1;
   MsgT out2;
   auto received = false;
   auto wait = std::async(
     [&]() {
-      auto ret = rclcpp::wait_for_message(out1, sub, node->get_node_options().context(), 5s);
+      auto ret = rclcpp::wait_for_message(out1, sub, node_->get_node_options().context(), 5s);
       EXPECT_TRUE(ret);
-      ret = rclcpp::wait_for_message(out2, sub, node->get_node_options().context(), 5s);
+      ret = rclcpp::wait_for_message(out2, sub, node_->get_node_options().context(), 5s);
       EXPECT_TRUE(ret);
       received = true;
     });
@@ -106,25 +128,20 @@ TEST(TestUtilities, wait_for_message_twice_one_sub) {
   ASSERT_TRUE(received);
   EXPECT_EQ(out1, *get_messages_strings()[0]);
   EXPECT_EQ(out2, *get_messages_strings()[0]);
-
-  rclcpp::shutdown();
 }
 
-TEST(TestUtilities, wait_for_last_message) {
-  rclcpp::init(0, nullptr);
-
-  auto node = std::make_shared<rclcpp::Node>("wait_for_last_message_node");
+TEST_F(TestWaitForMessage, wait_for_last_message) {
   auto qos = rclcpp::QoS(1).reliable().transient_local();
 
   using MsgT = test_msgs::msg::Strings;
-  auto pub = node->create_publisher<MsgT>("wait_for_last_message_topic", qos);
+  auto pub = node_->create_publisher<MsgT>(topic_name_, qos);
   pub->publish(*get_messages_strings()[0]);
 
   MsgT out;
   auto received = false;
   auto wait = std::async(
     [&]() {
-      auto ret = rclcpp::wait_for_message(out, node, "wait_for_last_message_topic", 5s, qos);
+      auto ret = rclcpp::wait_for_message(out, node_, topic_name_, 5s, qos);
       EXPECT_TRUE(ret);
       received = true;
     });
@@ -132,18 +149,13 @@ TEST(TestUtilities, wait_for_last_message) {
   ASSERT_NO_THROW(wait.get());
   ASSERT_TRUE(received);
   EXPECT_EQ(out, *get_messages_strings()[0]);
-
-  rclcpp::shutdown();
 }
 
-TEST(TestUtilities, wait_for_last_message_with_unbounded_uint8_values) {
-  rclcpp::init(0, nullptr);
-
-  auto node = std::make_shared<rclcpp::Node>("wait_for_unbounded_uint8_message_node");
+TEST_F(TestWaitForMessage, wait_for_last_message_with_unbounded_uint8_values) {
   auto qos = rclcpp::QoS(1).reliable().transient_local();
 
   using MsgT = test_msgs::msg::UnboundedSequences;
-  auto pub = node->create_publisher<MsgT>("wait_for_unbounded_uint8_message_topic", qos);
+  auto pub = node_->create_publisher<MsgT>(topic_name_, qos);
   MsgT input;
   input.uint8_values = {1, 2, 3};
   input.alignment_check = 42;
@@ -153,8 +165,7 @@ TEST(TestUtilities, wait_for_last_message_with_unbounded_uint8_values) {
   auto received = false;
   auto wait = std::async(
     [&]() {
-      auto ret = rclcpp::wait_for_message(
-        out, node, "wait_for_unbounded_uint8_message_topic", 5s, qos);
+      auto ret = rclcpp::wait_for_message(out, node_, topic_name_, 5s, qos);
       EXPECT_TRUE(ret);
       received = true;
     });
@@ -162,25 +173,27 @@ TEST(TestUtilities, wait_for_last_message_with_unbounded_uint8_values) {
   ASSERT_NO_THROW(wait.get());
   ASSERT_TRUE(received);
   EXPECT_EQ(out, input);
-
-  rclcpp::shutdown();
 }
 
-TEST(TestUtilities, wait_for_message_custom_context) {
+TEST(TestWaitForMessageCustomContext, wait_for_message_custom_context) {
   auto context = std::make_shared<rclcpp::Context>();
   context->init(0, nullptr);
 
+  const auto * info = ::testing::UnitTest::GetInstance()->current_test_info();
+  const std::string node_name = std::string("wait_for_message_custom_context_") + info->name();
+  const std::string topic_name = std::string("wait_for_message_topic_") + info->name();
+
   auto node_opt = rclcpp::NodeOptions().context(context);
-  auto node = std::make_shared<rclcpp::Node>("wait_for_message_custom_context_node", node_opt);
+  auto node = std::make_shared<rclcpp::Node>(node_name, node_opt);
 
   using MsgT = test_msgs::msg::Strings;
-  auto pub = node->create_publisher<MsgT>("wait_for_message_topic", 10);
+  auto pub = node->create_publisher<MsgT>(topic_name, 10);
 
   MsgT out;
   auto received = false;
   auto wait = std::async(
     [&]() {
-      auto ret = rclcpp::wait_for_message(out, node, "wait_for_message_topic", 5s);
+      auto ret = rclcpp::wait_for_message(out, node, topic_name, 5s);
       EXPECT_TRUE(ret);
       received = true;
     });
@@ -189,8 +202,37 @@ TEST(TestUtilities, wait_for_message_custom_context) {
     pub->publish(*get_messages_strings()[0]);
     std::this_thread::sleep_for(1s);
   }
+  ASSERT_NO_THROW(wait.get());
   ASSERT_TRUE(received);
   EXPECT_EQ(out, *get_messages_strings()[0]);
 
+  node.reset();
   context->shutdown("test complete");
+}
+
+TEST_F(TestWaitForMessage, wait_for_message_explicit_interfaces) {
+  using MsgT = test_msgs::msg::Strings;
+  auto pub = node_->create_publisher<MsgT>(topic_name_, 10);
+
+  MsgT out;
+  auto received = false;
+  auto wait = std::async(
+    [&]() {
+      auto ret = rclcpp::wait_for_message(
+        out,
+        node_->get_node_parameters_interface(),
+        node_->get_node_topics_interface(),
+        topic_name_,
+        5s);
+      EXPECT_TRUE(ret);
+      received = true;
+    });
+
+  for (auto i = 0u; i < 10 && received == false; ++i) {
+    pub->publish(*get_messages_strings()[0]);
+    std::this_thread::sleep_for(1s);
+  }
+  ASSERT_NO_THROW(wait.get());
+  ASSERT_TRUE(received);
+  EXPECT_EQ(out, *get_messages_strings()[0]);
 }

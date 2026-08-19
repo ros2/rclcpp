@@ -15,19 +15,24 @@
 #ifndef RCLCPP__WAIT_FOR_MESSAGE_HPP_
 #define RCLCPP__WAIT_FOR_MESSAGE_HPP_
 
+#include <chrono>
 #include <future>
 #include <memory>
 #include <string>
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "rclcpp/create_subscription.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set.hpp"
-#include "rclcpp/qos.hpp"
 
 namespace rclcpp
 {
+
 /// Wait for the next incoming message.
 /**
  * Given an already initialized subscription,
@@ -77,6 +82,42 @@ bool wait_for_message(
   return true;
 }
 
+/// Wait for the next incoming message using explicit node interfaces.
+/**
+ * Creates a temporary subscription via \ref rclcpp::create_subscription and waits
+ * for the next message (or until timeout / context shutdown).
+ *
+ * This overload does not require an `rclcpp::Node::SharedPtr`, so it works with
+ * `rclcpp_lifecycle::LifecycleNode` and during construction (no `shared_from_this`).
+ *
+ * \param[out] out is the message to be filled when a new message is arriving.
+ * \param[in] node_parameters parameters interface used when creating the subscription.
+ * \param[in] node_topics topics interface used when creating the subscription.
+ * \param[in] topic the topic to wait for messages.
+ * \param[in] time_to_wait parameter specifying the timeout before returning.
+ * \param[in] qos parameter specifying QoS settings for the subscription.
+ * \return true if a message was successfully received, false if message could not
+ * be obtained or shutdown was triggered asynchronously on the context.
+ */
+template<class MsgT, class Rep = int64_t, class Period = std::milli>
+bool wait_for_message(
+  MsgT & out,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
+  const std::string & topic,
+  std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1),
+  const rclcpp::QoS & qos = rclcpp::SystemDefaultsQoS())
+{
+  auto sub = rclcpp::create_subscription<MsgT>(
+    node_parameters,
+    node_topics,
+    topic,
+    qos,
+    [](const std::shared_ptr<const MsgT>) {});
+  return wait_for_message<MsgT, Rep, Period>(
+    out, sub, node_topics->get_node_base_interface()->get_context(), time_to_wait);
+}
+
 /// Wait for the next incoming message.
 /**
  * Wait for the next incoming message to arrive on a specified topic before the specified timeout.
@@ -97,9 +138,13 @@ bool wait_for_message(
   std::chrono::duration<Rep, Period> time_to_wait = std::chrono::duration<Rep, Period>(-1),
   const rclcpp::QoS & qos = rclcpp::SystemDefaultsQoS())
 {
-  auto sub = node->create_subscription<MsgT>(topic, qos, [](const std::shared_ptr<const MsgT>) {});
   return wait_for_message<MsgT, Rep, Period>(
-    out, sub, node->get_node_options().context(), time_to_wait);
+    out,
+    node->get_node_parameters_interface(),
+    node->get_node_topics_interface(),
+    topic,
+    time_to_wait,
+    qos);
 }
 
 }  // namespace rclcpp
