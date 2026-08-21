@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <csignal>
+#include <exception>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -264,7 +265,21 @@ SignalHandler::deferred_signal_handler()
             "deferred_signal_handler(): "
             "shutting down rclcpp::Context @ %p, because it had shutdown_on_signal == true",
             static_cast<void *>(context_ptr.get()));
-          context_ptr->shutdown("signal handler");
+          try {
+            context_ptr->shutdown("signal handler");
+          } catch (const std::exception & exc) {
+            // an uncaught exception on this thread would call std::terminate(),
+            // taking down the whole process, so log the failure instead
+            RCLCPP_ERROR(
+              get_logger(),
+              "deferred_signal_handler(): failed to shutdown rclcpp::Context @ %p: %s",
+              static_cast<void *>(context_ptr.get()), exc.what());
+          } catch (...) {
+            RCLCPP_ERROR(
+              get_logger(),
+              "deferred_signal_handler(): failed to shutdown rclcpp::Context @ %p",
+              static_cast<void *>(context_ptr.get()));
+          }
         }
       }
     }
