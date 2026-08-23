@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 
+#include <algorithm>
 #include <deque>
 #include <functional>
 #include <list>
@@ -214,8 +215,12 @@ private:
   void remove_callback_group(const CallbackGroupHandle *callback_handle)
   {
     std::lock_guard lk(ready_callback_groups_mutex);
-    ready_callback_groups.erase(std::find(ready_callback_groups.begin(),
-          ready_callback_groups.end(), callback_handle));
+
+    auto cbg_it = std::find(ready_callback_groups.begin(),
+          ready_callback_groups.end(), callback_handle);
+    if (cbg_it != ready_callback_groups.end()) {
+      ready_callback_groups.erase(cbg_it);
+    }
 
     callback_groups.remove_if([&callback_handle] (const auto & e) {
         return e.get() == callback_handle;
