@@ -230,11 +230,13 @@ private:
    */
   void callback_group_ready(CallbackGroupHandle *handle, bool callback_group_was_idle)
   {
-    if (!handle->in_queue) {
+    {
       std::lock_guard l(ready_callback_groups_mutex);
 
-      ready_callback_groups.push_back(handle);
-      handle->in_queue = true;
+      if (!handle->in_queue) {
+        ready_callback_groups.push_back(handle);
+        handle->in_queue = true;
+      }
     }
 
     if(callback_group_was_idle) {
