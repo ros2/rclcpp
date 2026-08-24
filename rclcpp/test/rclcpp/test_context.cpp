@@ -13,6 +13,10 @@
 // limitations under the License.
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <thread>
+#include <vector>
+
 #include "rclcpp/context.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -213,6 +217,75 @@ TEST(TestContext, check_on_shutdown_callback_order_after_del) {
   context->shutdown("for test");
 
   EXPECT_TRUE(result[0] == 1 && result[1] == 3 && result[2] == 4 && result[3] == 0);
+}
+
+// This test checks that a reentrant call to shutdown(), e.g. issued from a
+// pre_shutdown callback, returns false instead of running the entire shutdown
+// sequence again (which used to recurse into the pre_shutdown callbacks and
+// call rcl_shutdown() twice).
+TEST(TestContext, reentrant_shutdown_from_pre_shutdown_callback) {
+  auto context = std::make_shared<rclcpp::Context>();
+  context->init(0, nullptr);
+
+  size_t pre_shutdown_calls = 0;
+  size_t on_shutdown_calls = 0;
+  bool reentrant_shutdown_result = true;
+
+  context->add_pre_shutdown_callback(
+    [&context, &pre_shutdown_calls, &reentrant_shutdown_result]() {
+      pre_shutdown_calls++;
+      reentrant_shutdown_result = context->shutdown("reentrant shutdown");
+    });
+  context->add_on_shutdown_callback(
+    [&on_shutdown_calls]() {
+      on_shutdown_calls++;
+    });
+
+  EXPECT_TRUE(context->shutdown("for test"));
+  EXPECT_FALSE(reentrant_shutdown_result);
+  EXPECT_EQ(pre_shutdown_calls, 1u);
+  EXPECT_EQ(on_shutdown_calls, 1u);
+  EXPECT_FALSE(context->is_valid());
+
+  // shutdown() must work again after re-initialization
+  context->init(0, nullptr);
+  EXPECT_TRUE(context->is_valid());
+  EXPECT_TRUE(context->shutdown("for test again"));
+  EXPECT_FALSE(context->is_valid());
+}
+
+// This test checks that concurrent calls to shutdown() from multiple threads
+// result in exactly one thread running the shutdown sequence, and the other
+// threads returning false without error.
+TEST(TestContext, concurrent_shutdown) {
+  auto context = std::make_shared<rclcpp::Context>();
+  context->init(0, nullptr);
+
+  std::atomic<size_t> pre_shutdown_calls{0};
+  context->add_pre_shutdown_callback(
+    [&pre_shutdown_calls]() {
+      pre_shutdown_calls++;
+    });
+
+  constexpr size_t num_threads = 8;
+  std::atomic<size_t> success_count{0};
+  std::vector<std::thread> threads;
+  threads.reserve(num_threads);
+  for (size_t i = 0; i < num_threads; ++i) {
+    threads.emplace_back(
+      [&context, &success_count]() {
+        if (context->shutdown("concurrent shutdown")) {
+          success_count++;
+        }
+      });
+  }
+  for (auto & thread : threads) {
+    thread.join();
+  }
+
+  EXPECT_EQ(success_count, 1u);
+  EXPECT_EQ(pre_shutdown_calls, 1u);
+  EXPECT_FALSE(context->is_valid());
 }
 
 // This test checks that contexts will be properly destroyed when leaving a scope, after a

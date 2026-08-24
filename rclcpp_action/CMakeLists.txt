@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME}
   src/create_generic_client.cpp
   src/generic_client.cpp
   src/generic_client_goal_handle.cpp
+  src/graph.cpp
   src/qos.cpp
   src/server.cpp
   src/server_goal_handle.cpp
@@ -105,6 +106,17 @@ if(BUILD_TESTING)
       rcl_action::rcl_action
       rclcpp::rclcpp
       rcutils::rcutils
+      test_msgs::test_msgs
+    )
+  endif()
+
+  ament_add_gtest(test_graph test/test_graph.cpp TIMEOUT 180)
+  if(TARGET test_graph)
+    target_link_libraries(test_graph
+      ${PROJECT_NAME}
+      rcl::rcl
+      rcl_action::rcl_action
+      rclcpp::rclcpp
       test_msgs::test_msgs
     )
   endif()

@@ -55,9 +55,16 @@ protected:
 public:
   enum class CallbackReturn : uint8_t
   {
+     /// The callback completed successfully and the transition can proceed.
     SUCCESS = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS,
+
+    /// The callback completed normally, but the requested transition
+    /// could not be completed.
     FAILURE = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE,
-    ERROR = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR
+
+    /// An error occurred during callback execution.
+    /// The node transitions to an error handling state.
+    ERROR = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR,
   };
 
   /// Callback function for configure transition

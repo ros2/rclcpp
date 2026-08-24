@@ -143,12 +143,34 @@ int main(int argc, char * argv[])
   }
 
   std::shared_ptr<rclcpp::Executor> exec;
-  std::shared_ptr<rclcpp_components::ComponentManager> node =
-    std::make_shared<rclcpp_components::ComponentManager>();
+  std::shared_ptr<rclcpp_components::ComponentManager> node;
+
+  // Create the manager once, as its final type. The isolated managers resolve the
+  // `thread_num` parameter themselves when a component is loaded (0 == auto).
+  if (args.isolated) {
+    switch (args.executor_type) {
+      case ExecutorType::MultiThreaded:
+        node = std::make_shared<
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>>(
+          rclcpp::ExecutorOptions(), 0);
+        break;
+      case ExecutorType::EventsCBG:
+        node = std::make_shared<
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::EventsCBGExecutor>>(
+          rclcpp::ExecutorOptions(), 0);
+        break;
+      default:
+        node = std::make_shared<
+          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>();
+        break;
+    }
+  } else {
+    node = std::make_shared<rclcpp_components::ComponentManager>();
+  }
+
   const int64_t num_threads = (node->has_parameter("thread_num")) ?
     node->get_parameter("thread_num").as_int() :
     std::thread::hardware_concurrency();
-  std::string debug_msg;
 
   if (args.executor_type == ExecutorType::SingleThreaded &&
     num_threads > 0 &&
@@ -157,32 +179,12 @@ int main(int argc, char * argv[])
     RCUTILS_LOG_WARN_NAMED("component_container",
       "thread_num is not supported by the SingleThreadedExecutor. Ignoring...");
   }
+
+  std::string debug_msg;
   if (args.isolated) {
-    // we use the ComponentManager node initially to get the `thread_num` parameter,
-    // but temporarily delete it here before re-assigning it
-    // if running with a ComponentManagerIsolated.
-    // This is to avoid a possible race condition
-    // where the 2 nodes may be briefly alive at the same time,
-    node = nullptr;
     // The outer executor runs only the container manager's load/unload services.
     // Each loaded component gets its own dedicated executor of the requested type.
     exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    switch (args.executor_type) {
-      case ExecutorType::MultiThreaded:
-        node = std::make_shared<
-          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>>(
-          rclcpp::ExecutorOptions(), num_threads);
-        break;
-      case ExecutorType::EventsCBG:
-        node = std::make_shared<
-          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::EventsCBGExecutor>>(
-          rclcpp::ExecutorOptions(), num_threads);
-        break;
-      default:
-        node = std::make_shared<
-          rclcpp_components::ComponentManagerIsolated<rclcpp::executors::SingleThreadedExecutor>>();
-        break;
-    }
 
     debug_msg = "Creating isolated component container with the following per-node settings: "
       "executor_type: " + executor_type_to_string(args.executor_type);
@@ -199,7 +201,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  RCUTILS_LOG_DEBUG_NAMED("component_container", debug_msg.c_str());
+  RCUTILS_LOG_DEBUG_NAMED("component_container", "%s", debug_msg.c_str());
 
   node->set_executor(exec);
   exec->add_node(node);

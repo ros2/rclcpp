@@ -124,6 +124,20 @@ TEST_F(TestLoggingMacros, test_logging_stream) {
   EXPECT_EQ("message 5", g_last_log_event.message);
 }
 
+TEST_F(TestLoggingMacros, test_logging_format) {
+  for (std::string i : {"one", "two", "three"}) {
+    RCLCPP_DEBUG_FMT(g_logger, "message {}", i);
+  }
+  EXPECT_EQ(3u, g_log_calls);
+  EXPECT_EQ("message three", g_last_log_event.message);
+
+  RCLCPP_DEBUG_FMT(g_logger, "{}th message", 4);
+  EXPECT_EQ("4th message", g_last_log_event.message);
+
+  RCLCPP_DEBUG_FMT(g_logger, "{1} {0}", 5, "message");
+  EXPECT_EQ("message 5", g_last_log_event.message);
+}
+
 TEST_F(TestLoggingMacros, test_logging_once) {
   for (int i : {1, 2, 3}) {
     RCLCPP_INFO_ONCE(g_logger, "message %d", i);
