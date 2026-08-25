@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "rclcpp/experimental/timers_manager.hpp"
-#include "rclcpp/utilities.hpp"
 
 #include <inttypes.h>
 
@@ -22,6 +21,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "rclcpp/utilities.hpp"
 #include "rcpputils/scope_exit.hpp"
 
 using rclcpp::experimental::TimersManager;
