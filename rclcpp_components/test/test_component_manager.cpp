@@ -20,6 +20,7 @@
 #include "rclcpp_components/component_manager.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
+#include "rclcpp/utilities.hpp"
 
 class TestComponentManager : public ::testing::Test
 {

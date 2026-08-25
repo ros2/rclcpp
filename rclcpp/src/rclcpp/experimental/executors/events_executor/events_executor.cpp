@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "rclcpp/utilities.hpp"
 #include "rcpputils/compile_warnings.hpp"
 #include "rcpputils/scope_exit.hpp"
 

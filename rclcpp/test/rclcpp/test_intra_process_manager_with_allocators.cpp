@@ -25,6 +25,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/subscription_traits.hpp"
 
 // For demonstration purposes only, not necessary for allocator_traits
 static uint32_t num_allocs = 0;

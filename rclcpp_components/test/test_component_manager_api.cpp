@@ -24,6 +24,7 @@
 
 #include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_components/component_manager.hpp"
 #include "rclcpp_components/component_manager_isolated.hpp"
 

@@ -22,13 +22,13 @@
 
 #include "rcpputils/shared_library.hpp"
 
-#include "rclcpp/callback_group.hpp"
+#include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/typesupport_helpers.hpp"
 #include "rclcpp/visibility_control.hpp"
 

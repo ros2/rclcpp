@@ -20,6 +20,7 @@
 #include <functional>
 #include <initializer_list>
 #include <map>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <vector>

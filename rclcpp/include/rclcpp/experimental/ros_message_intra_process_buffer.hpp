@@ -20,7 +20,7 @@
 
 #include "rcl/error_handling.h"
 
-#include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "tracetools/tracetools.h"

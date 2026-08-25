@@ -20,7 +20,6 @@
 #include <functional>
 #include <optional>
 #include <memory>
-#include <sstream>
 #include <thread>
 #include <type_traits>
 #include <utility>

@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <mutex>
+#include <sstream>
 #include <string>
 
 #include "rclcpp/node.hpp"

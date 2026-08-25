@@ -24,6 +24,7 @@
 #include "rcl_action/wait.h"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rclcpp_action/client_base.hpp"
 
