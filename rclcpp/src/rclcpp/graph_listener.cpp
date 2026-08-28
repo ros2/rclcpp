@@ -71,29 +71,50 @@ void GraphListener::init_wait_set()
 void
 GraphListener::start_if_not_started()
 {
-  std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
-  if (is_shutdown_.load()) {
-    throw GraphListenerShutdownError();
-  }
   auto parent_context = weak_parent_context_.lock();
-  if (!is_started_ && parent_context) {
-    // Register an on_shutdown hook to shtudown the graph listener.
-    // This is important to ensure that the wait set is finalized before
-    // destruction of static objects occurs.
-    std::weak_ptr<GraphListener> weak_this = shared_from_this();
-    parent_context->on_shutdown(
-      [weak_this]() {
-        auto shared_this = weak_this.lock();
-        if (shared_this) {
-          // should not throw from on_shutdown if it can be avoided
-          shared_this->shutdown(std::nothrow);
-        }
-      });
-    // Initialize the wait set before starting.
-    init_wait_set();
-    // Start the listener thread.
-    listener_thread_ = std::thread(&GraphListener::run, this);
-    is_started_ = true;
+  {
+    std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
+    if (is_shutdown_.load()) {
+      throw GraphListenerShutdownError();
+    }
+    if (is_started_ || !parent_context) {
+      return;
+    }
+  }
+  // Register an on_shutdown hook to shutdown the graph listener.
+  // This is important to ensure that the wait set is finalized before
+  // destruction of static objects occurs.
+  // The hook is deliberately registered without holding shutdown_mutex_:
+  // to prevent inverting the lock order with Context::shutdown()
+  std::weak_ptr<GraphListener> weak_this = shared_from_this();
+  auto callback_handle = parent_context->add_on_shutdown_callback(
+    [weak_this]() {
+      auto shared_this = weak_this.lock();
+      if (shared_this) {
+        // should not throw from on_shutdown if it can be avoided
+        shared_this->shutdown(std::nothrow);
+      }
+    });
+
+  bool started_on_this_thread = false;
+  {
+    std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
+    if (!is_shutdown_.load() && !is_started_) {
+      // Initialize the wait set before starting.
+      init_wait_set();
+      // Start the listener thread.
+      listener_thread_ = std::thread(&GraphListener::run, this);
+      is_started_ = true;
+      started_on_this_thread = true;
+    }
+  }
+  if (!started_on_this_thread) {
+    // Another thread has started the listener, or the listener was
+    // shut down between registration and the lock. Drop this registration.
+    parent_context->remove_on_shutdown_callback(callback_handle);
+    if (is_shutdown_.load()) {
+      throw GraphListenerShutdownError();
+    }
   }
 }
 
