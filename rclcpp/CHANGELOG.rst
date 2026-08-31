@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.1.22 (2026-08-31)
+--------------------
+* register shutdown callback without shutdown mutex (`#3239 <https://github.com/ros2/rclcpp/issues/3239>`_)
+* Fix possible race condition with reentrant callback groups in EventsCBGExecutor scheduler (`#3234 <https://github.com/ros2/rclcpp/issues/3234>`_) (`#3236 <https://github.com/ros2/rclcpp/issues/3236>`_)
+* address context shutdown racy condition. (`#3219 <https://github.com/ros2/rclcpp/issues/3219>`_) (`#3225 <https://github.com/ros2/rclcpp/issues/3225>`_)
+* add support for reentrant callback groups (`#3205 <https://github.com/ros2/rclcpp/issues/3205>`_)
+* Contributors: Skyler Medeiros, mergify[bot]
+
 28.1.21 (2026-06-12)
 --------------------
 * fix: Fixed MSVC compile errors (`#3135 <https://github.com/ros2/rclcpp/issues/3135>`_) (`#3173 <https://github.com/ros2/rclcpp/issues/3173>`_)
@@ -214,12 +222,12 @@ Changelog for package rclcpp
   1.  Setting the liveliness duration to a value smaller than
   a microsecond causes Connext to throw an error.  Set it to
   a millisecond.
-  2.  Using the SystemDefaultsQoS sets the QoS to KEEP_LAST 1.
+  1.  Using the SystemDefaultsQoS sets the QoS to KEEP_LAST 1.
   Connext is somewhat slow in this regard, so it can be the case
   that we are overwriting a previous service introspection event
   with the next one.  Switch to the ServicesDefaultQoS in the test,
   which ensures we will not lose events.
-  3.  Connext is slow to match publishers and subscriptions.  Thus,
+  1.  Connext is slow to match publishers and subscriptions.  Thus,
   when creating a subscription "on-the-fly", we should wait for the
   publisher to match it before expecting the subscription to actually
   receive data from it.

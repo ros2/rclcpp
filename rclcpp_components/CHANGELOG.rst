@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.1.22 (2026-08-31)
+--------------------
+* Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_) (`#3197 <https://github.com/ros2/rclcpp/issues/3197>`_)
+* Contributors: mergify[bot]
+
 28.1.21 (2026-06-12)
 --------------------
 
