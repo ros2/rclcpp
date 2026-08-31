@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -50,6 +51,20 @@ public:
   void spin_nanoseconds(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
   {
     spin_node_once_nanoseconds(node, std::chrono::milliseconds(100));
+  }
+
+  using rclcpp::Executor::wait_for_work;
+
+  rclcpp::WaitResultKind last_wait_result_kind()
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return wait_result_ ? wait_result_->kind() : rclcpp::WaitResultKind::Empty;
+  }
+
+  size_t collected_timers_count()
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return current_collection_.timers.size();
   }
 };
 
@@ -397,6 +412,38 @@ TEST_F(TestExecutor, spin_some_fail_wait) {
   RCLCPP_EXPECT_THROW_EQ(
     dummy.spin_some(std::chrono::milliseconds(1)),
     std::runtime_error("rcl_wait() failed: error not set"));
+}
+
+TEST_F(TestExecutor, wait_for_work_checks_notify_waitable_on_timeout) {
+  DummyExecutor dummy;
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  auto timer1 = node->create_wall_timer(std::chrono::seconds(60), [&]() {});
+  dummy.add_node(node);
+
+  // Drain pending notifications until a wait produces a clean timeout.
+  size_t attempts = 0;
+  do {
+    dummy.wait_for_work(std::chrono::milliseconds(0));
+    ASSERT_LT(++attempts, 100u);
+  } while (dummy.last_wait_result_kind() != rclcpp::WaitResultKind::Timeout);
+  ASSERT_EQ(1u, dummy.collected_timers_count());
+
+  // Adding a timer triggers the node's notify guard condition.
+  auto timer2 = node->create_wall_timer(std::chrono::seconds(60), [&]() {});
+
+  {
+    // Reproduce the race from https://github.com/ros2/rclcpp/issues/3240: the rmw
+    // layer consumes the trigger racing with a timeout, reports the timeout, and
+    // leaves the ready slots in the wait set intact.
+    auto mock = mocking_utils::patch_and_return("lib:rclcpp", rcl_wait, RCL_RET_TIMEOUT);
+    dummy.wait_for_work(std::chrono::milliseconds(0));
+    ASSERT_EQ(rclcpp::WaitResultKind::Timeout, dummy.last_wait_result_kind());
+  }
+
+  // The notification must have been recovered from the wait set despite the
+  // timeout, so the next wait rebuilds the collection and picks up the new timer.
+  dummy.wait_for_work(std::chrono::milliseconds(0));
+  EXPECT_EQ(2u, dummy.collected_timers_count());
 }
 
 TEST_F(TestExecutor, spin_until_future_complete_in_spin_until_future_complete) {
