@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+29.5.11 (2026-08-31)
+--------------------
+* register shutdown callback without shutdown mutex (`#3239 <https://github.com/ros2/rclcpp/issues/3239>`_) (`#3242 <https://github.com/ros2/rclcpp/issues/3242>`_)
+* Fix possible race condition with reentrant callback groups in EventsCBGExecutor scheduler (`#3234 <https://github.com/ros2/rclcpp/issues/3234>`_) (`#3237 <https://github.com/ros2/rclcpp/issues/3237>`_)
+* address context shutdown racy condition. (`#3219 <https://github.com/ros2/rclcpp/issues/3219>`_) (`#3226 <https://github.com/ros2/rclcpp/issues/3226>`_)
+* Add tests isolation in rclcpp/test (backport `#3081 <https://github.com/ros2/rclcpp/issues/3081>`_) (`#3127 <https://github.com/ros2/rclcpp/issues/3127>`_)
+* Contributors: mergify[bot]
+
 29.5.10 (2026-07-28)
 --------------------
 * add support for reentrant callback groups (`#3204 <https://github.com/ros2/rclcpp/issues/3204>`_)
