@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.3 (2026-08-31)
+-------------------
+* rclcpp_components: Fix compilation with clang (`#3229 <https://github.com/ros2/rclcpp/issues/3229>`_) (`#3231 <https://github.com/ros2/rclcpp/issues/3231>`_)
+* Fix race condition when creating isolated component container (`#3223 <https://github.com/ros2/rclcpp/issues/3223>`_) (`#3228 <https://github.com/ros2/rclcpp/issues/3228>`_)
+* Contributors: mergify[bot]
+
 32.0.2 (2026-07-28)
 -------------------
 * Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_) (`#3199 <https://github.com/ros2/rclcpp/issues/3199>`_)

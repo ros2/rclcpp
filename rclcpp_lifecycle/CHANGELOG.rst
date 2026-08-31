@@ -2,6 +2,11 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.3 (2026-08-31)
+-------------------
+* Add wait_for_message overload using node interfaces (backport `#3230 <https://github.com/ros2/rclcpp/issues/3230>`_) (`#3233 <https://github.com/ros2/rclcpp/issues/3233>`_)
+* Contributors: mergify[bot]
+
 32.0.2 (2026-07-28)
 -------------------
 

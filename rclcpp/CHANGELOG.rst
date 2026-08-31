@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.3 (2026-08-31)
+-------------------
+* Add wait_for_message overload using node interfaces (backport `#3230 <https://github.com/ros2/rclcpp/issues/3230>`_) (`#3233 <https://github.com/ros2/rclcpp/issues/3233>`_)
+* Fix possible race condition with reentrant callback groups in EventsCBGExecutor scheduler (`#3234 <https://github.com/ros2/rclcpp/issues/3234>`_) (`#3235 <https://github.com/ros2/rclcpp/issues/3235>`_)
+* address context shutdown racy condition. (`#3219 <https://github.com/ros2/rclcpp/issues/3219>`_)
+* Contributors: Tomoya Fujita, mergify[bot]
+
 32.0.2 (2026-07-28)
 -------------------
 * Add test for transient-local delivery with unbounded uint8 messages (`#3195 <https://github.com/ros2/rclcpp/issues/3195>`_) (`#3202 <https://github.com/ros2/rclcpp/issues/3202>`_)
