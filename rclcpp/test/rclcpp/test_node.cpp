@@ -2726,6 +2726,19 @@ TEST_F(TestNode, get_parameter_undeclared_parameters_not_allowed) {
   }
 }
 
+TEST_F(TestNode, get_parameter_with_vector_int) {
+  auto node = std::make_shared<rclcpp::Node>("test_get_parameter_node"_unq);
+  auto name = "parameter"_unq;
+  const std::vector<int> expected_value = {
+    42, -99, std::numeric_limits<int>::max(), std::numeric_limits<int>::lowest(), 0};
+
+  node->declare_parameter(name, expected_value);
+
+  std::vector<int> value;
+  EXPECT_TRUE(node->get_parameter(name, value));
+  EXPECT_EQ(expected_value, value);
+}
+
 // test get_parameter with undeclared allowed
 TEST_F(TestNode, get_parameter_undeclared_parameters_allowed) {
   auto node = std::make_shared<rclcpp::Node>(

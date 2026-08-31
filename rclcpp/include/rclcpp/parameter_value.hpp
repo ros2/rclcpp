@@ -305,10 +305,11 @@ public:
   constexpr
   typename std::enable_if<
     std::is_convertible<
-      type, const std::vector<int> &>::value, const std::vector<int64_t> &>::type
+      type, const std::vector<int> &>::value, std::vector<int>>::type
   get() const
   {
-    return get<ParameterType::PARAMETER_INTEGER_ARRAY>();
+    const auto & value = get<ParameterType::PARAMETER_INTEGER_ARRAY>();
+    return std::vector<int>(value.begin(), value.end());
   }
 
   template<typename type>
