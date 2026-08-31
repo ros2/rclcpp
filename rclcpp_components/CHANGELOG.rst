@@ -2,6 +2,13 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.1.0 (2026-08-31)
+-------------------
+* cleanup headers (`#3238 <https://github.com/ros2/rclcpp/issues/3238>`_)
+* rclcpp_components: Fix compilation with clang (`#3229 <https://github.com/ros2/rclcpp/issues/3229>`_)
+* Fix race condition when creating isolated component container (`#3223 <https://github.com/ros2/rclcpp/issues/3223>`_)
+* Contributors: Alejandro Hernández Cordero, Michal Sojka, Tony Najjar
+
 33.0.3 (2026-07-28)
 -------------------
 * Deprecate the experimental EventsExecutor (`#3192 <https://github.com/ros2/rclcpp/issues/3192>`_)

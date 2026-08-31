@@ -2,6 +2,19 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.1.0 (2026-08-31)
+-------------------
+* Reject incompatible parameter range constraints (`#3243 <https://github.com/ros2/rclcpp/issues/3243>`_)
+* cleanup headers (`#3238 <https://github.com/ros2/rclcpp/issues/3238>`_)
+* Fix possible race condition with reentrant callback groups in EventsCBGExecutor scheduler (`#3234 <https://github.com/ros2/rclcpp/issues/3234>`_)
+* Add wait_for_message API that relies on node interfaces (`#3230 <https://github.com/ros2/rclcpp/issues/3230>`_)
+* Add test for infinite value in float range bound (`#3218 <https://github.com/ros2/rclcpp/issues/3218>`_)
+* Add RCLCPP\_*_FORMAT logging macros  (`#2263 <https://github.com/ros2/rclcpp/issues/2263>`_)
+* fix: prevent double-shutdown in rclcpp::Context (`#3220 <https://github.com/ros2/rclcpp/issues/3220>`_)
+* Move get_log_directory to improve compilation time (`#3214 <https://github.com/ros2/rclcpp/issues/3214>`_)
+* honor cancel() issued before spin_until_future_complete(). (`#3174 <https://github.com/ros2/rclcpp/issues/3174>`_)
+* Contributors: Alejandro Hernández Cordero, Nathan Wiebe Neufeldt, Skyler Medeiros, Tomoya Fujita, aiqubits, pum1k, yadunund
+
 33.0.3 (2026-07-28)
 -------------------
 * Restore direct cassert include in wait_result.hpp (`#3212 <https://github.com/ros2/rclcpp/issues/3212>`_)
