@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.20 (2026-08-31)
+--------------------
+
 16.0.19 (2026-03-25)
 --------------------
 * Avoid unecessary creation of MultiThreadedExecutor (`#3090 <https://github.com/ros2/rclcpp/issues/3090>`_) (`#3096 <https://github.com/ros2/rclcpp/issues/3096>`_)

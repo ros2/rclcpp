@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.20 (2026-08-31)
+--------------------
+* address context shutdown racy condition. (`#3219 <https://github.com/ros2/rclcpp/issues/3219>`_) (`#3224 <https://github.com/ros2/rclcpp/issues/3224>`_)
+* add missing header for std::function (`#3211 <https://github.com/ros2/rclcpp/issues/3211>`_)
+* node_interfaces.hpp: add missing include of stdexcept (`#3210 <https://github.com/ros2/rclcpp/issues/3210>`_)
+* chore: fix typo in test_time_source.cpp (`#3145 <https://github.com/ros2/rclcpp/issues/3145>`_) (`#3150 <https://github.com/ros2/rclcpp/issues/3150>`_)
+* Contributors: Fabian Hirmann, Guilhem Saurel, mergify[bot]
+
 16.0.19 (2026-03-25)
 --------------------
 * Remove duplicate test cases in TestAnySubscriptionCallback::is_serialized_message_callback (backport `#3104 <https://github.com/ros2/rclcpp/issues/3104>`_) (`#3108 <https://github.com/ros2/rclcpp/issues/3108>`_)
