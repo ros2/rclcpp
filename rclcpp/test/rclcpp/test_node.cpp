@@ -559,6 +559,39 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   }
 }
 
+TEST_F(TestNode, parameter_range_constraints_reject_incompatible_types) {
+  auto node = std::make_shared<rclcpp::Node>("test_parameter_range_types"_unq);
+
+  rcl_interfaces::msg::ParameterDescriptor integer_range_descriptor;
+  integer_range_descriptor.integer_range.resize(1);
+  integer_range_descriptor.integer_range[0].from_value = 0;
+  integer_range_descriptor.integer_range[0].to_value = 10;
+  EXPECT_THROW(
+    node->declare_parameter("bool_with_integer_range", false, integer_range_descriptor),
+    rclcpp::exceptions::InvalidParameterValueException);
+  EXPECT_THROW(
+    node->declare_parameter(
+      "uninitialized_bool_with_integer_range",
+      rclcpp::PARAMETER_BOOL,
+      integer_range_descriptor),
+    rclcpp::exceptions::InvalidParameterValueException);
+
+  rcl_interfaces::msg::ParameterDescriptor floating_point_range_descriptor;
+  floating_point_range_descriptor.floating_point_range.resize(1);
+  floating_point_range_descriptor.floating_point_range[0].from_value = 0.0;
+  floating_point_range_descriptor.floating_point_range[0].to_value = 10.0;
+  EXPECT_THROW(
+    node->declare_parameter(
+      "integer_with_floating_point_range", 1, floating_point_range_descriptor),
+    rclcpp::exceptions::InvalidParameterValueException);
+
+  integer_range_descriptor.dynamic_typing = true;
+  node->declare_parameter("dynamic_integer_range", 1, integer_range_descriptor);
+  auto result = node->set_parameter(rclcpp::Parameter("dynamic_integer_range", false));
+  EXPECT_FALSE(result.successful);
+  EXPECT_NE(result.reason.find("cannot use integer range constraints"), std::string::npos);
+}
+
 TEST_F(TestNode, declare_parameter_with_allow_undeclared_parameters) {
   // test cases without initial values
   auto node = std::make_shared<rclcpp::Node>(
