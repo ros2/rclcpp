@@ -36,6 +36,7 @@ class TimerManager;
 struct RegisteredEntityCache;
 class CBGScheduler;
 struct GlobalWeakExecutableCache;
+struct DedicatedThreadPool;
 }
 
 class EventsCBGExecutor : public rclcpp::Executor
@@ -119,6 +120,36 @@ public:
 
   // add a callback group to the executor, not bound to any node
   void add_callback_group_only(const rclcpp::CallbackGroup::SharedPtr & group_ptr);
+
+  /// Assign a dedicated worker thread to the given callback group.
+  /**
+   * All events of the given callback group will be executed exclusively by
+   * a thread dedicated to this callback group, instead of the shared worker
+   * pool. This isolates the execution of the callback group from the load
+   * of the rest of the system, and allows the use of custom scheduling
+   * settings (priority, affinity) for the dedicated thread.
+   *
+   * Dedicated worker threads only process events while spin() or
+   * spin(exception_handler) is active. spin_once, spin_some and spin_all
+   * will NOT execute events of dedicated callback groups.
+   *
+   * Must be called before the callback group is added to this executor,
+   * either directly, or indirectly by adding its node.
+   *
+   * \param group_ptr the callback group that shall be executed by a
+   *        dedicated worker thread
+   * \param thread_init_callback optional callback, executed once inside the
+   *        dedicated thread before any events are processed. May be used to
+   *        set the scheduling policy, priority, cpu affinity or name of the
+   *        dedicated thread.
+   * \throws std::runtime_error if the callback group was already added to
+   *         this executor
+   */
+  RCLCPP_PUBLIC
+  void
+  set_dedicated_thread_for_callback_group(
+    const rclcpp::CallbackGroup::SharedPtr & group_ptr,
+    std::function<void()> thread_init_callback = std::function<void()>());
 
   /**
    * \sa rclcpp::Executor:spin() for more details
@@ -295,6 +326,23 @@ private:
   void sync_callback_groups();
 
   /**
+   * Spawns dedicated worker threads for all callback groups configured
+   * via set_dedicated_thread_for_callback_group, that do not have a
+   * running worker thread yet.
+   *
+   * No op, if no threaded spin is active.
+   */
+  void start_dedicated_worker_threads();
+
+  /**
+   * Releases all dedicated worker threads and joins them.
+   * If called from within a dedicated worker thread (e.g. a callback
+   * initiated the shutdown), the calling thread is detached instead
+   * of joined.
+   */
+  void stop_dedicated_worker_threads();
+
+  /**
    * Either triggers a sync, or if not spinning,
    * syncs directly.
    */
@@ -352,6 +400,28 @@ private:
 
   /// Stores the executables for guard conditions of the nodes
   std::unique_ptr<cbg_executor::GlobalWeakExecutableCache> nodes_executable_cache;
+
+  struct DedicatedThreadConfig
+  {
+    rclcpp::CallbackGroup::WeakPtr callback_group;
+    std::function<void()> thread_init_callback;
+  };
+
+  std::mutex dedicated_thread_configs_mutex_;
+
+  /// Callback groups that shall be executed by a dedicated worker thread
+  std::vector<DedicatedThreadConfig> dedicated_thread_configs_;
+
+  /// The running dedicated worker threads, keyed by their scheduler handle
+  std::unique_ptr<cbg_executor::DedicatedThreadPool> dedicated_threads_;
+
+  /// True while a threaded spin (spin() / spin(exception_handler)) is active.
+  /// Dedicated worker threads are only spawned while this is set.
+  std::atomic_bool dedicated_workers_active_ = false;
+
+  /// Exception handler passed to the dedicated worker threads,
+  /// set by spin(exception_handler)
+  std::function<void(const std::exception &)> dedicated_exception_handler_;
 };
 
 }  // namespace executors
