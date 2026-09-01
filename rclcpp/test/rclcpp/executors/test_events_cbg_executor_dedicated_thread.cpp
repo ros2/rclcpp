@@ -14,12 +14,18 @@
 
 #include <gtest/gtest.h>
 
+#ifdef __linux__
+#include <pthread.h>
+#include <sched.h>
+#endif
+
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <mutex>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <thread>
 
 #include "rclcpp/rclcpp.hpp"
@@ -38,8 +44,9 @@ protected:
 /*
  * Test that all callbacks of a callback group with a dedicated thread are
  * executed by exactly one thread, that this thread is the one the
- * thread_init_callback was executed on, and that this thread executes no
- * callbacks of other callback groups.
+ * thread_init_callback was executed on, that this thread executes no
+ * callbacks of other callback groups, and that the name and cpu_affinity
+ * settings of DedicatedThreadOptions are applied.
  */
 TEST_F(TestEventsCBGExecutorDedicatedThread, dedicated_group_runs_on_own_thread)
 {
@@ -54,6 +61,9 @@ TEST_F(TestEventsCBGExecutorDedicatedThread, dedicated_group_runs_on_own_thread)
   std::atomic<size_t> dedicated_count{0};
   std::atomic<size_t> pool_count{0};
 
+  std::string observed_thread_name;
+  std::atomic<int> observed_cpu{-1};
+
   rclcpp::SubscriptionOptions dedicated_opts;
   dedicated_opts.callback_group = dedicated_cbg;
 
@@ -63,6 +73,12 @@ TEST_F(TestEventsCBGExecutorDedicatedThread, dedicated_group_runs_on_own_thread)
       {
         std::lock_guard<std::mutex> lock(ids_mutex);
         dedicated_ids.insert(std::this_thread::get_id());
+#ifdef __linux__
+        char thread_name[16] = {};
+        pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
+        observed_thread_name = thread_name;
+        observed_cpu.store(sched_getcpu());
+#endif
       }
       dedicated_count++;
     },
@@ -86,12 +102,15 @@ TEST_F(TestEventsCBGExecutorDedicatedThread, dedicated_group_runs_on_own_thread)
   std::atomic<size_t> init_calls{0};
 
   rclcpp::executors::EventsCBGExecutor executor(rclcpp::ExecutorOptions(), 2u);
-  executor.set_dedicated_thread_for_callback_group(
-    dedicated_cbg,
-    [&]() {
+
+  rclcpp::executors::EventsCBGExecutor::DedicatedThreadOptions thread_options;
+  thread_options.name = "dedicated_test";
+  thread_options.cpu_affinity = {0};
+  thread_options.thread_init_callback = [&]() {
       init_thread_id.store(std::this_thread::get_id());
       init_calls++;
-    });
+    };
+  executor.set_dedicated_thread_for_callback_group(dedicated_cbg, thread_options);
   executor.add_node(node);
 
   std::thread spin_thread([&executor]() {executor.spin();});
@@ -122,6 +141,13 @@ TEST_F(TestEventsCBGExecutorDedicatedThread, dedicated_group_runs_on_own_thread)
   EXPECT_EQ(pool_ids.count(dedicated_id), 0u) <<
     "the dedicated thread also executed callbacks of other callback groups";
   EXPECT_NE(dedicated_id, std::this_thread::get_id());
+
+#ifdef __linux__
+  EXPECT_EQ(observed_thread_name, "dedicated_test") <<
+    "the name of DedicatedThreadOptions was not applied";
+  EXPECT_EQ(observed_cpu.load(), 0) <<
+    "the cpu_affinity of DedicatedThreadOptions was not applied";
+#endif
 }
 
 /*
@@ -153,11 +179,12 @@ TEST_F(TestEventsCBGExecutorDedicatedThread, timer_runs_on_dedicated_thread)
   std::atomic<std::thread::id> init_thread_id{};
 
   rclcpp::executors::EventsCBGExecutor executor(rclcpp::ExecutorOptions(), 2u);
-  executor.set_dedicated_thread_for_callback_group(
-    dedicated_cbg,
-    [&]() {
+
+  rclcpp::executors::EventsCBGExecutor::DedicatedThreadOptions thread_options;
+  thread_options.thread_init_callback = [&]() {
       init_thread_id.store(std::this_thread::get_id());
-    });
+    };
+  executor.set_dedicated_thread_for_callback_group(dedicated_cbg, thread_options);
   executor.add_node(node);
 
   std::thread spin_thread([&executor]() {executor.spin();});

@@ -12,13 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef __linux__
+#include <pthread.h>
+#include <sched.h>
+#endif
+
 #include <chrono>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <set>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include "rcutils/logging_macros.h"
 
 #include "rcpputils/scope_exit.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
@@ -890,9 +899,95 @@ void EventsCBGExecutor::add_callback_group_only(const rclcpp::CallbackGroup::Sha
   add_callback_group(group_ptr, nullptr, true);
 }
 
+namespace
+{
+/**
+ * Applies the given thread settings to the calling thread.
+ * Failures are logged, and do not prevent the thread from running
+ * with the inherited settings.
+ */
+void apply_dedicated_thread_options(
+  const EventsCBGExecutor::DedicatedThreadOptions & options)
+{
+  using SchedulingPolicy = EventsCBGExecutor::DedicatedThreadOptions::SchedulingPolicy;
+
+#ifdef __linux__
+  if (!options.name.empty() ) {
+    // linux limits thread names to 15 characters plus null terminator
+    const std::string truncated_name = options.name.substr(0, 15);
+    const int ret = pthread_setname_np(pthread_self(), truncated_name.c_str() );
+    if (ret != 0) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp", "Failed to set name '%s' of dedicated thread: %s",
+        truncated_name.c_str(), strerror(ret) );
+    }
+  }
+
+  if (options.scheduling_policy != SchedulingPolicy::Inherit) {
+    int policy = SCHED_OTHER;
+    switch (options.scheduling_policy) {
+      case SchedulingPolicy::Inherit:
+      case SchedulingPolicy::Other:
+        policy = SCHED_OTHER;
+        break;
+      case SchedulingPolicy::RoundRobin:
+        policy = SCHED_RR;
+        break;
+      case SchedulingPolicy::Fifo:
+        policy = SCHED_FIFO;
+        break;
+    }
+
+    sched_param param{};
+    param.sched_priority = options.priority;
+    const int ret = pthread_setschedparam(pthread_self(), policy, &param);
+    if (ret != 0) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Failed to set scheduling policy / priority %d of dedicated thread: %s "
+        "(realtime policies usually require CAP_SYS_NICE or RLIMIT_RTPRIO)",
+        options.priority, strerror(ret) );
+    }
+  }
+
+  if (!options.cpu_affinity.empty() ) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    for (const size_t core : options.cpu_affinity) {
+      if (core >= CPU_SETSIZE) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp", "Ignoring out of range cpu core %zu in cpu_affinity", core);
+        continue;
+      }
+      CPU_SET(core, &cpuset);
+    }
+    const int ret = pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+    if (ret != 0) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp", "Failed to set cpu affinity of dedicated thread: %s", strerror(ret) );
+    }
+  }
+#else
+  if (!options.name.empty() ||
+    options.scheduling_policy != SchedulingPolicy::Inherit ||
+    !options.cpu_affinity.empty() )
+  {
+    RCUTILS_LOG_WARN_NAMED(
+      "rclcpp",
+      "The name, scheduling_policy and cpu_affinity settings of "
+      "DedicatedThreadOptions are only supported on Linux");
+  }
+#endif
+
+  if (options.thread_init_callback) {
+    options.thread_init_callback();
+  }
+}
+}  // namespace
+
 void EventsCBGExecutor::set_dedicated_thread_for_callback_group(
   const rclcpp::CallbackGroup::SharedPtr & group_ptr,
-  std::function<void()> thread_init_callback)
+  DedicatedThreadOptions options)
 {
   {
     std::lock_guard lock{callback_groups_mutex};
@@ -917,12 +1012,18 @@ void EventsCBGExecutor::set_dedicated_thread_for_callback_group(
 
   for (DedicatedThreadConfig & config : dedicated_thread_configs_) {
     if (config.callback_group.lock() == group_ptr) {
-      config.thread_init_callback = std::move(thread_init_callback);
+      config.options = std::move(options);
       return;
     }
   }
 
-  dedicated_thread_configs_.push_back({group_ptr, std::move(thread_init_callback)});
+  dedicated_thread_configs_.push_back({group_ptr, std::move(options)});
+}
+
+void EventsCBGExecutor::set_dedicated_thread_for_callback_group(
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr)
+{
+  set_dedicated_thread_for_callback_group(group_ptr, DedicatedThreadOptions());
 }
 
 void EventsCBGExecutor::start_dedicated_worker_threads()
@@ -942,7 +1043,7 @@ void EventsCBGExecutor::start_dedicated_worker_threads()
       continue;
     }
 
-    std::function<void()> thread_init_callback;
+    DedicatedThreadOptions thread_options;
     {
       const auto group = cbg_data.callback_group.lock();
       if (!group) {
@@ -951,7 +1052,7 @@ void EventsCBGExecutor::start_dedicated_worker_threads()
       std::lock_guard cfg_lock{dedicated_thread_configs_mutex_};
       for (const auto & config : dedicated_thread_configs_) {
         if (config.callback_group.lock() == group) {
-          thread_init_callback = config.thread_init_callback;
+          thread_options = config.options;
           break;
         }
       }
@@ -965,11 +1066,9 @@ void EventsCBGExecutor::start_dedicated_worker_threads()
     dedicated_threads_->threads.emplace(
       handle_ptr,
       std::thread(
-        [this, handle_ptr, thread_init_callback = std::move(thread_init_callback),
+        [this, handle_ptr, thread_options = std::move(thread_options),
         exception_handler = dedicated_exception_handler_]() {
-          if (thread_init_callback) {
-            thread_init_callback();
-          }
+          apply_dedicated_thread_options(thread_options);
 
           while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
             auto ready_entity = handle_ptr->get_next_ready_entity();

@@ -15,8 +15,10 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -121,6 +123,49 @@ public:
   // add a callback group to the executor, not bound to any node
   void add_callback_group_only(const rclcpp::CallbackGroup::SharedPtr & group_ptr);
 
+  /// Configuration of a dedicated worker thread.
+  /**
+   * All settings are optional. Defaults inherit the corresponding
+   * property from the process / parent thread.
+   */
+  struct DedicatedThreadOptions
+  {
+    enum class SchedulingPolicy
+    {
+      /// Keep the scheduling policy of the process (default)
+      Inherit,
+      /// SCHED_OTHER, the standard time sharing policy
+      Other,
+      /// SCHED_RR, realtime round robin policy
+      RoundRobin,
+      /// SCHED_FIFO, realtime first in first out policy
+      Fifo,
+    };
+
+    /// Name of the dedicated thread, as shown by debugging and tracing
+    /// tools. Empty keeps the default thread name. Note, on Linux thread
+    /// names are limited to 15 characters, longer names are truncated.
+    std::string name;
+
+    /// Scheduling policy of the dedicated thread.
+    SchedulingPolicy scheduling_policy = SchedulingPolicy::Inherit;
+
+    /// Scheduling priority of the dedicated thread. Only used with the
+    /// RoundRobin and Fifo policies. Note, setting a realtime policy
+    /// usually requires elevated privileges (e.g. CAP_SYS_NICE or an
+    /// appropriate RLIMIT_RTPRIO).
+    int priority = 0;
+
+    /// Indices of the cpu cores the dedicated thread may run on.
+    /// Empty keeps the affinity mask of the process.
+    std::vector<size_t> cpu_affinity;
+
+    /// Optional callback, executed once inside the dedicated thread after
+    /// the settings above were applied, and before any events are
+    /// processed. Escape hatch for settings not covered by this struct.
+    std::function<void()> thread_init_callback;
+  };
+
   /// Assign a dedicated worker thread to the given callback group.
   /**
    * All events of the given callback group will be executed exclusively by
@@ -128,6 +173,10 @@ public:
    * pool. This isolates the execution of the callback group from the load
    * of the rest of the system, and allows the use of custom scheduling
    * settings (priority, affinity) for the dedicated thread.
+   *
+   * If applying one of the requested thread settings fails (e.g. a
+   * realtime policy was requested without sufficient privileges), an
+   * error is logged and the thread continues with the inherited settings.
    *
    * Dedicated worker threads only process events while spin() or
    * spin(exception_handler) is active. spin_once, spin_some and spin_all
@@ -138,10 +187,8 @@ public:
    *
    * \param group_ptr the callback group that shall be executed by a
    *        dedicated worker thread
-   * \param thread_init_callback optional callback, executed once inside the
-   *        dedicated thread before any events are processed. May be used to
-   *        set the scheduling policy, priority, cpu affinity or name of the
-   *        dedicated thread.
+   * \param options thread settings (name, scheduling policy, priority,
+   *        cpu affinity) of the dedicated thread
    * \throws std::runtime_error if the callback group was already added to
    *         this executor
    */
@@ -149,7 +196,13 @@ public:
   void
   set_dedicated_thread_for_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & group_ptr,
-    std::function<void()> thread_init_callback = std::function<void()>());
+    DedicatedThreadOptions options);
+
+  /// \sa set_dedicated_thread_for_callback_group, with default options
+  RCLCPP_PUBLIC
+  void
+  set_dedicated_thread_for_callback_group(
+    const rclcpp::CallbackGroup::SharedPtr & group_ptr);
 
   /**
    * \sa rclcpp::Executor:spin() for more details
@@ -404,7 +457,7 @@ private:
   struct DedicatedThreadConfig
   {
     rclcpp::CallbackGroup::WeakPtr callback_group;
-    std::function<void()> thread_init_callback;
+    DedicatedThreadOptions options;
   };
 
   std::mutex dedicated_thread_configs_mutex_;
