@@ -38,8 +38,7 @@ class ClocksState final
 {
 public:
   ClocksState()
-  : logger_(rclcpp::get_logger("rclcpp")),
-    last_time_msg_(std::make_shared<builtin_interfaces::msg::Time>())
+  : logger_(rclcpp::get_logger("rclcpp"))
   {
   }
 
@@ -70,7 +69,7 @@ public:
     ros_time_active_ = false;
 
     // Update all attached clocks
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    builtin_interfaces::msg::Time msg;
     set_all_clocks(msg, false);
   }
 
@@ -108,7 +107,7 @@ public:
 
   // Internal helper function used inside iterators
   static void set_clock(
-    const builtin_interfaces::msg::Time::SharedPtr & msg,
+    const builtin_interfaces::msg::Time & msg,
     bool set_ros_time_enabled,
     const rclcpp::Clock::SharedPtr & clock)
   {
@@ -132,7 +131,7 @@ public:
 
       auto ret = rcl_set_ros_time_override(
         clock->get_clock_handle(),
-        rclcpp::Time(*msg).nanoseconds());
+        rclcpp::Time(msg).nanoseconds());
       if (ret != RCL_RET_OK) {
         rclcpp::exceptions::throw_from_rcl_error(
           ret, "Failed to set ros_time_override_status");
@@ -145,7 +144,7 @@ public:
 
   // Internal helper function
   void set_all_clocks(
-    const builtin_interfaces::msg::Time::SharedPtr & msg,
+    const builtin_interfaces::msg::Time & msg,
     bool set_ros_time_enabled)
   {
     std::lock_guard<std::mutex> guard(clock_list_lock_);
@@ -155,9 +154,9 @@ public:
   }
 
   // Cache the last clock message received
-  void cache_last_msg(const std::shared_ptr<const rosgraph_msgs::msg::Clock> & msg)
+  void cache_last_msg(const builtin_interfaces::msg::Time & msg)
   {
-    last_time_msg_ = std::make_shared<builtin_interfaces::msg::Time>(msg->clock);
+    last_time_msg_ = msg;
   }
 
   bool are_all_clocks_rcl_ros_time()
@@ -185,7 +184,7 @@ private:
   // This is needed when new clocks are added.
   bool ros_time_active_{false};
   // Last set message to be passed to newly registered clocks
-  std::shared_ptr<builtin_interfaces::msg::Time> last_time_msg_{nullptr};
+  builtin_interfaces::msg::Time last_time_msg_{};
 };
 
 class TimeSource::NodeState final
@@ -352,11 +351,10 @@ private:
       clocks_state_.enable_ros_time();
     }
     // Cache the last message in case a new clock is attached.
-    clocks_state_.cache_last_msg(msg);
-    auto time_msg = std::make_shared<builtin_interfaces::msg::Time>(msg->clock);
+    clocks_state_.cache_last_msg(msg->clock);
 
     if (sim_time_parameter_state_) {
-      clocks_state_.set_all_clocks(time_msg, true);
+      clocks_state_.set_all_clocks(msg->clock, true);
     }
   }
 
